@@ -51,17 +51,13 @@ class Condition:
         import gamspy.symbols as syms
 
         if not hasattr(self._symbol, "ref_container"):
-            raise Exception(
-                f"Container must be defined for symbol {self._symbol.name}"
-            )
+            raise Exception(f"Container must be defined for symbol {self._symbol.name}")
 
         self._symbol._is_dirty = True
 
         op_type = (
             ".."
-            if isinstance(
-                self._symbol, (syms.Equation, implicits.ImplicitEquation)
-            )
+            if isinstance(self._symbol, (syms.Equation, implicits.ImplicitEquation))
             else "="
         )
 

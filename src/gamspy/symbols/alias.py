@@ -48,13 +48,9 @@ class Alias(gt.Alias, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} -- {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} -- {n}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} - {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} - {n}")
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -76,13 +72,9 @@ class Alias(gt.Alias, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} ++ {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} ++ {n}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} + {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} + {n}")
 
         raise ValueError("Lead type must be linear or circular")
 
