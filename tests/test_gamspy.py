@@ -9,7 +9,7 @@ import pandas as pd
 
 import gamspy._algebra._expression as expression
 import gamspy.math as gams_math
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 from gamspy import (
     Alias,

@@ -4,26 +4,45 @@ import pandas as pd
 import gamspy._algebra._expression as expression
 import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
 
 
-class Equation(gt.Equation, operable.OperableMixin):
+class Variable(gt.Variable, operable.OperableMixin):
+    """
+    Represents a variable symbol in GAMS.
+    https://www.gams.com/latest/docs/UG_Variables.html
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    type : str, optional
+    domain : list, optional
+    records : DataFrame, optional
+    domain_forwarding : bool, optional
+    description : str, optional
+
+    Example
+    ----------
+    >>> m = gt.Container()
+    >>> i = gt.Set(m, "i", records=['i1','i2'])
+    >>> v = gt.Variable(m, "a", [i])
+    """
+
     def __init__(
         self,
         container: "Container",
         name: str,
-        type: str,
-        domain: Optional[List[Union["Set", str]]] = None,
+        type: str = "free",
+        domain: Optional[List[Union[str, "Set"]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition: Optional[expression.Expression] = None,
-        definition_domain: Optional[list] = None,
     ):
         super().__init__(
             container,
@@ -45,20 +64,13 @@ class Equation(gt.Equation, operable.OperableMixin):
         # add statement
         self.ref_container._addStatement(self)
 
-        # add defition if exists
-        self._definition_domain = definition_domain
-        self.definition = definition
-
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
+        self._fx = self._create_attr("fx")
+        self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
-        self._range = self._create_attr("range")
-        self._slacklo = self._create_attr("slacklo")
-        self._slackup = self._create_attr("slackup")
-        self._slack = self._create_attr("slack")
-        self._infeas = self._create_attr("infeas")
 
-    def _init_attributes(self) -> tuple:
+    def _init_attributes(self):
         level = self._create_attr("l")
         marginal = self._create_attr("m")
         lower = self._create_attr("lo")
@@ -74,7 +86,7 @@ class Equation(gt.Equation, operable.OperableMixin):
         )
 
     @property
-    def l(self):  # noqa: E741, E743
+    def l(self):  # noqa: E741,E743
         return self._l
 
     @property
@@ -94,115 +106,38 @@ class Equation(gt.Equation, operable.OperableMixin):
         return self._s
 
     @property
+    def fx(self):
+        return self._fx
+
+    @property
+    def prior(self):
+        return self._prior
+
+    @property
     def stage(self):
         return self._stage
 
-    @property
-    def range(self):
-        return self._range
-
-    @property
-    def slacklo(self):
-        return self._slacklo
-
-    @property
-    def slackup(self):
-        return self._slackup
-
-    @property
-    def slack(self):
-        return self._slack
-
-    @property
-    def infeas(self):
-        return self._infeas
-
-    @property
-    def definition(self) -> Optional[expression.Expression]:
-        return self._definition
-
-    @definition.setter
-    def definition(self, assignment: Optional[expression.Expression] = None) -> None:
-        """Needed for scalar equations
-        >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.definition = Sum(wh, build[wh]) <= 1
-        """
-        if assignment is None:
-            self._definition = assignment
-            return
-
-        eq_types = ["=e=", "=l=", "=g="]
-
-        # In case of an MCP equation without any equality, add the equality
-        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
-
-        equation_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        if self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]
-
-        domain = self._definition_domain if self._definition_domain else self.domain
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self.ref_container,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.ref_container._addStatement(statement)
-        self._definition = statement
-
     def __iter__(self):
         assert self._records is not None, (
-            f"Equation {self.name} does not contain any records. Cannot"
-            " iterate over an Equation with no records"
+            f"Variable {self.name} does not contain any records. Cannot"
+            " iterate over a Variable with no records"
         )
 
         if self._records is not None:
             return self._records.iterrows()
 
-    def __getitem__(self, indices: Union[list, str]):
+    def __getitem__(
+        self, indices: Union[list, str]
+    ) -> implicits.ImplicitVariable:
         domain = utils._toList(indices)
-        return implicits.ImplicitEquation(
-            self.ref_container, name=self.name, type=self.type, domain=domain
+        return implicits.ImplicitVariable(
+            self.ref_container, name=self.name, domain=domain
         )
 
-    def __setitem__(self, indices: Union[list, str], assignment: expression.Expression):
-        domain = utils._toList(indices)
-
-        equation_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        if self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]
-
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self.ref_container,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
+    def __neg__(self):
+        return implicits.ImplicitVariable(
+            self.ref_container, name=f"-{self.name}", domain=self.domain
         )
-
-        self.ref_container._addStatement(statement)
-        self._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -247,7 +182,7 @@ class Equation(gt.Equation, operable.OperableMixin):
                     symobj._requires_state_check = True
 
     def gamsRepr(self) -> str:
-        """Representation of this Equation in GAMS language.
+        """Representation of this Variable in GAMS language.
 
         Returns
         -------
@@ -260,21 +195,69 @@ class Equation(gt.Equation, operable.OperableMixin):
         return representation
 
     def getStatement(self) -> str:
-        """Statement of the Equation declaration
+        """Statement of the Variable definition
 
         Returns
         -------
         str
         """
-        output = f"Equation {self.name}"
+        output = self.type + " "
 
-        if self.domain:
-            domain_names = [set.name for set in self.domain]  # type: ignore
-            domain_str = "(" + ",".join(domain_names) + ")"
-            output += domain_str
+        output += f"Variable {self.gamsRepr()}"
 
         if self.description:
             output += ' "' + self.description + '"'
 
+        if self._records is not None:
+            records_str = " / "
+            col_mapping = {
+                "level": "L",
+                "marginal": "M",
+                "lower": "LO",
+                "upper": "UP",
+                "scale": "scale",
+            }
+
+            if len(self.domain) == 0:
+                for col, value in zip(
+                    self._records.columns.tolist(),
+                    self._records.values.tolist()[0],
+                ):
+                    # Discrete variables cannot have scale
+                    if (
+                        self.type.lower() in ["binary", "integer"]
+                        and col.lower() == "scale"
+                    ):
+                        continue
+                    else:
+                        records_str += f"{col_mapping[col.lower()]} {value},"
+                records_str = records_str[:-1]
+            else:
+                # domain, level, marginal, lower, upper, scale
+                for _, row in self._records.iterrows():
+                    row_as_list = row.tolist()
+                    label_str = ".".join(row_as_list[: len(self.domain)])
+
+                    for column_name in row.index.tolist():
+                        # Discrete variables cannot have scale
+                        if (
+                            isinstance(column_name, str)
+                            and column_name.lower() == "scale"
+                            and self.type.lower()
+                            in [
+                                "binary",
+                                "integer",
+                            ]
+                        ):
+                            continue
+                        else:
+                            if column_name in col_mapping.keys():
+                                records_str += f"\n{label_str}.{col_mapping[column_name.lower()]} {row[column_name]}"  # noqa: E501
+
+            records_str += "/"
+
+            output += records_str
+
         output += ";"
+
         return output

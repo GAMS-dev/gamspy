@@ -37,20 +37,22 @@ if TYPE_CHECKING:
 
 
 class ImplicitSet(_operable.OperableMixin):
+    """
+    Implicit Set
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    domain : Union[Set, str], optional
+    """
+    
     def __init__(
         self,
         container: "Container",
         name: str,
         domain: List[Union["Set", str]] = [],
     ) -> None:
-        """Implicit Set
-
-        Parameters
-        ----------
-        container : Container
-        name : str
-        domain : Union[Set, str], optional
-        """
         self.ref_container = container
         self.name = name
         self.domain = domain

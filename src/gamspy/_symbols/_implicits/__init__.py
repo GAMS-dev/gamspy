@@ -25,7 +25,7 @@
 
 # flake8: noqa
 
-from gamspy.symbols._implicits._implicit_set import ImplicitSet
-from gamspy.symbols._implicits._implicit_parameter import ImplicitParameter
-from gamspy.symbols._implicits._implicit_variable import ImplicitVariable
-from gamspy.symbols._implicits._implicit_equation import ImplicitEquation
+from gamspy._symbols._implicits._implicit_set import ImplicitSet
+from gamspy._symbols._implicits._implicit_parameter import ImplicitParameter
+from gamspy._symbols._implicits._implicit_variable import ImplicitVariable
+from gamspy._symbols._implicits._implicit_equation import ImplicitEquation

@@ -3,7 +3,7 @@ import gams.transfer as gt
 import gamspy._algebra._expression as expression
 import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 import pandas as pd
 
@@ -12,6 +12,27 @@ if TYPE_CHECKING:
 
 
 class Parameter(gt.Parameter, operable.OperableMixin):
+    """
+    Represents a parameter symbol in GAMS.
+    https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    domain : list, optional
+    records : Any, optional
+    domain_forwarding : bool, optional
+    description : str, optional
+    uels_on_axes : bool
+
+    Example
+    ----------
+    >>> m = gt.Container()
+    >>> i = gt.Set(m, "i", records=['i1','i2'])
+    >>> a = gt.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+    """
+
     def __init__(
         self,
         container: "Container",
@@ -67,7 +88,9 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         if self._records is not None:
             return self._records.iterrows()
 
-    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitParameter:
+    def __getitem__(
+        self, indices: Union[list, str]
+    ) -> implicits.ImplicitParameter:
         domain = utils._toList(indices)
         return implicits.ImplicitParameter(
             self.ref_container, name=self.name, domain=domain
@@ -138,7 +161,8 @@ class Parameter(gt.Parameter, operable.OperableMixin):
                     symobj._requires_state_check = True
 
     def gamsRepr(self) -> str:
-        """Representation of this Parameter in GAMS language.
+        """
+        Representation of this Parameter in GAMS language.
 
         Returns
         -------
@@ -151,7 +175,8 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         return representation
 
     def getStatement(self) -> str:
-        """Statement of the Parameter definition
+        """
+        Statement of the Parameter definition
 
         Returns
         -------
@@ -167,7 +192,9 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         if self._records is not None:
             if self.is_scalar:
                 # Parameter a(i) / 5.0 /;
-                value = 0 if self._records.empty else self._records.values[0][0]
+                value = (
+                    0 if self._records.empty else self._records.values[0][0]
+                )
                 records_str += str(value)
             else:
                 # Parameter a(i) / i1 1\n i2 2\n /;

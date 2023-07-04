@@ -50,7 +50,9 @@ def power(base, exponent):
     if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
         return base**exponent
 
-    base_str = str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
+    base_str = (
+        str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
+    )
     exponent_str = (
         str(exponent)
         if isinstance(exponent, (int, float, str))
@@ -60,14 +62,20 @@ def power(base, exponent):
 
 
 def mod(dividend, divider) -> Union[expression.Expression, int, float]:
-    if isinstance(dividend, (int, float)) and isinstance(divider, (int, float)):
+    if isinstance(dividend, (int, float)) and isinstance(
+        divider, (int, float)
+    ):
         return dividend % divider
 
     dividend_str = (
-        str(dividend) if isinstance(dividend, (int, float)) else dividend.gamsRepr()
+        str(dividend)
+        if isinstance(dividend, (int, float))
+        else dividend.gamsRepr()
     )
     divider_str = (
-        str(divider) if isinstance(divider, (int, float)) else divider.gamsRepr()
+        str(divider)
+        if isinstance(divider, (int, float))
+        else divider.gamsRepr()
     )
     return expression.Expression("mod(" + dividend_str, ",", divider_str + ")")
 
@@ -101,7 +109,9 @@ def log10(value) -> Union[expression.Expression, float]:
 
 
 def Round(value, decimal: int = 0) -> expression.Expression:
-    return expression.Expression("round(", value.gamsRepr() + f", {decimal}", ")")
+    return expression.Expression(
+        "round(", value.gamsRepr() + f", {decimal}", ")"
+    )
 
 
 def sin(value) -> Union[expression.Expression, float]:
@@ -117,12 +127,18 @@ def cos(value) -> Union[expression.Expression, float]:
 
 
 def uniform(lower_bound, upper_bound) -> expression.Expression:
-    return expression.Expression("uniform(", f"{lower_bound},{upper_bound}", ")")
+    return expression.Expression(
+        "uniform(", f"{lower_bound},{upper_bound}", ")"
+    )
 
 
 def uniformInt(lower_bound, upper_bound) -> expression.Expression:
-    return expression.Expression("uniformInt(", f"{lower_bound},{upper_bound}", ")")
+    return expression.Expression(
+        "uniformInt(", f"{lower_bound},{upper_bound}", ")"
+    )
 
 
-def normal(mean: Union[int, float], dev: Union[int, float]) -> expression.Expression:
+def normal(
+    mean: Union[int, float], dev: Union[int, float]
+) -> expression.Expression:
     return expression.Expression("normal(", f"{mean},{dev}", ")")

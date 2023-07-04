@@ -30,7 +30,26 @@ if TYPE_CHECKING:
 
 
 class Model:
-    """A model is a list of equations."""
+    """
+    Represents a list of equations to be solved.
+    https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelStatement
+
+    Parameters
+    ----------
+    container : Container
+        The container that the model belongs to
+    name : str
+        Name of the model
+    equations : Union[str, list]
+        List of Equation objects or str. ``all`` as a string represents
+        all the equations specified before the creation of this model
+    limited_variables : Optional[list], optional
+        Allows limiting the domain of variables used in a model.
+
+    Example
+    ----------
+    >>> transport = Model(m, "transport", equations=[cost,supply,demand])
+    """
 
     def __init__(
         self,
@@ -39,31 +58,18 @@ class Model:
         equations: Union[str, list],
         limited_variables: Optional[list] = None,
     ):
-        """Model symbol
-
-        Parameters
-        ----------
-        container : Container
-        name : str
-        equations : Union[str, list]
-        limited_variables : Optional[list], optional
-
-        Example
-        ----------
-        >>> transport = Model(m, "transport", equations=[cost,supply,demand])
-        """
         self.name = name
-        self.container = container
+        self.ref_container = container
         self._equations = equations
         self._limited_variables = limited_variables
-        self.container._addStatement(self)
+        self.ref_container._addStatement(self)
 
     @property
     def equations(self) -> Union[str, list]:
         return self._equations
 
     @equations.setter
-    def equations(self, new_equations):
+    def equations(self, new_equations) -> None:
         self._equations = new_equations
 
     def getStatement(self) -> str:
@@ -77,7 +83,9 @@ class Model:
         if isinstance(self._equations, str):
             equations_str = self._equations
         else:
-            equations_str = ",".join([equation.name for equation in self._equations])
+            equations_str = ",".join(
+                [equation.name for equation in self._equations]
+            )
 
         if self._limited_variables:
             limited_variables_str = ",".join(

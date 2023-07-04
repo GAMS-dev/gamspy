@@ -28,25 +28,31 @@ import gamspy._algebra._condition as condition
 import gamspy.utils as utils
 import gamspy._algebra._operable as _operable
 import gamspy._algebra._domain as _domain
-import gamspy.symbols as syms
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols as syms
+import gamspy._symbols._implicits as implicits
 from typing import Tuple
 
 
 class Expression(_operable.OperableMixin):
+    """
+    Expression of two operands and an operation.
+
+    Parameters
+    ----------
+    left: str | int | float | Parameter | Variable
+        Left operand
+    op_type: str
+        Operation
+    right: str | int | float | Parameter | Variable
+        Right operand
+
+    >>> a = Parameter(name="a", records=[["a", 1], ["b", 2], ["c", 3]]))
+    >>> b = Parameter(name="b", records=[["a", 1], ["b", 2], ["c", 3]]))
+    >>> a * b
+    Expression(a, "*", b)
+    """
+
     def __init__(self, left, op_type, right) -> None:
-        """Expression of two operands and an operation.
-
-        Args:
-            left (Union[str, int, float, Parameter, Variable]): Left operand
-            op_type (str): Operation
-            right (Union[str, int, float, Parameter, Variable]): Right operand
-
-        >>> a = Parameter(name="a", records=pd.DataFrame([[1,2,3]]))
-        >>> b = Parameter(name="b", records=pd.DataFrame([[1,2,3]]))
-        >>> a * b
-        Expression(a, "*", b)
-        """
         self.name = utils._getUniqueName()
         self._left = left
         self._op_type = op_type

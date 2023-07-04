@@ -68,7 +68,9 @@ class ImplicitParameter(_operable.OperableMixin):
     def assign(self, assignment) -> None:
         statement = _expression.Expression(
             ImplicitParameter(
-                name=self.name, domain=self.domain, container=self.ref_container
+                name=self.name,
+                domain=self.domain,
+                container=self.ref_container,
             ),
             "=",
             assignment,
@@ -78,7 +80,9 @@ class ImplicitParameter(_operable.OperableMixin):
 
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
-            name=f"-{self.name}", domain=self.domain, container=self.ref_container
+            name=f"-{self.name}",
+            domain=self.domain,
+            container=self.ref_container,
         )
 
     def __invert__(self):

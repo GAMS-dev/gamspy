@@ -4,7 +4,7 @@ import pandas as pd
 import gamspy._algebra._expression as expression
 import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
@@ -12,6 +12,27 @@ if TYPE_CHECKING:
 
 
 class Set(gt.Set, operable.OperableMixin):
+    """
+    Represents a Set symbol in GAMS.
+    https://www.gams.com/latest/docs/UG_SetDefinition.html
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    domain : list, optional
+    is_singleton : bool, optional
+    records : Union[int, float, DataFrame], optional
+    domain_forwarding : bool, optional
+    description : str, optional
+    uels_on_axes : bool
+
+    Example
+    ----------
+    >>> m = gt.Container()
+    >>> i = gt.Set(m, "i", records=['i1','i2'])
+    """
+
     def __init__(
         self,
         container: "Container",
@@ -99,7 +120,9 @@ class Set(gt.Set, operable.OperableMixin):
 
     def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitSet:
         domain = utils._toList(indices)
-        return implicits.ImplicitSet(self.ref_container, name=self.name, domain=domain)
+        return implicits.ImplicitSet(
+            self.ref_container, name=self.name, domain=domain
+        )
 
     def __setitem__(
         self,
@@ -112,7 +135,9 @@ class Set(gt.Set, operable.OperableMixin):
             assignment = "yes" if assignment is True else "no"  # type: ignore
 
         statement = expression.Expression(
-            implicits.ImplicitSet(self.ref_container, name=self.name, domain=domain),
+            implicits.ImplicitSet(
+                self.ref_container, name=self.name, domain=domain
+            ),
             "=",
             assignment,
         )
@@ -138,9 +163,13 @@ class Set(gt.Set, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} -- {n}")
+            return implicits.ImplicitSet(
+                self.ref_container, name=f"{self.name} -- {n}"
+            )
         elif type == "linear":
-            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} - {n}")
+            return implicits.ImplicitSet(
+                self.ref_container, name=f"{self.name} - {n}"
+            )
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -162,9 +191,13 @@ class Set(gt.Set, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} ++ {n}")
+            return implicits.ImplicitSet(
+                self.ref_container, name=f"{self.name} ++ {n}"
+            )
         elif type == "linear":
-            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} + {n}")
+            return implicits.ImplicitSet(
+                self.ref_container, name=f"{self.name} + {n}"
+            )
 
         raise ValueError("Lead type must be linear or circular")
 
@@ -253,7 +286,9 @@ class Set(gt.Set, operable.OperableMixin):
         records_str = " / "
         if self._records is not None:
             if self.domain is None or len(self.domain) <= 1:
-                records_str += ",".join(self._records.iloc[:, 0].values.tolist())
+                records_str += ",".join(
+                    self._records.iloc[:, 0].values.tolist()
+                )
             else:
                 strings = (
                     self._records.to_string(index=False, header=False)

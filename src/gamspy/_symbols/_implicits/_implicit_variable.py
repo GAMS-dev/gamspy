@@ -29,7 +29,7 @@ import gamspy._algebra._operable as _operable
 import gamspy._algebra._condition as _condition
 import gamspy.utils as utils
 import gamspy._algebra._expression as _expression
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,20 +38,22 @@ if TYPE_CHECKING:
 
 
 class ImplicitVariable(_operable.OperableMixin):
+    """
+    Implicit Variable
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    domain : Union[Set, str]
+    """
+
     def __init__(
         self,
         container: "Container",
         name: str,
         domain: list[Union["Set", str]],
     ):
-        """Implicit Variable
-
-        Parameters
-        ----------
-        container : Container
-        name : str
-        domain : Union[Set, str]
-        """
         self.ref_container = container
         self.name = name
         self.domain = domain

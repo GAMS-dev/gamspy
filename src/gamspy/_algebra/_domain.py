@@ -30,16 +30,18 @@ import gamspy.utils as utils
 
 
 class Domain:
+    """
+    Domain class needed for where statements on multidimensional index list in operations
+
+    Parameters
+    ----------
+    sets: tuple[Union[Set,str]]
+
+    >>> equation = Equation(name="equation", domain=[i,j])
+    >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
+    """
+
     def __init__(self, *sets: tuple) -> None:
-        """Domain class needed for where statements on multidimensional index list in operations
-
-        Parameters
-        ----------
-        sets: tuple[Union[Set,str]]
-
-        >>> equation = Equation(name="equation", domain=[i,j])
-        >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
-        """
         self._sanity_check(sets)
         self.sets = sets
         self.ref_container = self._find_container()  # type: ignore

@@ -27,11 +27,11 @@ import logging
 import gamspy
 import pandas as pd
 import gams.transfer as gt
-import gamspy.symbols._implicits as implicits
+import gamspy._symbols._implicits as implicits
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional, Union, List
 from gams.transfer._internals.algorithms import convert_to_categoricals
 
 
@@ -40,7 +40,8 @@ def _loadPackageGlobals() -> None:
 
 
 def _getUniqueName() -> str:
-    """Generates a unique name for elements with no name (e.g. Expressions).
+    """
+    Generates a unique name for elements with no name (e.g. Expressions).
 
     Returns
     -------
@@ -51,8 +52,11 @@ def _getUniqueName() -> str:
     return str(gamspy._order)  # type: ignore
 
 
-def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> Optional[pd.DataFrame]:
-    """Gets the data of single symbol from GDX.
+def _getSymbolData(
+    gams2np, gdxHandle, symbol_id: str
+) -> Optional[pd.DataFrame]:
+    """
+    Gets the data of single symbol from GDX.
 
     Parameters
     ----------
@@ -66,15 +70,20 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> Optional[pd.DataFrame]
     return None if no records exist
     """
     try:
-        arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(gdxHandle, symbol_id)
+        arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
+            gdxHandle, symbol_id
+        )
         return convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
-        logging.warning(f"No symbol with id {symbol_id} in the gdx file! Message: {e}")
+        logging.warning(
+            f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
+        )
         return None
 
 
 def _closeGdxHandle(handle):
-    """Closes the handle and unloads the gdx library.
+    """
+    Closes the handle and unloads the gdx library.
 
     Parameters
     ----------
@@ -86,7 +95,8 @@ def _closeGdxHandle(handle):
 
 
 def _set_special_values(gdxHandle):
-    """Sets the special values
+    """
+    Sets the special values
 
     Parameters
     ----------
@@ -108,7 +118,8 @@ def _set_special_values(gdxHandle):
 
 
 def _openGdxFile(system_directory: str, load_from: str):
-    """Opens the gdx file with given path
+    """
+    Opens the gdx file with given path
 
     Parameters
     ----------
@@ -130,7 +141,8 @@ def _openGdxFile(system_directory: str, load_from: str):
         assert rc[0], rc[1]
     except Exception as e:
         raise Exception(
-            "Could not properly load GDX DLL, check system_directory" f" path. {e}"
+            "Could not properly load GDX DLL, check system_directory"
+            f" path. {e}"
         )
 
     try:
@@ -146,7 +158,8 @@ def _openGdxFile(system_directory: str, load_from: str):
 
 
 def _toList(obj: Union[str, tuple, list]) -> list:
-    """Converts the given object to a list
+    """
+    Converts the given object to a list
 
     Parameters
     ----------
@@ -165,14 +178,43 @@ def _toList(obj: Union[str, tuple, list]) -> list:
     return obj
 
 
-def isin(element, container: Sequence) -> bool:
+def isin(symbol, container: Sequence) -> bool:
+    """
+    Checks whether the given symbol in the sequence.
+    Needed for symbol comparison since __eq__ magic
+    is overloaded by the symbols.
+
+    Parameters
+    ----------
+    symbol : Symbol
+        _Symbol to check
+    container : Sequence
+        Container that holds a sequence of symbols
+
+    Returns
+    -------
+    bool
+    """
     for item in container:
-        if element is item:
+        if symbol is item:
             return True
     return False
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
+    """
+    Checks if all elements of a sequence are equal to the all
+    elements of another sequence.
+
+    Parameters
+    ----------
+    iterable1 : Sequence
+    iterable2 : Sequence
+
+    Returns
+    -------
+    bool
+    """
     if len(iterable1) != len(iterable2):
         return False
 
@@ -184,7 +226,8 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
 
 
 def _getDomainStr(domain) -> str:
-    """Creates the string format of a given domain
+    """
+    Creates the string format of a given domain
 
     Parameters
     ----------
@@ -217,7 +260,7 @@ def _getDomainStr(domain) -> str:
     return "(" + ",".join(set_strs) + ")"
 
 
-def _getValidGmsOptions():
+def _getValidGmsOptions() -> List[str]:
     def lowercase(options):
         return [option.lower() for option in options]
 

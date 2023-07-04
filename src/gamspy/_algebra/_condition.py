@@ -27,15 +27,19 @@ import gamspy._algebra._expression as expression
 
 
 class Condition:
+    """
+    Condition class allows symbols to be conditioned.
+
+    Parameters
+    ----------
+    symbol: Alias | Set | Parameter | Variable | Equation | Expression
+        Reference to the symbol to be conditioned.
+
+    >>> muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
+    >>> minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
+    """
+
     def __init__(self, symbol):
-        """Condition class allows symbols to be conditioned.
-
-        Args:
-            symbol: Reference to the symbol to be conditioned.
-
-        >>> muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
-        >>> minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-        """
         self._symbol = symbol
 
     def __getitem__(self, condition_expression):
@@ -47,17 +51,21 @@ class Condition:
         return expression.Expression(self._symbol, "$", condition_expression)
 
     def __setitem__(self, condition_expression, right_handexpression) -> None:
-        import gamspy.symbols._implicits as implicits
-        import gamspy.symbols as syms
+        import gamspy._symbols._implicits as implicits
+        import gamspy._symbols as syms
 
         if not hasattr(self._symbol, "ref_container"):
-            raise Exception(f"Container must be defined for symbol {self._symbol.name}")
+            raise Exception(
+                f"Container must be defined for symbol {self._symbol.name}"
+            )
 
         self._symbol._is_dirty = True
 
         op_type = (
             ".."
-            if isinstance(self._symbol, (syms.Equation, implicits.ImplicitEquation))
+            if isinstance(
+                self._symbol, (syms.Equation, implicits.ImplicitEquation)
+            )
             else "="
         )
 

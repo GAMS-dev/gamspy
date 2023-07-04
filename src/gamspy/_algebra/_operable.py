@@ -27,7 +27,10 @@ import gamspy._algebra._expression as expression
 
 
 class OperableMixin:
-    """A mixin that overloads the magic operations of a class to be used in Expressions"""
+    """
+    A mixin class that overloads the magic operations of a class
+    to be used in Expressions
+    """
 
     # +, -, /, *, **
     def __add__(self, other):

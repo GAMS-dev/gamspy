@@ -12,6 +12,19 @@ if TYPE_CHECKING:
 
 
 class Container(gt.Container):
+    """
+    A container is an object that holds all symbols and operates on them.
+
+    Parameters
+    ----------
+    load_from : Optional[str], optional
+        Path to the GDX file to be loaded from, by default None
+    system_directory : Optional[str], optional
+        Path to the directory that holds the GAMS installation, by default None
+    name : str, optional
+        Name of the Container, by default "default"
+    """
+
     def __init__(
         self,
         load_from: Optional[str] = None,
@@ -35,7 +48,10 @@ class Container(gt.Container):
 
         self._cast_symbols()
 
-    def _cast_symbols(self):
+    def _cast_symbols(self) -> None:
+        """
+        Casts all symbols in the GAMS Transfer container to GAMSpy symbols
+        """
         import gamspy as gp
 
         for gt_symbol_name in list(self.data.keys()):
@@ -119,7 +135,7 @@ class Container(gt.Container):
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
-    def addAlias(self, name, alias_with):
+    def addAlias(self, name, alias_with) -> None:
         import gamspy as gp
 
         if name not in self:
@@ -129,7 +145,9 @@ class Container(gt.Container):
 
         else:
             if not isinstance(alias_with, (gt.Set, gt.Alias)):
-                raise TypeError("Symbol 'alias_with' must be type Set or Alias")
+                raise TypeError(
+                    "Symbol 'alias_with' must be type Set or Alias"
+                )
 
             if isinstance(alias_with, gt.Alias):
                 parent = alias_with
@@ -457,7 +475,9 @@ class Container(gt.Container):
                     f" {utils.GMS_OPTIONS}"
                 )
 
-            self._addStatement(expression.Expression(f"option {key}", "=", value))
+            self._addStatement(
+                expression.Expression(f"option {key}", "=", value)
+            )
 
     def addGamsCode(self, gams_code: str) -> None:
         """Adds an arbitrary GAMS code to the generate .gms file
@@ -528,7 +548,8 @@ class Container(gt.Container):
         """Generates the gams string, writes it to a file and runs it"""
         if not problem.upper() in utils.PROBLEM_TYPES:
             raise ValueError(
-                f"Allowed problem types: {utils.PROBLEM_TYPES} but found" f" {problem}."
+                f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
+                f" {problem}."
             )
 
         if sense is not None and not sense.upper() in utils.SENSE_TYPES:
@@ -540,7 +561,9 @@ class Container(gt.Container):
             raise ValueError("stdout must be a path for the output file")
 
         sense = "" if sense is None else sense
-        objective = objective_variable.name if objective_variable is not None else ""
+        objective = (
+            objective_variable.name if objective_variable is not None else ""
+        )
 
         self._unsaved_statements[
             utils._getUniqueName()
@@ -570,7 +593,9 @@ class Container(gt.Container):
         -------
         str
         """
-        dictionary = self._statements_dict if dictionary is None else dictionary
+        dictionary = (
+            self._statements_dict if dictionary is None else dictionary
+        )
         return (
             "\n".join(
                 [
@@ -632,7 +657,9 @@ class Container(gt.Container):
     def loadFromGdx(
         self,
         load_from: str,
-        symbols: List[Union["Set", "Parameter", "Variable", "Equation"]] = None,
+        symbols: List[
+            Union["Set", "Parameter", "Variable", "Equation"]
+        ] = None,
     ) -> None:
         import gamspy as gp
 

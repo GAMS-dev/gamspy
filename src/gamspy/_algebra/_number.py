@@ -28,11 +28,14 @@ import gamspy._algebra._condition as condition
 
 
 class Number:
+    """
+    Needed for conditions on numbers.
+
+    >>> Number(1).where[sig[i] == 0]
+    1$(sig(i) = 0)
+    """
+
     def __init__(self, value: Union[int, float]):
-        """Needed for conditions on numbers.
-        >>> Number(1).where[sig[i] == 0]
-        1$(sig(i) = 0)
-        """
         self._value = value
         self.where = condition.Condition(self)
 
