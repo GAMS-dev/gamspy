@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gamspy"
+version = "0.0.1"
+description = "GAMS Python API for algebraic modelling"
+urls.homepage = "https://github.com/GAMS-dev/gamspy"
+requires-python = ">= 3.8"
+license.file = "LICENSE"

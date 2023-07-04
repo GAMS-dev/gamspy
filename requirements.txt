@@ -1,0 +1,6 @@
+coverage==7.2.7
+distlib==0.3.6
+GAMS==43.2.0
+numpy==1.24.3
+pandas==2.0.2
+pre-commit==3.3.3

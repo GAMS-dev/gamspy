@@ -1,0 +1,73 @@
+from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
+from gamspy import Sum
+
+
+def main():
+    m = Container()
+
+    # Set
+    bus = Set(m, name="bus", records=[str(idx) for idx in range(1, 15)])
+    node = Alias(m, name="node", alias_with=bus)
+    conex = Set(
+        m,
+        name="conex",
+        records=[
+            ("1", "2"),
+            ("1", "5"),
+            ("2", "3"),
+            ("2", "4"),
+            ("2", "5"),
+            ("3", "4"),
+            ("4", "5"),
+            ("4", "7"),
+            ("4", "9"),
+            ("5", "6"),
+            ("6", "11"),
+            ("6", "12"),
+            ("6", "13"),
+            ("7", "8"),
+            ("7", "9"),
+            ("9", "10"),
+            ("9", "14"),
+            ("10", "11"),
+            ("12", "13"),
+            ("13", "14"),
+        ],
+        domain=[bus, node],
+    )
+    conex[bus, node].where[conex[node, bus]] = 1
+
+    # Data
+    NPMU = Parameter(m, name="NPMU", records=10)
+
+    # Variable
+    OF = Variable(m, name="OF")
+    PMU = Variable(m, name="PMU", domain=[bus], type="Binary")
+    alpha = Variable(m, name="alpha", domain=[bus], type="Binary")
+
+    # Equation
+    eq1 = Equation(m, type="eq", name="eq1")
+    eq2 = Equation(m, type="eq", name="eq2")
+    eq3 = Equation(m, type="eq", name="eq3", domain=[bus])
+
+    eq1.definition = Sum(bus, PMU[bus]) <= NPMU
+    eq2.definition = OF == Sum(node, alpha[node])
+    eq3[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
+
+    m.addOptions({"optCr": 0, "profile": 1})
+
+    placement3 = Model(m, name="placement3", equations="all")
+
+    counter = Set(m, "counter", records=[f"c{idx}" for idx in range(1, 5)])
+    report = Parameter(m, "report", domain=[bus, counter])
+    OBIrep = Parameter(m, "OBIrep", domain=[counter])
+
+    for idx, iter, _ in counter.records.itertuples():
+        NPMU.assign = idx + 1
+        m.solve(placement3, problem="MIP", sense="max", objective_variable=OF)
+        report[bus, iter] = PMU.l[bus]
+        OBIrep[iter] = OF.l
+
+
+if __name__ == "__main__":
+    main()

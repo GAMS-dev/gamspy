@@ -1,0 +1,70 @@
+from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
+from gamspy import Sum, Card, Ord
+import gamspy.math as gams_math
+
+
+def main():
+    cont = Container()
+
+    # Set
+    i = Set(cont, name="i", records=["1", "2"])
+    t = Set(cont, name="t", records=["1"])
+    j = Alias(cont, name="j", alias_with=i)
+
+    # Parameter
+    theta = Parameter(cont, name="theta", domain=[i], records=[[1, 0.2], [2, 0.3]])
+    pt = Parameter(cont, name="pt", domain=[i, t])
+    p = Parameter(cont, name="p", domain=[i], records=[[1, 0.2], [2, 0.8]])
+    icweight = Parameter(cont, name="icweight", domain=[i])
+    ru = Parameter(cont, name="ru", records=0)
+
+    pt[i, t] = gams_math.uniform(0, 1)
+    pt[i, t] = pt[i, t] / Sum(j, pt[j, t])
+    pt[i, t] = p[i]
+
+    # Variable
+    x = Variable(cont, name="x", domain=[i], type="Positive")
+    b = Variable(cont, name="b", domain=[i], type="Positive")
+    w = Variable(cont, name="w", domain=[i], type="Positive")
+    util = Variable(cont, name="util")
+
+    # Equation
+    obj = Equation(cont, name="obj", type="eq")
+    rev = Equation(cont, name="rev", domain=[i], type="eq")
+    pc = Equation(cont, name="pc", domain=[i], type="geq")
+    ic = Equation(cont, name="ic", domain=[i, j], type="geq")
+    licd = Equation(cont, name="licd", domain=[i], type="geq")
+    licu = Equation(cont, name="licu", domain=[i], type="geq")
+    mn = Equation(cont, name="mn", domain=[i], type="geq")
+
+    obj.definition = util == Sum(i, p[i] * (b[i] - w[i]))
+    rev[i] = b[i] == gams_math.sqrt(x[i])
+    pc[i] = w[i] - theta[i] * x[i] >= ru
+    ic[i, j] = w[i] - icweight[i] * x[i] >= w[j] - icweight[i] * x[j]
+    licd[i].where[Ord(i) < Card(i)] = (
+        w[i] - icweight[i] * x[i]
+        >= w[i.lead(1, "linear")] - icweight[i] * x[i.lead(1, "linear")]
+    )
+    licu[i].where[Ord(i) > 1] = (
+        w[i] - icweight[i] * x[i]
+        >= w[i.lag(1, "linear")] - icweight[i] * x[i.lag(1, "linear")]
+    )
+    mn[i].where[Ord(i) < Card(i)] = x[i] >= x[i.lead(1, "linear")]
+
+    x.lo[i] = 0.0001
+
+    m = Model(cont, name="m", equations="all -mn -ic -licd")
+    m_mn = Model(cont, name="m_mn", equations="m + mn")
+
+    cont.addOptions({"limRow": 0, "limCol": 0})
+
+    for iter, _ in t.records.itertuples(index=False):
+        p[i] = pt[i, iter]
+        icweight[i] = theta[i]
+        cont.solve(m, problem="NLP", sense="max", objective_variable=util)
+        cont.solve(m_mn, problem="NLP", sense="max", objective_variable=util)
+        cont.addOptions({"solPrint": "off"})
+
+
+if __name__ == "__main__":
+    main()
