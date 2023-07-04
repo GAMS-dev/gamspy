@@ -148,9 +148,7 @@ class Equation(gt.Equation, operable.OperableMixin):
         return self._definition
 
     @definition.setter
-    def definition(
-        self, assignment: Optional[expression.Expression] = None
-    ) -> None:
+    def definition(self, assignment: Optional[expression.Expression] = None) -> None:
         """
         Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
@@ -176,9 +174,7 @@ class Equation(gt.Equation, operable.OperableMixin):
         if self.type in equation_map.keys():
             assignment._op_type = equation_map[self.type]
 
-        domain = (
-            self._definition_domain if self._definition_domain else self.domain
-        )
+        domain = self._definition_domain if self._definition_domain else self.domain
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self.ref_container,
@@ -208,9 +204,7 @@ class Equation(gt.Equation, operable.OperableMixin):
             self.ref_container, name=self.name, type=self.type, domain=domain
         )
 
-    def __setitem__(
-        self, indices: Union[list, str], assignment: expression.Expression
-    ):
+    def __setitem__(self, indices: Union[list, str], assignment: expression.Expression):
         domain = utils._toList(indices)
 
         equation_map = {

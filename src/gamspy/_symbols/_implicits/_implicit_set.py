@@ -46,7 +46,7 @@ class ImplicitSet(_operable.OperableMixin):
     name : str
     domain : Union[Set, str], optional
     """
-    
+
     def __init__(
         self,
         container: "Container",

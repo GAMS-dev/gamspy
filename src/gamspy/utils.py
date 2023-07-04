@@ -52,9 +52,7 @@ def _getUniqueName() -> str:
     return str(gamspy._order)  # type: ignore
 
 
-def _getSymbolData(
-    gams2np, gdxHandle, symbol_id: str
-) -> Optional[pd.DataFrame]:
+def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> Optional[pd.DataFrame]:
     """
     Gets the data of single symbol from GDX.
 
@@ -70,14 +68,10 @@ def _getSymbolData(
     return None if no records exist
     """
     try:
-        arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
-            gdxHandle, symbol_id
-        )
+        arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(gdxHandle, symbol_id)
         return convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
-        logging.warning(
-            f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
-        )
+        logging.warning(f"No symbol with id {symbol_id} in the gdx file! Message: {e}")
         return None
 
 
@@ -141,8 +135,7 @@ def _openGdxFile(system_directory: str, load_from: str):
         assert rc[0], rc[1]
     except Exception as e:
         raise Exception(
-            "Could not properly load GDX DLL, check system_directory"
-            f" path. {e}"
+            "Could not properly load GDX DLL, check system_directory" f" path. {e}"
         )
 
     try:

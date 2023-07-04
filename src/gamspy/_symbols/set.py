@@ -120,9 +120,7 @@ class Set(gt.Set, operable.OperableMixin):
 
     def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitSet:
         domain = utils._toList(indices)
-        return implicits.ImplicitSet(
-            self.ref_container, name=self.name, domain=domain
-        )
+        return implicits.ImplicitSet(self.ref_container, name=self.name, domain=domain)
 
     def __setitem__(
         self,
@@ -135,9 +133,7 @@ class Set(gt.Set, operable.OperableMixin):
             assignment = "yes" if assignment is True else "no"  # type: ignore
 
         statement = expression.Expression(
-            implicits.ImplicitSet(
-                self.ref_container, name=self.name, domain=domain
-            ),
+            implicits.ImplicitSet(self.ref_container, name=self.name, domain=domain),
             "=",
             assignment,
         )
@@ -163,13 +159,9 @@ class Set(gt.Set, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} -- {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} -- {n}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} - {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} - {n}")
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -191,13 +183,9 @@ class Set(gt.Set, operable.OperableMixin):
             When type is not circular or linear
         """
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} ++ {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} ++ {n}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} + {n}"
-            )
+            return implicits.ImplicitSet(self.ref_container, name=f"{self.name} + {n}")
 
         raise ValueError("Lead type must be linear or circular")
 
@@ -286,9 +274,7 @@ class Set(gt.Set, operable.OperableMixin):
         records_str = " / "
         if self._records is not None:
             if self.domain is None or len(self.domain) <= 1:
-                records_str += ",".join(
-                    self._records.iloc[:, 0].values.tolist()
-                )
+                records_str += ",".join(self._records.iloc[:, 0].values.tolist())
             else:
                 strings = (
                     self._records.to_string(index=False, header=False)

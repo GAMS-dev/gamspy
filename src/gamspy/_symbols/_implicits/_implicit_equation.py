@@ -67,9 +67,7 @@ class ImplicitEquation:
         self.where = condition.Condition(self)
 
     def _create_attr(self, attr_name: str):
-        return ImplicitParameter(
-            self.ref_container, f"{self.gamsRepr()}.{attr_name}"
-        )
+        return ImplicitParameter(self.ref_container, f"{self.gamsRepr()}.{attr_name}")
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
@@ -128,9 +126,7 @@ class ImplicitEquation:
         return self._definition
 
     @definition.setter
-    def definition(
-        self, assignment: Optional[_expression.Expression] = None
-    ) -> None:
+    def definition(self, assignment: Optional[_expression.Expression] = None) -> None:
         """Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
         >>> eq.definition = Sum(wh, build[wh]) <= 1
@@ -171,9 +167,7 @@ class ImplicitEquation:
         if len(self.domain):
             set_strs = []
             for set in self.domain:
-                if isinstance(
-                    set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)
-                ):
+                if isinstance(set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)):
                     set_strs.append(set.gamsRepr())
                 elif isinstance(set, str):
                     if set == "*":
