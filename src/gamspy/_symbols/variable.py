@@ -126,7 +126,9 @@ class Variable(gt.Variable, operable.OperableMixin):
         if self._records is not None:
             return self._records.iterrows()
 
-    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitVariable:
+    def __getitem__(
+        self, indices: Union[list, str]
+    ) -> implicits.ImplicitVariable:
         domain = utils._toList(indices)
         return implicits.ImplicitVariable(
             self.ref_container, name=self.name, domain=domain

@@ -11,8 +11,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -43,11 +43,6 @@ class Condition:
         self._symbol = symbol
 
     def __getitem__(self, condition_expression):
-        if (
-            hasattr(condition_expression, "_op_type")
-            and condition_expression._op_type == "=e="
-        ):
-            condition_expression._op_type = "eq"
         return expression.Expression(self._symbol, "$", condition_expression)
 
     def __setitem__(self, condition_expression, right_handexpression) -> None:
@@ -55,13 +50,17 @@ class Condition:
         import gamspy._symbols as syms
 
         if not hasattr(self._symbol, "ref_container"):
-            raise Exception(f"Container must be defined for symbol {self._symbol.name}")
+            raise Exception(
+                f"Container must be defined for symbol {self._symbol.name}"
+            )
 
         self._symbol._is_dirty = True
 
         op_type = (
             ".."
-            if isinstance(self._symbol, (syms.Equation, implicits.ImplicitEquation))
+            if isinstance(
+                self._symbol, (syms.Equation, implicits.ImplicitEquation)
+            )
             else "="
         )
 

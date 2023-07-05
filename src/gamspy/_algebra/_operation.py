@@ -11,8 +11,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -41,7 +41,7 @@ class Operation(_operable.OperableMixin):
         op_name: str,
     ):
         self.domain = utils._toList(domain)
-        assert len(self.domain) > 0, f"Operation requires at least one index"
+        assert len(self.domain) > 0, "Operation requires at least one index"
         self._expression = expression
         self._op_name = op_name
 
@@ -49,7 +49,9 @@ class Operation(_operable.OperableMixin):
         if len(self.domain) == 1:
             return self.domain[0].gamsRepr()
 
-        return "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
+        return (
+            "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
+        )
 
     def __eq__(self, other):  # type: ignore
         return _expression.Expression(self, "=e=", other)
@@ -108,7 +110,9 @@ class Smax(Operation):
 
 
 class Ord(_operable.OperableMixin):
-    """Operator ord may be used only with one-dimensional sets that are static and ordered."""
+    """
+    Operator ord may be used only with one-dimensional sets.
+    """
 
     def __init__(self, set: "Set"):
         self._set = set
@@ -121,7 +125,9 @@ class Ord(_operable.OperableMixin):
 
 
 class Card(_operable.OperableMixin):
-    """The operator card may be used with any set: static and dynamic sets, ordered and unordered sets."""
+    """
+    The operator card may be used with any set.
+    """
 
     def __init__(self, set: "Set") -> None:
         self._set = set

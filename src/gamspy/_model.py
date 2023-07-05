@@ -83,7 +83,9 @@ class Model:
         if isinstance(self._equations, str):
             equations_str = self._equations
         else:
-            equations_str = ",".join([equation.name for equation in self._equations])
+            equations_str = ",".join(
+                [equation.name for equation in self._equations]
+            )
 
         if self._limited_variables:
             limited_variables_str = ",".join(

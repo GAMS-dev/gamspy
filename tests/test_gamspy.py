@@ -1106,7 +1106,8 @@ class GamspySuite(unittest.TestCase):
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
         # ADD
-        # Parameter + Variable, Variable + Parameter, Parameter + builtin, builtin + Parameter
+        # Parameter + Variable, Variable + Parameter,
+        # Parameter + builtin, builtin + Parameter
         op1 = b[i] + x[i]
         self.assertEqual(op1.gamsRepr(), "(b(i) + x(i))")
         op2 = x[i] + b[i]
@@ -1117,7 +1118,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(op4.gamsRepr(), "(5 + b(i))")
 
         # SUB
-        # Parameter - Variable, Variable - Parameter, Parameter - builtin, builtin - Parameter
+        # Parameter - Variable, Variable - Parameter,
+        # Parameter - builtin, builtin - Parameter
         op1 = b[i] - x[i]
         self.assertEqual(op1.gamsRepr(), "(b(i) - x(i))")
         op2 = x[i] - b[i]
@@ -1128,7 +1130,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(op4.gamsRepr(), "(5 - b(i))")
 
         # MUL
-        # Parameter * Variable, Variable * Parameter, Parameter * builtin, builtin * Parameter
+        # Parameter * Variable, Variable * Parameter,
+        # Parameter * builtin, builtin * Parameter
         op1 = b[i] * x[i]
         self.assertEqual(op1.gamsRepr(), "(b(i) * x(i))")
         op2 = x[i] * b[i]
@@ -1139,7 +1142,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(op4.gamsRepr(), "((-5) * b(i))")
 
         # DIV
-        # Parameter / Variable, Variable / Parameter, Parameter / builtin, builtin / Parameter
+        # Parameter / Variable, Variable / Parameter,
+        # Parameter / builtin, builtin / Parameter
         op1 = b[i] / x[i]
         self.assertEqual(op1.gamsRepr(), "(b(i) / x(i))")
         op2 = x[i] / b[i]
@@ -1332,6 +1336,11 @@ class GamspySuite(unittest.TestCase):
         op2 = gams_math.uniform(0, 1)
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(uniform( 0,1 ))")
+
+        # normal
+        op2 = gams_math.normal(mean=0, dev=1)
+        self.assertTrue(op2, expression.Expression)
+        self.assertEqual(op2.gamsRepr(), "(normal( 0,1 ))")
 
     def test_domain(self):
         # Set
@@ -1780,6 +1789,29 @@ class GamspySuite(unittest.TestCase):
             list(self.m._statements_dict.values())[-1].gamsRepr(),
             "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
         )
+
+    def test_container(self):
+        import gams.transfer as gt
+
+        i = gt.Set(self.m, "i")
+        self.m._cast_symbols()
+        self.assertTrue(isinstance(self.m["i"], Set))
+
+        _ = gt.Alias(self.m, "j", i)
+        self.m._cast_symbols()
+        self.assertTrue(isinstance(self.m["j"], Alias))
+
+        _ = gt.Parameter(self.m, "a")
+        self.m._cast_symbols()
+        self.assertTrue(isinstance(self.m["a"], Parameter))
+
+        _ = gt.Variable(self.m, "v")
+        self.m._cast_symbols()
+        self.assertTrue(isinstance(self.m["v"], Variable))
+
+        _ = gt.Equation(self.m, "e", type="eq")
+        self.m._cast_symbols()
+        self.assertTrue(isinstance(self.m["e"], Equation))
 
 
 def suite():

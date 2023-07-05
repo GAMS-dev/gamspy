@@ -88,7 +88,9 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         if self._records is not None:
             return self._records.iterrows()
 
-    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitParameter:
+    def __getitem__(
+        self, indices: Union[list, str]
+    ) -> implicits.ImplicitParameter:
         domain = utils._toList(indices)
         return implicits.ImplicitParameter(
             self.ref_container, name=self.name, domain=domain
@@ -190,7 +192,9 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         if self._records is not None:
             if self.is_scalar:
                 # Parameter a(i) / 5.0 /;
-                value = 0 if self._records.empty else self._records.values[0][0]
+                value = (
+                    0 if self._records.empty else self._records.values[0][0]
+                )
                 records_str += str(value)
             else:
                 # Parameter a(i) / i1 1\n i2 2\n /;
