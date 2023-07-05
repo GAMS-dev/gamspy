@@ -7,7 +7,7 @@ import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 import pandas as pd
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container
 
 
@@ -153,7 +153,7 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         self.ref_container.modified = True
 
         if self._records is not None:
-            if self.domain_forwarding:
+            if self.domain_forwarding:  # pragma: no cover
                 self._domainForwarding()
 
                 # reset state check flags for all symbols in the container

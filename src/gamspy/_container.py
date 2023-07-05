@@ -7,7 +7,7 @@ import gamspy.utils as utils
 import gamspy._algebra._expression as expression
 from typing import Dict, List, Union, Optional, Tuple, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Parameter, Variable, Equation, Model
 
 
@@ -144,19 +144,19 @@ class Container(gt.Container):
             return obj
 
         else:
-            if not isinstance(alias_with, (gt.Set, gt.Alias)):
+            if not isinstance(alias_with, (gp.Set, gp.Alias)):
                 raise TypeError(
                     "Symbol 'alias_with' must be type Set or Alias"
                 )
 
-            if isinstance(alias_with, gt.Alias):
+            if isinstance(alias_with, gp.Alias):
                 parent = alias_with
-                while not isinstance(parent, gt.Set):
+                while not isinstance(parent, gp.Set):
                     parent = parent.alias_with
                 alias_with = parent
 
             # allow overwriting
-            if isinstance(self.data[name], gt.Alias):
+            if isinstance(self.data[name], gp.Alias):
                 self.data[name].alias_with = alias_with
 
                 return self.data[name]
@@ -200,7 +200,7 @@ class Container(gt.Container):
             # try if argument formats are valid
             try:
                 m = Container()
-                obj = Set(
+                obj = gp.Set(
                     m,
                     name,
                     domain,
@@ -216,12 +216,12 @@ class Container(gt.Container):
             if domain is None:
                 domain = ["*"]
 
-            if isinstance(domain, (gt.Set, str)):
+            if isinstance(domain, (gp.Set, str)):
                 domain = [domain]
 
             # allow records overwriting
             if (
-                isinstance(self[name], gt.Set)
+                isinstance(self[name], gp.Set)
                 and utils.checkAllSame(self.data[name].domain, domain)
                 and self[name].is_singleton == is_singleton
                 and self[name].domain_forwarding == domain_forwarding
@@ -272,7 +272,7 @@ class Container(gt.Container):
             # try if argument formats are valid
             try:
                 m = Container()
-                obj = Parameter(
+                obj = gp.Parameter(
                     m,
                     name,
                     domain,
@@ -292,7 +292,7 @@ class Container(gt.Container):
 
             # allow records overwriting
             if (
-                isinstance(self.data[name], gt.Parameter)
+                isinstance(self.data[name], gp.Parameter)
                 and utils.checkAllSame(self.data[name].domain, domain)
                 and self.data[name].domain_forwarding == domain_forwarding
             ):
@@ -344,7 +344,7 @@ class Container(gt.Container):
             # try if argument formats are valid
             try:
                 m = Container()
-                obj = Variable(
+                obj = gp.Variable(
                     m,
                     name,
                     type,
@@ -365,7 +365,7 @@ class Container(gt.Container):
 
             # allow records overwriting
             if (
-                isinstance(self.data[name], gt.Variable)
+                isinstance(self.data[name], gp.Variable)
                 and self.data[name].type == type
                 and utils.checkAllSame(self.data[name].domain, domain)
                 and self.data[name].domain_forwarding == domain_forwarding
@@ -422,7 +422,7 @@ class Container(gt.Container):
             # try if argument formats are valid
             try:
                 m = Container()
-                obj = gt.Equation(
+                obj = gp.Equation(
                     m,
                     name,
                     type,
@@ -443,7 +443,7 @@ class Container(gt.Container):
 
             # allow records overwriting
             if (
-                isinstance(self.data[name], gt.Equation)
+                isinstance(self.data[name], gp.Equation)
                 and self.data[name].type == type
                 and utils.checkAllSame(self.data[name].domain, domain)
                 and self.data[name].domain_forwarding == domain_forwarding

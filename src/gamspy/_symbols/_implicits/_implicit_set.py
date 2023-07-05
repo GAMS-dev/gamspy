@@ -31,7 +31,7 @@ import gamspy._algebra._expression as _expression
 import gamspy.utils as utils
 from typing import List, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container
     from gamspy import Set
 

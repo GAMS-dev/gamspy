@@ -53,6 +53,16 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(k.gamsRepr(), "k(j)")
         self.assertEqual(k.getStatement(), "Set k(j) / seattle,san-diego /;")
 
+        # With two domain
+        m = Set(self.m, "m", records=[f"i{i}" for i in range(2)])
+        n = Set(self.m, "n", records=[f"j{i}" for i in range(2)])
+        a = Set(self.m, "a", [m, n])
+        a.generateRecords(density=1)
+        self.assertEqual(a.gamsRepr(), "a(m,n)")
+        self.assertEqual(
+            a.getStatement(), "Set a(m,n) / \ni0.j0\ni0.j1\ni1.j0\ni1.j1 /;"
+        )
+
     def test_set_operators(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
         card = Card(i)
@@ -1275,6 +1285,12 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(exp( b(i) ))")
 
+        op1 = gams_math.power(2, 3)
+        self.assertEqual(op1, math.pow(2, 3))
+        op2 = gams_math.power(b[i], 3)
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(power( b(i),3 ))")
+
         # mod
         op1 = gams_math.mod(5, 2)
         self.assertEqual(op1, 1)
@@ -1337,6 +1353,11 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(uniform( 0,1 ))")
 
+        # uniformInt
+        op2 = gams_math.uniformInt(0, 1)
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(uniformInt( 0,1 ))")
+
         # normal
         op2 = gams_math.normal(mean=0, dev=1)
         self.assertTrue(op2, expression.Expression)
@@ -1389,6 +1410,8 @@ class GamspySuite(unittest.TestCase):
         b = Parameter(self.m, name="b", domain=[j], records=demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=distances)
         c = Parameter(self.m, name="c", domain=[i, j])
+        e = Parameter(self.m, name="e")
+
         c[i, j] = 90 * d[i, j] / 1000
         self.assertTrue(c._is_dirty)
         self.assertEqual(
@@ -1403,6 +1426,10 @@ class GamspySuite(unittest.TestCase):
             ],
         )
         self.assertFalse(c._is_dirty)
+
+        e.assign = 5
+        self.assertTrue(e._is_dirty)
+        self.assertEqual(e.records.values.tolist(), [[5.0]])
 
         # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
@@ -1812,6 +1839,47 @@ class GamspySuite(unittest.TestCase):
         _ = gt.Equation(self.m, "e", type="eq")
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["e"], Equation))
+
+        # test addX syntax
+        m = Container()
+        i1 = m.addSet("i")
+        self.assertTrue(isinstance(i1, Set))
+        i2 = m.addSet("i")
+        self.assertTrue(id(i1) == id(i2))
+
+        j1 = m.addAlias("j", i1)
+        self.assertTrue(isinstance(j1, Alias))
+        j2 = m.addAlias("j", i1)
+        self.assertTrue(id(j1) == id(j2))
+
+        a1 = m.addParameter("a")
+        self.assertTrue(isinstance(a1, Parameter))
+        a2 = m.addParameter("a")
+        self.assertTrue(id(a1) == id(a2))
+
+        v1 = m.addVariable("v")
+        self.assertTrue(isinstance(v1, Variable))
+        v2 = m.addVariable("v")
+        self.assertTrue(id(v1) == id(v2))
+
+        e1 = m.addEquation("e", type="eq")
+        self.assertTrue(isinstance(e1, Equation))
+        e2 = m.addEquation("e", type="eq")
+        self.assertTrue(id(e1) == id(e2))
+
+    def test_set_attributes(self):
+        i = Set(self.m, "i")
+        self.assertEqual(i.pos.gamsRepr(), "i.pos")
+        self.assertEqual(i.ord.gamsRepr(), "i.ord")
+        self.assertEqual(i.off.gamsRepr(), "i.off")
+        self.assertEqual(i.rev.gamsRepr(), "i.rev")
+        self.assertEqual(i.uel.gamsRepr(), "i.uel")
+        self.assertEqual(i.len.gamsRepr(), "i.len")
+        self.assertEqual(i.tlen.gamsRepr(), "i.tlen")
+        self.assertEqual(i.val.gamsRepr(), "i.val")
+        self.assertEqual(i.tval.gamsRepr(), "i.tval")
+        self.assertEqual(i.first.gamsRepr(), "i.first")
+        self.assertEqual(i.last.gamsRepr(), "i.last")
 
 
 def suite():

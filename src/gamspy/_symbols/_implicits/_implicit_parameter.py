@@ -32,7 +32,7 @@ import gamspy._algebra._expression as _expression
 import gamspy._algebra._operable as _operable
 import gamspy.utils as utils
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container, Set
 
 

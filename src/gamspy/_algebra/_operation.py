@@ -28,7 +28,7 @@ import gamspy.utils as utils
 import gamspy._algebra._expression as _expression
 from typing import List, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gams.transfer import Set, Alias
     from gamspy._algebra import Domain
 

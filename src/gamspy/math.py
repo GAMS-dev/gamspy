@@ -48,7 +48,7 @@ def exp(value) -> Union[expression.Expression, float]:
 
 def power(base, exponent):
     if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return base**exponent
+        return math.pow(base, exponent)
 
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()

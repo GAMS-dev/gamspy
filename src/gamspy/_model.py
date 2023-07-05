@@ -25,7 +25,7 @@
 
 from typing import Optional, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container
 
 

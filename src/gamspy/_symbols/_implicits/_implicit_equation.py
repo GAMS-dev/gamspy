@@ -32,7 +32,7 @@ import gamspy._symbols.alias as alias
 import gamspy._symbols._implicits as implicits
 from typing import List, Optional, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
 
 
