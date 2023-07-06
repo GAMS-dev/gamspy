@@ -32,7 +32,40 @@ from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
 from typing import Optional, Union, List
-from gams.transfer._internals.algorithms import convert_to_categoricals
+
+
+def convert_to_categoricals(arrkeys, arrvals, unique_uels):
+    # Temporary function to be removed when Gams Transfer is updated.
+    has_domains = arrkeys.size > 0
+    has_values = arrvals.size > 0
+
+    dfs = []
+    if has_domains:
+        dfs.append(pd.DataFrame(arrkeys))
+
+    if has_values:
+        dfs.append(pd.DataFrame(arrvals))
+
+    if has_domains and has_values:
+        df = pd.concat(dfs, axis=1, copy=False)
+        df.columns = pd.RangeIndex(start=0, stop=len(df.columns))
+    elif has_domains or has_values:
+        df = dfs[0]
+        df.columns = pd.RangeIndex(start=0, stop=len(df.columns))
+    else:
+        df = None
+
+    if has_domains:
+        rk, ck = arrkeys.shape
+        for i in range(ck):
+            dtype = pd.CategoricalDtype(
+                categories=unique_uels[i], ordered=True
+            )
+            df.isetitem(
+                i, pd.Categorical(values=df[i], dtype=dtype, fastpath=True)
+            )
+
+    return df
 
 
 def _loadPackageGlobals() -> None:
