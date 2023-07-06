@@ -2,7 +2,7 @@ run_tests:
   stage: test
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
+    entrypoint: ["/usr/bin/env"]
   needs: [install-gamsdist-leg]
   script:
     - yum install -y wget git
@@ -15,7 +15,7 @@ run_tests:
     - echo $GAMS_LICENSE > $GAMS_PATH/gamslice.txt
     - PATH=$GAMS_PATH:$PATH
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - python transfer-repo/reinstall.py
+    - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - pip install -r requirements.txt
     - python -m build
