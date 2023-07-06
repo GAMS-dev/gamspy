@@ -1,0 +1,12 @@
+fetch-ci-scripts:
+  stage: fetch-scripts
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/ciscripts.git scripts-repo
+    - cp -R scripts-repo/ci .
+  artifacts:
+    name: ci-scripts
+    expire_in: 2 hours
+    paths: [ci/*]

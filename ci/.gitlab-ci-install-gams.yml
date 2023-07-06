@@ -1,0 +1,15 @@
+install-gamsdist-leg:
+  stage: install-gams
+  needs: [fetch-ci-scripts]
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  script:
+    - python3 ci/fetch_gams.py fetch_leg master $SSH_KEY_PORTING
+    - chmod 777 linux_x64_64_sfx.exe
+    - python3 ci/fetch_gams.py install
+  artifacts:
+    name: gamsdist-leg
+    expire_in: 1 hour
+    paths: 
+      - gamsdist/*

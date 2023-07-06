@@ -1,0 +1,38 @@
+default:
+  tags:
+    - linux
+
+stages:
+  - fetch-scripts
+  - install-gams # from builds.gams.com or web, all platforms
+  - formatter
+  - test
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  MACHINES_CONTAINER_REG:
+    value: registry.gams.com/devel/machines
+    description: "URL to the container registry of the machines repository"
+  PF_CUSTOM_BRANCH:
+    value: $CUSTOM_BRANCH
+    description: "Name of custom branch or 0 if published distribution with version as specified should be taken"
+  PF_BUILDS_WWW_PATH:
+    value: $BUILDS_WWW_PATH
+    description: "URL path prefix for builds server"
+  PF_BUILDS_SSH_PORT:
+    value: $BUILDS_SSH_PORT
+    description: "Port used for SSH connection to builds server"
+  PF_BUILDS_SSH_SERVER:
+    value: $BUILDS_SSH_SERVER
+    description: "URL of the build server"
+  PF_BUILDS_SSH_USER:
+    value: $BUILDS_SSH_USER
+    description: "Username used for SSH connection to builds server"
+  PF_GAMS_LICENSE:
+    value: $GAMS_LICENSE
+    description: "GAMS license string used for testing"
+
+include: ['ci/.gitlab-ci-fetch.yml',
+          'ci/.gitlab-ci-install-gams.yml',
+          'ci/.gitlab-ci-formatter.yml',
+          'ci/.gitlab-ci-test.yml']
