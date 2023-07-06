@@ -9,3 +9,9 @@ description = "GAMS Python API for algebraic modelling"
 urls.homepage = "https://github.com/GAMS-dev/gamspy"
 requires-python = ">= 3.8"
 license.file = "LICENSE"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.distutils.bdist_wheel]
+plat-name = "manylinux2014_x86_64"
