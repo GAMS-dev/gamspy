@@ -6,15 +6,14 @@ run_formatter:
     entrypoint: [""]
   script:
     - yum install -y wget
-    - wget https://repo.anaconda.com/archive/Anaconda3-2023.03-1-Linux-x86_64.sh
-    - chmod 777 Anaconda3-2023.03-1-Linux-x86_64.sh
-    - ./Anaconda3-2023.03-1-Linux-x86_64.sh -b -p anaconda3
+    - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
     - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
     - source $(pwd)/anaconda3/bin/activate
     - conda activate transfer-env
     - pip install black
-    - black src/gams/transfer --line-length=79 --experimental-string-processing --check
+    - black src/gamspy --line-length=79 --experimental-string-processing --check
     - black tests --line-length=79 --experimental-string-processing --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
