@@ -1881,6 +1881,52 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(i.first.gamsRepr(), "i.first")
         self.assertEqual(i.last.gamsRepr(), "i.last")
 
+    def test_setitem_errors(self):
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        a = Parameter(self.m, name="a", domain=[i], records=capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        with self.assertRaises(Exception):
+            c[i] = 5
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
+
+        # Equation
+        cost = Equation(self.m, name="cost", type="eq")
+        supply = Equation(self.m, name="supply", domain=[i], type="leq")
+        demand = Equation(self.m, name="demand", type="geq")
+
+        with self.assertRaises(Exception):
+            cost[i] = a * b
+        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
+
+        with self.assertRaises(Exception):
+            supply[i, j] = c * d
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+
+        with self.assertRaises(Exception):
+            demand[j] = Sum(i, x[i, j]) >= b[j]
+
 
 def suite():
     suite = unittest.TestSuite()

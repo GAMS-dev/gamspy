@@ -102,4 +102,4 @@ for circle in range(k):
 for v in range(height):
     picture[v * width] = 10
 
-print(picture.decode())
+# print(picture.decode())

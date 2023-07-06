@@ -1,24 +1,22 @@
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
-import pandas as pd
 
 
 def main():
     m = Container()
 
     # Prepare data
-    distances = pd.DataFrame(
-        [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-    )
-    capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-    demands = pd.DataFrame([["new-york", 325], ["chicago", 300], ["topeka", 275]])
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     # Set
     i = Set(m, name="i", records=["seattle", "san-diego"])
