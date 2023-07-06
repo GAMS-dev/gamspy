@@ -157,7 +157,7 @@ def _openGdxFile(system_directory: str, load_from: str):
     return gdxHandle
 
 
-def _toList(obj: Union[str, tuple, list]) -> list:
+def _toList(obj: Union[str, tuple, list, implicits.ImplicitSet]) -> list:
     """
     Converts the given object to a list
 

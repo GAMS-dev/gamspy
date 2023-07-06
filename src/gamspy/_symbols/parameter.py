@@ -98,19 +98,19 @@ class Parameter(gt.Parameter, operable.OperableMixin):
 
     def __setitem__(
         self,
-        indices: Union[tuple, str, operable.OperableMixin],
+        indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: expression.Expression,
     ) -> None:
         if len(self._domain) == 0:
             raise Exception(
                 "Cannot perform an indexed assignment over a scalar Equation."
-                f" \nEquation dimension: {len(self._domain)}\nIndexed"
-                f" assignment dimension: {len(indices)}"
+                " Specify the domain of the equation to perform an indexed"
+                " asssignment"
             )
 
         if isinstance(indices, (tuple, str)):
             if isinstance(indices, str):
-                indices = [indices]
+                indices = [indices]  # type: ignore
 
             if len(self._domain) != len(indices):
                 raise Exception(
@@ -125,7 +125,7 @@ class Parameter(gt.Parameter, operable.OperableMixin):
                     "Dimension of the symbol domain and the dimension of the"
                     " assignment indices must be the same!\nEquation"
                     f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices)}"
+                    f" dimension: {len(indices.domain)}"
                 )
 
         domain = utils._toList(indices)

@@ -8,7 +8,7 @@ import gamspy._algebra._expression as expression
 from typing import Dict, List, Union, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
-    from gamspy import Set, Parameter, Variable, Equation, Model
+    from gamspy import Alias, Set, Parameter, Variable, Equation, Model
 
 
 class Container(gt.Container):
@@ -34,8 +34,8 @@ class Container(gt.Container):
         super().__init__(load_from, system_directory)
 
         self.name = name
-        self._statements_dict = {}
-        self._unsaved_statements = {}
+        self._statements_dict: dict = {}
+        self._unsaved_statements: dict = {}
 
         # read on demand
         (
@@ -135,7 +135,7 @@ class Container(gt.Container):
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
-    def addAlias(self, name, alias_with) -> None:
+    def addAlias(self, name, alias_with) -> Optional[Alias]:
         import gamspy as gp
 
         if name not in self:
@@ -530,7 +530,7 @@ class Container(gt.Container):
             executed_command = " ".join(commands)
             sys.exit(
                 "Could not restart with the following"
-                f" command:\n\n{executed_command}\n\nError log:\n\n{e.output}"
+                f" command:\n\n{executed_command}\n\nError log:\n\n{e}"
             )
 
         # https://www.gams.com/latest/docs/UG_SaveRestart.html#UG_SaveRestart_AvoidingCommonMistakes
@@ -651,14 +651,14 @@ class Container(gt.Container):
             executed_command = " ".join(commands)
             sys.exit(
                 "Could not run .gms file with the following GAMS"
-                f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
+                f" command:\n\n{executed_command}\n\nError log: \n\n{e}"
             )
 
     def loadFromGdx(
         self,
         load_from: str,
-        symbols: List[
-            Union["Set", "Parameter", "Variable", "Equation"]
+        symbols: Optional[
+            List[Union["Set", "Parameter", "Variable", "Equation"]]
         ] = None,
     ) -> None:
         import gamspy as gp
