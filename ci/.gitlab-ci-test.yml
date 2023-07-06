@@ -5,7 +5,7 @@ run_tests:
     entrypoint: [""]
   needs: [install-gamsdist-leg]
   script:
-    - yum install -y wget
+    - yum install -y wget git
     - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
@@ -14,7 +14,8 @@ run_tests:
     - GAMS_PATH=$(pwd)/gamsdist
     - echo $GAMS_LICENSE > $GAMS_PATH/gamslice.txt
     - PATH=$GAMS_PATH:$PATH
-    - pip install gams[transfer] --find-links $GAMS_PATH/api/python/bdist
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - python transfer-repo/reinstall.py
     - pip install wheel build
     - python -m build
     - pip install dist/gamspy-0.0.1-py3-none-any.whl --force-reinstall
