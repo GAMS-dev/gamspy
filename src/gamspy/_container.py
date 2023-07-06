@@ -135,7 +135,7 @@ class Container(gt.Container):
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
-    def addAlias(self, name, alias_with) -> Optional[Alias]:
+    def addAlias(self, name, alias_with) -> Optional["Alias"]:
         import gamspy as gp
 
         if name not in self:
