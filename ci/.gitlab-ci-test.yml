@@ -17,6 +17,7 @@ run_tests:
     - pip install gams[transfer] --find-links $GAMS_PATH/api/python/bdist
     - pip install wheel build
     - python -m build
+    - pip install dist/gamspy-0.0.1-py3-none-any.whl --force-reinstall
     - python tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
