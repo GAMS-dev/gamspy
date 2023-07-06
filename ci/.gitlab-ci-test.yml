@@ -17,6 +17,7 @@ run_tests:
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - python transfer-repo/reinstall.py
     - pip install wheel build
+    - pip install -r requirements.txt
     - python -m build
     - pip install dist/gamspy-0.0.1-py3-none-any.whl --force-reinstall
     - python tests/test_gamspy.py
