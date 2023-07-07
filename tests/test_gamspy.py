@@ -1416,11 +1416,11 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "(ceil( b(i) ))")
 
         # floor
-        op1 = gams_math.ceil(7.5)
+        op1 = gams_math.floor(7.5)
         self.assertTrue(isinstance(op1, int) and op1 == 7)
-        op2 = gams_math.ceil(b[i])
+        op2 = gams_math.floor(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "(ceil( b(i) ))")
+        self.assertEqual(op2.gamsRepr(), "(floor( b(i) ))")
 
         # uniform
         op2 = gams_math.uniform(0, 1)
