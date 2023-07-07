@@ -12,6 +12,3 @@ license.file = "LICENSE"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.distutils.bdist_wheel]
-plat-name = "manylinux2014_x86_64"
