@@ -126,6 +126,18 @@ def cos(value) -> Union[expression.Expression, float]:
     return expression.Expression("cos(", value.gamsRepr(), ")")
 
 
+def ceil(value) -> Union[expression.Expression, float]:
+    if isinstance(value, (int, float)):
+        return math.ceil(value)
+    return expression.Expression("ceil(", value.gamsRepr(), ")")
+
+
+def floor(value) -> Union[expression.Expression, float]:
+    if isinstance(value, (int, float)):
+        return math.floor(value)
+    return expression.Expression("floor(", value.gamsRepr(), ")")
+
+
 def uniform(lower_bound, upper_bound) -> expression.Expression:
     return expression.Expression(
         "uniform(", f"{lower_bound},{upper_bound}", ")"
