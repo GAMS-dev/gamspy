@@ -135,10 +135,6 @@ class ImplicitEquation:
         >>> eq..  sum(wh,build(wh)) =l= 1;
         >>> eq.definition = Sum(wh, build[wh]) <= 1
         """
-        if assignment is None:
-            self._definition = assignment
-            return
-
         equation_map = {
             "nonbinding": "=n=",
             "external": "=x=",

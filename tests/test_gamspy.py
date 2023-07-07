@@ -721,6 +721,66 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(pi.infeas.gamsRepr(), "pi.infeas")
 
+    def test_implicit_equation_attributes(self):
+        i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
+        a = Equation(self.m, "a", "eq", [i])
+
+        self.assertTrue(
+            hasattr(a[i], "l")
+            and isinstance(a[i].l, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].l.gamsRepr(), "a(i).l")
+        self.assertTrue(
+            hasattr(a[i], "m")
+            and isinstance(a[i].m, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].m.gamsRepr(), "a(i).m")
+        self.assertTrue(
+            hasattr(a[i], "lo")
+            and isinstance(a[i].lo, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].lo.gamsRepr(), "a(i).lo")
+        self.assertTrue(
+            hasattr(a[i], "up")
+            and isinstance(a[i].up, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].up.gamsRepr(), "a(i).up")
+        self.assertTrue(
+            hasattr(a[i], "scale")
+            and isinstance(a[i].scale, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].scale.gamsRepr(), "a(i).scale")
+        self.assertTrue(
+            hasattr(a[i], "stage")
+            and isinstance(a[i].stage, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
+        self.assertTrue(
+            hasattr(a[i], "range")
+            and isinstance(a[i].range, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].range.gamsRepr(), "a(i).range")
+        self.assertTrue(
+            hasattr(a[i], "slacklo")
+            and isinstance(a[i].slacklo, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].slacklo.gamsRepr(), "a(i).slacklo")
+        self.assertTrue(
+            hasattr(a[i], "slackup")
+            and isinstance(a[i].slackup, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].slackup.gamsRepr(), "a(i).slackup")
+        self.assertTrue(
+            hasattr(a[i], "slack")
+            and isinstance(a[i].slack, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].slack.gamsRepr(), "a(i).slack")
+        self.assertTrue(
+            hasattr(a[i], "infeas")
+            and isinstance(a[i].infeas, implicits.ImplicitParameter)
+        )
+        self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
+
     def test_model_string(self):
         # Prepare data
         distances = pd.DataFrame(
@@ -1926,6 +1986,21 @@ class GamspySuite(unittest.TestCase):
 
         with self.assertRaises(Exception):
             demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    def test_system_directory(self):
+        import platform
+        import gamspy
+
+        gamspy_dir = os.path.dirname(gamspy.__file__)
+
+        expected_path = ""
+        user_os = platform.system().lower()
+        expected_path += gamspy_dir + os.sep + "minigams" + os.sep + user_os
+        if user_os == "darwin":
+            expected_path += f"_{platform.machine()}"
+
+        m = Container()
+        self.assertEqual(m.system_directory, expected_path)
 
 
 def suite():

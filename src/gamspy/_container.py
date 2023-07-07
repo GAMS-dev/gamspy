@@ -31,7 +31,8 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         name: str = "default",
     ):
-        super().__init__(load_from, system_directory)
+        self.system_directory = self.get_system_directory(system_directory)
+        super().__init__(load_from, self.system_directory)
 
         self.name = name
         self._statements_dict: dict = {}
@@ -47,6 +48,33 @@ class Container(gt.Container):
         self._clean_existing_workfiles()
 
         self._cast_symbols()
+
+    def get_system_directory(self, system_directory: Optional[str]) -> str:
+        """
+        Finds the system directory. If no existing GAMS installation provided,
+        returns minigams directory.
+
+        Parameters
+        ----------
+        system_directory : Optional[str]
+
+        Returns
+        -------
+        str
+            System directory
+        """
+        if system_directory:
+            return system_directory
+
+        system_directory = os.path.dirname(os.path.realpath(__file__)) + os.sep
+
+        user_os = platform.system().lower()
+        system_directory += "minigams" + os.sep + user_os
+
+        if user_os == "darwin":
+            system_directory += f"_{platform.machine()}"
+
+        return system_directory
 
     def _cast_symbols(self) -> None:
         """
