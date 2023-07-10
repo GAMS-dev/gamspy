@@ -6,9 +6,13 @@ def flow_shop(process_time_df, last_machine, last_item):
     c = gap.Container()
 
     # Sets
-    i = c.addSet(name="i", description="item", records=process_time_df["item"].unique())
+    i = c.addSet(
+        name="i", description="item", records=process_time_df["item"].unique()
+    )
     m = c.addSet(
-        name="m", description="machine", records=process_time_df["machine"].unique()
+        name="m",
+        description="machine",
+        records=process_time_df["machine"].unique(),
     )
     k = c.addAlias("k", i)
 
@@ -22,7 +26,10 @@ def flow_shop(process_time_df, last_machine, last_item):
 
     # Variables
     rank = c.addVariable(
-        name="rank", type="binary", domain=[i, k], description="item i has position k"
+        name="rank",
+        type="binary",
+        domain=[i, k],
+        description="item i has position k",
     )
     start = c.addVariable(
         name="start",
@@ -39,7 +46,7 @@ def flow_shop(process_time_df, last_machine, last_item):
     totwait = c.addVariable(
         name="totwait",
         type="free",
-        description="time before first job + times between jobs on last machine",
+        description="before first job + times between jobs on last machine",
     )
 
     # Equations
@@ -58,30 +65,32 @@ def flow_shop(process_time_df, last_machine, last_item):
     onMachRel = c.addEquation(
         name="onMachRel",
         domain=[m, k],
-        description="relations between the end of job rank k on machine m and start of job rank k on machine m+1",
         type="geq",
     )
     perMachRel = c.addEquation(
         name="perMachRel",
         domain=[m, k],
-        description="relations between the end of job rank k on machine m and start of job rank k+1 on machine m",
         type="geq",
     )
     defComp = c.addEquation(
         name="defComp",
         domain=[m, k],
-        description="calculation of completion time based on start time and proctime",
+        description="completion time based on start time and proctime",
         type="eq",
     )
     defObj = c.addEquation(
-        name="defObj", description="completion time of job rank last", type="geq"
+        name="defObj",
+        description="completion time of job rank last",
+        type="geq",
     )
 
     oneInPosition[k] = gap.Sum(i, rank[i, k]) == 1
     oneRankPer[i] = gap.Sum(k, rank[i, k]) == 1
     onMachRel[m, k.lead(1)] = start[m, k.lead(1)] >= comp[m, k]
     perMachRel[m.lead(1), k] = start[m.lead(1), k] >= comp[m, k]
-    defComp[m, k] = comp[m, k] == start[m, k] + gap.Sum(i, proctime[m, i] * rank[i, k])
+    defComp[m, k] = comp[m, k] == start[m, k] + gap.Sum(
+        i, proctime[m, i] * rank[i, k]
+    )
 
     defObj.definition = totwait >= comp[last_machine, last_item]
 
@@ -90,7 +99,9 @@ def flow_shop(process_time_df, last_machine, last_item):
     # set optCr to 0
     c.addOptions({"optcr": 0})
 
-    c.solve(model=flowshop, problem="MIP", sense="min", objective_variable=totwait)
+    c.solve(
+        model=flowshop, problem="MIP", sense="min", objective_variable=totwait
+    )
 
 
 def prepare_data():
@@ -128,5 +139,7 @@ def prepare_data():
 if __name__ == "__main__":
     process_time, last_machine, last_item = prepare_data()
     flow_shop(
-        process_time_df=process_time, last_machine=last_machine, last_item=last_item
+        process_time_df=process_time,
+        last_machine=last_machine,
+        last_item=last_item,
     )

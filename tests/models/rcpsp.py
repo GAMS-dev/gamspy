@@ -45,11 +45,19 @@ def parse_psplib(filename):
     attrs_offset = index_of_line(lines, "REQUESTS/DURATIONS") + 3
     caps_offset = index_of_line(lines, "RESOURCEAVAILABILITIES") + 2
 
-    jobs, res, periods = my_set("j", njobs), my_set("r", nres), my_set("t", nperiods)
-    succs = {j: succs_from_line(lines[prec_offset + ix]) for ix, j in enumerate(jobs)}
+    jobs, res, periods = (
+        my_set("j", njobs),
+        my_set("r", nres),
+        my_set("t", nperiods),
+    )
+    succs = {
+        j: succs_from_line(lines[prec_offset + ix])
+        for ix, j in enumerate(jobs)
+    }
     job_durations = column(lines, 2, attrs_offset, njobs)
     resource_demands = [
-        ints(lines[ix].split()[3:]) for ix in range(attrs_offset, attrs_offset + njobs)
+        ints(lines[ix].split()[3:])
+        for ix in range(attrs_offset, attrs_offset + njobs)
     ]
     resource_capacities = ints(lines[caps_offset].split())
     return dict(
@@ -102,10 +110,23 @@ def mini_project():
 
 def fill_records(dataset, symbols):
     sym_fields = "j,t,r,lastJob,actual,pred,tw,fw,capacities,durations,demands"
-    j, t, r, lastJob, actual, pred, tw, fw, capacities, durations, demands = extract(
-        symbols, sym_fields
+    (
+        j,
+        t,
+        r,
+        lastJob,
+        actual,
+        pred,
+        tw,
+        fw,
+        capacities,
+        durations,
+        demands,
+    ) = extract(symbols, sym_fields)
+    data_fields = (
+        "jobs,periods,res,succs,eft,lft,job_durations,"
+        "resource_capacities,resource_demands"
     )
-    data_fields = "jobs,periods,res,succs,eft,lft,job_durations,resource_capacities,resource_demands"
     (
         jobs,
         periods,
@@ -141,7 +162,9 @@ def fill_records(dataset, symbols):
             and eft[j] <= tix + 1 <= lft[j]
         ]
     )
-    capacities.setRecords([(r, resource_capacities[rix]) for rix, r in enumerate(res)])
+    capacities.setRecords(
+        [(r, resource_capacities[rix]) for rix, r in enumerate(res)]
+    )
     durations.setRecords([(j, job_durations[ix]) for ix, j in enumerate(jobs)])
     demands.setRecords(
         [
@@ -195,7 +218,8 @@ def build_abstract_model():
     resusage = Equation(m, name="resusage", domain=[r, t], type="leq")
     resusage[r, t] = (
         Sum(
-            j.where[actual[j]], demands[j, r] * Sum(tau.where[fw[j, t, tau]], x[j, tau])
+            j.where[actual[j]],
+            demands[j, r] * Sum(tau.where[fw[j, t, tau]], x[j, tau]),
         )
         <= capacities[r]
     )
@@ -238,7 +262,10 @@ def main():
     model = build_abstract_model()
     fill_records(dataset, model)
     model["m"].solve(
-        model["rcpsp"], problem="MIP", sense="min", objective_variable=model["makespan"]
+        model["rcpsp"],
+        problem="MIP",
+        sense="min",
+        objective_variable=model["makespan"],
     )
     display_results(model, dataset)
 

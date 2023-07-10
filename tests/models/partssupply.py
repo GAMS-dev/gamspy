@@ -12,7 +12,9 @@ def main():
     j = Alias(cont, name="j", alias_with=i)
 
     # Parameter
-    theta = Parameter(cont, name="theta", domain=[i], records=[[1, 0.2], [2, 0.3]])
+    theta = Parameter(
+        cont, name="theta", domain=[i], records=[[1, 0.2], [2, 0.3]]
+    )
     pt = Parameter(cont, name="pt", domain=[i, t])
     p = Parameter(cont, name="p", domain=[i], records=[[1, 0.2], [2, 0.8]])
     icweight = Parameter(cont, name="icweight", domain=[i])

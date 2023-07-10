@@ -52,7 +52,9 @@ def main():
 
     eq1.definition = Sum(bus, PMU[bus]) <= NPMU
     eq2.definition = OF == Sum(node, alpha[node])
-    eq3[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
+    eq3[bus] = (
+        PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
+    )
 
     m.addOptions({"optCr": 0, "profile": 1})
 

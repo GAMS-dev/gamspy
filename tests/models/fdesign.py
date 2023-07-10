@@ -10,20 +10,23 @@ def main():
     # Set
     i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
     omega_stop = Set(
-        m, name="omega_stop", domain=[i], records=[str(idx) for idx in range(120, 181)]
+        m,
+        name="omega_stop",
+        domain=[i],
+        records=[str(idx) for idx in range(120, 181)],
     )
     omega_pass = Set(
-        m, name="omega_pass", domain=[i], records=[str(idx) for idx in range(0, 91)]
+        m,
+        name="omega_pass",
+        domain=[i],
+        records=[str(idx) for idx in range(0, 91)],
     )
     k = Set(m, name="k", records=[str(idx) for idx in range(0, 11)])
 
     # Parameter
-    n2 = Parameter(m, name="n2", records=10)
     beta = Parameter(m, name="beta", records=0.01)
     step = Parameter(m, name="step", records=math.pi / 180)
     n = Parameter(m, name="n", records=20)
-    omega_s = Parameter(m, name="omega_s", records=2 * math.pi / 3)
-    omega_p = Parameter(m, name="omega_p", records=math.pi / 2)
     omega = Parameter(m, name="omega", domain=[i])
     omega[i] = (Ord(i) - 1) * step
 
@@ -36,11 +39,15 @@ def main():
     v = Variable(m, name="v", type="Positive")
 
     # Equation
-    passband_up_bnds = Equation(m, name="passband_up_bnds", domain=[i], type="eq")
+    passband_up_bnds = Equation(
+        m, name="passband_up_bnds", domain=[i], type="eq"
+    )
     cone_lhs = Equation(m, name="cone_lhs", type="eq")
     cone_rhs = Equation(m, name="cone_rhs", type="eq")
     so = Equation(m, name="so", type="eq")
-    passband_lo_bnds = Equation(m, name="passband_lo_bnds", domain=[i], type="eq")
+    passband_lo_bnds = Equation(
+        m, name="passband_lo_bnds", domain=[i], type="eq"
+    )
     stopband_bnds = Equation(m, name="stopband_bnds", domain=[i], type="eq")
     stopband_bnds2 = Equation(m, name="stopband_bnds2", domain=[i], type="eq")
 

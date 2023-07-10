@@ -124,7 +124,11 @@ def main():
     )
 
     # Sets
-    w = Set(m, name="w", records=["icbm", "mrbm-1", "lr-bomber", "f-bomber", "mrbm-2"])
+    w = Set(
+        m,
+        name="w",
+        records=["icbm", "mrbm-1", "lr-bomber", "f-bomber", "mrbm-2"],
+    )
     t = Set(m, name="t", records=[str(i) for i in range(1, 21)])
 
     # Parameters
@@ -147,7 +151,9 @@ def main():
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
-    probe[t] = prob[t] == 1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t])
+    probe[t] = prob[t] == 1 - Product(
+        w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
+    )
     etdp.definition = tetd == Sum(t, mv[t] * prob[t])
     etd.definition = tetd == Sum(
         t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))

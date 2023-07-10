@@ -5,7 +5,9 @@ from gamspy import Model, Container
 
 
 def main():
-    m = Container(load_from=str(Path(__file__).parent.absolute()) + "/tanksize.gdx")
+    m = Container(
+        load_from=str(Path(__file__).parent.absolute()) + "/tanksize.gdx"
+    )
 
     # Sets
     p, n, pp = m.getSymbols(["p", "n", "pp"])

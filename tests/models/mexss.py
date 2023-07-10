@@ -23,7 +23,13 @@ def main():
     intermediate_products = ["sponge", "pig-iron"]
     raw_materials = ["pellets", "coke", "nat-gas", "electric", "scrap"]
     processes = ["pig-iron", "sponge", "steel-oh", "steel-el", "steel-bof"]
-    productive_units = ["blast-furn", "openhearth", "bof", "direct-red", "elec-arc"]
+    productive_units = [
+        "blast-furn",
+        "openhearth",
+        "bof",
+        "direct-red",
+        "elec-arc",
+    ]
 
     io_coefficients = pandas.DataFrame(
         [
@@ -124,9 +130,17 @@ def main():
         records=pandas.DataFrame(steel_plants),
         description="steel plants",
     )
-    j = Set(cont, name="j", records=pandas.DataFrame(markets), description="markets")
+    j = Set(
+        cont,
+        name="j",
+        records=pandas.DataFrame(markets),
+        description="markets",
+    )
     c = Set(
-        cont, name="c", records=pandas.DataFrame(commodities), description="commidities"
+        cont,
+        name="c",
+        records=pandas.DataFrame(commodities),
+        description="commidities",
     )
     cf = Set(
         cont,
@@ -150,7 +164,10 @@ def main():
         description="raw materials",
     )
     p = Set(
-        cont, name="p", records=pandas.DataFrame(processes), description="processes"
+        cont,
+        name="p",
+        records=pandas.DataFrame(processes),
+        description="processes",
     )
     m = Set(
         cont,
@@ -188,7 +205,9 @@ def main():
         records=demand_distribution,
         description="distribution of demand",
     )
-    d = Parameter(cont, name="d", domain=[c, j], description="demand for steel in 1979")
+    d = Parameter(
+        cont, name="d", domain=[c, j], description="demand for steel in 1979"
+    )
 
     d["steel", j] = dt * (1 + rse / 100) * dd[j] / 100
 
@@ -201,10 +220,17 @@ def main():
     )
 
     muf = Parameter(
-        cont, name="muf", domain=[i, j], description="transport rate: final products"
+        cont,
+        name="muf",
+        domain=[i, j],
+        description="transport rate: final products",
     )
-    muv = Parameter(cont, name="muv", domain=[j], description="transport rate: imports")
-    mue = Parameter(cont, name="mue", domain=[i], description="transport rate: exports")
+    muv = Parameter(
+        cont, name="muv", domain=[j], description="transport rate: imports"
+    )
+    mue = Parameter(
+        cont, name="mue", domain=[i], description="transport rate: exports"
+    )
 
     muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
     muv[j] = (2.48 + 0.0084 * rd["import", j]).where[rd["import", j]]
@@ -228,7 +254,11 @@ def main():
 
     # Variable
     z = Variable(
-        cont, name="z", domain=[p, i], type="Positive", description="process level"
+        cont,
+        name="z",
+        domain=[p, i],
+        type="Positive",
+        description="process level",
     )
     x = Variable(
         cont,
@@ -244,8 +274,12 @@ def main():
         type="Positive",
         description="purchase of domestic materials",
     )
-    v = Variable(cont, name="v", domain=[c, j], type="Positive", description="imports")
-    e = Variable(cont, name="e", domain=[c, i], type="Positive", description="exports")
+    v = Variable(
+        cont, name="v", domain=[c, j], type="Positive", description="imports"
+    )
+    e = Variable(
+        cont, name="e", domain=[c, i], type="Positive", description="exports"
+    )
     phi = Variable(cont, name="phi", description="total cost")
     phipsi = Variable(cont, name="phipsi", description="raw material cost")
     philam = Variable(cont, name="philam", description="transport cost")
@@ -275,21 +309,40 @@ def main():
         description="material balances: raw materials",
     )
     cc = Equation(
-        cont, name="cc", type="leq", domain=[m, i], description="capacity constraint"
+        cont,
+        name="cc",
+        type="leq",
+        domain=[m, i],
+        description="capacity constraint",
     )
     mr = Equation(
-        cont, name="mr", type="geq", domain=[c, j], description="market requirements"
+        cont,
+        name="mr",
+        type="geq",
+        domain=[c, j],
+        description="market requirements",
     )
-    me = Equation(cont, name="me", type="leq", domain=[c], description="maximum export")
-    obj = Equation(cont, name="obj", type="eq", description="accounting: total cost")
+    me = Equation(
+        cont, name="me", type="leq", domain=[c], description="maximum export"
+    )
+    obj = Equation(
+        cont, name="obj", type="eq", description="accounting: total cost"
+    )
     apsi = Equation(
-        cont, name="apsi", type="eq", description="accounting: raw material cost"
+        cont,
+        name="apsi",
+        type="eq",
+        description="accounting: raw material cost",
     )
     alam = Equation(
         cont, name="alam", type="eq", description="accounting: transport cost"
     )
-    api = Equation(cont, name="api", type="eq", description="accounting: import cost")
-    aeps = Equation(cont, name="aeps", type="eq", description="accounting: export cost")
+    api = Equation(
+        cont, name="api", type="eq", description="accounting: import cost"
+    )
+    aeps = Equation(
+        cont, name="aeps", type="eq", description="accounting: export cost"
+    )
 
     # Equation definition
     mbf[cf, i] = Sum(p, a[cf, p] * z[p, i]) >= Sum(j, x[cf, i, j]) + e[cf, i]

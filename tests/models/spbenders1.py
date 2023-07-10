@@ -52,7 +52,11 @@ def main():
     )
 
     cut_coefficients = pd.DataFrame(
-        [[idx, f"d{center}", 0] for idx in range(1, 26) for center in range(1, 6)]
+        [
+            [idx, f"d{center}", 0]
+            for idx in range(1, 26)
+            for center in range(1, 6)
+        ]
     )
 
     # Set
@@ -79,7 +83,9 @@ def main():
     price = Parameter(m, name="price", records=24)
     wastecost = Parameter(m, name="wastecost", records=4)
     transcost = Parameter(m, name="transcost", domain=[i, j], records=cost)
-    ScenarioData = Parameter(m, name="scenariodata", domain=[s, "*"], records=scenarios)
+    ScenarioData = Parameter(
+        m, name="scenariodata", domain=[s, "*"], records=scenarios
+    )
 
     # Set
     iter = Set(m, name="iter", records=[f"{idx}" for idx in range(1, 26)])
@@ -92,7 +98,9 @@ def main():
         domain=[iter],
         records=pd.DataFrame([[f"{idx}", 0] for idx in range(1, 26)]),
     )
-    cutcoeff = Parameter(m, name="cutcoeff", domain=[iter, j], records=cut_coefficients)
+    cutcoeff = Parameter(
+        m, name="cutcoeff", domain=[iter, j], records=cut_coefficients
+    )
 
     # Variable
     ship = Variable(m, name="ship", domain=[i, j], type="Positive")
@@ -129,11 +137,15 @@ def main():
     selling = Equation(m, name="selling", type="eq", domain=[j])
     market = Equation(m, name="market", type="leq", domain=[j])
 
-    subobj.definition = zsub == Sum(j, price * sales[j]) - Sum(j, wastecost * waste[j])
+    subobj.definition = zsub == Sum(j, price * sales[j]) - Sum(
+        j, wastecost * waste[j]
+    )
     selling[j] = sales[j] + waste[j] == received.l[j]
     market[j] = sales[j] <= demand[j]
 
-    subproblem = Model(m, name="subproblem", equations=[subobj, selling, market])
+    subproblem = Model(
+        m, name="subproblem", equations=[subobj, selling, market]
+    )
 
     # Scalar
     rgap = Parameter(m, name="rgap", records=0)
@@ -169,7 +181,8 @@ def main():
                 scenario, "prob"
             ] * Sum(j, market.m[j] * demand[j])
             cutcoeff[iteration, j] = (
-                cutcoeff[iteration, j] + ScenarioData[scenario, "prob"] * selling.m[j]
+                cutcoeff[iteration, j]
+                + ScenarioData[scenario, "prob"] * selling.m[j]
             )
 
         itActive[iteration] = True
@@ -180,7 +193,9 @@ def main():
         ):
             lowerBound.assign = objMaster + objSub
 
-        rgap.assign = (upperBound - lowerBound) / (1 + gams_math.abs(upperBound))
+        rgap.assign = (upperBound - lowerBound) / (
+            1 + gams_math.abs(upperBound)
+        )
         if rgap.records.values[0][0] < rtol:
             break
 

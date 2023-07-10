@@ -17,7 +17,9 @@ def main():
         domain=[shop, desk],
         records=np.array([[4, 9, 7, 10], [1, 1, 3, 40]]),
     )
-    caplim = Parameter(m, name="caplim", domain=[shop], records=np.array([6000, 4000]))
+    caplim = Parameter(
+        m, name="caplim", domain=[shop], records=np.array([6000, 4000])
+    )
     price = Parameter(
         m, name="price", domain=[desk], records=np.array([12, 20, 18, 40])
     )

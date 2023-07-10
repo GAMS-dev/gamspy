@@ -10,7 +10,6 @@ def main():
     k = Alias(m, name="k", alias_with=nh)
 
     # Data
-    tf = Parameter(m, name="tf", records=100)
     ca_0 = Parameter(m, name="ca_0", records=1.0)
     cb_0 = Parameter(m, name="cb_0", records=0.0)
     h = Parameter(m, name="h", records=1)
@@ -35,15 +34,23 @@ def main():
     ek1[nh[k]] = k1[k] == 4000 * gams_math.exp(-2500 / t[k])
     ek2[nh[k]] = k2[k] == 620000 * gams_math.exp(-5000 / t[k])
 
-    state1[nh[k.lead(1, "linear")]] = ca[k.lead(1, "linear")] == ca[k] + (h / 2) * (
+    state1[nh[k.lead(1, "linear")]] = ca[k.lead(1, "linear")] == ca[k] + (
+        h / 2
+    ) * (
         -k1[k] * ca[k] * ca[k]
-        - k1[k.lead(1, "linear")] * ca[k.lead(1, "linear")] * ca[k.lead(1, "linear")]
+        - k1[k.lead(1, "linear")]
+        * ca[k.lead(1, "linear")]
+        * ca[k.lead(1, "linear")]
     )
 
-    state2[nh[k.lead(1, "linear")]] = cb[k.lead(1, "linear")] == cb[k] + (h / 2) * (
+    state2[nh[k.lead(1, "linear")]] = cb[k.lead(1, "linear")] == cb[k] + (
+        h / 2
+    ) * (
         k1[k] * ca[k] * ca[k]
         - k2[k] * cb[k]
-        + k1[k.lead(1, "linear")] * ca[k.lead(1, "linear")] * ca[k.lead(1, "linear")]
+        + k1[k.lead(1, "linear")]
+        * ca[k.lead(1, "linear")]
+        * ca[k.lead(1, "linear")]
         - k2[k.lead(1, "linear")] * cb[k.lead(1, "linear")]
     )
 

@@ -45,7 +45,9 @@ def main():
     lpcons = Equation(m, name="lpcons", domain=[i], type="leq")
     defdual = Equation(m, name="defdual", domain=[j], type="eq")
 
-    lpcons[i] = mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
+    lpcons[i] = (
+        mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
+    )
     defdual[j] = lmbda[j] - gamma[j] == x[j]
 
     lproblp = Model(m, name="lproblp", equations=[defobj, lpcons, defdual])
@@ -69,7 +71,9 @@ def main():
     defv[i, k] = v[i, k] == Sum(j, p[i, j, k] * x[j])
     socpqcpcons[i] = y[i] ** 2 >= Sum(k, v[i, k] ** 2)
 
-    roblpqcp = Model(m, name="roblpqcp", equations=[defobj, socpqcpcons, defrhs, defv])
+    roblpqcp = Model(
+        m, name="roblpqcp", equations=[defobj, socpqcpcons, defrhs, defv]
+    )
 
     y.lo[i] = 0
 

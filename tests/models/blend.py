@@ -7,7 +7,9 @@ def main():
     m = Container()
 
     # Set
-    alloy = Set(m, name="alloy", records=["a", "b", "c", "d", "e", "f", "g", "h", "i"])
+    alloy = Set(
+        m, name="alloy", records=["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+    )
     elem = Set(m, name="elem", records=["lead", "zinc", "tin"])
 
     # Data

@@ -8,17 +8,21 @@ def main():
 
     # Set
     t = Set(m, name="t", records=["period-1", "period-2", "period-3"])
-    u = Set(m, name="u", records=["oil", "others"])
 
     # Data
     load = Parameter(
         m,
         name="load",
         domain=[t],
-        records=pd.DataFrame([["period-1", 400], ["period-2", 900], ["period-3", 700]]),
+        records=pd.DataFrame(
+            [["period-1", 400], ["period-2", 900], ["period-3", 700]]
+        ),
     )
     initlev = Parameter(
-        m, name="initlev", domain=[t], records=pd.DataFrame([["period-1", 3000]])
+        m,
+        name="initlev",
+        domain=[t],
+        records=pd.DataFrame([["period-1", 3000]]),
     )
 
     # Variable
@@ -43,7 +47,9 @@ def main():
     demcons = Equation(m, type="eq", name="demcons", domain=[t])
     oileq = Equation(m, type="geq", name="oileq", domain=[t])
 
-    costfn.definition = cost == Sum(t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2))
+    costfn.definition = cost == Sum(
+        t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2)
+    )
     lowoil[t] = poil[t] >= 100 * status[t]
     maxoil[t] = poil[t] <= 500 * status[t]
     floweq[t] = volume[t] == volume[t.lag(1)] + 500 - oil[t] + initlev[t]

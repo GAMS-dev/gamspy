@@ -49,13 +49,17 @@ def main():
     cone_eq = Equation(cont, type="geq", name="cone_eq")
 
     pot_energy.definition = (
-        obj == Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n]) + k * v
+        obj
+        == Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n])
+        + k * v
     )
     delta_x_eq[n] = delta_x[n] == x[n] - x[n.lag(1)]
     delta_y_eq[n] = delta_y[n] == y[n] - y[n.lag(1)]
 
     link_L0[n] = t_L0[n] == L0 + t[n]
-    link_up[n].where[Ord(n) > 1] = t_L0[n] ** 2 >= delta_x[n] ** 2 + delta_y[n] ** 2
+    link_up[n].where[Ord(n) > 1] = (
+        t_L0[n] ** 2 >= delta_x[n] ** 2 + delta_y[n] ** 2
+    )
 
     cone_eq.definition = 2 * v * unit >= Sum(n.where[Ord(n) > 1], t[n] ** 2)
 
