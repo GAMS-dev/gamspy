@@ -5,4 +5,7 @@ default*
 .coverage
 build
 __pycache__
-test*
+test.gms
+test.gdx
+test.lst
+test.py
