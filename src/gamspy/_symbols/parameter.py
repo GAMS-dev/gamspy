@@ -103,8 +103,8 @@ class Parameter(gt.Parameter, operable.OperableMixin):
     ) -> None:
         if len(self._domain) == 0:
             raise Exception(
-                "Cannot perform an indexed assignment over a scalar Equation."
-                " Specify the domain of the equation to perform an indexed"
+                "Cannot perform an indexed assignment over a scalar Parameter."
+                " Specify the domain of the parameter to perform an indexed"
                 " asssignment"
             )
 

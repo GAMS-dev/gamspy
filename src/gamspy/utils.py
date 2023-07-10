@@ -279,7 +279,7 @@ def _getDomainStr(domain) -> str:
     set_strs = []
     for set in domain:
         if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-            set_strs.append(set.name)
+            set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":
                 set_strs.append(set)
@@ -402,6 +402,7 @@ PROBLEM_TYPES = [
     "QCP",
     "DNLP",
     "MIP",
+    "RMIP",
     "MINLP",
     "MIQCP",
     "MCP",

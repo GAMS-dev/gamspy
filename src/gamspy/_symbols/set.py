@@ -109,6 +109,12 @@ class Set(gt.Set, operable.OperableMixin):
     def last(self):
         return expression.Expression(f"{self.name}", ".", "last")
 
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
     def __iter__(self):
         assert self._records is not None, (
             f"Set {self.name} does not contain any records. Cannot iterate"
