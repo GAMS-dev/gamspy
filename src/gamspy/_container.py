@@ -84,6 +84,10 @@ class Container(gt.Container):
 
         for gt_symbol_name in list(self.data.keys()):
             gt_symbol = self.data[gt_symbol_name]
+            new_domain = [
+                self.data[set.name] if not isinstance(set, str) else set
+                for set in gt_symbol.domain
+            ]
 
             del self.data[gt_symbol_name]
 
@@ -97,7 +101,7 @@ class Container(gt.Container):
                 _ = gp.Set(
                     self,
                     gt_symbol.name,
-                    gt_symbol.domain,
+                    new_domain,
                     gt_symbol.is_singleton,
                     gt_symbol.records,
                     gt_symbol.domain_forwarding,
@@ -107,7 +111,7 @@ class Container(gt.Container):
                 _ = gp.Parameter(
                     self,
                     gt_symbol.name,
-                    gt_symbol.domain,
+                    new_domain,
                     gt_symbol.records,
                     gt_symbol.domain_forwarding,
                     gt_symbol.description,
@@ -117,7 +121,7 @@ class Container(gt.Container):
                     self,
                     gt_symbol.name,
                     gt_symbol.type,
-                    gt_symbol.domain,
+                    new_domain,
                     gt_symbol.records,
                     gt_symbol.domain_forwarding,
                     gt_symbol.description,
@@ -127,7 +131,7 @@ class Container(gt.Container):
                     self,
                     gt_symbol.name,
                     gt_symbol.type,
-                    gt_symbol.domain,
+                    new_domain,
                     gt_symbol.records,
                     gt_symbol.domain_forwarding,
                     gt_symbol.description,
