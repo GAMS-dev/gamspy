@@ -558,7 +558,7 @@ class Container(gt.Container):
             executed_command = " ".join(commands)
             sys.exit(
                 "Could not restart with the following"
-                f" command:\n\n{executed_command}\n\nError log:\n\n{e}"
+                f" command:\n\n{executed_command}\n\nError log:\n\n{e.output}"
             )
 
         # https://www.gams.com/latest/docs/UG_SaveRestart.html#UG_SaveRestart_AvoidingCommonMistakes
@@ -679,7 +679,7 @@ class Container(gt.Container):
             executed_command = " ".join(commands)
             sys.exit(
                 "Could not run .gms file with the following GAMS"
-                f" command:\n\n{executed_command}\n\nError log: \n\n{e}"
+                f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
             )
 
     def loadFromGdx(

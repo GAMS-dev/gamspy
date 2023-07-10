@@ -316,11 +316,7 @@ class Equation(gt.Equation, operable.OperableMixin):
         -------
         str
         """
-        representation = self.name
-        if self.domain:
-            representation += utils._getDomainStr(self.domain)
-
-        return representation
+        return self.name
 
     def getStatement(self) -> str:
         """

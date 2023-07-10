@@ -197,11 +197,7 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         -------
         str
         """
-        representation = self.name
-        if self.domain:
-            representation += utils._getDomainStr(self.domain)
-
-        return representation
+        return self.name
 
     def getStatement(self) -> str:
         """
@@ -211,7 +207,11 @@ class Parameter(gt.Parameter, operable.OperableMixin):
         -------
         str
         """
-        output = f"Parameter {self.gamsRepr()}"
+        statement_name = self.name
+        if self.domain:
+            statement_name += utils._getDomainStr(self.domain)
+
+        output = f"Parameter {statement_name}"
 
         if self.description:
             output += ' "' + self.description + '"'

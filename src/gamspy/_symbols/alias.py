@@ -113,21 +113,7 @@ class Alias(gt.Alias, operable.OperableMixin):
         -------
         str
         """
-        representation = self.name
-
-        domain = []
-        for set in self.alias_with.domain:
-            if isinstance(set, str):
-                if set != "*":
-                    domain.append(set)
-            else:
-                domain.append(set.name)
-
-        if domain:
-            domain_str = "(" + ",".join(domain) + ")"
-            representation += f"{domain_str}"
-
-        return representation
+        return self.name
 
     def getStatement(self) -> str:
         """

@@ -50,7 +50,7 @@ class GamspySuite(unittest.TestCase):
         # With one domain
         j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
         k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
-        self.assertEqual(k.gamsRepr(), "k(j)")
+        self.assertEqual(k.gamsRepr(), "k")
         self.assertEqual(k.getStatement(), "Set k(j) / seattle,san-diego /;")
 
         # With two domain
@@ -58,7 +58,7 @@ class GamspySuite(unittest.TestCase):
         n = Set(self.m, "n", records=[f"j{i}" for i in range(2)])
         a = Set(self.m, "a", [m, n])
         a.generateRecords(density=1)
-        self.assertEqual(a.gamsRepr(), "a(m,n)")
+        self.assertEqual(a.gamsRepr(), "a")
         self.assertEqual(
             a.getStatement(), "Set a(m,n) / \ni0.j0\ni0.j1\ni1.j0\ni1.j1 /;"
         )
@@ -135,7 +135,7 @@ class GamspySuite(unittest.TestCase):
         # Set and Alias with domain
         k = Set(self.m, name="k", domain=[i], records=["a", "b"])
         m = Alias(self.m, name="m", alias_with=k)
-        self.assertEqual(m.gamsRepr(), "m(i)")
+        self.assertEqual(m.gamsRepr(), "m")
         self.assertEqual(m.getStatement(), "Alias(k,m);")
 
     def test_parameter_string(self):
@@ -225,12 +225,12 @@ class GamspySuite(unittest.TestCase):
 
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
-        self.assertEqual(v1.gamsRepr(), "v1(i)")
+        self.assertEqual(v1.gamsRepr(), "v1")
         self.assertEqual(v1.getStatement(), "free Variable v1(i);")
 
         # Variable two domain
         v2 = Variable(self.m, name="v2", domain=[i, j])
-        self.assertEqual(v2.gamsRepr(), "v2(i,j)")
+        self.assertEqual(v2.gamsRepr(), "v2")
         self.assertEqual(v2.getStatement(), "free Variable v2(i,j);")
 
         # Scalar variable with records
@@ -507,7 +507,7 @@ class GamspySuite(unittest.TestCase):
             domain=[i],
             description="observe supply limit at plant i",
         )
-        self.assertEqual(supply.gamsRepr(), "supply(i)")
+        self.assertEqual(supply, "supply")
         self.assertEqual(
             supply.getStatement(),
             'Equation supply(i) "observe supply limit at plant i";',
@@ -521,7 +521,7 @@ class GamspySuite(unittest.TestCase):
             domain=[i, j],
             description="some text",
         )
-        self.assertEqual(bla.gamsRepr(), "bla(i,j)")
+        self.assertEqual(bla.gamsRepr(), "bla")
         self.assertEqual(bla.getStatement(), 'Equation bla(i,j) "some text";')
 
     def test_equation_definition(self):

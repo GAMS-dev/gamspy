@@ -247,21 +247,7 @@ class Set(gt.Set, operable.OperableMixin):
         -------
         str
         """
-        representation = self.name
-
-        domain = []
-        for set in self.domain:
-            if isinstance(set, str):
-                if set != "*":
-                    domain.append('"' + set + '"')
-            else:
-                domain.append(set.name)
-
-        if domain:
-            domain_str = "(" + ",".join(domain) + ")"
-            representation += domain_str
-
-        return representation
+        return self.name
 
     def getStatement(self) -> str:
         """Statement of the Set definition

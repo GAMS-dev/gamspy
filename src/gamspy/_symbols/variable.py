@@ -188,11 +188,7 @@ class Variable(gt.Variable, operable.OperableMixin):
         -------
         str
         """
-        representation = self.name
-        if self.domain:
-            representation += utils._getDomainStr(self.domain)
-
-        return representation
+        return self.name
 
     def getStatement(self) -> str:
         """Statement of the Variable definition
@@ -203,7 +199,11 @@ class Variable(gt.Variable, operable.OperableMixin):
         """
         output = self.type + " "
 
-        output += f"Variable {self.gamsRepr()}"
+        statement_name = self.name
+        if self.domain:
+            statement_name += utils._getDomainStr(self.domain)
+
+        output += f"Variable {statement_name}"
 
         if self.description:
             output += ' "' + self.description + '"'

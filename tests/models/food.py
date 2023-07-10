@@ -65,7 +65,11 @@ def main():
     )
     p = gp.Set(c, name="p", description="raw oils", records=products)
     pv = gp.Set(
-        c, name="pv", domain=p, description="vegetable oils", records=vegetable_oils
+        c,
+        name="pv",
+        domain=p,
+        description="vegetable oils",
+        records=vegetable_oils,
     )
     pnv = gp.Set(
         c,
@@ -77,7 +81,10 @@ def main():
 
     # Parameter
     maxusepv = gp.Parameter(
-        c, name="maxusepv", description="maximum use of vegetable oils", records=200
+        c,
+        name="maxusepv",
+        description="maximum use of vegetable oils",
+        records=200,
     )
     maxusepnv = gp.Parameter(
         c,
@@ -95,9 +102,14 @@ def main():
         records=3,
     )
     sp = gp.Parameter(
-        c, name="sp", description="sales price of refined and blended oil", records=150
+        c,
+        name="sp",
+        description="sales price of refined and blended oil",
+        records=150,
     )
-    sc = gp.Parameter(c, name="sc", description="storage cost of raw oils", records=5)
+    sc = gp.Parameter(
+        c, name="sc", description="storage cost of raw oils", records=5
+    )
     stock = gp.Parameter(
         c,
         name="stock",
@@ -106,16 +118,30 @@ def main():
         records=stock_p,
     )
     hmin = gp.Parameter(
-        c, name="hmin", description="minimum hardness of refined oil", records=3
+        c,
+        name="hmin",
+        description="minimum hardness of refined oil",
+        records=3,
     )
     hmax = gp.Parameter(
-        c, name="hmax", description="maximum hardness of refined oil", records=6
+        c,
+        name="hmax",
+        description="maximum hardness of refined oil",
+        records=6,
     )
     h = gp.Parameter(
-        c, name="h", description="hardness of raw oils", domain=p, records=hardness
+        c,
+        name="h",
+        description="hardness of raw oils",
+        domain=p,
+        records=hardness,
     )
     cost = gp.Parameter(
-        c, name="cost", description="raw oil cost", domain=[m, p], records=cost_mp
+        c,
+        name="cost",
+        description="raw oil cost",
+        domain=[m, p],
+        records=cost_mp,
     )
 
     # Variables
@@ -178,11 +204,13 @@ def main():
     defHmin[m] = gp.Sum(p, h[p] * use[m, p]) >= hmin * produce[m]
     defHmax[m] = gp.Sum(p, h[p] * use[m, p]) <= hmax * produce[m]
     stockbal[m, p] = (
-        store[m.lag(1, type="circular"), p] + buy[m, p] == use[m, p] + store[m, p]
+        store[m.lag(1, type="circular"), p] + buy[m, p]
+        == use[m, p] + store[m, p]
     )
     minUse[m, p] = use[m, p] >= minusep * induse[m, p]
     maxUse[m, p] = (
-        use[m, p] <= (maxusepv.where[pv] + maxusepnv.where[pnv]) * induse[m, p]
+        use[m, p]
+        <= (maxusepv.where[pv[p]] + maxusepnv.where[pnv[p]]) * induse[m, p]
     )
     maxNuse[m] = gp.Sum(p, induse[m, p]) <= maxnusep
     defLogic1[m] = gp.Sum(pv, induse[m, pv]) <= induse[m, "o3"] * gp.Card(pv)
