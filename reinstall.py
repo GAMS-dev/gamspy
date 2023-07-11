@@ -1,6 +1,10 @@
 import os
 import subprocess
 import sys
+import shutil
+
+if os.path.exists("gams-transfer-python"):
+    shutil.rmtree("gams-transfer-python")
 
 process = subprocess.run(
     (
