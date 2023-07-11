@@ -1,4 +1,4 @@
-# Gams Transfer usage with Algebra
+# GAMSpy
 
 Example models implemeted with Algebra: [Models](https://docs.google.com/spreadsheets/d/1t3rwz-AXtDAY-Xv5-vN8mDYGsfKCl74Wih59UCHxWZU/edit?usp=sharing)
 
@@ -7,23 +7,21 @@ Example models implemeted with Algebra: [Models](https://docs.google.com/spreads
 You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. You don't need to change anything. Now, these symbols can be used in creating expressions.
 
 ```Python
-import gams.transfer as gt
+import gamspy as gp
 
-m = gt.Container()
-i = gt.Set(m, "i", records=['i1','i2'])
-a = gt.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
+m = gp.Container()
+i = gp.Set(m, "i", records=['i1','i2'])
+a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
 ```
-
-## Newly Introduced Classes
 
 ### Model
 
 A model is a list of equations. 
 
 ```Python
-from gams.algebra import Model
+from gamspy import Model
 
-m = gt.Container()
+m = gp.Container()
 model1 = Model(m, name="model1", equations=[maxw, minw, etd]) # Defines equations explicitly as a list of equations
 model2 = Model(m, name="model2", equations="all")             # This includes all defined equations
 ```
@@ -33,13 +31,13 @@ model2 = Model(m, name="model2", equations="all")             # This includes al
 Frequently used Gams operations which accept an index list and an expression.
 
 ```Python
-from gams.algebra import Sum, Product, Smin, Smax
+from gamspy import Sum, Product, Smin, Smax
 
-m = gt.Container()
-i = gt.Set(m, "i", records=['i1','i2'])
-a = gt.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
+m = gp.Container()
+i = gp.Set(m, "i", records=['i1','i2'])
+a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
 
-supply = gt.Equation(m, name="supply", domain=[i], type="leq")
+supply = gp.Equation(m, name="supply", domain=[i], type="leq")
 supply[i] = Sum(i, a[i]) <= a[i]
 ```
 
@@ -48,7 +46,7 @@ supply[i] = Sum(i, a[i]) <= a[i]
 Python representation of Card and Ord operations.
 
 ```Python
-from gams.algebra import Card, Ord
+from gamspy import Card, Ord
 
     m = Container()
 
@@ -63,7 +61,7 @@ from gams.algebra import Card, Ord
 This class is exclusively for conditioning on a domain with more than one set.
 
 ```Python
-equation = gt.Equation(name="equation", domain=[i,j])
+equation = gp.Equation(name="equation", domain=[i,j])
 equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j]) # Equivalent to equation(i,j) = Sum((i,j)$(i), a(i) + b(j))
 ```
 
@@ -72,7 +70,7 @@ equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j]) # Equivalent to equation(
 This is for conditions on numbers or yes/no statements.
 
 ```Python
-from gams.algebra import Number
+from gamspy import Number
 
 Number(1).where[sig[i] == 0] # Equivalent to 1$(sig(i) = 0). It is also equivalent to yes$(sig(i) = 0)
 ```
