@@ -64,8 +64,16 @@ class Condition:
             else "="
         )
 
+        condition = condition_expression.gamsRepr()
+
+        if "=l=" in condition:
+            condition = condition.replace("=l=", "<=")
+
+        if "=g=" in condition:
+            condition = condition.replace("=g=", ">=")
+
         statement = expression.Expression(
-            expression.Expression(self._symbol, "$", condition_expression),
+            expression.Expression(self._symbol, "$", condition),
             op_type,
             right_handexpression,
         )
