@@ -81,8 +81,6 @@ class Container(gt.Container):
         """
         Casts all symbols in the GAMS Transfer container to GAMSpy symbols
         """
-        import gamspy as gp
-
         for gt_symbol_name in list(self.data.keys()):
             gt_symbol = self.data[gt_symbol_name]
             new_domain = [
@@ -169,8 +167,6 @@ class Container(gt.Container):
         self._unsaved_statements[statement.name] = statement
 
     def addAlias(self, name, alias_with) -> Optional["Alias"]:
-        import gamspy as gp
-
         if name not in self:
             obj = gp.Alias(self, name, alias_with)
 
@@ -213,8 +209,6 @@ class Container(gt.Container):
         description="",
         uels_on_axes=False,
     ):
-        import gamspy as gp
-
         if name not in self:
             obj = gp.Set(
                 self,
@@ -287,8 +281,6 @@ class Container(gt.Container):
         description="",
         uels_on_axes=False,
     ):
-        import gamspy as gp
-
         if name not in self:
             obj = gp.Parameter(
                 self,
@@ -358,8 +350,6 @@ class Container(gt.Container):
         description="",
         uels_on_axes=False,
     ):
-        import gamspy as gp
-
         if name not in self:
             obj = gp.Variable(
                 self,
@@ -434,8 +424,6 @@ class Container(gt.Container):
         definition=None,
         definition_domain=None,
     ):
-        import gamspy as gp
-
         if name not in self:
             obj = gp.Equation(
                 self,
@@ -580,13 +568,13 @@ class Container(gt.Container):
         stdout: Optional[str] = None,
     ):
         """Generates the gams string, writes it to a file and runs it"""
-        if not problem.upper() in utils.PROBLEM_TYPES:
+        if problem.upper() not in utils.PROBLEM_TYPES:
             raise ValueError(
                 f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
                 f" {problem}."
             )
 
-        if sense is not None and not sense.upper() in utils.SENSE_TYPES:
+        if sense is not None and sense.upper() not in utils.SENSE_TYPES:
             raise ValueError(
                 f"Allowed sense types: {utils.SENSE_TYPES} but found {sense}."
             )
