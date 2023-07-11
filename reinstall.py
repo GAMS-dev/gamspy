@@ -2,6 +2,17 @@ import os
 import subprocess
 import sys
 
+process = subprocess.run(
+    (
+        "git clone --recurse-submodules"
+        " git@git.gams.com:devel/gams-transfer-python.git"
+    ),
+    shell=True,
+)
+process = subprocess.run(
+    "cd gams-transfer-python && python reinstall.py", shell=True
+)
+
 try:
     import gams.transfer  # noqa: F401
 except Exception:
