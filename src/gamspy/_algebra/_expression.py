@@ -118,7 +118,12 @@ class Expression(_operable.Operable):
         # sum(hp $ ord(hp) >= ord(h),lambda(j,hp))
         # sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp))
         if self._op_type == "$" and (
-            "=l=" in right_str or "=e=" in right_str or "=g=" in right_str
+            "<=" in right_str
+            or "==" in right_str
+            or ">=" in right_str
+            or "=l=" in right_str
+            or "=e=" in right_str
+            or "=g=" in right_str
         ):
             right_str = f"({right_str})"
 

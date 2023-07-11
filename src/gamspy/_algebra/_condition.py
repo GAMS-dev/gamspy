@@ -45,7 +45,7 @@ class Condition:
     def __getitem__(self, condition_expression):
         return expression.Expression(self._symbol, "$", condition_expression)
 
-    def __setitem__(self, condition_expression, right_handexpression) -> None:
+    def __setitem__(self, condition_expression, right_hand_expression) -> None:
         import gamspy._symbols._implicits as implicits
         import gamspy._symbols as syms
 
@@ -64,10 +64,15 @@ class Condition:
             else "="
         )
 
+        condition = condition_expression.gamsRepr()
+        condition = condition.replace("=l=", "<=")
+        condition = condition.replace("=e=", "==")
+        condition = condition.replace("=g=", ">=")
+
         statement = expression.Expression(
-            expression.Expression(self._symbol, "$", condition_expression),
+            expression.Expression(self._symbol, "$", condition),
             op_type,
-            right_handexpression,
+            right_hand_expression,
         )
 
         self._symbol.ref_container._addStatement(statement)

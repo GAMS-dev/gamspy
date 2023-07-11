@@ -1728,6 +1728,15 @@ class GamspySuite(unittest.TestCase):
         eq = Equation(self.m, "eq", domain=[u, v], type="leq")
         self.assertEqual(eq[e[u, v]].gamsRepr(), "eq(e(u,v))")
 
+        m = Container()
+        s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
+        c = Parameter(m, name="c", domain=[s])
+        c[s].where[Ord(s) <= Ord(s)] = 1
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].getStatement(),
+            "c(s) $ (ord(s) <= ord(s))= 1;",
+        )
+
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
