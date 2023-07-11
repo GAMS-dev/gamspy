@@ -1740,7 +1740,7 @@ class GamspySuite(unittest.TestCase):
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1], "Set i / i1*i3 /;  "
+            list(self.m._unsaved_statements.values())[-1], "Set i / i1*i3 /;"
         )
 
     def test_isin(self):

@@ -507,7 +507,9 @@ class Container(gt.Container):
         ----------
         gams_code : str
         """
-        self._addStatement(expression.Expression(gams_code, "", ""))
+        unique_name = utils._getUniqueName()
+        self._unsaved_statements[unique_name] = gams_code
+        self._statements_dict[unique_name] = gams_code
 
     def _loadOnDemand(self, symbol_name: str) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
