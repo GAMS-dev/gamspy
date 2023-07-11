@@ -1861,7 +1861,7 @@ class GamspySuite(unittest.TestCase):
         )
 
         self.assertTrue(os.path.exists("test.gms"))
-        self.assertTrue(output is not None and type(output) == str)
+        self.assertTrue(isinstance(output, str))
 
         # Test invalid problem
         self.assertRaises(ValueError, self.m.solve, transport, "bla", "min", z)
@@ -1869,9 +1869,14 @@ class GamspySuite(unittest.TestCase):
         # Test invalid sense
         self.assertRaises(ValueError, self.m.solve, transport, "LP", "bla", z)
 
+        # Test invalid scenario
+        self.assertRaises(
+            TypeError, self.m.solve, transport, "LP", "min", z, None, x[i, j]
+        )
+
         # Test invalid stdout options
         self.assertRaises(
-            ValueError, self.m.solve, transport, "LP", "bla", z, None, "bla"
+            ValueError, self.m.solve, transport, "LP", "min", z, None, None, 5
         )
 
     def test_mcp_equation(self):

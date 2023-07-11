@@ -3,6 +3,7 @@ import os
 import sys
 import pandas as pd
 import gams.transfer as gt
+import gamspy as gp
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
 from typing import Dict, List, Union, Optional, Tuple, TYPE_CHECKING
@@ -575,7 +576,8 @@ class Container(gt.Container):
         sense: Optional[str] = None,
         objective_variable: Optional["Variable"] = None,
         commandline_options: Optional[dict] = None,
-        stdout=None,
+        scenario: Optional["Set"] = None,
+        stdout: Optional[str] = None,
     ):
         """Generates the gams string, writes it to a file and runs it"""
         if not problem.upper() in utils.PROBLEM_TYPES:
@@ -589,17 +591,26 @@ class Container(gt.Container):
                 f"Allowed sense types: {utils.SENSE_TYPES} but found {sense}."
             )
 
+        if scenario is not None and not isinstance(scenario, gp.Set):
+            raise TypeError(
+                f"scenario must be a Set but found {type(scenario)}"
+            )
+
         if stdout is not None and not isinstance(stdout, str):
             raise ValueError("stdout must be a path for the output file")
 
-        sense = "" if sense is None else sense
-        objective = (
-            objective_variable.name if objective_variable is not None else ""
-        )
+        solve_string = f"solve {model.name} using {problem}"
 
-        self._unsaved_statements[
-            utils._getUniqueName()
-        ] = f"solve {model.name} {sense} {objective} using {problem};\n"
+        if sense:
+            solve_string += f" {sense}"
+
+        if objective_variable:
+            solve_string += f" {objective_variable.gamsRepr()}"
+
+        if scenario:
+            solve_string += f" scenario {scenario.gamsRepr()}"
+
+        self._unsaved_statements[utils._getUniqueName()] = solve_string + ";\n"
 
         self._write_to_gms()
         output = self._run_gms(commandline_options)
@@ -631,9 +642,11 @@ class Container(gt.Container):
         return (
             "\n".join(
                 [
-                    statement
-                    if isinstance(statement, str)
-                    else statement.getStatement()
+                    (
+                        statement
+                        if isinstance(statement, str)
+                        else statement.getStatement()
+                    )
                     for statement in dictionary.values()
                 ]
             )
