@@ -14,6 +14,6 @@ run_formatter:
     - source $(pwd)/anaconda3/bin/activate
     - conda activate transfer-env
     - pip install black
-    - black src/gamspy --line-length=79 --experimental-string-processing --check
+    - black src/gamspy --line-length=79 --preview --check
     - black tests --line-length=79 --experimental-string-processing --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi

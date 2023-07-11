@@ -1148,9 +1148,11 @@ class GamspySuite(unittest.TestCase):
             )
             process = subprocess.run(
                 [
-                    os.environ["PYTHON38"]
-                    if "PYTHON38" in os.environ
-                    else "python3",
+                    (
+                        os.environ["PYTHON38"]
+                        if "PYTHON38" in os.environ
+                        else "python3"
+                    ),
                     path,
                 ],
                 check=True,
