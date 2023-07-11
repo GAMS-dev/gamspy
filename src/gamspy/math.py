@@ -25,13 +25,24 @@
 
 import math
 import gamspy._algebra._expression as expression
-from typing import Union
+from typing import Union, Optional
 
 
 def abs(value) -> Union[expression.Expression, float]:
     if isinstance(value, (int, float)):
         return math.fabs(value)
     return expression.Expression("abs(", value.gamsRepr(), ")")
+
+
+def centropy(x, y, z: Optional[float] = None):
+    if z:
+        return expression.Expression(
+            "centropy(", ",".join([x.gamsRepr(), y.gamsRepr(), str(z)]), ")"
+        )
+
+    return expression.Expression(
+        "centropy(", ",".join([x.gamsRepr(), y.gamsRepr()]), ")"
+    )
 
 
 def sqrt(value) -> Union[expression.Expression, float]:

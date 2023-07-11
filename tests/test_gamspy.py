@@ -1324,12 +1324,21 @@ class GamspySuite(unittest.TestCase):
         s2 = Parameter(self.m, name="s2", records=3)
         s3 = Parameter(self.m, name="s3", records=6)
 
+        # Variable
+        v = Variable(self.m, name="v", domain=[i])
+
         # abs
         op1 = gams_math.abs(-5)
         self.assertEqual(op1, 5)
         op2 = gams_math.abs(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(abs( b(i) ))")
+
+        # centropy
+        op2 = gams_math.centropy(v[i], b[i])
+        self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i) ))")
+        op2 = gams_math.centropy(v[i], b[i], 1e-15)
+        self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i),1e-15 ))")
 
         # sqrt
         op1 = gams_math.sqrt(9)
