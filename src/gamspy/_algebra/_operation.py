@@ -33,7 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy._algebra import Domain
 
 
-class Operation(_operable.OperableMixin):
+class Operation(_operable.Operable):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
@@ -109,7 +109,7 @@ class Smax(Operation):
         super().__init__(domain, expression, "smax")
 
 
-class Ord(_operable.OperableMixin):
+class Ord(_operable.Operable):
     """
     Operator ord may be used only with one-dimensional sets.
     """
@@ -124,7 +124,7 @@ class Ord(_operable.OperableMixin):
         return f"ord({self._set.name})"
 
 
-class Card(_operable.OperableMixin):
+class Card(_operable.Operable):
     """
     The operator card may be used with any set.
     """

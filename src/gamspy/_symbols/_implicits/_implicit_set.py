@@ -36,7 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set
 
 
-class ImplicitSet(_operable.OperableMixin):
+class ImplicitSet(_operable.Operable):
     """
     Implicit Set
 

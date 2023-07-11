@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container
 
 
-class Parameter(gt.Parameter, operable.OperableMixin):
+class Parameter(gt.Parameter, operable.Operable):
     """
     Represents a parameter symbol in GAMS.
     https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters

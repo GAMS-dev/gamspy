@@ -11,8 +11,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -33,7 +33,7 @@ import gamspy._symbols._implicits as implicits
 from typing import Tuple
 
 
-class Expression(_operable.OperableMixin):
+class Expression(_operable.Operable):
     """
     Expression of two operands and an operation.
 
@@ -61,14 +61,14 @@ class Expression(_operable.OperableMixin):
 
     @property
     def ref_container(self):
-        # Return the container of either left or right. They both must be the same anyways.
+        # Return the container of either left or right
         return self._left.ref_container
 
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
 
     def _get_operand_representations(self) -> Tuple[str, str]:
-        # Builtin Python types do not have gams representation. Print them as is.
+        # Builtin Python types do not have gams representation
         left_str = (
             str(self._left)
             if isinstance(self._left, (str, int, float))
@@ -115,7 +115,8 @@ class Expression(_operable.OperableMixin):
         """
         left_str, right_str = self._get_operand_representations()
 
-        # sum(hp $ ord(hp) >= ord(h),lambda(j,hp)) -> sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp))
+        # sum(hp $ ord(hp) >= ord(h),lambda(j,hp))
+        # sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp))
         if self._op_type == "$" and (
             "=l=" in right_str or "=e=" in right_str or "=g=" in right_str
         ):
@@ -165,7 +166,7 @@ class Expression(_operable.OperableMixin):
         """
         representation = self.gamsRepr()
 
-        # (voycap(j,k) $ vc(j,k)) .. sum(...) -> voycap(j,k) $ vc(j,k) .. sum(...)
+        # (voycap(j,k) $ vc(j,k)) .. sum(.) -> voycap(j,k) $ vc(j,k) .. sum(.)
         if (
             self._op_type in ["=", ".."]
             and isinstance(self._left, Expression)

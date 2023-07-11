@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
 
 
-class Variable(gt.Variable, operable.OperableMixin):
+class Variable(gt.Variable, operable.Operable):
     """
     Represents a variable symbol in GAMS.
     https://www.gams.com/latest/docs/UG_Variables.html

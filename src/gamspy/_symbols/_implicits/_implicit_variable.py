@@ -37,7 +37,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gams.transfer import Set
 
 
-class ImplicitVariable(_operable.OperableMixin):
+class ImplicitVariable(_operable.Operable):
     """
     Implicit Variable
 

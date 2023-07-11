@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
 
 
-class Equation(gt.Equation, operable.OperableMixin):
+class Equation(gt.Equation, operable.Operable):
     """
     Represents an Equation symbol in GAMS.
     https://www.gams.com/latest/docs/UG_Equations.html

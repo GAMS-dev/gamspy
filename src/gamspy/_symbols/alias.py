@@ -2,13 +2,14 @@ import gams.transfer as gt
 import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
+    from gamspy._algebra._operable import Operable
 
 
-class Alias(gt.Alias, operable.OperableMixin):
+class Alias(gt.Alias, operable.Operable):
     """
     Represents an Alias symbol in GAMS.
     https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet
@@ -47,13 +48,12 @@ class Alias(gt.Alias, operable.OperableMixin):
         if self.alias_with._records is not None:
             return self.alias_with._records.iterrows()
 
-    def lag(self, n: int, type: str = "linear"):
-        """
-        Lag operation shifts the values of a Set or Alias by one to the left
+    def lag(self, n: Union[int, "Operable"], type: str = "linear"):
+        """Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
         ----------
-        n : int
+        n : int | Operable
         type : 'linear' or 'circular', optional
 
         Returns
@@ -65,24 +65,25 @@ class Alias(gt.Alias, operable.OperableMixin):
         ValueError
             When type is not circular or linear
         """
+        jump = n if isinstance(n, int) else n.gamsRepr()
+
         if type == "circular":
             return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} -- {n}"
+                self.ref_container, name=f"{self.name} -- {jump}"
             )
         elif type == "linear":
             return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} - {n}"
+                self.ref_container, name=f"{self.name} - {jump}"
             )
 
         raise ValueError("Lag type must be linear or circular")
 
-    def lead(self, n: int, type: str = "linear"):
-        """
-        Lead shifts the values of a Set or Alias by one to the right
+    def lead(self, n: Union[int, "Operable"], type: str = "linear"):
+        """Lead shifts the values of a Set or Alias by one to the right
 
         Parameters
         ----------
-        n : int
+        n : int | Operable
         type : 'linear' or 'circular', optional
 
         Returns
@@ -94,13 +95,15 @@ class Alias(gt.Alias, operable.OperableMixin):
         ValueError
             When type is not circular or linear
         """
+        jump = n if isinstance(n, int) else n.gamsRepr()
+
         if type == "circular":
             return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} ++ {n}"
+                self.ref_container, name=f"{self.name} ++ {jump}"
             )
         elif type == "linear":
             return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} + {n}"
+                self.ref_container, name=f"{self.name} + {jump}"
             )
 
         raise ValueError("Lead type must be linear or circular")

@@ -36,7 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container, Set
 
 
-class ImplicitParameter(_operable.OperableMixin):
+class ImplicitParameter(_operable.Operable):
     def __init__(
         self,
         container: "Container",
