@@ -170,7 +170,7 @@ class Set(gt.Set, operable.Operable):
         ValueError
             When type is not circular or linear
         """
-        jump = n if isinstance(n, int) else n.gamsRepr()
+        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
             return implicits.ImplicitSet(
@@ -200,7 +200,7 @@ class Set(gt.Set, operable.Operable):
         ValueError
             When type is not circular or linear
         """
-        jump = n if isinstance(n, int) else n.gamsRepr()
+        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
             return implicits.ImplicitSet(

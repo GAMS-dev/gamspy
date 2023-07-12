@@ -142,7 +142,7 @@ class ImplicitEquation:
             "boolean": "=b=",
         }
 
-        if self.type in equation_map.keys():
+        if assignment is not None and self.type in equation_map.keys():
             assignment._op_type = equation_map[self.type]
 
         statement = _expression.Expression(

@@ -228,7 +228,7 @@ class Container(gt.Container):
     def addSet(
         self,
         name: str,
-        domain: Optional[List[Union[Set, str]]] = None,
+        domain: Optional[List[Union["Set", str]]] = None,
         is_singleton: bool = False,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
@@ -520,7 +520,7 @@ class Container(gt.Container):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition: "Expression" = None,
+        definition: Optional["Expression"] = None,
         definition_domain: Optional[List[Union["Set", str]]] = None,
     ) -> "Equation":
         """
@@ -678,7 +678,7 @@ class Container(gt.Container):
         except Exception as e:
             executed_command = " ".join(commands)
             sys.exit(
-                "Could not restart with the following"
+                "Could not restart with the following"  # type: ignore
                 f" command:\n\n{executed_command}\n\nError log:\n\n{e.output}"
             )
 
@@ -811,7 +811,7 @@ class Container(gt.Container):
         except Exception as e:
             executed_command = " ".join(commands)
             sys.exit(
-                "Could not run .gms file with the following GAMS"
+                "Could not run .gms file with the following GAMS"  # type: ignore # noqa: E501
                 f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
             )
 
