@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, List, Optional, Union, TYPE_CHECKING
 import gams.transfer as gt
 import pandas as pd
@@ -38,7 +39,7 @@ class Set(gt.Set, operable.Operable):
         self,
         container: "Container",
         name: str,
-        domain: Optional[List[Union[gt.Set, str]]] = None,
+        domain: Optional[List[Union[Set, str]]] = None,
         is_singleton: bool = False,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,

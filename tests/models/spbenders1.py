@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def main():
-    m = Container()
+    m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
 
     # Prepare data
     cost = pd.DataFrame(
@@ -156,9 +156,6 @@ def main():
     rtol = 0.001
 
     options = {
-        "limRow": 0,
-        "limCol": 0,
-        "solPrint": "silent",
         "solver": "cplex",
         "solveLink": "%solveLink.loadLibrary%",
     }
@@ -205,8 +202,8 @@ def main():
             sense="max",
             objective_variable=zmaster,
         )
-        upperBound.assign = zmaster.l
-        objMaster.assign = zmaster.l - theta.l
+        upperBound.setRecords(zmaster.records["level"])
+        objMaster.setRecords(zmaster.records["level"] - theta.records["level"])
 
 
 if __name__ == "__main__":

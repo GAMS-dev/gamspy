@@ -170,8 +170,10 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             a.getStatement(),
-            'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
-            " 600.0\ntopeka 500.0 /;",
+            (
+                'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
+                " 600.0\ntopeka 500.0 /;"
+            ),
         )
 
     def test_implicit_parameter_string(self):
@@ -266,12 +268,14 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v.getStatement(),
-            "free Variable v(*) / \ni0.L 0.0\ni0.M 0.0\ni0.LO -inf\ni0.UP"
-            " inf\ni0.scale 1.0\ni1.L 0.0\ni1.M 1.0\ni1.LO -inf\ni1.UP"
-            " inf\ni1.scale 1.0\ni2.L 0.0\ni2.M 2.0\ni2.LO -inf\ni2.UP"
-            " inf\ni2.scale 1.0\ni3.L 0.0\ni3.M 3.0\ni3.LO -inf\ni3.UP"
-            " inf\ni3.scale 1.0\ni4.L 0.0\ni4.M 4.0\ni4.LO -inf\ni4.UP"
-            " inf\ni4.scale 1.0/;",
+            (
+                "free Variable v(*) / \ni0.L 0.0\ni0.M 0.0\ni0.LO -inf\ni0.UP"
+                " inf\ni0.scale 1.0\ni1.L 0.0\ni1.M 1.0\ni1.LO -inf\ni1.UP"
+                " inf\ni1.scale 1.0\ni2.L 0.0\ni2.M 2.0\ni2.LO -inf\ni2.UP"
+                " inf\ni2.scale 1.0\ni3.L 0.0\ni3.M 3.0\ni3.LO -inf\ni3.UP"
+                " inf\ni3.scale 1.0\ni4.L 0.0\ni4.M 4.0\ni4.LO -inf\ni4.UP"
+                " inf\ni4.scale 1.0/;"
+            ),
         )
 
         v3 = Variable(
@@ -285,12 +289,14 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v3.getStatement(),
-            "positive Variable v3(*,*) / \nseattle.san-diego.L"
-            " 0.0\nseattle.san-diego.M 0.0\nseattle.san-diego.LO"
-            " 0.0\nseattle.san-diego.UP inf\nseattle.san-diego.scale"
-            " 1.0\nchicago.madison.L 0.0\nchicago.madison.M"
-            " 0.0\nchicago.madison.LO 0.0\nchicago.madison.UP"
-            " inf\nchicago.madison.scale 1.0/;",
+            (
+                "positive Variable v3(*,*) / \nseattle.san-diego.L"
+                " 0.0\nseattle.san-diego.M 0.0\nseattle.san-diego.LO"
+                " 0.0\nseattle.san-diego.UP inf\nseattle.san-diego.scale"
+                " 1.0\nchicago.madison.L 0.0\nchicago.madison.M"
+                " 0.0\nchicago.madison.LO 0.0\nchicago.madison.UP"
+                " inf\nchicago.madison.scale 1.0/;"
+            ),
         )
 
     def test_variable_types(self):
@@ -2045,6 +2051,11 @@ class GamspySuite(unittest.TestCase):
 
         m = Container()
         self.assertEqual(m.system_directory, expected_path)
+
+        m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
+        self.assertEqual(
+            m.system_directory, "/opt/gams/gams44.0_linux_x64_64_sfx"
+        )
 
 
 def suite():

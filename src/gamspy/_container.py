@@ -6,10 +6,11 @@ import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
-from typing import Dict, List, Union, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Union, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Alias, Set, Parameter, Variable, Equation, Model
+    from gamspy._algebra._expression import Expression
 
 
 class Container(gt.Container):
@@ -137,6 +138,14 @@ class Container(gt.Container):
                 )
 
     def _setup_paths(self) -> Tuple[str, str, str, str]:
+        """
+        Sets up the paths for .gms, .g00, and .gdx files.
+
+        Returns
+        -------
+        Tuple[str, str, str, str]
+            gms_path, save_to, restart_from, gdx_path
+        """
         gms_path = os.path.join(os.getcwd(), f"{self.name}.gms")
         if " " in gms_path:
             gms_path = f'"{gms_path}"'
@@ -166,7 +175,24 @@ class Container(gt.Container):
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
-    def addAlias(self, name, alias_with) -> Optional["Alias"]:
+    def addAlias(
+        self, name: str, alias_with: Union["Set", "Alias"]
+    ) -> "Alias":
+        """
+        Creates a new Alias and adds it to the container
+
+        Returns
+        -------
+        Alias
+
+        Raises
+        ------
+        TypeError
+            In case the alias_with is different than a Set or an Alias
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+        """
         if name not in self:
             obj = gp.Alias(self, name, alias_with)
 
@@ -201,14 +227,39 @@ class Container(gt.Container):
 
     def addSet(
         self,
-        name,
-        domain=None,
-        is_singleton=False,
-        records=None,
-        domain_forwarding=False,
-        description="",
-        uels_on_axes=False,
-    ):
+        name: str,
+        domain: Optional[List[Union[Set, str]]] = None,
+        is_singleton: bool = False,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ) -> "Set":
+        """
+        Creates a Set and adds it to the container
+
+        Parameters
+        ----------
+        name : str
+        domain : List[Union[Set, str]], optional
+        is_singleton : bool, optional
+        records : Any, optional
+        domain_forwarding : bool, optional
+        description : str, optional
+        uels_on_axes : bool, optional
+
+        Returns
+        -------
+        Set
+
+        Raises
+        ------
+        err
+            In case arguments are not valid
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+        """
         if name not in self:
             obj = gp.Set(
                 self,
@@ -274,13 +325,36 @@ class Container(gt.Container):
 
     def addParameter(
         self,
-        name,
-        domain=None,
-        records=None,
-        domain_forwarding=False,
-        description="",
-        uels_on_axes=False,
-    ):
+        name: str,
+        domain: Optional[List[Union[str, "Set"]]] = None,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ) -> "Parameter":
+        """Creates a Parameter and adds it to the Container
+
+        Parameters
+        ----------
+        name : str
+        domain : List[str | Set]], optional
+        records : Any, optional
+        domain_forwarding : bool, optional
+        description : str, optional
+        uels_on_axes : bool, optional
+
+        Returns
+        -------
+        Parameter
+
+        Raises
+        ------
+        err
+            In case arguments are not valid
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+        """
         if name not in self:
             obj = gp.Parameter(
                 self,
@@ -342,14 +416,39 @@ class Container(gt.Container):
 
     def addVariable(
         self,
-        name,
-        type="free",
-        domain=None,
-        records=None,
-        domain_forwarding=False,
-        description="",
-        uels_on_axes=False,
-    ):
+        name: str,
+        type: str = "free",
+        domain: Optional[List[Union[str, "Set"]]] = None,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ) -> "Variable":
+        """
+        Creates a Variable and adds it to the Container
+
+        Parameters
+        ----------
+        name : str
+        type : str, optional
+        domain : List[str | Set]], optional
+        records : Any, optional
+        domain_forwarding : bool, optional
+        description : str, optional
+        uels_on_axes : bool, optional
+
+        Returns
+        -------
+        Variable
+
+        Raises
+        ------
+        err
+            In case arguments are not valid
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+        """
         if name not in self:
             obj = gp.Variable(
                 self,
@@ -414,16 +513,43 @@ class Container(gt.Container):
 
     def addEquation(
         self,
-        name,
-        type,
-        domain=None,
-        records=None,
-        domain_forwarding=False,
-        description="",
-        uels_on_axes=False,
-        definition=None,
-        definition_domain=None,
-    ):
+        name: str,
+        type: str,
+        domain: Optional[List[Union["Set", str]]] = None,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+        definition: "Expression" = None,
+        definition_domain: Optional[List[Union["Set", str]]] = None,
+    ) -> "Equation":
+        """
+        Creates an Equation and adds it to the Container
+
+        Parameters
+        ----------
+        name : str
+        type : str
+        domain : List[Set | str], optional
+        records : Any, optional
+        domain_forwarding : bool, optional
+        description : str, optional
+        uels_on_axes : bool, optional
+        definition : Expression, optional
+        definition_domain : List[Set | str], optional
+
+        Returns
+        -------
+        Equation
+
+        Raises
+        ------
+        err
+            In case arguments are not valid
+        ValueError
+            If there is symbol with same name but different type in the
+            Container
+        """
         if name not in self:
             obj = gp.Equation(
                 self,
@@ -568,7 +694,7 @@ class Container(gt.Container):
         commandline_options: Optional[dict] = None,
         scenario: Optional["Set"] = None,
         stdout: Optional[str] = None,
-    ):
+    ) -> str:
         """Generates the gams string, writes it to a file and runs it"""
         if problem.upper() not in utils.PROBLEM_TYPES:
             raise ValueError(
@@ -696,8 +822,6 @@ class Container(gt.Container):
             List[Union["Set", "Parameter", "Variable", "Equation"]]
         ] = None,
     ) -> None:
-        import gamspy as gp
-
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
 
         gdxHandle = utils._openGdxFile(self.system_directory, load_from)
