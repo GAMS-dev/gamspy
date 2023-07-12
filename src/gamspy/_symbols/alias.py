@@ -41,14 +41,25 @@ class Alias(gt.Alias, operable.Operable):
         # add statement
         self.ref_container._addStatement(self)
 
-    def __iter__(self):
-        assert self.alias_with._records is not None, (
-            f"Alias {self.name} does not contain any records. Cannot iterate"
-            " over an Alias with no records"
-        )
+        # iterator index
+        self._current_index = 0
 
-        if self.alias_with._records is not None:
-            return self.alias_with._records.iterrows()
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
+
+        raise StopIteration
+
+    def __iter__(self):
+        return self
 
     def lag(self, n: Union[int, "Operable"], type: str = "linear"):
         """Lag operation shifts the values of a Set or Alias by one to the left

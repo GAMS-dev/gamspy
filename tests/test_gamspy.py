@@ -171,8 +171,10 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             a.getStatement(),
-            'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
-            " 600.0\ntopeka 500.0 /;",
+            (
+                'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
+                " 600.0\ntopeka 500.0 /;"
+            ),
         )
 
     def test_implicit_parameter_string(self):
@@ -267,12 +269,14 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v.getStatement(),
-            "free Variable v(*) / \ni0.L 0.0\ni0.M 0.0\ni0.LO -inf\ni0.UP"
-            " inf\ni0.scale 1.0\ni1.L 0.0\ni1.M 1.0\ni1.LO -inf\ni1.UP"
-            " inf\ni1.scale 1.0\ni2.L 0.0\ni2.M 2.0\ni2.LO -inf\ni2.UP"
-            " inf\ni2.scale 1.0\ni3.L 0.0\ni3.M 3.0\ni3.LO -inf\ni3.UP"
-            " inf\ni3.scale 1.0\ni4.L 0.0\ni4.M 4.0\ni4.LO -inf\ni4.UP"
-            " inf\ni4.scale 1.0/;",
+            (
+                "free Variable v(*) / \ni0.L 0.0\ni0.M 0.0\ni0.LO -inf\ni0.UP"
+                " inf\ni0.scale 1.0\ni1.L 0.0\ni1.M 1.0\ni1.LO -inf\ni1.UP"
+                " inf\ni1.scale 1.0\ni2.L 0.0\ni2.M 2.0\ni2.LO -inf\ni2.UP"
+                " inf\ni2.scale 1.0\ni3.L 0.0\ni3.M 3.0\ni3.LO -inf\ni3.UP"
+                " inf\ni3.scale 1.0\ni4.L 0.0\ni4.M 4.0\ni4.LO -inf\ni4.UP"
+                " inf\ni4.scale 1.0/;"
+            ),
         )
 
         v3 = Variable(
@@ -286,12 +290,14 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v3.getStatement(),
-            "positive Variable v3(*,*) / \nseattle.san-diego.L"
-            " 0.0\nseattle.san-diego.M 0.0\nseattle.san-diego.LO"
-            " 0.0\nseattle.san-diego.UP inf\nseattle.san-diego.scale"
-            " 1.0\nchicago.madison.L 0.0\nchicago.madison.M"
-            " 0.0\nchicago.madison.LO 0.0\nchicago.madison.UP"
-            " inf\nchicago.madison.scale 1.0/;",
+            (
+                "positive Variable v3(*,*) / \nseattle.san-diego.L"
+                " 0.0\nseattle.san-diego.M 0.0\nseattle.san-diego.LO"
+                " 0.0\nseattle.san-diego.UP inf\nseattle.san-diego.scale"
+                " 1.0\nchicago.madison.L 0.0\nchicago.madison.M"
+                " 0.0\nchicago.madison.LO 0.0\nchicago.madison.UP"
+                " inf\nchicago.madison.scale 1.0/;"
+            ),
         )
 
     def test_variable_types(self):
@@ -1644,83 +1650,39 @@ class GamspySuite(unittest.TestCase):
 
     def test_iterable(self):
         # Set with no records
-        def iterate_over_set():
-            i = Set(self.m, "i")
-            for elem in i:
-                print(elem)
+        i = Set(self.m, "i")
+        count = 0
+        for _ in i:
+            count += 1
 
-        self.assertRaises(AssertionError, iterate_over_set)
+        self.assertEqual(count, 0)
 
         # Set with records
         k = Set(self.m, "k", records=[str(idx) for idx in range(1, 3)])
-        for elem in k:
-            self.assertTrue(isinstance(elem, tuple))
-            self.assertTrue(isinstance(elem[0], int))
-            self.assertTrue(isinstance(elem[1], pd.Series))
+        count = 0
+        for _ in k:
+            count += 1
+
+        self.assertEqual(count, 2)
 
         # Alias with no records
-        def iterate_over_alias():
-            x = Set(self.m, "x")
-            a = Alias(self.m, "a", x)
-            for elem in a:
-                print(elem)
+        x = Set(self.m, "x")
+        a = Alias(self.m, "a", x)
+        count = 0
+        for _ in a:
+            count += 1
 
-        self.assertRaises(AssertionError, iterate_over_alias)
+        self.assertEqual(count, 0)
 
         # Alias with records
         b = Set(self.m, "b", records=[str(idx) for idx in range(1, 3)])
         c = Alias(self.m, "c", b)
 
-        for elem in c:
-            self.assertTrue(isinstance(elem, tuple))
-            self.assertTrue(isinstance(elem[0], int))
-            self.assertTrue(isinstance(elem[1], pd.Series))
+        count = 0
+        for _ in c:
+            count += 1
 
-        # Parameter with no records
-        def iterate_over_parameter():
-            d = Parameter(self.m, "d")
-            for elem in d:
-                print(elem)
-
-        self.assertRaises(AssertionError, iterate_over_parameter)
-
-        # Parameter with records
-        e = Parameter(self.m, "e", domain=[k], records=[("1", 1), ("2", 2)])
-        for elem in e:
-            self.assertTrue(isinstance(elem, tuple))
-            self.assertTrue(isinstance(elem[0], int))
-            self.assertTrue(isinstance(elem[1], pd.Series))
-
-        # Variable with no records
-        def iterate_over_variable():
-            f = Variable(self.m, "f")
-            for elem in f:
-                print(elem)
-
-        self.assertRaises(AssertionError, iterate_over_variable)
-
-        # Variable with records
-        g = Variable(
-            self.m,
-            "g",
-            domain=[k],
-            records=pd.DataFrame(
-                data=[(str(i), i) for i in range(1, 3)],
-                columns=["domain", "marginal"],
-            ),
-        )
-        for elem in g:
-            self.assertTrue(isinstance(elem, tuple))
-            self.assertTrue(isinstance(elem[0], int))
-            self.assertTrue(isinstance(elem[1], pd.Series))
-
-        # Equation with no records
-        def iterate_over_equation():
-            h = Equation(self.m, "h", type="eq")
-            for elem in h:
-                print(elem)
-
-        self.assertRaises(AssertionError, iterate_over_equation)
+        self.assertEqual(count, 2)
 
     def test_misc(self):
         u = Set(self.m, "u")

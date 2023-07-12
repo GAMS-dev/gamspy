@@ -67,6 +67,53 @@ class Set(gt.Set, operable.Operable):
         # add statement
         self.ref_container._addStatement(self)
 
+        # iterator index
+        self._current_index = 0
+
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
+
+        raise StopIteration
+
+    def __iter__(self):
+        return self
+
+    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitSet:
+        domain = utils._toList(indices)
+        return implicits.ImplicitSet(
+            self.ref_container, name=self.name, domain=domain
+        )
+
+    def __setitem__(
+        self,
+        indices: Union[list, str],
+        assignment,
+    ):
+        domain = utils._toList(indices)
+
+        if isinstance(assignment, bool):
+            assignment = "yes" if assignment is True else "no"  # type: ignore
+
+        statement = expression.Expression(
+            implicits.ImplicitSet(
+                self.ref_container, name=self.name, domain=domain
+            ),
+            "=",
+            assignment,
+        )
+
+        self.ref_container._addStatement(statement)
+        self._is_dirty = True
+
     # Set Attributes
     @property
     def pos(self):
@@ -111,48 +158,6 @@ class Set(gt.Set, operable.Operable):
     @property
     def last(self):
         return expression.Expression(f"{self.name}", ".", "last")
-
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
-    def __iter__(self):
-        assert self._records is not None, (
-            f"Set {self.name} does not contain any records. Cannot iterate"
-            " over a Set with no records"
-        )
-
-        if self._records is not None:
-            return self._records.iterrows()
-
-    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitSet:
-        domain = utils._toList(indices)
-        return implicits.ImplicitSet(
-            self.ref_container, name=self.name, domain=domain
-        )
-
-    def __setitem__(
-        self,
-        indices: Union[list, str],
-        assignment,
-    ):
-        domain = utils._toList(indices)
-
-        if isinstance(assignment, bool):
-            assignment = "yes" if assignment is True else "no"  # type: ignore
-
-        statement = expression.Expression(
-            implicits.ImplicitSet(
-                self.ref_container, name=self.name, domain=domain
-            ),
-            "=",
-            assignment,
-        )
-
-        self.ref_container._addStatement(statement)
-        self._is_dirty = True
 
     def lag(self, n: Union[int, "Operable"], type: str = "linear"):
         """Lag operation shifts the values of a Set or Alias by one to the left

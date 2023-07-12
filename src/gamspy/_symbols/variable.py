@@ -70,6 +70,36 @@ class Variable(gt.Variable, operable.Operable):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
+        # iterator index
+        self._current_index = 0
+
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
+
+        raise StopIteration
+
+    def __iter__(self):
+        return self
+
+    def __getitem__(
+        self, indices: Union[list, str]
+    ) -> implicits.ImplicitVariable:
+        domain = utils._toList(indices)
+        return implicits.ImplicitVariable(
+            self.ref_container, name=self.name, domain=domain
+        )
+
+    def __neg__(self):
+        return implicits.ImplicitVariable(
+            self.ref_container, name=f"-{self.name}", domain=self.domain
+        )
+
+    def __eq__(self, other):  # type: ignore
+        return expression.Expression(self, "=e=", other)
+
     def _init_attributes(self):
         level = self._create_attr("l")
         marginal = self._create_attr("m")
@@ -116,31 +146,6 @@ class Variable(gt.Variable, operable.Operable):
     @property
     def stage(self):
         return self._stage
-
-    def __iter__(self):
-        assert self._records is not None, (
-            f"Variable {self.name} does not contain any records. Cannot"
-            " iterate over a Variable with no records"
-        )
-
-        if self._records is not None:
-            return self._records.iterrows()
-
-    def __getitem__(
-        self, indices: Union[list, str]
-    ) -> implicits.ImplicitVariable:
-        domain = utils._toList(indices)
-        return implicits.ImplicitVariable(
-            self.ref_container, name=self.name, domain=domain
-        )
-
-    def __neg__(self):
-        return implicits.ImplicitVariable(
-            self.ref_container, name=f"-{self.name}", domain=self.domain
-        )
-
-    def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "=e=", other)
 
     @property
     def records(self):

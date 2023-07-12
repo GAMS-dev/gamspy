@@ -62,31 +62,19 @@ class Parameter(gt.Parameter, operable.Operable):
         # add statement
         self.ref_container._addStatement(self)
 
-    @property
-    def assign(self):
-        return self._assignment
+        # iterator index
+        self._current_index = 0
 
-    @assign.setter
-    def assign(self, assignment):
-        self._assignment = assignment
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
 
-        self._is_dirty = True
-        statement = expression.Expression(
-            implicits.ImplicitParameter(self.ref_container, name=self.name),
-            "=",
-            assignment,
-        )
-
-        self.ref_container._addStatement(statement)
+        raise StopIteration
 
     def __iter__(self):
-        assert self._records is not None, (
-            f"Parameter {self.name} does not contain any records. Cannot"
-            " iterate over a Parameter with no records"
-        )
-
-        if self._records is not None:
-            return self._records.iterrows()
+        return self
 
     def __getitem__(
         self, indices: Union[list, str]
@@ -149,6 +137,23 @@ class Parameter(gt.Parameter, operable.Operable):
         return implicits.ImplicitParameter(
             self.ref_container, name=f"-{self.name}", domain=self._domain
         )
+
+    @property
+    def assign(self):
+        return self._assignment
+
+    @assign.setter
+    def assign(self, assignment):
+        self._assignment = assignment
+
+        self._is_dirty = True
+        statement = expression.Expression(
+            implicits.ImplicitParameter(self.ref_container, name=self.name),
+            "=",
+            assignment,
+        )
+
+        self.ref_container._addStatement(statement)
 
     @property
     def records(self):

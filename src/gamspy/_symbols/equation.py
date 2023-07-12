@@ -84,6 +84,87 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
+        # iterator index
+        self._current_index = 0
+
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
+
+        raise StopIteration
+
+    def __iter__(self):
+        return self
+
+    def __getitem__(self, indices: Union[list, str]):
+        domain = utils._toList(indices)
+        return implicits.ImplicitEquation(
+            self.ref_container, name=self.name, type=self.type, domain=domain
+        )
+
+    def __setitem__(
+        self,
+        indices: Union[tuple, str, implicits.ImplicitSet],
+        assignment: expression.Expression,
+    ):
+        if len(self._domain) == 0:
+            raise Exception(
+                "Cannot perform an indexed assignment over a scalar Equation."
+                " Specify the domain of the equation to perform an indexed"
+                " asssignment"
+            )
+
+        if isinstance(indices, (tuple, str)):
+            if isinstance(indices, str):
+                indices = [indices]  # type: ignore
+
+            if len(self._domain) < len(indices):
+                raise Exception(
+                    "Dimension of the symbol domain and the dimension of the"
+                    " assignment indices must be the same!\nEquation"
+                    f" dimension: {len(self._domain)}\nIndexed assignment"
+                    f" dimension: {len(indices)}"
+                )
+        else:
+            if len(self._domain) < len(indices.domain):
+                raise Exception(
+                    "Dimension of the symbol domain and the dimension of the"
+                    " assignment indices must be the same!\nEquation"
+                    f" dimension: {len(self._domain)}\nIndexed assignment"
+                    f" dimension: {len(indices.domain)}"
+                )
+
+        domain = utils._toList(indices)
+
+        equation_map = {
+            "nonbinding": "=n=",
+            "external": "=x=",
+            "cone": "=c=",
+            "boolean": "=b=",
+        }
+
+        if self.type in equation_map.keys():
+            assignment._op_type = equation_map[self.type]
+
+        statement = expression.Expression(
+            implicits.ImplicitEquation(
+                self.ref_container,
+                name=self.name,
+                type=self.type,
+                domain=domain,
+            ),
+            "..",
+            assignment,
+        )
+
+        self.ref_container._addStatement(statement)
+        self._is_dirty = True
+
+    def __eq__(self, other):  # type: ignore
+        return expression.Expression(self, "=e=", other)
+
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
         marginal = self._create_attr("m")
@@ -192,82 +273,6 @@ class Equation(gt.Equation, operable.Operable):
 
         self.ref_container._addStatement(statement)
         self._definition = statement
-
-    def __iter__(self):
-        assert self._records is not None, (
-            f"Equation {self.name} does not contain any records. Cannot"
-            " iterate over an Equation with no records"
-        )
-
-        if self._records is not None:
-            return self._records.iterrows()
-
-    def __getitem__(self, indices: Union[list, str]):
-        domain = utils._toList(indices)
-        return implicits.ImplicitEquation(
-            self.ref_container, name=self.name, type=self.type, domain=domain
-        )
-
-    def __setitem__(
-        self,
-        indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: expression.Expression,
-    ):
-        if len(self._domain) == 0:
-            raise Exception(
-                "Cannot perform an indexed assignment over a scalar Equation."
-                " Specify the domain of the equation to perform an indexed"
-                " asssignment"
-            )
-
-        if isinstance(indices, (tuple, str)):
-            if isinstance(indices, str):
-                indices = [indices]  # type: ignore
-
-            if len(self._domain) < len(indices):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices)}"
-                )
-        else:
-            if len(self._domain) < len(indices.domain):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices.domain)}"
-                )
-
-        domain = utils._toList(indices)
-
-        equation_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        if self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]
-
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self.ref_container,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.ref_container._addStatement(statement)
-        self._is_dirty = True
-
-    def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "=e=", other)
 
     @property
     def records(self):
