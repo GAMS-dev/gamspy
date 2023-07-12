@@ -51,6 +51,7 @@ def main():
         objective_variable=z,
     )
     print(x.records)
+    print(transport.status)
 
 
 if __name__ == "__main__":

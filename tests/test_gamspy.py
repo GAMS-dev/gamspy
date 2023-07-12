@@ -27,6 +27,7 @@ from gamspy import (
     Smin,
     Sum,
     Variable,
+    ModelStatus,
 )
 
 
@@ -1876,6 +1877,7 @@ class GamspySuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(isinstance(output, str))
+        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
 
         # Test invalid problem
         self.assertRaises(ValueError, self.m.solve, transport, "bla", "min", z)

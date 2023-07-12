@@ -43,6 +43,7 @@ class Container(gt.Container):
         # read on demand
         (
             self._gms_path,
+            self._lst_path,
             self._save_to,
             self._restart_from,
             self._gdx_path,
@@ -137,18 +138,20 @@ class Container(gt.Container):
                     gt_symbol.description,
                 )
 
-    def _setup_paths(self) -> Tuple[str, str, str, str]:
+    def _setup_paths(self) -> Tuple[str, str, str, str, str]:
         """
-        Sets up the paths for .gms, .g00, and .gdx files.
+        Sets up the paths for .gms, .lst, .g00, and .gdx files.
 
         Returns
         -------
-        Tuple[str, str, str, str]
+        Tuple[str, str, str, str, str]
             gms_path, save_to, restart_from, gdx_path
         """
         gms_path = os.path.join(os.getcwd(), f"{self.name}.gms")
         if " " in gms_path:
             gms_path = f'"{gms_path}"'
+
+        lst_path = gms_path[:-4] + ".lst"
 
         save_to = os.path.join(os.getcwd(), f"{self.name}_save.g00")
         if " " in save_to:
@@ -162,7 +165,7 @@ class Container(gt.Container):
         if " " in gdx_path:
             gdx_path = f'"{gdx_path}"'
 
-        return gms_path, save_to, restart_from, gdx_path
+        return gms_path, lst_path, save_to, restart_from, gdx_path
 
     def _clean_existing_workfiles(self) -> None:
         """Deletes local workfiles"""
@@ -777,12 +780,28 @@ class Container(gt.Container):
             with open(stdout, "w") as output_file:
                 output_file.write(output)
 
+        self._update_status(model)
+
         self.loadFromGdx(self._gdx_path)
 
         return output
 
+    def _update_status(self, model):
+        with open(self._lst_path) as listing_file:
+            lines = listing_file.read()
+
+            lines = lines.split("\n")
+
+            for line in lines:
+                # Set model status
+                if line.startswith("**** MODEL STATUS"):
+                    status_number = int(line[5:].strip().split()[-2])
+                    status = gp.ModelStatus(status_number)
+                    model.status = status
+
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
-        """Generates the GAMS code
+        """
+        Generates the GAMS code
 
         Parameters
         ----------

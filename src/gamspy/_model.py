@@ -23,10 +23,55 @@
 # SOFTWARE.
 #
 
+from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING
+from enum import Enum
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Container
+
+
+class ModelStatus(Enum):
+    # Not solved yet
+    NotSolved = 0
+    # Optimal solution achieved
+    OptimalGlobal = 1
+    # Local optimal solution achieved
+    OptimalLocal = 2
+    # Unbounded model found
+    Unbounded = 3
+    # Infeasible model found
+    InfeasibleGlobal = 4
+    # Locally infeasible model found
+    InfeasibleLocal = 5
+    # Solver terminated early and model was still infeasible
+    InfeasibleIntermed = 6
+    # Solver terminated early and model was feasible but not yet optimal
+    Feasible = 7
+    # Integer solution found
+    Integer = 8
+    # Solver terminated early with a non integer solution found
+    NonIntegerIntermed = 9
+    # No feasible integer solution could be found
+    IntegerInfeasible = 10
+    # Licensing problem
+    LicenseError = 11
+    # Error - No cause known
+    ErrorUnknown = 12
+    # Error - No solution attained
+    ErrorNoSolution = 13
+    # No solution returned
+    NoSolutionReturned = 14
+    # Unique solution in a CNS models
+    SolvedUnique = 15
+    # Feasible solution in a CNS models
+    Solved = 16
+    # Singular in a CNS models
+    SolvedSingular = 17
+    # Unbounded - no solution
+    UnboundedNoSolution = 18
+    # Infeasible - no solution
+    InfeasibleNoSolution = 19
 
 
 class Model:
@@ -63,6 +108,15 @@ class Model:
         self._equations = equations
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
+        self._status = ModelStatus.NotSolved
+
+    @property
+    def status(self) -> ModelStatus:
+        return self._status
+
+    @status.setter
+    def status(self, new_status):
+        self._status = ModelStatus(new_status)
 
     @property
     def equations(self) -> Union[str, list]:
