@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def main():
-    m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
+    m = Container()
 
     # Prepare data
     cost = pd.DataFrame(
