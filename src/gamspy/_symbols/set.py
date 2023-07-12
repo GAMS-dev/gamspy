@@ -9,8 +9,9 @@ import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:  # pragma: no cover
-    from gamspy import Container
+    from gamspy import Alias, Container
     from gamspy._algebra._operable import Operable
+    from gamspy._algebra._expression import Expression
 
 
 class Set(gt.Set, operable.Operable):
@@ -251,6 +252,11 @@ class Set(gt.Set, operable.Operable):
                 # reset state check flags for all symbols in the container
                 for symnam, symobj in self.ref_container.data.items():
                     symobj._requires_state_check = True
+
+    def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
+        return expression.Expression(
+            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+        )
 
     def gamsRepr(self) -> str:
         """Representation of this Set in GAMS language.

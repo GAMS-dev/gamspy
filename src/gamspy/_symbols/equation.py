@@ -224,7 +224,7 @@ class Equation(gt.Equation, operable.Operable):
             if isinstance(indices, str):
                 indices = [indices]  # type: ignore
 
-            if len(self._domain) != len(indices):
+            if len(self._domain) < len(indices):
                 raise Exception(
                     "Dimension of the symbol domain and the dimension of the"
                     " assignment indices must be the same!\nEquation"
@@ -232,7 +232,7 @@ class Equation(gt.Equation, operable.Operable):
                     f" dimension: {len(indices)}"
                 )
         else:
-            if len(self._domain) != len(indices.domain):
+            if len(self._domain) < len(indices.domain):
                 raise Exception(
                     "Dimension of the symbol domain and the dimension of the"
                     " assignment indices must be the same!\nEquation"

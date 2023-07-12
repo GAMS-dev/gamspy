@@ -91,12 +91,12 @@ def mod(dividend, divider) -> Union[expression.Expression, int, float]:
     return expression.Expression("mod(" + dividend_str, ",", divider_str + ")")
 
 
-def min(values) -> expression.Expression:
+def min(*values) -> expression.Expression:
     values_str = ",".join([value.gamsRepr() for value in values])
     return expression.Expression("min(", values_str, ")")
 
 
-def max(values) -> expression.Expression:
+def max(*values) -> expression.Expression:
     values_str = ",".join([value.gamsRepr() for value in values])
     return expression.Expression("max(", values_str, ")")
 

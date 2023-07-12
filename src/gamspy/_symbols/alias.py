@@ -1,12 +1,14 @@
 import gams.transfer as gt
 import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
+import gamspy._algebra._expression as expression
 import gamspy._symbols._implicits as implicits
 from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
     from gamspy._algebra._operable import Operable
+    from gamspy._algebra._expression import Expression
 
 
 class Alias(gt.Alias, operable.Operable):
@@ -107,6 +109,11 @@ class Alias(gt.Alias, operable.Operable):
             )
 
         raise ValueError("Lead type must be linear or circular")
+
+    def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
+        return expression.Expression(
+            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+        )
 
     def gamsRepr(self) -> str:
         """
