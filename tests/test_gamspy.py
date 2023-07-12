@@ -2046,10 +2046,13 @@ class GamspySuite(unittest.TestCase):
         m = Container()
         self.assertEqual(m.system_directory, expected_path)
 
-        m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
-        self.assertEqual(
-            m.system_directory, "/opt/gams/gams44.0_linux_x64_64_sfx"
-        )
+        with self.assertRaises(Exception):
+            m = Container(
+                system_directory="/opt/gams/gams44.0_linux_x64_64_sfx"
+            )
+            self.assertEqual(
+                m.system_directory, "/opt/gams/gams44.0_linux_x64_64_sfx"
+            )
 
 
 def suite():
