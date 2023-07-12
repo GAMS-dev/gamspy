@@ -1890,7 +1890,7 @@ class GamspySuite(unittest.TestCase):
 
         # Test invalid stdout options
         self.assertRaises(
-            ValueError, self.m.solve, transport, "LP", "min", z, None, None, 5
+            TypeError, self.m.solve, transport, "LP", "min", z, None, None, 5
         )
 
     def test_mcp_equation(self):
