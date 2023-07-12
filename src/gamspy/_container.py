@@ -795,7 +795,7 @@ class Container(gt.Container):
             for line in lines:
                 # Set model status
                 if line.startswith("**** MODEL STATUS"):
-                    status_number = int(line[5:].strip().split()[-2])
+                    status_number = int(line[5:].strip().split()[2])
                     status = gp.ModelStatus(status_number)
                     model.status = status
 
