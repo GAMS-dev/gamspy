@@ -615,6 +615,18 @@ class Container(gt.Container):
                 )
 
     def addOptions(self, options: Dict[str, str]) -> None:
+        """
+        Allows adding options to .gms file
+
+        Parameters
+        ----------
+        options : Dict[str, str]
+
+        Raises
+        ------
+        ValueError
+            In case the option is not valid
+        """
         for key, value in options.items():
             if not key.lower() in utils.GMS_OPTIONS:
                 raise ValueError(
@@ -627,7 +639,8 @@ class Container(gt.Container):
             )
 
     def addGamsCode(self, gams_code: str) -> None:
-        """Adds an arbitrary GAMS code to the generate .gms file
+        """
+        Adds an arbitrary GAMS code to the generate .gms file
 
         Parameters
         ----------
@@ -695,7 +708,35 @@ class Container(gt.Container):
         scenario: Optional["Set"] = None,
         stdout: Optional[str] = None,
     ) -> str:
-        """Generates the gams string, writes it to a file and runs it"""
+        """
+        Generates the gams string, writes it to a file and runs it
+
+        Parameters
+        ----------
+        model : Model
+        problem : str
+        sense : "MIN" or "MAX", optional
+        objective_variable : Variable, optional
+        commandline_options : dict, optional
+        scenario : Set, optional
+        stdout : str, optional
+
+        Returns
+        -------
+        str
+            GAMS output
+
+        Raises
+        ------
+        ValueError
+            In case problem is not in possible problem types
+        ValueError
+            In case sense is different than "MIN" or "MAX"
+        TypeError
+            In case scenario is not a Set
+        TypeError
+            In case stdout is not a string
+        """
         if problem.upper() not in utils.PROBLEM_TYPES:
             raise ValueError(
                 f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
@@ -713,7 +754,7 @@ class Container(gt.Container):
             )
 
         if stdout is not None and not isinstance(stdout, str):
-            raise ValueError("stdout must be a path for the output file")
+            raise TypeError("stdout must be a path for the output file")
 
         solve_string = f"solve {model.name} using {problem}"
 
@@ -822,6 +863,18 @@ class Container(gt.Container):
             List[Union["Set", "Parameter", "Variable", "Equation"]]
         ] = None,
     ) -> None:
+        """
+        Loads data of the given symbols from a gdx file. If no symbols
+        are given, data of all symbols are loaded.
+
+        Parameters
+        ----------
+        load_from : str
+            Path to the gdx file
+        symbols : List[Set | Parameter | Variable | Equation], optional
+            Symbols whose data will be load from gdx, by default None
+        """
+
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
 
         gdxHandle = utils._openGdxFile(self.system_directory, load_from)
