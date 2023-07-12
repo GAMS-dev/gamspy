@@ -81,12 +81,12 @@ def main():
                     v[s2, r1].where[lr[elem[0], f_elem[0], s2, r1]] = Number(1)
                     v[f_elem[0], "1"].where[Card(k) == 0] = Number(1)
 
-                    l[elem[0], to, k].where[
-                        tree[elem[0], f_elem[0], to]
-                    ] = Number(1)
-                    lr[elem[0], to, v].where[
-                        tree[elem[0], f_elem[0], to]
-                    ] = Number(1)
+                    l[elem[0], to, k].where[tree[elem[0], f_elem[0], to]] = (
+                        Number(1)
+                    )
+                    lr[elem[0], to, v].where[tree[elem[0], f_elem[0], to]] = (
+                        Number(1)
+                    )
 
                     l[elem[0], to, f_elem[0], to].where[
                         tree[elem[0], f_elem[0], to]
