@@ -89,33 +89,6 @@ class Parameter(gt.Parameter, operable.Operable):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: expression.Expression,
     ) -> None:
-        if len(self._domain) == 0:
-            raise Exception(
-                "Cannot perform an indexed assignment over a scalar Parameter."
-                " Specify the domain of the parameter to perform an indexed"
-                " asssignment"
-            )
-
-        if isinstance(indices, (tuple, str)):
-            if isinstance(indices, str):
-                indices = [indices]  # type: ignore
-
-            if len(self._domain) != len(indices):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices)}"
-                )
-        else:
-            if len(self._domain) != len(indices.domain):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices.domain)}"
-                )
-
         domain = utils._toList(indices)
 
         statement = expression.Expression(
@@ -221,9 +194,9 @@ class Parameter(gt.Parameter, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
-        records_str = " / "
-
         if self._records is not None:
+            records_str = " / "
+
             if self.is_scalar:
                 # Parameter a(i) / 5.0 /;
                 value = (
@@ -237,8 +210,10 @@ class Parameter(gt.Parameter, operable.Operable):
                     label_str = ".".join(row_as_list[:-1])
                     records_str += "\n" + f"{label_str} {row_as_list[-1]}"
 
-        records_str += " /"
+            records_str += " /"
 
-        output += records_str + ";"
+            output += records_str
+
+        output += ";"
 
         return output

@@ -26,6 +26,7 @@
 import gamspy._algebra._operable as _operable
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
+import gamspy._algebra._domain as domain
 from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -47,7 +48,17 @@ class Operation(_operable.Operable):
 
     def _get_index_str(self):
         if len(self.domain) == 1:
-            return self.domain[0].gamsRepr()
+            index_str = self.domain[0].gamsRepr()
+
+            if isinstance(self.domain[0], expression.Expression):
+                if (
+                    "$" in index_str
+                    and not isinstance(self.domain[0]._left, domain.Domain)
+                    and index_str[0] == "("
+                ):
+                    index_str = index_str[1:-1]
+
+            return index_str
 
         return (
             "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
@@ -65,7 +76,11 @@ class Operation(_operable.Operable):
         output += index_str
         output += ","
 
-        expression_str = self.expression.gamsRepr()
+        expression_str = (
+            str(self.expression)
+            if isinstance(self.expression, int)
+            else self.expression.gamsRepr()
+        )
 
         output += expression_str
         output += ")"

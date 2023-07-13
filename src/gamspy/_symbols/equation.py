@@ -109,33 +109,6 @@ class Equation(gt.Equation, operable.Operable):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: expression.Expression,
     ):
-        if len(self._domain) == 0:
-            raise Exception(
-                "Cannot perform an indexed assignment over a scalar Equation."
-                " Specify the domain of the equation to perform an indexed"
-                " asssignment"
-            )
-
-        if isinstance(indices, (tuple, str)):
-            if isinstance(indices, str):
-                indices = [indices]  # type: ignore
-
-            if len(self._domain) < len(indices):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices)}"
-                )
-        else:
-            if len(self._domain) < len(indices.domain):
-                raise Exception(
-                    "Dimension of the symbol domain and the dimension of the"
-                    " assignment indices must be the same!\nEquation"
-                    f" dimension: {len(self._domain)}\nIndexed assignment"
-                    f" dimension: {len(indices.domain)}"
-                )
-
         domain = utils._toList(indices)
 
         equation_map = {
