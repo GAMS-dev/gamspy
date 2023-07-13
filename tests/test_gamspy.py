@@ -1140,7 +1140,7 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
-            "minw(t) $ tm(t).. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
+            "minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
     def test_full_models(self):
@@ -1691,7 +1691,7 @@ class GamspySuite(unittest.TestCase):
         c[s].where[Ord(s) <= Ord(s)] = 1
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
-            "c(s) $ (ord(s) <= ord(s))= 1;",
+            "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 
     def test_arbitrary_gams_code(self):

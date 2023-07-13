@@ -293,6 +293,25 @@ def _getDomainStr(domain) -> str:
     return "(" + ",".join(set_strs) + ")"
 
 
+def _getMatchingParanthesisIndices(string: str) -> dict:
+    stack = []  # stack of indices of opening parentheses
+    matching_indices = {}
+
+    for index, character in enumerate(string):
+        if character == "(":
+            stack.append(index)
+        if character == ")":
+            try:
+                matching_indices[stack.pop()] = index
+            except IndexError:
+                raise Exception("Too many closing parentheses")
+
+    if stack:  # check if stack is empty afterwards
+        raise Exception("Too many opening parentheses")
+
+    return matching_indices
+
+
 def _getValidGmsOptions() -> List[str]:
     def lowercase(options):
         return [option.lower() for option in options]

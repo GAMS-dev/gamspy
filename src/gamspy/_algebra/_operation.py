@@ -25,7 +25,7 @@
 
 import gamspy._algebra._operable as _operable
 import gamspy.utils as utils
-import gamspy._algebra._expression as _expression
+import gamspy._algebra._expression as expression
 from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -37,12 +37,12 @@ class Operation(_operable.Operable):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: _expression.Expression,
+        expression: expression.Expression,
         op_name: str,
     ):
         self.domain = utils._toList(domain)
         assert len(self.domain) > 0, "Operation requires at least one index"
-        self._expression = expression
+        self.expression = expression
         self._op_name = op_name
 
     def _get_index_str(self):
@@ -54,7 +54,7 @@ class Operation(_operable.Operable):
         )
 
     def __eq__(self, other):  # type: ignore
-        return _expression.Expression(self, "=e=", other)
+        return expression.Expression(self, "=e=", other)
 
     def gamsRepr(self) -> str:
         # Ex: sum((i,j), c(i,j) * x(i,j))
@@ -65,7 +65,7 @@ class Operation(_operable.Operable):
         output += index_str
         output += ","
 
-        expression_str = self._expression.gamsRepr()
+        expression_str = self.expression.gamsRepr()
 
         output += expression_str
         output += ")"
@@ -77,7 +77,7 @@ class Sum(Operation):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: _expression.Expression,
+        expression: expression.Expression,
     ):
         super().__init__(domain, expression, "sum")
 
@@ -86,7 +86,7 @@ class Product(Operation):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: _expression.Expression,
+        expression: expression.Expression,
     ):
         super().__init__(domain, expression, "prod")
 
@@ -95,7 +95,7 @@ class Smin(Operation):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: _expression.Expression,
+        expression: expression.Expression,
     ):
         super().__init__(domain, expression, "smin")
 
@@ -104,7 +104,7 @@ class Smax(Operation):
     def __init__(
         self,
         domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: _expression.Expression,
+        expression: expression.Expression,
     ):
         super().__init__(domain, expression, "smax")
 
@@ -117,8 +117,14 @@ class Ord(_operable.Operable):
     def __init__(self, set: "Set"):
         self._set = set
 
-    def __eq__(self, other) -> _expression.Expression:  # type: ignore
-        return _expression.Expression(self, "==", other)
+    def __eq__(self, other) -> expression.Expression:  # type: ignore
+        return expression.Expression(self, "==", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
 
     def gamsRepr(self) -> str:
         return f"ord({self._set.name})"
@@ -132,8 +138,8 @@ class Card(_operable.Operable):
     def __init__(self, set: "Set") -> None:
         self._set = set
 
-    def __eq__(self, other) -> _expression.Expression:  # type: ignore
-        return _expression.Expression(self, "==", other)
+    def __eq__(self, other) -> expression.Expression:  # type: ignore
+        return expression.Expression(self, "==", other)
 
     def gamsRepr(self) -> str:
         return f"card({self._set.name})"

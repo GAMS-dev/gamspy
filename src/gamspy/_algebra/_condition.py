@@ -66,7 +66,7 @@ class Condition:
 
         condition = condition_expression.gamsRepr()
         condition = condition.replace("=l=", "<=")
-        condition = condition.replace("=e=", "==")
+        condition = condition.replace("=e=", "=")
         condition = condition.replace("=g=", ">=")
 
         statement = expression.Expression(

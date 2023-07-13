@@ -100,7 +100,7 @@ class Expression(_operable.Operable):
                 implicits.ImplicitVariable,
             ),
         ):
-            right_str = right_str.replace("=e=", "==")
+            right_str = right_str.replace("=e=", "=")
             right_str = right_str.replace("=l=", "<=")
             right_str = right_str.replace("=g=", ">=")
 
@@ -115,23 +115,14 @@ class Expression(_operable.Operable):
         """
         left_str, right_str = self._get_operand_representations()
 
-        # sum(hp $ ord(hp) >= ord(h),lambda(j,hp))
-        # sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp))
-        if self._op_type == "$" and (
-            "<=" in right_str
-            or "==" in right_str
-            or ">=" in right_str
-            or "=l=" in right_str
-            or "=e=" in right_str
-            or "=g=" in right_str
-        ):
-            right_str = f"({right_str})"
+        out_str = f"{left_str} {self._op_type} {right_str}"
 
-        # add paranthesis for right ordering
-        representation = f"({left_str} {self._op_type} {right_str})"
+        if self._op_type not in ["..", "="]:
+            # add paranthesis for right ordering
+            out_str = f"({out_str})"
 
         if isinstance(self._left, (_domain.Domain, syms.Set, syms.Alias)):
-            return representation[1:-1]
+            return out_str[1:-1]
 
         if self._op_type in [
             "=g=",
@@ -141,26 +132,30 @@ class Expression(_operable.Operable):
             "=x=",
             "=c=",
             "=b=",
-            "=",
             ".",
-            "..",
         ]:
             # (test.. a =g= b) -> test.. a =g= b
-            representation = representation[1:-1]  # remove the paranthesis
-
-        if self._op_type in ["=", ".."]:
-            # add ; to assignments
-            representation += ";"
+            out_str = out_str[1:-1]  # remove the paranthesis
 
         if self._op_type == ".":
             # name . pos -> name.pos
-            representation = representation.replace(" ", "")  # remove spaces
+            out_str = out_str.replace(" ", "")  # remove spaces
+
+        if self._op_type in ["..", "="]:
+            # add ; to equation definitions and assignments
+            out_str += ";"
 
         if self._op_type == "==":
             # volume.lo(t)$(ord(t) = card(t)) = 2000;
-            representation = representation.replace("==", "=")
+            out_str = out_str.replace("==", "=")
 
-        return representation
+        if self._op_type in ["=", ".."] and out_str[0] == "(":
+            # (voycap(j,k)$vc(j,k)).. sum(.) -> voycap(j,k)$vc(j,k).. sum(.)
+            indices = utils._getMatchingParanthesisIndices(out_str)
+            match_index = indices[0]
+            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
+
+        return out_str
 
     def getStatement(self) -> str:
         """Conditioned equations become an Expression.
@@ -169,15 +164,4 @@ class Expression(_operable.Operable):
         -------
         str
         """
-        representation = self.gamsRepr()
-
-        # (voycap(j,k) $ vc(j,k)) .. sum(.) -> voycap(j,k) $ vc(j,k) .. sum(.)
-        if (
-            self._op_type in ["=", ".."]
-            and isinstance(self._left, Expression)
-            and representation[0] == "("
-        ):
-            splits = self.gamsRepr().rsplit(self._op_type, 1)
-            left_side = splits[0].rstrip()[1:-1]
-            return left_side + self._op_type + splits[1]
-        return representation
+        return self.gamsRepr()
