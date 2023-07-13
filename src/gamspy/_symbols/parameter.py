@@ -194,9 +194,9 @@ class Parameter(gt.Parameter, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
-        if self._records is not None:
-            records_str = " / "
+        records_str = " / "
 
+        if self._records is not None:
             if self.is_scalar:
                 # Parameter a(i) / 5.0 /;
                 value = (
@@ -210,10 +210,8 @@ class Parameter(gt.Parameter, operable.Operable):
                     label_str = ".".join(row_as_list[:-1])
                     records_str += "\n" + f"{label_str} {row_as_list[-1]}"
 
-            records_str += " /"
+        records_str += " /"
 
-            output += records_str
-
-        output += ";"
+        output += records_str + ";"
 
         return output

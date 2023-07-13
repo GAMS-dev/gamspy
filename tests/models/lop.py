@@ -46,16 +46,16 @@ def main():
     # Equations
     balance, defspobj = m.getSymbols(["balance", "defspobj"])
 
-    # balance[s, s1] = (
-    #     Sum(d[s1, s2], f[s, d])
-    #     == Sum(d[s2, s1], f[s, d]) + s.sameAs(s1) * Card(s) - 1
-    # )
+    balance[s, s1] = (
+        Sum(d[s1, s2], f[s, d])
+        == Sum(d[s2, s1], f[s, d]) + s.sameAs(s1) * Card(s) - 1
+    )
 
-    # defspobj.definition = spobj == Sum(
-    #     (s, d[s1, s2]), f[s, d] * math.max(rt[s1, s2], rt[s2, s1])
-    # )
+    defspobj.definition = spobj == Sum(
+        (s, d[s1, s2]), f[s, d] * math.max(rt[s1, s2], rt[s2, s1])
+    )
 
-    # sp = Model(m, "sp", equations=[balance, defspobj])
+    sp = Model(m, "sp", equations=[balance, defspobj])
     # m.solve(sp, "LP", "min", objective_variable=spobj)
 
     # tree = Set(m, "tree", domain=[s, s1, s2])
