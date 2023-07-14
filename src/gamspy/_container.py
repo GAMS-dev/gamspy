@@ -653,7 +653,7 @@ class Container(gt.Container):
         self._unsaved_statements[unique_name] = gams_code
         self._statements_dict[unique_name] = gams_code
 
-    def _loadOnDemand(self, symbol_name: str) -> pd.DataFrame:
+    def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
         # Save unsaved statements to a file
         self._write_to_gms()
@@ -662,14 +662,16 @@ class Container(gt.Container):
         self._restart_from_workfile()
 
         # Update symbol data
-        gdx_handle = utils._openGdxFile(self.system_directory, self._gdx_path)
-        data = utils._getSymbolData(self._gams2np, gdx_handle, symbol_name)
-        utils._closeGdxHandle(gdx_handle)
+        dirty_symbols = []
+        for symbol in self.data.values():
+            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
+                dirty_symbols.append(symbol)
+                symbol._is_dirty = False
+
+        self.loadFromGdx(self._gdx_path, dirty_symbols)
 
         # Empty unsaved statements
         self._unsaved_statements = {}
-
-        return data
 
     def _restart_from_workfile(self) -> None:
         """Restarts from the latest workfile"""

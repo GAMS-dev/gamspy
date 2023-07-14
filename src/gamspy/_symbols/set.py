@@ -224,14 +224,7 @@ class Set(gt.Set, operable.Operable):
         if not self._is_dirty:
             return self._records
 
-        updated_records = self.ref_container._loadOnDemand(self.name)
-        if updated_records is not None:
-            self.records = updated_records.copy()
-            self.domain_labels = self.domain_names
-        else:
-            self.records = updated_records
-
-        self._is_dirty = False
+        self.ref_container._loadOnDemand()
 
         return self._records
 

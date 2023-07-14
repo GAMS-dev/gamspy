@@ -54,7 +54,12 @@ class Condition:
                 f"Container must be defined for symbol {self._symbol.name}"
             )
 
-        self._symbol._is_dirty = True
+        self._symbol.ref_container[self._symbol.name]._is_dirty = True
+
+        if isinstance(right_hand_expression, bool):
+            right_hand_expression = (
+                "yes" if right_hand_expression is True else "no"
+            )
 
         op_type = (
             ".."

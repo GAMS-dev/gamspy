@@ -76,9 +76,12 @@ class Operation(_operable.Operable):
         output += index_str
         output += ","
 
+        if isinstance(self.expression, bool):
+            self.expression = "yes" if self.expression is True else "no"
+
         expression_str = (
             str(self.expression)
-            if isinstance(self.expression, int)
+            if isinstance(self.expression, (int, str))
             else self.expression.gamsRepr()
         )
 

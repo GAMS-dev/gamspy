@@ -133,14 +133,7 @@ class Parameter(gt.Parameter, operable.Operable):
         if not self._is_dirty:
             return self._records
 
-        updated_records = self.ref_container._loadOnDemand(self.name)
-        if updated_records is not None:
-            self.records = updated_records.copy()
-            self.domain_labels = self.domain_names
-        else:
-            self.records = updated_records
-
-        self._is_dirty = False
+        self.ref_container._loadOnDemand()
 
         return self._records
 
@@ -194,9 +187,9 @@ class Parameter(gt.Parameter, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
-        records_str = " / "
-
         if self._records is not None:
+            records_str = " / "
+
             if self.is_scalar:
                 # Parameter a(i) / 5.0 /;
                 value = (
@@ -210,8 +203,10 @@ class Parameter(gt.Parameter, operable.Operable):
                     label_str = ".".join(row_as_list[:-1])
                     records_str += "\n" + f"{label_str} {row_as_list[-1]}"
 
-        records_str += " /"
+            records_str += " /"
 
-        output += records_str + ";"
+            output += records_str
+
+        output += ";"
 
         return output
