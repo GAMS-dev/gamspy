@@ -23,7 +23,7 @@ import gamspy.math as math
 def main():
     m = Container(
         load_from=str(Path(__file__).parent.absolute()) + "/lop.gdx",
-        system_directory="/opt/gams/gams44.0_linux_x64_64_sfx",
+        # system_directory="/opt/gams/gams44.0_linux_x64_64_sfx",
     )
 
     # Sets
