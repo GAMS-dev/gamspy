@@ -24,9 +24,9 @@ class Alias(gt.Alias, operable.Operable):
 
     Example
     ----------
-    >>> m = gt.Container()
-    >>> i = gt.Set(m, "i")
-    >>> j = gt.Alias(m, "j", i)
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Alias(m, "j", i)
     """
 
     def __init__(self, container: "Container", name: str, alias_with: "Set"):

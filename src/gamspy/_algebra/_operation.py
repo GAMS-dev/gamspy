@@ -27,18 +27,25 @@ import gamspy._algebra._operable as _operable
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
 import gamspy._algebra._domain as domain
-from typing import List, Union, TYPE_CHECKING
+from typing import Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from gams.transfer import Set, Alias
     from gamspy._algebra import Domain
+    from gamspy._algebra._expression import Expression
 
 
 class Operation(_operable.Operable):
     def __init__(
         self,
-        domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: expression.Expression,
+        domain: Union[
+            "Set",
+            "Alias",
+            Tuple[Union["Set", "Alias"]],
+            "Domain",
+            "Expression",
+        ],
+        expression: Union["Expression", int, bool],
         op_name: str,
     ):
         self.domain = utils._toList(domain)
@@ -46,7 +53,7 @@ class Operation(_operable.Operable):
         self.expression = expression
         self._op_name = op_name
 
-    def _get_index_str(self):
+    def _get_index_str(self) -> str:
         if len(self.domain) == 1:
             index_str = self.domain[0].gamsRepr()
 
@@ -84,7 +91,9 @@ class Operation(_operable.Operable):
         output += ","
 
         if isinstance(self.expression, bool):
-            self.expression = "yes" if self.expression is True else "no"
+            self.expression = (
+                "yes" if self.expression is True else "no"  # type: ignore
+            )
 
         expression_str = (
             str(self.expression)
@@ -101,37 +110,125 @@ class Operation(_operable.Operable):
 
 
 class Sum(Operation):
+    """
+    Represents a sum operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : Union[Expression, int, bool]
+
+    Example
+    ----------
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
+    >>> e[i] = gp.Sum(i, 3) <= v
+    """
+
     def __init__(
         self,
-        domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: expression.Expression,
+        domain: Union[
+            "Set",
+            "Alias",
+            Tuple[Union["Set", "Alias"]],
+            "Domain",
+            "Expression",
+        ],
+        expression: Union["Expression", int, bool],
     ):
         super().__init__(domain, expression, "sum")
 
 
 class Product(Operation):
+    """
+    Represents a product operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : Union[Expression, int, bool]
+
+    Example
+    ----------
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
+    >>> e[i] = gp.Product(i, 3) <= v
+    """
+
     def __init__(
         self,
-        domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: expression.Expression,
+        domain: Union[
+            "Set",
+            "Alias",
+            Tuple[Union["Set", "Alias"]],
+            "Domain",
+            "Expression",
+        ],
+        expression: Union["Expression", int, bool],
     ):
         super().__init__(domain, expression, "prod")
 
 
 class Smin(Operation):
+    """
+    Represents a smin operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : Union[Expression, int, bool]
+
+    Example
+    ----------
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
+    >>> e[i] = gp.Smin(i, 3) <= v
+    """
+
     def __init__(
         self,
-        domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: expression.Expression,
+        domain: Union[
+            "Set",
+            "Alias",
+            Tuple[Union["Set", "Alias"]],
+            "Domain",
+            "Expression",
+        ],
+        expression: Union["Expression", int, bool],
     ):
         super().__init__(domain, expression, "smin")
 
 
 class Smax(Operation):
+    """
+    Represents a smax operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : Union[Expression, int, bool]
+
+    Example
+    ----------
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
+    >>> e[i] = gp.Smax(i, 3) <= v
+    """
+
     def __init__(
         self,
-        domain: List[Union["Domain", "Set", "Alias", str]],
-        expression: expression.Expression,
+        domain: Union[
+            "Set",
+            "Alias",
+            Tuple[Union["Set", "Alias"]],
+            "Domain",
+            "Expression",
+        ],
+        expression: Union["Expression", int, bool],
     ):
         super().__init__(domain, expression, "smax")
 
@@ -139,12 +236,16 @@ class Smax(Operation):
 class Ord(_operable.Operable):
     """
     Operator ord may be used only with one-dimensional sets.
+
+    Parameters
+    ----------
+    set : Set | Alias
     """
 
-    def __init__(self, set: "Set"):
+    def __init__(self, set: Union["Set", "Alias"]):
         self._set = set
 
-    def __eq__(self, other) -> expression.Expression:  # type: ignore
+    def __eq__(self, other) -> "Expression":  # type: ignore
         return expression.Expression(self, "==", other)
 
     def __ge__(self, other):
@@ -160,12 +261,16 @@ class Ord(_operable.Operable):
 class Card(_operable.Operable):
     """
     The operator card may be used with any set.
+
+    Parameters
+    ----------
+    set : Set | Alias
     """
 
-    def __init__(self, set: "Set") -> None:
+    def __init__(self, set: Union["Set", "Alias"]) -> None:
         self._set = set
 
-    def __eq__(self, other) -> expression.Expression:  # type: ignore
+    def __eq__(self, other) -> "Expression":  # type: ignore
         return expression.Expression(self, "==", other)
 
     def gamsRepr(self) -> str:

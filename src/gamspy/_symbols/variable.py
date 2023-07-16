@@ -28,9 +28,9 @@ class Variable(gt.Variable, operable.Operable):
 
     Example
     ----------
-    >>> m = gt.Container()
-    >>> i = gt.Set(m, "i", records=['i1','i2'])
-    >>> v = gt.Variable(m, "a", [i])
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2'])
+    >>> v = gp.Variable(m, "a", [i])
     """
 
     def __init__(

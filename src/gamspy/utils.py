@@ -31,7 +31,12 @@ import gamspy._symbols._implicits as implicits
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
-from typing import Optional, Union, List
+from typing import Optional, Tuple, Union, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gamspy import Alias, Set
+    from gamspy import Domain
+    from gamspy._algebra._expression import Expression
 
 
 def convert_to_categoricals(arrkeys, arrvals, unique_uels):
@@ -190,13 +195,24 @@ def _openGdxFile(system_directory: str, load_from: str):
     return gdxHandle
 
 
-def _toList(obj: Union[str, tuple, list, implicits.ImplicitSet]) -> list:
+def _toList(
+    obj: Union[
+        "Set",
+        "Alias",
+        str,
+        Tuple,
+        "Domain",
+        "Expression",
+        list,
+        implicits.ImplicitSet,
+    ]
+) -> list:
     """
     Converts the given object to a list
 
     Parameters
     ----------
-    obj : Union[str, tuple, list]
+    obj : Set | Alias | str | tuple | list | Domain | Expression | ImplicitSet
         Object to be converted
 
     Returns

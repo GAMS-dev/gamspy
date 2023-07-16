@@ -32,8 +32,8 @@ class Set(gt.Set, operable.Operable):
 
     Example
     ----------
-    >>> m = gt.Container()
-    >>> i = gt.Set(m, "i", records=['i1','i2'])
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2'])
     """
 
     def __init__(
