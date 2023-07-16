@@ -82,6 +82,7 @@ class Set(gt.Set, operable.Operable):
             self._current_index += 1
             return row
 
+        self._current_index = 0
         raise StopIteration
 
     def __iter__(self):
@@ -285,8 +286,9 @@ class Set(gt.Set, operable.Operable):
         if self.description:
             output += f' "{self.description}"'
 
-        records_str = " / "
         if self._records is not None:
+            records_str = " / "
+
             if self.domain is None or len(self.domain) <= 1:
                 records_str += ",".join(
                     self._records.iloc[:, 0].values.tolist()
@@ -300,7 +302,7 @@ class Set(gt.Set, operable.Operable):
                 for string in strings:
                     records_str += "\n" + ".".join(string.split())
 
-        output += records_str + " /"
+            output += records_str + " /"
 
         output += ";"
 

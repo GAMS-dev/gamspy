@@ -77,14 +77,20 @@ def main():
     l[root, s, s1, s2] = False
     lr[root, s, s1, r] = False
 
-    my_idx = 0
+    counter = 0
+
     for root_idx, root_elem in enumerate(root):
+        # print(f"Root elem: {root_elem[0]}\n-----------")
+        # print(r.records)
         from_[root_elem[0]] = True
         unvisit[s] = True
         visit[s] = False
 
         for idx, r_elem in enumerate(r):
-            if idx > 0 and len(unvisit) > 0:
+            # print(f"[{idx}], r elem: {r_elem[0]}, unvisit length: {len(unvisit)}")
+            if int(r_elem[0]) > 1 and len(unvisit):
+                # print(len(unvisit), unvisit.records)
+                # print(from_.records)
                 unvisit[from_] = False
                 visit[from_] = True
                 to[unvisit] = Sum(tree[root_elem[0], from_, unvisit], True)
@@ -113,25 +119,22 @@ def main():
                 from_[s] = False
                 from_[to] = True
                 to[s] = False
-                my_idx += 1
+
+                counter += 1
+                # print(counter)
 
         from_[s] = False
 
-    print(from_.records)
-    print(to.records)
-    print(unvisit.records)
-    print(visit.records)
-    exit()
     error02 = Set(m, "error02", domain=[s1, s2])
-    error02[s1, s2] = lfr[s1, s2] & Sum(l[root, s, s1, s2], 1) == 0
+    error02[s1, s2] = lfr[s1, s2] & (Sum(l[root, s, s1, s2], 1) == 0)
 
-    if not len(error02) > 0:
+    if len(error02):
         sys.exit(f"There is an error {error02.records}")
 
     ll = Set(m, "ll", domain=[s, s])
     ll[s1, s2] = Ord(s1) < Ord(s2)
 
-    l[root, s, s1, s2].where[~ll[root, s]] = True
+    l[root, s, s1, s2].where[~ll[root, s]] = False
     lr[root, s, s1, r].where[~ll[root, s]] = False
 
     l[root, s, s1, s2].where[l[root, s, s2, s1] & rt[s1, s2]] = True
@@ -179,8 +182,8 @@ def main():
 
     m.solve(lopdt, problem="mip", sense="max", objective_variable=obj)
 
-    solrep = Parameter(m, "solrep")
-    solsum = Parameter(m, "solsum")
+    solrep = Parameter(m, "solrep", domain=["*", "*", "*", "*"])
+    solsum = Parameter(m, "solsum", domain=["*", "*"])
 
     solrep["DT", ll, "freq"] = phi.l[ll]
     solrep["DT", ll, "cars"].where[phi.l[ll]] = mincars + Card(ac) - 1
@@ -243,68 +246,69 @@ def main():
 
     m.solve(ilp, problem="mip", sense="min", objective_variable=obj)
 
-    # solrep["ILP", ll, "freq"] = Sum(lf.where[x.l[ll, lf]], Ord(lf))
-    # solrep["ILP", ll, "cars"] = Sum(
-    #     lf.where[x.l[ll, lf]], mincars + y.l[ll, lf]
-    # )
-    # solsum["ILP", "cost"] = obj.l
+    solrep["ILP", ll, "freq"] = Sum(lf.where[x.l[ll, lf]], Ord(lf))
+    solrep["ILP", ll, "cars"] = Sum(
+        lf.where[x.l[ll, lf]], mincars + y.l[ll, lf]
+    )
+    solsum["ILP", "cost"] = obj.l
 
-    # cap = Parameter(m, "cap", domain=[s, s])
-    # sol = Set(m, "sol", domain=[s, s])
+    cap = Parameter(m, "cap", domain=[s, s])
+    sol = Set(m, "sol", domain=[s, s])
 
-    # dtr = Variable(m, "dtr", domain=[s, s, s, s], type="positive")
+    dtr = Variable(m, "dtr", domain=[s, s, s, s], type="positive")
 
-    # dtllimit = Equation(m, "dtllimit", domain=[s, s1, s2, s3], type="leq")
-    # sumbound = Equation(m, "sumbound", domain=[s, s], type="eq")
+    dtllimit = Equation(m, "dtllimit", domain=[s, s1, s2, s3], type="leq")
+    sumbound = Equation(m, "sumbound", domain=[s, s], type="eq")
 
-    # dtllimit[l[sol, s, s1]] = (
-    #     Sum(
-    #         Domain(s2, s3).where[od[s2, s3]]
-    #         & rp[sol, s2]
-    #         & rp[sol, s3]
-    #         & (
-    #             math.min(rp[sol, s], rp[sol, s1])
-    #             >= rp[sol, s2] & math.max(rp[sol, s], rp[sol, s1])
-    #             <= rp[sol, s3] | math.min(rp[sol, s], rp[sol, s1])
-    #             >= rp[sol, s3] & math.max(rp[sol, s], rp[sol, s1])
-    #             <= rp[sol, s2]
-    #         ),
-    #         dtr[sol, s2, s3],
-    #     )
-    #     <= cap[sol]
-    # )
+    dtllimit[l[sol, s, s1]] = (
+        Sum(
+            Domain(s2, s3).where[
+                od[s2, s3]
+                & rp[sol, s2]
+                & rp[sol, s3]
+                & (
+                    (math.min(rp[sol, s], rp[sol, s1]) >= rp[sol, s2])
+                    & (math.max(rp[sol, s], rp[sol, s1]) <= rp[sol, s3])
+                    | (math.min(rp[sol, s], rp[sol, s1]) >= rp[sol, s3])
+                    & (math.max(rp[sol, s], rp[sol, s1]) <= rp[sol, s2])
+                )
+            ],
+            dtr[sol, s2, s3],
+        )
+        <= cap[sol]
+    )
 
-    # sumbound[s2, s3].where[od[s2, s3]] = (
-    #     Sum(sol.where[rp[sol, s2] & rp[sol, s3]], dtr[sol, s2, s3])
-    #     == dt[s2, s3]
-    # )
+    sumbound[s2, s3].where[od[s2, s3]] = (
+        Sum(sol.where[rp[sol, s2] & rp[sol, s3]], dtr[sol, s2, s3])
+        == dt[s2, s3]
+    )
 
-    # evaldt = Model(m, "evaldt", equations=[dtllimit, sumbound, defobjdtlop])
+    evaldt = Model(m, "evaldt", equations=[dtllimit, sumbound, defobjdtlop])
 
-    # sol[ll] = solrep["DT", ll, "freq"]
-    # cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
+    sol[ll] = solrep["DT", ll, "freq"]
+    cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
 
-    # m.solve(evaldt, problem="lp", sense="max", objective_variable=obj)
+    m.solve(evaldt, problem="lp", sense="max", objective_variable=obj)
 
-    # solsum["DT", "dtrav"] = obj.l
-    # solsum["DT", "cost"] = Sum(
-    #     sol,
-    #     solrep["DT", sol, "freq"] * length[sol] * trm
-    #     + (
-    #         solrep["DT", sol, "freq"] * length[sol] * crm
-    #         + math.ceil(sigma[sol] * solrep["DT", sol, "freq"]) * cfx
-    #     )
-    #     * solrep["DT", sol, "cars"],
-    # )
+    solsum["DT", "dtrav"] = obj.l
+    solsum["DT", "cost"] = Sum(
+        sol,
+        solrep["DT", sol, "freq"] * length[sol] * trm
+        + (
+            solrep["DT", sol, "freq"] * length[sol] * crm
+            + math.ceil(sigma[sol] * solrep["DT", sol, "freq"]) * cfx
+        )
+        * solrep["DT", sol, "cars"],
+    )
 
-    # sol[ll] = solrep["ILP", ll, "freq"]
-    # cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
+    sol[ll] = solrep["ILP", ll, "freq"]
+    cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
 
-    # m.solve(evaldt, problem="lp", sense="max", objective_variable=obj)
-    # solsum["ILP", "dtrav"] = obj.l
+    m.solve(evaldt, problem="lp", sense="max", objective_variable=obj)
+    solsum["ILP", "dtrav"] = obj.l
 
-    # print(solrep.records)
-    # print(solsum.records)
+    print(solrep.records)
+    print(solsum.records)
 
 
 if __name__ == "__main__":

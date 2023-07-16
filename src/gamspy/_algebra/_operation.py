@@ -67,6 +67,13 @@ class Operation(_operable.Operable):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def _replace_operations(self, output: str) -> str:
+        output = output.replace("=l=", "<=")
+        output = output.replace("=g=", ">=")
+        output = output.replace("=e=", "==")
+
+        return output
+
     def gamsRepr(self) -> str:
         # Ex: sum((i,j), c(i,j) * x(i,j))
         output = f"{self._op_name}("
@@ -87,6 +94,8 @@ class Operation(_operable.Operable):
 
         output += expression_str
         output += ")"
+
+        output = self._replace_operations(output)
 
         return output
 

@@ -93,6 +93,7 @@ class Equation(gt.Equation, operable.Operable):
             self._current_index += 1
             return row
 
+        self._current_index = 0
         raise StopIteration
 
     def __iter__(self):
