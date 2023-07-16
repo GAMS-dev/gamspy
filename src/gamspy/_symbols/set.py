@@ -288,7 +288,6 @@ class Set(gt.Set, operable.Operable):
 
         if self._records is not None:
             records_str = " / "
-
             if self.domain is None or len(self.domain) <= 1:
                 records_str += ",".join(
                     self._records.iloc[:, 0].values.tolist()

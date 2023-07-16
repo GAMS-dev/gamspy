@@ -36,6 +36,11 @@ class GamspySuite(unittest.TestCase):
         self.m = Container()
 
     def test_set_string(self):
+        # Without records
+        b = Set(self.m, "b")
+        self.assertEqual(b.gamsRepr(), "b")
+        self.assertEqual(b.getStatement(), "Set b(*);")
+
         # Without domain
         i = Set(
             self.m,
@@ -172,8 +177,11 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             a.getStatement(),
             'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
-            " 600.0\ntopeka 500.0 /;",
+            " 600.0\ntopeka 500.0/;",
         )
+
+        b = Parameter(self.m, "b")
+        self.assertEqual(b.getStatement(), "Parameter b / /;")
 
     def test_implicit_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -228,20 +236,27 @@ class GamspySuite(unittest.TestCase):
         i = Set(self.m, name="i", records=["bla", "damn"])
         j = Set(self.m, name="j", records=["test", "test2"])
 
+        # Variable without data
+        v4 = Variable(self.m, "v4")
+        self.assertEqual(v4.gamsRepr(), "v4")
+        self.assertEqual(v4.getStatement(), "free Variable v4 / /;")
+
         # Variable without domain
         v0 = Variable(self.m, name="v0", description="some text")
         self.assertEqual(v0.gamsRepr(), "v0")
-        self.assertEqual(v0.getStatement(), 'free Variable v0 "some text";')
+        self.assertEqual(
+            v0.getStatement(), 'free Variable v0 "some text" / /;'
+        )
 
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
         self.assertEqual(v1.gamsRepr(), "v1")
-        self.assertEqual(v1.getStatement(), "free Variable v1(i);")
+        self.assertEqual(v1.getStatement(), "free Variable v1(i) / /;")
 
         # Variable two domain
         v2 = Variable(self.m, name="v2", domain=[i, j])
         self.assertEqual(v2.gamsRepr(), "v2")
-        self.assertEqual(v2.getStatement(), "free Variable v2(i,j);")
+        self.assertEqual(v2.getStatement(), "free Variable v2(i,j) / /;")
 
         # Scalar variable with records
         pi = Variable(
@@ -298,16 +313,16 @@ class GamspySuite(unittest.TestCase):
         i = Set(self.m, "i", records=["1", "2"])
 
         v = Variable(self.m, name="v", type="Positive")
-        self.assertEqual(v.getStatement(), "positive Variable v;")
+        self.assertEqual(v.getStatement(), "positive Variable v / /;")
 
         v1 = Variable(self.m, name="v1", type="Negative")
-        self.assertEqual(v1.getStatement(), "negative Variable v1;")
+        self.assertEqual(v1.getStatement(), "negative Variable v1 / /;")
 
         v2 = Variable(self.m, name="v2", type="Binary")
-        self.assertEqual(v2.getStatement(), "binary Variable v2;")
+        self.assertEqual(v2.getStatement(), "binary Variable v2 / /;")
 
         v3 = Variable(self.m, name="v3", domain=[i], type="Integer")
-        self.assertEqual(v3.getStatement(), "integer Variable v3(i);")
+        self.assertEqual(v3.getStatement(), "integer Variable v3(i) / /;")
 
     def test_variable_attributes(self):
         pi = Variable(
@@ -502,7 +517,8 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(cost.gamsRepr(), "cost")
         self.assertEqual(
-            cost.getStatement(), 'Equation cost "define objective function";'
+            cost.getStatement(),
+            'Equation cost "define objective function" / /;',
         )
 
         # Equation declaration with an index
@@ -683,8 +699,8 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
-            "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and (ord(t2)"
-            " > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
+            "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and"
+            " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
         )
 
     def test_equation_attributes(self):

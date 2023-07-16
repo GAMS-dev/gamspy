@@ -308,5 +308,8 @@ class Equation(gt.Equation, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
+        if not self.domain:
+            output += " / /"
+
         output += ";"
         return output

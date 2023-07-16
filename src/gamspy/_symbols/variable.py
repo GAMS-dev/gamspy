@@ -207,8 +207,8 @@ class Variable(gt.Variable, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
+        records_str = " / "
         if self._records is not None:
-            records_str = " / "
             col_mapping = {
                 "level": "L",
                 "marginal": "M",
@@ -253,9 +253,9 @@ class Variable(gt.Variable, operable.Operable):
                             if column_name in col_mapping.keys():
                                 records_str += f"\n{label_str}.{col_mapping[column_name.lower()]} {row[column_name]}"  # noqa: E501
 
-            records_str += "/"
+        records_str += "/"
 
-            output += records_str
+        output += records_str
 
         output += ";"
 
