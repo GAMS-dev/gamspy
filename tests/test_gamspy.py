@@ -1735,6 +1735,7 @@ class GamspySuite(unittest.TestCase):
     def test_loadSymbolsFromGdx(self):
         m = Container()
         _ = Set(m, "i", records=["i1", "i2"])
+        _ = Set(m, "j", records=["j1", "j2"])
         m.write("test.gdx")
 
         _ = Set(self.m, name="k", records=["k1", "k2"])
