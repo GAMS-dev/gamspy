@@ -337,7 +337,8 @@ class Container(gt.Container):
         description: str = "",
         uels_on_axes: bool = False,
     ) -> "Parameter":
-        """Creates a Parameter and adds it to the Container
+        """
+        Creates a Parameter and adds it to the Container
 
         Parameters
         ----------
@@ -923,5 +924,13 @@ class Container(gt.Container):
     def loadSymbolsFromGdx(
         self, load_from: str, symbol_names: List[str]
     ) -> None:
+        """
+        Loads specified symbols from the gdx file
+
+        Parameters
+        ----------
+        load_from : str
+        symbol_names : List[str]
+        """
         self.read(load_from, symbol_names, True)
         self._cast_symbols(symbol_names)

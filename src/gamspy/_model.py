@@ -127,7 +127,8 @@ class Model:
         self._equations = new_equations
 
     def getStatement(self) -> str:
-        """Statement of the Model definition
+        """
+        Statement of the Model definition
 
         Returns
         -------

@@ -161,7 +161,8 @@ class Set(gt.Set, operable.Operable):
         return expression.Expression(f"{self.name}", ".", "last")
 
     def lag(self, n: Union[int, "Operable"], type: str = "linear"):
-        """Lag operation shifts the values of a Set or Alias by one to the left
+        """
+        Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
         ----------
@@ -191,7 +192,8 @@ class Set(gt.Set, operable.Operable):
         raise ValueError("Lag type must be linear or circular")
 
     def lead(self, n: Union[int, "Operable"], type: str = "linear"):
-        """Lead shifts the values of a Set or Alias by one to the right
+        """
+        Lead shifts the values of a Set or Alias by one to the right
 
         Parameters
         ----------
@@ -258,7 +260,8 @@ class Set(gt.Set, operable.Operable):
         )
 
     def gamsRepr(self) -> str:
-        """Representation of this Set in GAMS language.
+        """
+        Representation of this Set in GAMS language.
 
         Returns
         -------
@@ -267,7 +270,8 @@ class Set(gt.Set, operable.Operable):
         return self.name
 
     def getStatement(self) -> str:
-        """Statement of the Set definition
+        """
+        Statement of the Set definition
 
         Returns
         -------

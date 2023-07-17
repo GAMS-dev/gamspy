@@ -93,7 +93,8 @@ class Alias(gt.Alias, operable.Operable):
         raise ValueError("Lag type must be linear or circular")
 
     def lead(self, n: Union[int, "Operable"], type: str = "linear"):
-        """Lead shifts the values of a Set or Alias by one to the right
+        """
+        Lead shifts the values of a Set or Alias by one to the right
 
         Parameters
         ----------

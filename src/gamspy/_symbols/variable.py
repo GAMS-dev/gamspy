@@ -181,7 +181,8 @@ class Variable(gt.Variable, operable.Operable):
                     symobj._requires_state_check = True
 
     def gamsRepr(self) -> str:
-        """Representation of this Variable in GAMS language.
+        """
+        Representation of this Variable in GAMS language.
 
         Returns
         -------
@@ -190,7 +191,8 @@ class Variable(gt.Variable, operable.Operable):
         return self.name
 
     def getStatement(self) -> str:
-        """Statement of the Variable definition
+        """
+        Statement of the Variable definition
 
         Returns
         -------
