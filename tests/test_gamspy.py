@@ -1088,6 +1088,13 @@ class GamspySuite(unittest.TestCase):
             expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
         )
 
+        random_eq = Equation(m, "random", type="eq", domain=[i, j])
+        random_eq[i, j] = Sum(i, muf[i, j]).where[muf[i, j] > 0] >= 0
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].getStatement(),
+            "random(i,j) .. (sum(i,muf(i,j)) $ (muf(i,j) > 0)) =g= 0;",
+        )
+
     def test_condition_on_equation(self):
         td_data = pd.DataFrame(
             [
@@ -1697,7 +1704,7 @@ class GamspySuite(unittest.TestCase):
             "solveLink = %solveLink.loadLibrary%",
         )
 
-    def test_loadFromGdx(self):
+    def test_loadRecordsFromGdx(self):
         i = Set(self.m, name="i", records=["i1", "i2"])
         a = Parameter(
             self.m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)]
@@ -1708,7 +1715,7 @@ class GamspySuite(unittest.TestCase):
         new_container = Container()
         i = Set(new_container, name="i")
         a = Parameter(new_container, name="a", domain=[i])
-        new_container.loadFromGdx("test.gdx")
+        new_container.loadRecordsFromGdx("test.gdx")
 
         # Set
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
@@ -1720,10 +1727,19 @@ class GamspySuite(unittest.TestCase):
         new_container2 = Container()
         i = Set(new_container2, name="i")
         a = Parameter(new_container2, name="a", domain=[i])
-        new_container2.loadFromGdx("test.gdx", [i])
+        new_container2.loadRecordsFromGdx("test.gdx", [i])
 
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
         self.assertIsNone(a.records)
+
+    def test_loadSymbolsFromGdx(self):
+        m = Container()
+        _ = Set(m, "i", records=["i1", "i2"])
+        m.write("test.gdx")
+
+        _ = Set(self.m, name="k", records=["k1", "k2"])
+        self.m.loadSymbolsFromGdx("test.gdx", ["i"])
+        self.assertEqual(list(self.m.data.keys()), ["k", "i"])
 
     def test_iterable(self):
         # Set with no records

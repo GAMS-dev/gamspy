@@ -79,63 +79,65 @@ class Container(gt.Container):
 
         return system_directory
 
-    def _cast_symbols(self) -> None:
+    def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
         Casts all symbols in the GAMS Transfer container to GAMSpy symbols
         """
-        for gt_symbol_name in list(self.data.keys()):
-            gt_symbol = self.data[gt_symbol_name]
+        symbol_names = symbol_names if symbol_names else list(self.data.keys())
+
+        for symbol_name in symbol_names:
+            symbol = self.data[symbol_name]
             new_domain = [
                 self.data[set.name] if not isinstance(set, str) else set
-                for set in gt_symbol.domain
+                for set in symbol.domain
             ]
 
-            del self.data[gt_symbol_name]
+            del self.data[symbol_name]
 
-            if isinstance(gt_symbol, gt.Alias):
+            if isinstance(symbol, gt.Alias):
                 _ = gp.Alias(
                     self,
-                    gt_symbol.name,
-                    gt_symbol.alias_with,
+                    symbol.name,
+                    symbol.alias_with,
                 )
-            elif isinstance(gt_symbol, gt.Set):
+            elif isinstance(symbol, gt.Set):
                 _ = gp.Set(
                     self,
-                    gt_symbol.name,
+                    symbol.name,
                     new_domain,
-                    gt_symbol.is_singleton,
-                    gt_symbol.records,
-                    gt_symbol.domain_forwarding,
-                    gt_symbol.description,
+                    symbol.is_singleton,
+                    symbol.records,
+                    symbol.domain_forwarding,
+                    symbol.description,
                 )
-            elif isinstance(gt_symbol, gt.Parameter):
+            elif isinstance(symbol, gt.Parameter):
                 _ = gp.Parameter(
                     self,
-                    gt_symbol.name,
+                    symbol.name,
                     new_domain,
-                    gt_symbol.records,
-                    gt_symbol.domain_forwarding,
-                    gt_symbol.description,
+                    symbol.records,
+                    symbol.domain_forwarding,
+                    symbol.description,
                 )
-            elif isinstance(gt_symbol, gt.Variable):
+            elif isinstance(symbol, gt.Variable):
                 _ = gp.Variable(
                     self,
-                    gt_symbol.name,
-                    gt_symbol.type,
+                    symbol.name,
+                    symbol.type,
                     new_domain,
-                    gt_symbol.records,
-                    gt_symbol.domain_forwarding,
-                    gt_symbol.description,
+                    symbol.records,
+                    symbol.domain_forwarding,
+                    symbol.description,
                 )
-            elif isinstance(gt_symbol, gt.Equation):
+            elif isinstance(symbol, gt.Equation):
                 _ = gp.Equation(
                     self,
-                    gt_symbol.name,
-                    gt_symbol.type,
+                    symbol.name,
+                    symbol.type,
                     new_domain,
-                    gt_symbol.records,
-                    gt_symbol.domain_forwarding,
-                    gt_symbol.description,
+                    symbol.records,
+                    symbol.domain_forwarding,
+                    symbol.description,
                 )
 
     def _setup_paths(self) -> Tuple[str, str, str, str, str]:
@@ -668,7 +670,7 @@ class Container(gt.Container):
                 dirty_symbols.append(symbol)
                 symbol._is_dirty = False
 
-        self.loadFromGdx(self._gdx_path, dirty_symbols)
+        self.loadRecordsFromGdx(self._gdx_path, dirty_symbols)
 
         # Empty unsaved statements
         self._unsaved_statements = {}
@@ -784,7 +786,7 @@ class Container(gt.Container):
 
         self._update_status(model)
 
-        self.loadFromGdx(self._gdx_path)
+        self.loadRecordsFromGdx(self._gdx_path)
 
         return output
 
@@ -877,7 +879,7 @@ class Container(gt.Container):
                 f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
             )
 
-    def loadFromGdx(
+    def loadRecordsFromGdx(
         self,
         load_from: str,
         symbols: Optional[
@@ -917,3 +919,9 @@ class Container(gt.Container):
         utils._closeGdxHandle(gdxHandle)
 
         self._unsaved_statements = {}
+
+    def loadSymbolsFromGdx(
+        self, load_from: str, symbol_names: List[str]
+    ) -> None:
+        self.read(load_from, symbol_names, True)
+        self._cast_symbols(symbol_names)
