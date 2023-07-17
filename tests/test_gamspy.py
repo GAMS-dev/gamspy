@@ -1204,6 +1204,23 @@ class GamspySuite(unittest.TestCase):
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
+        m = Container()
+
+        p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
+        o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
+
+        # Variables
+        sumc = Variable(m, name="sumc", type="free", domain=[o, p])
+        op = Variable(m, name="op", type="free", domain=[o, p])
+
+        # Equation
+        defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
+        defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].getStatement(),
+            "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
+        )
+
     def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent.absolute()) + "/models/*.py"

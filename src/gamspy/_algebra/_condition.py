@@ -42,8 +42,17 @@ class Condition:
     def __init__(self, symbol):
         self._symbol = symbol
 
+    def _replace_equality_signs(self, condition: str) -> str:
+        condition = condition.replace("=l=", "<=")
+        condition = condition.replace("=e=", "=")
+        condition = condition.replace("=g=", ">=")
+        return condition
+
     def __getitem__(self, condition_expression):
-        return expression.Expression(self._symbol, "$", condition_expression)
+        condition = self._replace_equality_signs(
+            condition_expression.gamsRepr()
+        )
+        return expression.Expression(self._symbol, "$", condition)
 
     def __setitem__(self, condition_expression, right_hand_expression) -> None:
         import gamspy._symbols._implicits as implicits
@@ -69,10 +78,9 @@ class Condition:
             else "="
         )
 
-        condition = condition_expression.gamsRepr()
-        condition = condition.replace("=l=", "<=")
-        condition = condition.replace("=e=", "=")
-        condition = condition.replace("=g=", ">=")
+        condition = self._replace_equality_signs(
+            condition_expression.gamsRepr()
+        )
 
         statement = expression.Expression(
             expression.Expression(self._symbol, "$", condition),
