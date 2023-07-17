@@ -23,9 +23,10 @@
 # SOFTWARE.
 #
 
-import gamspy._algebra._operable as _operable
 import gamspy.utils as utils
+import gamspy._algebra._operable as _operable
 import gamspy._algebra._expression as expression
+import gamspy._algebra._condition as condition
 import gamspy._algebra._domain as domain
 from typing import Tuple, Union, TYPE_CHECKING
 
@@ -52,6 +53,9 @@ class Operation(_operable.Operable):
         assert len(self.domain) > 0, "Operation requires at least one index"
         self.expression = expression
         self._op_name = op_name
+
+        # allow conditions
+        self.where = condition.Condition(self)
 
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:

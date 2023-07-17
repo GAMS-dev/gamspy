@@ -1083,6 +1083,11 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
+        expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]
+        self.assertEqual(
+            expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
+        )
+
     def test_condition_on_equation(self):
         td_data = pd.DataFrame(
             [
