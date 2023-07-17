@@ -1,7 +1,5 @@
 # GAMSpy
 
-Example models implemeted with Algebra: [Models](https://docs.google.com/spreadsheets/d/1t3rwz-AXtDAY-Xv5-vN8mDYGsfKCl74Wih59UCHxWZU/edit?usp=sharing)
-
 ## Set, Alias, Parameter, Variable, Equation
 
 You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. You don't need to change anything. Now, these symbols can be used in creating expressions.
