@@ -1062,7 +1062,25 @@ class GamspySuite(unittest.TestCase):
         last_statement = list(self.m._statements_dict.values())[-1]
         self.assertEqual(
             last_statement.getStatement(),
-            "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ rd(i,j));",
+            "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
+        )
+
+        m = Container()
+
+        p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
+        o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
+
+        sumc = Parameter(m, name="sumc", domain=[o, p])
+        sumc[o, p] = gams_math.uniform(0, 1)
+
+        op = Variable(m, name="op", type="free", domain=[o, p])
+
+        # Equation
+        defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
+        defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == Number(1)
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].getStatement(),
+            "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
     def test_condition_on_equation(self):
@@ -1183,7 +1201,7 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
-            "minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
+            "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
     def test_full_models(self):

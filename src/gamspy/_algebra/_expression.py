@@ -67,6 +67,18 @@ class Expression(_operable.Operable):
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
 
+    def _fix_condition_paranthesis(self, string: str) -> str:
+        if self._op_type == "$":
+            left, right = string.split("$", 1)
+            right = right.strip()
+
+            if right[0] != "(":
+                right = f"({right})"
+
+            string = f"{left}$ {right}"
+
+        return string
+
     def _get_operand_representations(self) -> Tuple[str, str]:
         # Builtin Python types do not have gams representation
         left_str = (
@@ -136,6 +148,8 @@ class Expression(_operable.Operable):
         ]:
             # (test.. a =g= b) -> test.. a =g= b
             out_str = out_str[1:-1]  # remove the paranthesis
+
+        out_str = self._fix_condition_paranthesis(out_str)
 
         if self._op_type == ".":
             # name . pos -> name.pos
