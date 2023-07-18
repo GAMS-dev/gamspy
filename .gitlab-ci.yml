@@ -5,7 +5,6 @@ default:
 stages:
   - fetch-scripts
   - fetch
-  - install-gams # from builds.gams.com or web, all platforms
   - formatter
   - test
 
@@ -32,7 +31,5 @@ variables:
     value: $GAMS_LICENSE
     description: "GAMS license string used for testing"
 
-include: ['ci/.gitlab-ci-fetch.yml',
-          'ci/.gitlab-ci-install-gams.yml',
-          'ci/.gitlab-ci-formatter.yml',
+include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test.yml']

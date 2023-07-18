@@ -5,7 +5,6 @@ test-leg:
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
     entrypoint: [""]
-  needs: [install-gamsdist-leg]
   script:
     - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
@@ -36,7 +35,6 @@ test-deg:
   stage: test
   when: on_success
   tags: [macos]
-  needs: [install-gamsdist-deg]
   script:
     - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n transfer-env python=3.8
@@ -59,7 +57,6 @@ test-dac:
   stage: test
   when: on_success
   tags: [macos-arm64]
-  needs: [install-gamsdist-dac]
   script:
     - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n transfer-env python=3.8
@@ -85,11 +82,10 @@ test-wei:
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
     entrypoint: [""]
-  needs: [install-gamsdist-wei]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n transfer-env python=3.8.10
     - conda activate transfer-env
+    - python --version
     - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
     - Out-File -FilePath $GAMS_PATH\gamslice.txt -InputObject $GAMS_LICENSE -Encoding ASCII
     - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
@@ -100,10 +96,10 @@ test-wei:
     - $env:GMSPYTHONLIB = "$GAMS_PATH\GMSPython\python38.dll"
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo; python reinstall.py; cd ..
-    - pip install wheel build
-    - pip install -r requirements.txt
+    - python -m pip install wheel build
+    - python -m pip install -r requirements.txt
     - python -m build
-    - pip install dist\gamspy-0.0.1-py3-none-any.whl --force-reinstall
+    - python -m pip install dist\gamspy-0.0.1-py3-none-any.whl --force-reinstall
     - coverage run --source=gamspy tests\test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
