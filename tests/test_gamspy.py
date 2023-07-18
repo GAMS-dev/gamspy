@@ -1235,13 +1235,15 @@ class GamspySuite(unittest.TestCase):
 
     def test_full_models(self):
         paths = glob.glob(
-            str(Path(__file__).parent.absolute()) + "/models/*.py"
+            str(Path(__file__).parent.absolute())
+            + os.sep
+            + "models"
+            + os.sep
+            + "*.py"
         )
 
         for idx, path in enumerate(paths):
-            print(
-                f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}", end=" "
-            )
+            print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
             process = subprocess.run(
                 [
                     (
