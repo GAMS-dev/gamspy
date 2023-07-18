@@ -4,6 +4,7 @@ default:
 
 stages:
   - fetch-scripts
+  - fetch
   - install-gams # from builds.gams.com or web, all platforms
   - formatter
   - test
