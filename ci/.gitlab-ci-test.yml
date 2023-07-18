@@ -1,4 +1,4 @@
-run_tests:
+test-leg:
   stage: test
   when: on_success
   tags: [linux]
@@ -31,3 +31,95 @@ run_tests:
         coverage_format: cobertura
         path: coverage.xml
   coverage: '/TOTAL.*\s+(\d+\%)/'
+
+test-deg:
+  stage: test
+  when: on_success
+  tags: [macos]
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  needs: [install-gamsdist-deg]
+  script:
+    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+    - chmod +x Miniconda3-latest-Linux-x86_64.sh
+    - ./Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
+    - source anaconda3/bin/activate
+    - conda create -y -n transfer-env python=3.8
+    - conda activate transfer-env
+    - GAMS_PATH=$(pwd)/gamsdist
+    - echo $GAMS_LICENSE > $GAMS_PATH/gamslice.txt
+    - PATH=$GAMS_PATH:$PATH
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - pip install -r requirements.txt
+    - python -m build
+    - pip install dist/gamspy-0.0.1-py3-none-any.whl --force-reinstall
+    - coverage run --source=gamspy tests/test_gamspy.py
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+
+test-dac:
+  stage: test
+  when: on_success
+  tags: [macos-arm64]
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  needs: [install-gamsdist-dac]
+  script:
+    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+    - chmod +x Miniconda3-latest-Linux-x86_64.sh
+    - ./Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
+    - source anaconda3/bin/activate
+    - conda create -y -n transfer-env python=3.8
+    - conda activate transfer-env
+    - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
+    - Out-File -FilePath $GAMS_PATH\gamslice.txt -InputObject $GAMS_LICENSE -Encoding ASCII
+    - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
+    - $env:GAMSDIR = "$GAMS_PATH;$GAMS_PATH\gbin"
+    - findthisgams -q
+    - gams
+    - $env:GAMS_SYSDIR = "$GAMS_PATH"
+    - $env:GMSPYTHONLIB = "$GAMS_PATH\GMSPython\python38.dll"
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - pip install -r requirements.txt
+    - python -m build
+    - pip install dist/gamspy-0.0.1-py3-none-any.whl --force-reinstall
+    - coverage run --source=gamspy tests/test_gamspy.py
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+
+test-wei:
+  stage: test
+  when: on_success
+  tags: [windows]
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  needs: [install-gamsdist-wei]
+  script:
+    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+    - chmod +x Miniconda3-latest-Linux-x86_64.sh
+    - .\Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
+    - source anaconda3\bin\activate
+    - conda create -y -n transfer-env python=3.8
+    - conda activate transfer-env
+    - GAMS_PATH=$(pwd)\gamsdist
+    - echo $GAMS_LICENSE > $GAMS_PATH\gamslice.txt
+    - PATH=$GAMS_PATH:$PATH
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - pip install -r requirements.txt
+    - python -m build
+    - pip install dist\gamspy-0.0.1-py3-none-any.whl --force-reinstall
+    - coverage run --source=gamspy tests\test_gamspy.py
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
