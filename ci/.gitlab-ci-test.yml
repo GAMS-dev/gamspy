@@ -36,9 +36,6 @@ test-deg:
   stage: test
   when: on_success
   tags: [macos]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
   needs: [install-gamsdist-deg]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -62,9 +59,6 @@ test-dac:
   stage: test
   when: on_success
   tags: [macos-arm64]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
   needs: [install-gamsdist-dac]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -89,7 +83,7 @@ test-wei:
   when: on_success
   tags: [windows]
   image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
     entrypoint: [""]
   needs: [install-gamsdist-wei]
   script:
