@@ -78,6 +78,7 @@ test-wei:
     - conda env list
     - conda activate transfer-env
     - set-alias -name python -value C:\Miniconda\envs\transfer-env\python
+    - set-alias -name pip -value "C:\Miniconda\envs\transfer-env\python -m pip"
     - python --version
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo; python reinstall.py; cd ..
