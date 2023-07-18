@@ -74,8 +74,10 @@ test-wei:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
     entrypoint: [""]
   script:
-    - conda create -y -n transfer-env python=3.8.10
+    - conda create -y -n transfer-env python=3.8
+    - conda env list
     - conda activate transfer-env
+    - set-alias -name python -value C:\Miniconda\envs\transfer-env\python
     - python --version
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo; python reinstall.py; cd ..
