@@ -1,15 +1,56 @@
 install-gamsdist-leg:
   stage: install-gams
+  when: on_success
+  tags: [linux]
   needs: [fetch-ci-scripts]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
     entrypoint: [""]
   script:
-    - python3 ci/fetch_gams.py fetch_leg master $SSH_KEY_PORTING
+    - python3 ci/fetch_gams.py fetch_leg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
     - chmod 777 linux_x64_64_sfx.exe
     - python3 ci/fetch_gams.py install
   artifacts:
     name: gamsdist-leg
     expire_in: 1 hour
-    paths: 
-      - gamsdist/*
+    paths: [ gamsdist/* ]
+
+install-gamsdist-deg:
+  stage: install-gams
+  when: on_success
+  tags: [macos]
+  needs: [fetch-ci-scripts]
+  script:
+    - python3 ci/fetch_gams.py fetch_deg $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
+    - python3 ci/fetch_gams.py install
+  artifacts:
+    name: gamsdist-deg
+    expire_in: 1 hour
+    paths: [gamsdist/*]
+
+install-gamsdist-dac:
+  stage: install-gams
+  when: on_success
+  tags: [macos-arm64]
+  needs: [fetch-ci-scripts]
+  script:
+    - python3 ci/fetch_gams.py fetch_dac $PF_CUSTOM_BRANCH $SSH_KEY_PORTING
+    - python3 ci/fetch_gams.py install
+  artifacts:
+    name: gamsdist-dac
+    expire_in: 1 hour
+    paths: [gamsdist/*]
+
+install-gamsdist-wei:
+  stage: install-gams
+  when: on_success
+  tags: [windows]
+  needs: [fetch-gamsdist-for-wei,fetch-ci-scripts]
+  image:
+    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
+  script:
+    - python ci/fetch_gams.py install
+  artifacts:
+    name: gamsdist-wei
+    expire_in: 1 hour
+    paths: [gamsdist/*]
