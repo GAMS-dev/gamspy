@@ -41,10 +41,6 @@ test-deg:
     entrypoint: [""]
   needs: [install-gamsdist-deg]
   script:
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-    - chmod +x Miniconda3-latest-Linux-x86_64.sh
-    - ./Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
-    - source anaconda3/bin/activate
     - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
     - GAMS_PATH=$(pwd)/gamsdist
@@ -70,10 +66,6 @@ test-dac:
     entrypoint: [""]
   needs: [install-gamsdist-dac]
   script:
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-    - chmod +x Miniconda3-latest-Linux-x86_64.sh
-    - ./Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
-    - source anaconda3/bin/activate
     - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
     - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
@@ -104,10 +96,6 @@ test-wei:
     entrypoint: [""]
   needs: [install-gamsdist-wei]
   script:
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-    - chmod +x Miniconda3-latest-Linux-x86_64.sh
-    - .\Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
-    - source anaconda3\bin\activate
     - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
     - GAMS_PATH=$(pwd)\gamsdist
