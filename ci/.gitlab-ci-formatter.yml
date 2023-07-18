@@ -1,5 +1,7 @@
 run_formatter:
   stage: formatter
+  when: on_success
+  tags: [linux]
   needs: [install-gamsdist-leg]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest

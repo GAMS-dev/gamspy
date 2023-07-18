@@ -1,5 +1,7 @@
 run_tests:
   stage: test
+  when: on_success
+  tags: [linux]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
     entrypoint: [""]
