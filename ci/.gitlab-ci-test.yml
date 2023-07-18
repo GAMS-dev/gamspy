@@ -2,11 +2,10 @@ run_tests:
   stage: test
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: ["/usr/bin/env"]
+    entrypoint: [""]
   needs: [install-gamsdist-leg]
   script:
-    - yum install -y wget git
-    - wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
     - conda create -y -n transfer-env python=3.8

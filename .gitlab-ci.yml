@@ -9,7 +9,6 @@ stages:
   - test
 
 variables:
-  GIT_SUBMODULE_STRATEGY: recursive
   MACHINES_CONTAINER_REG:
     value: registry.gams.com/devel/machines
     description: "URL to the container registry of the machines repository"
