@@ -90,11 +90,16 @@ test-wei:
     - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
-    - GAMS_PATH=$(pwd)\gamsdist
-    - echo $GAMS_LICENSE > $GAMS_PATH\gamslice.txt
-    - PATH=$GAMS_PATH:$PATH
+    - $GAMS_PATH = ($(pwd), '\gamsdist') -join ""
+    - Out-File -FilePath $GAMS_PATH\gamslice.txt -InputObject $GAMS_LICENSE -Encoding ASCII
+    - $env:Path = "$GAMS_PATH;$GAMS_PATH\gbin;" + $env:Path
+    - $env:GAMSDIR = "$GAMS_PATH;$GAMS_PATH\gbin"
+    - findthisgams -q
+    - gams
+    - $env:GAMS_SYSDIR = "$GAMS_PATH"
+    - $env:GMSPYTHONLIB = "$GAMS_PATH\GMSPython\python38.dll"
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - cd transfer-repo && python reinstall.py && cd ..
+    - cd transfer-repo; python reinstall.py; cd ..
     - pip install wheel build
     - pip install -r requirements.txt
     - python -m build
