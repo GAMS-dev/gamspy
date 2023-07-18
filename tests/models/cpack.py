@@ -63,7 +63,7 @@ r.lo.assign = 0.05
 r.up.assign = 0.4
 
 # solve with a good global solver
-c.addOptions({"solver": "scip", "optcr": "0.01"})
+c.addOptions({"optcr": "0.01"})
 print("Starting solve, be patient (log only shown afterwards)...")
 c.solve(m, problem="QCP", sense="max", objective_variable=r)
 

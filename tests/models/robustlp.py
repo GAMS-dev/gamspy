@@ -77,8 +77,6 @@ def main():
 
     y.lo[i] = 0
 
-    m.addOptions({"qcp": "cplex"})
-
     m.solve(roblpqcp, problem="QCP", sense="min", objective_variable=obj)
     results["qcp", j] = x.l[j]
     results["qcp", "obj"] = obj.l

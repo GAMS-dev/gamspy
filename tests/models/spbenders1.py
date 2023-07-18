@@ -155,11 +155,6 @@ def main():
     objSub = Parameter(m, name="objSub", records=0)
     rtol = 0.001
 
-    options = {
-        "solver": "cplex",
-        "solveLink": "%solveLink.loadLibrary%",
-    }
-    m.addOptions(options)
     received.l[j] = 0
 
     for iteration, _ in iter.records.itertuples(index=False):

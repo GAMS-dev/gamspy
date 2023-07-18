@@ -35,6 +35,7 @@ class Container(gt.Container):
     ):
         self.system_directory = self.get_system_directory(system_directory)
         super().__init__(load_from, self.system_directory)
+        self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
         self.name = name
         self._statements_dict: dict = {}
