@@ -25,7 +25,6 @@ def main():
     # Define container
     m = Container(
         load_from=str(Path(__file__).parent.absolute()) + "/Corporate.gdx",
-        system_directory="/opt/gams/gams44.0_linux_x64_64_sfx"
     )
 
     # SETS #

@@ -3,18 +3,18 @@ Equilibrium of System with Piecewise Linear Springs (SPRINGCHAIN)
 
 This model finds the shape of a hanging chain consisting of
 N springs and N-1 nodes. Each spring buckles under compression and each
-node has a weight hanging from it. The springs are assumed 
+node has a weight hanging from it. The springs are assumed
 weightless. The goal is to minimize the potential energy of the
 system.
 
-We use rotated quadratic cone constraints to model the extension 
+We use rotated quadratic cone constraints to model the extension
 of each spring.
 
 
-M. Lobo, L. Vandenberghe, S. Boyd, and H. Lebret,  
-Applications of second-order cone programming, Linear Algebra and its 
-Applications, 284:193-228, November 1998, Special Issue on Linear Algebra 
-in Control, Signals and Image Processing. 
+M. Lobo, L. Vandenberghe, S. Boyd, and H. Lebret,
+Applications of second-order cone programming, Linear Algebra and its
+Applications, 284:193-228, November 1998, Special Issue on Linear Algebra
+in Control, Signals and Image Processing.
 """
 
 import math

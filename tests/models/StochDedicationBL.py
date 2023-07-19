@@ -1,7 +1,8 @@
 """
 Stochastic Dedication model with borrowing and lending variables
 
-* StochDedicationBL.gms: Stochastic Dedication model with borrowing and lending variables.
+* StochDedicationBL.gms: Stochastic Dedication model with borrowing
+* and lending variables.
 * Consiglio, Nielsen and Zenios.
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 6.2.2
 * Last modified: Apr 2008.
@@ -27,7 +28,7 @@ import numpy as np
 
 def main():
     # Define container
-    m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
+    m = Container()
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
@@ -226,7 +227,7 @@ def main():
         description="spot rates",
     )
 
-    # Generate spot rate scenarios, Sr(t,s), using factors from FactorData.inc .
+    # Generate spot rate scenarios, Sr(t,s), using factors from FactorData.inc
     Sr = Parameter(
         m, name="Sr", domain=[t, l], description="Spot rate scenarios"
     )
@@ -284,7 +285,8 @@ def main():
         description="Scenarios of liabilities",
     )
 
-    # Note: The cashflows generated may be negative, modeling complicated derivatives
+    # Note: The cashflows generated may be negative, modeling complicated
+    # derivatives
     SF[t, i, l] = F[t, i] * gams_math.uniform(0.6, 2.0)
 
     SFactorWeights["FF_1", l] = FactorWeights["FF_1", l] * gams_math.uniform(
