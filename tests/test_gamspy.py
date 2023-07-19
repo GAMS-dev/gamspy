@@ -1235,7 +1235,7 @@ class GamspySuite(unittest.TestCase):
 
     def test_full_models(self):
         paths = glob.glob(
-            str(Path(__file__).parent.absolute())
+            str(Path(__file__).parent.resolve())
             + os.sep
             + "models"
             + os.sep
