@@ -2058,7 +2058,7 @@ class GamspySuite(unittest.TestCase):
             expected_path += f"_{platform.machine()}"
 
         m = Container()
-        self.assertEqual(m.system_directory, expected_path)
+        self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
     def test_sameas(self):
         i = Set(self.m, "i")
