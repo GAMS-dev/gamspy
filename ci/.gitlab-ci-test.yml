@@ -83,7 +83,7 @@ test-wei:
     - cd transfer-repo; python reinstall.py; cd ..
     - python -m pip install wheel build
     - python -m pip install -r requirements.txt
-    - python -m build
+    - python -m build --no-isolation
     - python -m pip install dist\gamspy-0.0.1-py3-none-any.whl --force-reinstall
     - coverage run --source=gamspy tests\test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
