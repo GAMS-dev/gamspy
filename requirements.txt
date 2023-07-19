@@ -1,6 +1,0 @@
-black==23.7.0
-build==0.10.0
-coverage==7.2.7
-pandas==2.0.2
-pre-commit==3.3.3
-flake8==6.0.0

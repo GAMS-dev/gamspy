@@ -9,6 +9,34 @@ description = "GAMS Python API for algebraic modelling"
 urls.homepage = "https://github.com/GAMS-dev/gamspy"
 requires-python = ">= 3.8"
 license.file = "LICENSE"
+keywords = [
+  "Optimization",
+  "GAMS",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+dependencies = [
+  "pandas ~= 2.0.2"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black >= 23.7.0",
+    "pre-commit >= 3.3.3",
+    "flake8 >= 5.0.0",
+]
+test = [
+    "mypy >= 1.4.1",
+    "coverage >= 7.2.7"
+]
+
+[tool.mypy]
+warn_unused_configs = true
+follow_imports = "skip"
+follow_imports_for_stubs = false
+ignore_missing_imports = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
