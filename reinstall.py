@@ -20,7 +20,7 @@ try:
 except Exception:
     sys.exit("Gotta install Gams Transfer first bruh")
 
-process = subprocess.run(["python", "-m", "build"])
+process = subprocess.run(["python", "-m", "build", "--wheel"])
 
 process = subprocess.run(
     [
