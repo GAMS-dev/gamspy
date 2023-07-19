@@ -1,3 +1,15 @@
+"""
+Onstream and offstream optimal reservoir management.
+
+Adapted from:
+McKinney, D.C., Savitsky, A.G., Basic optimization models for water and
+energy management. June 1999 (revision 6, February 2003).
+http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
+
+Andrei, N., Optimal management of system of two reservoirs.
+Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import pandas as pd

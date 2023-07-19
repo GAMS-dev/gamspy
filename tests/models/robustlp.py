@@ -1,3 +1,40 @@
+"""
+Robust linear programming as an SOCP (ROBUSTLP)
+
+Consider a linear optimization problem of the form
+min_x c^Tx s.t. a_i^Tx <= b_i, i=1,..,m.
+
+In practice, the coefficient vectors a_i may not be known perfectly,
+as they are subject to noise. Assume that we only know that a_i in E_i,
+where E_i are given ellipsoids. In robust optimization, we seek to minimize
+the original objective, but we insist that each constraint be satisfied,
+irrespective of the choice of the corresponding vector a_i in E_i.
+We obtain the second-order cone optimization problem
+min_x c^Tx s.t. a'_i^Tx + ||R_i^Tx|| <= b_i, i=1,..,m,
+where E_i = { a'_i + R_iu | ||u|| <= 1}. In the above, we observe that
+the feasible set is smaller than the original one, due to the terms involving
+the l_2-norms.
+
+The figure above illustrates the kind of feasible set one obtains in a particular
+instance of the above problem, with spherical uncertainties (that is, all the
+ellipsoids are spheres, R_i = rho I for some rho >0). We observe that the robust
+feasible set is indeed contained in the original polyhedron.
+
+In this particular example we allow coefficients A(i,*) to vary in an ellipsoid.
+The robust LP is reformulated as a SOCP.
+
+Contributed by Michael Ferris, University of Wisconsin, Madison
+
+
+Lobo, M S, Vandenberghe, L, Boyd, S, and Lebret, H, Applications of
+Second Order Cone Programming. Linear Algebra and its Applications,
+Special Issue on Linear Algebra in Control, Signals and Image
+Processing. 284 (November, 1998).
+
+Keywords: linear programming, quadratic constraint programming, robust optimization,
+          second order cone programming
+"""
+
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 from gamspy.math import uniform

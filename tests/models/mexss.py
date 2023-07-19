@@ -1,3 +1,22 @@
+"""
+Mexico Steel - Small Static (MEXSS)
+
+A simplified representation of the Mexican steel sector is used
+to introduce a process industry production and distribution
+scheduling problem.
+
+
+Kendrick, D, Meeraus, A, and Alatorre, J, The Planning of Investment
+Programs in the Steel Industry. The Johns Hopkins University Press,
+Baltimore and London, 1984.
+
+A scanned version of this out-of-print book is accessible at
+http://www.gams.com/docs/pdf/steel_investment.pdf
+
+Keywords: linear programming, production problem, distribution problem, scheduling,
+          micro economics, steel industry
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import pandas

@@ -1,3 +1,23 @@
+"""
+Fuel Scheduling and Unit Commitment Problem (FUEL)
+
+
+Fuel scheduling and unit commitment addresses the problem of
+fuel supply to plants and determining on/off status of units
+simultaneously to minimize total operating cost.
+The present problem: there are two generating units to
+meet a total load over a 6-hour period. One of the unit is oil-based
+and has to simultaneously meet the storage requirements, flow rates
+etc. There are limits on the generation levels for both the units.
+
+
+Wood, A J, and Wollenberg, B F, Example Problem 4e. In Power Generation,
+Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
+
+Keywords: mixed integer nonlinear programming, scheduling, engineering, power
+          generation, unit commitment problem
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Ord, Card
 import pandas as pd

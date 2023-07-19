@@ -1,3 +1,25 @@
+"""
+Tank Size Design Problem - (TANKSIZE)
+
+We discuss a tank design problem for a multi product plant, in which the
+optimal cycle time and the optimal campaign size are unknown. A mixed in-
+teger nonlinear programming formulation is presented, where non-convexities
+are due to the tank investment cost, storage cost, campaign setup cost and
+variable production rates. The objective of the optimization model is to
+minimize the sum of the production cost per ton per product produced. A
+continuous-time mathematical programming formulation for the problem is
+implemented with a fixed number of event points.
+
+
+Rebennack, S, Kallrath, J, and Pardalos, P M, Optimal Storage Design
+for a Multi-Product Plant: A Non-Convex MINLP Formulation. Tech. rep.,
+University of Florida, 2009. Submitted to Computers and Chemical
+Engineering
+
+Keywords: mixed integer nonlinear programming, storage design, global optimization
+          continuous-time model, chemical engineering
+"""
+
 from pathlib import Path
 from gamspy import Sum
 import gamspy.math as gams_math

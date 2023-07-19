@@ -1,3 +1,27 @@
+"""
+Resource-Constrained Project Scheduling Problem (RCPSP)
+
+Resource-constrained project scheduling problem (RCPSP) in a formulation
+which encodes the schedule using binary finishing time indicator variables
+as first proposed by Pritsker.
+
+Problem and model formulation based on:
+Pritsker, A. Alan B., Lawrence J. Waiters, and Philip M. Wolfe. "Multiproject
+scheduling with limited resources: A zero-one programming approach."
+Management science 16.1 (1969): 93-108.
+
+Contains embedded Python code for parsing instance data from the classic
+problem library PSPLIB from Kolisch and Sprecher.
+
+Instance library, generator and file format:
+Kolisch, Rainer, and Arno Sprecher. "PSPLIB-a project scheduling problem
+library: OR software-ORSEP operations research software exchange program."
+European journal of operational research 96.1 (1997): 205-216.
+http://www.om-db.wi.tum.de/psplib/main.html
+
+As default the first instance from PSPLIBs subset with 30 projects is solved to optimality (makespan=43).
+"""
+
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Ord, Domain
 

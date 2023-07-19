@@ -1,3 +1,23 @@
+"""
+A Transportation Problem (TRNSPORT)
+
+This problem finds a least cost shipping schedule that meets
+requirements at markets and supplies at factories.
+
+
+Dantzig, G B, Chapter 3.3. In Linear Programming and Extensions.
+Princeton University Press, Princeton, New Jersey, 1963.
+
+This formulation is described in detail in:
+Rosenthal, R E, Chapter 2: A GAMS Tutorial. In GAMS: A User's Guide.
+The Scientific Press, Redwood City, California, 1988.
+
+The line numbers will not match those in the book because of these
+comments.
+
+Keywords: linear programming, transportation problem, scheduling
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 

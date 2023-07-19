@@ -1,3 +1,16 @@
+"""
+A Production Mix Problem (PRODMIX)
+
+A furniture company wants to maximize its profits from the
+manufacture of different types of desks.
+
+
+Dantzig, G B, Chapter 3.5. In Linear Programming and Extensions.
+Princeton University Press, Princeton, New Jersey, 1963.
+
+Keywords: linear programming, production planning, manufacturing, furniture production
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import numpy as np

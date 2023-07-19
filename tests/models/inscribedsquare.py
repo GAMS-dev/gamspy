@@ -1,3 +1,27 @@
+"""
+Inscribed Square Problem (INSCRIBEDSQUARE)
+
+The inscribed square problem, also known as the square peg problem or
+the Toeplitz' conjecture, is an unsolved question in geometry:
+
+  Does every plane simple closed curve contain all four vertices of
+  some square?
+
+
+This is true if the curve is convex or piecewise smooth and in other
+special cases. The problem was proposed by Otto Toeplitz in 1911.
+See also https://en.wikipedia.org/wiki/Inscribed_square_problem
+
+This model computes a square of maximal area for a given curve.
+
+Use options --fx and --fy to specify the x and y coordinates of a closed
+curve as function in variable t, where t ranges from -pi to pi.
+Use option --gnuplot 1 to enable plotting the curve and computed square
+with gnuplot (if available and a feasible solution has been found).
+
+Contributor: Benjamin Mueller and Felipe Serrano
+"""
+
 from gamspy import Set, Variable, Equation, Model, Container
 from gamspy import Ord, Card
 import math

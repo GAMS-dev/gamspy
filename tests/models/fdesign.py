@@ -1,3 +1,28 @@
+"""
+Linear Phase Lowpass Filter Design (FDESIGN)
+
+This model finds the filter weights for a finite impulse response
+(FIR) filter. We use rotated quadratic cones for the constraints.
+
+This model is the minimax linear phase lowpass filter design from Lobo
+et. al (Section 3.3) We model the nonlinear term 1/t in the model as
+follows: introduce variables u,v, where v = 2 (and u = 1/t). Then 1/t
+can be modeled as the quadratic cone
+
+              ||[v, u-t]|| <= u+t,   u,t >=0
+
+Contributed by Michael Ferris, University of Wisconsin, Madison
+
+
+Lobo, M S, Vandenberghe, L, Boyd, S, and Lebret, H, Applications of
+Second Order Cone Programming. Linear Algebra and its Applications,
+Special Issue on Linear Algebra in Control, Signals and Image
+Processing. 284 (November, 1998).
+
+Keywords: quadratic constraint programming, second order cone programming,
+          engineering, finite impulse response filter designment
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Card, Ord
 import gamspy.math as gams_math

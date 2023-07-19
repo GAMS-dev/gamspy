@@ -1,3 +1,35 @@
+"""
+Parts Supply Problem (PARTSSUPPLY)
+
+This model is based on the ps2_f_s.358 .. ps10_s_mn.396 models by
+Hideo Hashimoto, Kojun Hamada, and Nobuhiro Hosoe.
+
+Using the following options, these models can be run:
+
+ps2_f              : default
+ps2_f_eff          : --nsupplier=1
+ps2_f_inf          : --nsupplier=1 --alttheta=1
+ps2_f_s            : --useic=1
+ps2_s              : --useic=1
+ps3_f              : --nsupplier=3
+ps3_s              : --nsupplier=3  --uselicd=1
+ps3_s_gic          : --nsupplier=3  --useic=1
+ps3_s_mn  1st solve: --nsupplier=3  --uselicd=1
+          2nd solve: --nsupplier=3  --uselicd=1 --altpi=1
+          3rd solve: --nsupplier=3  --uselicd=1 --alttheta=1
+ps3_s_scp 1st solve: --nsupplier=3  --alttheta=2 --modweight=1 --useic=1
+          2nd solve: --nsupplier=3  --alttheta=2 --modweight=1 --uselicd=1 --uselicu=1
+ps5_s_mn           : --nsupplier=5  --uselicd=1 --nsamples=1000
+ps10_s             : --nsupplier=10 --uselicd=1
+ps10_s_mn          : --nsupplier=10 --uselicd=1 --nsamples=1000
+
+Alternatively, the corresponding original model files can be found in
+the GAMS model library.
+
+Keywords: nonlinear programming, contract theory, principal-agent problem,
+          adverse selection, parts supply problem
+"""
+
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Card, Ord
 import gamspy.math as gams_math

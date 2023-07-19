@@ -1,3 +1,20 @@
+"""
+Packing identical size circles in the unit circle (CPACK)
+
+Given the unit circle (of radius 1), find a set of identical
+size circles with an optimized (maximal) radius r so that all
+such circles are contained by the unit circle, in a non-overlapping
+arrangement.
+
+A test example from  the LGO library
+
+
+Pinter, J D, Nonlinear optimization with GAMS/LGO.
+Journal of Global Optimization 38 (2007), 79-101.
+
+Keywords: quadratic constraint programming, circle packing problem, mathematics
+"""
+
 import sys
 from gamspy import Set, Alias, Variable, Equation, Model, Container
 from gamspy import Ord, Number

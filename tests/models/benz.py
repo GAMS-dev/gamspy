@@ -1,3 +1,20 @@
+"""
+Stability of a wire guided Daimler-Benz 0305 bus.
+
+References:
+Neculai Andrei, "Models, Test Problems and Applications for
+Mathematical Programming". Technical Press, Bucharest, 2003.
+
+Application A38, page 402.
+Ackermann, J., et al. " Robust gamma-stability analysis in a plant
+parameter space. Automatica, vol. 27, 1991, pp.75.
+
+Floudas, C.A., Pardalos, P.M., et al. "Handbook of Test Problems in
+Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
+1999.
+Section 7.3.5. Test problem 15, page 102.
+"""
+
 from gamspy import Variable, Equation, Model, Container
 import gamspy.math as gams_math
 

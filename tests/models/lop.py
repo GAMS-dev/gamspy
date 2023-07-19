@@ -1,3 +1,27 @@
+"""
+Line Optimization (LOP)
+
+The problem finds line plans for a given rail network and origin
+destination demand data. Models for minimum cost and direct traveler
+objectives are given. The set of possible lines is defined by the
+shortest paths in the rail network.
+
+
+Bussieck, M R, Optimal Lines in Public Rail Transport. PhD thesis,
+TU Braunschweig, 1998.
+
+Bussieck, M R, Kreuzer, P, and Zimmermann, U T, Optimal Lines for
+Railway Systems. European Journal of Operation Research 96, 1 (1996),
+54-63.
+
+Claessens, M T, van Dijk, N M, and Zwaneveld, P J, Cost Optimal
+Allocation of Rail Passenger Lines. European Journal Operation
+Research 110, 3 (1998), 474-489.
+
+Keywords: linear programming, mixed integer linear programming, passenger railway optimization,
+          shortest path, dutch railway, public rail transport, network optimization
+"""
+
 # flake8: noqa
 
 import sys

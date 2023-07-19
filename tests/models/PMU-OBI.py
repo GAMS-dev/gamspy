@@ -1,3 +1,21 @@
+"""
+Maximizing the network observability using a limited number of PMU for IEEE 14 network without considering zero injection nodes
+
+For more details please refer to Chapter 8 (Gcode8.4), of the following book:
+Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
+--------------------------------------------------------------------------------
+Model type: MIP
+--------------------------------------------------------------------------------
+Contributed by
+Dr. Alireza Soroudi
+IEEE Senior Member
+email: alireza.soroudi@gmail.com
+We do request that publications derived from the use of the developed GAMS code
+explicitly acknowledge that fact by citing
+Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
+DOI: doi.org/10.1007/978-3-319-62350-4
+"""
+
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 

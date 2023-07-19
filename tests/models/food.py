@@ -1,3 +1,50 @@
+"""
+Food Manufacturing Problem - Blending of Oils (FOOD)
+
+The problem is to plan the blending of five kinds of oil, organized in two
+categories (two kinds of vegetable oils and three kinds of non vegetable oils)
+into batches of blended products over six months.
+
+Some of the oil is already available in storage. There is an initial stock of
+oil of 500 tons of each raw type when planning begins. An equal stock should
+exist in storage at the end of the plan. Up to 1000 tons of each type of raw oil
+can be stored each month for later use. The price for storage of raw oils is
+5 monetary units per ton. Refined oil cannot be stored. The blended product
+cannot be stored either.
+
+The rest of the oil (that is, any not available in storage) must be bought in
+quantities to meet the blending requirements. The price of each kind of oil
+varies over the six-month period.
+
+The two categories of oil cannot be refined on the same production line.
+There is a limit on how much oil of each category (vegetable or non vegetable)
+can be refined in a given month:
+ - Not more than 200 tons of vegetable oil can be refined per month.
+ - Not more than 250 tons of non vegetable oil can be refined per month.
+
+There are constraints on the blending of oils:
+ - The product cannot blend more than three oils.
+ - When a given type of oil is blended into the product, at least 20 tons of
+   that type must be used.
+ - If either vegetable oil 1 (v1) or vegetable oil 2 (v2) is blended in the
+   product, then non vegetable oil 3 (o3) must also be blended in that product.
+
+The final product (refined and blended) sells for a known price:
+150 monetary units per ton.
+
+The aim of the six-month plan is to minimize production and storage costs while
+maximizing profit.
+
+
+This example is taken from the Cplex 12 User's Manual
+(ILOG, Cplex 12 User's Manual, 2009)
+
+Williams, H P, Model Building in Mathematical Programming. John Wiley
+and Sons, 1978.
+
+Keywords: mixed integer linear programming, food manufacturing, blending problem
+"""
+
 import gamspy as gp
 import pandas as pd
 

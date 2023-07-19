@@ -1,3 +1,16 @@
+"""
+Blending Problem I (BLEND)
+
+A company wishes to produce a lead-zinc-tin alloy at minimal cost.
+The problem is to blend a new alloy from other purchased alloys.
+
+
+Dantzig, G B, Chapter 3.4. In Linear Programming and Extensions.
+Princeton University Press, Princeton, New Jersey, 1963.
+
+Keywords: linear programming, blending problem, manufacturing, alloy blending
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import numpy as np

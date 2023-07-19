@@ -1,3 +1,20 @@
+"""
+Stochastic Benders - Sequential GAMS Loop (SPBENDERS1)
+
+This example demonstrates a stochastic Benders implementation for the
+simple transport example.
+
+This is the first example of a sequence of stochastic Benders
+implementations using various methods to solve the master and
+subproblem.
+
+This first example implements the stochastic Benders algorithm using
+sequential solves of the master and subproblems in a GAMS loop.
+
+Keywords: linear programming, stochastic Benders algorithm, transportation
+          problem
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import gamspy.math as gams_math

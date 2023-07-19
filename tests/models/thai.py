@@ -1,3 +1,18 @@
+"""
+Thai Navy Problem (THAI)
+
+This model is used to allocate ships to transport personnel from
+different port to a training center.
+
+
+Choypeng, P, Puakpong, P, and Rosenthal, R E, Optimal Ship Routing
+and Personnel Assignment for Naval Recruitment in Thailand.
+Interfaces 16, 4 (1986), 356-366.
+
+Keywords: mixed integer linear programming, routing, naval recruitment,
+          scheduling
+"""
+
 from pathlib import Path
 from gamspy import Sum, Domain
 from gamspy import Model, Container

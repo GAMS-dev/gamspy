@@ -1,3 +1,18 @@
+"""
+Substitution and Structural Change (CHENERY)
+
+This model follows conventional input-output formulations for production
+with nonlinear demand functions, import and export functions and production
+functions for direct factor use.
+
+
+Chenery, H B, and Raduchel, W J, Substitution and Structural Change.
+In Chenery, H B, Ed, Structural Change and Development Policy. Oxford
+University Press, New York and Oxford, 1979.
+
+Keywords: nonlinear programming, econometrics, economic development
+"""
+
 from pathlib import Path
 from gamspy import Sum, Number, Model, Container
 

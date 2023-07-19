@@ -1,3 +1,28 @@
+"""
+Flow Shop Scheduling - (FLOWSHOP)
+
+A workshop that produces metal pipes on demand for automotive industry
+has three machines for bending the pipes, soldering the fastenings,
+and assembling the links. The workshop has to produce six items, for
+which the durations of the processing steps are given below. Once
+started, jobs must be carried out to completion, but the
+workpieces(items) may wait between the machines.
+
+Every machine only processes one item at a time. A workpiece(item) may
+not overtake any other.
+
+What is the sequence that minimizes the total time for completing all
+items (makespan)?
+
+
+Gueret, C, Prins, C, and Sevaux, M, Applications of Optimization with
+Xpress-MP, Translated and revised by Susanne Heipcke. Dash
+Optimization, 2002.
+
+Keywords: mixed integer linear programming, relaxed mixed integer programming,
+          scenario analysis, GUSS, flow shop scheduling, production planning
+"""
+
 import gamspy as gap
 import pandas as pd
 

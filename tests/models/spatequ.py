@@ -1,3 +1,31 @@
+"""
+Spatial Equilibrium (SPATEQU)
+
+This program is written for the spatial equilibrium model with linear supply
+and demand having two products and three regions.
+
+The model contains multiple approaches (LP, NLP, and MCP) for solving this
+problem.
+
+
+Phan, S H, Policy option to promote the wood-processing industry in
+northern Vietnam, forth coming. PhD thesis,
+The University of Queensland, Australia, 2011.
+
+Phan, S H, and Harrison, S, A Review of the Formulation and
+Application of the Spatial Equilibrium Models to Analyze
+Policy. Journal of Forestry Research 22, 4 (2011).
+
+The numerical example has been taken from:
+Takayama, T, and Judge, G G, Spatial Equilibrium and Quadratic
+Programming. Journal of Farm Economics 46, 1 (1964), 67-93
+
+Contributed by: Phan Sy Hieu, November 2010
+
+Keywords: linear programming, nonlinear programming, mixed complementarity
+          problem, spatial equilibrium model
+"""
+
 from pathlib import Path
 from gamspy import Sum
 import gamspy.math as gams_math

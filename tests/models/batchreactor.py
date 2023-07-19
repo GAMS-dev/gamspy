@@ -1,3 +1,15 @@
+"""
+Optimal control of a batch reactor.
+Find the optimal temperature profile which gives maximum intermediate product
+concentration in a batch reactor with two consecutive reactions. The first
+reaction is of second order and the second one is of first order with known
+rate constants.
+
+Renfro J.G., Morshedi, A.M., Osbjornsen, O.A., Simultaneous optimization and
+solution of systems described by differential/algebraic equations. Computer
+and Chemical Engineering, vol.11, 1987, pp.503-517.
+"""
+
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 import gamspy.math as gams_math
 

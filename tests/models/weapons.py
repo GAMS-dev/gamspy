@@ -1,3 +1,18 @@
+"""
+Weapons Assignment (WEAPONS)
+
+This model determines an assignment of weapons to targets in order
+to inflict maximum damage at minimal cost. This is a classic
+NLP test problem.
+
+
+Bracken, J, and McCormick, G P, Chapter 2. In Selected Applications of
+Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
+
+Keywords: nonlinear programming, assignment problem, military application,
+          nlp test problem
+"""
+
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Product, Card
 import pandas as pd
