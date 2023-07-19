@@ -1246,7 +1246,7 @@ class GamspySuite(unittest.TestCase):
                     (
                         os.environ["PYTHON38"]
                         if "PYTHON38" in os.environ
-                        else "python3"
+                        else "python"
                     ),
                     path,
                 ],
