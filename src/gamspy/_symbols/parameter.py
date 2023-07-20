@@ -87,21 +87,6 @@ class Parameter(gt.Parameter, operable.Operable):
         # add statement
         self.ref_container._addStatement(self)
 
-        # iterator index
-        self._current_index = 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
-
     def __getitem__(
         self, indices: Union[list, str]
     ) -> implicits.ImplicitParameter:

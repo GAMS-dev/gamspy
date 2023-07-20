@@ -109,21 +109,6 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-        # iterator index
-        self._current_index = 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
-
     def __getitem__(self, indices: Union[list, str]):
         domain = utils._toList(indices)
         return implicits.ImplicitEquation(

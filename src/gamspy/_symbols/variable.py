@@ -95,21 +95,6 @@ class Variable(gt.Variable, operable.Operable):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-        # iterator index
-        self._current_index = 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
-
     def __getitem__(
         self, indices: Union[list, str]
     ) -> implicits.ImplicitVariable:
