@@ -28,7 +28,7 @@ import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._algebra._expression as expression
 import gamspy._symbols._implicits as implicits
-from typing import TYPE_CHECKING, Union
+from typing import Literal, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Set, Container
@@ -87,7 +87,11 @@ class Alias(gt.Alias, operable.Operable):
     def __iter__(self):
         return self
 
-    def lag(self, n: Union[int, "Operable"], type: str = "linear"):
+    def lag(
+        self,
+        n: Union[int, "Operable"],
+        type: Literal["linear", "circular"] = "linear",
+    ):
         """Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
@@ -117,7 +121,11 @@ class Alias(gt.Alias, operable.Operable):
 
         raise ValueError("Lag type must be linear or circular")
 
-    def lead(self, n: Union[int, "Operable"], type: str = "linear"):
+    def lead(
+        self,
+        n: Union[int, "Operable"],
+        type: Literal["linear", "circular"] = "linear",
+    ):
         """
         Lead shifts the values of a Set or Alias by one to the right
 

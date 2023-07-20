@@ -131,6 +131,12 @@ class GamspySuite(unittest.TestCase):
         new_set = alias.lead(n=5, type="linear")
         self.assertEqual(new_set.name, "A + 5")
 
+        # Incorrect type
+        self.assertRaises(ValueError, set.lead, 5, "bla")
+        self.assertRaises(ValueError, alias.lead, 5, "bla")
+        self.assertRaises(ValueError, set.lag, 5, "bla")
+        self.assertRaises(ValueError, alias.lag, 5, "bla")
+
         m = Container()
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
@@ -1996,6 +2002,12 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(
             TypeError, self.m.solve, transport, "LP", "min", z, None, None, 5
         )
+
+        # Try to solve invalid model
+        m = Container()
+        v = Variable(m, "v")
+        model = Model(m, "model", equations="all")
+        self.assertRaises(Exception, m.solve, model, "LP", "min", v)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)

@@ -24,7 +24,7 @@
 #
 
 from __future__ import annotations
-from typing import Any, List, Optional, Union, TYPE_CHECKING
+from typing import Any, List, Literal, Optional, Union, TYPE_CHECKING
 import gams.transfer as gt
 import pandas as pd
 import gamspy._algebra._expression as expression
@@ -185,7 +185,11 @@ class Set(gt.Set, operable.Operable):
     def last(self):
         return expression.Expression(f"{self.name}", ".", "last")
 
-    def lag(self, n: Union[int, "Operable"], type: str = "linear"):
+    def lag(
+        self,
+        n: Union[int, "Operable"],
+        type: Literal["linear", "circular"] = "linear",
+    ):
         """
         Lag operation shifts the values of a Set or Alias by one to the left
 
@@ -216,7 +220,11 @@ class Set(gt.Set, operable.Operable):
 
         raise ValueError("Lag type must be linear or circular")
 
-    def lead(self, n: Union[int, "Operable"], type: str = "linear"):
+    def lead(
+        self,
+        n: Union[int, "Operable"],
+        type: Literal["linear", "circular"] = "linear",
+    ):
         """
         Lead shifts the values of a Set or Alias by one to the right
 

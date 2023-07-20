@@ -25,13 +25,22 @@
 
 import subprocess
 import os
-import sys
+import platform
 import pandas as pd
 import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
-from typing import Any, Dict, List, Union, Optional, Tuple, TYPE_CHECKING
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    Union,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Alias, Set, Parameter, Variable, Equation, Model
@@ -724,7 +733,7 @@ class Container(gt.Container):
             )
         except Exception as e:
             executed_command = " ".join(commands)
-            sys.exit(
+            raise Exception(
                 "Could not restart with the following"  # type: ignore
                 f" command:\n\n{executed_command}\n\nError log:\n\n{e.output}"
             )
@@ -736,7 +745,7 @@ class Container(gt.Container):
         self,
         model: "Model",
         problem: str,
-        sense: Optional[str] = None,
+        sense: Optional[Literal["MIN", "MAX"]] = None,
         objective_variable: Optional["Variable"] = None,
         commandline_options: Optional[dict] = None,
         scenario: Optional["Set"] = None,
@@ -901,7 +910,7 @@ class Container(gt.Container):
             return process.stdout
         except Exception as e:
             executed_command = " ".join(commands)
-            sys.exit(
+            raise Exception(
                 "Could not run .gms file with the following GAMS"  # type: ignore # noqa: E501
                 f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
             )
