@@ -43,9 +43,3 @@ def power(base, exponent):
         else exponent.gamsRepr()
     )
     return expression.Expression("power(", f"{base_str},{exponent_str}", ")")
-
-
-def sqrt(value) -> Union["Expression", float]:
-    if isinstance(value, (int, float)):
-        return math.sqrt(value)
-    return expression.Expression("sqrt(", value.gamsRepr(), ")")

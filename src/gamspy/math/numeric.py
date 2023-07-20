@@ -61,3 +61,9 @@ def Round(value, decimal: int = 0) -> "Expression":
 
 def sign(value) -> "Expression":
     return expression.Expression("sign(", value.gamsRepr(), ")")
+
+
+def sqrt(value) -> Union["Expression", float]:
+    if isinstance(value, (int, float)):
+        return math.sqrt(value)
+    return expression.Expression("sqrt(", value.gamsRepr(), ")")

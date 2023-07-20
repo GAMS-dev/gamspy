@@ -24,8 +24,18 @@
 #
 
 from gamspy.math.trigonometric import cos, sin, acos, asin
-from gamspy.math.log_exp import exp, power, sqrt, log, log2, log10
-from gamspy.math.numeric import abs, ceil, floor, min, max, mod, Round, sign
+from gamspy.math.log_power import exp, power, log, log2, log10
+from gamspy.math.numeric import (
+    abs,
+    ceil,
+    floor,
+    min,
+    max,
+    mod,
+    Round,
+    sign,
+    sqrt,
+)
 from gamspy.math.probability import centropy, normal, uniform, uniformInt
 
 __all__ = [
