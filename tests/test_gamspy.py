@@ -998,7 +998,7 @@ class GamspySuite(unittest.TestCase):
             sum_op.gamsRepr(), "smax((i,j),(c(i,j) * x(i,j))) =e= z"
         )
 
-    def test_condition_onexpression(self):
+    def test_condition_on_expression(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
         markets = ["mexico-df", "monterrey", "guadalaja"]
 
@@ -1093,6 +1093,18 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
             "random(i,j) .. (sum(i,muf(i,j)) $ (muf(i,j) > 0)) =g= 0;",
+        )
+
+        i["ahmsa"] = True
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            'i("ahmsa") = yes;',
+        )
+
+        i["ahmsa"] = False
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            'i("ahmsa") = no;',
         )
 
     def test_condition_on_equation(self):

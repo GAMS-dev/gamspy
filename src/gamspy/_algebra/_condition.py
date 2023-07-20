@@ -58,10 +58,9 @@ class Condition:
         import gamspy._symbols._implicits as implicits
         import gamspy._symbols as syms
 
-        if not hasattr(self._symbol, "ref_container"):
-            raise Exception(
-                f"Container must be defined for symbol {self._symbol.name}"
-            )
+        assert hasattr(
+            self._symbol, "ref_container"  # pragma: no cover
+        ), f"Container must be defined for symbol {self._symbol.name}"
 
         self._symbol.ref_container[self._symbol.name]._is_dirty = True
 

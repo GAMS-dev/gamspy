@@ -59,11 +59,6 @@ class Expression(_operable.Operable):
         self._right = right
         self.where = condition.Condition(self)
 
-    @property
-    def ref_container(self):
-        # Return the container of either left or right
-        return self._left.ref_container
-
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
 
