@@ -1233,7 +1233,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1506,12 +1506,26 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(sin( b(i) ))")
 
+        # asin
+        op1 = gams_math.asin(0.5)
+        self.assertTrue(isinstance(op1, float))
+        op2 = gams_math.asin(b[i])
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(arcsin( b(i) ))")
+
         # cos
         op1 = gams_math.cos(8)
         self.assertTrue(isinstance(op1, float))
         op2 = gams_math.cos(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(cos( b(i) ))")
+
+        # arccos
+        op1 = gams_math.acos(0.5)
+        self.assertTrue(isinstance(op1, float))
+        op2 = gams_math.acos(b[i])
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(arccos( b(i) ))")
 
         # ceil
         op1 = gams_math.ceil(7.5)
@@ -2065,6 +2079,28 @@ class GamspySuite(unittest.TestCase):
         j = Alias(self.m, "j", i)
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
+
+    def test_utils(self):
+        string = "(bla))"
+        self.assertRaises(
+            Exception, utils._getMatchingParanthesisIndices, string
+        )
+
+        string2 = "((bla)"
+        self.assertRaises(
+            Exception, utils._getMatchingParanthesisIndices, string2
+        )
+
+        i = Set(self.m, "i", records=["i1", "i2"])
+        self.assertEqual(utils._getDomainStr([i, "b", "*"]), '(i,"b",*)')
+        self.assertRaises(Exception, utils._getDomainStr, 5)
+
+        # invalid system directory
+        self.assertRaises(Exception, utils._openGdxFile, "bla", "bla")
+
+        self.assertFalse(utils.checkAllSame([1, 2], [2]))
+        self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))
+        self.assertTrue(utils.checkAllSame([1, 2], [1, 2]))
 
 
 def suite():

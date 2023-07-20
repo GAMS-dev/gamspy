@@ -1,7 +1,7 @@
 import gamspy._algebra._expression as expression
 from typing import Union, Optional, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from gamspy._algebra._expression import Expression
 
 
