@@ -1814,8 +1814,7 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(Exception, m._write_to_gms)
 
         # Parameter record override
-        c = Parameter(
-            m,
+        c = m.addParameter(
             name="c",
             domain=[s],
             records=[("1", 1), ("2", 2), ("3", 3)],
@@ -1824,7 +1823,7 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(c.description, "new description")
 
         # Try to add the same parameter
-        self.assertRaises(ValueError, m, "c", [s, s])
+        self.assertRaises(ValueError, m.addParameter, "c", [s, s])
 
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
