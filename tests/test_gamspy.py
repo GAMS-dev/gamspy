@@ -1822,8 +1822,11 @@ class GamspySuite(unittest.TestCase):
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 
-        m._gms_path = "/root"
-        self.assertRaises(Exception, m._write_to_gms)
+        import platform
+
+        if platform.system() != "Windows":
+            m._gms_path = "/root"
+            self.assertRaises(Exception, m._write_to_gms)
 
         # Parameter record override
         c = m.addParameter(
