@@ -4,7 +4,7 @@ import sys
 
 if not os.path.exists("gams-transfer-python"):
     process = subprocess.run(
-        "git clone --recurse-submodules"
+        "git clone --recurse-submodules --depth 1 --branch v0.1"
         " git@git.gams.com:devel/gams-transfer-python.git",
         shell=True,
     )
