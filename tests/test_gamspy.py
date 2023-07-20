@@ -1239,7 +1239,6 @@ class GamspySuite(unittest.TestCase):
         )
 
         for idx, path in enumerate(paths):
-            print(path)
             print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
             process = subprocess.run(
                 [
@@ -1542,6 +1541,10 @@ class GamspySuite(unittest.TestCase):
         op2 = gams_math.normal(mean=0, dev=1)
         self.assertTrue(op2, expression.Expression)
         self.assertEqual(op2.gamsRepr(), "(normal( 0,1 ))")
+
+        p = Parameter(self.m, "p", domain=[i])
+        op2 = gams_math.sign(p[i])
+        self.assertEqual(op2.gamsRepr(), "(sign( p(i) ))")
 
     def test_domain(self):
         # Set
