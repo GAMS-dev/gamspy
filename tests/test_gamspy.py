@@ -1810,6 +1810,22 @@ class GamspySuite(unittest.TestCase):
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 
+        m._gms_path = "/root"
+        self.assertRaises(Exception, m._write_to_gms)
+
+        # Parameter record override
+        c = Parameter(
+            m,
+            name="c",
+            domain=[s],
+            records=[("1", 1), ("2", 2), ("3", 3)],
+            description="new description",
+        )
+        self.assertEqual(c.description, "new description")
+
+        # Try to add the same parameter
+        self.assertRaises(ValueError, m, "c", [s, s])
+
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
@@ -2073,6 +2089,8 @@ class GamspySuite(unittest.TestCase):
 
         m = Container()
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
+
+        self.assertEqual(m.get_system_directory("bla/bla"), "bla/bla")
 
     def test_sameas(self):
         i = Set(self.m, "i")

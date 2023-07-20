@@ -866,7 +866,7 @@ class Container(gt.Container):
             with open(self._gms_path, "w") as file:
                 file.write(gams_string)
         except Exception as e:
-            sys.exit(f"Could not write to {self.name}.gms because: {e}")
+            raise Exception(f"Could not write to {self.name}.gms because: {e}")
 
     def _run_gms(self, commandline_options: Optional[dict] = None):
         commands = [
