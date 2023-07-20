@@ -200,18 +200,11 @@ class Parameter(gt.Parameter, operable.Operable):
 
         records_str = " / "
         if self._records is not None:
-            if self.is_scalar:
-                # Parameter a(i) / 5.0 /;
-                value = (
-                    0 if self._records.empty else self._records.values[0][0]
-                )
-                records_str += str(value)
-            else:
-                # Parameter a(i) / i1 1\n i2 2\n /;
-                for _, row in self._records.iterrows():
-                    row_as_list = row.tolist()
-                    label_str = ".".join(row_as_list[:-1])
-                    records_str += "\n" + f"{label_str} {row_as_list[-1]}"
+            # Parameter a(i) / i1 1\n i2 2\n /;
+            for _, row in self._records.iterrows():
+                row_as_list = row.tolist()
+                label_str = ".".join(row_as_list[:-1])
+                records_str += "\n" + f"{label_str} {row_as_list[-1]}"
 
         records_str += "/"
 
