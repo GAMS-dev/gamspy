@@ -1,19 +1,18 @@
 import os
 import subprocess
 import sys
-import shutil
 
-if os.path.exists("gams-transfer-python"):
-    shutil.rmtree("gams-transfer-python")
-
-process = subprocess.run(
-    "git clone --recurse-submodules"
-    " git@git.gams.com:devel/gams-transfer-python.git",
-    shell=True,
-)
-process = subprocess.run(
-    "cd gams-transfer-python && python reinstall.py", shell=True
-)
+if not os.path.exists("gams-transfer-python"):
+    process = subprocess.run(
+        "git clone --recurse-submodules"
+        " git@git.gams.com:devel/gams-transfer-python.git",
+        shell=True,
+    )
+    process = subprocess.run(
+        "cd gams-transfer-python && python setup.py bdist_wheel && pip install"
+        " gams[transfer] --find-links dist/",
+        shell=True,
+    )
 
 try:
     import gams.transfer  # noqa: F401
