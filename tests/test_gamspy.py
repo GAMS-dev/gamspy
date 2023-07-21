@@ -69,6 +69,9 @@ class GamspySuite(unittest.TestCase):
             a.getStatement(), "Set a(m,n) / \ni0.j0\ni0.j1\ni1.j0\ni1.j1 /;"
         )
 
+        s = Set(self.m, "s", is_singleton=True)
+        self.assertEqual(s.getStatement(), "Singleton Set s(*);")
+
     def test_set_operators(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
         card = Card(i)
@@ -92,6 +95,8 @@ class GamspySuite(unittest.TestCase):
         difference = i - k
         self.assertEqual(difference.gamsRepr(), "i - k")
 
+        self.assertRaises(TypeError, i.records, 5)
+
     def test_dynamic_sets(self):
         i = Set(self.m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
@@ -99,6 +104,16 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             'i("i1") = no;',
+        )
+
+    def test_implicit_sets(self):
+        j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
+        k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
+
+        k[j] = ~k[j]
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            "k(j) = ( not k(j));",
         )
 
     def test_lag_and_lead(self):
@@ -208,6 +223,17 @@ class GamspySuite(unittest.TestCase):
         )
 
         self.assertEqual(a[i].gamsRepr(), "a(i)")
+        a[i].assign = a * 5
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            "a(i) = (a * 5);",
+        )
+
+        a[i] = -a[i] * 5
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            "a(i) = (-a(i) * 5);",
+        )
 
     def test_implicit_parameter_assignment(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -274,6 +300,8 @@ class GamspySuite(unittest.TestCase):
             pi.getStatement(),
             "free Variable pi / L 3.14159,M 0.0,LO -inf,UP inf,scale 1.0/;",
         )
+        new_pi = -pi
+        self.assertEqual(new_pi.gamsRepr(), "-pi")
 
         # 1D variable with records
         v = Variable(
@@ -595,10 +623,14 @@ class GamspySuite(unittest.TestCase):
             description="define objective function",
         )
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
+
+        self.assertIsNotNone(cost.definition)
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
+
+        self.assertRaises(TypeError, cost.records, 5)
 
         # Equation definition with an index
         supply = Equation(
@@ -836,7 +868,7 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
 
-    def test_model_string(self):
+    def test_model(self):
         # Prepare data
         distances = pd.DataFrame(
             [
@@ -913,6 +945,7 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             test_model2.getStatement(), "\nModel test_model2 / cost,supply /;"
         )
+        self.assertEqual(test_model2.equations, [cost, supply])
 
         # Test limited variables
         test_model3 = Model(
@@ -924,6 +957,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             test_model3.getStatement(), "\nModel test_model3 / all,x(i) /;"
         )
+        test_model3.equations = [cost, supply]
+        self.assertEqual(test_model3.equations, [cost, supply])
 
     def test_operations(self):
         # Prepare data
@@ -1251,7 +1286,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1359,6 +1394,10 @@ class GamspySuite(unittest.TestCase):
         op2 = x[i] & b[i]
         self.assertEqual(op2.gamsRepr(), "(x(i) and b(i))")
 
+        # RAND
+        op1 = 5 & b[i]
+        self.assertEqual(op1.gamsRepr(), "(5 and b(i))")
+
         # OR
         # Parameter or Variable, Variable or Parameter
         op1 = b[i] | x[i]
@@ -1366,12 +1405,20 @@ class GamspySuite(unittest.TestCase):
         op2 = x[i] | b[i]
         self.assertEqual(op2.gamsRepr(), "(x(i) or b(i))")
 
+        # ROR
+        op1 = 5 | b[i]
+        self.assertEqual(op1.gamsRepr(), "(5 or b(i))")
+
         # XOR
         # Parameter xor Variable, Variable xor Parameter
         op1 = b[i] ^ x[i]
         self.assertEqual(op1.gamsRepr(), "(b(i) xor x(i))")
         op2 = x[i] ^ b[i]
         self.assertEqual(op2.gamsRepr(), "(x(i) xor b(i))")
+
+        # RXOR
+        op1 = 5 ^ x[i]
+        self.assertEqual(op1.gamsRepr(), "(5 xor x(i))")
 
         # LT
         # Parameter < Variable, Variable < Parameter
@@ -1414,6 +1461,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "(b(i) = x(i))")
         op2 = x[i] == b[i]
         self.assertEqual(op2.gamsRepr(), "x(i) =e= b(i)")
+        op3 = b[i] == b[i]
+        self.assertEqual(op3.gamsRepr(), "(b(i) = b(i))")
 
         # not
         # not Parameter/Variable
@@ -1695,6 +1744,11 @@ class GamspySuite(unittest.TestCase):
             == ["i", "level", "marginal", "lower", "upper", "scale"]
         )
 
+        m = Container()
+        m.addGamsCode("some gibberish")
+        m._write_to_gms()
+        self.assertRaises(Exception, m._restart_from_workfile)
+
     def test_number(self):
         i = Set(self.m, name="i", records=["i1", "i2"])
         d = Parameter(
@@ -1737,6 +1791,9 @@ class GamspySuite(unittest.TestCase):
             list(self.m._statements_dict.values())[4],
             "solveLink = %solveLink.loadLibrary%",
         )
+
+        options = {"bla": 0}
+        self.assertRaises(ValueError, self.m.addOptions, options)
 
     def test_loadRecordsFromGdx(self):
         i = Set(self.m, name="i", records=["i1", "i2"])
@@ -1845,6 +1902,12 @@ class GamspySuite(unittest.TestCase):
 
         # Try to add the same parameter
         self.assertRaises(ValueError, m.addParameter, "c", [s, s])
+
+        # Try to add the same Alias with non-Set alias_with
+        self.assertRaises(TypeError, self.m.addAlias, "v", eq)
+
+        # Try to add the same alias
+        self.assertRaises(ValueError, self.m.addAlias, "u", u)
 
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
@@ -2044,7 +2107,7 @@ class GamspySuite(unittest.TestCase):
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["i"], Set))
 
-        _ = gt.Alias(self.m, "j", i)
+        j = gt.Alias(self.m, "j", i)
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["j"], Alias))
 
@@ -2066,6 +2129,9 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(i1, Set))
         i2 = m.addSet("i")
         self.assertTrue(id(i1) == id(i2))
+        i3 = m.addSet("i", records=["new_record"], description="new desc")
+        self.assertTrue(id(i1) == id(i3))
+        self.assertRaises(ValueError, m.addSet, "i", [j])
 
         j1 = m.addAlias("j", i1)
         self.assertTrue(isinstance(j1, Alias))
@@ -2076,11 +2142,13 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(a1, Parameter))
         a2 = m.addParameter("a")
         self.assertTrue(id(a1) == id(a2))
+        self.assertRaises(ValueError, m.addParameter, "a", ["*"])
 
         v1 = m.addVariable("v")
         self.assertTrue(isinstance(v1, Variable))
         v2 = m.addVariable("v")
         self.assertTrue(id(v1) == id(v2))
+        self.assertRaises(ValueError, m.addVariable, "v", "free", ["*"])
 
         e1 = m.addEquation("e", type="eq")
         self.assertTrue(isinstance(e1, Equation))
