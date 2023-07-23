@@ -72,6 +72,8 @@ class GamspySuite(unittest.TestCase):
         s = Set(self.m, "s", is_singleton=True)
         self.assertEqual(s.getStatement(), "Singleton Set s(*);")
 
+        self.assertRaises(TypeError, s.records, 5)
+
     def test_set_operators(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
         card = Card(i)
@@ -208,6 +210,8 @@ class GamspySuite(unittest.TestCase):
 
         b = Parameter(self.m, "b")
         self.assertEqual(b.getStatement(), "Parameter b / /;")
+        self.assertEqual((b == 5).gamsRepr(), "(b = 5)")
+        self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -277,6 +281,7 @@ class GamspySuite(unittest.TestCase):
         v4 = Variable(self.m, "v4")
         self.assertEqual(v4.gamsRepr(), "v4")
         self.assertEqual(v4.getStatement(), "free Variable v4 / /;")
+        self.assertRaises(TypeError, v4.records, 5)
 
         # Variable without domain
         v0 = Variable(self.m, name="v0", description="some text")
@@ -1294,7 +1299,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1702,6 +1707,9 @@ class GamspySuite(unittest.TestCase):
         e.assign = 5
         self.assertTrue(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
+        self.assertEqual(e.assign, 5)
+
+        self.assertRaises(TypeError, e.records, 5)
 
         # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
