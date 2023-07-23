@@ -62,10 +62,12 @@ class ImplicitParameter(_operable.Operable):
 
     @property
     def assign(self):
-        return self._records
+        return self._assignment  # pragma: no cover
 
     @assign.setter
     def assign(self, assignment) -> None:
+        self._assignment = assignment
+
         statement = _expression.Expression(
             ImplicitParameter(
                 name=self.name,

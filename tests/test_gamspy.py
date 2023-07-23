@@ -110,6 +110,11 @@ class GamspySuite(unittest.TestCase):
         j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
         k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
 
+        expr = k[j] <= k[j]
+        self.assertEqual(expr.gamsRepr(), "(k(j) <= k(j))")
+        expr = k[j] >= k[j]
+        self.assertEqual(expr.gamsRepr(), "(k(j) >= k(j))")
+
         k[j] = ~k[j]
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].gamsRepr(),
@@ -284,6 +289,8 @@ class GamspySuite(unittest.TestCase):
         v1 = Variable(self.m, name="v1", domain=[i])
         self.assertEqual(v1.gamsRepr(), "v1")
         self.assertEqual(v1.getStatement(), "free Variable v1(i) / /;")
+
+        self.assertEqual((v1[i] == v1[i]).gamsRepr(), "v1(i) =e= v1(i)")
 
         # Variable two domain
         v2 = Variable(self.m, name="v2", domain=[i, j])
@@ -1287,7 +1294,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def _test_full_models(self):
+    def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
