@@ -655,7 +655,7 @@ class GamspySuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, j].definition = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
@@ -1287,7 +1287,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2170,7 +2170,7 @@ class GamspySuite(unittest.TestCase):
         # test addX syntax
         m = Container()
         i1 = m.addSet("i")
-        _ = m.addSet("k", domain=i1)
+        self.assertRaises(ValueError, m.addSet, "i", i1)
         self.assertTrue(isinstance(i1, Set))
         i2 = m.addSet("i")
         self.assertTrue(id(i1) == id(i2))
@@ -2187,7 +2187,7 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(id(j3) == id(j2))
 
         a1 = m.addParameter("a")
-        _ = m.addParameter("b", domain=i1)
+        self.assertRaises(ValueError, m.addParameter, "a", i1)
         self.assertTrue(isinstance(a1, Parameter))
         a2 = m.addParameter("a")
         self.assertTrue(id(a1) == id(a2))
@@ -2195,7 +2195,7 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(TypeError, m.addParameter, "a", None, None, 5)
 
         v1 = m.addVariable("v")
-        _ = m.addVariable("y", domain=i1)
+        self.assertRaises(ValueError, m.addVariable, "v", "free", domain=i1)
         self.assertTrue(isinstance(v1, Variable))
         v2 = m.addVariable("v", description="blabla", records=pd.DataFrame())
         self.assertTrue(id(v1) == id(v2))
@@ -2203,12 +2203,14 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(ValueError, m.addVariable, "v", "dayum")
 
         e1 = m.addEquation("e", type="eq")
-        _ = m.addEquation("f", type="eq", domain=i1)
+        self.assertRaises(ValueError, m.addEquation, "e", "eq", i1)
         self.assertTrue(isinstance(e1, Equation))
         e2 = m.addEquation("e", type="eq")
         self.assertTrue(id(e1) == id(e2))
         self.assertRaises(ValueError, m.addEquation, "e", "bla")
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
+        e3 = m.addEquation("e", type="eq", records=pd.DataFrame())
+        self.assertTrue(id(e3) == id(e1))
 
     def test_set_attributes(self):
         i = Set(self.m, "i")

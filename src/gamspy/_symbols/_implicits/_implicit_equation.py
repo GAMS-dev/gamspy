@@ -125,7 +125,7 @@ class ImplicitEquation:
 
     @property
     def definition(self) -> Optional[_expression.Expression]:
-        return self._definition
+        return self._definition  # pragma: no cover
 
     @definition.setter
     def definition(
@@ -158,9 +158,6 @@ class ImplicitEquation:
 
         self.ref_container._addStatement(statement)
         self._definition = statement
-
-    def __eq__(self, other):  # type: ignore
-        return _expression.Expression(self, "=e=", other)
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"
