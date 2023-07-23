@@ -623,6 +623,7 @@ class GamspySuite(unittest.TestCase):
             description="define objective function",
         )
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
+        self.assertRaises(TypeError, cost.records, 5)
 
         self.assertIsNotNone(cost.definition)
         self.assertEqual(
@@ -1286,7 +1287,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def _test_full_models(self):
+    def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1909,6 +1910,49 @@ class GamspySuite(unittest.TestCase):
         # Try to add the same alias
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
 
+        # Test operation index
+        mt = 2016
+        mg = 17
+        maxdt = 40
+        t = Set(
+            m,
+            name="t",
+            records=[f"t{i}" for i in range(1, mt + 1)],
+            description="hours",
+        )
+        g = Set(
+            m,
+            name="g",
+            records=[f"g{i}" for i in range(1, mg + 1)],
+            description="generators",
+        )
+        t1 = Alias(m, name="t1", alias_with=t)
+        tt = Set(
+            m,
+            name="tt",
+            domain=[t],
+            records=[f"t{i}" for i in range(1, maxdt + 1)],
+            description="max downtime hours",
+        )
+        pMinDown = Parameter(
+            m, name="pMinDown", domain=[g, t], description="minimum downtime"
+        )
+        vStart = Variable(m, name="vStart", type="binary", domain=[g, t])
+        eStartFast = Equation(m, name="eStartFast", type="leq", domain=[g, t])
+        eStartFast[g, t1] = (
+            Sum(
+                tt[t].where[Ord(t) <= pMinDown[g, t1]],
+                vStart[g, t.lead(Ord(t1) - pMinDown[g, t1])],
+            )
+            <= 1
+        )
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].gamsRepr(),
+            "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
+            " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
+            " =l= 1;",
+        )
+
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
@@ -2126,34 +2170,45 @@ class GamspySuite(unittest.TestCase):
         # test addX syntax
         m = Container()
         i1 = m.addSet("i")
+        _ = m.addSet("k", domain=i1)
         self.assertTrue(isinstance(i1, Set))
         i2 = m.addSet("i")
         self.assertTrue(id(i1) == id(i2))
         i3 = m.addSet("i", records=["new_record"], description="new desc")
         self.assertTrue(id(i1) == id(i3))
         self.assertRaises(ValueError, m.addSet, "i", [j])
+        self.assertRaises(TypeError, m.addSet, "i", None, 5)
 
         j1 = m.addAlias("j", i1)
         self.assertTrue(isinstance(j1, Alias))
         j2 = m.addAlias("j", i1)
         self.assertTrue(id(j1) == id(j2))
+        j3 = m.addAlias("j", j2)
+        self.assertTrue(id(j3) == id(j2))
 
         a1 = m.addParameter("a")
+        _ = m.addParameter("b", domain=i1)
         self.assertTrue(isinstance(a1, Parameter))
         a2 = m.addParameter("a")
         self.assertTrue(id(a1) == id(a2))
         self.assertRaises(ValueError, m.addParameter, "a", ["*"])
+        self.assertRaises(TypeError, m.addParameter, "a", None, None, 5)
 
         v1 = m.addVariable("v")
+        _ = m.addVariable("y", domain=i1)
         self.assertTrue(isinstance(v1, Variable))
-        v2 = m.addVariable("v")
+        v2 = m.addVariable("v", description="blabla", records=pd.DataFrame())
         self.assertTrue(id(v1) == id(v2))
         self.assertRaises(ValueError, m.addVariable, "v", "free", ["*"])
+        self.assertRaises(ValueError, m.addVariable, "v", "dayum")
 
         e1 = m.addEquation("e", type="eq")
+        _ = m.addEquation("f", type="eq", domain=i1)
         self.assertTrue(isinstance(e1, Equation))
         e2 = m.addEquation("e", type="eq")
         self.assertTrue(id(e1) == id(e2))
+        self.assertRaises(ValueError, m.addEquation, "e", "bla")
+        self.assertRaises(ValueError, m.addEquation, "e", "leq")
 
     def test_set_attributes(self):
         i = Set(self.m, "i")

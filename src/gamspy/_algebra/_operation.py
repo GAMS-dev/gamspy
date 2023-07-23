@@ -67,6 +67,8 @@ class Operation(_operable.Operable):
                     and not isinstance(self.domain[0]._left, domain.Domain)
                     and index_str[0] == "("
                 ):
+                    # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
+                    # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
                     index_str = index_str[1:-1]
 
             return index_str
