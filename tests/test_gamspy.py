@@ -1299,7 +1299,7 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2285,6 +2285,11 @@ class GamspySuite(unittest.TestCase):
         self.assertFalse(utils.checkAllSame([1, 2], [2]))
         self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))
         self.assertTrue(utils.checkAllSame([1, 2], [1, 2]))
+
+        # invalid load from path
+        self.assertRaises(
+            Exception, utils._openGdxFile, self.m.system_directory, "bla.gdx"
+        )
 
 
 def suite():

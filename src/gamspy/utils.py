@@ -73,7 +73,7 @@ def convert_to_categoricals(arrkeys, arrvals, unique_uels):
     return df
 
 
-def _loadPackageGlobals() -> None:
+def _loadPackageGlobals() -> None:  # pragma: no cover
     gamspy._order = 0  # type: ignore
 
 
@@ -185,11 +185,11 @@ def _openGdxFile(system_directory: str, load_from: str):
 
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
-        assert rc
+        assert rc[0]
 
         rc = _set_special_values(gdxHandle)
         assert rc
-    except Exception as e:
+    except AssertionError as e:
         raise Exception(f"Could not open the GDX file at: {load_from}. {e}")
 
     return gdxHandle
