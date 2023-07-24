@@ -72,7 +72,8 @@ class GamspySuite(unittest.TestCase):
         s = Set(self.m, "s", is_singleton=True)
         self.assertEqual(s.getStatement(), "Singleton Set s(*);")
 
-        self.assertRaises(TypeError, s.records, 5)
+        with self.assertRaises(TypeError):
+            s.records = 5
 
     def test_set_operators(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
@@ -96,8 +97,6 @@ class GamspySuite(unittest.TestCase):
 
         difference = i - k
         self.assertEqual(difference.gamsRepr(), "i - k")
-
-        self.assertRaises(TypeError, i.records, 5)
 
     def test_dynamic_sets(self):
         i = Set(self.m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
@@ -281,7 +280,9 @@ class GamspySuite(unittest.TestCase):
         v4 = Variable(self.m, "v4")
         self.assertEqual(v4.gamsRepr(), "v4")
         self.assertEqual(v4.getStatement(), "free Variable v4 / /;")
-        self.assertRaises(TypeError, v4.records, 5)
+
+        with self.assertRaises(TypeError):
+            v4.records = 5
 
         # Variable without domain
         v0 = Variable(self.m, name="v0", description="some text")
@@ -461,11 +462,14 @@ class GamspySuite(unittest.TestCase):
             and isinstance(test.stage, implicits.ImplicitParameter)
         )
 
-    def test_implicit_variable_attributes(self):
+    def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
         a = Variable(self.m, "a", "free", [i])
         a.generateRecords()
         self.assertTrue(a.isValid())
+
+        expression = -a[i] * 5
+        self.assertEqual(expression.gamsRepr(), "(-a(i) * 5)")
 
         self.assertTrue(
             hasattr(a[i], "l")
@@ -644,15 +648,14 @@ class GamspySuite(unittest.TestCase):
             description="define objective function",
         )
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
-        self.assertRaises(TypeError, cost.records, 5)
+        with self.assertRaises(TypeError):
+            cost.records = 5
 
         self.assertIsNotNone(cost.definition)
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
-
-        self.assertRaises(TypeError, cost.records, 5)
 
         # Equation definition with an index
         supply = Equation(
@@ -1733,7 +1736,8 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(e.records.values.tolist(), [[5.0]])
         self.assertEqual(e.assign, 5)
 
-        self.assertRaises(TypeError, e.records, 5)
+        with self.assertRaises(TypeError):
+            e.records = 5
 
         # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
