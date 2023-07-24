@@ -10,3 +10,4 @@ test.gdx
 test.lst
 test.py
 gams-transfer-python
+*.csv
