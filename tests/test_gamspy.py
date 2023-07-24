@@ -2277,7 +2277,7 @@ class GamspySuite(unittest.TestCase):
 
         i = Set(self.m, "i", records=["i1", "i2"])
         self.assertEqual(utils._getDomainStr([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(Exception, utils._getDomainStr, 5)
+        self.assertRaises(Exception, utils._getDomainStr, [5])
 
         # invalid system directory
         self.assertRaises(Exception, utils._openGdxFile, "bla", "bla")
@@ -2290,6 +2290,9 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(
             Exception, utils._openGdxFile, self.m.system_directory, "bla.gdx"
         )
+
+        # invalid symbol
+        self.assertRaises(Exception, utils._getSymbolData, None, None, "i")
 
 
 def suite():

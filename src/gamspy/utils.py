@@ -23,7 +23,6 @@
 # SOFTWARE.
 #
 
-import logging
 import gamspy
 import pandas as pd
 import gams.transfer as gt
@@ -31,7 +30,7 @@ import gamspy._symbols._implicits as implicits
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
-from typing import Optional, Tuple, Union, List, TYPE_CHECKING
+from typing import Tuple, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from gamspy import Alias, Set
@@ -58,7 +57,7 @@ def convert_to_categoricals(arrkeys, arrvals, unique_uels):
         df = dfs[0]
         df.columns = pd.RangeIndex(start=0, stop=len(df.columns))
     else:
-        df = None
+        df = None  # pragma: no cover
 
     if has_domains:
         rk, ck = arrkeys.shape
@@ -90,9 +89,7 @@ def _getUniqueName() -> str:
     return str(gamspy._order)  # type: ignore
 
 
-def _getSymbolData(
-    gams2np, gdxHandle, symbol_id: str
-) -> Optional[pd.DataFrame]:
+def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
     """
     Gets the data of single symbol from GDX.
 
@@ -105,7 +102,11 @@ def _getSymbolData(
     Returns
     -------
     return pandas.DataFrame (w/categoricals) if records exist
-    return None if no records exist
+
+    Raises
+    -------
+    Exception
+        In case there is no such symbol in the gdx
     """
     try:
         arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
@@ -113,10 +114,9 @@ def _getSymbolData(
         )
         return convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
-        logging.warning(
+        raise Exception(
             f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
         )
-        return None
 
 
 def _closeGdxHandle(handle):
