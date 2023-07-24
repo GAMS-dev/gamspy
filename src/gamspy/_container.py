@@ -42,7 +42,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation, Model
     from gamspy._algebra._expression import Expression
 

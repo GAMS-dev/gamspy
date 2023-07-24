@@ -30,7 +30,7 @@ import gamspy._algebra._condition as condition
 import gamspy._algebra._domain as domain
 from typing import Tuple, Union, TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gams.transfer import Set, Alias
     from gamspy._algebra import Domain
     from gamspy._algebra._expression import Expression

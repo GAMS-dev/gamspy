@@ -32,7 +32,7 @@ import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gamspy import Set, Container
 
 

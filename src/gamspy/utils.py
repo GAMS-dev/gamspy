@@ -32,7 +32,7 @@ from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
 from typing import Tuple, Union, List, TYPE_CHECKING
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra._expression import Expression

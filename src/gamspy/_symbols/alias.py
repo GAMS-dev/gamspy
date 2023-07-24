@@ -30,7 +30,7 @@ import gamspy._algebra._expression as expression
 import gamspy._symbols._implicits as implicits
 from typing import Literal, TYPE_CHECKING, Union
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gamspy import Set, Container
     from gamspy._algebra._operable import Operable
     from gamspy._algebra._expression import Expression

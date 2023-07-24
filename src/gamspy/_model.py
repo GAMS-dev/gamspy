@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import Optional, Union, TYPE_CHECKING
 from enum import Enum
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from gamspy import Container
 
 
