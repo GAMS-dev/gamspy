@@ -103,23 +103,18 @@ def main():
 
     counter = 0
 
-    for root_idx, root_elem in enumerate(root):
-        # print(f"Root elem: {root_elem[0]}\n-----------")
-        # print(r.records)
+    for root_elem in root:
         from_[root_elem[0]] = True
         unvisit[s] = True
         visit[s] = False
 
-        for idx, r_elem in enumerate(r):
-            # print(f"[{idx}], r elem: {r_elem[0]}, unvisit length: {len(unvisit)}")
+        for r_elem in r:
             if int(r_elem[0]) > 1 and len(unvisit):
-                # print(len(unvisit), unvisit.records)
-                # print(from_.records)
                 unvisit[from_] = False
                 visit[from_] = True
                 to[unvisit] = Sum(tree[root_elem[0], from_, unvisit], True)
 
-                for f_idx, f_elem in enumerate(from_):
+                for f_elem in from_:
                     k[s2, s3].where[l[root_elem[0], f_elem[0], s2, s3]] = True
                     v[s2, r1].where[lr[root_elem[0], f_elem[0], s2, r1]] = True
                     v[f_elem[0], "1"].where[Card(k) == 0] = True
@@ -145,7 +140,6 @@ def main():
                 to[s] = False
 
                 counter += 1
-                # print(counter)
 
         from_[s] = False
 
