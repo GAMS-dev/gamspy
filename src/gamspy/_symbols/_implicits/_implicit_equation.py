@@ -173,8 +173,6 @@ class ImplicitEquation:
                         set_strs.append(set)
                     else:
                         set_strs.append('"' + set + '"')
-                else:
-                    raise Exception("Domain type must be str, Set or Alias")
 
             domain_str = "(" + ",".join(set_strs) + ")"
 

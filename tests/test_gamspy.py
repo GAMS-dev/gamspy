@@ -290,6 +290,9 @@ class GamspySuite(unittest.TestCase):
             v0.getStatement(), 'free Variable v0 "some text" / /;'
         )
 
+        expression = -v0
+        self.assertEqual(expression.name, "-v0")
+
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
         self.assertEqual(v1.gamsRepr(), "v1")
@@ -540,6 +543,12 @@ class GamspySuite(unittest.TestCase):
             "eq2(i) .. x(i) =n= c(i);",
         )
 
+        eq2[i].definition = x[i] == c[i]
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            "eq2(i) .. x(i) =n= c(i);",
+        )
+
     def test_equation_declaration(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -671,6 +680,12 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
+        )
+
+        bla[i, "*"] = Sum((i, j), x[i, j]) <= a[i]
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            "bla(i,*) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
         # Equation definition in constructor
@@ -1013,6 +1028,9 @@ class GamspySuite(unittest.TestCase):
         sum_op = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(sum_op.gamsRepr(), "sum(j,x(i,j)) =l= a(i)")
 
+        expression = Sum(a[i], True)
+        self.assertEqual(expression.gamsRepr(), "sum(a(i),yes)")
+
         # Operation with two indices
         sum_op = Sum((i, j), c[i, j] * x[i, j]) == z
         self.assertEqual(
@@ -1051,6 +1069,12 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             sum_op.gamsRepr(), "smax((i,j),(c(i,j) * x(i,j))) =e= z"
         )
+
+        # Ord, Card
+        expression = Ord(i) == Ord(j)
+        self.assertEqual(expression.gamsRepr(), "(ord(i) = ord(j))")
+        expression = Card(i) == 5
+        self.assertEqual(expression.gamsRepr(), "(card(i) = 5)")
 
     def test_condition_on_expression(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
