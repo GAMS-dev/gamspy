@@ -68,7 +68,6 @@ class Container(gt.Container):
         name: str = "default",
     ):
         self.system_directory = self.get_system_directory(system_directory)
-        super().__init__(load_from, self.system_directory)
         self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
         self.name = name
@@ -85,7 +84,7 @@ class Container(gt.Container):
         ) = self._setup_paths()
         self._clean_existing_workfiles()
 
-        self._cast_symbols()
+        super().__init__(load_from, self.system_directory)
 
     def get_system_directory(self, system_directory: Optional[str]) -> str:
         """
