@@ -1343,10 +1343,13 @@ class GamspySuite(unittest.TestCase):
                     path,
                 ],
                 check=True,
+                capture_output=True,
             )
 
+            if process.returncode:
+                print(process.output)
+
             self.assertTrue(process.returncode == 0)
-            _ = print("PASSED") if process.returncode == 0 else print("FAILED")
 
     def test_operable_symbols(self):
         # Prepare data
