@@ -956,14 +956,16 @@ class Container(gt.Container):
 
         self._unsaved_statements = {}
 
-    def read(self, load_from: str, symbol_names: List[str]) -> None:
+    def read(
+        self, load_from: str, symbol_names: Optional[List[str]] = None
+    ) -> None:
         """
         Loads specified symbols from the gdx file
 
         Parameters
         ----------
         load_from : str
-        symbol_names : List[str]
+        symbol_names : List[str], optional
         """
         super().read(load_from, symbol_names)
         self._cast_symbols(symbol_names)

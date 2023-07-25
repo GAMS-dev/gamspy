@@ -1,0 +1,6 @@
+Input=/home/muhammet/Documents/gams_workspace/gamspy/default.gms
+Save=/home/muhammet/Documents/gams_workspace/gamspy/default_save.g00
+ScrDir=225a
+SysDir=/home/muhammet/anaconda3/envs/gamspy/lib/python3.8/site-packages/gamspy/minigams/linux
+ScriptNext=225a/gamsnext.sh
+GDX=/home/muhammet/Documents/gams_workspace/gamspy/default.gdx

@@ -1,0 +1,91 @@
+52
+2 133 0 0 440  0.00000000000000E+0000 5  0.00000000000000E+0000 0 0
+2178 0 0 0 361 391 1616 171 0 0 0 0
+1260 0 0 0 0 0 0 0
+9283 0
+487 771 2 0 0 0 0 486 0 1
+0 0 0 0 0 0 0
+0 97 0
+0 0 20
+ 1.00000000000000E-0006  0.00000000000000E+0000 0
+0  0.00000000000000E+0000 0  0.00000000000000E+0000
+ 1.00000000000000E+0010 2147483647 0
+11 0
+ 0.00000000000000E+0000 0 0 0  1.00000000000000E+0000 0 1 0 0  1.00000000000000E-0005 0
+1 100
+0 0 0 0 0
+ 0.00000000000000E+0000  0.00000000000000E+0000  0.00000000000000E+0000  0.00000000000000E+0000  0.00000000000000E+0000
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamsmatr.dat
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamsinst.dat
+/home/muhammet/Documents/gams_workspace/gamspy/highs.opt
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamsstat.dat
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamssolu.dat
+
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamsdict.dat
+3
+10:57:32
+07/25/23
+/home/muhammet/Documents/gams_workspace/gamspy/
+/home/muhammet/anaconda3/envs/gamspy/lib/python3.8/site-packages/gamspy/minigams/linux/
+/home/muhammet/Documents/gams_workspace/gamspy/225a/
+32767 2147483647
+0 0 6 45131 45155 61340
+Eval License                                   S230719|0002CO-GEN0
+GAMS Software GmbH, Braunschweig Office                          0
+13486285010M0SECATBACOCTCPDEDIHIIPKNLDM5MBGEODPTSBSCSNXXGL       0
+1 1 1 0
+225a/gmsprmun.dat
+15 6 3
+LP          3 0
+MIP         3 0
+RMIP        3 0
+NLP         1 0
+MCP         5 0
+MPEC        4 0
+RMPEC       2 0
+CNS         1 0
+DNLP        1 0
+RMINLP      1 0
+MINLP       6 0
+QCP         1 0
+MIQCP       6 0
+RMIQCP      1 0
+EMP         2 0
+CONOPT      1 0 1 1 0 1 1 0 0 0 1 1 1 0 1 0 1 0
+gmsgenus.run
+gmsgenux.out
+CONVERT     103011 5 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+gmsgenus.run optconvert.def
+gmsgenux.out
+HIGHS       11 5 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0
+gmsgenus.run
+gmsgenux.out
+NLPEC       103001 0 1 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0
+gmscvnus.run
+gmscvnux.out
+PATH        103001 5 1 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0
+gmsgenus.run
+gmsgenux.out
+SBB         11 5 1 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0
+gmssb_us.run
+gmssb_ux.out
+2505244606060606060606060606060606060606060606060606060606       0
+DCE2908      g 7                               C Eval            0
+License Admin: Muhammet Soytuerk, msoyturk@gams.com              0
+1 /home/muhammet/anaconda3/envs/gamspy/lib/python3.8/site-packages/gamspy/minigams/linux/gamslice.txt
+1 /home/muhammet/anaconda3/envs/gamspy/lib/python3.8/site-packages/gamspy/minigams/linux/gmscmpun.txt
+/home/muhammet/Documents/gams_workspace/gamspy/default.dat
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+0 0  1.00000000000000E+0000 0 0
+0 0 0
+0 0 0 1 0
+/home/muhammet/Documents/gams_workspace/gamspy/energy.so
+/home/muhammet/Documents/gams_workspace/gamspy/225a/sbbinfo.dat
+/home/muhammet/Documents/gams_workspace/gamspy/225a/gamscntr.dat
+/home/muhammet/Documents/gams_workspace/gamspy/
+dat
+ 1.00000000000000E+0299
+
+
+/home/muhammet/Documents/gams_workspace/gamspy/default.gms
+ 9.28300000000000E+0003  0.00000000000000E+0000
