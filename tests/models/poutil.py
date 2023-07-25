@@ -20,8 +20,10 @@ Optimization for Electric Utilities: Case Study for Germany. In
 Bj�rndal, E, Bj�rndal, M, Pardalos, P.M. and R�nnqvist, M Eds,.
 Springer, pp. 221-246, 2010.
 
-Keywords: mixed integer linear programming, energy economics, portfolio optimization,
-          unit commitment, economic dispatch, power plant control, day-ahead market
+Keywords: mixed integer linear programming, energy economics, portfolio
+optimization,
+          unit commitment, economic dispatch, power plant control,
+          day-ahead market
 """
 
 from gamspy import (
@@ -510,7 +512,7 @@ def main():
     # control the minimum change time period eq. (29)
     PPstageChange[t].where[Ord(t) < Card(t) - Card(iS) + 2] = (
         Sum(iS, chiS[t.lead(Ord(iS))]) <= 1
-    )  ### Bug here
+    )
 
     # indicate if the plant left the idle state eq. (30)
     PPstarted[t] = chiI[t] >= delta["m1", t.lag(1)] - delta["m1", t]
@@ -519,7 +521,7 @@ def main():
     # it has to be at least Nk2 time periods long eq. (31)
     PPidleTime[t].where[Ord(t) < Card(t) - Card(iI) + 2] = (
         Sum(iI, chiI[t.lead(Ord(iI))]) <= 1
-    )  ### Bug here
+    )
 
     # cost for the spot market eq. (12)
     # consistent of the base load (alpha) and peak load (beta) contracts
@@ -557,7 +559,8 @@ def main():
     energy = Model(cont, name="energy", equations="all")
 
     # relative termination criterion for MIP (relative gap)
-    cont.addOptions({"optCr": 0.000001})
+    # termination criterion is decreased to 0.1 from 0.000001
+    cont.addOptions({"optCr": 0.1})
 
     cont.solve(energy, problem="MIP", sense="min", objective_variable=c)
 
