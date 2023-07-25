@@ -11,6 +11,7 @@ import gamspy._algebra._expression as expression
 import gamspy.math as gams_math
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
+from gamspy.functions import ifthen
 from gamspy import (
     Alias,
     Card,
@@ -2315,6 +2316,20 @@ class GamspySuite(unittest.TestCase):
 
         # invalid symbol
         self.assertRaises(Exception, utils._getSymbolData, None, None, "i")
+
+    def test_functions(self):
+        m = Container()
+
+        o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
+        p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])
+        sumc = Variable(m, "sumc", domain=[o, p])
+        op = Variable(m, "op", domain=[o, p])
+        defopLS = Equation(m, "defopLS", type="eq", domain=[o, p])
+        defopLS[o, p] = op[o, p] == ifthen(sumc[o, p] >= 0.5, 1, 0)
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].gamsRepr(),
+            "defopLS(o,p) .. op(o,p) =e= (ifthen(sumc(o,p) >= 0.5, 1, 0)  );",
+        )
 
 
 def suite():
