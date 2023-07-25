@@ -68,12 +68,12 @@ class Container(gt.Container):
         name: str = "default",
     ):
         self.system_directory = self.get_system_directory(system_directory)
-        self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
         self.name = name
         self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
 
+        super().__init__(load_from, self.system_directory)
         # read on demand
         (
             self._gms_path,
@@ -83,8 +83,7 @@ class Container(gt.Container):
             self._gdx_path,
         ) = self._setup_paths()
         self._clean_existing_workfiles()
-
-        super().__init__(load_from, self.system_directory)
+        self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
     def get_system_directory(self, system_directory: Optional[str]) -> str:
         """
