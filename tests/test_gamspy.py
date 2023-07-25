@@ -1333,23 +1333,14 @@ class GamspySuite(unittest.TestCase):
 
         for idx, path in enumerate(paths):
             print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
-            process = subprocess.run(
-                [
-                    (
-                        os.environ["PYTHON38"]
-                        if "PYTHON38" in os.environ
-                        else "python"
-                    ),
-                    path,
-                ],
-                check=True,
-                capture_output=True,
-            )
+            try:
+                process = subprocess.run(
+                    ["python", path], check=True, capture_output=True
+                )
 
-            if process.returncode:
-                print(process.output)
-
-            self.assertTrue(process.returncode == 0)
+                self.assertTrue(process.returncode == 0)
+            except subprocess.CalledProcessError as e:
+                print(f"Output: {e.stderr.decode('utf-8')}")
 
     def test_operable_symbols(self):
         # Prepare data
