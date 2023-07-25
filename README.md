@@ -1,5 +1,6 @@
 [![pipeline status](https://git.gams.com/devel/gamspy/badges/master/pipeline.svg)](https://git.gams.com/devel/gamspy/-/commits/master)
 [![coverage report](https://git.gams.com/devel/gamspy/badges/master/coverage.svg)](https://git.gams.com/devel/gamspy/-/commits/master)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # GAMSpy
 
