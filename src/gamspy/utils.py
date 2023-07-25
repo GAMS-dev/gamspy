@@ -132,6 +132,13 @@ def _closeGdxHandle(handle):
     gdx.gdxLibraryUnload()
 
 
+def _replaceEqualitySigns(condition: str) -> str:
+    condition = condition.replace("=l=", "<=")
+    condition = condition.replace("=e=", "=")
+    condition = condition.replace("=g=", ">=")
+    return condition
+
+
 def _set_special_values(gdxHandle):
     """
     Sets the special values

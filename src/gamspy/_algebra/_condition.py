@@ -24,6 +24,7 @@
 #
 
 import gamspy._algebra._expression as expression
+import gamspy.utils as utils
 
 
 class Condition:
@@ -42,14 +43,8 @@ class Condition:
     def __init__(self, symbol):
         self._symbol = symbol
 
-    def _replace_equality_signs(self, condition: str) -> str:
-        condition = condition.replace("=l=", "<=")
-        condition = condition.replace("=e=", "=")
-        condition = condition.replace("=g=", ">=")
-        return condition
-
     def __getitem__(self, condition_expression):
-        condition = self._replace_equality_signs(
+        condition = utils._replaceEqualitySigns(
             condition_expression.gamsRepr()
         )
         return expression.Expression(self._symbol, "$", condition)
@@ -77,7 +72,7 @@ class Condition:
             else "="
         )
 
-        condition = self._replace_equality_signs(
+        condition = utils._replaceEqualitySigns(
             condition_expression.gamsRepr()
         )
 
