@@ -1867,14 +1867,14 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
         self.assertIsNone(a.records)
 
-    def test_loadSymbolsFromGdx(self):
+    def test_read(self):
         m = Container()
         _ = Set(m, "i", records=["i1", "i2"])
         _ = Set(m, "j", records=["j1", "j2"])
         m.write("test.gdx")
 
         _ = Set(self.m, name="k", records=["k1", "k2"])
-        self.m.loadSymbolsFromGdx("test.gdx", ["i"])
+        self.m.read("test.gdx", ["i"])
         self.assertEqual(list(self.m.data.keys()), ["k", "i"])
 
     def test_iterable(self):
