@@ -23,8 +23,27 @@
 # SOFTWARE.
 #
 
-# flake8: noqa
+from typing import Union
+import gamspy._algebra._condition as condition
 
-from gamspy._algebra.domain import Domain
-from gamspy._algebra.number import Number
-from gamspy._algebra.operation import Sum, Product, Smin, Smax, Card, Ord
+
+class Number:
+    """
+    Needed for conditions on numbers.
+
+    >>> Number(1).where[sig[i] == 0]
+    1$(sig(i) = 0)
+    """
+
+    def __init__(self, value: Union[int, float]):
+        self._value = value
+        self.where = condition.Condition(self)
+
+    def gamsRepr(self) -> str:
+        """Representation of this Number in GAMS language.
+
+        Returns
+        -------
+        str
+        """
+        return f"{self._value}"

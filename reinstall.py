@@ -25,7 +25,7 @@ process = subprocess.run(
     [
         "pip",
         "install",
-        "dist" + os.sep + "gamspy-0.0.1-py3-none-any.whl[dev,test]",
+        "dist" + os.sep + "gamspy-0.1.0-py3-none-any.whl[dev,test]",
         "--force-reinstall",
     ]
 )

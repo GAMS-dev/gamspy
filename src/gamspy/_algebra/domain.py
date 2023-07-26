@@ -23,8 +23,44 @@
 # SOFTWARE.
 #
 
-# flake8: noqa
+from __future__ import annotations
 
-from gamspy._algebra.domain import Domain
-from gamspy._algebra.number import Number
-from gamspy._algebra.operation import Sum, Product, Smin, Smax, Card, Ord
+import gamspy._algebra._condition as condition
+import gamspy.utils as utils
+
+
+class Domain:
+    """
+    Domain class needed for where statements on multidimensional index list
+    in operations
+
+    Parameters
+    ----------
+    sets: tuple[Union[Set,str]]
+
+    >>> equation = Equation(name="equation", domain=[i,j])
+    >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
+    """
+
+    def __init__(self, *sets: tuple) -> None:
+        self._sanity_check(sets)
+        self.sets = sets
+        self.ref_container = self._find_container()  # type: ignore
+        self.where = condition.Condition(self)
+
+    def _sanity_check(self, sets: tuple):
+        if len(sets) < 2:
+            raise Exception("Domain requires at least 2 sets")
+
+        if all(not hasattr(set, "ref_container") for set in sets):
+            raise Exception(
+                "At least one of the sets in the domain must be a Set or Alias"
+            )
+
+    def _find_container(self):
+        for set in self.sets:
+            if hasattr(set, "ref_container"):
+                return set.ref_container
+
+    def gamsRepr(self) -> str:
+        return utils._getDomainStr(self.sets)

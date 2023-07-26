@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from gamspy._algebra._expression import Expression
 
 
-def convert_to_categoricals(arrkeys, arrvals, unique_uels):
+def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
     # Temporary function to be removed when Gams Transfer is updated.
     has_domains = arrkeys.size > 0
     has_values = arrvals.size > 0
@@ -112,7 +112,7 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
         arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
             gdxHandle, symbol_id
         )
-        return convert_to_categoricals(arrkeys, arrvals, unique_uels)
+        return _convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
         raise Exception(
             f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
