@@ -28,7 +28,7 @@ or if you already cloned and installed Gams Transfer master branch
 
 ```
 python -m build
-pip install dist/gamspy-0.0.1-py3-none-any.whl
+pip install dist/gamspy-0.1.0-py3-none-any.whl
 ```
 
 ## Set, Alias, Parameter, Variable, Equation

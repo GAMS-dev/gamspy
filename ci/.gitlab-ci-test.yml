@@ -15,7 +15,7 @@ test-leg:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python -m build --wheel
-    - pip install dist/gamspy-0.0.1-py3-none-any.whl[test] --force-reinstall
+    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -39,7 +39,7 @@ test-deg:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python -m build --wheel
-    - pip install dist/gamspy-0.0.1-py3-none-any.whl[test] --force-reinstall
+    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -57,7 +57,7 @@ test-dac:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python -m build --wheel
-    - pip install dist/gamspy-0.0.1-py3-none-any.whl[test] --force-reinstall
+    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -80,7 +80,7 @@ test-wei:
     - cd transfer-repo; python reinstall.py; cd ..
     - python -m pip install wheel build
     - python -m build --no-isolation --wheel
-    - python -m pip install dist\gamspy-0.0.1-py3-none-any.whl[test] --force-reinstall
+    - python -m pip install dist\gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
     - coverage run --source=gamspy tests\test_gamspy.py
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
