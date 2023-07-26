@@ -36,7 +36,7 @@ class Domain:
 
     Parameters
     ----------
-    sets: tuple[Union[Set,str]]
+    sets: tuple[Set | str]
 
     >>> equation = Equation(name="equation", domain=[i,j])
     >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])

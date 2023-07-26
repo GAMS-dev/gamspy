@@ -50,7 +50,7 @@ class Set(gt.Set, operable.Operable):
     name : str
     domain : list, optional
     is_singleton : bool, optional
-    records : Union[int, float, DataFrame], optional
+    records : int | float | DataFrame, optional
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes : bool

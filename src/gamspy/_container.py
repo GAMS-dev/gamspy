@@ -279,7 +279,7 @@ class Container(gt.Container):
         Parameters
         ----------
         name : str
-        domain : List[Union[Set, str]], optional
+        domain : List[Set | str], optional
         is_singleton : bool, optional
         records : Any, optional
         domain_forwarding : bool, optional

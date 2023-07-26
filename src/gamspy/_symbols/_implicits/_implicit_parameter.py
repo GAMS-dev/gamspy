@@ -50,7 +50,7 @@ class ImplicitParameter(_operable.Operable):
         ----------
         container : Container
         name : str
-        domain : Union[Set;, str], optional
+        domain : List[Set | str], optional
         records : Any, optional
         """
         self.ref_container = container

@@ -122,7 +122,7 @@ class Sum(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Union[Expression, int, bool]
+    expression : Expression | int | bool
 
     Example
     ----------
@@ -153,7 +153,7 @@ class Product(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Union[Expression, int, bool]
+    expression : Expression | int | bool
 
     Example
     ----------
@@ -184,7 +184,7 @@ class Smin(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Union[Expression, int, bool]
+    expression : Expression | int | bool
 
     Example
     ----------
@@ -215,7 +215,7 @@ class Smax(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Union[Expression, int, bool]
+    expression : Expression | int | bool
 
     Example
     ----------

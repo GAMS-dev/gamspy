@@ -46,7 +46,7 @@ class Equation(gt.Equation, operable.Operable):
     container : Container
     name : str
     type : str
-    domain : Union[Set, str], optional
+    domain : List[Set | str], optional
     records : Any, optional
     domain_forwarding : bool, optional
     description : str, optional

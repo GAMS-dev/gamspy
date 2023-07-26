@@ -45,7 +45,7 @@ class ImplicitVariable(_operable.Operable):
     ----------
     container : Container
     name : str
-    domain : Union[Set, str]
+    domain : List[Set | str]
     """
 
     def __init__(

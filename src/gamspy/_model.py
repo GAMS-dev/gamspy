@@ -85,7 +85,7 @@ class Model:
         The container that the model belongs to
     name : str
         Name of the model
-    equations : Union[str, list]
+    equations : List[str | list]
         List of Equation objects or str. ``all`` as a string represents
         all the equations specified before the creation of this model
     limited_variables : Optional[list], optional

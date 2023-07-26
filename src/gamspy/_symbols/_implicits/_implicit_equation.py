@@ -50,7 +50,7 @@ class ImplicitEquation:
         ----------
         container : Container
         name : str
-        domain : Union[gams_set.Set, str]
+        domain : List[Set | str]
         """
         self.ref_container = container
         self.name = name
