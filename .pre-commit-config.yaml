@@ -3,6 +3,7 @@ repos:
     rev: 23.7.0
     hooks:
     -   id: black
+        exclude: ^docs/
         args: [--line-length=79, --preview]
         language_version: python3
 
@@ -10,11 +11,13 @@ repos:
     rev: 6.0.0
     hooks:
     -   id: flake8
+        exclude: ^docs/
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
     -   id: end-of-file-fixer
+        exclude: ^docs/
     -   id: check-added-large-files
     -   id: check-ast
     -   id: check-case-conflict
