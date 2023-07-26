@@ -27,7 +27,7 @@ from __future__ import annotations
 import gamspy._algebra._condition as condition
 import gamspy.utils as utils
 import gamspy._algebra._operable as _operable
-import gamspy._algebra.domain as domain
+import gamspy._algebra._domain as _domain
 import gamspy._symbols as syms
 import gamspy._symbols._implicits as implicits
 from typing import Tuple
@@ -128,7 +128,7 @@ class Expression(_operable.Operable):
             # add paranthesis for right ordering
             out_str = f"({out_str})"
 
-        if isinstance(self._left, (domain.Domain, syms.Set, syms.Alias)):
+        if isinstance(self._left, (_domain.Domain, syms.Set, syms.Alias)):
             return out_str[1:-1]
 
         if self._op_type in [

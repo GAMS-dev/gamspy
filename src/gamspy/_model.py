@@ -91,8 +91,8 @@ class Model:
     limited_variables : Optional[list], optional
         Allows limiting the domain of variables used in a model.
 
-    Examples
-    --------
+    Example
+    ----------
     >>> transport = Model(m, "transport", equations=[cost,supply,demand])
     """
 

@@ -27,11 +27,11 @@ import gamspy.utils as utils
 import gamspy._algebra._operable as _operable
 import gamspy._algebra._expression as expression
 import gamspy._algebra._condition as condition
-import gamspy._algebra.domain as domain
+import gamspy._algebra._domain as domain
 from typing import Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Set, Alias
+    from gams.transfer import Set, Alias
     from gamspy._algebra import Domain
     from gamspy._algebra._expression import Expression
 
@@ -124,8 +124,8 @@ class Sum(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Union[Expression, int, bool]
 
-    Examples
-    --------
+    Example
+    ----------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -155,8 +155,8 @@ class Product(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Union[Expression, int, bool]
 
-    Examples
-    --------
+    Example
+    ----------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -186,8 +186,8 @@ class Smin(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Union[Expression, int, bool]
 
-    Examples
-    --------
+    Example
+    ----------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -217,8 +217,8 @@ class Smax(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Union[Expression, int, bool]
 
-    Examples
-    --------
+    Example
+    ----------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])

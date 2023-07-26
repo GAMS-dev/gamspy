@@ -51,8 +51,8 @@ class Variable(gt.Variable, operable.Operable):
     domain_forwarding : bool, optional
     description : str, optional
 
-    Examples
-    --------
+    Example
+    ----------
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
     >>> v = gp.Variable(m, "a", [i])

@@ -33,7 +33,8 @@ import gamspy._symbols._implicits as implicits
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gams.transfer import Container
+    from gams.transfer import Set
 
 
 class ImplicitVariable(_operable.Operable):

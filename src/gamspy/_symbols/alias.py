@@ -47,8 +47,8 @@ class Alias(gt.Alias, operable.Operable):
     name : str
     alias_with : Set
 
-    Examples
-    --------
+    Example
+    ----------
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i")
     >>> j = gp.Alias(m, "j", i)

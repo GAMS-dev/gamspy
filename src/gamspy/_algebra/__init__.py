@@ -25,6 +25,6 @@
 
 # flake8: noqa
 
-from gamspy._algebra.domain import Domain
-from gamspy._algebra.number import Number
-from gamspy._algebra.operation import Sum, Product, Smin, Smax, Card, Ord
+from gamspy._algebra._domain import Domain
+from gamspy._algebra._number import Number
+from gamspy._algebra._operation import Sum, Product, Smin, Smax, Card, Ord
