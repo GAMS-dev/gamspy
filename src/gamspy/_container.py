@@ -824,18 +824,22 @@ class Container(gt.Container):
 
         return output
 
-    def _update_status(self, model):
-        with open(self._lst_path) as listing_file:
-            lines = listing_file.read()
+    def _update_status(self, model: "Model"):
+        """
+        Updates the model status by using .lst file
 
-            lines = lines.split("\n")
+        Parameters
+        ----------
+        model : Model
+        """
+        with open(self._lst_path) as listing_file:
+            lines = listing_file.read().split("\n")
 
             for line in lines:
-                # Set model status
                 if line.startswith("**** MODEL STATUS"):
+                    # e.g.: **** MODEL STATUS      2 Locally Optimal
                     status_number = int(line[5:].strip().split()[2])
-                    status = gp.ModelStatus(status_number)
-                    model.status = status
+                    model.status = gp.ModelStatus(status_number)
 
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """
