@@ -1534,9 +1534,10 @@ class GamspySuite(unittest.TestCase):
 
         # centropy
         op2 = gams_math.centropy(v[i], b[i])
-        self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i) ))")
+        self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i),1e-20 ))")
         op2 = gams_math.centropy(v[i], b[i], 1e-15)
         self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i),1e-15 ))")
+        self.assertRaises(ValueError, gams_math.centropy, v[i], b[i], -1)
 
         # sqrt
         op1 = gams_math.sqrt(9)
