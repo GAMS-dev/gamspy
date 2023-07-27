@@ -14,8 +14,7 @@ test-leg:
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
-    - python -m build --wheel
-    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
+    - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -25,6 +24,9 @@ test-leg:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+    name: linux_wheel
+    expire_in: 2 hours
+    paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
 
 test-deg:
@@ -38,12 +40,15 @@ test-deg:
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
-    - python -m build --wheel
-    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
+    - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
+  artifacts:
+    name: macos_x86_64
+    expire_in: 2 hours
+    paths: [dist/*]
 
 test-dac:
   stage: test
@@ -56,12 +61,15 @@ test-dac:
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
-    - python -m build --wheel
-    - pip install dist/gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
+    - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
+  artifacts:
+    name: macos_arm64
+    expire_in: 2 hours
+    paths: [dist/*]
 
 test-wei:
   stage: test
@@ -79,8 +87,11 @@ test-wei:
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo; python reinstall.py; cd ..
     - python -m pip install wheel build
-    - python -m build --no-isolation --wheel
-    - python -m pip install dist\gamspy-0.1.0-py3-none-any.whl[test] --force-reinstall
+    - python reinstall.py
     - coverage run --source=gamspy tests\test_gamspy.py
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
+  artifacts:
+    name: windows
+    expire_in: 2 hours
+    paths: [dist/*]

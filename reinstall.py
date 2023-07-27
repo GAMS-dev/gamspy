@@ -9,8 +9,8 @@ if not os.path.exists("gams-transfer-python"):
         shell=True,
     )
     process = subprocess.run(
-        "cd gams-transfer-python && python setup.py bdist_wheel && pip install"
-        " gams[transfer] --find-links dist/",
+        "cd gams-transfer-python && python setup.py bdist_wheel && pip"
+        " install gams[transfer] --find-links dist/",
         shell=True,
     )
 
@@ -19,13 +19,15 @@ try:
 except Exception:
     sys.exit("Gotta install Gams Transfer first bruh")
 
-process = subprocess.run(["python", "-m", "build", "--wheel"])
+process = subprocess.run(["python", "setup.py", "bdist_wheel"])
 
 process = subprocess.run(
     [
         "pip",
         "install",
-        "dist" + os.sep + "gamspy-0.1.0-py3-none-any.whl[dev,test]",
+        "gamspy",
+        "--find-links",
+        "dist" + os.sep,
         "--force-reinstall",
     ]
 )
