@@ -16,6 +16,7 @@ release = "0.1.0"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
     "numpydoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
@@ -28,6 +29,7 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "sphinx.ext.mathjax",
     "sphinx_design",
+    "sphinx_copybutton",
 ]
 
 templates_path = ["_templates"]

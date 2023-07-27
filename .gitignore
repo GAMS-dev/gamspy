@@ -12,3 +12,4 @@ test.py
 gams-transfer-python
 *.csv
 225*
+docs/_build

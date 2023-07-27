@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from gamspy._algebra._expression import Expression
 
 
-def convert_to_categoricals(arrkeys, arrvals, unique_uels):
+def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
     # Temporary function to be removed when Gams Transfer is updated.
     has_domains = arrkeys.size > 0
     has_values = arrvals.size > 0
@@ -112,7 +112,7 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
         arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
             gdxHandle, symbol_id
         )
-        return convert_to_categoricals(arrkeys, arrvals, unique_uels)
+        return _convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
         raise Exception(
             f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
@@ -234,7 +234,7 @@ def _toList(
     return obj
 
 
-def isin(symbol, container: Sequence) -> bool:
+def isin(symbol, sequence: Sequence) -> bool:
     """
     Checks whether the given symbol in the sequence.
     Needed for symbol comparison since __eq__ magic
@@ -244,14 +244,26 @@ def isin(symbol, container: Sequence) -> bool:
     ----------
     symbol : Symbol
         _Symbol to check
-    container : Sequence
-        Container that holds a sequence of symbols
+    sequence : Sequence
+        Sequence that holds a sequence of symbols
 
     Returns
     -------
     bool
+
+    Examples
+    --------
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> sets = [i, j]
+    >>> gp.utils.isin(i, sets)
+    True
+    >>> gp.utils.isin(k, sets)
+    False
     """
-    for item in container:
+    for item in sequence:
         if symbol is item:
             return True
     return False
@@ -270,6 +282,20 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
     Returns
     -------
     bool
+
+    Examples
+    --------
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> list1 = [i, j]
+    >>> list2 = [i, j]
+    >>> utils.checkAllSame(list1, list2)
+    True
+    >>> list3 = [i, j, k]
+    >>> utils.checkAllSame(list1, list3)
+    False
     """
     if len(iterable1) != len(iterable2):
         return False

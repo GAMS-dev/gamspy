@@ -53,9 +53,9 @@ class Container(gt.Container):
 
     Parameters
     ----------
-    load_from : Optional[str], optional
+    load_from : str, optional
         Path to the GDX file to be loaded from, by default None
-    system_directory : Optional[str], optional
+    system_directory : str, optional
         Path to the directory that holds the GAMS installation, by default None
     name : str, optional
         Name of the Container, by default "default"
@@ -97,7 +97,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        system_directory : Optional[str]
+        system_directory : str, optional
 
         Returns
         -------

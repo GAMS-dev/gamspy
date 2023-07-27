@@ -11,11 +11,4 @@ gamspy
 
    gamspy.functions
    gamspy.math
-
-utils
--------------------
-
-.. automodule:: gamspy.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   gamspy.utils
