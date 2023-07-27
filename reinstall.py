@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import platform
 
 if not os.path.exists("gams-transfer-python"):
     process = subprocess.run(
@@ -21,13 +22,16 @@ except Exception:
 
 process = subprocess.run(["python", "setup.py", "bdist_wheel"])
 
-process = subprocess.run(
-    [
-        "pip",
-        "install",
-        "gamspy",
-        "--find-links",
-        "dist" + os.sep,
-        "--force-reinstall",
-    ]
-)
+command = [
+    "pip",
+    "install",
+    "gamspy",
+    "--find-links",
+    "dist" + os.sep,
+    "--force-reinstall",
+]
+
+if platform.system() == "Windows":
+    command.append("--user")
+
+process = subprocess.run(command)
