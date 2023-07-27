@@ -124,8 +124,8 @@ class Sum(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Expression | int | bool
 
-    Example
-    ----------
+    Examples
+    --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -155,8 +155,8 @@ class Product(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Expression | int | bool
 
-    Example
-    ----------
+    Examples
+    --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -186,8 +186,8 @@ class Smin(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Expression | int | bool
 
-    Example
-    ----------
+    Examples
+    --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])
@@ -217,8 +217,8 @@ class Smax(Operation):
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
     expression : Expression | int | bool
 
-    Example
-    ----------
+    Examples
+    --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq", domain=[i])

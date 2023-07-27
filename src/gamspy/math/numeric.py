@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 def abs(x: Union[float, "Operable"]) -> Union["Expression", float]:
     """
-    Absolute value of x (i.e. |x|)
+    Absolute value of x (i.e. ``|x|``)
 
     Returns
     -------
