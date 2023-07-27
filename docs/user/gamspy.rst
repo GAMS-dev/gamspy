@@ -1,5 +1,5 @@
 gamspy
-==============
+======
 
 .. automodule:: gamspy
    :members:
@@ -7,7 +7,7 @@ gamspy
    :show-inheritance:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    gamspy.functions
    gamspy.math
