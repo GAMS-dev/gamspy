@@ -324,16 +324,8 @@ document.write(`
 <dt><strong>alias_with</strong><span class="classifier">Set</span></dt><dd></dd>
 </dl>
 </dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Alias</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;j&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>alias_with</strong></dt><dd></dd>
 <dt><strong>description</strong></dt><dd></dd>
 <dt><strong>dimension</strong></dt><dd></dd>
@@ -594,8 +586,16 @@ document.write(`
 </dd>
 </dl>
 </dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">(</span><span class="n">system_directory</span><span class="o">=</span><span class="n">path_to_the_directory</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">(</span><span class="n">load_from</span><span class="o">=</span><span class="n">path_to_the_gdx</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>data</strong></dt><dd></dd>
 <dt><strong>modified</strong></dt><dd></dd>
 </dl>
@@ -635,7 +635,7 @@ document.write(`
 <td><p>Loads data of the given symbols from a gdx file.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#gamspy.Container.read" title="gamspy.Container.read"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read</span></code></a>(load_from[, symbol_names])</p></td>
-<td><p>Loads specified symbols from the gdx file</p></td>
+<td><p>Reads specified symbols from the gdx file.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#gamspy.Container.solve" title="gamspy.Container.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>(model, problem[, sense, ...])</p></td>
 <td><p>Generates the gams string, writes it to a file and runs it</p></td>
@@ -889,7 +889,7 @@ Container</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name</strong><span class="classifier">str</span></dt><dd></dd>
-<dt><strong>domain</strong><span class="classifier">List[Union[Set, str]], optional</span></dt><dd></dd>
+<dt><strong>domain</strong><span class="classifier">List[Set | str], optional</span></dt><dd></dd>
 <dt><strong>is_singleton</strong><span class="classifier">bool, optional</span></dt><dd></dd>
 <dt><strong>records</strong><span class="classifier">Any, optional</span></dt><dd></dd>
 <dt><strong>domain_forwarding</strong><span class="classifier">bool, optional</span></dt><dd></dd>
@@ -1006,7 +1006,8 @@ are given, data of all symbols are loaded.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gamspy.Container.read">
 <span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_from</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#gamspy.Container.read" title="Permalink to this definition">#</a></dt>
-<dd><p>Loads specified symbols from the gdx file</p>
+<dd><p>Reads specified symbols from the gdx file. If symbol_names are
+not provided, it reads all symbols from the gdx file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1065,7 +1066,7 @@ in operations</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>sets: tuple[Union[Set,str]]</strong></dt><dd></dd>
+<dt><strong>sets: tuple[Set | str]</strong></dt><dd></dd>
 <dt><strong>&gt;&gt;&gt; equation = Equation(name=”equation”, domain=[i,j])</strong></dt><dd></dd>
 <dt><strong>&gt;&gt;&gt; equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])</strong></dt><dd></dd>
 </dl>
@@ -1098,7 +1099,7 @@ in operations</p>
 <dt><strong>container</strong><span class="classifier">Container</span></dt><dd></dd>
 <dt><strong>name</strong><span class="classifier">str</span></dt><dd></dd>
 <dt><strong>type</strong><span class="classifier">str</span></dt><dd></dd>
-<dt><strong>domain</strong><span class="classifier">Union[Set, str], optional</span></dt><dd></dd>
+<dt><strong>domain</strong><span class="classifier">List[Set | str], optional</span></dt><dd></dd>
 <dt><strong>records</strong><span class="classifier">Any, optional</span></dt><dd></dd>
 <dt><strong>domain_forwarding</strong><span class="classifier">bool, optional</span></dt><dd></dd>
 <dt><strong>description</strong><span class="classifier">str, optional</span></dt><dd></dd>
@@ -1107,18 +1108,8 @@ in operations</p>
 <dt><strong>definition_domain: list, optional</strong></dt><dd></dd>
 </dl>
 </dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">records</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">]])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Equation</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="n">a</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>definition</strong></dt><dd></dd>
 <dt><strong>description</strong></dt><dd></dd>
 <dt><strong>dimension</strong></dt><dd></dd>
@@ -1433,21 +1424,15 @@ in operations</p>
 </dd>
 <dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Name of the model</p>
 </dd>
-<dt><strong>equations</strong><span class="classifier">Union[str, list]</span></dt><dd><p>List of Equation objects or str. <code class="docutils literal notranslate"><span class="pre">all</span></code> as a string represents
+<dt><strong>equations</strong><span class="classifier">str | list</span></dt><dd><p>List of Equation objects or str. <code class="docutils literal notranslate"><span class="pre">all</span></code> as a string represents
 all the equations specified before the creation of this model</p>
 </dd>
-<dt><strong>limited_variables</strong><span class="classifier">Optional[list], optional</span></dt><dd><p>Allows limiting the domain of variables used in a model.</p>
+<dt><strong>limited_variables</strong><span class="classifier">list, optional</span></dt><dd><p>Allows limiting the domain of variables used in a model.</p>
 </dd>
 </dl>
 </dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">transport</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;transport&quot;</span><span class="p">,</span> <span class="n">equations</span><span class="o">=</span><span class="p">[</span><span class="n">cost</span><span class="p">,</span><span class="n">supply</span><span class="p">,</span><span class="n">demand</span><span class="p">])</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>equations</strong></dt><dd></dd>
 <dt><strong>status</strong></dt><dd></dd>
 </dl>
@@ -1670,16 +1655,8 @@ all the equations specified before the creation of this model</p>
 <dt><strong>uels_on_axes</strong><span class="classifier">bool</span></dt><dd></dd>
 </dl>
 </dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">records</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">]])</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>assign</strong></dt><dd></dd>
 <dt><strong>description</strong></dt><dd></dd>
 <dt><strong>dimension</strong></dt><dd></dd>
@@ -1923,17 +1900,10 @@ all the equations specified before the creation of this model</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>domain</strong><span class="classifier">Set | Alias | Tuple[Set | Alias], Domain, Expression</span></dt><dd></dd>
-<dt><strong>expression</strong><span class="classifier">Union[Expression, int, bool]</span></dt><dd></dd>
+<dt><strong>expression</strong><span class="classifier">Expression | int | bool</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span> <span class="s1">&#39;i3&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Equation</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">v</span>
-</pre></div>
-</div>
 <p class="rubric">Methods</p>
 <table class="table">
 <tbody>
@@ -1946,7 +1916,7 @@ all the equations specified before the creation of this model</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gamspy.Set">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gamspy.</span></span><span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gamspy.Container" title="gamspy.Container"><span class="pre">Container</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#gamspy.Set" title="gamspy.symbols.set.Set"><span class="pre">Set</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_singleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_forwarding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uels_on_axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gamspy.Set" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gamspy.</span></span><span class="sig-name descname"><span class="pre">Set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#gamspy.Container" title="gamspy.Container"><span class="pre">Container</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#gamspy.Set" title="gamspy._symbols.set.Set"><span class="pre">Set</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_singleton</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">records</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_forwarding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uels_on_axes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gamspy.Set" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Operable</span></code></p>
 <p>Represents a Set symbol in GAMS.
 <a class="reference external" href="https://www.gams.com/latest/docs/UG_SetDefinition.html">https://www.gams.com/latest/docs/UG_SetDefinition.html</a></p>
@@ -1957,7 +1927,7 @@ all the equations specified before the creation of this model</p>
 <dt><strong>name</strong><span class="classifier">str</span></dt><dd></dd>
 <dt><strong>domain</strong><span class="classifier">list, optional</span></dt><dd></dd>
 <dt><strong>is_singleton</strong><span class="classifier">bool, optional</span></dt><dd></dd>
-<dt><strong>records</strong><span class="classifier">Union[int, float, DataFrame], optional</span></dt><dd></dd>
+<dt><strong>records</strong><span class="classifier">int | float | DataFrame, optional</span></dt><dd></dd>
 <dt><strong>domain_forwarding</strong><span class="classifier">bool, optional</span></dt><dd></dd>
 <dt><strong>description</strong><span class="classifier">str, optional</span></dt><dd></dd>
 <dt><strong>uels_on_axes</strong><span class="classifier">bool</span></dt><dd></dd>
@@ -2272,17 +2242,10 @@ all the equations specified before the creation of this model</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>domain</strong><span class="classifier">Set | Alias | Tuple[Set | Alias], Domain, Expression</span></dt><dd></dd>
-<dt><strong>expression</strong><span class="classifier">Union[Expression, int, bool]</span></dt><dd></dd>
+<dt><strong>expression</strong><span class="classifier">Expression | int | bool</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span> <span class="s1">&#39;i3&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Equation</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Smax</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">v</span>
-</pre></div>
-</div>
 <p class="rubric">Methods</p>
 <table class="table">
 <tbody>
@@ -2302,17 +2265,10 @@ all the equations specified before the creation of this model</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>domain</strong><span class="classifier">Set | Alias | Tuple[Set | Alias], Domain, Expression</span></dt><dd></dd>
-<dt><strong>expression</strong><span class="classifier">Union[Expression, int, bool]</span></dt><dd></dd>
+<dt><strong>expression</strong><span class="classifier">Expression | int | bool</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span> <span class="s1">&#39;i3&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Equation</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Smin</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">v</span>
-</pre></div>
-</div>
 <p class="rubric">Methods</p>
 <table class="table">
 <tbody>
@@ -2332,17 +2288,10 @@ all the equations specified before the creation of this model</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>domain</strong><span class="classifier">Set | Alias | Tuple[Set | Alias], Domain, Expression</span></dt><dd></dd>
-<dt><strong>expression</strong><span class="classifier">Union[Expression, int, bool]</span></dt><dd></dd>
+<dt><strong>expression</strong><span class="classifier">Expression | int | bool</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">,</span> <span class="s1">&#39;i3&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;v&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Equation</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">v</span>
-</pre></div>
-</div>
 <p class="rubric">Methods</p>
 <table class="table">
 <tbody>
@@ -2371,16 +2320,8 @@ all the equations specified before the creation of this model</p>
 <dt><strong>description</strong><span class="classifier">str, optional</span></dt><dd></dd>
 </dl>
 </dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Container</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Set</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">,</span> <span class="n">records</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;i1&#39;</span><span class="p">,</span><span class="s1">&#39;i2&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="p">])</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
 <dt><strong>description</strong></dt><dd></dd>
 <dt><strong>dimension</strong></dt><dd></dd>
 <dt><strong>domain</strong></dt><dd></dd>
@@ -2714,6 +2655,11 @@ elements of another sequence.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="gamspy.utils.convert_to_categoricals">
+<span class="sig-prename descclassname"><span class="pre">gamspy.utils.</span></span><span class="sig-name descname"><span class="pre">convert_to_categoricals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arrkeys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arrvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_uels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gamspy.utils.convert_to_categoricals" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="gamspy.utils.isin">
 <span class="sig-prename descclassname"><span class="pre">gamspy.utils.</span></span><span class="sig-name descname"><span class="pre">isin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">container</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#gamspy.utils.isin" title="Permalink to this definition">#</a></dt>
 <dd><p>Checks whether the given symbol in the sequence.
@@ -2919,6 +2865,7 @@ is overloaded by the symbols.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-gamspy.utils">utils</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamspy.utils.checkAllSame"><code class="docutils literal notranslate"><span class="pre">checkAllSame()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamspy.utils.convert_to_categoricals"><code class="docutils literal notranslate"><span class="pre">convert_to_categoricals()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gamspy.utils.isin"><code class="docutils literal notranslate"><span class="pre">isin()</span></code></a></li>
 </ul>
 </li>

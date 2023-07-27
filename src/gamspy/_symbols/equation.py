@@ -54,8 +54,8 @@ class Equation(gt.Equation, operable.Operable):
     definition: Expression, optional
     definition_domain: list, optional
 
-    Example
-    ----------
+    Examples
+    --------
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
     >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])

@@ -59,6 +59,12 @@ class Container(gt.Container):
         Path to the directory that holds the GAMS installation, by default None
     name : str, optional
         Name of the Container, by default "default"
+
+    Examples
+    --------
+    >>> m = gp.Container()
+    >>> m = gp.Container(system_directory=path_to_the_directory)
+    >>> m = gp.Container(load_from=path_to_the_gdx)
     """
 
     def __init__(
@@ -74,7 +80,6 @@ class Container(gt.Container):
         self._unsaved_statements: dict = {}
 
         super().__init__(load_from, self.system_directory)
-        # read on demand
         (
             self._gms_path,
             self._lst_path,
@@ -962,7 +967,8 @@ class Container(gt.Container):
         self, load_from: str, symbol_names: Optional[List[str]] = None
     ) -> None:
         """
-        Loads specified symbols from the gdx file
+        Reads specified symbols from the gdx file. If symbol_names are
+        not provided, it reads all symbols from the gdx file.
 
         Parameters
         ----------

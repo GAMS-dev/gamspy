@@ -31,6 +31,12 @@ class Number:
     """
     Needed for conditions on numbers.
 
+    Parameters
+    ----------
+    value : int | float
+
+    Examples
+    --------
     >>> Number(1).where[sig[i] == 0]
     1$(sig(i) = 0)
     """
@@ -40,7 +46,8 @@ class Number:
         self.where = condition.Condition(self)
 
     def gamsRepr(self) -> str:
-        """Representation of this Number in GAMS language.
+        """
+        Representation of this Number in GAMS language.
 
         Returns
         -------

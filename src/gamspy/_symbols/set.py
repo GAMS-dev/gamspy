@@ -55,8 +55,8 @@ class Set(gt.Set, operable.Operable):
     description : str, optional
     uels_on_axes : bool
 
-    Example
-    ----------
+    Examples
+    --------
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
     """

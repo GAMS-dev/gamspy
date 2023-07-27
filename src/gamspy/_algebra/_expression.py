@@ -46,10 +46,14 @@ class Expression(_operable.Operable):
     right: str | int | float | Parameter | Variable
         Right operand
 
+    Examples
+    --------
     >>> a = Parameter(name="a", records=[["a", 1], ["b", 2], ["c", 3]]))
     >>> b = Parameter(name="b", records=[["a", 1], ["b", 2], ["c", 3]]))
-    >>> a * b
+    >>> expression = a * b
     Expression(a, "*", b)
+    >>> expression.gamsRepr()
+    (a * b)
     """
 
     def __init__(self, left, op_type, right) -> None:
