@@ -15,7 +15,16 @@ keywords = [
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
-  "Programming Language :: Python"
+  "Programming Language :: Python",
+  "Topic :: Software Development",
+  "Topic :: Scientific/Engineering",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX",
+  "Operating System :: Unix",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
   "pandas ~= 2.0.2"
