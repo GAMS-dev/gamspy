@@ -40,7 +40,9 @@ class GamspySuite(unittest.TestCase):
         # Without records
         b = Set(self.m, "b")
         self.assertEqual(b.gamsRepr(), "b")
-        self.assertEqual(b.getStatement(), "Set b(*);")
+        self.assertEqual(
+            b.getStatement(), f"Set b(*);\n$gdxLoad {self.m._gdx_path} b"
+        )
 
         # Without domain
         i = Set(
@@ -51,14 +53,17 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(i.gamsRepr(), "i")
         self.assertEqual(
-            i.getStatement(), 'Set i(*) "dummy set" / seattle,san-diego /;'
+            i.getStatement(),
+            f'Set i(*) "dummy set";\n$gdxLoad {self.m._gdx_path} i',
         )
 
         # With one domain
         j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
         k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
         self.assertEqual(k.gamsRepr(), "k")
-        self.assertEqual(k.getStatement(), "Set k(j) / seattle,san-diego /;")
+        self.assertEqual(
+            k.getStatement(), f"Set k(j);\n$gdxLoad {self.m._gdx_path} k"
+        )
 
         # With two domain
         m = Set(self.m, "m", records=[f"i{i}" for i in range(2)])
@@ -67,11 +72,14 @@ class GamspySuite(unittest.TestCase):
         a.generateRecords(density=1)
         self.assertEqual(a.gamsRepr(), "a")
         self.assertEqual(
-            a.getStatement(), "Set a(m,n) / \ni0.j0\ni0.j1\ni1.j0\ni1.j1 /;"
+            a.getStatement(), f"Set a(m,n);\n$gdxLoad {self.m._gdx_path} a"
         )
 
         s = Set(self.m, "s", is_singleton=True)
-        self.assertEqual(s.getStatement(), "Singleton Set s(*);")
+        self.assertEqual(
+            s.getStatement(),
+            f"Singleton Set s(*);\n$gdxLoad {self.m._gdx_path} s",
+        )
 
         with self.assertRaises(TypeError):
             s.records = 5
@@ -204,12 +212,13 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             a.getStatement(),
-            'Parameter a(i) "distances" / \nseattle 350.0\nsan-diego'
-            " 600.0\ntopeka 500.0/;",
+            f'Parameter a(i) "distances";\n$gdxLoad {self.m._gdx_path} a',
         )
 
         b = Parameter(self.m, "b")
-        self.assertEqual(b.getStatement(), "Parameter b / /;")
+        self.assertEqual(
+            b.getStatement(), f"Parameter b;\n$gdxLoad {self.m._gdx_path} b"
+        )
         self.assertEqual((b == 5).gamsRepr(), "(b = 5)")
         self.assertEqual((-b).name, "-b")
 
@@ -280,7 +289,10 @@ class GamspySuite(unittest.TestCase):
         # Variable without data
         v4 = Variable(self.m, "v4")
         self.assertEqual(v4.gamsRepr(), "v4")
-        self.assertEqual(v4.getStatement(), "free Variable v4 / /;")
+        self.assertEqual(
+            v4.getStatement(),
+            f"free Variable v4;\n$gdxLoad {self.m._gdx_path} v4",
+        )
 
         with self.assertRaises(TypeError):
             v4.records = 5
@@ -289,7 +301,8 @@ class GamspySuite(unittest.TestCase):
         v0 = Variable(self.m, name="v0", description="some text")
         self.assertEqual(v0.gamsRepr(), "v0")
         self.assertEqual(
-            v0.getStatement(), 'free Variable v0 "some text" / /;'
+            v0.getStatement(),
+            f'free Variable v0 "some text";\n$gdxLoad {self.m._gdx_path} v0',
         )
 
         expression = -v0
@@ -298,14 +311,20 @@ class GamspySuite(unittest.TestCase):
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
         self.assertEqual(v1.gamsRepr(), "v1")
-        self.assertEqual(v1.getStatement(), "free Variable v1(i) / /;")
+        self.assertEqual(
+            v1.getStatement(),
+            f"free Variable v1(i);\n$gdxLoad {self.m._gdx_path} v1",
+        )
 
         self.assertEqual((v1[i] == v1[i]).gamsRepr(), "v1(i) =e= v1(i)")
 
         # Variable two domain
         v2 = Variable(self.m, name="v2", domain=[i, j])
         self.assertEqual(v2.gamsRepr(), "v2")
-        self.assertEqual(v2.getStatement(), "free Variable v2(i,j) / /;")
+        self.assertEqual(
+            v2.getStatement(),
+            f"free Variable v2(i,j);\n$gdxLoad {self.m._gdx_path} v2",
+        )
 
         # Scalar variable with records
         pi = Variable(
@@ -315,7 +334,7 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             pi.getStatement(),
-            "free Variable pi / L 3.14159,M 0.0,LO -inf,UP inf,scale 1.0/;",
+            f"free Variable pi;\n$gdxLoad {self.m._gdx_path} pi",
         )
         new_pi = -pi
         self.assertEqual(new_pi.gamsRepr(), "-pi")
@@ -333,12 +352,7 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v.getStatement(),
-            "free Variable v(*) / \ni0.L 0.0\ni0.M 0.0\ni0.LO -inf\ni0.UP"
-            " inf\ni0.scale 1.0\ni1.L 0.0\ni1.M 1.0\ni1.LO -inf\ni1.UP"
-            " inf\ni1.scale 1.0\ni2.L 0.0\ni2.M 2.0\ni2.LO -inf\ni2.UP"
-            " inf\ni2.scale 1.0\ni3.L 0.0\ni3.M 3.0\ni3.LO -inf\ni3.UP"
-            " inf\ni3.scale 1.0\ni4.L 0.0\ni4.M 4.0\ni4.LO -inf\ni4.UP"
-            " inf\ni4.scale 1.0/;",
+            f"free Variable v(*);\n$gdxLoad {self.m._gdx_path} v",
         )
 
         v3 = Variable(
@@ -352,28 +366,35 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             v3.getStatement(),
-            "positive Variable v3(*,*) / \nseattle.san-diego.L"
-            " 0.0\nseattle.san-diego.M 0.0\nseattle.san-diego.LO"
-            " 0.0\nseattle.san-diego.UP inf\nseattle.san-diego.scale"
-            " 1.0\nchicago.madison.L 0.0\nchicago.madison.M"
-            " 0.0\nchicago.madison.LO 0.0\nchicago.madison.UP"
-            " inf\nchicago.madison.scale 1.0/;",
+            f"positive Variable v3(*,*);\n$gdxLoad {self.m._gdx_path} v3",
         )
 
     def test_variable_types(self):
         i = Set(self.m, "i", records=["1", "2"])
 
         v = Variable(self.m, name="v", type="Positive")
-        self.assertEqual(v.getStatement(), "positive Variable v / /;")
+        self.assertEqual(
+            v.getStatement(),
+            f"positive Variable v;\n$gdxLoad {self.m._gdx_path} v",
+        )
 
         v1 = Variable(self.m, name="v1", type="Negative")
-        self.assertEqual(v1.getStatement(), "negative Variable v1 / /;")
+        self.assertEqual(
+            v1.getStatement(),
+            f"negative Variable v1;\n$gdxLoad {self.m._gdx_path} v1",
+        )
 
         v2 = Variable(self.m, name="v2", type="Binary")
-        self.assertEqual(v2.getStatement(), "binary Variable v2 / /;")
+        self.assertEqual(
+            v2.getStatement(),
+            f"binary Variable v2;\n$gdxLoad {self.m._gdx_path} v2",
+        )
 
         v3 = Variable(self.m, name="v3", domain=[i], type="Integer")
-        self.assertEqual(v3.getStatement(), "integer Variable v3(i) / /;")
+        self.assertEqual(
+            v3.getStatement(),
+            f"integer Variable v3(i);\n$gdxLoad {self.m._gdx_path} v3",
+        )
 
     def test_variable_attributes(self):
         pi = Variable(

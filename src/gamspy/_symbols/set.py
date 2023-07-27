@@ -323,23 +323,8 @@ class Set(gt.Set, operable.Operable):
         if self.description:
             output += f' "{self.description}"'
 
-        if self._records is not None:
-            records_str = " / "
-            if self.domain is None or len(self.domain) <= 1:
-                records_str += ",".join(
-                    self._records.iloc[:, 0].values.tolist()
-                )
-            else:
-                strings = (
-                    self._records.to_string(index=False, header=False)
-                    .strip()
-                    .split("\n")
-                )
-                for string in strings:
-                    records_str += "\n" + ".".join(string.split())
-
-            output += records_str + " /"
-
         output += ";"
+
+        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output

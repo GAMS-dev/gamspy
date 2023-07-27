@@ -133,10 +133,11 @@ class Container(gt.Container):
             del self.data[symbol_name]
 
             if isinstance(symbol, gt.Alias):
+                alias_with = self[symbol.alias_with.name]
                 _ = gp.Alias(
                     self,
                     symbol.name,
-                    symbol.alias_with,
+                    alias_with,
                 )
             elif isinstance(symbol, gt.Set):
                 _ = gp.Set(
@@ -697,6 +698,7 @@ class Container(gt.Container):
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
         # Save unsaved statements to a file
+        self.write(self._gdx_path)
         self._write_to_gms()
 
         # Restart from a workfile
@@ -815,6 +817,7 @@ class Container(gt.Container):
 
         self._unsaved_statements[utils._getUniqueName()] = solve_string + ";\n"
 
+        self.write(self._gdx_path)
         self._write_to_gms()
         output = self._run_gms(commandline_options)
 
@@ -977,3 +980,23 @@ class Container(gt.Container):
         """
         super().read(load_from, symbol_names)
         self._cast_symbols(symbol_names)
+
+    def write(
+        self,
+        write_to: str,
+        symbol_names: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Writes specified symbols to the gdx file. If symbol_names are
+        not provided, it writes all symbols to the gdx file.
+
+        Parameters
+        ----------
+        write_to : str
+        symbol_names : List[str], optional
+        """
+        sequence = symbol_names if symbol_names else self.data.keys()
+        for symbol_name in sequence:
+            self[symbol_name]._is_dirty = False
+
+        super().write(write_to, symbol_names)

@@ -219,56 +219,7 @@ class Variable(gt.Variable, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
-        records_str = " / "
-        if self._records is not None:
-            col_mapping = {
-                "level": "L",
-                "marginal": "M",
-                "lower": "LO",
-                "upper": "UP",
-                "scale": "scale",
-            }
-
-            if len(self.domain) == 0:
-                for col, value in zip(
-                    self._records.columns.tolist(),
-                    self._records.values.tolist()[0],
-                ):
-                    # Discrete variables cannot have scale
-                    if (
-                        self.type.lower() in ["binary", "integer"]
-                        and col.lower() == "scale"
-                    ):
-                        continue
-                    else:
-                        records_str += f"{col_mapping[col.lower()]} {value},"
-                records_str = records_str[:-1]
-            else:
-                # domain, level, marginal, lower, upper, scale
-                for _, row in self._records.iterrows():
-                    row_as_list = row.tolist()
-                    label_str = ".".join(row_as_list[: len(self.domain)])
-
-                    for column_name in row.index.tolist():
-                        # Discrete variables cannot have scale
-                        if (
-                            isinstance(column_name, str)
-                            and column_name.lower() == "scale"
-                            and self.type.lower()
-                            in [
-                                "binary",
-                                "integer",
-                            ]
-                        ):
-                            continue
-                        else:
-                            if column_name in col_mapping.keys():
-                                records_str += f"\n{label_str}.{col_mapping[column_name.lower()]} {row[column_name]}"  # noqa: E501
-
-        records_str += "/"
-
-        output += records_str
-
         output += ";"
+        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output

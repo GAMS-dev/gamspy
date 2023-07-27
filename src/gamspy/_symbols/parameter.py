@@ -198,18 +198,7 @@ class Parameter(gt.Parameter, operable.Operable):
         if self.description:
             output += ' "' + self.description + '"'
 
-        records_str = " / "
-        if self._records is not None:
-            # Parameter a(i) / i1 1\n i2 2\n /;
-            for _, row in self._records.iterrows():
-                row_as_list = row.tolist()
-                label_str = ".".join(row_as_list[:-1])
-                records_str += "\n" + f"{label_str} {row_as_list[-1]}"
-
-        records_str += "/"
-
-        output += records_str
-
         output += ";"
+        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output
