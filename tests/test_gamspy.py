@@ -2160,11 +2160,6 @@ class GamspySuite(unittest.TestCase):
         # Test invalid sense
         self.assertRaises(ValueError, self.m.solve, transport, "LP", "bla", z)
 
-        # Test invalid scenario
-        self.assertRaises(
-            TypeError, self.m.solve, transport, "LP", "min", z, None, x[i, j]
-        )
-
         # Test invalid stdout options
         self.assertRaises(
             TypeError, self.m.solve, transport, "LP", "min", z, None, None, 5

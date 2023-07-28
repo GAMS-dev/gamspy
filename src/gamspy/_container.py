@@ -753,7 +753,6 @@ class Container(gt.Container):
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective_variable: Optional["Variable"] = None,
         commandline_options: Optional[dict] = None,
-        scenario: Optional["Set"] = None,
         stdout: Optional[str] = None,
     ) -> str:
         """
@@ -796,11 +795,6 @@ class Container(gt.Container):
                 f"Allowed sense types: {utils.SENSE_TYPES} but found {sense}."
             )
 
-        if scenario is not None and not isinstance(scenario, gp.Set):
-            raise TypeError(
-                f"scenario must be a Set but found {type(scenario)}"
-            )
-
         if stdout is not None and not isinstance(stdout, str):
             raise TypeError("stdout must be a path for the output file")
 
@@ -811,9 +805,6 @@ class Container(gt.Container):
 
         if objective_variable:
             solve_string += f" {objective_variable.gamsRepr()}"
-
-        if scenario:
-            solve_string += f" scenario {scenario.gamsRepr()}"
 
         self._unsaved_statements[utils._getUniqueName()] = solve_string + ";\n"
 
