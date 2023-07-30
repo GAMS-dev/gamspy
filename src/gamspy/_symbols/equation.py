@@ -144,7 +144,6 @@ class Equation(gt.Equation, operable.Operable):
         )
 
         self.ref_container._addStatement(statement)
-        self._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -260,11 +259,6 @@ class Equation(gt.Equation, operable.Operable):
 
     @property
     def records(self):
-        if not self._is_dirty:
-            return self._records
-
-        self.ref_container._loadOnDemand()
-
         return self._records
 
     @records.setter

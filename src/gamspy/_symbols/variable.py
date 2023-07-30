@@ -160,11 +160,6 @@ class Variable(gt.Variable, operable.Operable):
 
     @property
     def records(self):
-        if not self._is_dirty:
-            return self._records
-
-        self.ref_container._loadOnDemand()
-
         return self._records
 
     @records.setter

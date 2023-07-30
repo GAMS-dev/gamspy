@@ -1348,6 +1348,13 @@ class GamspySuite(unittest.TestCase):
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
+        k = Set(m, "k", domain=[p])
+        k[p].where[k[p]] = True
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].gamsRepr(),
+            "k(p) $ (k(p)) = yes;",
+        )
+
     def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"

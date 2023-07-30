@@ -116,7 +116,7 @@ class Container(gt.Container):
         system_directory += "minigams" + os.sep + user_os
 
         if user_os == "darwin":
-            system_directory += f"_{platform.machine()}"
+            system_directory += f"_{platform.machine()}"  # pragma: no cover
 
         return system_directory
 
@@ -704,18 +704,16 @@ class Container(gt.Container):
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
         # Save unsaved statements to a file
+        dirty_symbols = []
+        for symbol in self.data.values():
+            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
+                dirty_symbols.append(symbol)
+
         self.write(self._gdx_path)
         self._write_to_gms()
 
         # Restart from a workfile
         self._restart_from_workfile()
-
-        # Update symbol data
-        dirty_symbols = []
-        for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
-                dirty_symbols.append(symbol)
-                symbol._is_dirty = False
 
         self.loadRecordsFromGdx(self._gdx_path, dirty_symbols)
 
