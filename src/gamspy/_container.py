@@ -72,6 +72,7 @@ class Container(gt.Container):
         load_from: Optional[str] = None,
         system_directory: Optional[str] = None,
         name: str = "default",
+        working_directory: Optional[str] = None,
     ):
         self.system_directory = self.get_system_directory(system_directory)
 
@@ -80,13 +81,15 @@ class Container(gt.Container):
         self._unsaved_statements: dict = {}
 
         super().__init__(load_from, self.system_directory)
+
         (
             self._gms_path,
             self._lst_path,
             self._save_to,
             self._restart_from,
             self._gdx_path,
-        ) = self._setup_paths()
+        ) = self._setup_paths(working_directory)
+
         self._clean_existing_workfiles()
         self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
@@ -179,32 +182,35 @@ class Container(gt.Container):
                     symbol.description,
                 )
 
-    def _setup_paths(self) -> Tuple[str, str, str, str, str]:
+    def _setup_paths(
+        self, working_directory: Optional[str]
+    ) -> Tuple[str, str, str, str, str]:
         """
         Sets up the paths for .gms, .lst, .g00, and .gdx files.
+
+        Parameters
+        ----------
+        working_directory : str, optional
 
         Returns
         -------
         Tuple[str, str, str, str, str]
             gms_path, save_to, restart_from, gdx_path
         """
-        gms_path = os.path.join(os.getcwd(), f"{self.name}.gms")
-        if " " in gms_path:
-            gms_path = f'"{gms_path}"'
+        directory = working_directory if working_directory else os.getcwd()
 
-        lst_path = gms_path[:-4] + ".lst"
+        if " " in directory:
+            raise Exception(
+                "Working directory path cannot contain spaces. Working"
+                f" directory: {os.getcwd()}"
+            )
 
-        save_to = os.path.join(os.getcwd(), f"{self.name}_save.g00")
-        if " " in save_to:
-            save_to = f'"{save_to}"'
-
-        restart_from = os.path.join(os.getcwd(), f"{self.name}_restart.g00")
-        if " " in restart_from:
-            restart_from = f'"{restart_from}"'
-
-        gdx_path = os.path.join(os.getcwd(), f"{self.name}.gdx")
-        if " " in gdx_path:
-            gdx_path = f'"{gdx_path}"'
+        temporary_file_prefix = os.path.join(directory, self.name)
+        gms_path = temporary_file_prefix + ".gms"
+        lst_path = temporary_file_prefix + ".lst"
+        save_to = temporary_file_prefix + "_save.g00"
+        restart_from = temporary_file_prefix + "_restart.g00"
+        gdx_path = temporary_file_prefix + ".gdx"
 
         return gms_path, lst_path, save_to, restart_from, gdx_path
 

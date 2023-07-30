@@ -2013,6 +2013,8 @@ class GamspySuite(unittest.TestCase):
             " =l= 1;",
         )
 
+        self.assertRaises(Exception, self.m._setup_paths, "/home/a b c")
+
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
@@ -2147,6 +2149,7 @@ class GamspySuite(unittest.TestCase):
             problem="LP",
             sense="min",
             objective_variable=z,
+            commandline_options={"resLim": 100},
             stdout="test.gms",
         )
 
@@ -2163,6 +2166,18 @@ class GamspySuite(unittest.TestCase):
         # Test invalid stdout options
         self.assertRaises(
             TypeError, self.m.solve, transport, "LP", "min", z, None, None, 5
+        )
+
+        # Test invalid commandline options
+        self.assertRaises(
+            Exception,
+            self.m.solve,
+            transport,
+            "LP",
+            "min",
+            z,
+            {"bla": 100},
+            None,
         )
 
         # Try to solve invalid model
