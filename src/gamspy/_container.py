@@ -771,7 +771,6 @@ class Container(gt.Container):
         sense : "MIN" or "MAX", optional
         objective_variable : Variable, optional
         commandline_options : dict, optional
-        scenario : Set, optional
         stdout : str, optional
 
         Returns
@@ -785,8 +784,6 @@ class Container(gt.Container):
             In case problem is not in possible problem types
         ValueError
             In case sense is different than "MIN" or "MAX"
-        TypeError
-            In case scenario is not a Set
         TypeError
             In case stdout is not a string
         """

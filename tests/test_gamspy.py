@@ -2165,7 +2165,7 @@ class GamspySuite(unittest.TestCase):
 
         # Test invalid stdout options
         self.assertRaises(
-            TypeError, self.m.solve, transport, "LP", "min", z, None, None, 5
+            TypeError, self.m.solve, transport, "LP", "min", z, None, 5
         )
 
         # Test invalid commandline options
