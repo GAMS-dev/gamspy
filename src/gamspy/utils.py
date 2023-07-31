@@ -33,6 +33,7 @@ from collections.abc import Sequence
 from typing import Tuple, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from gamspy._symbols._implicits import ImplicitSet
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra._expression import Expression
@@ -307,14 +308,13 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
     return all_same
 
 
-def _getDomainStr(domain) -> str:
+def _getDomainStr(domain: Union["Set", "Alias", "ImplicitSet", str]) -> str:
     """
     Creates the string format of a given domain
 
     Parameters
     ----------
-    domain : _type_
-        _description_
+    domain : Set | Alias | ImplicitSet | str
 
     Returns
     -------
@@ -343,6 +343,24 @@ def _getDomainStr(domain) -> str:
 
 
 def _getMatchingParanthesisIndices(string: str) -> dict:
+    """
+    Stack based paranthesis matcher.
+
+    Parameters
+    ----------
+    string : str
+
+    Returns
+    -------
+    dict
+
+    Raises
+    ------
+    Exception
+        In case there are more closing paranthesis than opening parantheses
+    Exception
+        In case there are more opening paranthesis than closing parantheses
+    """
     stack = []  # stack of indices of opening parentheses
     matching_indices = {}
 
@@ -353,10 +371,10 @@ def _getMatchingParanthesisIndices(string: str) -> dict:
             try:
                 matching_indices[stack.pop()] = index
             except IndexError:
-                raise Exception("Too many closing parentheses")
+                raise Exception("Too many closing parentheses!")
 
-    if stack:  # check if stack is empty afterwards
-        raise Exception("Too many opening parentheses")
+    if stack:
+        raise Exception("Too many opening parentheses!")
 
     return matching_indices
 
