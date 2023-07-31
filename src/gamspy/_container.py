@@ -703,7 +703,6 @@ class Container(gt.Container):
 
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
-        # Save unsaved statements to a file
         dirty_symbols = []
         for symbol in self.data.values():
             if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
@@ -712,43 +711,12 @@ class Container(gt.Container):
         self.write(self._gdx_path)
         self._write_to_gms()
 
-        # Restart from a workfile
-        self._restart_from_workfile()
+        self._run_gms()
 
         self.loadRecordsFromGdx(self._gdx_path, dirty_symbols)
 
         # Empty unsaved statements
         self._unsaved_statements = {}
-
-    def _restart_from_workfile(self) -> None:
-        """Restarts from the latest workfile"""
-        commands = [
-            self._gams_compiler_path,
-            self._gms_path,
-            f"save={self._save_to}",
-            f"gdx={self._gdx_path}",
-        ]
-
-        if os.path.exists(self._restart_from):
-            commands.append(f"restart={self._restart_from}")
-
-        try:
-            _ = subprocess.run(
-                " ".join(commands),
-                capture_output=True,
-                check=True,
-                shell=True,
-                text=True,
-            )
-        except Exception as e:
-            executed_command = " ".join(commands)
-            raise Exception(
-                "Could not restart with the following"  # type: ignore
-                f" command:\n\n{executed_command}\n\nError log:\n\n{e.output}"
-            )
-
-        # https://www.gams.com/latest/docs/UG_SaveRestart.html#UG_SaveRestart_AvoidingCommonMistakes
-        self._save_to, self._restart_from = self._restart_from, self._save_to
 
     def solve(
         self,
@@ -935,7 +903,6 @@ class Container(gt.Container):
         symbols : List[Set | Parameter | Variable | Equation], optional
             Symbols whose data will be load from gdx, by default None
         """
-
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
 
         gdxHandle = utils._openGdxFile(self.system_directory, load_from)
@@ -951,7 +918,6 @@ class Container(gt.Container):
                 statement.records = updated_records
 
                 if updated_records is not None:
-                    statement.records = updated_records.copy()
                     statement.domain_labels = statement.domain_names
 
         utils._closeGdxHandle(gdxHandle)

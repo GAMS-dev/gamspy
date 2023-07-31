@@ -1812,11 +1812,6 @@ class GamspySuite(unittest.TestCase):
             == ["i", "level", "marginal", "lower", "upper", "scale"]
         )
 
-        m = Container()
-        m.addGamsCode("some gibberish")
-        m._write_to_gms()
-        self.assertRaises(Exception, m._restart_from_workfile)
-
     def test_number(self):
         i = Set(self.m, name="i", records=["i1", "i2"])
         d = Parameter(
