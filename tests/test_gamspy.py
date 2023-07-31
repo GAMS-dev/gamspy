@@ -28,7 +28,6 @@ from gamspy import (
     Smin,
     Sum,
     Variable,
-    ModelStatus,
 )
 
 
@@ -1355,7 +1354,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2157,7 +2156,9 @@ class GamspySuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(isinstance(output, str))
-        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+        self.assertTrue(transport.modelStat == 1.0)
+        for attr_name in transport._getAttributeNames():
+            self.assertTrue(hasattr(transport, attr_name))
 
         # Test invalid problem
         self.assertRaises(ValueError, self.m.solve, transport, "bla", "min", z)

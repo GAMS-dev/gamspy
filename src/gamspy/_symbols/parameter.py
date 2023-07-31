@@ -199,6 +199,7 @@ class Parameter(gt.Parameter, operable.Operable):
             output += ' "' + self.description + '"'
 
         output += ";"
+
         output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output

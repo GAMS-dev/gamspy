@@ -24,54 +24,10 @@
 #
 
 from __future__ import annotations
-from typing import Optional, Union, TYPE_CHECKING
-from enum import Enum
+from typing import List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Container
-
-
-class ModelStatus(Enum):
-    # Not solved yet
-    NotSolved = 0
-    # Optimal solution achieved
-    OptimalGlobal = 1
-    # Local optimal solution achieved
-    OptimalLocal = 2
-    # Unbounded model found
-    Unbounded = 3
-    # Infeasible model found
-    InfeasibleGlobal = 4
-    # Locally infeasible model found
-    InfeasibleLocal = 5
-    # Solver terminated early and model was still infeasible
-    InfeasibleIntermed = 6
-    # Solver terminated early and model was feasible but not yet optimal
-    Feasible = 7
-    # Integer solution found
-    Integer = 8
-    # Solver terminated early with a non integer solution found
-    NonIntegerIntermed = 9
-    # No feasible integer solution could be found
-    IntegerInfeasible = 10
-    # Licensing problem
-    LicenseError = 11
-    # Error - No cause known
-    ErrorUnknown = 12
-    # Error - No solution attained
-    ErrorNoSolution = 13
-    # No solution returned
-    NoSolutionReturned = 14
-    # Unique solution in a CNS models
-    SolvedUnique = 15
-    # Feasible solution in a CNS models
-    Solved = 16
-    # Singular in a CNS models
-    SolvedSingular = 17
-    # Unbounded - no solution
-    UnboundedNoSolution = 18
-    # Infeasible - no solution
-    InfeasibleNoSolution = 19
 
 
 class Model:
@@ -108,15 +64,7 @@ class Model:
         self._equations = equations
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
-        self._status = ModelStatus.NotSolved
-
-    @property
-    def status(self) -> ModelStatus:
-        return self._status
-
-    @status.setter
-    def status(self, new_status):
-        self._status = ModelStatus(new_status)
+        self._generate_attribute_symbols()
 
     @property
     def equations(self) -> Union[str, list]:
@@ -125,6 +73,60 @@ class Model:
     @equations.setter
     def equations(self, new_equations) -> None:
         self._equations = new_equations
+
+    def _generate_attribute_symbols(self) -> None:
+        import gamspy as gp
+
+        for attr_name in self._getAttributeNames():
+            symbol_name = f"{self.name}_{attr_name}"
+            _ = gp.Parameter(self.ref_container, symbol_name)
+
+    def _getAttributeNames(self) -> List[str]:
+        attributes = [
+            "domUsd",
+            "etAlg",
+            "etSolve",
+            "etSolver",
+            "handle",
+            "iterUsd",
+            "line",
+            "linkUsed",
+            "marginals",
+            "maxInfes",
+            "meanInfes",
+            "modelStat",
+            "nodUsd",
+            "number",
+            "numDepnd",
+            "numDVar",
+            "numEqu",
+            "numInfes",
+            "numNLIns",
+            "numNLNZ",
+            "numNOpt",
+            "numNZ",
+            "numRedef",
+            "numVar",
+            "numVarProj",
+            "objEst",
+            "objVal",
+            "procUsed",
+            "resGen",
+            "resUsd",
+            "rngBndMax",
+            "rngBndMin",
+            "rngMatMax",
+            "rngMatMin",
+            "rngRhsMax",
+            "rngRhsMin",
+            "rObj",
+            "solveStat",
+            "sumInfes",
+            "sysIdent",
+            "sysVer",
+        ]
+
+        return attributes
 
     def getStatement(self) -> str:
         """

@@ -753,6 +753,30 @@ class Container(gt.Container):
         TypeError
             In case stdout is not a string
         """
+        self._check_solve_validity(problem, sense, stdout)
+        self._append_solve_string(model, problem, sense, objective_variable)
+        self._assign_model_attributes(model)
+
+        self.write(self._gdx_path)
+        self._write_to_gms()
+        output = self._run_gms(commandline_options)
+
+        # Write results to the specified output file
+        if stdout:
+            with open(stdout, "w") as output_file:
+                output_file.write(output)
+
+        self.loadRecordsFromGdx(self._gdx_path)
+        self._update_model_attributes(model)
+
+        return output
+
+    def _check_solve_validity(
+        self,
+        problem: str,
+        sense: Optional[Literal["MIN", "MAX"]] = None,
+        stdout: Optional[str] = None,
+    ) -> None:
         if problem.upper() not in utils.PROBLEM_TYPES:
             raise ValueError(
                 f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
@@ -767,6 +791,13 @@ class Container(gt.Container):
         if stdout is not None and not isinstance(stdout, str):
             raise TypeError("stdout must be a path for the output file")
 
+    def _append_solve_string(
+        self,
+        model: "Model",
+        problem: str,
+        sense: Optional[Literal["MIN", "MAX"]] = None,
+        objective_variable: Optional["Variable"] = None,
+    ) -> None:
         solve_string = f"solve {model.name} using {problem}"
 
         if sense:
@@ -777,37 +808,25 @@ class Container(gt.Container):
 
         self._unsaved_statements[utils._getUniqueName()] = solve_string + ";\n"
 
-        self.write(self._gdx_path)
-        self._write_to_gms()
-        output = self._run_gms(commandline_options)
-
-        # Write results to the specified output file
-        if stdout:
-            with open(stdout, "w") as output_file:
-                output_file.write(output)
-
-        self._update_status(model)
-
-        self.loadRecordsFromGdx(self._gdx_path)
-
-        return output
-
-    def _update_status(self, model: "Model"):
+    def _assign_model_attributes(self, model: "Model") -> None:
         """
-        Updates the model status by using .lst file
+        Assign model attributes to parameters
 
         Parameters
         ----------
         model : Model
         """
-        with open(self._lst_path) as listing_file:
-            lines = listing_file.read().split("\n")
+        for attr_name in model._getAttributeNames():
+            symbol_name = f"{model.name}_{attr_name}"
 
-            for line in lines:
-                if line.startswith("**** MODEL STATUS"):
-                    # e.g.: **** MODEL STATUS      2 Locally Optimal
-                    status_number = int(line[5:].strip().split()[2])
-                    model.status = gp.ModelStatus(status_number)
+            self._unsaved_statements[utils._getUniqueName()] = (
+                f"{symbol_name} = {model.name}.{attr_name};"
+            )
+
+    def _update_model_attributes(self, model: "Model") -> None:
+        for attr_name in model._getAttributeNames():
+            symbol_name = f"{model.name}_{attr_name}"
+            setattr(model, attr_name, self[symbol_name].records.values[0][0])
 
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """
