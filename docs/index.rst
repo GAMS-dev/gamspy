@@ -18,15 +18,10 @@ GamsPy documentation
 `Historical versions of documentation <https://numpy.org/doc/>`_
    
 **Useful links**:
-`Installation <https://numpy.org/install/>`_ |
-`Source Repository <https://github.com/numpy/numpy>`_ |
-`Issue Tracker <https://github.com/numpy/numpy/issues>`_ |
-`Q&A Support <https://numpy.org/gethelp/>`_ |
-`Mailing List <https://mail.python.org/mailman/listinfo/numpy-discussion>`_
+`Installation <user/Installation>`_ |
+`Source Repository <https://git.gams.com/devel/gamspy/-/tree/master/>`_ |
+`Support <https://www.gams.com/support/>`_
 
-NumPy is the fundamental package for scientific computing in Python. It is a
-Python library that provides a multidimensional array object, various derived
-objects (such as masked arrays and matrices), and an assortment of routines for
-fast operations on arrays, including mathematical, logical, shape manipulation,
-sorting, selecting, I/O, discrete Fourier transforms, basic linear algebra,
-basic statistical operations, random simulation and much more.
+GamsPy is a mathematical optimization package for scientific and commercial
+computing in Python. It is a Python library that provides symbols to be used
+in equations, a math package, and various utility functions.
