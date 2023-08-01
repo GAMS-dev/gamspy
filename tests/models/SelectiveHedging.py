@@ -59,7 +59,6 @@ def main(output=None):
     pr = Parameter(
         m, name="pr", domain=[l], description="Scenario probability"
     )
-    EpsTolerance = Parameter(m, name="EpsTolerance")
 
     USDDEMForwardRate.assign = -0.005
     USDCHFForwardRate.assign = 0.001
@@ -115,9 +114,7 @@ def main(output=None):
     z = Variable(m, name="z")
     h = Variable(m, name="h", type="positive", domain=[i])
     u = Variable(m, name="u", type="positive", domain=[i])
-    x = Variable(m, name="x", type="positive", domain=[i])
     y = Variable(m, name="y", type="positive", domain=[l])
-    r = Variable(m, name="r", domain=[l, i])
 
     # EQUATIONS #
     ObjDef = Equation(m, name="ObjDef", type="eq")
@@ -189,8 +186,7 @@ def main(output=None):
             Frontiers[pp, "mu"] = Frontiers[f"P_{idx}", "mu"] + Number(0.001)
 
     for pp, _ in p.records.itertuples(index=False):
-        if not IndexFund.status in [
-            ModelStatus.NotSolved,
+        if IndexFund.status not in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
@@ -210,10 +206,9 @@ def main(output=None):
     # Fully hedged model
     u.fx[i] = 0.0
 
-    IndexFund.status = ModelStatus.NotSolved
+    IndexFund.status = None
     for pp, _ in p.records.itertuples(index=False):
-        if not IndexFund.status in [
-            ModelStatus.NotSolved,
+        if IndexFund.status not in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
@@ -235,10 +230,9 @@ def main(output=None):
     u.up[i] = 1.0
     h.fx[i] = 0.0
 
-    IndexFund.status = ModelStatus.NotSolved
+    IndexFund.status = None
     for pp, _ in p.records.itertuples(index=False):
-        if not IndexFund.status in [
-            ModelStatus.NotSolved,
+        if IndexFund.status not in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:

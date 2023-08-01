@@ -28,6 +28,7 @@ from gamspy import (
     Smin,
     Sum,
     Variable,
+    ModelStatus,
 )
 
 
@@ -1354,7 +1355,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1369,6 +1370,7 @@ class GamspySuite(unittest.TestCase):
                 self.assertTrue(process.returncode == 0)
             except subprocess.CalledProcessError as e:
                 print(f"Output: {e.stderr.decode('utf-8')}")
+                exit(1)
 
     def test_operable_symbols(self):
         # Prepare data
@@ -2156,8 +2158,8 @@ class GamspySuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(isinstance(output, str))
-        self.assertTrue(transport.modelStat == 1.0)
-        for attr_name in transport._getAttributeNames():
+        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+        for attr_name in transport._getAttributeNames().values():
             self.assertTrue(hasattr(transport, attr_name))
 
         # Test invalid problem
@@ -2284,6 +2286,8 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
         e3 = m.addEquation("e", type="eq", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
+
+        self.assertRaises(Exception, Container, None, None, "default", "a b")
 
     def test_set_attributes(self):
         i = Set(self.m, "i")

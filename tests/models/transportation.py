@@ -71,7 +71,8 @@ def main():
         objective_variable=z,
     )
     print(x.records)
-    print(transport.objVal)
+    print(transport.objective_value)
+    print(transport.status)
 
 
 if __name__ == "__main__":

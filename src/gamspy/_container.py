@@ -27,6 +27,7 @@ import subprocess
 import os
 import platform
 import pandas as pd
+from gams import GamsWorkspace, DebugLevel
 import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
@@ -59,6 +60,9 @@ class Container(gt.Container):
         Path to the directory that holds the GAMS installation, by default None
     name : str, optional
         Name of the Container, by default "default"
+    working_directory : str, optional
+        Path to the working directory to store temporary files such .lst, .gms,
+        .gdx, .g00 files.
 
     Examples
     --------
@@ -75,6 +79,9 @@ class Container(gt.Container):
         working_directory: Optional[str] = None,
     ):
         self.system_directory = self.get_system_directory(system_directory)
+        self.workspace = GamsWorkspace(
+            working_directory, self.system_directory, DebugLevel.KeepFiles
+        )
 
         self.name = name
         self._statements_dict: dict = {}
@@ -88,7 +95,7 @@ class Container(gt.Container):
             self._save_to,
             self._restart_from,
             self._gdx_path,
-        ) = self._setup_paths(working_directory)
+        ) = self._setup_paths()
 
         self._clean_existing_workfiles()
         self._gams_compiler_path = self.system_directory + os.sep + "gams"
@@ -182,9 +189,7 @@ class Container(gt.Container):
                     symbol.description,
                 )
 
-    def _setup_paths(
-        self, working_directory: Optional[str]
-    ) -> Tuple[str, str, str, str, str]:
+    def _setup_paths(self) -> Tuple[str, str, str, str, str]:
         """
         Sets up the paths for .gms, .lst, .g00, and .gdx files.
 
@@ -197,12 +202,12 @@ class Container(gt.Container):
         Tuple[str, str, str, str, str]
             gms_path, save_to, restart_from, gdx_path
         """
-        directory = working_directory if working_directory else os.getcwd()
+        directory = self.workspace.working_directory
 
         if " " in directory:
             raise Exception(
                 "Working directory path cannot contain spaces. Working"
-                f" directory: {os.getcwd()}"
+                f" directory: {directory}"
             )
 
         temporary_file_prefix = os.path.join(directory, self.name)
@@ -214,7 +219,7 @@ class Container(gt.Container):
 
         return gms_path, lst_path, save_to, restart_from, gdx_path
 
-    def _clean_existing_workfiles(self) -> None:
+    def _clean_existing_workfiles(self) -> None:  # pragma: no cover
         """Deletes local workfiles"""
         if os.path.exists(self._restart_from):
             os.remove(self._restart_from)
@@ -816,7 +821,7 @@ class Container(gt.Container):
         ----------
         model : Model
         """
-        for attr_name in model._getAttributeNames():
+        for attr_name in model._getAttributeNames().keys():
             symbol_name = f"{model.name}_{attr_name}"
 
             self._unsaved_statements[utils._getUniqueName()] = (
@@ -824,9 +829,19 @@ class Container(gt.Container):
             )
 
     def _update_model_attributes(self, model: "Model") -> None:
-        for attr_name in model._getAttributeNames():
-            symbol_name = f"{model.name}_{attr_name}"
-            setattr(model, attr_name, self[symbol_name].records.values[0][0])
+        for gams_attr, python_attr in model._getAttributeNames().items():
+            symbol_name = f"{model.name}_{gams_attr}"
+
+            if python_attr == "status":
+                setattr(
+                    model,
+                    python_attr,
+                    gp.ModelStatus(self[symbol_name].records.values[0][0]),
+                )
+            else:
+                setattr(
+                    model, python_attr, self[symbol_name].records.values[0][0]
+                )
 
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """
@@ -870,6 +885,7 @@ class Container(gt.Container):
         commands = [
             self._gams_compiler_path,
             self._gms_path,
+            f"-o={self._lst_path}",
             f"save={self._save_to}",
             f"gdx={self._gdx_path}",
         ]

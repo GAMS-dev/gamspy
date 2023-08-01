@@ -24,10 +24,52 @@
 #
 
 from __future__ import annotations
-from typing import List, Optional, Union, TYPE_CHECKING
+from enum import Enum
+from typing import Dict, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Container
+
+
+class ModelStatus(Enum):
+    # Optimal solution achieved
+    OptimalGlobal = 1
+    # Local optimal solution achieved
+    OptimalLocal = 2
+    # Unbounded model found
+    Unbounded = 3
+    # Infeasible model found
+    InfeasibleGlobal = 4
+    # Locally infeasible model found
+    InfeasibleLocal = 5
+    # Solver terminated early and model was still infeasible
+    InfeasibleIntermed = 6
+    # Solver terminated early and model was feasible but not yet optimal
+    Feasible = 7
+    # Integer solution found
+    Integer = 8
+    # Solver terminated early with a non integer solution found
+    NonIntegerIntermed = 9
+    # No feasible integer solution could be found
+    IntegerInfeasible = 10
+    # Licensing problem
+    LicenseError = 11
+    # Error - No cause known
+    ErrorUnknown = 12
+    # Error - No solution attained
+    ErrorNoSolution = 13
+    # No solution returned
+    NoSolutionReturned = 14
+    # Unique solution in a CNS models
+    SolvedUnique = 15
+    # Feasible solution in a CNS models
+    Solved = 16
+    # Singular in a CNS models
+    SolvedSingular = 17
+    # Unbounded - no solution
+    UnboundedNoSolution = 18
+    # Infeasible - no solution
+    InfeasibleNoSolution = 19
 
 
 class Model:
@@ -66,6 +108,32 @@ class Model:
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
 
+        # Attributes
+        self.num_domain_violations = None
+        self.algorithm_time = None
+        self.solve_time = None
+        self.solver_time = None
+        self.num_iterations = None
+        self.marginals = None
+        self.max_infeasibility = None
+        self.mean_infeasibility = None
+        self.status = None
+        self.num_nodes_used = None
+        self.num_dependencies = None
+        self.num_discrete_variables = None
+        self.num_infeasibilities = None
+        self.num_nonlinear_insts = None
+        self.num_nonlinear_zeros = None
+        self.num_nonoptimalities = None
+        self.num_nonzeros = None
+        self.num_variables = None
+        self.num_bound_projections = None
+        self.objective_estimation = None
+        self.objective_value = None
+        self.model_generation_time = None
+        self.sum_infeasibilities = None
+        self.solver_version = None
+
     @property
     def equations(self) -> Union[str, list]:
         return self._equations
@@ -81,50 +149,33 @@ class Model:
             symbol_name = f"{self.name}_{attr_name}"
             _ = gp.Parameter(self.ref_container, symbol_name)
 
-    def _getAttributeNames(self) -> List[str]:
-        attributes = [
-            "domUsd",
-            "etAlg",
-            "etSolve",
-            "etSolver",
-            "handle",
-            "iterUsd",
-            "line",
-            "linkUsed",
-            "marginals",
-            "maxInfes",
-            "meanInfes",
-            "modelStat",
-            "nodUsd",
-            "number",
-            "numDepnd",
-            "numDVar",
-            "numEqu",
-            "numInfes",
-            "numNLIns",
-            "numNLNZ",
-            "numNOpt",
-            "numNZ",
-            "numRedef",
-            "numVar",
-            "numVarProj",
-            "objEst",
-            "objVal",
-            "procUsed",
-            "resGen",
-            "resUsd",
-            "rngBndMax",
-            "rngBndMin",
-            "rngMatMax",
-            "rngMatMin",
-            "rngRhsMax",
-            "rngRhsMin",
-            "rObj",
-            "solveStat",
-            "sumInfes",
-            "sysIdent",
-            "sysVer",
-        ]
+    def _getAttributeNames(self) -> Dict[str, str]:
+        attributes = {
+            "domUsd": "num_domain_violations",
+            "etAlg": "algorithm_time",
+            "etSolve": "solve_time",
+            "etSolver": "solver_time",
+            "iterUsd": "num_iterations",
+            "marginals": "marginals",
+            "maxInfes": "max_infeasibility",
+            "meanInfes": "mean_infeasibility",
+            "modelStat": "status",
+            "nodUsd": "num_nodes_used",
+            "numDepnd": "num_dependencies",
+            "numDVar": "num_discrete_variables",
+            "numInfes": "num_infeasibilities",
+            "numNLIns": "num_nonlinear_insts",
+            "numNLNZ": "num_nonlinear_zeros",
+            "numNOpt": "num_nonoptimalities",
+            "numNZ": "num_nonzeros",
+            "numVar": "num_variables",
+            "numVarProj": "num_bound_projections",
+            "objEst": "objective_estimation",
+            "objVal": "objective_value",
+            "resGen": "model_generation_time",
+            "sumInfes": "sum_infeasibilities",
+            "sysVer": "solver_version",
+        }
 
         return attributes
 
