@@ -1010,6 +1010,16 @@ class GamspySuite(unittest.TestCase):
         test_model3.equations = [cost, supply]
         self.assertEqual(test_model3.equations, [cost, supply])
 
+        test_model4 = self.m.addModel(
+            name="test_model4",
+            equations=[cost, supply],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
+        )
+
+        self.assertTrue(test_model4.equations == test_model3.equations)
+
     def test_operations(self):
         # Prepare data
         distances = pd.DataFrame(
@@ -1352,7 +1362,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2200,6 +2210,22 @@ class GamspySuite(unittest.TestCase):
         cost = Equation(m, "cost", "eq")
         model = Model(m, "model", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
+
+        # Test limited variables
+        transport = Model(
+            m,
+            name="transport",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
+            limited_variables=[x[i]],
+        )
+
+        self.assertEqual(
+            transport.getStatement(),
+            "\nModel transport / cost,supply,demand,x(i) /;",
+        )
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)

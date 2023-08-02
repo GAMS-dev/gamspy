@@ -36,6 +36,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Union,
     Optional,
     Tuple,
@@ -668,6 +669,26 @@ class Container(gt.Container):
                     " symbol 'records' and 'description' are possible if all"
                     " other properties have not changed."
                 )
+
+    def addModel(
+        self,
+        name: str,
+        equations: List["Equation"],
+        problem: str,
+        sense: Optional[Literal["MIN", "MAX"]] = None,
+        objective_variable: Optional["Variable"] = None,
+        limited_variables: Optional[list] = None,
+    ):
+        model = gp.Model(
+            self,
+            name,
+            equations,
+            problem,
+            sense,
+            objective_variable,
+            limited_variables,
+        )
+        return model
 
     def addOptions(self, options: Dict[str, str]) -> None:
         """
