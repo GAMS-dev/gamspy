@@ -5,7 +5,6 @@ default:
 stages:
   - formatter
   - test
-  - build_wheel
 
 variables:
   MACHINES_CONTAINER_REG:
