@@ -110,6 +110,7 @@ class Model:
         problem: str,
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective_variable: Optional["Variable"] = None,
+        limited_variables: Optional[list] = None,
     ):
         self.name = name
         self.ref_container = container
@@ -120,6 +121,7 @@ class Model:
         self.problem = problem
         self.sense = sense
         self.objective_variable = objective_variable
+        self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
 
@@ -322,6 +324,12 @@ class Model:
             equations_str = ",".join(
                 [equation.name for equation in self._equations]
             )
+
+        if self._limited_variables:
+            limited_variables_str = ",".join(
+                [variable.gamsRepr() for variable in self._limited_variables]
+            )
+            equations_str = ",".join([equations_str, limited_variables_str])
 
         model_str = f"\nModel {self.name} / {equations_str} /;"
 
