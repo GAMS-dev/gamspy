@@ -13,7 +13,8 @@ Baltimore and London, 1984.
 A scanned version of this out-of-print book is accessible at
 http://www.gams.com/docs/pdf/steel_investment.pdf
 
-Keywords: linear programming, production problem, distribution problem, scheduling,
+Keywords: linear programming, production problem, distribution problem,
+scheduling,
           micro economics, steel industry
 """
 
@@ -378,9 +379,16 @@ def main():
     api.definition = phipi == Sum((cf, j), pv[cf] * v[cf, j])
     aeps.definition = phieps == Sum((cf, i), pe[cf] * e[cf, i])
 
-    mexss = Model(cont, name="mexss", equations="all")
+    mexss = Model(
+        cont,
+        name="mexss",
+        equations="all",
+        problem="LP",
+        sense="min",
+        objective_variable=phi,
+    )
 
-    cont.solve(mexss, problem="LP", sense="min", objective_variable=phi)
+    mexss.solve()
 
 
 if __name__ == "__main__":

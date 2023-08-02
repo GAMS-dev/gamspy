@@ -18,7 +18,8 @@ ps3_s_mn  1st solve: --nsupplier=3  --uselicd=1
           2nd solve: --nsupplier=3  --uselicd=1 --altpi=1
           3rd solve: --nsupplier=3  --uselicd=1 --alttheta=1
 ps3_s_scp 1st solve: --nsupplier=3  --alttheta=2 --modweight=1 --useic=1
-          2nd solve: --nsupplier=3  --alttheta=2 --modweight=1 --uselicd=1 --uselicu=1
+          2nd solve: --nsupplier=3  --alttheta=2 --modweight=1 --uselicd=1
+          --uselicu=1
 ps5_s_mn           : --nsupplier=5  --uselicd=1 --nsamples=1000
 ps10_s             : --nsupplier=10 --uselicd=1
 ps10_s_mn          : --nsupplier=10 --uselicd=1 --nsamples=1000
@@ -87,16 +88,30 @@ def main():
 
     x.lo[i] = 0.0001
 
-    m = Model(cont, name="m", equations="all -mn -ic -licd")
-    m_mn = Model(cont, name="m_mn", equations="m + mn")
+    m = Model(
+        cont,
+        name="m",
+        equations="all -mn -ic -licd",
+        problem="NLP",
+        sense="max",
+        objective_variable=util,
+    )
+    m_mn = Model(
+        cont,
+        name="m_mn",
+        equations="m + mn",
+        problem="NLP",
+        sense="max",
+        objective_variable=util,
+    )
 
     cont.addOptions({"limRow": 0, "limCol": 0})
 
     for iter, _ in t.records.itertuples(index=False):
         p[i] = pt[i, iter]
         icweight[i] = theta[i]
-        cont.solve(m, problem="NLP", sense="max", objective_variable=util)
-        cont.solve(m_mn, problem="NLP", sense="max", objective_variable=util)
+        m.solve()
+        m_mn.solve()
         cont.addOptions({"solPrint": "off"})
 
 

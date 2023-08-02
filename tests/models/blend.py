@@ -59,15 +59,29 @@ def main():
     mb.definition = Sum(alloy, v[alloy]) == 1
     ac.definition = phi == Sum(alloy, price[alloy] * v[alloy])
 
-    b1 = Model(m, name="b1", equations=[pc, ac])
-    b2 = Model(m, name="b2", equations="all")
+    b1 = Model(
+        m,
+        name="b1",
+        equations=[pc, ac],
+        problem="LP",
+        sense="min",
+        objective_variable=phi,
+    )
+    b2 = Model(
+        m,
+        name="b2",
+        equations="all",
+        problem="LP",
+        sense="min",
+        objective_variable=phi,
+    )
 
     report = Parameter(m, name="report", domain=[alloy, "*"])
 
-    m.solve(b1, problem="LP", sense="min", objective_variable=phi)
+    b1.solve()
 
     report[alloy, "blend-1"] = v.l[alloy]
-    m.solve(b2, problem="LP", sense="min", objective_variable=phi)
+    b2.solve()
     report[alloy, "blend-2"] = v.l[alloy]
     # Can be removed after devel/gams-transfer-python#69 gets fixed
     report.records.columns = ["alloy", "uni", "value"]

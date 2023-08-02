@@ -63,7 +63,14 @@ nonoverlap = Equation(
 )
 nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)
 
-m = Model(c, name="cpack", equations="all")
+m = Model(
+    c,
+    name="cpack",
+    equations="all",
+    problem="QCP",
+    sense="max",
+    objective_variable=r,
+)
 
 # Data
 i.setRecords([str(i) for i in range(k)])
@@ -82,7 +89,7 @@ r.up.assign = 0.4
 # solve with a good global solver
 c.addOptions({"optcr": "0.01"})
 print("Starting solve, be patient (log only shown afterwards)...")
-c.solve(m, problem="QCP", sense="max", objective_variable=r)
+m.solve()
 
 rval = r.records.loc[0, "level"]
 print("Maximized radius:", rval)

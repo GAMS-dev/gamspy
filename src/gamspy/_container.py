@@ -36,7 +36,6 @@ from typing import (
     Any,
     Dict,
     List,
-    Literal,
     Union,
     Optional,
     Tuple,
@@ -44,7 +43,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, Parameter, Variable, Equation, Model
+    from gamspy import Alias, Set, Parameter, Variable, Equation
     from gamspy._algebra._expression import Expression
 
 
@@ -722,126 +721,6 @@ class Container(gt.Container):
 
         # Empty unsaved statements
         self._unsaved_statements = {}
-
-    def solve(
-        self,
-        model: "Model",
-        problem: str,
-        sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective_variable: Optional["Variable"] = None,
-        commandline_options: Optional[dict] = None,
-        stdout: Optional[str] = None,
-    ) -> str:
-        """
-        Generates the gams string, writes it to a file and runs it
-
-        Parameters
-        ----------
-        model : Model
-        problem : str
-        sense : "MIN" or "MAX", optional
-        objective_variable : Variable, optional
-        commandline_options : dict, optional
-        stdout : str, optional
-
-        Returns
-        -------
-        str
-            GAMS output
-
-        Raises
-        ------
-        ValueError
-            In case problem is not in possible problem types
-        ValueError
-            In case sense is different than "MIN" or "MAX"
-        TypeError
-            In case stdout is not a string
-        """
-        self._check_solve_validity(problem, sense, stdout)
-        self._append_solve_string(model, problem, sense, objective_variable)
-        self._assign_model_attributes(model)
-
-        self.write(self._gdx_path)
-        self._write_to_gms()
-        output = self._run_gms(commandline_options)
-
-        # Write results to the specified output file
-        if stdout:
-            with open(stdout, "w") as output_file:
-                output_file.write(output)
-
-        self.loadRecordsFromGdx(self._gdx_path)
-        self._update_model_attributes(model)
-
-        return output
-
-    def _check_solve_validity(
-        self,
-        problem: str,
-        sense: Optional[Literal["MIN", "MAX"]] = None,
-        stdout: Optional[str] = None,
-    ) -> None:
-        if problem.upper() not in utils.PROBLEM_TYPES:
-            raise ValueError(
-                f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
-                f" {problem}."
-            )
-
-        if sense is not None and sense.upper() not in utils.SENSE_TYPES:
-            raise ValueError(
-                f"Allowed sense types: {utils.SENSE_TYPES} but found {sense}."
-            )
-
-        if stdout is not None and not isinstance(stdout, str):
-            raise TypeError("stdout must be a path for the output file")
-
-    def _append_solve_string(
-        self,
-        model: "Model",
-        problem: str,
-        sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective_variable: Optional["Variable"] = None,
-    ) -> None:
-        solve_string = f"solve {model.name} using {problem}"
-
-        if sense:
-            solve_string += f" {sense}"
-
-        if objective_variable:
-            solve_string += f" {objective_variable.gamsRepr()}"
-
-        self._unsaved_statements[utils._getUniqueName()] = solve_string + ";\n"
-
-    def _assign_model_attributes(self, model: "Model") -> None:
-        """
-        Assign model attributes to parameters
-
-        Parameters
-        ----------
-        model : Model
-        """
-        for attr_name in model._getAttributeNames().keys():
-            symbol_name = f"{model.name}_{attr_name}"
-
-            self._unsaved_statements[utils._getUniqueName()] = (
-                f"{symbol_name} = {model.name}.{attr_name};"
-            )
-
-    def _update_model_attributes(self, model: "Model") -> None:
-        for gams_attr, python_attr in model._getAttributeNames().items():
-            symbol_name = f"{model.name}_{gams_attr}"
-
-            if python_attr == "status":
-                setattr(
-                    model,
-                    python_attr,
-                    gp.ModelStatus(self[symbol_name].records.values[0][0]),
-                )
-            else:
-                setattr(
-                    model, python_attr, self[symbol_name].records.values[0][0]
-                )
 
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """

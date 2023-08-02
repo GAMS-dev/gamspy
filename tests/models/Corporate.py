@@ -202,11 +202,17 @@ def main():
         m,
         name="StrategicModel",
         equations=[ObjDef, BroadPortRetDef, MADCon, BroadNormalCon],
+        problem="LP",
+        sense="MAX",
+        objective_variable=ObjValue,
     )
     TacticalModel = Model(
         m,
         name="TacticalModel",
         equations=[ObjDef, PortRetDef, MADCon, NormalCon],
+        problem="LP",
+        sense="MAX",
+        objective_variable=ObjValue,
     )
 
     # Solve strategic model
@@ -215,9 +221,7 @@ def main():
 
     EpsTolerance.assign = 0.02
 
-    m.solve(
-        StrategicModel, problem="LP", sense="MAX", objective_variable=ObjValue
-    )
+    StrategicModel.solve()
 
     print("## Strategic Asset Allocation ##")
     print("z: \n", z.records.level.to_list())
@@ -254,12 +258,7 @@ def main():
     EpsTolerance.assign = 0.03
 
     if CurrentWeight.records.value[0] > 0.05:
-        m.solve(
-            TacticalModel,
-            problem="LP",
-            sense="MAX",
-            objective_variable=ObjValue,
-        )
+        TacticalModel.solve()
 
         print("\n## Model BA_2 ##")
         print("\nx: \n", x.records.level.tolist())
@@ -275,12 +274,7 @@ def main():
     EpsTolerance.assign = 0.02
 
     if CurrentWeight.records.value[0] > 0.05:
-        m.solve(
-            TacticalModel,
-            problem="LP",
-            sense="MAX",
-            objective_variable=ObjValue,
-        )
+        TacticalModel.solve()
 
         print("\n## Model BA_3 ##")
         print("\nx: \n", x.records.level.tolist())
@@ -295,9 +289,7 @@ def main():
 
     ACTIVE[i] = Number(1)
 
-    m.solve(
-        TacticalModel, problem="LP", sense="MAX", objective_variable=ObjValue
-    )
+    TacticalModel.solve()
     print("\n## Model Integrated ##")
     print("x: \n", x.records.level.tolist())
 

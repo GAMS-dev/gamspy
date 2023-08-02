@@ -89,6 +89,9 @@ def main():
         m,
         name="process",
         equations=[yield1, makeup, sdef, motor, drat, ddil, df4, dprofit],
+        problem="NLP",
+        sense="max",
+        objective_variable=profit,
     )
     rproc = Model(
         m,
@@ -103,6 +106,9 @@ def main():
             rngdf4,
             dprofit,
         ],
+        problem="NLP",
+        sense="max",
+        objective_variable=profit,
     )
 
     rangey.lo.assign = 0.9
@@ -147,9 +153,9 @@ def main():
     f4.l.assign = 145
     profit.l.assign = 872
 
-    m.solve(process, problem="NLP", sense="max", objective_variable=profit)
+    process.solve()
     print("Profit in model 'process': {:.2f}".format(profit.records.level[0]))
-    m.solve(rproc, problem="NLP", sense="max", objective_variable=profit)
+    rproc.solve()
     print("Profit in model 'rproc': {:.2f}".format(profit.records.level[0]))
 
 

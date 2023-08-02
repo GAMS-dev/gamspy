@@ -985,30 +985,27 @@ class GamspySuite(unittest.TestCase):
         )
         bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
 
-        # Test all
-        test_model = Model(self.m, name="test_model", equations="all")
-        self.assertEqual(
-            test_model.getStatement(), "\nModel test_model / all /;"
-        )
-
         # Test model with specific equations
         test_model2 = Model(
-            self.m, name="test_model2", equations=[cost, supply]
+            self.m,
+            name="test_model2",
+            equations=[cost, supply],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
         )
         self.assertEqual(
             test_model2.getStatement(), "\nModel test_model2 / cost,supply /;"
         )
         self.assertEqual(test_model2.equations, [cost, supply])
 
-        # Test limited variables
         test_model3 = Model(
             self.m,
             name="test_model3",
-            equations="all",
-            limited_variables=[x[i]],
-        )
-        self.assertEqual(
-            test_model3.getStatement(), "\nModel test_model3 / all,x(i) /;"
+            equations=[cost],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
         )
         test_model3.equations = [cost, supply]
         self.assertEqual(test_model3.equations, [cost, supply])
@@ -1355,7 +1352,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def _test_full_models(self):
+    def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1777,11 +1774,15 @@ class GamspySuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        transport = Model(self.m, name="transport", equations="all")
-
-        self.m.solve(
-            transport, problem="LP", sense="min", objective_variable=z
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
         )
+        transport.solve()
 
         # Test the columns of a set
         self.assertTrue(i.records.columns.tolist() == ["uni", "element_text"])
@@ -2085,21 +2086,27 @@ class GamspySuite(unittest.TestCase):
         cost2.definition = Sum((i, j), c[i, j] * x[i, j]) * 5 == z2
 
         transport = Model(
-            self.m, name="transport", equations=[cost, supply, demand]
+            self.m,
+            name="transport",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
         )
+        transport.solve()
 
-        self.m.solve(
-            transport, problem="LP", sense="min", objective_variable=z
-        )
         first_z2_value = z2.records["level"].values[0]
         self.assertEqual(first_z2_value, 0.0)
 
         transport2 = Model(
-            self.m, name="transport2", equations=[cost2, supply, demand]
+            self.m,
+            name="transport2",
+            equations=[cost2, supply, demand],
+            problem="LP",
+            sense="min",
+            objective_variable=z2,
         )
-        self.m.solve(
-            transport2, problem="LP", sense="min", objective_variable=z2
-        )
+        transport2.solve()
         second_z2_value = z2.records["level"].values[0]
         self.assertAlmostEqual(second_z2_value, 768.375, 3)
 
@@ -2144,14 +2151,17 @@ class GamspySuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        transport = Model(self.m, name="transport", equations="all")
-
-        # Test output redirection
-        output = self.m.solve(
-            transport,
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[cost, supply, demand],
             problem="LP",
             sense="min",
             objective_variable=z,
+        )
+
+        # Test output redirection
+        output = transport.solve(
             commandline_options={"resLim": 100},
             stdout="test.gms",
         )
@@ -2163,33 +2173,33 @@ class GamspySuite(unittest.TestCase):
             self.assertTrue(hasattr(transport, attr_name))
 
         # Test invalid problem
-        self.assertRaises(ValueError, self.m.solve, transport, "bla", "min", z)
+        self.assertRaises(ValueError, Model, self.m, "model", [cost], "bla")
 
         # Test invalid sense
-        self.assertRaises(ValueError, self.m.solve, transport, "LP", "bla", z)
+        self.assertRaises(
+            ValueError, Model, self.m, "model", [cost], "LP", "bla"
+        )
+
+        # Test invalid objective variable
+        self.assertRaises(
+            TypeError, Model, self.m, "model", [cost], "LP", "min", a
+        )
 
         # Test invalid stdout options
-        self.assertRaises(
-            TypeError, self.m.solve, transport, "LP", "min", z, None, 5
-        )
+        self.assertRaises(TypeError, transport.solve, None, 5)
 
         # Test invalid commandline options
         self.assertRaises(
             Exception,
-            self.m.solve,
-            transport,
-            "LP",
-            "min",
-            z,
+            transport.solve,
             {"bla": 100},
-            None,
         )
 
         # Try to solve invalid model
         m = Container()
-        v = Variable(m, "v")
-        model = Model(m, "model", equations="all")
-        self.assertRaises(Exception, m.solve, model, "LP", "min", v)
+        cost = Equation(m, "cost", "eq")
+        model = Model(m, "model", equations=[cost], problem="LP", sense="min")
+        self.assertRaises(Exception, model.solve)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)

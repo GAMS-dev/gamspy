@@ -238,7 +238,8 @@ def main():
     print("Dur: \n", Dur.records)
     print("Conv: \n", Conv.records)
 
-    # Calculate the corresponding amounts for Liabilities. Use its PV as its "price".
+    # Calculate the corresponding amounts for Liabilities. Use its PV as its
+    # "price".
 
     PV_Liab.assign = Sum(t, Liability[t] * gams_math.exp(-r[t] * tau[t]))
 
@@ -312,8 +313,11 @@ def main():
         m,
         name="ImmunizationOne",
         equations=[ObjDef, PresentValueMatch, DurationMatch],
+        problem="LP",
+        sense="MAX",
+        objective_variable=z,
     )
-    m.solve(ImmunizationOne, problem="LP", sense="MAX", objective_variable=z)
+    ImmunizationOne.solve()
 
     Convexity = Parameter(m, name="Convexity")
     Convexity.assign = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x.l[i])
@@ -327,8 +331,11 @@ def main():
         m,
         name="ImmunizationTwo",
         equations=[ObjDef, PresentValueMatch, DurationMatch, ConvexityMatch],
+        problem="LP",
+        sense="MAX",
+        objective_variable=z,
     )
-    m.solve(ImmunizationTwo, problem="LP", sense="MAX", objective_variable=z)
+    ImmunizationTwo.solve()
 
     DurationMatch.l.assign = DurationMatch.l / PV_Liab
 
@@ -349,8 +356,11 @@ def main():
         m,
         name="ImmunizationThree",
         equations=[ConvexityObj, PresentValueMatch, DurationMatch],
+        problem="LP",
+        sense="MIN",
+        objective_variable=z,
     )
-    m.solve(ImmunizationThree, problem="LP", sense="MIN", objective_variable=z)
+    ImmunizationThree.solve()
 
     x_results.append(x.records.level.tolist())
     x_results = pd.DataFrame(

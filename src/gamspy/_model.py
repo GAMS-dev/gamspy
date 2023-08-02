@@ -25,10 +25,12 @@
 
 from __future__ import annotations
 from enum import Enum
-from typing import Dict, Optional, Union, TYPE_CHECKING
+import gamspy.utils as utils
+import gamspy as gp
+from typing import Dict, List, Literal, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Container
+    from gamspy import Variable, Equation, Container
 
 
 class ModelStatus(Enum):
@@ -86,6 +88,12 @@ class Model:
     equations : str | list
         List of Equation objects or str. ``all`` as a string represents
         all the equations specified before the creation of this model
+    problem : str
+        Problem type (e.g. LP, NLP etc.)
+    sense : "MIN" or "MAX", optional
+        Minimize or maximize
+    objective_variable : Variable, optional
+        Objective variable to minimize or maximize
     limited_variables : list, optional
         Allows limiting the domain of variables used in a model.
 
@@ -98,12 +106,21 @@ class Model:
         self,
         container: "Container",
         name: str,
-        equations: Union[str, list],
+        equations: List["Equation"],
+        problem: str,
+        sense: Optional[Literal["MIN", "MAX"]] = None,
+        objective_variable: Optional["Variable"] = None,
         limited_variables: Optional[list] = None,
     ):
         self.name = name
         self.ref_container = container
+        self._check_model_validity(
+            equations, problem, sense, objective_variable
+        )
         self._equations = equations
+        self.problem = problem
+        self.sense = sense
+        self.objective_variable = objective_variable
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
@@ -143,8 +160,6 @@ class Model:
         self._equations = new_equations
 
     def _generate_attribute_symbols(self) -> None:
-        import gamspy as gp
-
         for attr_name in self._getAttributeNames():
             symbol_name = f"{self.name}_{attr_name}"
             _ = gp.Parameter(self.ref_container, symbol_name)
@@ -178,6 +193,121 @@ class Model:
         }
 
         return attributes
+
+    def solve(
+        self,
+        commandline_options: Optional[dict] = None,
+        stdout: Optional[str] = None,
+    ) -> str:
+        """
+        Generates the gams string, writes it to a file and runs it
+
+        Parameters
+        ----------
+        commandline_options : dict, optional
+        stdout : str, optional
+
+        Returns
+        -------
+        str
+            GAMS output
+
+        Raises
+        ------
+        ValueError
+            In case problem is not in possible problem types
+        ValueError
+            In case sense is different than "MIN" or "MAX"
+        TypeError
+            In case stdout is not a string
+        """
+        if stdout is not None and not isinstance(stdout, str):
+            raise TypeError("stdout must be a path for the output file")
+
+        self._append_solve_string()
+        self._assign_model_attributes()
+
+        self.ref_container.write(self.ref_container._gdx_path)
+        self.ref_container._write_to_gms()
+        output = self.ref_container._run_gms(commandline_options)
+
+        # Write results to the specified output file
+        if stdout:
+            with open(stdout, "w") as output_file:
+                output_file.write(output)
+
+        self.ref_container.loadRecordsFromGdx(self.ref_container._gdx_path)
+        self._update_model_attributes()
+
+        return output
+
+    def _check_model_validity(
+        self, equations, problem, sense=None, objective_variable=None
+    ) -> None:
+        # if not isinstance(equations, list):
+        #     raise TypeError(f"Equations must be a list of Equation(s)")
+        # else:
+        #     if len(equations) == 0:
+        #         raise ValueError("A Model requires at least one Equation")
+
+        if problem.upper() not in utils.PROBLEM_TYPES:
+            raise ValueError(
+                f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
+                f" {problem}."
+            )
+
+        if sense is not None and sense.upper() not in utils.SENSE_TYPES:
+            raise ValueError(
+                f"Allowed sense values: {utils.SENSE_TYPES} but found {sense}."
+            )
+
+        if objective_variable is not None and not isinstance(
+            objective_variable, gp.Variable
+        ):
+            raise TypeError("Objective variable must be type Variable")
+
+    def _append_solve_string(self) -> None:
+        solve_string = f"solve {self.name} using {self.problem}"
+
+        if self.sense:
+            solve_string += f" {self.sense}"
+
+        if self.objective_variable:
+            solve_string += f" {self.objective_variable.gamsRepr()}"
+
+        self.ref_container._unsaved_statements[utils._getUniqueName()] = (
+            solve_string + ";\n"
+        )
+
+    def _assign_model_attributes(self) -> None:
+        """
+        Assign model attributes to parameters
+        """
+        for attr_name in self._getAttributeNames().keys():
+            symbol_name = f"{self.name}_{attr_name}"
+
+            self.ref_container._unsaved_statements[utils._getUniqueName()] = (
+                f"{symbol_name} = {self.name}.{attr_name};"
+            )
+
+    def _update_model_attributes(self) -> None:
+        for gams_attr, python_attr in self._getAttributeNames().items():
+            symbol_name = f"{self.name}_{gams_attr}"
+
+            if python_attr == "status":
+                setattr(
+                    self,
+                    python_attr,
+                    ModelStatus(
+                        self.ref_container[symbol_name].records.values[0][0]
+                    ),
+                )
+            else:
+                setattr(
+                    self,
+                    python_attr,
+                    self.ref_container[symbol_name].records.values[0][0],
+                )
 
     def getStatement(self) -> str:
         """

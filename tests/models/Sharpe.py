@@ -92,9 +92,14 @@ def main():
     PortVariance.lo.assign = 0.001
 
     Sharpe = Model(
-        m, name="Sharpe", equations=[ReturnDef, VarDef, NormalCon, ObjDef]
+        m,
+        name="Sharpe",
+        equations=[ReturnDef, VarDef, NormalCon, ObjDef],
+        problem="nlp",
+        sense="MAX",
+        objective_variable=z,
     )
-    m.solve(Sharpe, problem="nlp", sense="MAX", objective_variable=z)
+    Sharpe.solve()
 
     print("Objective Function Variable: ", round(z.records.level[0], 3))
 

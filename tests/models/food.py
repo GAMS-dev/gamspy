@@ -7,9 +7,9 @@ into batches of blended products over six months.
 
 Some of the oil is already available in storage. There is an initial stock of
 oil of 500 tons of each raw type when planning begins. An equal stock should
-exist in storage at the end of the plan. Up to 1000 tons of each type of raw oil
-can be stored each month for later use. The price for storage of raw oils is
-5 monetary units per ton. Refined oil cannot be stored. The blended product
+exist in storage at the end of the plan. Up to 1000 tons of each type of raw
+oil can be stored each month for later use. The price for storage of raw oils
+is 5 monetary units per ton. Refined oil cannot be stored. The blended product
 cannot be stored either.
 
 The rest of the oil (that is, any not available in storage) must be bought in
@@ -42,7 +42,8 @@ This example is taken from the Cplex 12 User's Manual
 Williams, H P, Model Building in Mathematical Programming. John Wiley
 and Sons, 1978.
 
-Keywords: mixed integer linear programming, food manufacturing, blending problem
+Keywords: mixed integer linear programming, food manufacturing, blending
+problem
 """
 
 import gamspy as gp
@@ -266,12 +267,19 @@ def main():
     store.up[m, p] = maxstore
     store.fx["m6", p] = stock[p]
 
-    food = gp.Model(c, name="food", equations="all")
+    food = gp.Model(
+        c,
+        name="food",
+        equations="all",
+        problem="MIP",
+        sense="max",
+        objective_variable=profit,
+    )
 
     # set optCr to 0
     c.addOptions({"optcr": 0})
 
-    c.solve(food, problem="MIP", sense="max", objective_variable=profit)
+    food.solve()
 
 
 if __name__ == "__main__":

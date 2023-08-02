@@ -111,8 +111,15 @@ def main():
     t.lo.assign = 1
     v.fx.assign = 2
 
-    fir_socp = Model(m, name="fir_socp", equations="all")
-    m.solve(fir_socp, problem="QCP", sense="min", objective_variable=t)
+    fir_socp = Model(
+        m,
+        name="fir_socp",
+        equations="all",
+        problem="QCP",
+        sense="min",
+        objective_variable=t,
+    )
+    fir_socp.solve()
 
 
 if __name__ == "__main__":

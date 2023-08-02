@@ -164,8 +164,22 @@ def main():
     x.lo[i] = 0.0001
 
     # Models
-    SB_lic = Model(m, name="SB_lic", equations=[obj, rev, pc, licd])
-    SB_lic2 = Model(m, name="SB_lic2", equations=[obj, rev, pc, licd, mn])
+    SB_lic = Model(
+        m,
+        name="SB_lic",
+        equations=[obj, rev, pc, licd],
+        problem="nlp",
+        sense="max",
+        objective_variable=Util,
+    )
+    SB_lic2 = Model(
+        m,
+        name="SB_lic2",
+        equations=[obj, rev, pc, licd, mn],
+        problem="nlp",
+        sense="max",
+        objective_variable=Util,
+    )
 
     # Options to solve models quickly
     m.addOptions({"solveLink": 5})
@@ -206,9 +220,7 @@ def main():
         p[i] = pt[i, tt]
 
         #  Solving the model w/o MN
-        m.solve(
-            SB_lic, problem="nlp", sense="max", objective_variable=Util
-        )  ###
+        SB_lic.solve()
 
         Util_lic[tt] = Util.l
         x_lic[i, tt] = x.l[i]
@@ -217,9 +229,7 @@ def main():
         )
 
         #  Solving the model w/ MN
-        m.solve(
-            SB_lic2, problem="nlp", sense="max", objective_variable=Util
-        )  ###
+        SB_lic2.solve()
 
         Util_lic2[tt] = Util.l
         x_lic2[i, tt] = x.l[i]

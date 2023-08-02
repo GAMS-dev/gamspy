@@ -15,13 +15,14 @@ where E_i = { a'_i + R_iu | ||u|| <= 1}. In the above, we observe that
 the feasible set is smaller than the original one, due to the terms involving
 the l_2-norms.
 
-The figure above illustrates the kind of feasible set one obtains in a particular
-instance of the above problem, with spherical uncertainties (that is, all the
-ellipsoids are spheres, R_i = rho I for some rho >0). We observe that the robust
-feasible set is indeed contained in the original polyhedron.
+The figure above illustrates the kind of feasible set one obtains in a
+particular instance of the above problem, with spherical uncertainties
+(that is, all the ellipsoids are spheres, R_i = rho I for some rho >0).
+We observe that the robust feasible set is indeed contained in the original
+polyhedron.
 
-In this particular example we allow coefficients A(i,*) to vary in an ellipsoid.
-The robust LP is reformulated as a SOCP.
+In this particular example we allow coefficients A(i,*) to vary in an
+ellipsoid. The robust LP is reformulated as a SOCP.
 
 Contributed by Michael Ferris, University of Wisconsin, Madison
 
@@ -31,8 +32,8 @@ Second Order Cone Programming. Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image
 Processing. 284 (November, 1998).
 
-Keywords: linear programming, quadratic constraint programming, robust optimization,
-          second order cone programming
+Keywords: linear programming, quadratic constraint programming, robust
+optimization, second order cone programming
 """
 
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
@@ -69,8 +70,15 @@ def main():
     defobj.definition = obj == Sum(j, c[j] * x[j])
     cons[i] = Sum(j, a[i, j] * x[j]) <= b[i]
 
-    lpmod = Model(m, name="lpmod", equations=[defobj, cons])
-    m.solve(lpmod, problem="LP", sense="min", objective_variable=obj)
+    lpmod = Model(
+        m,
+        name="lpmod",
+        equations=[defobj, cons],
+        problem="LP",
+        sense="min",
+        objective_variable=obj,
+    )
+    lpmod.solve()
 
     results = Parameter(m, name="results", domain=["*", "*"])
     results["lp", j] = x.l[j]
@@ -87,8 +95,15 @@ def main():
     )
     defdual[j] = lmbda[j] - gamma[j] == x[j]
 
-    lproblp = Model(m, name="lproblp", equations=[defobj, lpcons, defdual])
-    m.solve(lproblp, problem="LP", sense="min", objective_variable=obj)
+    lproblp = Model(
+        m,
+        name="lproblp",
+        equations=[defobj, lpcons, defdual],
+        problem="LP",
+        sense="min",
+        objective_variable=obj,
+    )
+    lproblp.solve()
 
     results["roblp", j] = x.l[j]
     results["roblp", "obj"] = obj.l
@@ -109,12 +124,17 @@ def main():
     socpqcpcons[i] = y[i] ** 2 >= Sum(k, v[i, k] ** 2)
 
     roblpqcp = Model(
-        m, name="roblpqcp", equations=[defobj, socpqcpcons, defrhs, defv]
+        m,
+        name="roblpqcp",
+        equations=[defobj, socpqcpcons, defrhs, defv],
+        problem="QCP",
+        sense="min",
+        objective_variable=obj,
     )
 
     y.lo[i] = 0
 
-    m.solve(roblpqcp, problem="QCP", sense="min", objective_variable=obj)
+    roblpqcp.solve()
     results["qcp", j] = x.l[j]
     results["qcp", "obj"] = obj.l
 

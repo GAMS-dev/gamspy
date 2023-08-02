@@ -16,9 +16,12 @@ We use the following discretization f(x) of sqrt(x)
 
 This discretization has some good properties:
   0) f(x) is a continuous function
-  1) f(0)=0, otherwise we would pick up a fixed cost even for unused connections
-  2) a fine representation in the reasonable range of shipments (between 50 and 400)
-  3) f(x) underestimates sqrt in the area of x=0 to 600. Past that is overestimates sqrt.
+  1) f(0)=0, otherwise we would pick up a fixed cost even for unused
+  connections
+  2) a fine representation in the reasonable range of shipments
+  (between 50 and 400)
+  3) f(x) underestimates sqrt in the area of x=0 to 600. Past that is
+  overestimates sqrt.
 
 The model is organized as follows:
   1) We set a starting point for the NLP solver so it will get stuck
@@ -176,9 +179,17 @@ def main():
 
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
-    transport = Model(m, name="transport", equations="all")
+    transport = Model(
+        m,
+        name="transport",
+        equations="all",
+        problem="nlp",
+        sense="min",
+        objective_variable=z,
+    )
 
-    # Start the local NLP solver in a local solution that is not globally optimal
+    # Start the local NLP solver in a local solution that is not globally
+    # optimal
     x.l["seattle  ", "chicago "] = 25
     x.l["seattle  ", "topeka  "] = 275
     x.l["san-diego", "new-york"] = 325
@@ -192,7 +203,7 @@ def main():
 
     m.addOptions({"nlp": "conopt"})
 
-    m.solve(transport, problem="nlp", sense="min", objective_variable=z)
+    transport.solve()
     print("Initial Objective Function Value: ", round(z.records.level[0], 3))
 
     localopt.assign = z.l
@@ -235,7 +246,8 @@ def main():
     if xlow.records.value[0] < 0:
         raise Exception("xlow less than 0")
 
-    # Equidistant sampling of the sqrt function with slopes at the beginning and end
+    # Equidistant sampling of the sqrt function with slopes at the beginning
+    # and end
     p["slope0"] = -1
     p[ss] = xlow + (xhigh - xlow) / (Card(ss) - 1) * ss.off
     p["slopeN"] = 1
@@ -265,11 +277,14 @@ def main():
         m,
         name="trnsdiscA",
         equations=[supply, demand, defsos1, defsos2, defsos3, defobjdisc],
+        problem="mip",
+        sense="min",
+        objective_variable=z,
     )
 
     m.addOptions({"optCr": 0})
 
-    m.solve(trnsdiscA, problem="mip", sense="min", objective_variable=z)
+    trnsdiscA.solve()
 
     # The next model (formulation b) uses the convex combinations of
     # neighboring points but requires the discretization to be bounded
@@ -283,11 +298,12 @@ def main():
     # last segment into the set ss that builds the convex combinations.
     ss[s] = Number(1)
 
-    m.solve(trnsdiscA, problem="mip", sense="min", objective_variable=z)
+    trnsdiscA.solve()
 
     # The next model (formulation c) implements another formulation for a
     # piecewise linear function. We need to assume that the domain region
-    # is bounded. We use the same discretization as in the previous formulation.
+    # is bounded. We use the same discretization as in the previous
+    # formulation.
     # Sets
     g = Set(
         m,
@@ -370,12 +386,15 @@ def main():
         m,
         name="trnsdiscB",
         equations=[supply, demand, defx, defsqrt, defseg, defgs, defobjdisc],
+        problem="mip",
+        sense="min",
+        objective_variable=z,
     )
 
-    m.solve(trnsdiscB, problem="mip", sense="min", objective_variable=z)
+    trnsdiscB.solve()
 
     # Now restart the local solver from this approximate point
-    m.solve(transport, problem="nlp", sense="min", objective_variable=z)
+    transport.solve()
 
     print("Improved Objective Function Value: ", round(z.records.level[0], 3))
 

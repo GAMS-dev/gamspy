@@ -183,16 +183,86 @@ def main():
     ls8.definition = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 4))
 
     # Models
-    mod1 = Model(m, name="mod1", equations=[ddev, ls1])
-    mod1a = Model(m, name="mod1a", equations=[ddeva, ls1a])
-    mod2 = Model(m, name="mod2", equations=[ddev, ls2])
-    mod3 = Model(m, name="mod3", equations=[ddev, ls3])
-    mod4 = Model(m, name="mod4", equations=[ddev, ls4])
-    mod5 = Model(m, name="mod5", equations=[ddev, ls5])
-    mod5a = Model(m, name="mod5a", equations=[ddeva, ls5a])
-    mod6 = Model(m, name="mod6", equations=[ddev, ls6])
-    mod7 = Model(m, name="mod7", equations=[ddev, ls7])
-    mod8 = Model(m, name="mod8", equations=[ddev, ls8])
+    mod1 = Model(
+        m,
+        name="mod1",
+        equations=[ddev, ls1],
+        problem="dnlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod1a = Model(
+        m,
+        name="mod1a",
+        equations=[ddeva, ls1a],
+        problem="lp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod2 = Model(
+        m,
+        name="mod2",
+        equations=[ddev, ls2],
+        problem="nlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod3 = Model(
+        m,
+        name="mod3",
+        equations=[ddev, ls3],
+        problem="dnlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod4 = Model(
+        m,
+        name="mod4",
+        equations=[ddev, ls4],
+        problem="nlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod5 = Model(
+        m,
+        name="mod5",
+        equations=[ddev, ls5],
+        problem="dnlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod5a = Model(
+        m,
+        name="mod5a",
+        equations=[ddeva, ls5a],
+        problem="lp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod6 = Model(
+        m,
+        name="mod6",
+        equations=[ddev, ls6],
+        problem="nlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod7 = Model(
+        m,
+        name="mod7",
+        equations=[ddev, ls7],
+        problem="dnlp",
+        sense="min",
+        objective_variable=obj,
+    )
+    mod8 = Model(
+        m,
+        name="mod8",
+        equations=[ddev, ls8],
+        problem="nlp",
+        sense="min",
+        objective_variable=obj,
+    )
 
     # Reporting Parameter
     result = Parameter(m, name="result", domain=["*", "*"])
@@ -206,43 +276,43 @@ def main():
 
     m.addOptions({"limRow": 0, "limCol": 0})
 
-    m.solve(mod1, problem="dnlp", sense="min", objective_variable=obj)
+    mod1.solve()
     result["mod1", n] = b.l[n]
     result["mod1", "obj"] = obj.l
 
-    m.solve(mod1a, problem="lp", sense="min", objective_variable=obj)
+    mod1a.solve()
     result["mod1a", n] = b.l[n]
     result["mod1a", "obj"] = obj.l
 
-    m.solve(mod2, problem="nlp", sense="min", objective_variable=obj)
+    mod2.solve()
     result["mod2", n] = b.l[n]
     result["mod2", "obj"] = obj.l
 
-    m.solve(mod3, problem="dnlp", sense="min", objective_variable=obj)
+    mod3.solve()
     result["mod3", n] = b.l[n]
     result["mod3", "obj"] = obj.l
 
-    m.solve(mod4, problem="nlp", sense="min", objective_variable=obj)
+    mod4.solve()
     result["mod4", n] = b.l[n]
     result["mod4", "obj"] = obj.l
 
-    m.solve(mod5, problem="dnlp", sense="min", objective_variable=obj)
+    mod5.solve()
     result["mod5", n] = b.l[n]
     result["mod5", "obj"] = obj.l
 
-    m.solve(mod5a, problem="lp", sense="min", objective_variable=obj)
+    mod5a.solve()
     result["mod5a", n] = b.l[n]
     result["mod5a", "obj"] = obj.l
 
-    m.solve(mod6, problem="nlp", sense="min", objective_variable=obj)
+    mod6.solve()
     result["mod6", n] = b.l[n]
     result["mod6", "obj"] = obj.l
 
-    m.solve(mod7, problem="dnlp", sense="min", objective_variable=obj)
+    mod7.solve()
     result["mod7", n] = b.l[n]
     result["mod7", "obj"] = obj.l
 
-    m.solve(mod8, problem="nlp", sense="min", objective_variable=obj)
+    mod8.solve()
     result["mod8", n] = b.l[n]
     result["mod8", "obj"] = obj.l
 

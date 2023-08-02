@@ -1,7 +1,8 @@
 """
 Social Golfer Problem (SGOLFER)
 
-In a golf club, there are 32 social golfers, each of whom play golf once a week,
+In a golf club, there are 32 social golfers, each of whom play golf once a
+week,
 and always in groups of 4. The problem is to build a schedule of play for 10
 weeks with ''maximum socialisation''; that is, as few repeated meetings as
 possible. More generally the problem is to schedule m groups of n golfers over
@@ -9,10 +10,11 @@ p weeks, with maximum socialisation.
 
 
 Warwick, H, The Fully Social Golfer Problem. In Smith, B, and Warwick, H, Eds,
-Proceedings of the Third International Workshop on Symmetry in Constraint Satisfaction
-Problems (SymCon 2003). 2003, pp. 75-85.
+Proceedings of the Third International Workshop on Symmetry in Constraint
+Satisfaction Problems (SymCon 2003). 2003, pp. 75-85.
 
-Keywords: mixed integer linear programming, mixed integer nonlinear programming,
+Keywords: mixed integer linear programming, mixed integer nonlinear
+programming,
           social golfer problem, combinatorial optimization
 """
 
@@ -107,16 +109,28 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         ((Ord(gr) - 1) * gg_c + 1 <= Ord(gf)) & (Ord(gf) <= (Ord(gr)) * gg_c)
     ] = 1
 
-    social_golfer = Model(cont, name="social_golfer", equations="all")
+    social_golfer_mip = Model(
+        cont,
+        name="social_golfer_mip",
+        equations="all",
+        problem="mip",
+        sense="min",
+        objective_variable=obj,
+    )
+
+    social_golfer_minlp = Model(
+        cont,
+        name="social_golfer_minlp",
+        equations="all",
+        problem="minlp",
+        sense="min",
+        objective_variable=obj,
+    )
 
     if mip:
-        cont.solve(
-            social_golfer, problem="mip", sense="min", objective_variable=obj
-        )
+        social_golfer_mip.solve()
     else:
-        cont.solve(
-            social_golfer, problem="minlp", sense="min", objective_variable=obj
-        )
+        social_golfer_minlp.solve()
 
     print("Objective Function Variable: ", obj.records.level[0])
 

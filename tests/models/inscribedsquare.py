@@ -74,7 +74,14 @@ def main():
     e4x.definition = fx(t["4"]) == x + a - b
     e4y.definition = fy(t["4"]) == y + a + b
 
-    square = Model(m, name="square", equations="all")
+    square = Model(
+        m,
+        name="square",
+        equations="all",
+        problem="DNLP",
+        sense="max",
+        objective_variable=z,
+    )
 
     t.l[i] = -math.pi + (Ord(i) - 1) * 2 * math.pi / Card(i)
     x.l.assign = fx(t.l["1"])
@@ -82,7 +89,7 @@ def main():
     a.l.assign = 1
     b.l.assign = 1
 
-    m.solve(square, problem="DNLP", sense="max", objective_variable=z)
+    square.solve()
 
 
 if __name__ == "__main__":

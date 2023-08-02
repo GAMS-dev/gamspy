@@ -177,11 +177,17 @@ def main():
         m,
         name="MinRegret",
         equations=[BudgetCon, ReturnCon, RegretCon, ObjDefRegret],
+        problem="LP",
+        sense="MIN",
+        objective_variable=z,
     )
     MaxReturn = Model(
         m,
         name="MaxReturn",
         equations=[BudgetCon, ExpRegretCon, EpsRegretCon, ObjDefReturn],
+        problem="LP",
+        sense="MAX",
+        objective_variable=z,
     )
 
     TargetIndex[l] = 1.01
@@ -192,7 +198,7 @@ def main():
     mu_iter = MIN_MU.records.value[0]
     while mu_iter <= MAX_MU.records.value[0]:
         MU_TARGET.assign = mu_iter
-        m.solve(MinRegret, problem="LP", sense="MIN", objective_variable=z)
+        MinRegret.solve()
 
         result.append(
             [
@@ -206,7 +212,7 @@ def main():
 
         result[-1].append("")
 
-        m.solve(MaxReturn, problem="LP", sense="MAX", objective_variable=z)
+        MaxReturn.solve()
 
         result[-1] += [RISK_TARGET.records.value[0], z.records.level[0]]
         result[-1] += x.records.level.tolist()

@@ -91,10 +91,11 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
         description="max downtime hours",
     )
 
-    # Slow and fast calculation for the set of time slices t2 for a given time step t1
+    # Slow and fast calculation for the set of time slices t2 for a given time
+    # step t1
     # Output from profile=1
-    # ----     50 Assignment sMinDown      5.819     5.819 SECS     26 MB  850713
-    # ----     51 Assignment sMinDownFast  0.187     6.006 SECS     48 MB  850713
+    # ----     50 Assignment sMinDown      5.819  5.819 SECS 26 MB  850713
+    # ----     51 Assignment sMinDownFast  0.187  6.006 SECS 48 MB  850713
 
     sMinDown[g, t1, t2] = (Ord(t1) >= Ord(t2)) & (
         Ord(t2) > Ord(t1) - pMinDown[g, t1]
@@ -111,11 +112,12 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     vStart = Variable(m, name="vStart", type="binary", domain=[g, t])
     z = Variable(m, name="z")
 
-    # Slow, fast, and fastest (but memory intensive way because we need to store sMinDownFast) way to write the equation
+    # Slow, fast, and fastest (but memory intensive way because we need to
+    # store sMinDownFast) way to write the equation
     # Output from profile = 1
-    # ----     67 Equation   eStartNaive   6.099    12.215 SECS    106 MB  34272
-    # ----     68 Equation   eStartFast    0.593    12.808 SECS    144 MB  34272
-    # ----     69 Equation   eStartFaster  0.468    13.276 SECS    180 MB  34272
+    # ----     67 Equation   eStartNaive   6.099 12.215 SECS 106 MB 34272
+    # ----     68 Equation   eStartFast    0.593 12.808 SECS 144 MB 34272
+    # ----     69 Equation   eStartFaster  0.468 13.276 SECS 180 MB 34272
 
     # Equations
     eStartNaive = Equation(m, name="eStartNaive", type="leq", domain=[g, t])
@@ -145,9 +147,16 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
 
     defobj.definition = z == Sum([g, t], vStart[g, t])
 
-    maxStarts = Model(m, name="maxStarts", equations="all")
+    maxStarts = Model(
+        m,
+        name="maxStarts",
+        equations="all",
+        problem="mip",
+        sense="max",
+        objective_variable=z,
+    )
 
-    m.solve(maxStarts, problem="mip", sense="max", objective_variable=z)
+    maxStarts.solve()
     print("Objective Function Value: ", z.records.level[0])
 
 

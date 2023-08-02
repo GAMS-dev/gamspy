@@ -16,7 +16,8 @@ for a Multi-Product Plant: A Non-Convex MINLP Formulation. Tech. rep.,
 University of Florida, 2009. Submitted to Computers and Chemical
 Engineering
 
-Keywords: mixed integer nonlinear programming, storage design, global optimization
+Keywords: mixed integer nonlinear programming, storage design, global
+optimization
           continuous-time model, chemical engineering
 """
 
@@ -153,10 +154,17 @@ def main():
     sM.lo[p] = SLB[p]
     sM.up[p] = SUB[p]
 
-    Sequenz = Model(m, name="Sequenz", equations="all")
+    Sequenz = Model(
+        m,
+        name="Sequenz",
+        equations="all",
+        problem="MINLP",
+        sense="min",
+        objective_variable=cPT,
+    )
     omega.l[p, n] = gams_math.uniform(0, 1)
 
-    m.solve(Sequenz, problem="MINLP", sense="min", objective_variable=cPT)
+    Sequenz.solve()
 
 
 if __name__ == "__main__":

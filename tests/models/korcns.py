@@ -17,7 +17,8 @@ Lewis, J, and Robinson, S, Chapter 11. In Chenery, H B, Robinson, S,
 and Syrquin, S, Eds, Industrialization and Growth: A Comparative
 Study. Oxford University Press, London, 1986.
 
-Keywords: constrained nonlinear system, general equilibrium model, economic growth,
+Keywords: constrained nonlinear system, general equilibrium model, economic
+growth,
           industrialization, economic policy, Korean economy
 """
 
@@ -593,9 +594,9 @@ def main():
     gdtot.fx.assign = gdtot.l
     ls.fx[lc] = ls.l[lc]
 
-    model1 = Model(cont, name="model1", equations="all")
+    model1 = Model(cont, name="model1", equations="all", problem="cns")
 
-    cont.solve(model1, problem="cns")
+    model1.solve()
 
     print(
         "\nObjective Function Variable <omega>: ",

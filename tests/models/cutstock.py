@@ -55,7 +55,14 @@ def main():
     demand = Equation(m, "demand", type="geq", domain=[i])
     demand[i] = Sum(pp, aip[i, pp] * xp[pp]) >= d[i]
 
-    master = Model(m, "master", equations=[numpat, demand])
+    master = Model(
+        m,
+        "master",
+        equations=[numpat, demand],
+        problem="rmip",
+        sense="MIN",
+        objective_variable=z,
+    )
 
     # Pricing model variables
     y = Variable(m, "y", domain=[i], type="integer")
@@ -71,7 +78,14 @@ def main():
         m, "knapsack", type="leq", definition=Sum(i, w[i] * y[i]) <= r
     )
 
-    pricing = Model(m, "pricing", equations=[defobj, knapsack])
+    pricing = Model(
+        m,
+        "pricing",
+        equations=[defobj, knapsack],
+        problem="mip",
+        sense="MIN",
+        objective_variable=z,
+    )
 
     pp[p] = Ord(p) <= Card(i)
     aip[i, pp[p]].where[Ord(i) == Ord(p)] = math.floor(r / w[i])
@@ -82,8 +96,8 @@ def main():
     m.addOptions({"optCr": 0, "limRow": 0, "limCol": 0, "solPrint": "off"})
 
     while len(pp) < len(p):
-        m.solve(master, "rmip", sense="MIN", objective_variable=z)
-        m.solve(pricing, "mip", sense="MIN", objective_variable=z)
+        master.solve()
+        pricing.solve()
 
         if z.records["level"].values[0] >= -0.001:
             break
@@ -92,7 +106,8 @@ def main():
         pp[pi] = Number(1)
         pi[p] = pi[p.lag(1)]
 
-    m.solve(master, "mip", sense="MIN", objective_variable=z)
+    master.problem = "mip"
+    master.solve()
 
     patrep = Parameter(m, "patrep", domain=["*", "*"])
     demrep = Parameter(m, "demrep", domain=["*", "*"])

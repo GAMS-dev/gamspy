@@ -45,7 +45,6 @@ def main():
     fnum = Parameter(m, name="fnum", records=1000)
     land = Parameter(m, name="land", records=4)
     famlab = Parameter(m, name="famlab", records=25)
-    dpm = Parameter(m, name="dpm", records=25)
     rwage = Parameter(m, name="rwage", records=3)
     twage = Parameter(m, name="twage", records=4)
     llab = Parameter(m, name="llab", records=2)
@@ -182,11 +181,14 @@ def main():
             lstraw,
             objn,
         ],
+        problem="qcp",
+        sense="max",
+        objective_variable=cps,
     )
 
     m.addOptions({"limCol": 0, "limRow": 0})
 
-    m.solve(demo7n, problem="qcp", sense="max", objective_variable=cps)
+    demo7n.solve()
 
     print("Value of objective:  ", round(cps.records.level[0], 3))
 

@@ -10,7 +10,8 @@ this toy problem.
 Miller R E, and Blair P D, Input-Output Analysis: Foundations and Extensions,
 Cambridge University Press, New York, 2009.
 
-Keywords: linear programming, nonlinear programming, quadratic constraints, statistics,
+Keywords: linear programming, nonlinear programming, quadratic constraints,
+statistics,
           RAS approach
 """
 
@@ -141,12 +142,19 @@ def main():
         [i, j], x[j] * a[i, j] * gams_math.log(a[i, j] / a0[i, j])
     )
 
-    mEntropy = Model(m, name="mEntropy", equations=[rowbal, colbal, defobjent])
+    mEntropy = Model(
+        m,
+        name="mEntropy",
+        equations=[rowbal, colbal, defobjent],
+        problem="NLP",
+        sense="Min",
+        objective_variable=obj,
+    )
 
     # we need to exclude small values to avoid domain violations
     a.lo[i, j] = 1e-5
 
-    m.solve(mEntropy, problem="NLP", sense="Min", objective_variable=obj)
+    mEntropy.solve()
     report["Entropy", i, j] = a.l[i, j]
 
     # --- 3: Entropy with flow variable
@@ -171,13 +179,18 @@ def main():
     )
 
     mEntropyz = Model(
-        m, name="mEntropyz", equations=[rowbalz, colbalz, defobjentz]
+        m,
+        name="mEntropyz",
+        equations=[rowbalz, colbalz, defobjentz],
+        problem="NLP",
+        sense="min",
+        objective_variable=obj,
     )
 
     # turn off detailed outputs
     m.addOptions({"limRow": 0, "limCol": 0, "solPrint": "off"})
 
-    m.solve(mEntropyz, problem="NLP", sense="min", objective_variable=obj)
+    mEntropyz.solve()
     report["EntropyZ", i, j] = zv.l[i, j] / x[j]
 
     # --- 4. absolute deviation formulations result in LPs
@@ -214,17 +227,36 @@ def main():
     deflinf.definition = obj == amax
 
     # Model
-    mMAD = Model(m, name="mMAD", equations=[rowbal, colbal, defabs, defmad])
-    mMADE = Model(m, name="mMADE", equations=[rowbal, colbal, defabs, defmade])
+    mMAD = Model(
+        m,
+        name="mMAD",
+        equations=[rowbal, colbal, defabs, defmad],
+        problem="LP",
+        sense="min",
+        objective_variable=obj,
+    )
+    mMADE = Model(
+        m,
+        name="mMADE",
+        equations=[rowbal, colbal, defabs, defmade],
+        problem="LP",
+        sense="min",
+        objective_variable=obj,
+    )
     mLinf = Model(
-        m, name="mLinf", equations=[rowbal, colbal, defmaxp, defmaxn, deflinf]
+        m,
+        name="mLinf",
+        equations=[rowbal, colbal, defmaxp, defmaxn, deflinf],
+        problem="LP",
+        sense="min",
+        objective_variable=obj,
     )
 
-    m.solve(mMAD, problem="LP", sense="min", objective_variable=obj)
+    mMAD.solve()
     report["MAD", i, j] = a.l[i, j]
-    m.solve(mMADE, problem="LP", sense="min", objective_variable=obj)
+    mMADE.solve()
     report["MADE", i, j] = a.l[i, j]
-    m.solve(mLinf, problem="LP", sense="min", objective_variable=obj)
+    mLinf.solve()
     report["Linf", i, j] = a.l[i, j]
 
     # --- 5. Squared Deviations can be solved with powerful QP codes
@@ -243,12 +275,26 @@ def main():
     )
 
     # Model
-    mSD = Model(m, name="mSD", equations=[rowbal, colbal, defsd])
-    mRSD = Model(m, name="mRSD", equations=[rowbal, colbal, defrsd])
+    mSD = Model(
+        m,
+        name="mSD",
+        equations=[rowbal, colbal, defsd],
+        problem="QCP",
+        sense="min",
+        objective_variable=obj,
+    )
+    mRSD = Model(
+        m,
+        name="mRSD",
+        equations=[rowbal, colbal, defrsd],
+        problem="QCP",
+        sense="min",
+        objective_variable=obj,
+    )
 
-    m.solve(mSD, problem="QCP", sense="min", objective_variable=obj)
+    mSD.solve()
     report["SD", i, j] = a.l[i, j]
-    m.solve(mRSD, problem="QCP", sense="min", objective_variable=obj)
+    mRSD.solve()
     report["RSD", i, j] = a.l[i, j]
 
     print()

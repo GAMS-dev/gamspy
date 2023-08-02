@@ -162,7 +162,14 @@ def main(output=None):
 
     NormalCon.definition = Sum(i, h[i] + u[i]) == 1.0
 
-    IndexFund = Model(m, name="IndexFund", equations="all")
+    IndexFund = Model(
+        m,
+        name="IndexFund",
+        equations="all",
+        problem="LP",
+        sense="MIN",
+        objective_variable=z,
+    )
 
     FrontierPoints = Set(
         m, name="FrontierPoints", records=[f"P_{i}" for i in range(1, 51)]
@@ -194,7 +201,7 @@ def main(output=None):
 
         mu.assign = Frontiers[pp, "mu"]
 
-        m.solve(IndexFund, problem="LP", sense="MIN", objective_variable=z)
+        IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
 
         if IndexFund.status in [
@@ -216,7 +223,7 @@ def main(output=None):
 
         mu.assign = Frontiers[pp, "mu"]
 
-        m.solve(IndexFund, problem="LP", sense="MIN", objective_variable=z)
+        IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
 
         if IndexFund.status in [
@@ -240,7 +247,7 @@ def main(output=None):
 
         mu.assign = Frontiers[pp, "mu"]
 
-        m.solve(IndexFund, problem="LP", sense="MIN", objective_variable=z)
+        IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
 
         if IndexFund.status in [

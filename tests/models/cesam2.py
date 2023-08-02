@@ -73,7 +73,8 @@ Earlier version, CESAM, programmed by Sherman Robinson and Moataz El-Said,
 November 2000.
 Original version programmed by Sherman Robinson and Andrea Cattaneo.
 
-Keywords: nonlinear programming, micro economics, cross entropy, social accounting matrix
+Keywords: nonlinear programming, micro economics, cross entropy, social
+accounting matrix
 """
 
 from gamspy import (
@@ -195,7 +196,8 @@ def main(is_centropy=False):
     # The set jwt defines the dimension of the support set for the error
     # distribution and the number of weights that must be estimated for each
     # error. In this case, we specify an uninformative prior for jwt1,
-    # a normal prior for jwt2, and a general two-parameter distribution for jwt3.
+    # a normal prior for jwt2, and a general two-parameter distribution for
+    # jwt3.
     jwt = Set(
         m,
         name="jwt",
@@ -437,72 +439,11 @@ def main(is_centropy=False):
     macrov0["gdp2"] = gdp0
     macrov0["gdpfc2"] = gdpfc0
 
-    # display negsam, ColSum0, gdpfc0, gdp0, macrov0
-
-    # *############### Define prior distributions of errors #####################
-    # Start from assumed prior knowledge of the means and standard errors of
-    # measurement of the cell elements, macro aggregates, and column sums. Below,
-    # we assume that all column sums and macro aggregates have standard errors set
-    # in stderr1, stderr2, and stderr3. These are Bayesian priors, not a maintained
-    # hypothesis.
-
-    # The estimated error is weighted Sum of elements in an error support
-    # set:
-    #     ERR[ii]    = Sum(jwt, W[ii,jwt]*VBAR[ii,jwt])
-    # where the W's are estimated in the CE procedure and the support set, VBAR,
-    # is specified to span the possible domain of the errors.
-
-    # The prior mean (zero) and variance of these errors is given by:
-    #         0       = Sum(jwt, WBAR[ii,jwt]*VBAR[ii,jwt]) and
-    # (sigmay[ii])**2 = Sum(jwt, WBAR[ii,jwt]*(VBAR[ii,jwt])**2)
-    # where the WBAR's are the priors on the probability weights.
-
-    # The VBARs are chosen to define a domain for the support set of +/- 3
-    # standard errors. The prior on the weights, WBAR, are then calculated
-    # to yield the specified prior on the standard error, sigmay.
-
-    # In Robinson, Cattaneo, and El-Said (2001), we specify prior weights
-    # (WBAR) that are "uninformative", given by a uniform distribution,
-    # and set the prior standard errors by the choice of support set, VBAR.
-    # In that paper, we use a three-weight specification (jwt /1*3/) with uniform
-    # prior weights. Our current practice to specify an uniformative prior is to use
-    # a seven-element support set with uniform prior weights, WBAR. To illustrate,
-    # we specify an uninformative prior for col/row sums below
-
-    # We assume two possible "informative" priors:
-    # (1) A general two-parameter distribution with priors on the mean (zero) and
-    #     variance (sigmay**2). This prior requires a three-element support set.
-    #     We specify this prior for SAM elements with either additive or
-    #     multiplicative errors.
-    # (2) A normal distribution with priors on the mean (zero), variance (sigmay**2),
-    #     skewness (zero), and kurtosis (3*sigmay**4). This prior requires a
-    #     five-element support set. We specify this prior for macro totals.
-
-    # We solve for the prior weights (wbar) given the specification of the prior
-    # distribution and choice of the support set values (vbar)
-
-    # For example, for the prior of a normal distribution, we assumes a prior mean
-    # of zero, skewness of zero, and a prior value of kurtosis consistent with a
-    # prior normal distribution with mean zero and variance of sigmay**2. In this
-    # case, kurtosis equals 3*sigmay**4. To specify a four-parameter distribution
-    # (mean, variance, skewness, kurtosis) requires a five-weight support set.
-
-    # The prior weights (wbar) are specified so that:
-    # Sum(jwt, wbar[ii,jwt]*vbar[ii,jwt]**4) = 3*sigmay[ii,jwt]**4
-    # as well as defining the variance as above, a mean of zero, and skewness (third
-    # moment) of zero. These equations suffice to determine the values of the prior
-    # weights (wbar).
-
-    # The choice of +/- 1.5 standard error for vbar(ii,"2") and vbar(ii,"4") is
-    # arbitrary, but it is convenient to have equal spacing of the error support set.
-
-    # These are priors, not maintained hypotheses. The actual moments are estimated
-    # as part of the estimation procedure.
-
     # Set standard deviation for errors on column/row totals
     sigmay1[ii] = stderr1 * ColSum0[ii]
 
-    # Set constants for 7-weight error distribution (uninformative uniform prior)
+    # Set constants for 7-weight error distribution
+    # (uninformative uniform prior)
     vbar1[ii, "1"] = -3 * sigmay1[ii]
     vbar1[ii, "2"] = -2 * sigmay1[ii]
     vbar1[ii, "3"] = -1 * sigmay1[ii]
@@ -781,7 +722,6 @@ def main(is_centropy=False):
             )
         )
     else:
-        # Objective function using GAMS cross-entropy intrinsic function, CENTROPY
         ENTROPY.definition = DENTROPY == (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
@@ -805,7 +745,14 @@ def main(is_centropy=False):
     W3.up[ii, jj, jwt3].where[NONZERO[ii, jj]] = 1
     W3.fx[ii, jj, jwt3].where[~NONZERO[ii, jj]] = 0
 
-    SAMENTROP = Model(m, name="SAMENTROP", equations="all")
+    SAMENTROP = Model(
+        m,
+        name="SAMENTROP",
+        equations="all",
+        problem="NLP",
+        sense="min",
+        objective_variable=DENTROPY,
+    )
 
     m.addOptions(
         {
@@ -817,7 +764,7 @@ def main(is_centropy=False):
         }
     )
 
-    m.solve(SAMENTROP, problem="NLP", sense="min", objective_variable=DENTROPY)
+    SAMENTROP.solve()
 
     # Parameters for reporting results
     Macsam1 = Parameter(

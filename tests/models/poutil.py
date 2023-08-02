@@ -556,13 +556,20 @@ def main():
         eLFCs[b] <= (eLFCb[b] - eLFCb[b.lag(1)]) * mu[b]
     )
 
-    energy = Model(cont, name="energy", equations="all")
+    energy = Model(
+        cont,
+        name="energy",
+        equations="all",
+        problem="MIP",
+        sense="min",
+        objective_variable=c,
+    )
 
     # relative termination criterion for MIP (relative gap)
     # termination criterion is decreased to 0.1 from 0.000001
     cont.addOptions({"optCr": 0.1})
 
-    cont.solve(energy, problem="MIP", sense="min", objective_variable=c)
+    energy.solve()
 
     print("Objective Function Value: ", c.records.level[0])
 

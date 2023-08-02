@@ -8,7 +8,8 @@ Laguna, M, Applying Robust Optimization to Capacity Expansion of
 One Location in Telecommunications with Demand Uncertainty.
 Management Science 44, 11 (1998), 101-110.
 
-Keywords: mixed integer linear programming, robust optimization, capacity expansion,
+Keywords: mixed integer linear programming, robust optimization, capacity
+expansion,
           time-dependent knapsack problem
 """
 
@@ -124,11 +125,18 @@ def main():
 
     dembal[t, s] = cap[t] + z[s] >= d[t, s]
 
-    rotdk = Model(m, name="rotdk", equations="all")
+    rotdk = Model(
+        m,
+        name="rotdk",
+        equations="all",
+        problem="mip",
+        sense="min",
+        objective_variable=obj,
+    )
 
     m.addOptions({"limCol": 0, "limRow": 0})
 
-    m.solve(rotdk, problem="mip", sense="min", objective_variable=obj)
+    rotdk.solve()
 
     print("Objective Function Value: ", round(obj.records.level[0], 2))
 

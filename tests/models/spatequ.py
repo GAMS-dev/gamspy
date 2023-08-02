@@ -146,28 +146,40 @@ def main():
         m,
         name="P2R3_Linear",
         equations=[DEM, SUP, SDBAL, PDIF, TRANSCOST, SX, DX],
+        problem="LP",
+        sense="min",
+        objective_variable=TC,
     )
     P2R3_LinearLog = Model(
         m,
         name="P2R3_LinearLog",
         equations=[DEMLOG, SUPLOG, SDBAL, PDIF, TRANSCOST, SX, DX],
+        problem="NLP",
+        sense="min",
+        objective_variable=TC,
     )
     P2R3_NonLinear = Model(
         m,
         name="P2R3_NonLinear",
-        equations="P2R3_Linear, DEMINT, SUPINT, OBJECT",
+        equations=P2R3_Linear.equations + [DEMINT, SUPINT, OBJECT],
+        problem="NLP",
+        sense="max",
+        objective_variable=OBJ,
     )
     P2R3_MCP = Model(
-        m, name="P2R3_MCP", equations="DEM, SUP, IN_OUT.P, DOM_TRAD.X"
+        m,
+        name="P2R3_MCP",
+        equations="DEM, SUP, IN_OUT.P, DOM_TRAD.X",
+        problem="MCP",
     )
 
-    m.solve(P2R3_Linear, problem="LP", sense="min", objective_variable=TC)
-    m.solve(P2R3_LinearLog, problem="NLP", sense="min", objective_variable=TC)
-    m.solve(P2R3_NonLinear, problem="NLP", sense="max", objective_variable=OBJ)
+    P2R3_Linear.solve()
+    P2R3_LinearLog.solve()
+    P2R3_NonLinear.solve()
 
     X.fx[r, r, c] = 0
 
-    m.solve(P2R3_MCP, problem="MCP")
+    P2R3_MCP.solve()
 
 
 if __name__ == "__main__":

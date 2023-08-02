@@ -53,8 +53,15 @@ def main():
 
     stock.up[t] = storecap
 
-    swp = Model(m, name="swp", equations="all")
-    m.solve(swp, problem="LP", sense="min", objective_variable=cost)
+    swp = Model(
+        m,
+        name="swp",
+        equations="all",
+        problem="LP",
+        sense="min",
+        objective_variable=cost,
+    )
+    swp.solve()
 
     print("Objective function value: ", cost.records.level[0])
 

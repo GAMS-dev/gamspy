@@ -383,8 +383,6 @@ def main():
     tauz[i] = tauz00[i]
     taum[i] = taum00[i]
 
-    # display Y0, F0, X0, Z0, Xp0, Xv0, E0, M0, Q0, D0, Sp0, Td0, Tz0, Tm0, FF0, Sf0, tauz, taum
-
     # ===============================================================
     # Calibration ---------------------------------------------------
     # ===============================================================
@@ -681,9 +679,16 @@ def main():
     # ===============================================================
     # Defining and solving the model --------------------------------
     # ===============================================================
-    dyncge = Model(m, name="dyncge", equations="all")
+    dyncge = Model(
+        m,
+        name="dyncge",
+        equations="all",
+        problem="nlp",
+        sense="max",
+        objective_variable=CC,
+    )
 
-    m.solve(dyncge, problem="nlp", sense="max", objective_variable=CC)
+    dyncge.solve()
     m.addOptions(
         {
             "limRow": 0,
@@ -701,7 +706,7 @@ def main():
     taum[i] = taum00[i] * 0
 
     for iteration, _ in t.records.itertuples(index=False):
-        m.solve(dyncge, problem="nlp", sense="max", objective_variable=CC)
+        dyncge.solve()
 
         #  storing results -------------------------
         Y1[j, iteration] = Y.l[j]

@@ -137,18 +137,32 @@ def main():
     bcd2.definition = bc == Sum([j, h], k[j] * lamda[j, h] * b[j, h])
     obj.definition = phi == oc + bc
 
-    alloc1 = Model(m, name="alloc1", equations=[ab, db, ocd, bcd1, obj])
-    alloc2 = Model(m, name="alloc2", equations=[ab, yd, bd, ocd, bcd2, obj])
+    alloc1 = Model(
+        m,
+        name="alloc1",
+        equations=[ab, db, ocd, bcd1, obj],
+        problem="LP",
+        sense="min",
+        objective_variable=phi,
+    )
+    alloc2 = Model(
+        m,
+        name="alloc2",
+        equations=[ab, yd, bd, ocd, bcd2, obj],
+        problem="LP",
+        sense="min",
+        objective_variable=phi,
+    )
 
     y.up[j, h] = deltb[j, h]
-    m.solve(alloc1, problem="LP", sense="min", objective_variable=phi)
+    alloc1.solve()
 
     print("Number of passengers carried with limit:")
     print(y.pivot())
 
     y.up[j, h] = np.inf
 
-    m.solve(alloc2, problem="LP", sense="min", objective_variable=phi)
+    alloc2.solve()
     print()
     print("Number of passengers carried without limit:")
     print(y.pivot())

@@ -74,12 +74,15 @@ def main():
     )
 
     StochDedicationBL = Model(
-        m, name="StochDedicationBL", equations=[CashFlowCon]
+        m,
+        name="StochDedicationBL",
+        equations=[CashFlowCon],
+        problem="LP",
+        sense="MIN",
+        objective_variable=v0,
     )
 
-    m.solve(
-        StochDedicationBL, problem="LP", sense="MIN", objective_variable=v0
-    )
+    StochDedicationBL.solve()
     print("Objective Function Value: ", round(v0.records.level[0], 3))
 
     print(x.description, ": \n", x.records.loc[:, ["i", "level"]])

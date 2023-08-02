@@ -75,8 +75,15 @@ def main():
     t.lo[nh] = 110
     t.up[nh] = 280
 
-    batchReactor = Model(m, name="batchReactor", equations="all")
-    m.solve(batchReactor, problem="NLP", sense="max", objective_variable=obj)
+    batchReactor = Model(
+        m,
+        name="batchReactor",
+        equations="all",
+        problem="NLP",
+        sense="max",
+        objective_variable=obj,
+    )
+    batchReactor.solve()
 
 
 if __name__ == "__main__":

@@ -186,8 +186,15 @@ def main():
         == surplus[t] + Liability[t].where[tau[t] > 0]
     )
 
-    Dedication = Model(m, name="Dedication", equations=[CashFlowCon])
-    m.solve(Dedication, problem="LP", sense="MIN", objective_variable=v0)
+    Dedication = Model(
+        m,
+        name="Dedication",
+        equations=[CashFlowCon],
+        problem="LP",
+        sense="MIN",
+        objective_variable=v0,
+    )
+    Dedication.solve()
 
     print("Objective Function Variable: ", round(v0.records.level[0], 3))
 

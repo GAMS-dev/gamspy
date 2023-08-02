@@ -8,7 +8,8 @@ manufacture of different types of desks.
 Dantzig, G B, Chapter 3.5. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
 
-Keywords: linear programming, production planning, manufacturing, furniture production
+Keywords: linear programming, production planning, manufacturing, furniture
+production
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
@@ -48,9 +49,16 @@ def main():
     cap[shop] = Sum(desk, labor[shop, desk] * mix[desk]) <= caplim[shop]
     ap.definition = profit == Sum(desk, price[desk] * mix[desk])
 
-    pmp = Model(m, name="pmp", equations="all")
+    pmp = Model(
+        m,
+        name="pmp",
+        equations="all",
+        problem="LP",
+        sense="max",
+        objective_variable=profit,
+    )
 
-    m.solve(pmp, problem="LP", sense="max", objective_variable=profit)
+    pmp.solve()
 
 
 if __name__ == "__main__":

@@ -142,7 +142,14 @@ def main():
     )
     product.up[i] = capacity[i]
 
-    masterproblem = Model(m, name="masterproblem", equations="all")
+    masterproblem = Model(
+        m,
+        name="masterproblem",
+        equations="all",
+        problem="LP",
+        sense="max",
+        objective_variable=zmaster,
+    )
 
     # Variable
     sales = Variable(m, name="sales", domain=[j], type="Positive")
@@ -161,7 +168,12 @@ def main():
     market[j] = sales[j] <= demand[j]
 
     subproblem = Model(
-        m, name="subproblem", equations=[subobj, selling, market]
+        m,
+        name="subproblem",
+        equations=[subobj, selling, market],
+        problem="LP",
+        sense="max",
+        objective_variable=zsub,
     )
 
     # Scalar
@@ -179,12 +191,7 @@ def main():
 
         for scenario, _ in s.records.itertuples(index=False):
             demand[j] = ScenarioData[scenario, j]
-            m.solve(
-                subproblem,
-                problem="LP",
-                sense="max",
-                objective_variable=zsub,
-            )
+            subproblem.solve()
             objSub.assign = objSub + ScenarioData[scenario, "prob"] * zsub.l
             cutconst[iteration] = cutconst[iteration] + ScenarioData[
                 scenario, "prob"
@@ -208,12 +215,7 @@ def main():
         if rgap.records.values[0][0] < rtol:
             break
 
-        m.solve(
-            masterproblem,
-            problem="LP",
-            sense="max",
-            objective_variable=zmaster,
-        )
+        masterproblem.solve()
         upperBound.setRecords(zmaster.records["level"])
         objMaster.setRecords(zmaster.records["level"] - theta.records["level"])
 

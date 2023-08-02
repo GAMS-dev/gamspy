@@ -23,7 +23,8 @@ Solving the car-sequencing problem in constraint logic programming.
 In 8th European Conference on Artificial Intelligence (ECAI 88) ,
 Y. Kodratoff, Ed. Pitmann Publishing, London, Munich, Germany, 290-295, 1988
 
-Keywords: mixed integer linear programming, mixed integer nonlinear programming,
+Keywords: mixed integer linear programming, mixed integer nonlinear
+programming,
           production planning, car manufacturing, line problem
 """
 
@@ -112,7 +113,6 @@ def main(mip=False):
     defnumCars = Equation(m, name="defnumCars", type="eq", domain=[c])
     defoneCar = Equation(m, name="defoneCar", type="eq", domain=[p])
     defop = Equation(m, name="defop", type="leq", domain=[o, p])
-    defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
     defviol = Equation(m, name="defviol", type="leq", domain=[o, p])
     defviolLS = Equation(m, name="defviolLS", type="eq", domain=[o, p])
     defobj = Equation(m, name="defobj", type="eq")
@@ -140,18 +140,30 @@ def main(mip=False):
 
     # Model
     carseqMIP = Model(
-        m, name="carseqMIP", equations="all - defopLS - defviolLS - defsumc"
+        m,
+        name="carseqMIP",
+        equations="all - defopLS - defviolLS - defsumc",
+        problem="mip",
+        sense="min",
+        objective_variable=obj,
     )
-    carseqLS = Model(m, name="carseqLS", equations="all - defop   - defviol")
+    carseqLS = Model(
+        m,
+        name="carseqLS",
+        equations="all - defop   - defviol",
+        problem="minlp",
+        sense="min",
+        objective_variable=obj,
+    )
 
     m.addOptions({"optCr": 0})
 
     if mip:
         v.type = "positive"
         op.type = "binary"
-        m.solve(carseqMIP, problem="mip", sense="min", objective_variable=obj)
+        carseqMIP.solve()
     else:
-        m.solve(carseqLS, problem="minlp", sense="min", objective_variable=obj)
+        carseqLS.solve()
 
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]

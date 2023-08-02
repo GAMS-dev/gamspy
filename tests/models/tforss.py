@@ -194,7 +194,14 @@ def main():
     benefit.definition = phi == phix - phik - phir - phil - phip
 
     # Model definition
-    forest = Model(cont, name="forest", equations="all")
+    forest = Model(
+        cont,
+        name="forest",
+        equations="all",
+        problem="LP",
+        sense="max",
+        objective_variable=phi,
+    )
 
     # Case Selection and Report Definitions
     rhoset = Set(
@@ -231,7 +238,7 @@ def main():
 
     for case, _ in rhoset.records.itertuples(index=False):
         rho.assign = rhoval[case]
-        cont.solve(forest, problem="LP", sense="max", objective_variable=phi)
+        forest.solve()
         landcl[s, k] = Round(landc.l[s, k], 3)
         rep[cl, case] = r.l[cl]
         reprp[s, k, case] = (landcl[s, k] / Sum(at, v.l[s, k, at])).where[

@@ -119,14 +119,19 @@ def flow_shop(process_time_df, last_machine, last_item):
 
     defObj.definition = totwait >= comp[last_machine, last_item]
 
-    flowshop = gap.Model(container=c, name="flowshop", equations="all")
+    flowshop = gap.Model(
+        container=c,
+        name="flowshop",
+        equations="all",
+        problem="MIP",
+        sense="min",
+        objective_variable=totwait,
+    )
 
     # set optCr to 0
     c.addOptions({"optcr": 0})
 
-    c.solve(
-        model=flowshop, problem="MIP", sense="min", objective_variable=totwait
-    )
+    flowshop.solve()
 
 
 def prepare_data():

@@ -82,7 +82,14 @@ def main():
 
     cone_eq.definition = 2 * v * unit >= Sum(n.where[Ord(n) > 1], t[n] ** 2)
 
-    spring = Model(cont, name="spring", equations="all")
+    spring = Model(
+        cont,
+        name="spring",
+        equations="all",
+        problem="QCP",
+        sense="min",
+        objective_variable=obj,
+    )
 
     x.l[n] = ((Ord(n) - 1) / N) * b_x + (Ord(n) / N) * a_x
     y.l[n] = ((Ord(n) - 1) / N) * b_y + (Ord(n) / N) * a_y
@@ -93,7 +100,7 @@ def main():
     y.fx[f"n{N}"] = b_y
     unit.fx.assign = 1
 
-    cont.solve(spring, problem="QCP", sense="min", objective_variable=obj)
+    spring.solve()
 
 
 if __name__ == "__main__":

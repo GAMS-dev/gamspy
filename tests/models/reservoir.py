@@ -123,8 +123,15 @@ def main():
     q2.lo[t] = 0.0
     q2.l[t] = 0.00001
 
-    reservoir = Model(m, name="reservoir", equations="all")
-    m.solve(reservoir, problem="NLP", sense="min", objective_variable=obj)
+    reservoir = Model(
+        m,
+        name="reservoir",
+        equations="all",
+        problem="NLP",
+        sense="min",
+        objective_variable=obj,
+    )
+    reservoir.solve()
 
 
 if __name__ == "__main__":

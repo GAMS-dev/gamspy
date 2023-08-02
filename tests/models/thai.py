@@ -66,9 +66,16 @@ def main():
     )
     shiplim[k] = Sum(j.where[vc[j, k]], z[j, k]) <= n[k]
 
-    thainavy = Model(m, name="thainavy", equations="all")
+    thainavy = Model(
+        m,
+        name="thainavy",
+        equations="all",
+        problem="MIP",
+        sense="min",
+        objective_variable=obj,
+    )
     z.up[j, k].where[vc[j, k]] = n[k]
-    m.solve(thainavy, problem="MIP", sense="min", objective_variable=obj)
+    thainavy.solve()
 
 
 if __name__ == "__main__":

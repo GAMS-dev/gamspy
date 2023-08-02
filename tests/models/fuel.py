@@ -76,10 +76,17 @@ def main():
     oileq[t] = oil[t] == 50 * status[t] + poil[t] + 0.005 * (poil[t] ** 2)
     demcons[t] = poil[t] + others[t] >= load[t]
 
-    model = Model(m, name="ucom", equations="all")
+    model = Model(
+        m,
+        name="ucom",
+        equations="all",
+        problem="MINLP",
+        sense="min",
+        objective_variable=cost,
+    )
     poil.l[t] = 100
 
-    m.solve(model, problem="MINLP", sense="min", objective_variable=cost)
+    model.solve()
 
 
 if __name__ == "__main__":

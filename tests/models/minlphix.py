@@ -72,7 +72,8 @@ Associated Reference:
  C.A. Floudas and G.E. Paules IV,  1988.
  Computers and Chemical Engineering vol. 12 no. 6 pp. 531-546
 
-Keywords: mixed integer nonlinear programming, chemical engineering, distillation
+Keywords: mixed integer nonlinear programming, chemical engineering,
+distillation
           sequences, heat integrated distillation
 """
 
@@ -408,10 +409,17 @@ def main():
     tc.up["c-4"] = tcin - 1
     tr.up[j] = trmax[j]
 
-    skip = Model(cont, name="skip", equations="all")
+    skip = Model(
+        cont,
+        name="skip",
+        equations="all",
+        problem="minlp",
+        sense="min",
+        objective_variable=zoau,
+    )
     cont.addOptions({"domLim": 100})
 
-    cont.solve(skip, problem="minlp", sense="min", objective_variable=zoau)
+    skip.solve()
 
     print("Best integer solution found:", round(zoau.records.level[0], 3))
 

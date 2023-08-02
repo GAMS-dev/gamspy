@@ -109,7 +109,14 @@ def main():
     dv[i] = v[i] == pk * k[i] + plab * l[i]
 
     # Model chenrad 'chenery raduchel model' / all /;
-    chenrad = Model(container, name="chenrad", equations="all")
+    chenrad = Model(
+        container,
+        name="chenrad",
+        equations="all",
+        problem="NLP",
+        sense="max",
+        objective_variable=td,
+    )
 
     y.up[i] = 2000
     x.up[i] = 2000
@@ -171,7 +178,7 @@ def main():
     pd.lo.assign = 0.01
     p.lo[i] = 0.1
 
-    container.solve(chenrad, problem="NLP", sense="max", objective_variable=td)
+    chenrad.solve()
 
 
 if __name__ == "__main__":

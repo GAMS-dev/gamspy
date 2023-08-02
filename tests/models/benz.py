@@ -101,8 +101,15 @@ def main():
     w.l.assign = 0.1
     k.l.assign = 0.1
 
-    benz = Model(m, name="benz", equations="all")
-    m.solve(benz, problem="NLP", sense="min", objective_variable=objval)
+    benz = Model(
+        m,
+        name="benz",
+        equations="all",
+        problem="NLP",
+        sense="min",
+        objective_variable=objval,
+    )
+    benz.solve()
 
 
 if __name__ == "__main__":

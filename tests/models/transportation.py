@@ -62,14 +62,16 @@ def main():
     supply[i] = Sum(j, x[i, j]) <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
-    transport = Model(m, name="transport", equations="all")
-
-    m.solve(
-        transport,
+    transport = Model(
+        m,
+        name="transport",
+        equations="all",
         problem="LP",
         sense="min",
         objective_variable=z,
     )
+    transport.solve()
+
     print(x.records)
     print(transport.objective_value)
     print(transport.status)

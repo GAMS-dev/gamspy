@@ -19,7 +19,8 @@ library: OR software-ORSEP operations research software exchange program."
 European journal of operational research 96.1 (1997): 205-216.
 http://www.om-db.wi.tum.de/psplib/main.html
 
-As default the first instance from PSPLIBs subset with 30 projects is solved to optimality (makespan=43).
+As default the first instance from PSPLIBs subset with 30 projects is solved
+to optimality (makespan=43).
 """
 
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
@@ -248,7 +249,14 @@ def build_abstract_model():
         <= capacities[r]
     )
 
-    rcpsp = Model(m, name="rcpsp", equations="all")
+    rcpsp = Model(
+        m,
+        name="rcpsp",
+        equations="all",
+        problem="MIP",
+        sense="min",
+        objective_variable=makespan,
+    )
     makespan.lo.assign = 0
 
     return dict(
@@ -285,12 +293,7 @@ def main():
     decorate_with_time_windows(dataset)
     model = build_abstract_model()
     fill_records(dataset, model)
-    model["m"].solve(
-        model["rcpsp"],
-        problem="MIP",
-        sense="min",
-        objective_variable=model["makespan"],
-    )
+    model["rcpsp"].solve()
     display_results(model, dataset)
 
 

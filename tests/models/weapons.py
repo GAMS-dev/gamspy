@@ -174,11 +174,18 @@ def main():
         t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))
     )
 
-    war = Model(m, name="war", equations=[maxw, minw, etd])
+    war = Model(
+        m,
+        name="war",
+        equations=[maxw, minw, etd],
+        problem="NLP",
+        sense="max",
+        objective_variable=tetd,
+    )
 
     x.l[w, t].where[td[w, t]] = wa[w] / Card(t)
 
-    m.solve(war, problem="NLP", sense="max", objective_variable=tetd)
+    war.solve()
 
 
 if __name__ == "__main__":

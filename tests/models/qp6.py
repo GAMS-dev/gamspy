@@ -18,7 +18,6 @@ from gamspy import (
     Variable,
     Equation,
     Container,
-    Alias,
     Model,
     Sum,
     Ord,
@@ -115,9 +114,10 @@ def main():
         equations=(
             "d_x.x, d_w.w, retcon.m_retcon, budget.m_budget, wdef.m_wdef"
         ),
+        problem="mcp",
     )
 
-    cont.solve(qp6, problem="mcp")
+    qp6.solve()
 
     z = Parameter(cont, name="z")
     z.assign = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
