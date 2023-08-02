@@ -113,6 +113,7 @@ def main(mip=False):
     defnumCars = Equation(m, name="defnumCars", type="eq", domain=[c])
     defoneCar = Equation(m, name="defoneCar", type="eq", domain=[p])
     defop = Equation(m, name="defop", type="leq", domain=[o, p])
+    _ = Equation(m, name="defopLS", type="eq", domain=[o, p])
     defviol = Equation(m, name="defviol", type="leq", domain=[o, p])
     defviolLS = Equation(m, name="defviolLS", type="eq", domain=[o, p])
     defobj = Equation(m, name="defobj", type="eq")
