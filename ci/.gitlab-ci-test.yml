@@ -9,8 +9,8 @@ test-leg:
     - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
-    - conda create -y -n transfer-env python=3.8
-    - conda activate transfer-env
+    - conda create -y -n gamspy-env python=3.8
+    - conda activate gamspy-env
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
@@ -35,8 +35,8 @@ test-deg:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n transfer-env python=3.8
-    - conda activate transfer-env
+    - conda create -y -n gamspy-env python=3.8
+    - conda activate gamspy-env
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
@@ -56,8 +56,8 @@ test-dac:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n transfer-env python=3.8
-    - conda activate transfer-env
+    - conda create -y -n gamspy-env python=3.8
+    - conda activate gamspy-env
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
@@ -79,10 +79,10 @@ test-wei:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
     entrypoint: [""]
   script:
-    - conda create -y -n transfer-env python=3.8
+    - conda create -y -n gamspy-env python=3.8
     - conda env list
-    - conda activate transfer-env
-    - $env:Path = "C:\Miniconda\envs\transfer-env;C:\Miniconda\envs\transfer-env\Scripts;" + $env:Path
+    - conda activate gamspy-env
+    - $env:Path = "C:\Miniconda\envs\gamspy-env;C:\Miniconda\envs\gamspy-env\Scripts;" + $env:Path
     - python --version
     - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
     - cd transfer-repo; python reinstall.py; cd ..
