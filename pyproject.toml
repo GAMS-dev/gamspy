@@ -26,19 +26,17 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: Microsoft :: Windows",
 ]
-dependencies = [
-  "pandas ~= 2.0.2"
-]
+dynamic = ["dependencies"]
 
 [project.optional-dependencies]
 dev = [
-    "black >= 23.7.0",
-    "pre-commit >= 3.3.3",
-    "flake8 >= 5.0.0",
+    "black == 23.7.0",
+    "pre-commit == 3.3.3",
+    "flake8 == 5.0.0",
 ]
 test = [
-    "mypy >= 1.4.1",
-    "coverage >= 7.2.7"
+    "mypy == 1.4.1",
+    "coverage == 7.2.7"
 ]
 
 [tool.mypy]
