@@ -30,6 +30,7 @@ from pathlib import Path
 from gamspy import Sum
 import gamspy.math as gams_math
 from gamspy import Model, Container
+from gamspy import Problem, Sense
 
 
 def main():
@@ -147,23 +148,23 @@ def main():
         name="P2R3_Linear",
         equations=[DEM, SUP, SDBAL, PDIF, TRANSCOST, SX, DX],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=TC,
     )
     P2R3_LinearLog = Model(
         m,
         name="P2R3_LinearLog",
         equations=[DEMLOG, SUPLOG, SDBAL, PDIF, TRANSCOST, SX, DX],
-        problem="NLP",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=TC,
     )
     P2R3_NonLinear = Model(
         m,
         name="P2R3_NonLinear",
         equations=P2R3_Linear.equations + [DEMINT, SUPINT, OBJECT],
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=OBJ,
     )
     P2R3_MCP = Model(

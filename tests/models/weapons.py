@@ -16,6 +16,7 @@ Keywords: nonlinear programming, assignment problem, military application,
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Product, Card
 import pandas as pd
+from gamspy import Problem, Sense
 
 
 def main():
@@ -178,8 +179,8 @@ def main():
         m,
         name="war",
         equations=[maxw, minw, etd],
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=tetd,
     )
 

@@ -28,6 +28,7 @@ from gamspy import (
     Model,
     Sum,
     Number,
+    Sense,
 )
 from gamspy.math import max as gams_max
 
@@ -114,7 +115,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         name="social_golfer_mip",
         equations="all",
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 
@@ -123,7 +124,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         name="social_golfer_minlp",
         equations="all",
         problem="minlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

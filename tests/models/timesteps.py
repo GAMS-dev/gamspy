@@ -37,6 +37,7 @@ from gamspy import (
     Sum,
     Number,
     Ord,
+    Sense,
 )
 from gamspy.math import uniformInt
 
@@ -152,7 +153,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
         name="maxStarts",
         equations="all",
         problem="mip",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=z,
     )
 

@@ -22,6 +22,7 @@ from pathlib import Path
 from gamspy import Parameter, Variable, Equation, Container, Model, Sum, Number
 from gamspy.math import power
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def sqr(x):
@@ -181,8 +182,8 @@ def main():
             lstraw,
             objn,
         ],
-        problem="qcp",
-        sense="max",
+        problem=Problem.QCP,
+        sense=Sense.MAX,
         objective_variable=cps,
     )
 

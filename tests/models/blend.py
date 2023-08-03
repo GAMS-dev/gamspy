@@ -12,7 +12,7 @@ Keywords: linear programming, blending problem, manufacturing, alloy blending
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
+from gamspy import Sum, Sense
 import numpy as np
 
 
@@ -64,7 +64,7 @@ def main():
         name="b1",
         equations=[pc, ac],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=phi,
     )
     b2 = Model(
@@ -72,7 +72,7 @@ def main():
         name="b2",
         equations="all",
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=phi,
     )
 

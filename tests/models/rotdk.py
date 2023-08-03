@@ -24,6 +24,7 @@ from gamspy import (
     Sum,
     Ord,
     Card,
+    Sense,
 )
 from gamspy.math import Round, uniform, power, normal
 
@@ -130,7 +131,7 @@ def main():
         name="rotdk",
         equations="all",
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

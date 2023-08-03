@@ -24,7 +24,7 @@ optimization
 from pathlib import Path
 from gamspy import Sum
 import gamspy.math as gams_math
-from gamspy import Model, Container
+from gamspy import Model, Container, Sense
 
 
 def main():
@@ -159,7 +159,7 @@ def main():
         name="Sequenz",
         equations="all",
         problem="MINLP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=cPT,
     )
     omega.l[p, n] = gams_math.uniform(0, 1)

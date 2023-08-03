@@ -17,7 +17,7 @@ Keywords: mixed integer linear programming, cutting stock, column generation,
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Ord, Card, Sum, Number
+from gamspy import Ord, Card, Sum, Number, Sense
 import gamspy.math as math
 
 
@@ -60,7 +60,7 @@ def main():
         "master",
         equations=[numpat, demand],
         problem="rmip",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=z,
     )
 
@@ -83,7 +83,7 @@ def main():
         "pricing",
         equations=[defobj, knapsack],
         problem="mip",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=z,
     )
 

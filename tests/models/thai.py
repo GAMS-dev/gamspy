@@ -15,7 +15,7 @@ Keywords: mixed integer linear programming, routing, naval recruitment,
 
 from pathlib import Path
 from gamspy import Sum, Domain
-from gamspy import Model, Container
+from gamspy import Model, Container, Sense
 
 
 def main():
@@ -71,7 +71,7 @@ def main():
         name="thainavy",
         equations="all",
         problem="MIP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     z.up[j, k].where[vc[j, k]] = n[k]

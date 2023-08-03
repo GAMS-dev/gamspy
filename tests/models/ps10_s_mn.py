@@ -25,6 +25,7 @@ from gamspy import (
 )
 from gamspy.math import uniform, Round
 import time
+from gamspy import Problem, Sense
 
 
 def main():
@@ -168,16 +169,16 @@ def main():
         m,
         name="SB_lic",
         equations=[obj, rev, pc, licd],
-        problem="nlp",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=Util,
     )
     SB_lic2 = Model(
         m,
         name="SB_lic2",
         equations=[obj, rev, pc, licd, mn],
-        problem="nlp",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=Util,
     )
 

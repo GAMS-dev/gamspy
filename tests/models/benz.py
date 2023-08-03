@@ -17,6 +17,7 @@ Section 7.3.5. Test problem 15, page 102.
 
 from gamspy import Variable, Equation, Model, Container
 import gamspy.math as gams_math
+from gamspy import Problem, Sense
 
 
 def main():
@@ -105,8 +106,8 @@ def main():
         m,
         name="benz",
         equations="all",
-        problem="NLP",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=objval,
     )
     benz.solve()

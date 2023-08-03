@@ -15,6 +15,7 @@ from gamspy import (
     Container,
     Model,
     Sum,
+    Sense,
 )
 
 
@@ -78,7 +79,7 @@ def main():
         name="StochDedicationBL",
         equations=[CashFlowCon],
         problem="LP",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=v0,
     )
 

@@ -88,6 +88,7 @@ from gamspy import (
     Sum,
     Ord,
     Domain,
+    Sense,
 )
 from gamspy.math import sqrt
 import pandas as pd
@@ -414,7 +415,7 @@ def main():
         name="skip",
         equations="all",
         problem="minlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=zoau,
     )
     cont.addOptions({"domLim": 100})

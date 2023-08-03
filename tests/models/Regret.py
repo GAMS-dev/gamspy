@@ -18,6 +18,7 @@ from gamspy import (
     Card,
     Smin,
     Smax,
+    Sense,
 )
 import pandas as pd
 
@@ -178,7 +179,7 @@ def main():
         name="MinRegret",
         equations=[BudgetCon, ReturnCon, RegretCon, ObjDefRegret],
         problem="LP",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=z,
     )
     MaxReturn = Model(
@@ -186,7 +187,7 @@ def main():
         name="MaxReturn",
         equations=[BudgetCon, ExpRegretCon, EpsRegretCon, ObjDefReturn],
         problem="LP",
-        sense="MAX",
+        sense=Sense.MAX,
         objective_variable=z,
     )
 

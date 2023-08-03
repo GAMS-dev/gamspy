@@ -12,6 +12,7 @@ and Chemical Engineering, vol.11, 1987, pp.503-517.
 
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 import gamspy.math as gams_math
+from gamspy import Problem, Sense
 
 
 def main():
@@ -79,8 +80,8 @@ def main():
         m,
         name="batchReactor",
         equations="all",
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=obj,
     )
     batchReactor.solve()

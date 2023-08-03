@@ -29,6 +29,7 @@ from gamspy import (
 )
 import gamspy.math as gams_math
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def main():
@@ -146,8 +147,8 @@ def main():
         m,
         name="mEntropy",
         equations=[rowbal, colbal, defobjent],
-        problem="NLP",
-        sense="Min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 
@@ -182,8 +183,8 @@ def main():
         m,
         name="mEntropyz",
         equations=[rowbalz, colbalz, defobjentz],
-        problem="NLP",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 
@@ -232,7 +233,7 @@ def main():
         name="mMAD",
         equations=[rowbal, colbal, defabs, defmad],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mMADE = Model(
@@ -240,7 +241,7 @@ def main():
         name="mMADE",
         equations=[rowbal, colbal, defabs, defmade],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mLinf = Model(
@@ -248,7 +249,7 @@ def main():
         name="mLinf",
         equations=[rowbal, colbal, defmaxp, defmaxn, deflinf],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 
@@ -279,16 +280,16 @@ def main():
         m,
         name="mSD",
         equations=[rowbal, colbal, defsd],
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mRSD = Model(
         m,
         name="mRSD",
         equations=[rowbal, colbal, defrsd],
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

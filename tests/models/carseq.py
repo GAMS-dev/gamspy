@@ -40,6 +40,7 @@ from gamspy import (
     Ord,
     Card,
     Number,
+    Sense,
 )
 import gamspy.math as gams_math
 import pandas as pd
@@ -145,7 +146,7 @@ def main(mip=False):
         name="carseqMIP",
         equations="all - defopLS - defviolLS - defsumc",
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     carseqLS = Model(
@@ -153,7 +154,7 @@ def main(mip=False):
         name="carseqLS",
         equations="all - defop   - defviol",
         problem="minlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

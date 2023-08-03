@@ -16,7 +16,7 @@ Keywords: linear programming, stochastic Benders algorithm, transportation
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
+from gamspy import Sum, Sense
 import gamspy.math as gams_math
 import pandas as pd
 
@@ -147,7 +147,7 @@ def main():
         name="masterproblem",
         equations="all",
         problem="LP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=zmaster,
     )
 
@@ -172,7 +172,7 @@ def main():
         name="subproblem",
         equations=[subobj, selling, market],
         problem="LP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=zsub,
     )
 

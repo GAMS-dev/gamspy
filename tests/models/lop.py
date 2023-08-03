@@ -38,8 +38,8 @@ from gamspy import (
     Model,
     Equation,
     Container,
-    Number,
     Ord,
+    Sense,
 )
 import gamspy.math as math
 
@@ -84,7 +84,7 @@ def main():
         "sp",
         equations=[balance, defspobj],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=spobj,
     )
     sp.solve()
@@ -202,7 +202,7 @@ def main():
         "lopdt",
         equations=[deffreqlop, dtlimit, defobjdtlop],
         problem="mip",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=obj,
     )
 
@@ -270,7 +270,7 @@ def main():
         "ilp",
         equations=[defobjilp, deffreqilp, defloadilp, oneilp, couplexy],
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 
@@ -323,7 +323,7 @@ def main():
         "evaldt",
         equations=[dtllimit, sumbound, defobjdtlop],
         problem="lp",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=obj,
     )
 

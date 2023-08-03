@@ -80,6 +80,7 @@ from gamspy import (
 )
 from gamspy.math import sqrt
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def main():
@@ -183,8 +184,8 @@ def main():
         m,
         name="transport",
         equations="all",
-        problem="nlp",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=z,
     )
 
@@ -278,7 +279,7 @@ def main():
         name="trnsdiscA",
         equations=[supply, demand, defsos1, defsos2, defsos3, defobjdisc],
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=z,
     )
 
@@ -387,7 +388,7 @@ def main():
         name="trnsdiscB",
         equations=[supply, demand, defx, defsqrt, defseg, defgs, defobjdisc],
         problem="mip",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=z,
     )
 

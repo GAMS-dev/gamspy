@@ -17,6 +17,7 @@ Keywords: linear programming, nonlinear programming, discontinuous derivatives,
 from gamspy import Set, Parameter, Variable, Equation, Container, Model, Sum
 import gamspy.math as gams_math
 import pandas as pd
+from gamspy import Problem, Sense
 
 
 def main():
@@ -188,7 +189,7 @@ def main():
         name="mod1",
         equations=[ddev, ls1],
         problem="dnlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod1a = Model(
@@ -196,15 +197,15 @@ def main():
         name="mod1a",
         equations=[ddeva, ls1a],
         problem="lp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod2 = Model(
         m,
         name="mod2",
         equations=[ddev, ls2],
-        problem="nlp",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod3 = Model(
@@ -212,15 +213,15 @@ def main():
         name="mod3",
         equations=[ddev, ls3],
         problem="dnlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod4 = Model(
         m,
         name="mod4",
         equations=[ddev, ls4],
-        problem="nlp",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod5 = Model(
@@ -228,7 +229,7 @@ def main():
         name="mod5",
         equations=[ddev, ls5],
         problem="dnlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod5a = Model(
@@ -236,15 +237,15 @@ def main():
         name="mod5a",
         equations=[ddeva, ls5a],
         problem="lp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod6 = Model(
         m,
         name="mod6",
         equations=[ddev, ls6],
-        problem="nlp",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod7 = Model(
@@ -252,15 +253,15 @@ def main():
         name="mod7",
         equations=[ddev, ls7],
         problem="dnlp",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     mod8 = Model(
         m,
         name="mod8",
         equations=[ddev, ls8],
-        problem="nlp",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

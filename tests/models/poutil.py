@@ -37,6 +37,7 @@ from gamspy import (
     Smax,
     Card,
     Ord,
+    Sense,
 )
 import numpy as np
 
@@ -561,7 +562,7 @@ def main():
         name="energy",
         equations="all",
         problem="MIP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=c,
     )
 

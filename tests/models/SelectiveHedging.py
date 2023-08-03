@@ -20,6 +20,7 @@ from gamspy import (
     Card,
     Number,
     ModelStatus,
+    Sense,
 )
 
 
@@ -167,7 +168,7 @@ def main(output=None):
         name="IndexFund",
         equations="all",
         problem="LP",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=z,
     )
 

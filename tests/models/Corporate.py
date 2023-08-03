@@ -17,6 +17,7 @@ from gamspy import (
     Sum,
     Card,
     Number,
+    Sense,
 )
 import gamspy.math as gams_math
 
@@ -203,7 +204,7 @@ def main():
         name="StrategicModel",
         equations=[ObjDef, BroadPortRetDef, MADCon, BroadNormalCon],
         problem="LP",
-        sense="MAX",
+        sense=Sense.MAX,
         objective_variable=ObjValue,
     )
     TacticalModel = Model(
@@ -211,7 +212,7 @@ def main():
         name="TacticalModel",
         equations=[ObjDef, PortRetDef, MADCon, NormalCon],
         problem="LP",
-        sense="MAX",
+        sense=Sense.MAX,
         objective_variable=ObjValue,
     )
 
@@ -240,7 +241,7 @@ def main():
         m.solve(
             TacticalModel,
             problem="LP",
-            sense="MAX",
+            sense=Sense.MAX,
             objective_variable=ObjValue,
         )
 

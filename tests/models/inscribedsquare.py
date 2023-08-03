@@ -23,7 +23,7 @@ Contributor: Benjamin Mueller and Felipe Serrano
 """
 
 from gamspy import Set, Variable, Equation, Model, Container
-from gamspy import Ord, Card
+from gamspy import Ord, Card, Sense
 import math
 from gamspy.math import sin, cos
 
@@ -79,7 +79,7 @@ def main():
         name="square",
         equations="all",
         problem="DNLP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=z,
     )
 

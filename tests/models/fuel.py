@@ -19,7 +19,7 @@ Keywords: mixed integer nonlinear programming, scheduling, engineering, power
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Ord, Card
+from gamspy import Sum, Ord, Card, Sense
 import pandas as pd
 
 
@@ -81,7 +81,7 @@ def main():
         name="ucom",
         equations="all",
         problem="MINLP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=cost,
     )
     poil.l[t] = 100

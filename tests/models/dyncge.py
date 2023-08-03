@@ -23,6 +23,7 @@ from gamspy import (
     Product,
 )
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def main():
@@ -683,8 +684,8 @@ def main():
         m,
         name="dyncge",
         equations="all",
-        problem="nlp",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=CC,
     )
 

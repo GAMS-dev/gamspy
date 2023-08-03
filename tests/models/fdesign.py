@@ -27,6 +27,7 @@ from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Card, Ord
 import gamspy.math as gams_math
 import math
+from gamspy import Problem, Sense
 
 
 def main():
@@ -115,8 +116,8 @@ def main():
         m,
         name="fir_socp",
         equations="all",
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=t,
     )
     fir_socp.solve()

@@ -19,6 +19,7 @@ from gamspy import (
     Ord,
     Card,
     Number,
+    Sense,
 )
 import pandas as pd
 import numpy as np
@@ -191,7 +192,7 @@ def main():
         name="Dedication",
         equations=[CashFlowCon],
         problem="LP",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=v0,
     )
     Dedication.solve()

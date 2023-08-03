@@ -19,7 +19,7 @@ scheduling,
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
+from gamspy import Sum, Sense
 import pandas
 
 
@@ -384,7 +384,7 @@ def main():
         name="mexss",
         equations="all",
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=phi,
     )
 

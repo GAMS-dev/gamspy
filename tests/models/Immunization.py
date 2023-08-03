@@ -19,6 +19,7 @@ from gamspy import (
     Ord,
     Card,
     Number,
+    Sense,
 )
 import gamspy.math as gams_math
 import pandas as pd
@@ -314,7 +315,7 @@ def main():
         name="ImmunizationOne",
         equations=[ObjDef, PresentValueMatch, DurationMatch],
         problem="LP",
-        sense="MAX",
+        sense=Sense.MAX,
         objective_variable=z,
     )
     ImmunizationOne.solve()
@@ -332,7 +333,7 @@ def main():
         name="ImmunizationTwo",
         equations=[ObjDef, PresentValueMatch, DurationMatch, ConvexityMatch],
         problem="LP",
-        sense="MAX",
+        sense=Sense.MAX,
         objective_variable=z,
     )
     ImmunizationTwo.solve()
@@ -357,7 +358,7 @@ def main():
         name="ImmunizationThree",
         equations=[ConvexityObj, PresentValueMatch, DurationMatch],
         problem="LP",
-        sense="MIN",
+        sense=Sense.MIN,
         objective_variable=z,
     )
     ImmunizationThree.solve()

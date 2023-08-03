@@ -272,7 +272,7 @@ def main():
         name="food",
         equations="all",
         problem="MIP",
-        sense="max",
+        sense=gp.Sense.MAX,
         objective_variable=profit,
     )
 

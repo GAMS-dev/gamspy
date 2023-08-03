@@ -19,6 +19,7 @@ import sys
 from gamspy import Set, Alias, Variable, Equation, Model, Container
 from gamspy import Ord, Number
 from gamspy.math import power
+from gamspy import Problem, Sense
 import math
 
 
@@ -67,8 +68,8 @@ m = Model(
     c,
     name="cpack",
     equations="all",
-    problem="QCP",
-    sense="max",
+    problem=Problem.QCP,
+    sense=Sense.MAX,
     objective_variable=r,
 )
 

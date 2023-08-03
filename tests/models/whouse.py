@@ -12,7 +12,16 @@ Princeton University Press, Princeton, New Jersey, 1963.
 Keywords: linear programming, warehouse management, inventory
 """
 
-from gamspy import Set, Parameter, Variable, Equation, Container, Sum, Model
+from gamspy import (
+    Set,
+    Parameter,
+    Variable,
+    Equation,
+    Container,
+    Sum,
+    Model,
+    Sense,
+)
 import numpy as np
 
 
@@ -58,7 +67,7 @@ def main():
         name="swp",
         equations="all",
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=cost,
     )
     swp.solve()

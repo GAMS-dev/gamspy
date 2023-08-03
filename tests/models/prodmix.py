@@ -13,7 +13,7 @@ production
 """
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
+from gamspy import Sum, Sense
 import numpy as np
 
 
@@ -54,7 +54,7 @@ def main():
         name="pmp",
         equations="all",
         problem="LP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=profit,
     )
 

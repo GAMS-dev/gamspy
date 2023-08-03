@@ -13,6 +13,7 @@ Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import pandas as pd
+from gamspy import Problem, Sense
 
 
 def main():
@@ -127,8 +128,8 @@ def main():
         m,
         name="reservoir",
         equations="all",
-        problem="NLP",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     reservoir.solve()

@@ -24,7 +24,7 @@ to optimality (makespan=43).
 """
 
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Ord, Domain
+from gamspy import Sum, Ord, Domain, Sense
 
 
 # Utility functions
@@ -254,7 +254,7 @@ def build_abstract_model():
         name="rcpsp",
         equations="all",
         problem="MIP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=makespan,
     )
     makespan.lo.assign = 0

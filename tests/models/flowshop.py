@@ -124,7 +124,7 @@ def flow_shop(process_time_df, last_machine, last_item):
         name="flowshop",
         equations="all",
         problem="MIP",
-        sense="min",
+        sense=gap.Sense.MIN,
         objective_variable=totwait,
     )
 

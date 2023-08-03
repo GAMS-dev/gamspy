@@ -21,6 +21,7 @@ import math
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Ord, Card
 import pandas as pd
+from gamspy import Problem, Sense
 
 
 def main():
@@ -86,8 +87,8 @@ def main():
         cont,
         name="spring",
         equations="all",
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

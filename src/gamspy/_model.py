@@ -27,7 +27,7 @@ from __future__ import annotations
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
-from typing import Dict, List, Literal, Optional, Union, TYPE_CHECKING
+from typing import Dict, List, Literal, Optional, Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Variable, Equation, Container
@@ -114,13 +114,10 @@ class Model:
     ):
         self.name = name
         self.ref_container = container
-        self._check_model_validity(
-            equations, problem, sense, objective_variable
+        self.problem, self.sense, self.objective_variable = (
+            self._validate_model(problem, sense, objective_variable)
         )
         self._equations = equations
-        self.problem = problem
-        self.sense = sense
-        self.objective_variable = objective_variable
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
@@ -241,30 +238,33 @@ class Model:
 
         return output
 
-    def _check_model_validity(
-        self, equations, problem, sense=None, objective_variable=None
-    ) -> None:
-        # if not isinstance(equations, list):
-        #     raise TypeError(f"Equations must be a list of Equation(s)")
-        # else:
-        #     if len(equations) == 0:
-        #         raise ValueError("A Model requires at least one Equation")
+    def _validate_model(
+        self, problem, sense=None, objective_variable=None
+    ) -> Tuple:
+        if isinstance(problem, str):
+            if problem.upper() not in gp.Problem.values():
+                raise ValueError(
+                    f"Allowed problem types: {gp.Problem.values()} but found"
+                    f" {problem}."
+                )
+            else:
+                problem = gp.Problem(problem.upper())
 
-        if problem.upper() not in utils.PROBLEM_TYPES:
-            raise ValueError(
-                f"Allowed problem types: {utils.PROBLEM_TYPES} but found"
-                f" {problem}."
-            )
+        if isinstance(sense, str):
+            if sense.upper() not in gp.Sense.values():
+                raise ValueError(
+                    f"Allowed sense values: {gp.Sense.values()} but found"
+                    f" {sense}."
+                )
 
-        if sense is not None and sense.upper() not in utils.SENSE_TYPES:
-            raise ValueError(
-                f"Allowed sense values: {utils.SENSE_TYPES} but found {sense}."
-            )
+            sense = gp.Sense(sense.upper())
 
         if objective_variable is not None and not isinstance(
             objective_variable, gp.Variable
         ):
             raise TypeError("Objective variable must be type Variable")
+
+        return problem, sense, objective_variable
 
     def _append_solve_string(self) -> None:
         solve_string = f"solve {self.name} using {self.problem}"

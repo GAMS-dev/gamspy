@@ -22,6 +22,7 @@ from gamspy import (
     Sum,
     Ord,
     Model,
+    Sense,
 )
 import numpy as np
 
@@ -142,7 +143,7 @@ def main():
         name="alloc1",
         equations=[ab, db, ocd, bcd1, obj],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=phi,
     )
     alloc2 = Model(
@@ -150,7 +151,7 @@ def main():
         name="alloc2",
         equations=[ab, yd, bd, ocd, bcd2, obj],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=phi,
     )
 

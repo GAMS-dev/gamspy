@@ -20,6 +20,7 @@ from gamspy import (
 )
 import gamspy.math as gams_math
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def main():
@@ -128,7 +129,7 @@ def main():
 
     evportfol = Model(cont, name="evportfol", equations="all")
 
-    cont.solve(evportfol, problem="nlp", sense="max", objective_variable=obj)
+    cont.solve(evportfol, problem=Problem.NLP, sense=Sense.MAX, objective_variable=obj)
 
     variance = Parameter(cont, name="variance")
     variance = Sum(s, Sum(sp, invest.l[s] * covar[s, sp] * invest.l[sp]))
@@ -216,8 +217,8 @@ def main():
 
     cont.solve(
         evportfol,
-        problem="nlp",
-        sense="max",
+        problem=Problem.NLP,
+        Sense.MAX,
         objective_variable=obj,
         scenario=dictionary,
     )

@@ -22,6 +22,7 @@ from gamspy import (
     Set,
     Parameter,
     Ord,
+    Sense,
 )
 from gamspy.math import power, Round
 import numpy as np
@@ -199,7 +200,7 @@ def main():
         name="forest",
         equations="all",
         problem="LP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=phi,
     )
 

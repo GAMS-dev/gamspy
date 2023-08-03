@@ -482,19 +482,4 @@ def _getValidGmsOptions() -> List[str]:
     )
 
 
-PROBLEM_TYPES = [
-    "LP",
-    "NLP",
-    "QCP",
-    "DNLP",
-    "MIP",
-    "RMIP",
-    "MINLP",
-    "MIQCP",
-    "MCP",
-    "CNS",
-    "MPEC",
-    "EMP",
-]
-SENSE_TYPES = ["MIN", "MAX"]
 GMS_OPTIONS = _getValidGmsOptions()

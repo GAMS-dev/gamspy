@@ -34,6 +34,7 @@ Keywords: nonlinear programming, contract theory, principal-agent problem,
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Card, Ord
 import gamspy.math as gams_math
+from gamspy import Problem, Sense
 
 
 def main():
@@ -92,16 +93,16 @@ def main():
         cont,
         name="m",
         equations="all -mn -ic -licd",
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=util,
     )
     m_mn = Model(
         cont,
         name="m_mn",
         equations="m + mn",
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=util,
     )
 

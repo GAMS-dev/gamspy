@@ -12,6 +12,7 @@ Keywords: nonlinear programming, alkylation process, chemical engineering
 
 from gamspy import Variable, Equation, Container, Model
 from gamspy.math import power
+from gamspy import Problem, Sense
 
 
 def main():
@@ -89,8 +90,8 @@ def main():
         m,
         name="process",
         equations=[yield1, makeup, sdef, motor, drat, ddil, df4, dprofit],
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=profit,
     )
     rproc = Model(
@@ -106,8 +107,8 @@ def main():
             rngdf4,
             dprofit,
         ],
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=profit,
     )
 

@@ -18,7 +18,7 @@ DOI: doi.org/10.1007/978-3-319-62350-4
 """
 
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
+from gamspy import Sum, Sense
 
 
 def main():
@@ -82,7 +82,7 @@ def main():
         name="placement3",
         equations="all",
         problem="MIP",
-        sense="max",
+        sense=Sense.MAX,
         objective_variable=OF,
     )
 

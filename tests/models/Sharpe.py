@@ -19,6 +19,7 @@ from gamspy import (
 import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
+from gamspy import Problem, Sense
 
 
 def main():
@@ -95,8 +96,8 @@ def main():
         m,
         name="Sharpe",
         equations=[ReturnDef, VarDef, NormalCon, ObjDef],
-        problem="nlp",
-        sense="MAX",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=z,
     )
     Sharpe.solve()

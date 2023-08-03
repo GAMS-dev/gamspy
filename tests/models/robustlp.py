@@ -39,6 +39,7 @@ optimization, second order cone programming
 from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 from gamspy.math import uniform
+from gamspy import Problem, Sense
 
 
 def main():
@@ -75,7 +76,7 @@ def main():
         name="lpmod",
         equations=[defobj, cons],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     lpmod.solve()
@@ -100,7 +101,7 @@ def main():
         name="lproblp",
         equations=[defobj, lpcons, defdual],
         problem="LP",
-        sense="min",
+        sense=Sense.MIN,
         objective_variable=obj,
     )
     lproblp.solve()
@@ -127,8 +128,8 @@ def main():
         m,
         name="roblpqcp",
         equations=[defobj, socpqcpcons, defrhs, defv],
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=obj,
     )
 

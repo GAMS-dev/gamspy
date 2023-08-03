@@ -15,6 +15,7 @@ Keywords: nonlinear programming, econometrics, economic development
 
 from pathlib import Path
 from gamspy import Sum, Number, Model, Container
+from gamspy import Problem, Sense
 
 
 def main():
@@ -113,8 +114,8 @@ def main():
         container,
         name="chenrad",
         equations="all",
-        problem="NLP",
-        sense="max",
+        problem=Problem.NLP,
+        sense=Sense.MAX,
         objective_variable=td,
     )
 

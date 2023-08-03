@@ -51,6 +51,7 @@ from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum
 import pandas as pd
 from gamspy.math import uniform
+from gamspy import Problem, Sense
 
 
 def main():
@@ -134,8 +135,8 @@ def main():
         m,
         name="truss",
         equations="all",
-        problem="QCP",
-        sense="min",
+        problem=Problem.QCP,
+        sense=Sense.MIN,
         objective_variable=tau,
     )
     sigma.l[i, k] = uniform(0.1, 1)

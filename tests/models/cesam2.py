@@ -92,6 +92,7 @@ from gamspy import (
 )
 from gamspy.math import abs, exp, log, centropy
 import numpy as np
+from gamspy import Problem, Sense
 
 
 def main(is_centropy=False):
@@ -749,8 +750,8 @@ def main(is_centropy=False):
         m,
         name="SAMENTROP",
         equations="all",
-        problem="NLP",
-        sense="min",
+        problem=Problem.NLP,
+        sense=Sense.MIN,
         objective_variable=DENTROPY,
     )
 
