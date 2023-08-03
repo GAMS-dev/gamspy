@@ -4,15 +4,14 @@
 What is GamsPy?
 **************
 
-GamsPy is a mathematical optimization package for scientific and commercial
-computing in Python. It is a Python library that provides symbols to be used
-in equations, a math package, and various utility functions.
+GamsPy is a mathematical optimization package that combines the power of high performance 
+GAMS execution system and flexible Python language. It is a Python library that provides GAMS 
+symbols (`Set`, `Alias`, `Parameter`, `Variable`, and `Equation`) to compose mathematical 
+models, a math package, and various utility functions.
 
-Symbols are at the core of the GamsPy package. This
-encapsulates *n*-dimensional arrays of homogeneous data types, with
-many operations being performed in compiled code for performance.
-There are several important differences between GamsPy arrays and the
-standard Python sequences:
+Symbols are at the heart of the GamsPy package. Each symbol is associated with
+a `Container`. There are several important differences between GamsPy symbols and 
+the standard Python objects:
 
 - GamsPy arrays have a fixed size at creation, unlike Python lists
   (which can grow dynamically). Changing the size of an `ndarray` will
@@ -122,14 +121,3 @@ different shapes, provided that the smaller array is "expandable" to
 the shape of the larger in such a way that the resulting broadcast is
 unambiguous. For detailed "rules" of broadcasting see
 :ref:`Broadcasting <basics.broadcasting>`.
-
-Who Else Uses GamsPy?
---------------------
-
-GamsPy fully supports an object-oriented approach, starting, once
-again, with `ndarray`.  For example, `ndarray` is a class, possessing
-numerous methods and attributes.  Many of its methods are mirrored by
-functions in the outer-most GamsPy namespace, allowing the programmer
-to code in whichever paradigm they prefer. This flexibility has allowed the
-GamsPy array dialect and GamsPy `ndarray` class to become the *de-facto* language
-of multi-dimensional data interchange used in Python.

@@ -19,7 +19,7 @@ details are found in :ref:`reference`.
 
 .. toctree::
    :caption: Fundamentals and usage
-   :maxdepth: 1
+   :maxdepth: 2
 
    basics
 

@@ -2,7 +2,7 @@
 .. _interoperability:
 
 ***************************
-Interoperability with NumPy
+Interoperability with GamsPy
 ***************************
 
 NumPy's ndarray objects provide both a high-level API for operations on
