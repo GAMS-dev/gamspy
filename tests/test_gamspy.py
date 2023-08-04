@@ -1676,16 +1676,16 @@ class GamspySuite(unittest.TestCase):
         # tan
         op1 = gams_math.tan(0.5)
         self.assertTrue(isinstance(op1, float))
+        op2 = gams_math.tan(b[i])
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(tan( b(i) ))")
+
+        # arctan
+        op1 = gams_math.atan(7.5)
+        self.assertTrue(isinstance(op1, float))
         op2 = gams_math.atan(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(arctan( b(i) ))")
-
-        # arc
-        op1 = gams_math.ceil(7.5)
-        self.assertTrue(isinstance(op1, int) and op1 == 8)
-        op2 = gams_math.ceil(b[i])
-        self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "(ceil( b(i) ))")
 
         # floor
         op1 = gams_math.floor(7.5)
