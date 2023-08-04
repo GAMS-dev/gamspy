@@ -33,9 +33,22 @@ def sin(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("sin(", x.gamsRepr(), ")")
 
 
+def tan(x: Union[float, "Operable"]) -> Union["Expression", float]:
+    """
+    Tangent of x.
+
+    Returns
+    -------
+    Expression | float
+    """
+    if isinstance(x, (int, float)):
+        return math.tan(x)
+    return expression.Expression("tan(", x.gamsRepr(), ")")
+
+
 def acos(x: Union[float, "Operable"]) -> Union["Expression", float]:
     """
-    Arccosine of x.
+    Inverse cosine of x.
 
     Returns
     -------
@@ -48,7 +61,7 @@ def acos(x: Union[float, "Operable"]) -> Union["Expression", float]:
 
 def asin(x: Union[float, "Operable"]) -> Union["Expression", float]:
     """
-    Arcsine of x.
+    Inver sinus of x.
 
     Returns
     -------
@@ -57,3 +70,16 @@ def asin(x: Union[float, "Operable"]) -> Union["Expression", float]:
     if isinstance(x, (int, float)):
         return math.asin(x)
     return expression.Expression("arcsin(", x.gamsRepr(), ")")
+
+
+def atan(x: Union[float, "Operable"]) -> Union["Expression", float]:
+    """
+    Inverse tangent of x.
+
+    Returns
+    -------
+    Expression | float
+    """
+    if isinstance(x, (int, float)):
+        return math.atan(x)
+    return expression.Expression("arctan(", x.gamsRepr(), ")")

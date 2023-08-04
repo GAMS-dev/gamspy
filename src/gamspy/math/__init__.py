@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 
-from gamspy.math.trigonometric import cos, sin, acos, asin
+from gamspy.math.trigonometric import cos, sin, acos, asin, tan, atan
 from gamspy.math.log_power import exp, power, log, log2, log10
 from gamspy.math.numeric import (
     abs,
@@ -43,6 +43,8 @@ __all__ = [
     "sin",
     "acos",
     "asin",
+    "tan",
+    "atan",
     "exp",
     "power",
     "sqrt",
