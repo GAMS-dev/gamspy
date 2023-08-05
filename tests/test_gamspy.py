@@ -1568,6 +1568,13 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(abs( b(i) ))")
 
+        # ceil
+        op1 = gams_math.ceil(7.5)
+        self.assertTrue(isinstance(op1, int) and op1 == 8)
+        op2 = gams_math.ceil(b[i])
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(ceil( b(i) ))")
+
         # centropy
         op2 = gams_math.centropy(v[i], b[i])
         self.assertEqual(op2.gamsRepr(), "(centropy( v(i),b(i),1e-20 ))")

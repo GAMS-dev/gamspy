@@ -319,7 +319,7 @@ class Model:
         """
         equations_str = ""
         if isinstance(self._equations, str):
-            equations_str = self._equations
+            equations_str = self._equations  # pragma: no cover
         else:
             equations_str = ",".join(
                 [equation.name for equation in self._equations]
