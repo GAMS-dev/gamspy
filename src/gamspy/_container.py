@@ -785,10 +785,9 @@ class Container(gt.Container):
 
         try:
             process = subprocess.run(
-                " ".join(commands),
+                commands,
                 capture_output=True,
                 check=True,
-                shell=True,
                 text=True,
             )
 

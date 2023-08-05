@@ -33,6 +33,7 @@ dev = [
     "black == 23.7.0",
     "pre-commit == 3.3.3",
     "flake8 == 5.0.0",
+    "bandit == 1.7.5"
 ]
 test = [
     "mypy == 1.4.1",
@@ -53,3 +54,8 @@ exclude_also = [
     "pragma: no cover",
     "if TYPE_CHECKING:"
 ]
+
+[tool.bandit]
+exclude_dirs = ["tests", "docs"]
+tests = ["B201", "B301"]
+skips = ["B101", "B404", "B603", "B607"]
