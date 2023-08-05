@@ -39,6 +39,10 @@ if TYPE_CHECKING:
     from gamspy._algebra._expression import Expression
 
 
+class GdxException(Exception):
+    """Exception raised if there is a GDX related issue"""
+
+
 def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
     # Temporary function to be removed when Gams Transfer is updated.
     has_domains = arrkeys.size > 0
@@ -115,7 +119,7 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
         )
         return _convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
-        raise Exception(
+        raise GdxException(
             f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
         )
 
@@ -185,8 +189,8 @@ def _openGdxFile(system_directory: str, load_from: str):
         gdxHandle = gdx.new_gdxHandle_tp()
         rc = gdx.gdxCreateD(gdxHandle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
-    except Exception as e:
-        raise Exception(
+    except AssertionError as e:
+        raise GdxException(
             "Could not properly load GDX DLL, check system_directory"
             f" path. {e}"
         )
@@ -198,7 +202,7 @@ def _openGdxFile(system_directory: str, load_from: str):
         rc = _set_special_values(gdxHandle)
         assert rc
     except AssertionError as e:
-        raise Exception(f"Could not open the GDX file at: {load_from}. {e}")
+        raise GdxException(f"Could not open the GDX file at: {load_from}. {e}")
 
     return gdxHandle
 
@@ -325,6 +329,8 @@ def _getDomainStr(domain: Union["Set", "Alias", "ImplicitSet", str]) -> str:
     Exception
         Given domain must contain only sets, aliases or strings
     """
+    from gamspy._algebra._domain import DomainException
+
     set_strs = []
     for set in domain:
         if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
@@ -335,7 +341,7 @@ def _getDomainStr(domain: Union["Set", "Alias", "ImplicitSet", str]) -> str:
             else:
                 set_strs.append('"' + set + '"')
         else:
-            raise Exception(
+            raise DomainException(
                 f"Domain type must be str, Set or Alias but found {type(set)}"
             )
 

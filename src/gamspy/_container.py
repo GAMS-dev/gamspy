@@ -331,19 +331,16 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            try:
-                m = Container()
-                obj = gp.Set(
-                    m,
-                    name,
-                    domain,
-                    is_singleton,
-                    records=None,
-                    domain_forwarding=domain_forwarding,
-                    description=description,
-                )
-            except (TypeError, ValueError, Exception) as err:
-                raise err
+            m = Container()
+            obj = gp.Set(
+                m,
+                name,
+                domain,
+                is_singleton,
+                records=None,
+                domain_forwarding=domain_forwarding,
+                description=description,
+            )
 
             # domain handling
             if domain is None:
@@ -425,18 +422,15 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            try:
-                m = Container()
-                obj = gp.Parameter(
-                    m,
-                    name,
-                    domain,
-                    records=None,
-                    domain_forwarding=domain_forwarding,
-                    description=description,
-                )
-            except (TypeError, ValueError, Exception) as err:
-                raise err
+            m = Container()
+            obj = gp.Parameter(
+                m,
+                name,
+                domain,
+                records=None,
+                domain_forwarding=domain_forwarding,
+                description=description,
+            )
 
             # domain handling
             if domain is None:
@@ -520,19 +514,16 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            try:
-                m = Container()
-                obj = gp.Variable(
-                    m,
-                    name,
-                    type,
-                    domain,
-                    records=None,
-                    domain_forwarding=domain_forwarding,
-                    description=description,
-                )
-            except (TypeError, ValueError, Exception) as err:
-                raise err
+            m = Container()
+            obj = gp.Variable(
+                m,
+                name,
+                type,
+                domain,
+                records=None,
+                domain_forwarding=domain_forwarding,
+                description=description,
+            )
 
             # domain handling
             if domain is None:
@@ -623,19 +614,16 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            try:
-                m = Container()
-                obj = gp.Equation(
-                    m,
-                    name,
-                    type,
-                    domain,
-                    records=None,
-                    domain_forwarding=domain_forwarding,
-                    description=description,
-                )
-            except (TypeError, ValueError, Exception) as err:
-                raise err
+            m = Container()
+            obj = gp.Equation(
+                m,
+                name,
+                type,
+                domain,
+                records=None,
+                domain_forwarding=domain_forwarding,
+                description=description,
+            )
 
             # domain handling
             if domain is None:
@@ -775,11 +763,9 @@ class Container(gt.Container):
 
     def _write_to_gms(self):
         gams_string = self.generateGamsString(self._unsaved_statements)
-        try:
-            with open(self._gms_path, "w") as file:
-                file.write(gams_string)
-        except Exception as e:
-            raise Exception(f"Could not write to {self.name}.gms because: {e}")
+
+        with open(self._gms_path, "w") as file:
+            file.write(gams_string)
 
     def _run_gms(self, commandline_options: Optional[dict] = None):
         commands = [
@@ -813,7 +799,7 @@ class Container(gt.Container):
             )
 
             return process.stdout
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             executed_command = " ".join(commands)
             raise Exception(
                 "Could not run .gms file with the following GAMS"  # type: ignore # noqa: E501

@@ -29,6 +29,10 @@ import gamspy._algebra._condition as condition
 import gamspy.utils as utils
 
 
+class DomainException(Exception):
+    """Exception raised if a domain is not valid."""
+
+
 class Domain:
     """
     Domain class needed for where statements on multidimensional index list
@@ -50,10 +54,10 @@ class Domain:
 
     def _sanity_check(self, sets: tuple):
         if len(sets) < 2:
-            raise Exception("Domain requires at least 2 sets")
+            raise DomainException("Domain requires at least 2 sets")
 
         if all(not hasattr(set, "ref_container") for set in sets):
-            raise Exception(
+            raise DomainException(
                 "At least one of the sets in the domain must be a Set or Alias"
             )
 
