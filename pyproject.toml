@@ -57,5 +57,4 @@ exclude_also = [
 
 [tool.bandit]
 exclude_dirs = ["tests", "docs"]
-tests = ["B201", "B301"]
 skips = ["B101", "B404", "B603", "B607"]
