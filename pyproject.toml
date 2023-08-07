@@ -40,6 +40,9 @@ test = [
     "coverage == 7.2.7"
 ]
 
+[project.scripts]
+gamspy = "gamspy._cmdline:main"
+
 [tool.mypy]
 warn_unused_configs = true
 follow_imports = "skip"

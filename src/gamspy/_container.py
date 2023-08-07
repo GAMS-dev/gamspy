@@ -25,7 +25,6 @@
 
 import subprocess
 import os
-import platform
 import pandas as pd
 from gams import GamsWorkspace, DebugLevel
 import gams.transfer as gt
@@ -78,7 +77,7 @@ class Container(gt.Container):
         name: str = "default",
         working_directory: Optional[str] = None,
     ):
-        self.system_directory = self.get_system_directory(system_directory)
+        self.system_directory = utils._getSystemDirectory(system_directory)
         self.workspace = GamsWorkspace(
             working_directory, self.system_directory, DebugLevel.KeepFiles
         )
@@ -99,33 +98,6 @@ class Container(gt.Container):
 
         self._clean_existing_workfiles()
         self._gams_compiler_path = self.system_directory + os.sep + "gams"
-
-    def get_system_directory(self, system_directory: Optional[str]) -> str:
-        """
-        Finds the system directory. If no existing GAMS installation provided,
-        returns minigams directory.
-
-        Parameters
-        ----------
-        system_directory : str, optional
-
-        Returns
-        -------
-        str
-            System directory
-        """
-        if system_directory:
-            return system_directory
-
-        system_directory = os.path.dirname(os.path.realpath(__file__)) + os.sep
-
-        user_os = platform.system().lower()
-        system_directory += "minigams" + os.sep + user_os
-
-        if user_os == "darwin":
-            system_directory += f"_{platform.machine()}"  # pragma: no cover
-
-        return system_directory
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
