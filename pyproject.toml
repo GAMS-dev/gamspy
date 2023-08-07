@@ -52,6 +52,12 @@ ignore_missing_imports = true
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.coverage.run]
+omit = [
+    "gamspy/_cli/*",
+    "gamspy/__main__.py"
+]
+
 [tool.coverage.report]
 exclude_also = [
     "pragma: no cover",

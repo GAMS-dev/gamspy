@@ -187,6 +187,7 @@ def main():
     x.l[w, t].where[td[w, t]] = wa[w] / Card(t)
 
     war.solve()
+    print(war.objective_value)
 
 
 if __name__ == "__main__":

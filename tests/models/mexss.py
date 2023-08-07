@@ -389,6 +389,7 @@ def main():
     )
 
     mexss.solve()
+    print(mexss.objective_value)
 
 
 if __name__ == "__main__":

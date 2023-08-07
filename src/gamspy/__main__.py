@@ -1,4 +1,3 @@
-# pragma: no cover
 from gamspy._cli.cmdline import main
 
 if __name__ == "__main__":

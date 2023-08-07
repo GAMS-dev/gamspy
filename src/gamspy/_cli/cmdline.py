@@ -1,5 +1,3 @@
-# pragma: no cover
-
 import shutil
 import argparse
 import gamspy.utils as utils

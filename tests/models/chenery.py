@@ -180,6 +180,7 @@ def main():
     p.lo[i] = 0.1
 
     chenrad.solve()
+    print(chenrad.objective_value)
 
 
 if __name__ == "__main__":

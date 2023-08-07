@@ -26,7 +26,7 @@
 import subprocess
 import os
 import pandas as pd
-from gams import GamsWorkspace, DebugLevel
+from gams import GamsWorkspace, GamsCheckpoint, DebugLevel
 import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
@@ -161,7 +161,9 @@ class Container(gt.Container):
                     symbol.description,
                 )
 
-    def _setup_paths(self) -> Tuple[str, str, str, str, str]:
+    def _setup_paths(
+        self,
+    ) -> Tuple[str, str, GamsCheckpoint, GamsCheckpoint, str]:
         """
         Sets up the paths for .gms, .lst, .g00, and .gdx files.
 
@@ -171,8 +173,8 @@ class Container(gt.Container):
 
         Returns
         -------
-        Tuple[str, str, str, str, str]
-            gms_path, save_to, restart_from, gdx_path
+        Tuple[str, str, GamsCheckpoint, GamsCheckpoint, str]
+            gms_path, lst_path, save_to, restart_from, gdx_path
         """
         directory = self.workspace.working_directory
 
@@ -185,18 +187,22 @@ class Container(gt.Container):
         temporary_file_prefix = os.path.join(directory, self.name)
         gms_path = temporary_file_prefix + ".gms"
         lst_path = temporary_file_prefix + ".lst"
-        save_to = temporary_file_prefix + "_save.g00"
-        restart_from = temporary_file_prefix + "_restart.g00"
+        save_to = GamsCheckpoint(
+            self.workspace, temporary_file_prefix + "_save.g00"
+        )
+        restart_from = GamsCheckpoint(
+            self.workspace, temporary_file_prefix + "_restart.g00"
+        )
         gdx_path = temporary_file_prefix + ".gdx"
 
         return gms_path, lst_path, save_to, restart_from, gdx_path
 
     def _clean_existing_workfiles(self) -> None:  # pragma: no cover
         """Deletes local workfiles"""
-        if os.path.exists(self._restart_from):
-            os.remove(self._restart_from)
-        if os.path.exists(self._save_to):
-            os.remove(self._save_to)
+        if os.path.exists(self._restart_from._checkpoint_file_name):
+            os.remove(self._restart_from._checkpoint_file_name)
+        if os.path.exists(self._save_to._checkpoint_file_name):
+            os.remove(self._save_to._checkpoint_file_name)
 
     def _addStatement(self, statement) -> None:
         self._statements_dict[statement.name] = statement
@@ -744,12 +750,14 @@ class Container(gt.Container):
             self._gams_compiler_path,
             self._gms_path,
             f"-o={self._lst_path}",
-            f"save={self._save_to}",
+            f"save={self._save_to._checkpoint_file_name}",
             f"gdx={self._gdx_path}",
         ]
 
-        if os.path.exists(self._restart_from):
-            commands.append(f"restart={self._restart_from}")
+        if os.path.exists(self._restart_from._checkpoint_file_name):
+            commands.append(
+                f"restart={self._restart_from._checkpoint_file_name}"
+            )
 
         if commandline_options:
             for key, value in commandline_options.items():
