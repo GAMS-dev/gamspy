@@ -54,7 +54,8 @@ where = ["src"]
 
 [tool.coverage.run]
 omit = [
-    "_cli/*",
+    "*/_cli/*.py",
+    "_cmdline.py",
     "__main__.py"
 ]
 
