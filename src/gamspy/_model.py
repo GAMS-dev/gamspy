@@ -196,7 +196,7 @@ class Model:
     def solve(
         self,
         commandline_options: Optional[dict] = None,
-        stdout: Optional[str] = None,
+        output: Optional[str] = None,
     ):
         """
         Generates the gams string, writes it to a file and runs it
@@ -204,12 +204,7 @@ class Model:
         Parameters
         ----------
         commandline_options : dict, optional
-        stdout : str, optional
-
-        Returns
-        -------
-        str
-            GAMS output
+        output : str, optional
 
         Raises
         ------
@@ -217,12 +212,7 @@ class Model:
             In case problem is not in possible problem types
         ValueError
             In case sense is different than "MIN" or "MAX"
-        TypeError
-            In case stdout is not a string
         """
-        if stdout is not None and not isinstance(stdout, str):
-            raise TypeError("stdout must be a path for the output file")
-
         self._append_solve_string()
         self._assign_model_attributes()
 
@@ -238,6 +228,9 @@ class Model:
 
             options = GamsOptions(self.ref_container.workspace)
             for option, value in commandline_options.items():
+                if option.lower() not in utils.COMMANDLINE_OPTIONS:
+                    raise Exception(f"Invalid commandline option: {option}")
+
                 setattr(options, option, value)
 
         checkpoint = (
@@ -257,6 +250,7 @@ class Model:
             gams_options=options,
             checkpoint=self.ref_container._save_to,
             create_out_db=True,
+            output=output,
         )
 
         self.ref_container._restart_from, self.ref_container._save_to = (

@@ -522,7 +522,7 @@ GMS_OPTIONS = _getValidGmsOptions()
 
 
 def _getValidCommandlineOptions() -> List[str]:
-    return [
+    options = [
         "all_model_types",
         "lp",
         "mip",
@@ -678,6 +678,10 @@ def _getValidCommandlineOptions() -> List[str]:
         "zerores",
         "zeroresrep",
     ]
+
+    options = [option.lower() for option in options]
+
+    return options
 
 
 COMMANDLINE_OPTIONS = _getValidCommandlineOptions()

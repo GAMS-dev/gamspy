@@ -28,6 +28,7 @@ from gamspy import (
     Smin,
     Sum,
     Variable,
+    ModelStatus,
 )
 
 
@@ -1361,7 +1362,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def _test_full_models(self):
+    def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2190,17 +2191,17 @@ class GamspySuite(unittest.TestCase):
             objective_variable=z,
         )
 
-        # # Test output redirection
-        # _ = transport.solve(
-        #     commandline_options={"resLim": 100},
-        #     stdout="test.gms",
-        # )
+        # Test output redirection
+        with open("test.gms", "w") as file:
+            _ = transport.solve(
+                commandline_options={"resLim": 100},
+                output=file,
+            )
 
-        # self.assertTrue(os.path.exists("test.gms"))
-        # # self.assertTrue(isinstance(output, str))
-        # self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
-        # for attr_name in transport._getAttributeNames().values():
-        #     self.assertTrue(hasattr(transport, attr_name))
+        self.assertTrue(os.path.exists("test.gms"))
+        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+        for attr_name in transport._getAttributeNames().values():
+            self.assertTrue(hasattr(transport, attr_name))
 
         # Test invalid problem
         self.assertRaises(ValueError, Model, self.m, "model", [cost], "bla")
@@ -2215,15 +2216,12 @@ class GamspySuite(unittest.TestCase):
             TypeError, Model, self.m, "model", [cost], "LP", "min", a
         )
 
-        # Test invalid stdout options
-        self.assertRaises(TypeError, transport.solve, None, 5)
-
         # Test invalid commandline options
-        # self.assertRaises(
-        #     Exception,
-        #     transport.solve,
-        #     {"bla": 100},
-        # )
+        self.assertRaises(
+            Exception,
+            transport.solve,
+            {"bla": 100},
+        )
 
         # Try to solve invalid model
         m = Container()
