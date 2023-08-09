@@ -20,6 +20,7 @@ Keywords: linear programming, transportation problem, scheduling
 
 from gamspy import Set, Parameter, Variable, Equation, Model, Container
 from gamspy import Sum, Sense
+import sys
 
 
 def main():
@@ -70,7 +71,7 @@ def main():
         sense=Sense.MIN,
         objective_variable=z,
     )
-    transport.solve()
+    transport.solve(output=sys.stdout)
 
     print(x.records)
     print(transport.objective_value)
