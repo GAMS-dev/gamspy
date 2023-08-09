@@ -23,10 +23,10 @@
 # SOFTWARE.
 #
 
-import subprocess
 import os
+import io
 import pandas as pd
-from gams import GamsWorkspace, GamsCheckpoint, DebugLevel
+from gams import GamsWorkspace, GamsJob, GamsCheckpoint, DebugLevel
 import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
@@ -45,6 +45,7 @@ from typing import (
 if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation
     from gamspy._algebra._expression import Expression
+    from gams import GamsOptions
 
 
 class Container(gt.Container):
@@ -699,18 +700,9 @@ class Container(gt.Container):
             if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
                 dirty_symbols.append(symbol)
 
-        self.write(self._gdx_path)
-        self._write_to_gms()
+        self._run_job()
 
-        self._run_gms()
-
-        self.loadRecordsFromGdx(self._gdx_path, dirty_symbols)
-
-        # Empty unsaved statements
         self._unsaved_statements = {}
-
-    def _swap_checkpoints(self):
-        self._restart_from, self._save_to = self._save_to, self._restart_from
 
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """
@@ -742,45 +734,43 @@ class Container(gt.Container):
             + "\n"
         )
 
-    def _write_to_gms(self):
+    def _run_job(
+        self,
+        options: Optional["GamsOptions"] = None,
+        output: Optional[io.TextIOWrapper] = None,
+    ):
+        self.write(self._gdx_path)
         gams_string = self.generateGamsString(self._unsaved_statements)
 
-        with open(self._gms_path, "w") as file:
-            file.write(gams_string)
+        checkpoint = (
+            self._restart_from
+            if os.path.exists(self._restart_from._checkpoint_file_name)
+            else None
+        )
 
-    def _run_gms(self):
-        commands = [
-            self._gams_compiler_path,
-            self._gms_path,
-            f"-o={self._lst_path}",
-            f"save={self._save_to._checkpoint_file_name}",
-            f"gdx={self._gdx_path}",
-        ]
+        job = GamsJob(
+            self.workspace,
+            source=gams_string,
+            checkpoint=checkpoint,
+        )
 
-        if os.path.exists(self._restart_from._checkpoint_file_name):
-            commands.append(
-                f"restart={self._restart_from._checkpoint_file_name}"
-            )
+        job.run(
+            gams_options=options,
+            checkpoint=self._save_to,
+            create_out_db=True,
+            output=output,
+        )
 
-        try:
-            _ = subprocess.run(
-                commands,
-                capture_output=True,
-                check=True,
-                text=True,
-            )
+        self._restart_from, self._save_to = self._save_to, self._restart_from
 
-            # https://www.gams.com/latest/docs/UG_SaveRestart.html#UG_SaveRestart_AvoidingCommonMistakes
-            self._save_to, self._restart_from = (
-                self._restart_from,
-                self._save_to,
-            )
-        except subprocess.CalledProcessError as e:
-            executed_command = " ".join(commands)
-            raise Exception(
-                "Could not run .gms file with the following GAMS"  # type: ignore # noqa: E501
-                f" command:\n\n{executed_command}\n\nError log: \n\n{e.output}"
-            )
+        self._gdx_path = (
+            job.out_db.workspace.working_directory
+            + os.sep
+            + job.out_db.name
+            + ".gdx"
+        )
+
+        self.loadRecordsFromGdx(self._gdx_path)
 
     def loadRecordsFromGdx(
         self,

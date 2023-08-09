@@ -1362,7 +1362,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def _test_full_models(self):
+    def test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -1980,12 +1980,6 @@ class GamspySuite(unittest.TestCase):
             list(m._statements_dict.values())[-1].getStatement(),
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
-
-        import platform
-
-        if platform.system() != "Windows":
-            m._gms_path = "/root"
-            self.assertRaises(Exception, m._write_to_gms)
 
         # Parameter record override
         c = m.addParameter(

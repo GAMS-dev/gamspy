@@ -24,12 +24,11 @@
 #
 
 from __future__ import annotations
-import os
 import io
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
-from gams import GamsJob, GamsOptions
+from gams import GamsOptions
 from typing import Dict, List, Literal, Optional, Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -194,7 +193,9 @@ class Model:
 
         return attributes
 
-    def _prepare_gams_options(self, commandline_options) -> GamsOptions:
+    def _prepare_gams_options(
+        self, commandline_options
+    ) -> Optional[GamsOptions]:
         options = None
         if commandline_options:
             if not isinstance(commandline_options, dict):
@@ -232,43 +233,10 @@ class Model:
         self._append_solve_string()
         self._assign_model_attributes()
 
-        self.ref_container.write(self.ref_container._gdx_path)
-        gams_string = self.ref_container.generateGamsString(
-            self.ref_container._unsaved_statements
-        )
-
         options = self._prepare_gams_options(commandline_options)
 
-        checkpoint = (
-            self.ref_container._restart_from
-            if os.path.exists(
-                self.ref_container._restart_from._checkpoint_file_name
-            )
-            else None
-        )
-        job = GamsJob(
-            self.ref_container.workspace,
-            source=gams_string,
-            checkpoint=checkpoint,
-        )
+        self.ref_container._run_job(options, output)
 
-        job.run(
-            gams_options=options,
-            checkpoint=self.ref_container._save_to,
-            create_out_db=True,
-            output=output,
-        )
-
-        self.ref_container._swap_checkpoints()
-
-        self.ref_container._gdx_path = (
-            job.out_db.workspace.working_directory
-            + os.sep
-            + job.out_db.name
-            + ".gdx"
-        )
-
-        self.ref_container.loadRecordsFromGdx(self.ref_container._gdx_path)
         self._update_model_attributes()
 
     def _validate_model(
