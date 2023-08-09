@@ -24,9 +24,11 @@
 #
 
 from __future__ import annotations
+import os
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
+from gams import GamsJob, GamsOptions
 from typing import Dict, List, Literal, Optional, Tuple, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -195,7 +197,7 @@ class Model:
         self,
         commandline_options: Optional[dict] = None,
         stdout: Optional[str] = None,
-    ) -> str:
+    ):
         """
         Generates the gams string, writes it to a file and runs it
 
@@ -225,18 +227,52 @@ class Model:
         self._assign_model_attributes()
 
         self.ref_container.write(self.ref_container._gdx_path)
-        self.ref_container._write_to_gms()
-        output = self.ref_container._run_gms(commandline_options)
+        gams_string = self.ref_container.generateGamsString(
+            self.ref_container._unsaved_statements
+        )
 
-        # Write results to the specified output file
-        if stdout:
-            with open(stdout, "w") as output_file:
-                output_file.write(output)
+        options = None
+        if commandline_options:
+            if not isinstance(commandline_options, dict):
+                raise Exception("commandline_options must be a dict")
+
+            options = GamsOptions(self.ref_container.workspace)
+            for option, value in commandline_options.items():
+                setattr(options, option, value)
+
+        checkpoint = (
+            self.ref_container._restart_from
+            if os.path.exists(
+                self.ref_container._restart_from._checkpoint_file_name
+            )
+            else None
+        )
+        job = GamsJob(
+            self.ref_container.workspace,
+            source=gams_string,
+            checkpoint=checkpoint,
+        )
+
+        job.run(
+            gams_options=options,
+            checkpoint=self.ref_container._save_to,
+            create_out_db=True,
+        )
+
+        self.ref_container._restart_from, self.ref_container._save_to = (
+            self.ref_container._save_to,
+            self.ref_container._restart_from,
+        )
+
+        self.ref_container._gdx_path = (
+            job._out_db.get_workspace().get_working_directory()
+            + os.sep
+            + job._out_db.get_name()
+            + ".gdx"
+        )
 
         self.ref_container.loadRecordsFromGdx(self.ref_container._gdx_path)
         self._update_model_attributes()
-
-        return output
 
     def _validate_model(
         self, problem, sense=None, objective_variable=None
