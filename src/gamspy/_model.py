@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 import os
+import io
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
@@ -193,10 +194,25 @@ class Model:
 
         return attributes
 
+    def _prepare_gams_options(self, commandline_options) -> GamsOptions:
+        options = None
+        if commandline_options:
+            if not isinstance(commandline_options, dict):
+                raise Exception("commandline_options must be a dict")
+
+            options = GamsOptions(self.ref_container.workspace)
+            for option, value in commandline_options.items():
+                if option.lower() not in utils.COMMANDLINE_OPTIONS:
+                    raise Exception(f"Invalid commandline option: {option}")
+
+                setattr(options, option, value)
+
+        return options
+
     def solve(
         self,
         commandline_options: Optional[dict] = None,
-        output: Optional[str] = None,
+        output: Optional[io.TextIOWrapper] = None,
     ):
         """
         Generates the gams string, writes it to a file and runs it
@@ -204,7 +220,7 @@ class Model:
         Parameters
         ----------
         commandline_options : dict, optional
-        output : str, optional
+        output : TextIOWrapper, optional
 
         Raises
         ------
@@ -221,17 +237,7 @@ class Model:
             self.ref_container._unsaved_statements
         )
 
-        options = None
-        if commandline_options:
-            if not isinstance(commandline_options, dict):
-                raise Exception("commandline_options must be a dict")
-
-            options = GamsOptions(self.ref_container.workspace)
-            for option, value in commandline_options.items():
-                if option.lower() not in utils.COMMANDLINE_OPTIONS:
-                    raise Exception(f"Invalid commandline option: {option}")
-
-                setattr(options, option, value)
+        options = self._prepare_gams_options(commandline_options)
 
         checkpoint = (
             self.ref_container._restart_from
@@ -253,15 +259,12 @@ class Model:
             output=output,
         )
 
-        self.ref_container._restart_from, self.ref_container._save_to = (
-            self.ref_container._save_to,
-            self.ref_container._restart_from,
-        )
+        self.ref_container._swap_checkpoints()
 
         self.ref_container._gdx_path = (
-            job._out_db.get_workspace().get_working_directory()
+            job.out_db.workspace.working_directory
             + os.sep
-            + job._out_db.get_name()
+            + job.out_db.name
             + ".gdx"
         )
 

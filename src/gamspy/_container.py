@@ -709,6 +709,9 @@ class Container(gt.Container):
         # Empty unsaved statements
         self._unsaved_statements = {}
 
+    def _swap_checkpoints(self):
+        self._restart_from, self._save_to = self._save_to, self._restart_from
+
     def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
         """
         Generates the GAMS code
