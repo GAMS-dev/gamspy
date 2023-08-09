@@ -97,7 +97,6 @@ class Container(gt.Container):
             self._gdx_path,
         ) = self._setup_paths()
 
-        self._clean_existing_workfiles()
         self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
@@ -197,13 +196,6 @@ class Container(gt.Container):
         gdx_path = temporary_file_prefix + ".gdx"
 
         return gms_path, lst_path, save_to, restart_from, gdx_path
-
-    def _clean_existing_workfiles(self) -> None:  # pragma: no cover
-        """Deletes local workfiles"""
-        if os.path.exists(self._restart_from._checkpoint_file_name):
-            os.remove(self._restart_from._checkpoint_file_name)
-        if os.path.exists(self._save_to._checkpoint_file_name):
-            os.remove(self._save_to._checkpoint_file_name)
 
     def _addStatement(self, statement) -> None:
         self._statements_dict[statement.name] = statement
