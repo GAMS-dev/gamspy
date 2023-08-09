@@ -745,7 +745,7 @@ class Container(gt.Container):
         with open(self._gms_path, "w") as file:
             file.write(gams_string)
 
-    def _run_gms(self, commandline_options: Optional[dict] = None):
+    def _run_gms(self):
         commands = [
             self._gams_compiler_path,
             self._gms_path,
@@ -759,12 +759,8 @@ class Container(gt.Container):
                 f"restart={self._restart_from._checkpoint_file_name}"
             )
 
-        if commandline_options:
-            for key, value in commandline_options.items():
-                commands.append(f"{key}={value}")
-
         try:
-            process = subprocess.run(
+            _ = subprocess.run(
                 commands,
                 capture_output=True,
                 check=True,
@@ -776,8 +772,6 @@ class Container(gt.Container):
                 self._restart_from,
                 self._save_to,
             )
-
-            return process.stdout
         except subprocess.CalledProcessError as e:
             executed_command = " ".join(commands)
             raise Exception(

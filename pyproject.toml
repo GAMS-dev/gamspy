@@ -54,8 +54,8 @@ where = ["src"]
 
 [tool.coverage.run]
 omit = [
-    "gamspy/_cli/*",
-    "gamspy/__main__.py"
+    "src/gamspy/_cli/*",
+    "src/gamspy/__main__.py"
 ]
 
 [tool.coverage.report]
