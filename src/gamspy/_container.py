@@ -90,14 +90,10 @@ class Container(gt.Container):
         super().__init__(load_from, self.system_directory)
 
         (
-            self._gms_path,
-            self._lst_path,
             self._save_to,
             self._restart_from,
             self._gdx_path,
         ) = self._setup_paths()
-
-        self._gams_compiler_path = self.system_directory + os.sep + "gams"
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
@@ -163,9 +159,9 @@ class Container(gt.Container):
 
     def _setup_paths(
         self,
-    ) -> Tuple[str, str, GamsCheckpoint, GamsCheckpoint, str]:
+    ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str]:
         """
-        Sets up the paths for .gms, .lst, .g00, and .gdx files.
+        Sets up the paths for .g00, and .gdx files.
 
         Parameters
         ----------
@@ -173,20 +169,13 @@ class Container(gt.Container):
 
         Returns
         -------
-        Tuple[str, str, GamsCheckpoint, GamsCheckpoint, str]
-            gms_path, lst_path, save_to, restart_from, gdx_path
+        Tuple[GamsCheckpoint, GamsCheckpoint, str]
+            save_to, restart_from, gdx_path
         """
-        directory = self.workspace.working_directory
+        temporary_file_prefix = os.path.join(
+            self.workspace.working_directory, self.name
+        )
 
-        if " " in directory:
-            raise Exception(
-                "Working directory path cannot contain spaces. Working"
-                f" directory: {directory}"
-            )
-
-        temporary_file_prefix = os.path.join(directory, self.name)
-        gms_path = temporary_file_prefix + ".gms"
-        lst_path = temporary_file_prefix + ".lst"
         save_to = GamsCheckpoint(
             self.workspace, temporary_file_prefix + "_save.g00"
         )
@@ -195,7 +184,7 @@ class Container(gt.Container):
         )
         gdx_path = temporary_file_prefix + ".gdx"
 
-        return gms_path, lst_path, save_to, restart_from, gdx_path
+        return save_to, restart_from, gdx_path
 
     def _addStatement(self, statement) -> None:
         self._statements_dict[statement.name] = statement

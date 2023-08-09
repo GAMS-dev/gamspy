@@ -1368,7 +1368,9 @@ class GamspySuite(unittest.TestCase):
         )
 
         for idx, path in enumerate(paths):
-            print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
+            print(
+                f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}", end=" "
+            )
             try:
                 process = subprocess.run(
                     ["python", path], check=True, capture_output=True
@@ -1376,8 +1378,11 @@ class GamspySuite(unittest.TestCase):
 
                 self.assertTrue(process.returncode == 0)
             except subprocess.CalledProcessError as e:
+                print("\u2718")
                 print(f"Output: {e.stderr.decode('utf-8')}")
                 exit(1)
+
+            print("\u2714")
 
     def test_operable_symbols(self):
         # Prepare data
@@ -2042,8 +2047,6 @@ class GamspySuite(unittest.TestCase):
             " =l= 1;",
         )
 
-        self.assertRaises(Exception, self.m._setup_paths, "/home/a b c")
-
     def test_arbitrary_gams_code(self):
         self.m.addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
@@ -2336,8 +2339,6 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
         e3 = m.addEquation("e", type="eq", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
-
-        self.assertRaises(Exception, Container, None, None, "default", "a b")
 
     def test_set_attributes(self):
         i = Set(self.m, "i")
