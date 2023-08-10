@@ -1378,11 +1378,11 @@ class GamspySuite(unittest.TestCase):
 
                 self.assertTrue(process.returncode == 0)
             except subprocess.CalledProcessError as e:
-                print("\u2718")
+                print("\u2718".encode("utf-8"))
                 print(f"Output: {e.stderr.decode('utf-8')}")
                 exit(1)
 
-            print("\u2714")
+            print("\u2714".encode("utf-8"))
 
     def test_operable_symbols(self):
         # Prepare data
