@@ -109,6 +109,9 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(self, indices: Union[list, str]):
         domain = utils._toList(indices)
         return implicits.ImplicitEquation(

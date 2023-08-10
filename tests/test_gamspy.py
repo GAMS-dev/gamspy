@@ -995,7 +995,7 @@ class GamspySuite(unittest.TestCase):
             objective_variable=z,
         )
         self.assertEqual(
-            test_model2.getStatement(), "\nModel test_model2 / cost,supply /;"
+            test_model2.getStatement(), "Model test_model2 / cost,supply /;"
         )
         self.assertEqual(test_model2.equations, [cost, supply])
 
@@ -1019,6 +1019,19 @@ class GamspySuite(unittest.TestCase):
         )
 
         self.assertTrue(test_model4.equations == test_model3.equations)
+
+        test_model5 = self.m.addModel(
+            name="test_model5",
+            equations=[cost, supply],
+            problem="LP",
+            sense="min",
+            objective_variable=z,
+            matches={supply: x, cost: z},
+        )
+        self.assertEqual(
+            test_model5.getStatement(),
+            "Model test_model5 / cost,supply,supply.x,cost.z /;",
+        )
 
     def test_operations(self):
         # Prepare data
@@ -1368,9 +1381,7 @@ class GamspySuite(unittest.TestCase):
         )
 
         for idx, path in enumerate(paths):
-            print(
-                f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}", end=" "
-            )
+            print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
             try:
                 process = subprocess.run(
                     ["python", path], check=True, capture_output=True
@@ -1378,11 +1389,9 @@ class GamspySuite(unittest.TestCase):
 
                 self.assertTrue(process.returncode == 0)
             except subprocess.CalledProcessError as e:
-                print("\u2718".encode("utf-8"))
+                print("(x)")
                 print(f"Output: {e.stderr.decode('utf-8')}")
                 exit(1)
-
-            print("\u2714".encode("utf-8"))
 
     def test_operable_symbols(self):
         # Prepare data
@@ -2241,7 +2250,7 @@ class GamspySuite(unittest.TestCase):
 
         self.assertEqual(
             transport.getStatement(),
-            "\nModel transport / cost,supply,demand,x(i) /;",
+            "Model transport / cost,supply,demand,x(i) /;",
         )
 
     def test_mcp_equation(self):

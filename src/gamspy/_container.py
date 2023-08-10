@@ -625,6 +625,7 @@ class Container(gt.Container):
         problem: str,
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective_variable: Optional["Variable"] = None,
+        matches: Optional[dict] = None,
         limited_variables: Optional[list] = None,
     ):
         model = gp.Model(
@@ -634,6 +635,7 @@ class Container(gt.Container):
             problem,
             sense,
             objective_variable,
+            matches,
             limited_variables,
         )
         return model

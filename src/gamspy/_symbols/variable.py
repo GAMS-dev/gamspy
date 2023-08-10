@@ -95,6 +95,9 @@ class Variable(gt.Variable, operable.Operable):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
+    def __hash__(self):
+        return id(self)
+
     def __getitem__(
         self, indices: Union[list, str]
     ) -> implicits.ImplicitVariable:

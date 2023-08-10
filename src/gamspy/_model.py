@@ -29,7 +29,14 @@ from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
 from gams import GamsOptions
-from typing import Dict, List, Literal, Optional, Tuple, Union, TYPE_CHECKING
+from typing import (
+    Dict,
+    Iterable,
+    Literal,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
+)
 
 if TYPE_CHECKING:
     from gamspy import Variable, Equation, Container
@@ -87,7 +94,7 @@ class Model:
         The container that the model belongs to
     name : str
         Name of the model
-    equations : str | list
+    equations : str | Iterable
         List of Equation objects or str. ``all`` as a string represents
         all the equations specified before the creation of this model
     problem : str
@@ -96,7 +103,7 @@ class Model:
         Minimize or maximize
     objective_variable : Variable, optional
         Objective variable to minimize or maximize
-    limited_variables : list, optional
+    limited_variables : Iterable, optional
         Allows limiting the domain of variables used in a model.
 
     Examples
@@ -108,11 +115,12 @@ class Model:
         self,
         container: "Container",
         name: str,
-        equations: List["Equation"],
+        equations: Iterable["Equation"],
         problem: str,
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective_variable: Optional["Variable"] = None,
-        limited_variables: Optional[list] = None,
+        matches: Optional[dict] = None,
+        limited_variables: Optional[Iterable["Variable"]] = None,
     ):
         self.name = name
         self.ref_container = container
@@ -120,6 +128,7 @@ class Model:
             self._validate_model(problem, sense, objective_variable)
         )
         self._equations = equations
+        self._matches = matches
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
@@ -151,7 +160,7 @@ class Model:
         self.solver_version = None
 
     @property
-    def equations(self) -> Union[str, list]:
+    def equations(self) -> Iterable["Equation"]:
         return self._equations
 
     @equations.setter
@@ -332,6 +341,15 @@ class Model:
             )
             equations_str = ",".join([equations_str, limited_variables_str])
 
-        model_str = f"\nModel {self.name} / {equations_str} /;"
+        if self._matches:
+            matches_str = ",".join(
+                [
+                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                    for equation, variable in self._matches.items()
+                ]
+            )
+            equations_str = ",".join([equations_str, matches_str])
+
+        model_str = f"Model {self.name} / {equations_str} /;"
 
         return model_str
