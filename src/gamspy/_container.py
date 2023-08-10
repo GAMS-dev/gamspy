@@ -51,6 +51,7 @@ from typing import (
 if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation
     from gamspy._algebra._expression import Expression
+    from gamspy._engine import EngineConfig
 
 
 class Container(gt.Container):
@@ -690,6 +691,7 @@ class Container(gt.Container):
 
         options = GamsOptions(self.workspace)
         options.gdx = self._gdx_path
+        options.forcework = 1
         self._run_job(options)
 
         self._unsaved_statements = {}
@@ -728,9 +730,18 @@ class Container(gt.Container):
         self,
         options: "GamsOptions",
         output: Optional[io.TextIOWrapper] = None,
+        backend: Literal["local", "engine-one", "engine-sass"] = "local",
+        engine_config: Optional["EngineConfig"] = None,
     ):
         self.write(self._gdx_path)
-        gams_string = self.generateGamsString(self._unsaved_statements)
+
+        if backend in ["engine-one", "engine-sass"]:
+            old_path = self._gdx_path
+            self._gdx_path = "default.gdx"
+            gams_string = self.generateGamsString(self._unsaved_statements)
+            self._gdx_path = old_path
+        else:
+            gams_string = self.generateGamsString(self._unsaved_statements)
 
         checkpoint = (
             self._restart_from
@@ -744,12 +755,37 @@ class Container(gt.Container):
             checkpoint=checkpoint,
         )
 
-        job.run(
-            gams_options=options,
-            checkpoint=self._save_to,
-            create_out_db=False,
-            output=output,
-        )
+        if backend == "local":
+            job.run(
+                gams_options=options,
+                checkpoint=self._save_to,
+                create_out_db=False,
+                output=output,
+            )
+        elif backend in ["engine-one", "engine-sass"]:
+            options.gdx = "default.gdx"
+
+            if engine_config is None:
+                raise Exception(
+                    "Engine configuration must be defined to run the job with"
+                    " GAMS Engine"
+                )
+
+            job.run_engine(
+                engine_configuration=engine_config.get_engine_configuration(),
+                extra_model_files=self._gdx_path,
+                gams_options=options,
+                checkpoint=self._save_to,
+                output=output,
+                create_out_db=False,
+                engine_options=engine_config.engine_options,
+                remove_results=engine_config.remove_results,
+            )
+        else:
+            raise Exception(
+                "Specified backend is not supported. Possible backends: local,"
+                " engine-one, engine-sass"
+            )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
 

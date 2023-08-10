@@ -29,6 +29,8 @@ from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
 from gams import GamsOptions
+from gamspy._engine import EngineConfig
+
 from typing import (
     Dict,
     Iterable,
@@ -225,6 +227,8 @@ class Model:
         self,
         commandline_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
+        backend: Literal["local", "engine-one", "engine-sass"] = "local",
+        engine_config: Optional["EngineConfig"] = None,
     ):
         """
         Generates the gams string, writes it to a file and runs it
@@ -246,7 +250,7 @@ class Model:
 
         options = self._prepare_gams_options(commandline_options)
 
-        self.ref_container._run_job(options, output)
+        self.ref_container._run_job(options, output, backend, engine_config)
 
         self._update_model_attributes()
 

@@ -83,8 +83,7 @@ def main():
     report[alloy, "blend-1"] = v.l[alloy]
     b2.solve()
     report[alloy, "blend-2"] = v.l[alloy]
-    # Can be removed after devel/gams-transfer-python#69 gets fixed
-    report.records.columns = ["alloy", "uni", "value"]
+
     print(report.pivot())
 
 
