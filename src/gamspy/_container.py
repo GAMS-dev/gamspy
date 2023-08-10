@@ -26,7 +26,13 @@
 import os
 import io
 import pandas as pd
-from gams import GamsWorkspace, GamsJob, GamsCheckpoint, DebugLevel
+from gams import (
+    GamsWorkspace,
+    GamsOptions,
+    GamsJob,
+    GamsCheckpoint,
+    DebugLevel,
+)
 import gams.transfer as gt
 import gamspy as gp
 import gamspy.utils as utils
@@ -45,7 +51,6 @@ from typing import (
 if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation
     from gamspy._algebra._expression import Expression
-    from gams import GamsOptions
 
 
 class Container(gt.Container):
@@ -683,7 +688,9 @@ class Container(gt.Container):
             if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
                 dirty_symbols.append(symbol)
 
-        self._run_job()
+        options = GamsOptions(self.workspace)
+        options.gdx = self._gdx_path
+        self._run_job(options)
 
         self._unsaved_statements = {}
 
@@ -719,7 +726,7 @@ class Container(gt.Container):
 
     def _run_job(
         self,
-        options: Optional["GamsOptions"] = None,
+        options: "GamsOptions",
         output: Optional[io.TextIOWrapper] = None,
     ):
         self.write(self._gdx_path)
@@ -740,18 +747,11 @@ class Container(gt.Container):
         job.run(
             gams_options=options,
             checkpoint=self._save_to,
-            create_out_db=True,
+            create_out_db=False,
             output=output,
         )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
-
-        self._gdx_path = (
-            job.out_db.workspace.working_directory
-            + os.sep
-            + job.out_db.name
-            + ".gdx"
-        )
 
         self.loadRecordsFromGdx(self._gdx_path)
 

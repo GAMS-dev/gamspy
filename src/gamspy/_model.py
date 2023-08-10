@@ -203,14 +203,16 @@ class Model:
         return attributes
 
     def _prepare_gams_options(
-        self, commandline_options
-    ) -> Optional[GamsOptions]:
-        options = None
+        self,
+        commandline_options: Optional[dict] = None,
+    ) -> GamsOptions:
+        options = GamsOptions(self.ref_container.workspace)
+        options.gdx = self.ref_container._gdx_path
+
         if commandline_options:
             if not isinstance(commandline_options, dict):
                 raise Exception("commandline_options must be a dict")
 
-            options = GamsOptions(self.ref_container.workspace)
             for option, value in commandline_options.items():
                 if option.lower() not in utils.COMMANDLINE_OPTIONS:
                     raise Exception(f"Invalid commandline option: {option}")
