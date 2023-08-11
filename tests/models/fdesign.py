@@ -115,7 +115,7 @@ def main():
     fir_socp = Model(
         m,
         name="fir_socp",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
         objective_variable=t,

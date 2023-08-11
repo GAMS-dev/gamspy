@@ -52,7 +52,7 @@ def main():
     pmp = Model(
         m,
         name="pmp",
-        equations="all",
+        equations=m.getEquations(),
         problem="LP",
         sense=Sense.MAX,
         objective_variable=profit,

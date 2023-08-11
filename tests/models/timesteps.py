@@ -151,7 +151,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     maxStarts = Model(
         m,
         name="maxStarts",
-        equations="all",
+        equations=m.getEquations(),
         problem="mip",
         sense=Sense.MAX,
         objective_variable=z,

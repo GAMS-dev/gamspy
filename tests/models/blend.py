@@ -70,7 +70,7 @@ def main():
     b2 = Model(
         m,
         name="b2",
-        equations="all",
+        equations=[pc, mb, ac],
         problem="LP",
         sense=Sense.MIN,
         objective_variable=phi,

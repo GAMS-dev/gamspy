@@ -126,10 +126,9 @@ class Model:
     ):
         self.name = name
         self.ref_container = container
-        self.problem, self.sense, self.objective_variable = (
-            self._validate_model(problem, sense, objective_variable)
+        self._equations, self.problem, self.sense, self.objective_variable = (
+            self._validate_model(equations, problem, sense, objective_variable)
         )
-        self._equations = equations
         self._matches = matches
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
@@ -255,8 +254,13 @@ class Model:
         self._update_model_attributes()
 
     def _validate_model(
-        self, problem, sense=None, objective_variable=None
+        self, equations, problem, sense=None, objective_variable=None
     ) -> Tuple:
+        if not isinstance(equations, list) or any(
+            not isinstance(equation, gp.Equation) for equation in equations
+        ):
+            raise TypeError("equations must be list of Equation objects")
+
         if isinstance(problem, str):
             if problem.upper() not in gp.Problem.values():
                 raise ValueError(
@@ -280,7 +284,7 @@ class Model:
         ):
             raise TypeError("Objective variable must be type Variable")
 
-        return problem, sense, objective_variable
+        return equations, problem, sense, objective_variable
 
     def _append_solve_string(self) -> None:
         solve_string = f"solve {self.name} using {self.problem}"
@@ -333,19 +337,15 @@ class Model:
         -------
         str
         """
-        equations_str = ""
-        if isinstance(self._equations, str):
-            equations_str = self._equations  # pragma: no cover
-        else:
-            equations_str = ",".join(
-                [equation.name for equation in self._equations]
-            )
+        equations = []
+        for equation in self._equations:
+            if self._matches:
+                if equation not in self._matches.keys():
+                    equations.append(equation.gamsRepr())
+            else:
+                equations.append(equation.gamsRepr())
 
-        if self._limited_variables:
-            limited_variables_str = ",".join(
-                [variable.gamsRepr() for variable in self._limited_variables]
-            )
-            equations_str = ",".join([equations_str, limited_variables_str])
+        equations_str = ",".join(equations)
 
         if self._matches:
             matches_str = ",".join(
@@ -354,7 +354,18 @@ class Model:
                     for equation, variable in self._matches.items()
                 ]
             )
-            equations_str = ",".join([equations_str, matches_str])
+
+            equations_str = (
+                ",".join([equations_str, matches_str])
+                if equations
+                else matches_str
+            )
+
+        if self._limited_variables:
+            limited_variables_str = ",".join(
+                [variable.gamsRepr() for variable in self._limited_variables]
+            )
+            equations_str += "," + limited_variables_str
 
         model_str = f"Model {self.name} / {equations_str} /;"
 

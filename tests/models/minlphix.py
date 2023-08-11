@@ -413,7 +413,7 @@ def main():
     skip = Model(
         cont,
         name="skip",
-        equations="all",
+        equations=cont.getEquations(),
         problem="minlp",
         sense=Sense.MIN,
         objective_variable=zoau,

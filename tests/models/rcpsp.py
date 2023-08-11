@@ -252,7 +252,7 @@ def build_abstract_model():
     rcpsp = Model(
         m,
         name="rcpsp",
-        equations="all",
+        equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
         objective_variable=makespan,

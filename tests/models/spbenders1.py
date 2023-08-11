@@ -145,7 +145,7 @@ def main():
     masterproblem = Model(
         m,
         name="masterproblem",
-        equations="all",
+        equations=m.getEquations(),
         problem="LP",
         sense=Sense.MAX,
         objective_variable=zmaster,

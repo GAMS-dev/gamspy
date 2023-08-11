@@ -69,7 +69,7 @@ def main():
     thainavy = Model(
         m,
         name="thainavy",
-        equations="all",
+        equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
         objective_variable=obj,

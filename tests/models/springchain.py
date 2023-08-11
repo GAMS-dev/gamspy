@@ -86,7 +86,7 @@ def main():
     spring = Model(
         cont,
         name="spring",
-        equations="all",
+        equations=cont.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
         objective_variable=obj,

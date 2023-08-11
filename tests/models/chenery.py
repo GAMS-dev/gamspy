@@ -113,7 +113,7 @@ def main():
     chenrad = Model(
         container,
         name="chenrad",
-        equations="all",
+        equations=container.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MAX,
         objective_variable=td,

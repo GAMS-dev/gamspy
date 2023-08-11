@@ -67,7 +67,7 @@ nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)
 m = Model(
     c,
     name="cpack",
-    equations="all",
+    equations=c.getEquations(),
     problem=Problem.QCP,
     sense=Sense.MAX,
     objective_variable=r,

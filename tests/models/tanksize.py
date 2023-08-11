@@ -157,7 +157,7 @@ def main():
     Sequenz = Model(
         m,
         name="Sequenz",
-        equations="all",
+        equations=m.getEquations(),
         problem="MINLP",
         sense=Sense.MIN,
         objective_variable=cPT,

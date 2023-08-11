@@ -382,7 +382,7 @@ def main():
     mexss = Model(
         cont,
         name="mexss",
-        equations="all",
+        equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MIN,
         objective_variable=phi,

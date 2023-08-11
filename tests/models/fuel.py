@@ -79,7 +79,7 @@ def main():
     model = Model(
         m,
         name="ucom",
-        equations="all",
+        equations=m.getEquations(),
         problem="MINLP",
         sense=Sense.MIN,
         objective_variable=cost,

@@ -127,7 +127,7 @@ def main():
 
     investav.definition = Sum(s, prices[s] * invest[s]) <= funds
 
-    evportfol = Model(cont, name="evportfol", equations="all")
+    evportfol = Model(cont, name="evportfol", equations=cont.getEquations())
 
     cont.solve(evportfol, problem=Problem.NLP, sense=Sense.MAX, objective_variable=obj)
 

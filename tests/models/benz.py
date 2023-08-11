@@ -105,7 +105,7 @@ def main():
     benz = Model(
         m,
         name="benz",
-        equations="all",
+        equations=[f, g1, g2, b1l, b1u, b2l, b2u],
         problem=Problem.NLP,
         sense=Sense.MIN,
         objective_variable=objval,

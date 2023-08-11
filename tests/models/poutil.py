@@ -560,7 +560,7 @@ def main():
     energy = Model(
         cont,
         name="energy",
-        equations="all",
+        equations=cont.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
         objective_variable=c,

@@ -77,7 +77,7 @@ def main():
     square = Model(
         m,
         name="square",
-        equations="all",
+        equations=m.getEquations(),
         problem="DNLP",
         sense=Sense.MAX,
         objective_variable=z,

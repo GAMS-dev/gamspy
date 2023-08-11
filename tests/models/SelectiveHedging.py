@@ -166,7 +166,7 @@ def main(output=None):
     IndexFund = Model(
         m,
         name="IndexFund",
-        equations="all",
+        equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
         objective_variable=z,

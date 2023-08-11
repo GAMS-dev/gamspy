@@ -594,7 +594,9 @@ def main():
     gdtot.fx.assign = gdtot.l
     ls.fx[lc] = ls.l[lc]
 
-    model1 = Model(cont, name="model1", equations="all", problem="cns")
+    model1 = Model(
+        cont, name="model1", equations=cont.getEquations(), problem="cns"
+    )
 
     model1.solve()
 

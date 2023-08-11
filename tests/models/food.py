@@ -270,7 +270,7 @@ def main():
     food = gp.Model(
         c,
         name="food",
-        equations="all",
+        equations=c.getEquations(),
         problem="MIP",
         sense=gp.Sense.MAX,
         objective_variable=profit,

@@ -749,7 +749,7 @@ def main(is_centropy=False):
     SAMENTROP = Model(
         m,
         name="SAMENTROP",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
         objective_variable=DENTROPY,

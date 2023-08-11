@@ -92,7 +92,7 @@ def main():
     m = Model(
         cont,
         name="m",
-        equations="all -mn -ic -licd",
+        equations=[obj, rev, pc, licu],
         problem=Problem.NLP,
         sense=Sense.MAX,
         objective_variable=util,
@@ -100,7 +100,7 @@ def main():
     m_mn = Model(
         cont,
         name="m_mn",
-        equations="m + mn",
+        equations=[obj, rev, pc, licu, mn],
         problem=Problem.NLP,
         sense=Sense.MAX,
         objective_variable=util,

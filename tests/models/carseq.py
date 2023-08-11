@@ -42,6 +42,7 @@ from gamspy import (
     Number,
     Sense,
 )
+from gamspy.functions import ifthen
 import gamspy.math as gams_math
 import pandas as pd
 import numpy as np
@@ -114,26 +115,18 @@ def main(mip=False):
     defnumCars = Equation(m, name="defnumCars", type="eq", domain=[c])
     defoneCar = Equation(m, name="defoneCar", type="eq", domain=[p])
     defop = Equation(m, name="defop", type="leq", domain=[o, p])
-    _ = Equation(m, name="defopLS", type="eq", domain=[o, p])
+    defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
     defviol = Equation(m, name="defviol", type="leq", domain=[o, p])
     defviolLS = Equation(m, name="defviolLS", type="eq", domain=[o, p])
     defobj = Equation(m, name="defobj", type="eq")
     defsumc = Equation(m, name="defsumc", type="eq", domain=[o, p])
 
     defnumCars[c] = Sum(p, cp[c, p]) == classData[c, "numCars"]
-
     defoneCar[p] = Sum(c, cp[c, p]) == Number(1)
-
     defop[o, p] = Sum(c.where[classData[c, o]], cp[c, p]) <= op[o, p]
-
     defsumc[o, p] = sumc[o, p] == Sum(c.where[classData[c, o]], cp[c, p])
-
-    m._add_gams_code(
-        "defopLS(o,p)..          op(o,p) =e= ifthen(sumc(o,p) >= 0.5, 1, 0);"
-    )
-
+    defopLS[o, p] = op[o, p] == ifthen(sumc[o, p] >= 0.5, 1, 0)
     defviol[blk[o, p]] = Sum(blkc[blk, pp], op[o, pp]) <= maxc[o] + v[o, p]
-
     defviolLS[blk[o, p]] = v[o, p] == gams_math.max(
         Sum(blkc[blk, pp], op[o, pp]) - maxc[o], Number(0)
     )
@@ -144,7 +137,13 @@ def main(mip=False):
     carseqMIP = Model(
         m,
         name="carseqMIP",
-        equations="all - defopLS - defviolLS - defsumc",
+        equations=[
+            defnumCars,
+            defoneCar,
+            defop,
+            defviol,
+            defobj,
+        ],
         problem="mip",
         sense=Sense.MIN,
         objective_variable=obj,
@@ -152,7 +151,14 @@ def main(mip=False):
     carseqLS = Model(
         m,
         name="carseqLS",
-        equations="all - defop   - defviol",
+        equations=[
+            defnumCars,
+            defoneCar,
+            defsumc,
+            defopLS,
+            defviolLS,
+            defobj,
+        ],
         problem="minlp",
         sense=Sense.MIN,
         objective_variable=obj,

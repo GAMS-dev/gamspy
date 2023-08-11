@@ -198,7 +198,7 @@ def main():
     forest = Model(
         cont,
         name="forest",
-        equations="all",
+        equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MAX,
         objective_variable=phi,

@@ -122,7 +122,7 @@ def flow_shop(process_time_df, last_machine, last_item):
     flowshop = gap.Model(
         container=c,
         name="flowshop",
-        equations="all",
+        equations=c.getEquations(),
         problem="MIP",
         sense=gap.Sense.MIN,
         objective_variable=totwait,

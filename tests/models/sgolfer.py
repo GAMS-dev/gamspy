@@ -113,7 +113,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     social_golfer_mip = Model(
         cont,
         name="social_golfer_mip",
-        equations="all",
+        equations=cont.getEquations(),
         problem="mip",
         sense=Sense.MIN,
         objective_variable=obj,
@@ -122,7 +122,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     social_golfer_minlp = Model(
         cont,
         name="social_golfer_minlp",
-        equations="all",
+        equations=cont.getEquations(),
         problem="minlp",
         sense=Sense.MIN,
         objective_variable=obj,

@@ -52,7 +52,7 @@ from gamspy import Model
 
 m = gp.Container()
 model1 = Model(m, name="model1", equations=[maxw, minw, etd]) # Defines equations explicitly as a list of equations
-model2 = Model(m, name="model2", equations="all")             # This includes all defined equations
+model2 = Model(m, name="model2", equations=m.getEquations())             # This includes all defined equations
 ```
 
 ### Sum/Product/Smin/Smax

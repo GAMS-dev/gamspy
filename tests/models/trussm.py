@@ -134,7 +134,7 @@ def main():
     truss = Model(
         m,
         name="truss",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
         objective_variable=tau,

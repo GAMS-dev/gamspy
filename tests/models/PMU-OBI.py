@@ -80,7 +80,7 @@ def main():
     placement3 = Model(
         m,
         name="placement3",
-        equations="all",
+        equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MAX,
         objective_variable=OF,

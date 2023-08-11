@@ -127,7 +127,7 @@ def main():
     reservoir = Model(
         m,
         name="reservoir",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
         objective_variable=obj,

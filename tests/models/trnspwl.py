@@ -183,7 +183,7 @@ def main():
     transport = Model(
         m,
         name="transport",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
         objective_variable=z,

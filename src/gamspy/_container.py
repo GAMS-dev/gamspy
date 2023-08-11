@@ -670,7 +670,7 @@ class Container(gt.Container):
                 expression.Expression(f"option {key}", "=", value)
             )
 
-    def _add_gams_code(self, gams_code: str) -> None:
+    def _addGamsCode(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
@@ -681,6 +681,21 @@ class Container(gt.Container):
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
         self._statements_dict[unique_name] = gams_code
+
+    def getSets(self):
+        return [self[symbol_name] for symbol_name in self.listSets()]
+
+    def getAliases(self):
+        return [self[symbol_name] for symbol_name in self.listAliases()]
+
+    def getParameters(self):
+        return [self[symbol_name] for symbol_name in self.listParameters()]
+
+    def getVariables(self):
+        return [self[symbol_name] for symbol_name in self.listVariables()]
+
+    def getEquations(self):
+        return [self[symbol_name] for symbol_name in self.listEquations()]
 
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""

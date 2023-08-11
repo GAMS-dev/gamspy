@@ -111,9 +111,14 @@ def main():
     qp6 = Model(
         cont,
         name="qp6",
-        equations=(
-            "d_x.x, d_w.w, retcon.m_retcon, budget.m_budget, wdef.m_wdef"
-        ),
+        equations=[d_x, d_w, retcon, budget, wdef],
+        matches={
+            d_x: x,
+            d_w: w,
+            retcon: m_retcon,
+            budget: m_budget,
+            wdef: m_wdef,
+        },
         problem="mcp",
     )
 

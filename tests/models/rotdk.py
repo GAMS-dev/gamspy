@@ -129,7 +129,7 @@ def main():
     rotdk = Model(
         m,
         name="rotdk",
-        equations="all",
+        equations=m.getEquations(),
         problem="mip",
         sense=Sense.MIN,
         objective_variable=obj,

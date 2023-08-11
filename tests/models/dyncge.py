@@ -683,7 +683,7 @@ def main():
     dyncge = Model(
         m,
         name="dyncge",
-        equations="all",
+        equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MAX,
         objective_variable=CC,

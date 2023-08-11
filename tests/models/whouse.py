@@ -65,7 +65,7 @@ def main():
     swp = Model(
         m,
         name="swp",
-        equations="all",
+        equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
         objective_variable=cost,

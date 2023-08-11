@@ -1030,7 +1030,7 @@ class GamspySuite(unittest.TestCase):
         )
         self.assertEqual(
             test_model5.getStatement(),
-            "Model test_model5 / cost,supply,supply.x,cost.z /;",
+            "Model test_model5 / supply.x,cost.z /;",
         )
 
     def test_operations(self):
@@ -2057,7 +2057,7 @@ class GamspySuite(unittest.TestCase):
         )
 
     def test_arbitrary_gams_code(self):
-        self.m._add_gams_code("Set i / i1*i3 /;")
+        self.m._addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
             list(self.m._unsaved_statements.values())[-1], "Set i / i1*i3 /;"
         )

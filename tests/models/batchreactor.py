@@ -79,7 +79,7 @@ def main():
     batchReactor = Model(
         m,
         name="batchReactor",
-        equations="all",
+        equations=[eobj, state1, state2, ek1, ek2],
         problem=Problem.NLP,
         sense=Sense.MAX,
         objective_variable=obj,
