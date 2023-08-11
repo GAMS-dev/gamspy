@@ -128,7 +128,7 @@ def main(mip=False):
 
     defsumc[o, p] = sumc[o, p] == Sum(c.where[classData[c, o]], cp[c, p])
 
-    m.addGamsCode(
+    m._add_gams_code(
         "defopLS(o,p)..          op(o,p) =e= ifthen(sumc(o,p) >= 0.5, 1, 0);"
     )
 

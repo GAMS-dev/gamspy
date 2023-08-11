@@ -670,7 +670,7 @@ class Container(gt.Container):
                 expression.Expression(f"option {key}", "=", value)
             )
 
-    def addGamsCode(self, gams_code: str) -> None:
+    def _add_gams_code(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
@@ -733,9 +733,11 @@ class Container(gt.Container):
         backend: Literal["local", "engine-one", "engine-sass"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
+        # Create gdx file to read records from
         self.write(self._gdx_path)
 
         if backend in ["engine-one", "engine-sass"]:
+            # Engine expects gdx file to be next to the gms file
             old_path = self._gdx_path
             self._gdx_path = "default.gdx"
             gams_string = self.generateGamsString(self._unsaved_statements)
@@ -743,6 +745,7 @@ class Container(gt.Container):
         else:
             gams_string = self.generateGamsString(self._unsaved_statements)
 
+        # If there is no restart checkpoint, set it to None
         checkpoint = (
             self._restart_from
             if os.path.exists(self._restart_from._checkpoint_file_name)
@@ -755,6 +758,7 @@ class Container(gt.Container):
             checkpoint=checkpoint,
         )
 
+        # Actual run depending on the backend
         if backend == "local":
             job.run(
                 gams_options=options,
@@ -789,6 +793,7 @@ class Container(gt.Container):
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
 
+        # Load records from the results
         self.loadRecordsFromGdx(self._gdx_path)
 
     def loadRecordsFromGdx(
