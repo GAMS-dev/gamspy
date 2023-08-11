@@ -31,6 +31,7 @@ import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
+import gamspy.enums as enums
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -69,6 +70,8 @@ class Variable(gt.Variable, operable.Operable):
         description: str = "",
         uels_on_axes: bool = False,
     ):
+        type = self._cast_type(type)
+
         super().__init__(
             container,
             name,
@@ -94,6 +97,21 @@ class Variable(gt.Variable, operable.Operable):
         self._fx = self._create_attr("fx")
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
+
+    def _cast_type(self, type: Union[str, enums.VariableType]) -> str:
+        if (
+            isinstance(type, str)
+            and type.upper() not in enums.VariableType.values()
+        ):
+            raise ValueError(
+                f"Allowed variable types: {enums.VariableType.values()} but"
+                f" found {type}."
+            )
+
+        if isinstance(type, enums.VariableType):
+            type = type.value
+
+        return type
 
     def __getitem__(
         self, indices: Union[list, str]

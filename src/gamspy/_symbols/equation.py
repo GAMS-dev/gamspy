@@ -31,6 +31,7 @@ import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
+import gamspy.enums as enums
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -76,6 +77,8 @@ class Equation(gt.Equation, operable.Operable):
         definition: Optional[expression.Expression] = None,
         definition_domain: Optional[list] = None,
     ):
+        type = self._cast_type(type)
+
         super().__init__(
             container,
             name,
@@ -108,6 +111,21 @@ class Equation(gt.Equation, operable.Operable):
         self._slackup = self._create_attr("slackup")
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
+
+    def _cast_type(self, type: Union[str, enums.EquationType]) -> str:
+        if (
+            isinstance(type, str)
+            and type.upper() not in enums.EquationType.values()
+        ):
+            raise ValueError(
+                "Allowed equation types:"
+                f" {enums.EquationType.values()} but found {type}."
+            )
+
+        if isinstance(type, enums.EquationType):
+            type = type.value
+
+        return type
 
     def __hash__(self):
         return id(self)

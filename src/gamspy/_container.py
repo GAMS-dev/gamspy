@@ -682,19 +682,54 @@ class Container(gt.Container):
         self._unsaved_statements[unique_name] = gams_code
         self._statements_dict[unique_name] = gams_code
 
-    def getSets(self):
+    def getSets(self) -> List["Set"]:
+        """
+        Returns all Sets in the container
+
+        Returns
+        -------
+        List[Set]
+        """
         return [self[symbol_name] for symbol_name in self.listSets()]
 
-    def getAliases(self):
+    def getAliases(self) -> List["Alias"]:
+        """
+        Returns all Aliases in the container
+
+        Returns
+        -------
+        List[Alias]
+        """
         return [self[symbol_name] for symbol_name in self.listAliases()]
 
-    def getParameters(self):
+    def getParameters(self) -> List["Parameter"]:
+        """
+        Returns all parameters in the container
+
+        Returns
+        -------
+        List[Parameter]
+        """
         return [self[symbol_name] for symbol_name in self.listParameters()]
 
-    def getVariables(self):
+    def getVariables(self) -> List["Variable"]:
+        """
+        Returns all variables in the container
+
+        Returns
+        -------
+        List[Variable]
+        """
         return [self[symbol_name] for symbol_name in self.listVariables()]
 
-    def getEquations(self):
+    def getEquations(self) -> List["Equation"]:
+        """
+        Returns all equations in the container
+
+        Returns
+        -------
+        List[Equation]
+        """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
     def _loadOnDemand(self) -> pd.DataFrame:
