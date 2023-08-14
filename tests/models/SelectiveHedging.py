@@ -169,7 +169,7 @@ def main(output=None):
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     FrontierPoints = Set(

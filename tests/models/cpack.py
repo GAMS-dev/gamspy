@@ -68,7 +68,7 @@ m = Model(
     equations=c.getEquations(),
     problem=Problem.QCP,
     sense=Sense.MAX,
-    objective_variable=r,
+    objective=r,
 )
 
 # Data

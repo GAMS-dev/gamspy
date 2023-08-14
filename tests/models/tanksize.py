@@ -160,7 +160,7 @@ def main():
         equations=m.getEquations(),
         problem="MINLP",
         sense=Sense.MIN,
-        objective_variable=cPT,
+        objective=cPT,
     )
     omega.l[p, n] = gams_math.uniform(0, 1)
 

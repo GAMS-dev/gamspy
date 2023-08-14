@@ -83,7 +83,7 @@ def main():
         equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MAX,
-        objective_variable=OF,
+        objective=OF,
     )
 
     counter = Set(m, "counter", records=[f"c{idx}" for idx in range(1, 5)])

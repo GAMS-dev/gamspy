@@ -94,7 +94,7 @@ def main():
         equations=[ReturnDef, VarDef, NormalCon, ObjDef],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
     Sharpe.solve()
 

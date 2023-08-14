@@ -182,7 +182,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     # Start the local NLP solver in a local solution that is not globally
@@ -276,7 +276,7 @@ def main():
         equations=[supply, demand, defsos1, defsos2, defsos3, defobjdisc],
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     m.addOptions({"optCr": 0})
@@ -385,7 +385,7 @@ def main():
         equations=[supply, demand, defx, defsqrt, defseg, defgs, defobjdisc],
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     trnsdiscB.solve()

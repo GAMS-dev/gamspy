@@ -190,7 +190,7 @@ def main():
         equations=[ddev, ls1],
         problem="dnlp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod1a = Model(
         m,
@@ -198,7 +198,7 @@ def main():
         equations=[ddeva, ls1a],
         problem="lp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod2 = Model(
         m,
@@ -206,7 +206,7 @@ def main():
         equations=[ddev, ls2],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod3 = Model(
         m,
@@ -214,7 +214,7 @@ def main():
         equations=[ddev, ls3],
         problem="dnlp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod4 = Model(
         m,
@@ -222,7 +222,7 @@ def main():
         equations=[ddev, ls4],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod5 = Model(
         m,
@@ -230,7 +230,7 @@ def main():
         equations=[ddev, ls5],
         problem="dnlp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod5a = Model(
         m,
@@ -238,7 +238,7 @@ def main():
         equations=[ddeva, ls5a],
         problem="lp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod6 = Model(
         m,
@@ -246,7 +246,7 @@ def main():
         equations=[ddev, ls6],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod7 = Model(
         m,
@@ -254,7 +254,7 @@ def main():
         equations=[ddev, ls7],
         problem="dnlp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mod8 = Model(
         m,
@@ -262,7 +262,7 @@ def main():
         equations=[ddev, ls8],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     # Reporting Parameter

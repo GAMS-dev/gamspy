@@ -80,7 +80,7 @@ def main():
         equations=[CashFlowCon],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=v0,
+        objective=v0,
     )
 
     StochDedicationBL.solve()

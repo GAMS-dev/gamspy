@@ -116,7 +116,7 @@ def main():
         equations=container.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=td,
+        objective=td,
     )
 
     y.up[i] = 2000

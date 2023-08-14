@@ -30,18 +30,23 @@ import gamspy.utils as utils
 import gamspy as gp
 from gams import GamsOptions
 from gamspy._engine import EngineConfig
+import gamspy._algebra._expression as expression
+import gamspy._algebra._operation as operation
 
 from typing import (
     Dict,
     Iterable,
     Literal,
     Optional,
+    Union,
     Tuple,
     TYPE_CHECKING,
 )
 
 if TYPE_CHECKING:
     from gamspy import Variable, Equation, Container
+    from gamspy._algebra._expression import Expression
+    from gamspy._algebra._operation import Operation
 
 
 class Problem(Enum):
@@ -158,15 +163,16 @@ class Model:
         equations: Iterable["Equation"],
         problem: str,
         sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective_variable: Optional["Variable"] = None,
+        objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[Iterable["Variable"]] = None,
     ):
         self.name = name
         self.ref_container = container
-        self._equations, self.problem, self.sense, self.objective_variable = (
-            self._validate_model(equations, problem, sense, objective_variable)
+        self._equations, self.problem, self.sense = self._validate_model(
+            equations, problem, sense
         )
+        self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
         self.ref_container._addStatement(self)
@@ -197,6 +203,46 @@ class Model:
         self.model_generation_time = None
         self.sum_infeasibilities = None
         self.solver_version = None
+
+    def _set_objective_variable(
+        self,
+        assignment: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
+    ) -> "Variable":
+        if assignment is not None and not isinstance(
+            assignment,
+            (gp.Variable, expression.Expression, operation.Operation),
+        ):
+            raise TypeError(
+                "Objective must be a Variable or an Expression but"
+                f" {type(assignment)} given"
+            )
+
+        if isinstance(
+            assignment, (expression.Expression, operation.Operation)
+        ):
+            # Create a dummy objective variable
+            variable = gp.Variable(
+                self.ref_container, f"dummy_objective{utils._getUniqueName()}"
+            )
+
+            # Create a dummy equation
+            equation = gp.Equation(
+                self.ref_container, f"dummy_equation{utils._getUniqueName()}"
+            )
+
+            # Sum((i,j),c[i,j]*x[i,j])->Sum((i,j),c[i,j]*x[i,j]) =e= var
+            assignment = assignment == variable
+
+            # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
+            equation.definition = assignment
+            self._equations.append(equation)
+
+            return variable
+
+        elif isinstance(assignment, gp.Variable):
+            return assignment
 
     @property
     def equations(self) -> Iterable["Equation"]:
@@ -291,9 +337,7 @@ class Model:
 
         self._update_model_attributes()
 
-    def _validate_model(
-        self, equations, problem, sense=None, objective_variable=None
-    ) -> Tuple:
+    def _validate_model(self, equations, problem, sense=None) -> Tuple:
         if not isinstance(equations, list) or any(
             not isinstance(equation, gp.Equation) for equation in equations
         ):
@@ -317,12 +361,7 @@ class Model:
 
             sense = gp.Sense(sense.upper())
 
-        if objective_variable is not None and not isinstance(
-            objective_variable, gp.Variable
-        ):
-            raise TypeError("Objective variable must be type Variable")
-
-        return equations, problem, sense, objective_variable
+        return equations, problem, sense
 
     def _append_solve_string(self) -> None:
         solve_string = f"solve {self.name} using {self.problem}"
@@ -330,8 +369,8 @@ class Model:
         if self.sense:
             solve_string += f" {self.sense}"
 
-        if self.objective_variable:
-            solve_string += f" {self.objective_variable.gamsRepr()}"
+        if hasattr(self, "_objective_variable"):
+            solve_string += f" {self._objective_variable.gamsRepr()}"
 
         self.ref_container._unsaved_statements[utils._getUniqueName()] = (
             solve_string + ";\n"

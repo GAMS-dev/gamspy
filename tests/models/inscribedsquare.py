@@ -80,7 +80,7 @@ def main():
         equations=m.getEquations(),
         problem="DNLP",
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
 
     t.l[i] = -math.pi + (Ord(i) - 1) * 2 * math.pi / Card(i)

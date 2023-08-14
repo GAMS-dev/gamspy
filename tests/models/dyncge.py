@@ -686,7 +686,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=CC,
+        objective=CC,
     )
 
     dyncge.solve()

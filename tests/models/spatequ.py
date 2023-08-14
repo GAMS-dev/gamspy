@@ -149,7 +149,7 @@ def main():
         equations=[DEM, SUP, SDBAL, PDIF, TRANSCOST, SX, DX],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=TC,
+        objective=TC,
     )
     P2R3_LinearLog = Model(
         m,
@@ -157,7 +157,7 @@ def main():
         equations=[DEMLOG, SUPLOG, SDBAL, PDIF, TRANSCOST, SX, DX],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=TC,
+        objective=TC,
     )
     P2R3_NonLinear = Model(
         m,
@@ -165,7 +165,7 @@ def main():
         equations=P2R3_Linear.equations + [DEMINT, SUPINT, OBJECT],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=OBJ,
+        objective=OBJ,
     )
     P2R3_MCP = Model(
         m,

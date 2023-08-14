@@ -203,7 +203,7 @@ def main():
         equations=[ObjDef, BroadPortRetDef, MADCon, BroadNormalCon],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=ObjValue,
+        objective=ObjValue,
     )
     TacticalModel = Model(
         m,
@@ -211,7 +211,7 @@ def main():
         equations=[ObjDef, PortRetDef, MADCon, NormalCon],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=ObjValue,
+        objective=ObjValue,
     )
 
     # Solve strategic model
@@ -240,7 +240,7 @@ def main():
             TacticalModel,
             problem="LP",
             sense=Sense.MAX,
-            objective_variable=ObjValue,
+            objective=ObjValue,
         )
 
         print("\n## Model BA_1 ##")

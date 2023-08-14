@@ -130,7 +130,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     reservoir.solve()
 

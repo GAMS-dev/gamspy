@@ -68,7 +68,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=cost,
+        objective=cost,
     )
     swp.solve()
 

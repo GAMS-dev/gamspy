@@ -148,7 +148,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=zmaster,
+        objective=zmaster,
     )
 
     # Variable
@@ -173,7 +173,7 @@ def main():
         equations=[subobj, selling, market],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=zsub,
+        objective=zsub,
     )
 
     # Scalar

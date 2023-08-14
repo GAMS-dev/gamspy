@@ -144,7 +144,7 @@ def main():
         equations=[ab, db, ocd, bcd1, obj],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=phi,
+        objective=phi,
     )
     alloc2 = Model(
         m,
@@ -152,7 +152,7 @@ def main():
         equations=[ab, yd, bd, ocd, bcd2, obj],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=phi,
+        objective=phi,
     )
 
     y.up[j, h] = deltb[j, h]

@@ -119,7 +119,7 @@ def flow_shop(process_time_df, last_machine, last_item):
         equations=c.getEquations(),
         problem="MIP",
         sense=gap.Sense.MIN,
-        objective_variable=totwait,
+        objective=totwait,
     )
 
     # set optCr to 0

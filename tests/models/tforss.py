@@ -195,7 +195,7 @@ def main():
         equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=phi,
+        objective=phi,
     )
 
     # Case Selection and Report Definitions

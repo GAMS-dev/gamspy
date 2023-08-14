@@ -184,7 +184,7 @@ def main():
         ],
         problem=Problem.QCP,
         sense=Sense.MAX,
-        objective_variable=cps,
+        objective=cps,
     )
 
     m.addOptions({"limCol": 0, "limRow": 0})

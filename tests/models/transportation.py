@@ -52,14 +52,11 @@ def main():
 
     # Variable
     x = Variable(m, name="x", domain=[i, j], type="Positive")
-    z = Variable(m, name="z")
 
     # Equation
-    cost = Equation(m, name="cost")
     supply = Equation(m, name="supply", domain=[i])
     demand = Equation(m, name="demand", domain=[j])
 
-    cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
     supply[i] = Sum(j, x[i, j]) <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
@@ -69,7 +66,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve(output=sys.stdout)
 

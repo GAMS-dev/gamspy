@@ -72,7 +72,7 @@ def main():
         equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     z.up[j, k].where[vc[j, k]] = n[k]
     thainavy.solve()

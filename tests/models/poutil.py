@@ -542,7 +542,7 @@ def main():
         equations=cont.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
-        objective_variable=c,
+        objective=c,
     )
 
     # relative termination criterion for MIP (relative gap)

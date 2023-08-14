@@ -173,7 +173,7 @@ def main():
         equations=[BudgetCon, ReturnCon, RegretCon, ObjDefRegret],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
     MaxReturn = Model(
         m,
@@ -181,7 +181,7 @@ def main():
         equations=[BudgetCon, ExpRegretCon, EpsRegretCon, ObjDefReturn],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
 
     TargetIndex[l] = 1.01

@@ -114,7 +114,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=t,
+        objective=t,
     )
     fir_socp.solve()
 

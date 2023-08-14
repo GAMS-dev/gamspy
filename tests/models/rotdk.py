@@ -134,7 +134,7 @@ def main():
         equations=m.getEquations(),
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     m.addOptions({"limCol": 0, "limRow": 0, "resLim": 3})

@@ -255,7 +255,7 @@ def build_abstract_model():
         equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
-        objective_variable=makespan,
+        objective=makespan,
     )
     makespan.lo.assign = 0
 

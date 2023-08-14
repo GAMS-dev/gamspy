@@ -85,7 +85,7 @@ def main():
         equations=[balance, defspobj],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=spobj,
+        objective=spobj,
     )
     sp.solve()
 
@@ -203,7 +203,7 @@ def main():
         equations=[deffreqlop, dtlimit, defobjdtlop],
         problem="mip",
         sense=Sense.MAX,
-        objective_variable=obj,
+        objective=obj,
     )
 
     freq.lo[s1, s2].where[rt[s1, s2]] = math.max(
@@ -271,7 +271,7 @@ def main():
         equations=[defobjilp, deffreqilp, defloadilp, oneilp, couplexy],
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     y.up[ll, lf] = Card(ac) - 1
@@ -324,7 +324,7 @@ def main():
         equations=[dtllimit, sumbound, defobjdtlop],
         problem="lp",
         sense=Sense.MAX,
-        objective_variable=obj,
+        objective=obj,
     )
 
     sol[ll] = solrep["DT", ll, "freq"]

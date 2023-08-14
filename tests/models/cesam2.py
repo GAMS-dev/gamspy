@@ -744,7 +744,7 @@ def main(is_centropy=False):
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=DENTROPY,
+        objective=DENTROPY,
     )
 
     m.addOptions(

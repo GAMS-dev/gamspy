@@ -382,7 +382,7 @@ def main():
         equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=phi,
+        objective=phi,
     )
 
     mexss.solve()

@@ -146,7 +146,7 @@ def main(mip=False):
         ],
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     carseqLS = Model(
         m,
@@ -161,7 +161,7 @@ def main(mip=False):
         ],
         problem="minlp",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     m.addOptions({"optCr": 0})

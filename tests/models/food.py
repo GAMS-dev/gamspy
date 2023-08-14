@@ -273,7 +273,7 @@ def main():
         equations=c.getEquations(),
         problem="MIP",
         sense=gp.Sense.MAX,
-        objective_variable=profit,
+        objective=profit,
     )
 
     # set optCr to 0

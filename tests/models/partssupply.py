@@ -95,7 +95,7 @@ def main():
         equations=[obj, rev, pc, licu],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=util,
+        objective=util,
     )
     m_mn = Model(
         cont,
@@ -103,7 +103,7 @@ def main():
         equations=[obj, rev, pc, licu, mn],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=util,
+        objective=util,
     )
 
     cont.addOptions({"limRow": 0, "limCol": 0})

@@ -77,7 +77,7 @@ def main():
         equations=[defobj, cons],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     lpmod.solve()
 
@@ -102,7 +102,7 @@ def main():
         equations=[defobj, lpcons, defdual],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     lproblp.solve()
 
@@ -130,7 +130,7 @@ def main():
         equations=[defobj, socpqcpcons, defrhs, defv],
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     y.lo[i] = 0

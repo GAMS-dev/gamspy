@@ -28,10 +28,8 @@ def main():
     q2 = Variable(m, name="q2")
     w = Variable(m, name="w")
     k = Variable(m, name="k")
-    objval = Variable(m, name="objval", type="FREE")
 
     # Equation
-    f = Equation(m, name="f")
     g1 = Equation(m, name="g1")
     g2 = Equation(m, name="g2")
     b1l = Equation(m, name="b1l")
@@ -39,7 +37,6 @@ def main():
     b2l = Equation(m, name="b2l")
     b2u = Equation(m, name="b2u")
 
-    f.definition = objval == k
     g1.definition = (gams_math.power(q1, 2)) * (gams_math.power(q2, 2)) * (
         gams_math.power(w, 8)
     ) - (
@@ -105,12 +102,13 @@ def main():
     benz = Model(
         m,
         name="benz",
-        equations=[f, g1, g2, b1l, b1u, b2l, b2u],
+        equations=[g1, g2, b1l, b1u, b2l, b2u],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=objval,
+        objective=k,
     )
     benz.solve()
+    print(benz.objective_value)
 
 
 if __name__ == "__main__":

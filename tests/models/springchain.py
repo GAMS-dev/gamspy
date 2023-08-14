@@ -89,7 +89,7 @@ def main():
         equations=cont.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     x.l[n] = ((Ord(n) - 1) / N) * b_x + (Ord(n) / N) * a_x

@@ -312,7 +312,7 @@ def main():
         equations=[ObjDef, PresentValueMatch, DurationMatch],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
     ImmunizationOne.solve()
 
@@ -330,7 +330,7 @@ def main():
         equations=[ObjDef, PresentValueMatch, DurationMatch, ConvexityMatch],
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
     ImmunizationTwo.solve()
 
@@ -355,7 +355,7 @@ def main():
         equations=[ConvexityObj, PresentValueMatch, DurationMatch],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
     ImmunizationThree.solve()
 

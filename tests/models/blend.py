@@ -48,32 +48,29 @@ def main():
 
     # Variable
     v = Variable(m, name="v", domain=[alloy], type="Positive")
-    phi = Variable(m, name="phi")
 
     # Equation
     pc = Equation(m, name="pc", domain=[elem])
     mb = Equation(m, name="mb")
-    ac = Equation(m, name="ac")
 
     pc[elem] = Sum(alloy, compdat[elem, alloy] * v[alloy]) == rb[elem]
     mb.definition = Sum(alloy, v[alloy]) == 1
-    ac.definition = phi == Sum(alloy, price[alloy] * v[alloy])
 
     b1 = Model(
         m,
         name="b1",
-        equations=[pc, ac],
+        equations=[pc],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=phi,
+        objective=Sum(alloy, price[alloy] * v[alloy]),
     )
     b2 = Model(
         m,
         name="b2",
-        equations=[pc, mb, ac],
+        equations=[pc, mb],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=phi,
+        objective=Sum(alloy, price[alloy] * v[alloy]),
     )
 
     report = Parameter(m, name="report", domain=[alloy, "*"])

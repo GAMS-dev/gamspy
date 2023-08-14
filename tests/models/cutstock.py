@@ -61,7 +61,7 @@ def main():
         equations=[numpat, demand],
         problem="rmip",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     # Pricing model variables
@@ -81,7 +81,7 @@ def main():
         equations=[defobj, knapsack],
         problem="mip",
         sense=Sense.MIN,
-        objective_variable=z,
+        objective=z,
     )
 
     pp[p] = Ord(p) <= Card(i)

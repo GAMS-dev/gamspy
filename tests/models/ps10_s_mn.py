@@ -169,7 +169,7 @@ def main():
         equations=[obj, rev, pc, licd],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=Util,
+        objective=Util,
     )
     SB_lic2 = Model(
         m,
@@ -177,7 +177,7 @@ def main():
         equations=[obj, rev, pc, licd, mn],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=Util,
+        objective=Util,
     )
 
     # Options to solve models quickly

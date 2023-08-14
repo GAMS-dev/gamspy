@@ -92,7 +92,7 @@ def main():
         equations=[yield1, makeup, sdef, motor, drat, ddil, df4, dprofit],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=profit,
+        objective=profit,
     )
     rproc = Model(
         m,
@@ -109,7 +109,7 @@ def main():
         ],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=profit,
+        objective=profit,
     )
 
     rangey.lo.assign = 0.9

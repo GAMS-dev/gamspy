@@ -55,7 +55,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective_variable=profit,
+        objective=profit,
     )
 
     pmp.solve()

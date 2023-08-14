@@ -416,7 +416,7 @@ def main():
         equations=cont.getEquations(),
         problem="minlp",
         sense=Sense.MIN,
-        objective_variable=zoau,
+        objective=zoau,
     )
     cont.addOptions({"domLim": 100})
 

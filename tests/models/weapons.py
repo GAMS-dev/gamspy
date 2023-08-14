@@ -181,7 +181,7 @@ def main():
         equations=[maxw, minw, etd],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective_variable=tetd,
+        objective=tetd,
     )
 
     x.l[w, t].where[td[w, t]] = wa[w] / Card(t)

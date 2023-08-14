@@ -82,7 +82,7 @@ def main():
         equations=m.getEquations(),
         problem="MINLP",
         sense=Sense.MIN,
-        objective_variable=cost,
+        objective=cost,
     )
     poil.l[t] = 100
 

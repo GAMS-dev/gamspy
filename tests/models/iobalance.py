@@ -149,7 +149,7 @@ def main():
         equations=[rowbal, colbal, defobjent],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     # we need to exclude small values to avoid domain violations
@@ -185,7 +185,7 @@ def main():
         equations=[rowbalz, colbalz, defobjentz],
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     # turn off detailed outputs
@@ -234,7 +234,7 @@ def main():
         equations=[rowbal, colbal, defabs, defmad],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mMADE = Model(
         m,
@@ -242,7 +242,7 @@ def main():
         equations=[rowbal, colbal, defabs, defmade],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mLinf = Model(
         m,
@@ -250,7 +250,7 @@ def main():
         equations=[rowbal, colbal, defmaxp, defmaxn, deflinf],
         problem="LP",
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     mMAD.solve()
@@ -282,7 +282,7 @@ def main():
         equations=[rowbal, colbal, defsd],
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
     mRSD = Model(
         m,
@@ -290,7 +290,7 @@ def main():
         equations=[rowbal, colbal, defrsd],
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=obj,
+        objective=obj,
     )
 
     mSD.solve()

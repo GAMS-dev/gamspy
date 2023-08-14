@@ -154,7 +154,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
         equations=m.getEquations(),
         problem="mip",
         sense=Sense.MAX,
-        objective_variable=z,
+        objective=z,
     )
 
     maxStarts.solve()

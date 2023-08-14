@@ -129,7 +129,7 @@ def main():
 
     evportfol = Model(cont, name="evportfol", equations=cont.getEquations())
 
-    cont.solve(evportfol, problem=Problem.NLP, sense=Sense.MAX, objective_variable=obj)
+    cont.solve(evportfol, problem=Problem.NLP, sense=Sense.MAX, objective=obj)
 
     variance = Parameter(cont, name="variance")
     variance = Sum(s, Sum(sp, invest.l[s] * covar[s, sp] * invest.l[sp]))
@@ -219,7 +219,7 @@ def main():
         evportfol,
         problem=Problem.NLP,
         Sense.MAX,
-        objective_variable=obj,
+        objective=obj,
         scenario=dictionary,
     )
 

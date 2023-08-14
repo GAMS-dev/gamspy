@@ -137,7 +137,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective_variable=tau,
+        objective=tau,
     )
     sigma.l[i, k] = uniform(0.1, 1)
     truss.solve()

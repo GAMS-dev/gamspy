@@ -632,7 +632,7 @@ class Container(gt.Container):
         equations: List["Equation"],
         problem: str,
         sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective_variable: Optional["Variable"] = None,
+        objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[list] = None,
     ):
@@ -642,7 +642,7 @@ class Container(gt.Container):
             equations,
             problem,
             sense,
-            objective_variable,
+            objective,
             matches,
             limited_variables,
         )

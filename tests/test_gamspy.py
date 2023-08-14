@@ -993,7 +993,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
         self.assertEqual(
             test_model2.getStatement(), "Model test_model2 / cost,supply /;"
@@ -1006,7 +1006,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
         test_model3.equations = [cost, supply]
         self.assertEqual(test_model3.equations, [cost, supply])
@@ -1016,7 +1016,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
 
         self.assertTrue(test_model4.equations == test_model3.equations)
@@ -1026,7 +1026,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
             matches={supply: x, cost: z},
         )
         self.assertEqual(
@@ -1826,7 +1826,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply, demand],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
         transport.solve()
 
@@ -2129,7 +2129,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply, demand],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
         transport.solve()
 
@@ -2142,7 +2142,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost2, supply, demand],
             problem="LP",
             sense="min",
-            objective_variable=z2,
+            objective=z2,
         )
         transport2.solve()
         second_z2_value = z2.records["level"].values[0]
@@ -2195,7 +2195,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply, demand],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
         )
 
         # Test output redirection
@@ -2245,7 +2245,7 @@ class GamspySuite(unittest.TestCase):
             equations=[cost, supply, demand],
             problem="LP",
             sense="min",
-            objective_variable=z,
+            objective=z,
             limited_variables=[x[i]],
         )
 
