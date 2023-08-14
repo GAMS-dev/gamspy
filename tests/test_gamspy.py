@@ -2207,7 +2207,7 @@ class GamspySuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
-        for attr_name in transport._getAttributeNames().values():
+        for attr_name in transport._get_attribute_names().values():
             self.assertTrue(hasattr(transport, attr_name))
 
         # Test invalid problem
