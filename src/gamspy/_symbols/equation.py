@@ -31,10 +31,27 @@ import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
-import gamspy.enums as enums
+from enum import Enum
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
+
+
+class EquationType(Enum):
+    EQ = "EQ"
+    GEQ = "GEQ"
+    LEQ = "LEQ"
+    NONBINDING = "NONBINDING"
+    EXTERNAL = "EXTERNAL"
+    CONE = "CONE"
+    BOOLEAN = "BOOLEAN"
+
+    @classmethod
+    def values(cls):
+        return list(cls._value2member_map_.keys())
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Equation(gt.Equation, operable.Operable):
@@ -112,17 +129,14 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-    def _cast_type(self, type: Union[str, enums.EquationType]) -> str:
-        if (
-            isinstance(type, str)
-            and type.upper() not in enums.EquationType.values()
-        ):
+    def _cast_type(self, type: Union[str, EquationType]) -> str:
+        if isinstance(type, str) and type.upper() not in EquationType.values():
             raise ValueError(
                 "Allowed equation types:"
-                f" {enums.EquationType.values()} but found {type}."
+                f" {EquationType.values()} but found {type}."
             )
 
-        if isinstance(type, enums.EquationType):
+        if isinstance(type, EquationType):
             type = type.value
 
         return type

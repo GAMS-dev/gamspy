@@ -31,10 +31,29 @@ import gamspy._algebra._operable as operable
 import gamspy._algebra._condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
-import gamspy.enums as enums
+from enum import Enum
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
+
+
+class VariableType(Enum):
+    BINARY = "BINARY"
+    INTEGER = "INTEGER"
+    POSITIVE = "POSITIVE"
+    NEGATIVE = "NEGATIVE"
+    FREE = "FREE"
+    SOS1 = "SOS1"
+    SOS2 = "SOS2"
+    SEMICONT = "SEMICONT"
+    SEMIINT = "SEMIINT"
+
+    @classmethod
+    def values(cls):
+        return list(cls._value2member_map_.keys())
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Variable(gt.Variable, operable.Operable):
@@ -98,17 +117,14 @@ class Variable(gt.Variable, operable.Operable):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-    def _cast_type(self, type: Union[str, enums.VariableType]) -> str:
-        if (
-            isinstance(type, str)
-            and type.upper() not in enums.VariableType.values()
-        ):
+    def _cast_type(self, type: Union[str, VariableType]) -> str:
+        if isinstance(type, str) and type.upper() not in VariableType.values():
             raise ValueError(
-                f"Allowed variable types: {enums.VariableType.values()} but"
+                f"Allowed variable types: {VariableType.values()} but"
                 f" found {type}."
             )
 
-        if isinstance(type, enums.VariableType):
+        if isinstance(type, VariableType):
             type = type.value
 
         return type
