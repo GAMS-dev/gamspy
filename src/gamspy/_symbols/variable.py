@@ -130,7 +130,7 @@ class Variable(gt.Variable, operable.Operable):
         return type
 
     def __getitem__(
-        self, indices: Union[list, str]
+        self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
         domain = utils._toList(indices)
         return implicits.ImplicitVariable(

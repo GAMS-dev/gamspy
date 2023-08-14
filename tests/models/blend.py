@@ -51,9 +51,9 @@ def main():
     phi = Variable(m, name="phi")
 
     # Equation
-    pc = Equation(m, name="pc", domain=[elem], type="eq")
-    mb = Equation(m, name="mb", type="eq")
-    ac = Equation(m, name="ac", type="eq")
+    pc = Equation(m, name="pc", domain=[elem], type="regular")
+    mb = Equation(m, name="mb", type="regular")
+    ac = Equation(m, name="ac", type="regular")
 
     pc[elem] = Sum(alloy, compdat[elem, alloy] * v[alloy]) == rb[elem]
     mb.definition = Sum(alloy, v[alloy]) == 1

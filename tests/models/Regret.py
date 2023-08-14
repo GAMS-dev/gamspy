@@ -111,44 +111,44 @@ def main():
     BudgetCon = Equation(
         m,
         name="BudgetCon",
-        type="eq",
+        type="regular",
         description="Equation defining the budget contraint",
     )
     ReturnCon = Equation(
         m,
         name="ReturnCon",
-        type="geq",
+        type="regular",
         description="Equation defining the portfolio return constraint",
     )
     ExpRegretCon = Equation(
         m,
         name="ExpRegretCon",
-        type="leq",
+        type="regular",
         description="Equation defining the expected regret allowed",
     )
     ObjDefRegret = Equation(
         m,
         name="ObjDefRegret",
-        type="eq",
+        type="regular",
         description="Objective function definition for regret minimization",
     )
     ObjDefReturn = Equation(
         m,
         name="ObjDefReturn",
-        type="eq",
+        type="regular",
         description="Objective function definition for return mazimization",
     )
     RegretCon = Equation(
         m,
         name="RegretCon",
-        type="geq",
+        type="regular",
         domain=[l],
         description="Equations defining the regret constraints",
     )
     EpsRegretCon = Equation(
         m,
         name="EpsRegretCon",
-        type="geq",
+        type="regular",
         domain=[l],
         description=(
             "Equations defining the regret constraints with tolerance"

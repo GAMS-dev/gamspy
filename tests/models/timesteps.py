@@ -121,10 +121,14 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     # ----     69 Equation   eStartFaster  0.468 13.276 SECS 180 MB 34272
 
     # Equations
-    eStartNaive = Equation(m, name="eStartNaive", type="leq", domain=[g, t])
-    eStartFast = Equation(m, name="eStartFast", type="leq", domain=[g, t])
-    eStartFaster = Equation(m, name="eStartFaster", type="leq", domain=[g, t])
-    defobj = Equation(m, name="defobj", type="eq")
+    eStartNaive = Equation(
+        m, name="eStartNaive", type="regular", domain=[g, t]
+    )
+    eStartFast = Equation(m, name="eStartFast", type="regular", domain=[g, t])
+    eStartFaster = Equation(
+        m, name="eStartFaster", type="regular", domain=[g, t]
+    )
+    defobj = Equation(m, name="defobj", type="regular")
 
     eStartNaive[g, t1] = (
         Sum(

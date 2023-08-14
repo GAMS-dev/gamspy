@@ -79,34 +79,34 @@ def flow_shop(process_time_df, last_machine, last_item):
         name="oneInPosition",
         domain=[k],
         description="every position gets a jobs",
-        type="eq",
+        type="regular",
     )
     oneRankPer = c.addEquation(
         name="oneRankPer",
         domain=[i],
         description="every job is assigned a rank",
-        type="eq",
+        type="regular",
     )
     onMachRel = c.addEquation(
         name="onMachRel",
         domain=[m, k],
-        type="geq",
+        type="regular",
     )
     perMachRel = c.addEquation(
         name="perMachRel",
         domain=[m, k],
-        type="geq",
+        type="regular",
     )
     defComp = c.addEquation(
         name="defComp",
         domain=[m, k],
         description="completion time based on start time and proctime",
-        type="eq",
+        type="regular",
     )
     defObj = c.addEquation(
         name="defObj",
         description="completion time of job rank last",
-        type="geq",
+        type="regular",
     )
 
     oneInPosition[k] = gap.Sum(i, rank[i, k]) == 1

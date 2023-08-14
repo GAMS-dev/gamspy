@@ -50,7 +50,7 @@ circumscribe = Equation(
     c,
     name="circumscribe",
     domain=[i],
-    type="geq",
+    type="regular",
     description="enforce circle is enclosed in unit circle",
 )
 circumscribe[i] = sqr(1 - r) >= sqr(x[i]) + sqr(y[i])
@@ -59,7 +59,7 @@ nonoverlap = Equation(
     c,
     name="nonoverlap",
     domain=[i, j],
-    type="geq",
+    type="regular",
     description="enforce that circles do not overlap",
 )
 nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)

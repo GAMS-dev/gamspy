@@ -175,7 +175,7 @@ def main():
     CashFlowCon = Equation(
         m,
         name="CashFlowCon",
-        type="eq",
+        type="regular",
         domain=[t],
         description="Equations defining the cashflow balance",
     )

@@ -38,9 +38,7 @@ if TYPE_CHECKING:
 
 
 class EquationType(Enum):
-    EQ = "EQ"
-    GEQ = "GEQ"
-    LEQ = "LEQ"
+    REGULAR = "REGULAR"
     NONBINDING = "NONBINDING"
     EXTERNAL = "EXTERNAL"
     CONE = "CONE"
@@ -85,7 +83,7 @@ class Equation(gt.Equation, operable.Operable):
         self,
         container: "Container",
         name: str,
-        type: str,
+        type: Optional[Union[str, EquationType]] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
@@ -129,25 +127,34 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-    def _cast_type(self, type: Union[str, EquationType]) -> str:
-        if isinstance(type, str) and type.upper() not in EquationType.values():
-            raise ValueError(
-                "Allowed equation types:"
-                f" {EquationType.values()} but found {type}."
-            )
+    def _cast_type(self, type: Optional[Union[str, EquationType]]) -> str:
+        if type is None:
+            return "EQ"
 
-        if isinstance(type, EquationType):
-            type = type.value
+        elif isinstance(type, str):
+            if type.upper() not in EquationType.values():
+                raise ValueError(
+                    "Allowed equation types:"
+                    f" {EquationType.values()} but found {type}."
+                )
+
+            # assign eq by default
+            if type.upper() == "REGULAR":
+                type = "EQ"
+
+        elif isinstance(type, EquationType):
+            # assign eq by default
+            type = "EQ" if EquationType.REGULAR else str(type)
 
         return type
 
     def __hash__(self):
         return id(self)
 
-    def __getitem__(self, indices: Union[list, str]):
+    def __getitem__(self, indices: Union[tuple, str]):
         domain = utils._toList(indices)
         return implicits.ImplicitEquation(
-            self.ref_container, name=self.name, type=self.type, domain=domain
+            self.ref_container, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
 
     def __setitem__(
@@ -157,15 +164,23 @@ class Equation(gt.Equation, operable.Operable):
     ):
         domain = utils._toList(indices)
 
-        equation_map = {
+        non_regular_map = {
             "nonbinding": "=n=",
             "external": "=x=",
             "cone": "=c=",
             "boolean": "=b=",
         }
 
-        if self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]
+        regular_map = {
+            "=e=": "eq",
+            "=g=": "geq",
+            "=l=": "leq",
+        }
+
+        if self.type in non_regular_map.keys():  # type: ignore
+            assignment._op_type = non_regular_map[self.type]  # type: ignore
+        else:
+            self.type = regular_map[assignment._op_type]
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -265,15 +280,23 @@ class Equation(gt.Equation, operable.Operable):
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
 
-        equation_map = {
+        non_regular_map = {
             "nonbinding": "=n=",
             "external": "=x=",
             "cone": "=c=",
             "boolean": "=b=",
         }
 
-        if self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]  # type: ignore
+        regular_map = {
+            "=e=": "eq",
+            "=g=": "geq",
+            "=l=": "leq",
+        }
+
+        if self.type in non_regular_map.keys():
+            assignment._op_type = non_regular_map[self.type]  # type: ignore
+        else:
+            self.type = regular_map[assignment._op_type]
 
         domain = (
             self._definition_domain if self._definition_domain else self.domain

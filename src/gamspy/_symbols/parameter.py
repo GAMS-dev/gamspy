@@ -88,7 +88,7 @@ class Parameter(gt.Parameter, operable.Operable):
         self.ref_container._addStatement(self)
 
     def __getitem__(
-        self, indices: Union[list, str]
+        self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
         domain = utils._toList(indices)
         return implicits.ImplicitParameter(

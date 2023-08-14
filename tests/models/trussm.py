@@ -119,11 +119,11 @@ def main():
     sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
 
     # Equation
-    volumeeq = Equation(m, type="geq", name="volumeeq", domain=[i, k])
-    deftk = Equation(m, type="eq", name="deftk", domain=[i, k])
-    reseq = Equation(m, type="leq", name="reseq", domain=[k])
-    trusscomp = Equation(m, type="leq", name="trusscomp")
-    stiffness = Equation(m, type="eq", name="stifness", domain=[j, k])
+    volumeeq = Equation(m, type="regular", name="volumeeq", domain=[i, k])
+    deftk = Equation(m, type="regular", name="deftk", domain=[i, k])
+    reseq = Equation(m, type="regular", name="reseq", domain=[k])
+    trusscomp = Equation(m, type="regular", name="trusscomp")
+    stiffness = Equation(m, type="regular", name="stifness", domain=[j, k])
 
     volumeeq[i, k] = 2 * tk[i, k] * sigma[i, k] >= s[i, k] ** 2
     deftk[i, k] = tk[i, k] == t[i]

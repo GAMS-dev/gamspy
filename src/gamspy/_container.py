@@ -153,10 +153,13 @@ class Container(gt.Container):
                     symbol.description,
                 )
             elif isinstance(symbol, gt.Equation):
+                symbol_type = symbol.type
+                if symbol.type in ["eq", "leq", "geq"]:
+                    symbol_type = "regular"
                 _ = gp.Equation(
                     self,
                     symbol.name,
-                    symbol.type,
+                    symbol_type,
                     new_domain,
                     symbol.records,
                     symbol.domain_forwarding,
@@ -601,7 +604,6 @@ class Container(gt.Container):
             # allow records overwriting
             if (
                 isinstance(self.data[name], gp.Equation)
-                and self.data[name].type == type
                 and utils.checkAllSame(self.data[name].domain, domain)
                 and self.data[name].domain_forwarding == domain_forwarding
             ):

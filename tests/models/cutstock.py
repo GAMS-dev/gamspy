@@ -51,8 +51,10 @@ def main():
     xp.up[p] = Sum(i, d[i])
 
     # Master model equations
-    numpat = Equation(m, "numpat", type="eq", definition=z == Sum(pp, xp[pp]))
-    demand = Equation(m, "demand", type="geq", domain=[i])
+    numpat = Equation(
+        m, "numpat", type="regular", definition=z == Sum(pp, xp[pp])
+    )
+    demand = Equation(m, "demand", type="regular", domain=[i])
     demand[i] = Sum(pp, aip[i, pp] * xp[pp]) >= d[i]
 
     master = Model(
@@ -71,11 +73,11 @@ def main():
     defobj = Equation(
         m,
         "defobj",
-        type="eq",
+        type="regular",
         definition=z == (1 - Sum(i, demand.m[i] * y[i])),
     )
     knapsack = Equation(
-        m, "knapsack", type="leq", definition=Sum(i, w[i] * y[i]) <= r
+        m, "knapsack", type="regular", definition=Sum(i, w[i] * y[i]) <= r
     )
 
     pricing = Model(

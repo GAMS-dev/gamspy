@@ -561,6 +561,7 @@ class GamspySuite(unittest.TestCase):
             list(self.m._statements_dict.values())[-1].gamsRepr(),
             "eq1 .. x =n= c;",
         )
+        self.assertEqual(eq1.type, "nonbinding")
 
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
         eq2[i] = x[i] == c[i]
@@ -574,6 +575,21 @@ class GamspySuite(unittest.TestCase):
             list(self.m._statements_dict.values())[-1].gamsRepr(),
             "eq2(i) .. x(i) =n= c(i);",
         )
+
+        # eq
+        eq3 = Equation(self.m, "eq3", domain=[i])
+        eq3[i] = x == c
+        self.assertEqual(eq3.type, "eq")
+
+        # geq
+        eq4 = Equation(self.m, "eq4", domain=[i])
+        eq4[i] = x >= c
+        self.assertEqual(eq4.type, "geq")
+
+        # leq
+        eq5 = Equation(self.m, "eq5", domain=[i])
+        eq5[i] = x <= c
+        self.assertEqual(eq5.type, "leq")
 
     def test_equation_declaration(self):
         # Prepare data
@@ -593,7 +609,7 @@ class GamspySuite(unittest.TestCase):
         cost = Equation(
             self.m,
             name="cost",
-            type="eq",
+            type="regular",
             description="define objective function",
         )
         self.assertEqual(cost.gamsRepr(), "cost")
@@ -606,7 +622,7 @@ class GamspySuite(unittest.TestCase):
         supply = Equation(
             self.m,
             name="supply",
-            type="geq",
+            type="regular",
             domain=[i],
             description="observe supply limit at plant i",
         )
@@ -620,7 +636,7 @@ class GamspySuite(unittest.TestCase):
         bla = Equation(
             self.m,
             name="bla",
-            type="leq",
+            type="regular",
             domain=[i, j],
             description="some text",
         )
@@ -666,7 +682,7 @@ class GamspySuite(unittest.TestCase):
         cost = Equation(
             self.m,
             name="cost",
-            type="eq",
+            type="regular",
             description="define objective function",
         )
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
@@ -683,7 +699,7 @@ class GamspySuite(unittest.TestCase):
         supply = Equation(
             self.m,
             name="supply",
-            type="leq",
+            type="regular",
             domain=[i],
             description="observe supply limit at plant i",
         )
@@ -697,7 +713,7 @@ class GamspySuite(unittest.TestCase):
         bla = Equation(
             self.m,
             name="bla",
-            type="geq",
+            type="regular",
             domain=[i, j],
             description="observe supply limit at plant i",
         )
@@ -717,7 +733,7 @@ class GamspySuite(unittest.TestCase):
         _ = Equation(
             self.m,
             name="cost2",
-            type="eq",
+            type="regular",
             description="define objective function",
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
@@ -729,7 +745,7 @@ class GamspySuite(unittest.TestCase):
         # Equation definition in addEquation
         _ = self.m.addEquation(
             name="cost2",
-            type="eq",
+            type="regular",
             description="define objective function",
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
@@ -742,7 +758,7 @@ class GamspySuite(unittest.TestCase):
         bla2 = Equation(
             self.m,
             name="bla2",
-            type="geq",
+            type="regular",
             domain=[i, j],
             description="observe supply limit at plant i",
         )
@@ -756,7 +772,7 @@ class GamspySuite(unittest.TestCase):
         _ = Equation(
             self.m,
             name="bla3",
-            type="geq",
+            type="regular",
             domain=[i, j],
             description="observe supply limit at plant i",
             definition=Sum((i, j), x[i, j]) <= a[i],
@@ -773,7 +789,7 @@ class GamspySuite(unittest.TestCase):
         t2 = Set(m, name="t2", records=[str(i) for i in range(1, 4)])
 
         eStartNaive = Equation(
-            m, name="eStartNaive", type="leq", domain=[g, t1]
+            m, name="eStartNaive", type="regular", domain=[g, t1]
         )
         pMinDown = Parameter(m, name="pMinDown", domain=[g, t1])
         vStart = Parameter(m, name="vStart", domain=[g, t2])
@@ -795,7 +811,7 @@ class GamspySuite(unittest.TestCase):
         )
 
     def test_equation_attributes(self):
-        pi = Equation(self.m, "pi", type="eq")
+        pi = Equation(self.m, "pi", type="regular")
 
         self.assertTrue(
             hasattr(pi, "l") and isinstance(pi.l, implicits.ImplicitParameter)
@@ -863,7 +879,7 @@ class GamspySuite(unittest.TestCase):
 
     def test_implicit_equation_attributes(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
-        a = Equation(self.m, "a", "eq", [i])
+        a = Equation(self.m, "a", "regular", [i])
 
         self.assertTrue(
             hasattr(a[i], "l")
@@ -960,7 +976,7 @@ class GamspySuite(unittest.TestCase):
         cost = Equation(
             self.m,
             name="cost",
-            type="eq",
+            type="regular",
             description="define objective function",
         )
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
@@ -969,7 +985,7 @@ class GamspySuite(unittest.TestCase):
         supply = Equation(
             self.m,
             name="supply",
-            type="leq",
+            type="regular",
             domain=[i],
             description="observe supply limit at plant i",
         )
@@ -979,7 +995,7 @@ class GamspySuite(unittest.TestCase):
         bla = Equation(
             self.m,
             name="bla",
-            type="geq",
+            type="regular",
             domain=[i, j],
             description="observe supply limit at plant i",
         )
@@ -1199,7 +1215,7 @@ class GamspySuite(unittest.TestCase):
         op = Variable(m, name="op", type="free", domain=[o, p])
 
         # Equation
-        defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
+        defopLS = Equation(m, name="defopLS", type="regular", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == Number(1)
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
@@ -1211,7 +1227,7 @@ class GamspySuite(unittest.TestCase):
             expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
         )
 
-        random_eq = Equation(m, "random", type="eq", domain=[i, j])
+        random_eq = Equation(m, "random", type="regular", domain=[i, j])
         random_eq[i, j] = Sum(i, muf[i, j]).where[muf[i, j] > 0] >= 0
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
@@ -1340,8 +1356,8 @@ class GamspySuite(unittest.TestCase):
         x = Variable(self.m, name="x", domain=[w, t], type="Positive")
 
         # Equations
-        maxw = Equation(self.m, name="maxw", type="leq", domain=[w])
-        minw = Equation(self.m, name="minw", type="geq", domain=[t])
+        maxw = Equation(self.m, name="maxw", type="regular", domain=[w])
+        minw = Equation(self.m, name="minw", type="regular", domain=[t])
 
         maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
         minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
@@ -1361,7 +1377,7 @@ class GamspySuite(unittest.TestCase):
         op = Variable(m, name="op", type="free", domain=[o, p])
 
         # Equation
-        defopLS = Equation(m, name="defopLS", type="eq", domain=[o, p])
+        defopLS = Equation(m, name="defopLS", type="regular", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(
             list(m._statements_dict.values())[-1].getStatement(),
@@ -1811,9 +1827,9 @@ class GamspySuite(unittest.TestCase):
         z = Variable(self.m, name="z")
 
         # Equation
-        cost = Equation(self.m, name="cost", type="eq")
-        supply = Equation(self.m, name="supply", domain=[i], type="leq")
-        demand = Equation(self.m, name="demand", domain=[j], type="geq")
+        cost = Equation(self.m, name="cost", type="regular")
+        supply = Equation(self.m, name="supply", domain=[i], type="regular")
+        demand = Equation(self.m, name="demand", domain=[j], type="regular")
 
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
@@ -1983,7 +1999,7 @@ class GamspySuite(unittest.TestCase):
         u = Set(self.m, "u")
         v = Alias(self.m, "v", alias_with=u)
         e = Set(self.m, "e", domain=[u, v])
-        eq = Equation(self.m, "eq", domain=[u, v], type="leq")
+        eq = Equation(self.m, "eq", domain=[u, v], type="regular")
         self.assertEqual(eq[e[u, v]].gamsRepr(), "eq(e(u,v))")
 
         m = Container()
@@ -2041,7 +2057,9 @@ class GamspySuite(unittest.TestCase):
             m, name="pMinDown", domain=[g, t], description="minimum downtime"
         )
         vStart = Variable(m, name="vStart", type="binary", domain=[g, t])
-        eStartFast = Equation(m, name="eStartFast", type="leq", domain=[g, t])
+        eStartFast = Equation(
+            m, name="eStartFast", type="regular", domain=[g, t]
+        )
         eStartFast[g, t1] = (
             Sum(
                 tt[t].where[Ord(t) <= pMinDown[g, t1]],
@@ -2112,10 +2130,10 @@ class GamspySuite(unittest.TestCase):
         z2 = Variable(self.m, name="z2")
 
         # Equation
-        cost = Equation(self.m, name="cost", type="eq")
-        cost2 = Equation(self.m, name="cost2", type="eq")
-        supply = Equation(self.m, name="supply", domain=[i], type="leq")
-        demand = Equation(self.m, name="demand", domain=[j], type="geq")
+        cost = Equation(self.m, name="cost", type="regular")
+        cost2 = Equation(self.m, name="cost2", type="regular")
+        supply = Equation(self.m, name="supply", domain=[i], type="regular")
+        demand = Equation(self.m, name="demand", domain=[j], type="regular")
 
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
@@ -2180,9 +2198,9 @@ class GamspySuite(unittest.TestCase):
         z = Variable(self.m, name="z")
 
         # Equation
-        cost = Equation(self.m, name="cost", type="eq")
-        supply = Equation(self.m, name="supply", domain=[i], type="leq")
-        demand = Equation(self.m, name="demand", domain=[j], type="geq")
+        cost = Equation(self.m, name="cost", type="regular")
+        supply = Equation(self.m, name="supply", domain=[i], type="regular")
+        demand = Equation(self.m, name="demand", domain=[j], type="regular")
 
         cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
@@ -2233,7 +2251,7 @@ class GamspySuite(unittest.TestCase):
 
         # Try to solve invalid model
         m = Container()
-        cost = Equation(m, "cost", "eq")
+        cost = Equation(m, "cost", "regular")
         model = Model(m, "model", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
@@ -2339,14 +2357,14 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(ValueError, m.addVariable, "v", "free", ["*"])
         self.assertRaises(ValueError, m.addVariable, "v", "dayum")
 
-        e1 = m.addEquation("e", type="eq")
-        self.assertRaises(ValueError, m.addEquation, "e", "eq", i1)
+        e1 = m.addEquation("e", type="regular")
+        self.assertRaises(ValueError, m.addEquation, "e", "regular", i1)
         self.assertTrue(isinstance(e1, Equation))
-        e2 = m.addEquation("e", type="eq")
+        e2 = m.addEquation("e", type="regular")
         self.assertTrue(id(e1) == id(e2))
         self.assertRaises(ValueError, m.addEquation, "e", "bla")
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
-        e3 = m.addEquation("e", type="eq", records=pd.DataFrame())
+        e3 = m.addEquation("e", type="regular", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
     def test_set_attributes(self):
@@ -2423,7 +2441,7 @@ class GamspySuite(unittest.TestCase):
         p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])
         sumc = Variable(m, "sumc", domain=[o, p])
         op = Variable(m, "op", domain=[o, p])
-        defopLS = Equation(m, "defopLS", type="eq", domain=[o, p])
+        defopLS = Equation(m, "defopLS", type="regular", domain=[o, p])
         defopLS[o, p] = op[o, p] == ifthen(sumc[o, p] >= 0.5, 1, 0)
         self.assertEqual(
             list(m._statements_dict.values())[-1].gamsRepr(),

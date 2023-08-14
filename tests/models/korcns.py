@@ -422,56 +422,58 @@ def main():
 
     # Equation Definitions
     # price block
-    pmdef = Equation(cont, name="pmdef", type="eq", domain=[i])
-    pedef = Equation(cont, name="pedef", type="eq", domain=[i])
-    absorption = Equation(cont, name="absorption", type="eq", domain=[i])
-    sales = Equation(cont, name="sales", type="eq", domain=[i])
-    actp = Equation(cont, name="actp", type="eq", domain=[i])
-    pkdef = Equation(cont, name="pkdef", type="eq", domain=[i])
-    pindexdef = Equation(cont, name="pindexdef", type="eq")
+    pmdef = Equation(cont, name="pmdef", type="regular", domain=[i])
+    pedef = Equation(cont, name="pedef", type="regular", domain=[i])
+    absorption = Equation(cont, name="absorption", type="regular", domain=[i])
+    sales = Equation(cont, name="sales", type="regular", domain=[i])
+    actp = Equation(cont, name="actp", type="regular", domain=[i])
+    pkdef = Equation(cont, name="pkdef", type="regular", domain=[i])
+    pindexdef = Equation(cont, name="pindexdef", type="regular")
 
     # output block
-    activity = Equation(cont, name="activity", type="eq", domain=[i])
-    profitmax = Equation(cont, name="profitmax", type="eq", domain=[i, lc])
-    lmequil = Equation(cont, name="lmequil", type="eq", domain=[lc])
-    cet = Equation(cont, name="cet", type="eq", domain=[i])
-    esupply = Equation(cont, name="esupply", type="eq", domain=[i])
-    armington = Equation(cont, name="armington", type="eq", domain=[i])
-    costmin = Equation(cont, name="costmin", type="eq", domain=[i])
-    xxdsn = Equation(cont, name="xxdsn", type="eq", domain=[i])
-    xsn = Equation(cont, name="xsn", type="eq", domain=[i])
+    activity = Equation(cont, name="activity", type="regular", domain=[i])
+    profitmax = Equation(
+        cont, name="profitmax", type="regular", domain=[i, lc]
+    )
+    lmequil = Equation(cont, name="lmequil", type="regular", domain=[lc])
+    cet = Equation(cont, name="cet", type="regular", domain=[i])
+    esupply = Equation(cont, name="esupply", type="regular", domain=[i])
+    armington = Equation(cont, name="armington", type="regular", domain=[i])
+    costmin = Equation(cont, name="costmin", type="regular", domain=[i])
+    xxdsn = Equation(cont, name="xxdsn", type="regular", domain=[i])
+    xsn = Equation(cont, name="xsn", type="regular", domain=[i])
 
     # demand block
-    inteq = Equation(cont, name="inteq", type="eq", domain=[i])
-    cdeq = Equation(cont, name="cdeq", type="eq", domain=[i])
-    dsteq = Equation(cont, name="dsteq", type="eq", domain=[i])
-    gdp = Equation(cont, name="gdp", type="eq")
-    labory = Equation(cont, name="labory", type="eq")
-    capitaly = Equation(cont, name="capitaly", type="eq")
-    hhtaxdef = Equation(cont, name="hhtaxdef", type="eq")
-    gdeq = Equation(cont, name="gdeq", type="eq", domain=[i])
-    greq = Equation(cont, name="greq", type="eq")
-    tariffdef = Equation(cont, name="tariffdef", type="eq")
-    premium = Equation(cont, name="premium", type="eq")
-    indtaxdef = Equation(cont, name="indtaxdef", type="eq")
-    netsubdef = Equation(cont, name="netsubdef", type="eq")
+    inteq = Equation(cont, name="inteq", type="regular", domain=[i])
+    cdeq = Equation(cont, name="cdeq", type="regular", domain=[i])
+    dsteq = Equation(cont, name="dsteq", type="regular", domain=[i])
+    gdp = Equation(cont, name="gdp", type="regular")
+    labory = Equation(cont, name="labory", type="regular")
+    capitaly = Equation(cont, name="capitaly", type="regular")
+    hhtaxdef = Equation(cont, name="hhtaxdef", type="regular")
+    gdeq = Equation(cont, name="gdeq", type="regular", domain=[i])
+    greq = Equation(cont, name="greq", type="regular")
+    tariffdef = Equation(cont, name="tariffdef", type="regular")
+    premium = Equation(cont, name="premium", type="regular")
+    indtaxdef = Equation(cont, name="indtaxdef", type="regular")
+    netsubdef = Equation(cont, name="netsubdef", type="regular")
 
     # savings-investment block
-    hhsaveq = Equation(cont, name="hhsaveq", type="eq")
-    gruse = Equation(cont, name="gruse", type="eq")
-    depreq = Equation(cont, name="depreq", type="eq")
-    totsav = Equation(cont, name="totsav", type="eq")
-    prodinv = Equation(cont, name="prodinv", type="eq", domain=[i])
-    ieq = Equation(cont, name="ieq", type="eq", domain=[i])
+    hhsaveq = Equation(cont, name="hhsaveq", type="regular")
+    gruse = Equation(cont, name="gruse", type="regular")
+    depreq = Equation(cont, name="depreq", type="regular")
+    totsav = Equation(cont, name="totsav", type="regular")
+    prodinv = Equation(cont, name="prodinv", type="regular", domain=[i])
+    ieq = Equation(cont, name="ieq", type="regular", domain=[i])
 
     # balance of payments
-    caeq = Equation(cont, name="caeq", type="eq")
+    caeq = Equation(cont, name="caeq", type="regular")
 
     # market clearing
-    equil = Equation(cont, name="equil", type="eq", domain=[i])
+    equil = Equation(cont, name="equil", type="regular", domain=[i])
 
     # objective function
-    obj = Equation(cont, name="obj", type="eq")
+    obj = Equation(cont, name="obj", type="regular")
 
     # price block
     pmdef[it] = pm[it] == pwm[it] * er * (1 + tm[it] + pr)

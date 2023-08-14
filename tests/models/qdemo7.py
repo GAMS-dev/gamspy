@@ -105,19 +105,19 @@ def main():
     cps = Variable(m, name="cps")
 
     # Equation
-    landbal = Equation(m, name="landbal", type="leq", domain=[t])
-    laborbal = Equation(m, name="laborbal", type="leq", domain=[t])
-    plow = Equation(m, name="plow", type="leq", domain=[s])
-    ares = Equation(m, name="ares", type="eq")
-    acost = Equation(m, name="acost", type="eq")
-    amisc = Equation(m, name="amisc", type="eq")
-    aplow = Equation(m, name="aplow", type="eq")
-    alab = Equation(m, name="alab", type="eq")
-    lclover = Equation(m, name="lclover", type="geq")
-    lstraw = Equation(m, name="lstraw", type="geq")
-    proc = Equation(m, name="proc", type="eq", domain=[c])
-    dem = Equation(m, name="dem", type="eq", domain=[c])
-    objn = Equation(m, name="objn", type="eq")
+    landbal = Equation(m, name="landbal", type="regular", domain=[t])
+    laborbal = Equation(m, name="laborbal", type="regular", domain=[t])
+    plow = Equation(m, name="plow", type="regular", domain=[s])
+    ares = Equation(m, name="ares", type="regular")
+    acost = Equation(m, name="acost", type="regular")
+    amisc = Equation(m, name="amisc", type="regular")
+    aplow = Equation(m, name="aplow", type="regular")
+    alab = Equation(m, name="alab", type="regular")
+    lclover = Equation(m, name="lclover", type="regular")
+    lstraw = Equation(m, name="lstraw", type="regular")
+    proc = Equation(m, name="proc", type="regular", domain=[c])
+    dem = Equation(m, name="dem", type="regular", domain=[c])
+    objn = Equation(m, name="objn", type="regular")
 
     landbal[t] = Sum(c, xcrop[c] * a[t, c]) <= land * fnum
 

@@ -107,16 +107,20 @@ def main():
 
     # Equation
     capbal = Equation(
-        m, name="capbal", type="eq", domain=[t], description="capacity balance"
+        m,
+        name="capbal",
+        type="regular",
+        domain=[t],
+        description="capacity balance",
     )
     dembal = Equation(
         m,
         name="dembal",
-        type="eq",
+        type="regular",
         domain=[t, s],
         description="demand balance",
     )
-    objdef = Equation(m, name="objdef", type="geq")
+    objdef = Equation(m, name="objdef", type="regular")
 
     objdef.definition = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
         s
@@ -135,7 +139,7 @@ def main():
         objective_variable=obj,
     )
 
-    m.addOptions({"limCol": 0, "limRow": 0})
+    m.addOptions({"limCol": 0, "limRow": 0, "resLim": 3})
 
     rotdk.solve()
 

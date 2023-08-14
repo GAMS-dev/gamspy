@@ -30,6 +30,11 @@ from gamspy import Problem, Sense
 
 def main():
     start = time.time()
+
+    # Decreased no. of draw from 1001 to 11 for convenience
+    # Otherwise, it takes a lot of time
+    NUM_DRAWS = 11
+
     m = Container()
 
     m.addOptions({"limCol": 0, "limRow": 0, "solPrint": "off"})
@@ -41,10 +46,11 @@ def main():
         records=[str(i) for i in range(10)],
         description="type of supplier",
     )
+
     t = Set(
         m,
         name="t",
-        records=[str(i) for i in range(1, 1001)],
+        records=[str(i) for i in range(1, NUM_DRAWS)],
         description="no. of Monte-Carlo draws",
     )
 
@@ -102,47 +108,47 @@ def main():
 
     # Equations
     obj = Equation(
-        m, name="obj", type="eq", description="maker's utility function"
+        m, name="obj", type="regular", description="maker's utility function"
     )
     rev = Equation(
         m,
         name="rev",
-        type="eq",
+        type="regular",
         domain=[i],
         description="maker's revenue function",
     )
     pc = Equation(
         m,
         name="pc",
-        type="geq",
+        type="regular",
         domain=[i],
         description="participation constraint",
     )
     licd = Equation(
         m,
         name="licd",
-        type="geq",
+        type="regular",
         domain=[i],
         description="incentive compatibility constraint",
     )
     licu = Equation(
         m,
         name="licu",
-        type="geq",
+        type="regular",
         domain=[i],
         description="incentive compatibility constraint",
     )
     ic = Equation(
         m,
         name="ic",
-        type="geq",
+        type="regular",
         domain=[i, j],
         description="global incentive compatibility constraint",
     )
     mn = Equation(
         m,
         name="mn",
-        type="geq",
+        type="regular",
         domain=[i],
         description="monotonicity constraint",
     )

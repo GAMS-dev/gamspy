@@ -65,8 +65,8 @@ def main():
     obj = Variable(m, name="obj")
 
     # Equation
-    defobj = Equation(m, name="defobj", type="eq")
-    cons = Equation(m, name="cons", domain=[i], type="leq")
+    defobj = Equation(m, name="defobj", type="regular")
+    cons = Equation(m, name="cons", domain=[i], type="regular")
 
     defobj.definition = obj == Sum(j, c[j] * x[j])
     cons[i] = Sum(j, a[i, j] * x[j]) <= b[i]
@@ -88,8 +88,8 @@ def main():
     lmbda = Variable(m, name="lambda", domain=[j])
     gamma = Variable(m, name="gamma", domain=[j])
 
-    lpcons = Equation(m, name="lpcons", domain=[i], type="leq")
-    defdual = Equation(m, name="defdual", domain=[j], type="eq")
+    lpcons = Equation(m, name="lpcons", domain=[i], type="regular")
+    defdual = Equation(m, name="defdual", domain=[j], type="regular")
 
     lpcons[i] = (
         mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
@@ -116,9 +116,9 @@ def main():
     y = Variable(m, name="y", domain=[i])
     v = Variable(m, name="v", domain=[i, k])
 
-    defrhs = Equation(m, name="defrhs", domain=[i], type="eq")
-    defv = Equation(m, name="defv", domain=[i, k], type="eq")
-    socpqcpcons = Equation(m, name="socpqcpcons", domain=[i], type="geq")
+    defrhs = Equation(m, name="defrhs", domain=[i], type="regular")
+    defv = Equation(m, name="defv", domain=[i, k], type="regular")
+    socpqcpcons = Equation(m, name="socpqcpcons", domain=[i], type="regular")
 
     defrhs[i] = y[i] == b[i] - Sum(j, a[i, j] * x[j])
     defv[i, k] = v[i, k] == Sum(j, p[i, j, k] * x[j])

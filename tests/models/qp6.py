@@ -79,11 +79,11 @@ def main():
     )
 
     # Equation
-    budget = Equation(cont, name="budget", type="eq")
+    budget = Equation(cont, name="budget", type="regular")
     retcon = Equation(
-        cont, name="retcon", type="geq", description="returns constraint"
+        cont, name="retcon", type="regular", description="returns constraint"
     )
-    wdef = Equation(cont, name="wdef", type="eq", domain=[days])
+    wdef = Equation(cont, name="wdef", type="regular", domain=[days])
 
     wdef[d] = w[d] == Sum(s, x[s] * dev[s, d])
 
@@ -92,8 +92,8 @@ def main():
     retcon.definition = Sum(s, mean[s] * x[s]) >= totmean * 1.25
 
     # Equation
-    d_x = Equation(cont, name="d_x", type="eq", domain=[stocks])
-    d_w = Equation(cont, name="d_w", type="eq", domain=[days])
+    d_x = Equation(cont, name="d_x", type="regular", domain=[stocks])
+    d_w = Equation(cont, name="d_w", type="regular", domain=[days])
 
     # Variable
     m_budget = Variable(cont, name="m_budget", type="free")

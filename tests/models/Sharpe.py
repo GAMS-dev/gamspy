@@ -57,25 +57,25 @@ def main():
     ReturnDef = Equation(
         m,
         name="ReturnDef",
-        type="eq",
+        type="regular",
         description="Equation defining the portfolio excess return",
     )
     VarDef = Equation(
         m,
         name="VarDef",
-        type="eq",
+        type="regular",
         description="Equation defining the portfolio excess variance",
     )
     NormalCon = Equation(
         m,
         name="NormalCon",
-        type="eq",
+        type="regular",
         description="Equation defining the normalization contraint",
     )
     ObjDef = Equation(
         m,
         name="ObjDef",
-        type="eq",
+        type="regular",
         description="Objective function definition",
     )
 

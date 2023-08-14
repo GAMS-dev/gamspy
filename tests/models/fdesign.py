@@ -66,16 +66,20 @@ def main():
 
     # Equation
     passband_up_bnds = Equation(
-        m, name="passband_up_bnds", domain=[i], type="eq"
+        m, name="passband_up_bnds", domain=[i], type="regular"
     )
-    cone_lhs = Equation(m, name="cone_lhs", type="eq")
-    cone_rhs = Equation(m, name="cone_rhs", type="eq")
-    so = Equation(m, name="so", type="eq")
+    cone_lhs = Equation(m, name="cone_lhs", type="regular")
+    cone_rhs = Equation(m, name="cone_rhs", type="regular")
+    so = Equation(m, name="so", type="regular")
     passband_lo_bnds = Equation(
-        m, name="passband_lo_bnds", domain=[i], type="eq"
+        m, name="passband_lo_bnds", domain=[i], type="regular"
     )
-    stopband_bnds = Equation(m, name="stopband_bnds", domain=[i], type="eq")
-    stopband_bnds2 = Equation(m, name="stopband_bnds2", domain=[i], type="eq")
+    stopband_bnds = Equation(
+        m, name="stopband_bnds", domain=[i], type="regular"
+    )
+    stopband_bnds2 = Equation(
+        m, name="stopband_bnds2", domain=[i], type="regular"
+    )
 
     passband_up_bnds[i].where[omega_pass[i]] = (
         2

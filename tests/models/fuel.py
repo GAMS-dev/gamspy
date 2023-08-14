@@ -60,12 +60,12 @@ def main():
     others.up[t] = 700
 
     # Equation
-    costfn = Equation(m, type="eq", name="costfn")
-    lowoil = Equation(m, type="geq", name="lowoil", domain=[t])
-    maxoil = Equation(m, type="leq", name="maxoil", domain=[t])
-    floweq = Equation(m, type="eq", name="floweq", domain=[t])
-    demcons = Equation(m, type="eq", name="demcons", domain=[t])
-    oileq = Equation(m, type="geq", name="oileq", domain=[t])
+    costfn = Equation(m, type="regular", name="costfn")
+    lowoil = Equation(m, type="regular", name="lowoil", domain=[t])
+    maxoil = Equation(m, type="regular", name="maxoil", domain=[t])
+    floweq = Equation(m, type="regular", name="floweq", domain=[t])
+    demcons = Equation(m, type="regular", name="demcons", domain=[t])
+    oileq = Equation(m, type="regular", name="oileq", domain=[t])
 
     costfn.definition = cost == Sum(
         t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2)

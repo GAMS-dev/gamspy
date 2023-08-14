@@ -113,7 +113,7 @@ class Set(gt.Set, operable.Operable):
     def __iter__(self):
         return self
 
-    def __getitem__(self, indices: Union[list, str]) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitSet:
         domain = utils._toList(indices)
         return implicits.ImplicitSet(
             self.ref_container, name=self.name, domain=domain
@@ -121,7 +121,7 @@ class Set(gt.Set, operable.Operable):
 
     def __setitem__(
         self,
-        indices: Union[list, str],
+        indices: Union[tuple, str],
         assignment,
     ):
         domain = utils._toList(indices)

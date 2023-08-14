@@ -226,21 +226,21 @@ def build_abstract_model():
     makespan = Variable(m, name="makespan")
     x = Variable(m, name="x", domain=[j, t], type="Binary")
 
-    objective = Equation(m, name="objective", type="eq")
+    objective = Equation(m, name="objective", type="regular")
     objective.definition = makespan == Sum(
         Domain(j, t).where[tw[j, t] & lastJob[j]], x[j, t] * (Ord(t) - 1)
     )
 
-    once = Equation(m, name="once", domain=[j], type="eq")
+    once = Equation(m, name="once", domain=[j], type="regular")
     once[j] = Sum(t.where[tw[j, t]], x[j, t]) == 1
 
-    precedence = Equation(m, name="precedence", domain=[i, j], type="leq")
+    precedence = Equation(m, name="precedence", domain=[i, j], type="regular")
     precedence[i, j].where[pred[i, j]] = (
         Sum(t.where[tw[i, t]], Ord(t) * x[i, t])
         <= Sum(t.where[tw[j, t]], Ord(t) * x[j, t]) - durations[j]
     )
 
-    resusage = Equation(m, name="resusage", domain=[r, t], type="leq")
+    resusage = Equation(m, name="resusage", domain=[r, t], type="regular")
     resusage[r, t] = (
         Sum(
             j.where[actual[j]],

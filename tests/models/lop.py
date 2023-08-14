@@ -181,9 +181,9 @@ def main():
     phi = Variable(m, "phi", domain=[s1, s2], type="integer")
     obj = Variable(m, "obj")
 
-    deffreqlop = Equation(m, "deffreqlop", type="eq", domain=[s1, s2])
-    dtlimit = Equation(m, "dtlimit", type="leq", domain=[s1, s2])
-    defobjdtlop = Equation(m, "defobjdtlop", type="eq")
+    deffreqlop = Equation(m, "deffreqlop", type="regular", domain=[s1, s2])
+    dtlimit = Equation(m, "dtlimit", type="regular", domain=[s1, s2])
+    defobjdtlop = Equation(m, "defobjdtlop", type="regular")
 
     deffreqlop[s1, s2].where[rt[s1, s2]] = freq[s1, s2] == Sum(
         l[ll, s1, s2], phi[ll]
@@ -243,11 +243,11 @@ def main():
     x = Variable(m, "x", type="binary", domain=[s1, s2, lf])
     y = Variable(m, "y", type="integer", domain=[s1, s2, lf])
 
-    deffreqilp = Equation(m, "deffreqilp", domain=[s, s], type="eq")
-    defloadilp = Equation(m, "defloadilp", domain=[s, s], type="leq")
-    oneilp = Equation(m, "oneilp", domain=[s, s], type="leq")
-    couplexy = Equation(m, "couplexy", domain=[s, s, lf], type="leq")
-    defobjilp = Equation(m, "defobjilp", type="eq")
+    deffreqilp = Equation(m, "deffreqilp", domain=[s, s], type="regular")
+    defloadilp = Equation(m, "defloadilp", domain=[s, s], type="regular")
+    oneilp = Equation(m, "oneilp", domain=[s, s], type="regular")
+    couplexy = Equation(m, "couplexy", domain=[s, s, lf], type="regular")
+    defobjilp = Equation(m, "defobjilp", type="regular")
 
     deffreqilp[s1, s2].where[rt[s1, s2]] = freq[s1, s2] == Sum(
         (l[ll, s1, s2], lf), Ord(lf) * x[ll, lf]
@@ -292,8 +292,8 @@ def main():
 
     dtr = Variable(m, "dtr", domain=[s, s, s, s], type="positive")
 
-    dtllimit = Equation(m, "dtllimit", domain=[s, s1, s2, s3], type="leq")
-    sumbound = Equation(m, "sumbound", domain=[s, s], type="eq")
+    dtllimit = Equation(m, "dtllimit", domain=[s, s1, s2, s3], type="regular")
+    sumbound = Equation(m, "sumbound", domain=[s, s], type="regular")
 
     dtllimit[l[sol, s, s1]] = (
         Sum(

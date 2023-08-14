@@ -131,9 +131,9 @@ def main():
     a = Variable(m, name="a", type="positive", domain=[i, j])
 
     # Equation
-    rowbal = Equation(m, name="rowbal", type="eq", domain=[i])
-    colbal = Equation(m, name="colbal", type="eq", domain=[j])
-    defobjent = Equation(m, name="defobjent", type="eq")
+    rowbal = Equation(m, name="rowbal", type="regular", domain=[i])
+    colbal = Equation(m, name="colbal", type="regular", domain=[j])
+    defobjent = Equation(m, name="defobjent", type="regular")
 
     rowbal[i] = Sum(j, a[i, j] * x[j]) == u[i]
 
@@ -162,9 +162,9 @@ def main():
     #        we can balance the flow matrix instead of the A matrix
     zv = Variable(m, name="zv", type="free", domain=[i, j])
 
-    rowbalz = Equation(m, name="rowbalz", type="eq", domain=[i])
-    colbalz = Equation(m, name="colbalz", type="eq", domain=[j])
-    defobjentz = Equation(m, name="defobjentz", type="eq")
+    rowbalz = Equation(m, name="rowbalz", type="regular", domain=[i])
+    colbalz = Equation(m, name="colbalz", type="regular", domain=[j])
+    defobjentz = Equation(m, name="defobjentz", type="regular")
 
     rowbalz[i] = Sum(j, zv[i, j]) == u[i]
 
@@ -204,12 +204,12 @@ def main():
     amax = Variable(m, name="amax", type="positive")
 
     # Equation
-    defabs = Equation(m, name="defabs", type="eq", domain=[i, j])
-    defmaxp = Equation(m, name="defmaxp", type="leq", domain=[i, j])
-    defmaxn = Equation(m, name="defmaxn", type="geq", domain=[i, j])
-    defmad = Equation(m, name="defmad", type="eq")
-    defmade = Equation(m, name="defmade", type="eq")
-    deflinf = Equation(m, name="deflinf", type="eq")
+    defabs = Equation(m, name="defabs", type="regular", domain=[i, j])
+    defmaxp = Equation(m, name="defmaxp", type="regular", domain=[i, j])
+    defmaxn = Equation(m, name="defmaxn", type="regular", domain=[i, j])
+    defmad = Equation(m, name="defmad", type="regular")
+    defmade = Equation(m, name="defmade", type="regular")
+    deflinf = Equation(m, name="deflinf", type="regular")
 
     defabs[i, j] = a[i, j] - a0[i, j] == ap[i, j] - an[i, j]
 
@@ -264,8 +264,8 @@ def main():
     #        SD     squared deviations
     #        RSD    relative squared deviations
     # Equation
-    defsd = Equation(m, name="defsd", type="eq")
-    defrsd = Equation(m, name="defrsd", type="eq")
+    defsd = Equation(m, name="defsd", type="regular")
+    defrsd = Equation(m, name="defrsd", type="regular")
 
     defsd.definition = obj == Sum(
         [i, j], gams_math.power(a[i, j] + a0[i, j], 2)

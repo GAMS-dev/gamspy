@@ -31,13 +31,13 @@ def main():
     objval = Variable(m, name="objval", type="FREE")
 
     # Equation
-    f = Equation(m, type="eq", name="f")
-    g1 = Equation(m, type="eq", name="g1")
-    g2 = Equation(m, type="eq", name="g2")
-    b1l = Equation(m, type="eq", name="b1l")
-    b1u = Equation(m, type="eq", name="b1u")
-    b2l = Equation(m, type="eq", name="b2l")
-    b2u = Equation(m, type="eq", name="b2u")
+    f = Equation(m, type="regular", name="f")
+    g1 = Equation(m, type="regular", name="g1")
+    g2 = Equation(m, type="regular", name="g2")
+    b1l = Equation(m, type="regular", name="b1l")
+    b1u = Equation(m, type="regular", name="b1u")
+    b2l = Equation(m, type="regular", name="b2l")
+    b2u = Equation(m, type="regular", name="b2u")
 
     f.definition = objval == k
     g1.definition = (gams_math.power(q1, 2)) * (gams_math.power(q2, 2)) * (

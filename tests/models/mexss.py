@@ -310,58 +310,68 @@ def main():
     mbf = Equation(
         cont,
         name="mbf",
-        type="geq",
+        type="regular",
         domain=[c, i],
         description="material balances: final products",
     )
     mbi = Equation(
         cont,
         name="mbi",
-        type="geq",
+        type="regular",
         domain=[c, i],
         description="material balances: intermediates",
     )
     mbr = Equation(
         cont,
         name="mbr",
-        type="geq",
+        type="regular",
         domain=[c, i],
         description="material balances: raw materials",
     )
     cc = Equation(
         cont,
         name="cc",
-        type="leq",
+        type="regular",
         domain=[m, i],
         description="capacity constraint",
     )
     mr = Equation(
         cont,
         name="mr",
-        type="geq",
+        type="regular",
         domain=[c, j],
         description="market requirements",
     )
     me = Equation(
-        cont, name="me", type="leq", domain=[c], description="maximum export"
+        cont,
+        name="me",
+        type="regular",
+        domain=[c],
+        description="maximum export",
     )
     obj = Equation(
-        cont, name="obj", type="eq", description="accounting: total cost"
+        cont, name="obj", type="regular", description="accounting: total cost"
     )
     apsi = Equation(
         cont,
         name="apsi",
-        type="eq",
+        type="regular",
         description="accounting: raw material cost",
     )
     alam = Equation(
-        cont, name="alam", type="eq", description="accounting: transport cost"
+        cont,
+        name="alam",
+        type="regular",
+        description="accounting: transport cost",
     )
     api = Equation(
-        cont, name="api", type="eq", description="accounting: import cost"
+        cont, name="api", type="regular", description="accounting: import cost"
     )
     aeps = Equation(
-        cont, name="aeps", type="eq", description="accounting: export cost"
+        cont,
+        name="aeps",
+        type="regular",
+        description="accounting: export cost",
     )
 
     # Equation definition

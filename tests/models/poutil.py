@@ -371,111 +371,111 @@ def main():
 
     # Equations
     obj = Equation(
-        cont, name="obj", type="eq", description="objective function"
+        cont, name="obj", type="regular", description="objective function"
     )
     demand = Equation(
         cont,
         name="demand",
-        type="eq",
+        type="regular",
         domain=[t],
         description="demand constraint for energy forcast",
     )
     PPcost = Equation(
-        cont, name="PPcost", type="eq", description="power plant cost"
+        cont, name="PPcost", type="regular", description="power plant cost"
     )
     PPpower = Equation(
         cont,
         name="PPpower",
-        type="eq",
+        type="regular",
         domain=[t],
         description="power of power plant at time t",
     )
     PPstage = Equation(
         cont,
         name="PPstage",
-        type="eq",
+        type="regular",
         domain=[t],
         description="exactly one stage of power plant at any time",
     )
     PPchiS1 = Equation(
         cont,
         name="PPchiS1",
-        type="geq",
+        type="regular",
         domain=[t, m],
         description="relate chi and delta variables first constraint",
     )
     PPchiS2 = Equation(
         cont,
         name="PPchiS2",
-        type="geq",
+        type="regular",
         domain=[t, m],
         description="relate chi and delta variables second constraint",
     )
     PPstageChange = Equation(
         cont,
         name="PPstageChange",
-        type="leq",
+        type="regular",
         domain=[t],
         description="restrict the number of stage changes",
     )
     PPstarted = Equation(
         cont,
         name="PPstarted",
-        type="geq",
+        type="regular",
         domain=[t],
         description="connect chiZ and chi variables",
     )
     PPidleTime = Equation(
         cont,
         name="PPidleTime",
-        type="leq",
+        type="regular",
         domain=[t],
         description="control the idle time of the plant",
     )
     SMcost = Equation(
         cont,
         name="SMcost",
-        type="eq",
+        type="regular",
         description="cost associated with spot market",
     )
     SMpower = Equation(
         cont,
         name="SMpower",
-        type="eq",
+        type="regular",
         domain=[t],
         description="power from the spot market",
     )
     LFCcost = Equation(
-        cont, name="LFCcost", type="eq", description="cost for the LFC"
+        cont, name="LFCcost", type="regular", description="cost for the LFC"
     )
     LFCenergy = Equation(
         cont,
         name="LFCenergy",
-        type="eq",
+        type="regular",
         description="total energy from the LFC",
     )
     LFCmu = Equation(
         cont,
         name="LFCmu",
-        type="eq",
+        type="regular",
         description="exactly one price segment b",
     )
     LFCenergyS = Equation(
         cont,
         name="LFCenergyS",
-        type="eq",
+        type="regular",
         description="connect the mu variables with the total energy",
     )
     LFCemuo = Equation(
         cont,
         name="LFCemuo",
-        type="leq",
+        type="regular",
         description="accumulated energy amount for segement b1",
     )
     LFCemug = Equation(
         cont,
         name="LFCemug",
-        type="leq",
+        type="regular",
         domain=[b],
         description="accumulated energy amount for all other segements",
     )

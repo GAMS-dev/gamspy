@@ -157,19 +157,19 @@ def main():
 
     # Equation
     cost = Equation(
-        m, name="cost", type="eq", description="define objective function"
+        m, name="cost", type="regular", description="define objective function"
     )
     supply = Equation(
         m,
         name="supply",
-        type="eq",
+        type="regular",
         domain=[i],
         description="observe supply limit at plant i",
     )
     demand = Equation(
         m,
         name="demand",
-        type="eq",
+        type="regular",
         domain=[j],
         description="satisfy demand at market j",
     )
@@ -261,10 +261,10 @@ def main():
     sqrtx = Variable(m, name="sqrtx", type="positive", domain=[i, j])
 
     # Equations
-    defsos1 = Equation(m, name="defsos1", type="eq", domain=[i, j])
-    defsos2 = Equation(m, name="defsos2", type="eq", domain=[i, j])
-    defsos3 = Equation(m, name="defsos3", type="eq", domain=[i, j])
-    defobjdisc = Equation(m, name="defobjdisc", type="eq")
+    defsos1 = Equation(m, name="defsos1", type="regular", domain=[i, j])
+    defsos2 = Equation(m, name="defsos2", type="regular", domain=[i, j])
+    defsos3 = Equation(m, name="defsos3", type="regular", domain=[i, j])
+    defobjdisc = Equation(m, name="defobjdisc", type="regular")
 
     defsos1[i, j] = x[i, j] == Sum(s, p[s] * xs[i, j, s])
 
@@ -349,26 +349,30 @@ def main():
 
     # Equations
     defx = Equation(
-        m, name="defx", type="eq", domain=[i, j], description="definition of x"
+        m,
+        name="defx",
+        type="regular",
+        domain=[i, j],
+        description="definition of x",
     )
     defsqrt = Equation(
         m,
         name="defsqrt",
-        type="eq",
+        type="regular",
         domain=[i, j],
         description="definition of sqrt",
     )
     defseg = Equation(
         m,
         name="defseg",
-        type="leq",
+        type="regular",
         domain=[i, j, s],
         description="segment can only have shipment if indicator is on",
     )
     defgs = Equation(
         m,
         name="defgs",
-        type="leq",
+        type="regular",
         domain=[i, j],
         description="select at most one segment",
     )

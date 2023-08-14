@@ -159,11 +159,11 @@ def main():
     tetd = Variable(m, name="tetd")
 
     # Equations
-    maxw = Equation(m, type="leq", name="maxw", domain=[w])
-    minw = Equation(m, type="geq", name="minw", domain=[t])
-    probe = Equation(m, type="eq", name="probe", domain=[t])
-    etdp = Equation(m, type="eq", name="etdp")
-    etd = Equation(m, type="eq", name="etd")
+    maxw = Equation(m, type="regular", name="maxw", domain=[w])
+    minw = Equation(m, type="regular", name="minw", domain=[t])
+    probe = Equation(m, type="regular", name="probe", domain=[t])
+    etdp = Equation(m, type="regular", name="etdp")
+    etd = Equation(m, type="regular", name="etd")
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
