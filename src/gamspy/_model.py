@@ -246,20 +246,12 @@ class Model:
 
         return assignment
 
-    @property
-    def equations(self) -> Iterable["Equation"]:
-        return self._equations
-
-    @equations.setter
-    def equations(self, new_equations) -> None:
-        self._equations = new_equations
-
     def _generate_attribute_symbols(self) -> None:
-        for attr_name in self._getAttributeNames():
+        for attr_name in self._get_attribute_names():
             symbol_name = f"{self.name}_{attr_name}"
             _ = gp.Parameter(self.ref_container, symbol_name)
 
-    def _getAttributeNames(self) -> Dict[str, str]:
+    def _get_attribute_names(self) -> Dict[str, str]:
         attributes = {
             "domUsd": "num_domain_violations",
             "etAlg": "algorithm_time",
@@ -308,37 +300,6 @@ class Model:
 
         return options
 
-    def solve(
-        self,
-        commandline_options: Optional[dict] = None,
-        output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine-one", "engine-sass"] = "local",
-        engine_config: Optional["EngineConfig"] = None,
-    ):
-        """
-        Generates the gams string, writes it to a file and runs it
-
-        Parameters
-        ----------
-        commandline_options : dict, optional
-        output : TextIOWrapper, optional
-
-        Raises
-        ------
-        ValueError
-            In case problem is not in possible problem types
-        ValueError
-            In case sense is different than "MIN" or "MAX"
-        """
-        self._append_solve_string()
-        self._assign_model_attributes()
-
-        options = self._prepare_gams_options(commandline_options)
-
-        self.ref_container._run_job(options, output, backend, engine_config)
-
-        self._update_model_attributes()
-
     def _validate_model(self, equations, problem, sense=None) -> Tuple:
         if not isinstance(equations, list) or any(
             not isinstance(equation, gp.Equation) for equation in equations
@@ -382,7 +343,7 @@ class Model:
         """
         Assign model attributes to parameters
         """
-        for attr_name in self._getAttributeNames().keys():
+        for attr_name in self._get_attribute_names().keys():
             symbol_name = f"{self.name}_{attr_name}"
 
             self.ref_container._unsaved_statements[utils._getUniqueName()] = (
@@ -390,7 +351,7 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        for gams_attr, python_attr in self._getAttributeNames().items():
+        for gams_attr, python_attr in self._get_attribute_names().items():
             symbol_name = f"{self.name}_{gams_attr}"
 
             if python_attr == "status":
@@ -407,6 +368,45 @@ class Model:
                     python_attr,
                     self.ref_container[symbol_name].records.values[0][0],
                 )
+
+    @property
+    def equations(self) -> Iterable["Equation"]:
+        return self._equations
+
+    @equations.setter
+    def equations(self, new_equations) -> None:
+        self._equations = new_equations
+
+    def solve(
+        self,
+        commandline_options: Optional[dict] = None,
+        output: Optional[io.TextIOWrapper] = None,
+        backend: Literal["local", "engine-one", "engine-sass"] = "local",
+        engine_config: Optional["EngineConfig"] = None,
+    ):
+        """
+        Generates the gams string, writes it to a file and runs it
+
+        Parameters
+        ----------
+        commandline_options : dict, optional
+        output : TextIOWrapper, optional
+
+        Raises
+        ------
+        ValueError
+            In case problem is not in possible problem types
+        ValueError
+            In case sense is different than "MIN" or "MAX"
+        """
+        self._append_solve_string()
+        self._assign_model_attributes()
+
+        options = self._prepare_gams_options(commandline_options)
+
+        self.ref_container._run_job(options, output, backend, engine_config)
+
+        self._update_model_attributes()
 
     def getStatement(self) -> str:
         """
