@@ -60,7 +60,7 @@ def main():
     v0 = Variable(m, "v0")
 
     # Equations
-    CashFlowCon = Equation(m, "CashFlowCon", type="regular", domain=[t, l])
+    CashFlowCon = Equation(m, "CashFlowCon", domain=[t, l])
 
     CashFlowCon[t, l] = (
         Sum(i, SF[t, i, l] * x[i]).where[tau[t] > 0]

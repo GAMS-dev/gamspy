@@ -109,18 +109,16 @@ def main():
     capbal = Equation(
         m,
         name="capbal",
-        type="regular",
         domain=[t],
         description="capacity balance",
     )
     dembal = Equation(
         m,
         name="dembal",
-        type="regular",
         domain=[t, s],
         description="demand balance",
     )
-    objdef = Equation(m, name="objdef", type="regular")
+    objdef = Equation(m, name="objdef")
 
     objdef.definition = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
         s

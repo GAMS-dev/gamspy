@@ -112,12 +112,12 @@ def main():
 
     # Equations
     objj = Equation(
-        cont, name="objj", type="regular", description="objective function"
+        cont, name="objj", description="objective function"
     )
     investav = Equation(
         cont,
         name="investav",
-        type="regular",
+        
         description="investment funds available",
     )
 

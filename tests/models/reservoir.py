@@ -95,10 +95,10 @@ def main():
     obj = Variable(m, name="obj")
 
     # Equation
-    bal1 = Equation(m, type="regular", domain=[n, t], name="bal1")
-    bal2 = Equation(m, type="regular", domain=[n, t], name="bal2")
-    dec = Equation(m, type="regular", domain=[n, t], name="dec")
-    objf = Equation(m, type="regular", name="objf")
+    bal1 = Equation(m, domain=[n, t], name="bal1")
+    bal2 = Equation(m, domain=[n, t], name="bal2")
+    dec = Equation(m, domain=[n, t], name="dec")
+    objf = Equation(m, name="objf")
 
     bal1[n, t].where[~tt[t]] = (
         s["res1", t] - s["res1", t.lag(1, "linear")]

@@ -71,47 +71,33 @@ def main():
     lbal = Equation(
         cont,
         name="lbal",
-        type="regular",
         domain=[cl],
         description="log balances",
     )
     bal = Equation(
         cont,
         name="bal",
-        type="regular",
         domain=[c],
         description="material balances of wood processing",
     )
     cap = Equation(
         cont,
         name="cap",
-        type="regular",
         domain=[m],
         description="wood processing capacities",
     )
     landc = Equation(
         cont,
         name="landc",
-        type="regular",
         domain=[s, k],
         description="land availability constraint",
     )
-    ainvc = Equation(
-        cont, name="ainvc", type="regular", description="investment cost"
-    )
-    aproc = Equation(
-        cont, name="aproc", type="regular", description="process cost"
-    )
-    asales = Equation(
-        cont, name="asales", type="regular", description="sales revenue"
-    )
-    acutc = Equation(
-        cont, name="acutc", type="regular", description="cutting cost"
-    )
-    aplnt = Equation(
-        cont, name="aplnt", type="regular", description="planting cost"
-    )
-    benefit = Equation(cont, name="benefit", type="regular")
+    ainvc = Equation(cont, name="ainvc", description="investment cost")
+    aproc = Equation(cont, name="aproc", description="process cost")
+    asales = Equation(cont, name="asales", description="sales revenue")
+    acutc = Equation(cont, name="acutc", description="cutting cost")
+    aplnt = Equation(cont, name="aplnt", description="planting cost")
+    benefit = Equation(cont, name="benefit")
 
     # Variable
     v = Variable(

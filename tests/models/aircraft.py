@@ -118,14 +118,14 @@ def main():
     phi = Variable(m, name="phi")
 
     # Equations
-    ab = Equation(m, type="regular", name="ab", domain=[i])
-    db = Equation(m, type="regular", name="db", domain=[j])
-    yd = Equation(m, type="regular", name="yd", domain=[j, h])
-    bd = Equation(m, type="regular", name="bd", domain=[j, h])
-    ocd = Equation(m, type="regular", name="ocd")
-    bcd1 = Equation(m, type="regular", name="bcd1")
-    bcd2 = Equation(m, type="regular", name="bcd2")
-    obj = Equation(m, type="regular", name="obj")
+    ab = Equation(m, name="ab", domain=[i])
+    db = Equation(m, name="db", domain=[j])
+    yd = Equation(m, name="yd", domain=[j, h])
+    bd = Equation(m, name="bd", domain=[j, h])
+    ocd = Equation(m, name="ocd")
+    bcd1 = Equation(m, name="bcd1")
+    bcd2 = Equation(m, name="bcd2")
+    obj = Equation(m, name="obj")
 
     ab[i] = Sum(j, x[i, j]) <= aa[i]
     db[j] = Sum(i, p[i, j] * x[i, j]) >= Sum(h.where[deltb[j, h]], y[j, h])

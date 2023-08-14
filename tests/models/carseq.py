@@ -112,14 +112,14 @@ def main(mip=False):
         op.type = "binary"
 
     # Equations
-    defnumCars = Equation(m, name="defnumCars", type="regular", domain=[c])
-    defoneCar = Equation(m, name="defoneCar", type="regular", domain=[p])
-    defop = Equation(m, name="defop", type="regular", domain=[o, p])
-    defopLS = Equation(m, name="defopLS", type="regular", domain=[o, p])
-    defviol = Equation(m, name="defviol", type="regular", domain=[o, p])
-    defviolLS = Equation(m, name="defviolLS", type="regular", domain=[o, p])
-    defobj = Equation(m, name="defobj", type="regular")
-    defsumc = Equation(m, name="defsumc", type="regular", domain=[o, p])
+    defnumCars = Equation(m, name="defnumCars", domain=[c])
+    defoneCar = Equation(m, name="defoneCar", domain=[p])
+    defop = Equation(m, name="defop", domain=[o, p])
+    defopLS = Equation(m, name="defopLS", domain=[o, p])
+    defviol = Equation(m, name="defviol", domain=[o, p])
+    defviolLS = Equation(m, name="defviolLS", domain=[o, p])
+    defobj = Equation(m, name="defobj")
+    defsumc = Equation(m, name="defsumc", domain=[o, p])
 
     defnumCars[c] = Sum(p, cp[c, p]) == classData[c, "numCars"]
     defoneCar[p] = Sum(c, cp[c, p]) == Number(1)

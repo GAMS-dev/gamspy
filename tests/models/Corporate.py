@@ -146,7 +146,6 @@ def main():
     ObjDef = Equation(
         m,
         name="ObjDef",
-        type="regular",
         description=(
             "Objective function for the strategic model (Expected return)"
         ),
@@ -154,21 +153,18 @@ def main():
     BroadPortRetDef = Equation(
         m,
         name="BroadPortRetDef",
-        type="regular",
         domain=[l],
         description="Portfolio return definition for broad asset classes",
     )
     PortRetDef = Equation(
         m,
         name="PortRetDef",
-        type="regular",
         domain=[l],
         description="Portfolio return definition",
     )
     BroadNormalCon = Equation(
         m,
         name="BroadNormalCon",
-        type="regular",
         description=(
             "Equation defining the normalization contraint for broad asset"
             " classes"
@@ -177,13 +173,11 @@ def main():
     NormalCon = Equation(
         m,
         name="NormalCon",
-        type="regular",
         description="Equation defining the normalization contraint",
     )
     MADCon = Equation(
         m,
         name="MADCon",
-        type="regular",
         domain=[l],
         description="MAD constraints",
     )

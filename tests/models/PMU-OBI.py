@@ -65,9 +65,9 @@ def main():
     alpha = Variable(m, name="alpha", domain=[bus], type="Binary")
 
     # Equation
-    eq1 = Equation(m, type="regular", name="eq1")
-    eq2 = Equation(m, type="regular", name="eq2")
-    eq3 = Equation(m, type="regular", name="eq3", domain=[bus])
+    eq1 = Equation(m, name="eq1")
+    eq2 = Equation(m, name="eq2")
+    eq3 = Equation(m, name="eq3", domain=[bus])
 
     eq1.definition = Sum(bus, PMU[bus]) <= NPMU
     eq2.definition = OF == Sum(node, alpha[node])

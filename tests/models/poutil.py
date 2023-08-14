@@ -370,112 +370,91 @@ def main():
     pLFC.up[t] = pLFCref
 
     # Equations
-    obj = Equation(
-        cont, name="obj", type="regular", description="objective function"
-    )
+    obj = Equation(cont, name="obj", description="objective function")
     demand = Equation(
         cont,
         name="demand",
-        type="regular",
         domain=[t],
         description="demand constraint for energy forcast",
     )
-    PPcost = Equation(
-        cont, name="PPcost", type="regular", description="power plant cost"
-    )
+    PPcost = Equation(cont, name="PPcost", description="power plant cost")
     PPpower = Equation(
         cont,
         name="PPpower",
-        type="regular",
         domain=[t],
         description="power of power plant at time t",
     )
     PPstage = Equation(
         cont,
         name="PPstage",
-        type="regular",
         domain=[t],
         description="exactly one stage of power plant at any time",
     )
     PPchiS1 = Equation(
         cont,
         name="PPchiS1",
-        type="regular",
         domain=[t, m],
         description="relate chi and delta variables first constraint",
     )
     PPchiS2 = Equation(
         cont,
         name="PPchiS2",
-        type="regular",
         domain=[t, m],
         description="relate chi and delta variables second constraint",
     )
     PPstageChange = Equation(
         cont,
         name="PPstageChange",
-        type="regular",
         domain=[t],
         description="restrict the number of stage changes",
     )
     PPstarted = Equation(
         cont,
         name="PPstarted",
-        type="regular",
         domain=[t],
         description="connect chiZ and chi variables",
     )
     PPidleTime = Equation(
         cont,
         name="PPidleTime",
-        type="regular",
         domain=[t],
         description="control the idle time of the plant",
     )
     SMcost = Equation(
         cont,
         name="SMcost",
-        type="regular",
         description="cost associated with spot market",
     )
     SMpower = Equation(
         cont,
         name="SMpower",
-        type="regular",
         domain=[t],
         description="power from the spot market",
     )
-    LFCcost = Equation(
-        cont, name="LFCcost", type="regular", description="cost for the LFC"
-    )
+    LFCcost = Equation(cont, name="LFCcost", description="cost for the LFC")
     LFCenergy = Equation(
         cont,
         name="LFCenergy",
-        type="regular",
         description="total energy from the LFC",
     )
     LFCmu = Equation(
         cont,
         name="LFCmu",
-        type="regular",
         description="exactly one price segment b",
     )
     LFCenergyS = Equation(
         cont,
         name="LFCenergyS",
-        type="regular",
         description="connect the mu variables with the total energy",
     )
     LFCemuo = Equation(
         cont,
         name="LFCemuo",
-        type="regular",
         description="accumulated energy amount for segement b1",
     )
     LFCemug = Equation(
         cont,
         name="LFCemug",
-        type="regular",
         domain=[b],
         description="accumulated energy amount for all other segements",
     )

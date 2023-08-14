@@ -49,7 +49,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, Parameter, Variable, Equation
+    from gamspy import Alias, Set, Parameter, Variable, Equation, EquationType
     from gamspy._algebra._expression import Expression
     from gamspy._engine import EngineConfig
 
@@ -530,7 +530,7 @@ class Container(gt.Container):
     def addEquation(
         self,
         name: str,
-        type: str,
+        type: Union[str, "EquationType"] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,

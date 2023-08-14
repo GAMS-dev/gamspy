@@ -231,17 +231,17 @@ def main():
     profit = gp.Variable(c, name="profit", description="objective variable")
 
     # Equation
-    defObj = gp.Equation(c, name="defObj", type="regular")
-    defUsePv = gp.Equation(c, name="defUsePv", domain=m, type="regular")
-    defUsePnv = gp.Equation(c, name="defUsePnv", domain=m, type="regular")
-    defProduce = gp.Equation(c, name="defProduce", domain=m, type="regular")
-    defHmin = gp.Equation(c, name="defHmin", domain=m, type="regular")
-    defHmax = gp.Equation(c, name="defHmax", domain=m, type="regular")
-    stockbal = gp.Equation(c, name="stockbal", domain=[m, p], type="regular")
-    minUse = gp.Equation(c, name="minUse", domain=[m, p], type="regular")
-    maxUse = gp.Equation(c, name="maxUse", domain=[m, p], type="regular")
-    maxNuse = gp.Equation(c, name="maxNuse", domain=m, type="regular")
-    defLogic1 = gp.Equation(c, name="defLogic1", domain=m, type="regular")
+    defObj = gp.Equation(c, name="defObj")
+    defUsePv = gp.Equation(c, name="defUsePv", domain=m)
+    defUsePnv = gp.Equation(c, name="defUsePnv", domain=m)
+    defProduce = gp.Equation(c, name="defProduce", domain=m)
+    defHmin = gp.Equation(c, name="defHmin", domain=m)
+    defHmax = gp.Equation(c, name="defHmax", domain=m)
+    stockbal = gp.Equation(c, name="stockbal", domain=[m, p])
+    minUse = gp.Equation(c, name="minUse", domain=[m, p])
+    maxUse = gp.Equation(c, name="maxUse", domain=[m, p])
+    maxNuse = gp.Equation(c, name="maxNuse", domain=m)
+    defLogic1 = gp.Equation(c, name="defLogic1", domain=m)
 
     defObj.definition = profit == gp.Sum(m, sp * produce[m]) - gp.Sum(
         (m, p), cost[m, p] * buy[m, p]

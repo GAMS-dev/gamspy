@@ -50,8 +50,8 @@ def main():
     cost = Variable(m, name="cost")
 
     # Equations
-    sb = Equation(m, type="regular", name="sb", domain=[t])
-    at = Equation(m, type="regular", name="at")
+    sb = Equation(m, name="sb", domain=[t])
+    at = Equation(m, name="at")
 
     sb[t] = (
         stock[t] == stock[t.lag(1, "linear")] + buy[t] - sell[t] + istock[t]

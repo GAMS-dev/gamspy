@@ -58,12 +58,12 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     obj = Variable(cont, name="obj", type="free")
 
     # Equation
-    defx = Equation(cont, name="defx", type="regular", domain=[w, gf])
-    defgr = Equation(cont, name="defgr", type="regular", domain=[w, gr])
-    defm = Equation(cont, name="defm", type="regular", domain=[w, gr, gf, gf])
-    defnumm = Equation(cont, name="defnumm", type="regular", domain=[gf, gf])
-    defredm = Equation(cont, name="defredm", type="regular", domain=[gf, gf])
-    defobj = Equation(cont, name="defobj", type="regular")
+    defx = Equation(cont, name="defx", domain=[w, gf])
+    defgr = Equation(cont, name="defgr", domain=[w, gr])
+    defm = Equation(cont, name="defm", domain=[w, gr, gf, gf])
+    defnumm = Equation(cont, name="defnumm", domain=[gf, gf])
+    defredm = Equation(cont, name="defredm", domain=[gf, gf])
+    defobj = Equation(cont, name="defobj")
 
     if not isinstance(mip, bool):
         raise Exception(
@@ -74,12 +74,8 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         m.type = "binary"
         redm.type = "positive"
 
-        defm2 = Equation(
-            cont, name="defm2", type="regular", domain=[w, gr, gf, gf]
-        )
-        defm3 = Equation(
-            cont, name="defm3", type="regular", domain=[w, gr, gf, gf]
-        )
+        defm2 = Equation(cont, name="defm2", domain=[w, gr, gf, gf])
+        defm3 = Equation(cont, name="defm3", domain=[w, gr, gf, gf])
 
         defm[w, gr, mgf[gf1, gf2]] = m[w, gr, mgf] <= x[w, gr, gf1]
 

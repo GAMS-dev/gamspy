@@ -272,7 +272,6 @@ def main():
     PresentValueMatch = Equation(
         m,
         name="PresentValueMatch",
-        type="regular",
         description=(
             "Equation matching the present value of asset and liability"
         ),
@@ -280,19 +279,16 @@ def main():
     DurationMatch = Equation(
         m,
         name="DurationMatch",
-        type="regular",
         description="Equation matching the duration of asset and liability",
     )
     ConvexityMatch = Equation(
         m,
         name="ConvexityMatch",
-        type="regular",
         description="Equation matching the convexity of asset and liability",
     )
     ObjDef = Equation(
         m,
         name="ObjDef",
-        type="regular",
         description="Objective function definition",
     )
 
@@ -347,7 +343,7 @@ def main():
     print("DurationMatch: ", DurationMatch.records.level[0])
     print("ConvexityMatch: ", ConvexityMatch.records.level[0])
 
-    ConvexityObj = Equation(m, name="ConvexityObj", type="regular")
+    ConvexityObj = Equation(m, name="ConvexityObj")
 
     ConvexityObj.definition = z == (1.0 / PV_Liab) * Sum(
         i, Conv[i] * PV[i] * x[i]

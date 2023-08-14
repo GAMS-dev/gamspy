@@ -61,12 +61,12 @@ def main():
     v = Variable(cont, name="v", type="Positive")
 
     # Equation
-    pot_energy = Equation(cont, type="regular", name="pot_energy")
-    delta_x_eq = Equation(cont, type="regular", name="delta_x_eq", domain=[n])
-    delta_y_eq = Equation(cont, type="regular", name="delta_y_eq", domain=[n])
-    link_L0 = Equation(cont, type="regular", name="link_L0", domain=[n])
-    link_up = Equation(cont, type="regular", name="link_up", domain=[n])
-    cone_eq = Equation(cont, type="regular", name="cone_eq")
+    pot_energy = Equation(cont, name="pot_energy")
+    delta_x_eq = Equation(cont, name="delta_x_eq", domain=[n])
+    delta_y_eq = Equation(cont, name="delta_y_eq", domain=[n])
+    link_L0 = Equation(cont, name="link_L0", domain=[n])
+    link_up = Equation(cont, name="link_up", domain=[n])
+    cone_eq = Equation(cont, name="cone_eq")
 
     pot_energy.definition = (
         obj

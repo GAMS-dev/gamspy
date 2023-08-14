@@ -118,11 +118,11 @@ def main(output=None):
     y = Variable(m, name="y", type="positive", domain=[l])
 
     # EQUATIONS #
-    ObjDef = Equation(m, name="ObjDef", type="regular")
-    ReturnCon = Equation(m, name="ReturnCon", type="regular")
-    NormalCon = Equation(m, name="NormalCon", type="regular")
-    yPosDef = Equation(m, name="yPosDef", type="regular", domain=[l])
-    yNegDef = Equation(m, name="yNegDef", type="regular", domain=[l])
+    ObjDef = Equation(m, name="ObjDef")
+    ReturnCon = Equation(m, name="ReturnCon")
+    NormalCon = Equation(m, name="NormalCon")
+    yPosDef = Equation(m, name="yPosDef", domain=[l])
+    yNegDef = Equation(m, name="yNegDef", domain=[l])
 
     ObjDef.definition = z == Sum(l, pr[l] * y[l])
 

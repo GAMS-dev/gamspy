@@ -107,48 +107,40 @@ def main():
     Util = Variable(m, name="Util", type="free", description="maker's utility")
 
     # Equations
-    obj = Equation(
-        m, name="obj", type="regular", description="maker's utility function"
-    )
+    obj = Equation(m, name="obj", description="maker's utility function")
     rev = Equation(
         m,
         name="rev",
-        type="regular",
         domain=[i],
         description="maker's revenue function",
     )
     pc = Equation(
         m,
         name="pc",
-        type="regular",
         domain=[i],
         description="participation constraint",
     )
     licd = Equation(
         m,
         name="licd",
-        type="regular",
         domain=[i],
         description="incentive compatibility constraint",
     )
     licu = Equation(
         m,
         name="licu",
-        type="regular",
         domain=[i],
         description="incentive compatibility constraint",
     )
     ic = Equation(
         m,
         name="ic",
-        type="regular",
         domain=[i, j],
         description="global incentive compatibility constraint",
     )
     mn = Equation(
         m,
         name="mn",
-        type="regular",
         domain=[i],
         description="monotonicity constraint",
     )

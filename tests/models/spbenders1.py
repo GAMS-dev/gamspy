@@ -127,10 +127,10 @@ def main():
     theta = Variable(m, name="theta")
 
     # Equation
-    masterobj = Equation(m, name="masterobj", type="regular")
-    production = Equation(m, name="production", type="regular", domain=[i])
-    receive = Equation(m, name="receive", type="regular", domain=[j])
-    optcut = Equation(m, name="optcut", type="regular", domain=[iter])
+    masterobj = Equation(m, name="masterobj")
+    production = Equation(m, name="production", domain=[i])
+    receive = Equation(m, name="receive", domain=[j])
+    optcut = Equation(m, name="optcut", domain=[iter])
 
     masterobj.definition = zmaster == theta - Sum(
         (i, j), transcost[i, j] * ship[i, j]
@@ -157,9 +157,9 @@ def main():
     zsub = Variable(m, name="zsub")
 
     # Equation
-    subobj = Equation(m, name="subobj", type="regular")
-    selling = Equation(m, name="selling", type="regular", domain=[j])
-    market = Equation(m, name="market", type="regular", domain=[j])
+    subobj = Equation(m, name="subobj")
+    selling = Equation(m, name="selling", domain=[j])
+    market = Equation(m, name="market", domain=[j])
 
     subobj.definition = zsub == Sum(j, price * sales[j]) - Sum(
         j, wastecost * waste[j]

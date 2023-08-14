@@ -36,11 +36,11 @@ def main():
     obj = Variable(m, name="obj")
 
     # Equation
-    eobj = Equation(m, type="regular", name="eobj")
-    state1 = Equation(m, type="regular", domain=[nh], name="state1")
-    state2 = Equation(m, type="regular", domain=[nh], name="state2")
-    ek1 = Equation(m, type="regular", domain=[nh], name="ek1")
-    ek2 = Equation(m, type="regular", domain=[nh], name="ek2")
+    eobj = Equation(m, name="eobj")
+    state1 = Equation(m, domain=[nh], name="state1")
+    state2 = Equation(m, domain=[nh], name="state2")
+    ek1 = Equation(m, domain=[nh], name="ek1")
+    ek2 = Equation(m, domain=[nh], name="ek2")
 
     eobj.definition = obj == cb["100"]
 

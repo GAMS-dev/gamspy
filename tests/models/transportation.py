@@ -55,9 +55,9 @@ def main():
     z = Variable(m, name="z")
 
     # Equation
-    cost = Equation(m, name="cost", type="regular")
-    supply = Equation(m, name="supply", domain=[i], type="regular")
-    demand = Equation(m, name="demand", domain=[j], type="regular")
+    cost = Equation(m, name="cost")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
 
     cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
     supply[i] = Sum(j, x[i, j]) <= a[i]

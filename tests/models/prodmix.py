@@ -43,8 +43,8 @@ def main():
     profit = Variable(m, name="profit")
 
     # Equation
-    cap = Equation(m, name="cap", domain=[shop], type="regular")
-    ap = Equation(m, name="ap", type="regular")
+    cap = Equation(m, name="cap", domain=[shop])
+    ap = Equation(m, name="ap")
 
     cap[shop] = Sum(desk, labor[shop, desk] * mix[desk]) <= caplim[shop]
     ap.definition = profit == Sum(desk, price[desk] * mix[desk])

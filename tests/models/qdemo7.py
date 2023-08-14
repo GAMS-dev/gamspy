@@ -105,19 +105,19 @@ def main():
     cps = Variable(m, name="cps")
 
     # Equation
-    landbal = Equation(m, name="landbal", type="regular", domain=[t])
-    laborbal = Equation(m, name="laborbal", type="regular", domain=[t])
-    plow = Equation(m, name="plow", type="regular", domain=[s])
-    ares = Equation(m, name="ares", type="regular")
-    acost = Equation(m, name="acost", type="regular")
-    amisc = Equation(m, name="amisc", type="regular")
-    aplow = Equation(m, name="aplow", type="regular")
-    alab = Equation(m, name="alab", type="regular")
-    lclover = Equation(m, name="lclover", type="regular")
-    lstraw = Equation(m, name="lstraw", type="regular")
-    proc = Equation(m, name="proc", type="regular", domain=[c])
-    dem = Equation(m, name="dem", type="regular", domain=[c])
-    objn = Equation(m, name="objn", type="regular")
+    landbal = Equation(m, name="landbal", domain=[t])
+    laborbal = Equation(m, name="laborbal", domain=[t])
+    plow = Equation(m, name="plow", domain=[s])
+    ares = Equation(m, name="ares")
+    acost = Equation(m, name="acost")
+    amisc = Equation(m, name="amisc")
+    aplow = Equation(m, name="aplow")
+    alab = Equation(m, name="alab")
+    lclover = Equation(m, name="lclover")
+    lstraw = Equation(m, name="lstraw")
+    proc = Equation(m, name="proc", domain=[c])
+    dem = Equation(m, name="dem", domain=[c])
+    objn = Equation(m, name="objn")
 
     landbal[t] = Sum(c, xcrop[c] * a[t, c]) <= land * fnum
 

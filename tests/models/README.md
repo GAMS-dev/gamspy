@@ -35,7 +35,7 @@ m = gp.Container()
 i = gp.Set(m, "i", records=['i1','i2'])
 a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
 
-supply = gp.Equation(m, name="supply", domain=[i], type="regular")
+supply = gp.Equation(m, name="supply", domain=[i])
 supply[i] = Sum(i, a[i]) <= a[i]
 ```
 

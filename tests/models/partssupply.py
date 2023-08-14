@@ -65,13 +65,13 @@ def main():
     util = Variable(cont, name="util")
 
     # Equation
-    obj = Equation(cont, name="obj", type="regular")
-    rev = Equation(cont, name="rev", domain=[i], type="regular")
-    pc = Equation(cont, name="pc", domain=[i], type="regular")
-    ic = Equation(cont, name="ic", domain=[i, j], type="regular")
-    licd = Equation(cont, name="licd", domain=[i], type="regular")
-    licu = Equation(cont, name="licu", domain=[i], type="regular")
-    mn = Equation(cont, name="mn", domain=[i], type="regular")
+    obj = Equation(cont, name="obj")
+    rev = Equation(cont, name="rev", domain=[i])
+    pc = Equation(cont, name="pc", domain=[i])
+    ic = Equation(cont, name="ic", domain=[i, j])
+    licd = Equation(cont, name="licd", domain=[i])
+    licu = Equation(cont, name="licu", domain=[i])
+    mn = Equation(cont, name="mn", domain=[i])
 
     obj.definition = util == Sum(i, p[i] * (b[i] - w[i]))
     rev[i] = b[i] == gams_math.sqrt(x[i])

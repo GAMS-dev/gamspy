@@ -54,15 +54,15 @@ def main():
     t.up[i] = math.pi
 
     # Equation
-    obj = Equation(m, name="obj", type="regular")
-    e1x = Equation(m, name="e1x", type="regular")
-    e1y = Equation(m, name="e1y", type="regular")
-    e2x = Equation(m, name="e2x", type="regular")
-    e2y = Equation(m, name="e2y", type="regular")
-    e3x = Equation(m, name="e3x", type="regular")
-    e3y = Equation(m, name="e3y", type="regular")
-    e4x = Equation(m, name="e4x", type="regular")
-    e4y = Equation(m, name="e4y", type="regular")
+    obj = Equation(m, name="obj")
+    e1x = Equation(m, name="e1x")
+    e1y = Equation(m, name="e1y")
+    e2x = Equation(m, name="e2x")
+    e2y = Equation(m, name="e2y")
+    e3x = Equation(m, name="e3x")
+    e3y = Equation(m, name="e3y")
+    e4x = Equation(m, name="e4x")
+    e4y = Equation(m, name="e4y")
 
     obj.definition = z == a**2 + b**2
     e1x.definition = fx(t["1"]) == x

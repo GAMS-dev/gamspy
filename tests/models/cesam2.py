@@ -559,102 +559,84 @@ def main(is_centropy=False):
     ROWSUMEQ = Equation(
         m,
         name="ROWSUMEQ",
-        type="regular",
         domain=[i],
         description="rowsum with error",
     )
-    ROWSUM = Equation(
-        m, name="ROWSUM", type="regular", domain=[i], description="row sums"
-    )
-    COLSUM = Equation(
-        m, name="COLSUM", type="regular", domain=[j], description="column sums"
-    )
+    ROWSUM = Equation(m, name="ROWSUM", domain=[i], description="row sums")
+    COLSUM = Equation(m, name="COLSUM", domain=[j], description="column sums")
     SAMCOEF = Equation(
         m,
         name="SAMCOEF",
-        type="regular",
         domain=[i, j],
         description="define SAM coefficients",
     )
     TSAMEQ = Equation(
         m,
         name="TSAMEQ",
-        type="regular",
         domain=[i, j],
         description="SAM elements in values",
     )
     ASAMEQ = Equation(
         m,
         name="ASAMEQ",
-        type="regular",
         domain=[i, j],
         description="SAM coefficients",
     )
     GDPFCDEF = Equation(
         m,
         name="GDPFCDEF",
-        type="regular",
         description="define GDP at factor cost",
     )
     GDPDEF = Equation(
         m,
         name="GDPDEF",
-        type="regular",
         description="define GDP at market prices",
     )
     MACROEQ = Equation(
         m,
         name="MACROEQ",
-        type="regular",
         domain=[macro],
         description="macro aggregates with error",
     )
     ERROR1EQ = Equation(
         m,
         name="ERROR1EQ",
-        type="regular",
         domain=[i],
         description="definition of error term 1",
     )
     ERROR2EQ = Equation(
         m,
         name="ERROR2EQ",
-        type="regular",
         domain=[macro],
         description="definition of error term 2",
     )
     ERROR3EQ = Equation(
         m,
         name="ERROR3EQ",
-        type="regular",
         domain=[i, j],
         description="definition of error term 3",
     )
     SUMW1 = Equation(
         m,
         name="SUMW1",
-        type="regular",
         domain=[i],
         description="Sum of weights 1",
     )
     SUMW2 = Equation(
         m,
         name="SUMW2",
-        type="regular",
         domain=[macro],
         description="Sum of weights 2",
     )
     SUMW3 = Equation(
         m,
         name="SUMW3",
-        type="regular",
         domain=[i, j],
         description="Sum of weights 3",
     )
     ENTROPY = Equation(
         m,
         name="ENTROPY",
-        type="regular",
         description="entropy difference definition",
     )
 
