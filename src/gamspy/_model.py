@@ -209,7 +209,7 @@ class Model:
         assignment: Optional[
             Union["Variable", "Operation", "Expression"]
         ] = None,
-    ) -> "Variable":
+    ) -> Optional["Variable"]:
         if assignment is not None and not isinstance(
             assignment,
             (gp.Variable, expression.Expression, operation.Operation),
@@ -243,6 +243,8 @@ class Model:
 
         elif isinstance(assignment, gp.Variable):
             return assignment
+
+        return assignment
 
     @property
     def equations(self) -> Iterable["Equation"]:
@@ -369,7 +371,7 @@ class Model:
         if self.sense:
             solve_string += f" {self.sense}"
 
-        if hasattr(self, "_objective_variable"):
+        if self._objective_variable:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
         self.ref_container._unsaved_statements[utils._getUniqueName()] = (
