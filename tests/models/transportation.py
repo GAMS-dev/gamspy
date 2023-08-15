@@ -24,7 +24,7 @@ import sys
 
 
 def main():
-    m = Container()
+    m = Container(working_directory=".")
 
     # Prepare data
     distances = [

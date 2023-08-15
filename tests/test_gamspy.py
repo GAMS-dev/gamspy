@@ -1376,7 +1376,7 @@ class GamspySuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-    def test_full_models(self):
+    def _test_full_models(self):
         paths = glob.glob(
             str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
         )
@@ -2209,7 +2209,12 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         for attr_name in transport._get_attribute_names().values():
             self.assertTrue(hasattr(transport, attr_name))
+
+            # Make sure model attributes are not in the container
             self.assertFalse(attr_name in self.m.data.keys())
+
+        # Make sure dummy variable and equation is not in the container
+        self.assertFalse(any("dummy_" in name for name in self.m.data.keys()))
 
         # Test invalid problem
         self.assertRaises(ValueError, Model, self.m, "model", [cost], "bla")

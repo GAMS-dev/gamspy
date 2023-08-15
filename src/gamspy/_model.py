@@ -210,6 +210,21 @@ class Model:
             Union["Variable", "Operation", "Expression"]
         ] = None,
     ) -> Optional["Variable"]:
+        """
+        Returns objective variable. If the assignment is an Expression
+        or an Operation (Sum, Product etc.), it creates a dummy variable
+        and a dummy equation.
+
+        Returns
+        -------
+        Variable | None
+
+        Raises
+        ------
+        TypeError
+            In case assignment is not a Variable, Expression or an Operation.
+        """
+
         if assignment is not None and not isinstance(
             assignment,
             (gp.Variable, expression.Expression, operation.Operation),
@@ -339,9 +354,6 @@ class Model:
         )
 
     def _assign_model_attributes(self) -> None:
-        """
-        Assign model attributes to parameters
-        """
         for attr_name in self._get_attribute_names().keys():
             symbol_name = f"{self.name}_{attr_name}"
 
@@ -373,6 +385,14 @@ class Model:
                     python_attr,
                     records.values[0][0],
                 )
+
+    def _remove_dummy_symbols(self):
+        dummy_symbol_names = [
+            name for name in self.ref_container.data.keys() if "dummy_" in name
+        ]
+
+        for name in dummy_symbol_names:
+            del self.ref_container.data[name]
 
     @property
     def equations(self) -> Iterable["Equation"]:
@@ -412,6 +432,7 @@ class Model:
         self.ref_container._run_job(options, output, backend, engine_config)
 
         self._update_model_attributes()
+        self._remove_dummy_symbols()
 
     def getStatement(self) -> str:
         """
