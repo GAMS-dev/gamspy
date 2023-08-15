@@ -6,6 +6,15 @@
 
 GAMS Python API for writing algebraic equations.
 
+## List of tools that are used for development
+
+* **Black** - Formatting
+* **Flake8** - Style Guide Enforcement
+* **Pre-commit** - Managing pre-commit hooks
+* **Bandit** - Security Check
+* **Mypy** - Static Code Analysis
+* **Coverage** - Test Coverage
+
 ## Project Structure
 
 ```
