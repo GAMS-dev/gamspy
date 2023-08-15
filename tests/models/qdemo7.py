@@ -20,13 +20,9 @@ Keywords: quadratic constraint programming, farming, agricultural economics,
 
 from pathlib import Path
 from gamspy import Parameter, Variable, Equation, Container, Model, Sum, Number
-from gamspy.math import power
+from gamspy.math import sqr
 import numpy as np
 from gamspy import Problem, Sense
-
-
-def sqr(x):
-    return power(x, 2)
 
 
 def main():

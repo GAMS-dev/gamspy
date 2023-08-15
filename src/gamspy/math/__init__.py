@@ -24,7 +24,7 @@
 #
 
 from gamspy.math.trigonometric import cos, sin, acos, asin, tan, atan
-from gamspy.math.log_power import exp, power, log, log2, log10
+from gamspy.math.log_power import exp, power, sqr, log, log2, log10
 from gamspy.math.numeric import (
     abs,
     ceil,
@@ -47,6 +47,7 @@ __all__ = [
     "atan",
     "exp",
     "power",
+    "sqr",
     "sqrt",
     "log",
     "log2",

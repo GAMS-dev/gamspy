@@ -1611,11 +1611,19 @@ class GamspySuite(unittest.TestCase):
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(exp( b(i) ))")
 
+        # power
         op1 = gams_math.power(2, 3)
         self.assertEqual(op1, math.pow(2, 3))
         op2 = gams_math.power(b[i], 3)
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(power( b(i),3 ))")
+
+        # sqr
+        op1 = gams_math.sqr(4)
+        self.assertEqual(op1, 4**2)
+        op2 = gams_math.sqr(b[i])
+        self.assertTrue(isinstance(op2, expression.Expression))
+        self.assertEqual(op2.gamsRepr(), "(power( b(i),2 ))")
 
         # mod
         op1 = gams_math.mod(5, 2)

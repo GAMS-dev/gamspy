@@ -18,14 +18,9 @@ Keywords: quadratic constraint programming, circle packing problem, mathematics
 import sys
 from gamspy import Set, Alias, Variable, Equation, Model, Container
 from gamspy import Ord, Number
-from gamspy.math import power
+from gamspy.math import sqr
 from gamspy import Problem, Sense
 import math
-
-
-# gamspy.math seems to miss sqr()
-def sqr(x):
-    return power(x, 2)
 
 
 # take number of circles as first argument

@@ -410,7 +410,7 @@ class Model:
 
         options = self._prepare_gams_options(commandline_options)
 
-        self.ref_container._run_job(options, output, backend, engine_config)
+        self.ref_container._run(options, output, backend, engine_config)
 
         self._update_model_attributes()
         self._remove_dummy_symbols()

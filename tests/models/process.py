@@ -11,16 +11,12 @@ Keywords: nonlinear programming, alkylation process, chemical engineering
 """
 
 from gamspy import Variable, Equation, Container, Model
-from gamspy.math import power
+from gamspy.math import sqr
 from gamspy import Problem, Sense
 
 
 def main():
     m = Container()
-
-    # gams.transfer.algebra.math seems to miss sqr()
-    def sqr(x):
-        return power(x, 2)
 
     # Variables
     olefin = Variable(m, name="olefin", type="positive")

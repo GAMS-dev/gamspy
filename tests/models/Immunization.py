@@ -22,12 +22,9 @@ from gamspy import (
     Sense,
 )
 import gamspy.math as gams_math
+from gamspy.math import sqr
 import pandas as pd
 import numpy as np
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
 
 
 def main():

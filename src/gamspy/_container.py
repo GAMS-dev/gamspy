@@ -741,10 +741,7 @@ class Container(gt.Container):
             if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
                 dirty_symbols.append(symbol)
 
-        options = GamsOptions(self.workspace)
-        options.gdx = self._gdx_path
-        options.forcework = 1
-        self._run_job(options)
+        self._run()
 
         self._unsaved_statements = {}
 
@@ -778,13 +775,18 @@ class Container(gt.Container):
             + "\n"
         )
 
-    def _run_job(
+    def _run(
         self,
-        options: "GamsOptions",
+        options: Optional["GamsOptions"] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine-one", "engine-sass"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
+        if options is None:
+            options = GamsOptions(self.workspace)
+            options.gdx = self._gdx_path
+            options.forcework = 1
+
         # Create gdx file to read records from
         self.write(self._gdx_path)
 

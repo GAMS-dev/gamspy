@@ -23,11 +23,7 @@ from gamspy import (
     Ord,
     Card,
 )
-from gamspy.math import power
-
-
-def sqr(x):
-    return power(x, 2)
+from gamspy.math import sqr
 
 
 def main():

@@ -86,3 +86,18 @@ def power(
         else exponent.gamsRepr()
     )
     return expression.Expression("power(", f"{base_str},{exponent_str}", ")")
+
+
+def sqr(x: Union[float, "Operable"]) -> Union["Expression", float]:
+    """
+    Square of x
+
+    Parameters
+    ----------
+    x : float | Operable
+
+    Returns
+    -------
+    Expression | float
+    """
+    return power(x, 2)
