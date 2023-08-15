@@ -251,6 +251,13 @@ class Model:
             symbol_name = f"{self.name}_{attr_name}"
             _ = gp.Parameter(self.ref_container, symbol_name)
 
+    def _remove_attribute_symbols(self) -> None:
+        for attr_name in self._get_attribute_names():
+            symbol_name = f"{self.name}_{attr_name}"
+
+            if symbol_name in self.ref_container.data.keys():
+                del self.ref_container.data[symbol_name]
+
     def _get_attribute_names(self) -> Dict[str, str]:
         attributes = {
             "domUsd": "num_domain_violations",
@@ -351,22 +358,28 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
+        gdxHandle = utils._openGdxFile(
+            self.ref_container.system_directory, self.ref_container._gdx_path
+        )
+
         for gams_attr, python_attr in self._get_attribute_names().items():
             symbol_name = f"{self.name}_{gams_attr}"
+
+            records = utils._getSymbolData(
+                self.ref_container._gams2np, gdxHandle, symbol_name
+            )
 
             if python_attr == "status":
                 setattr(
                     self,
                     python_attr,
-                    ModelStatus(
-                        self.ref_container[symbol_name].records.values[0][0]
-                    ),
+                    ModelStatus(records.values[0][0]),
                 )
             else:
                 setattr(
                     self,
                     python_attr,
-                    self.ref_container[symbol_name].records.values[0][0],
+                    records.values[0][0],
                 )
 
     @property
@@ -407,6 +420,7 @@ class Model:
         self.ref_container._run_job(options, output, backend, engine_config)
 
         self._update_model_attributes()
+        self._remove_attribute_symbols()
 
     def getStatement(self) -> str:
         """
