@@ -88,43 +88,24 @@ class Sense(Enum):
 
 
 class ModelStatus(Enum):
-    # Optimal solution achieved
     OptimalGlobal = 1
-    # Local optimal solution achieved
     OptimalLocal = 2
-    # Unbounded model found
     Unbounded = 3
-    # Infeasible model found
     InfeasibleGlobal = 4
-    # Locally infeasible model found
     InfeasibleLocal = 5
-    # Solver terminated early and model was still infeasible
     InfeasibleIntermed = 6
-    # Solver terminated early and model was feasible but not yet optimal
     Feasible = 7
-    # Integer solution found
     Integer = 8
-    # Solver terminated early with a non integer solution found
     NonIntegerIntermed = 9
-    # No feasible integer solution could be found
     IntegerInfeasible = 10
-    # Licensing problem
     LicenseError = 11
-    # Error - No cause known
     ErrorUnknown = 12
-    # Error - No solution attained
     ErrorNoSolution = 13
-    # No solution returned
     NoSolutionReturned = 14
-    # Unique solution in a CNS models
     SolvedUnique = 15
-    # Feasible solution in a CNS models
     Solved = 16
-    # Singular in a CNS models
     SolvedSingular = 17
-    # Unbounded - no solution
     UnboundedNoSolution = 18
-    # Infeasible - no solution
     InfeasibleNoSolution = 19
 
 

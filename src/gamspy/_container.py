@@ -845,7 +845,6 @@ class Container(gt.Container):
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
 
-        # Load records from the results
         self.loadRecordsFromGdx(self._gdx_path)
 
     def loadRecordsFromGdx(
