@@ -241,22 +241,14 @@ class Model:
 
             return variable
 
-        elif isinstance(assignment, gp.Variable):
-            return assignment
-
         return assignment
 
     def _generate_attribute_symbols(self) -> None:
         for attr_name in self._get_attribute_names():
             symbol_name = f"{self.name}_{attr_name}"
-            _ = gp.Parameter(self.ref_container, symbol_name)
-
-    def _remove_attribute_symbols(self) -> None:
-        for attr_name in self._get_attribute_names():
-            symbol_name = f"{self.name}_{attr_name}"
-
-            if symbol_name in self.ref_container.data.keys():
-                del self.ref_container.data[symbol_name]
+            self.ref_container._unsaved_statements[symbol_name] = (
+                f"Scalar {symbol_name};"
+            )
 
     def _get_attribute_names(self) -> Dict[str, str]:
         attributes = {
@@ -420,7 +412,6 @@ class Model:
         self.ref_container._run_job(options, output, backend, engine_config)
 
         self._update_model_attributes()
-        self._remove_attribute_symbols()
 
     def getStatement(self) -> str:
         """
