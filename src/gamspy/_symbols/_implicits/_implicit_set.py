@@ -26,7 +26,7 @@
 from __future__ import annotations
 
 import gamspy._algebra._condition as _condition
-import gamspy._algebra._operable as _operable
+import gamspy._algebra._operable as operable
 import gamspy._algebra._expression as _expression
 import gamspy.utils as utils
 from typing import List, Union, TYPE_CHECKING
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from gamspy import Set
 
 
-class ImplicitSet(_operable.Operable):
+class ImplicitSet(operable.Operable):
     """
     Implicit Set
 

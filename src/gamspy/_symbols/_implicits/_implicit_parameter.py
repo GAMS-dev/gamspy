@@ -29,17 +29,17 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 import gamspy._algebra._condition as _condition
 import gamspy._algebra._expression as _expression
-import gamspy._algebra._operable as _operable
+import gamspy._algebra._operable as operable
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
-    from gamspy import Container, Set
+    from gamspy import Set, Parameter, Variable, Equation
 
 
-class ImplicitParameter(_operable.Operable):
+class ImplicitParameter(operable.Operable):
     def __init__(
         self,
-        container: "Container",
+        parent: Union["Parameter", "Variable", "Equation"],
         name: str,
         domain: list[Union["Set", str]] = [],
         records: Optional[Any] = None,
@@ -48,12 +48,13 @@ class ImplicitParameter(_operable.Operable):
 
         Parameters
         ----------
-        container : Container
+        parent : Parameter | Variable | Equation
         name : str
         domain : List[Set | str], optional
         records : Any, optional
         """
-        self.ref_container = container
+        self.parent = parent
+        self.ref_container = parent.ref_container
         self.name = name
         self.domain = domain
         self._records = records
@@ -72,7 +73,7 @@ class ImplicitParameter(_operable.Operable):
             ImplicitParameter(
                 name=self.name,
                 domain=self.domain,
-                container=self.ref_container,
+                parent=self.parent,
             ),
             "=",
             assignment,
@@ -80,11 +81,13 @@ class ImplicitParameter(_operable.Operable):
 
         self.ref_container._addStatement(statement)
 
+        self.parent._is_dirty = True
+
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
+            parent=self.parent,
             name=f"-{self.name}",
             domain=self.domain,
-            container=self.ref_container,
         )
 
     def __invert__(self):
@@ -93,7 +96,7 @@ class ImplicitParameter(_operable.Operable):
     def __getitem__(self, indices: Union[list, str]) -> ImplicitParameter:
         domain: list = utils._toList(indices)
         return ImplicitParameter(
-            container=self.ref_container, name=self.name, domain=domain
+            parent=self.parent, name=self.name, domain=domain
         )
 
     def __setitem__(
@@ -103,13 +106,15 @@ class ImplicitParameter(_operable.Operable):
 
         statement = _expression.Expression(
             ImplicitParameter(
-                name=self.name, domain=domain, container=self.ref_container
+                parent=self.parent, name=self.name, domain=domain
             ),
             "=",
             assignment,
         )
 
         self.ref_container._addStatement(statement)
+
+        self.parent._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
         return _expression.Expression(self, "==", other)

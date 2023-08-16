@@ -154,7 +154,7 @@ class Equation(gt.Equation, operable.Operable):
     def __getitem__(self, indices: Union[tuple, str]):
         domain = utils._toList(indices)
         return implicits.ImplicitEquation(
-            self.ref_container, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
+            self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
 
     def __setitem__(
@@ -184,7 +184,7 @@ class Equation(gt.Equation, operable.Operable):
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
-                self.ref_container,
+                self,
                 name=self.name,
                 type=self.type,
                 domain=domain,
@@ -194,6 +194,8 @@ class Equation(gt.Equation, operable.Operable):
         )
 
         self.ref_container._addStatement(statement)
+
+        self._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -208,7 +210,7 @@ class Equation(gt.Equation, operable.Operable):
 
     def _create_attr(self, attr_name):
         return implicits.ImplicitParameter(
-            self.ref_container,
+            self,
             name=f"{self.name}.{attr_name}",
             records=self.records,
         )
@@ -296,14 +298,14 @@ class Equation(gt.Equation, operable.Operable):
         if self.type in non_regular_map.keys():
             assignment._op_type = non_regular_map[self.type]  # type: ignore
         else:
-            self.type = regular_map[assignment._op_type]
+            self.type = regular_map[assignment._op_type]  # type: ignore
 
         domain = (
             self._definition_domain if self._definition_domain else self.domain
         )
         statement = expression.Expression(
             implicits.ImplicitEquation(
-                self.ref_container,
+                self,
                 name=self.name,
                 type=self.type,
                 domain=domain,
@@ -317,6 +319,11 @@ class Equation(gt.Equation, operable.Operable):
 
     @property
     def records(self):
+        if not self._is_dirty:
+            return self._records
+
+        self.ref_container._loadOnDemand()
+
         return self._records
 
     @records.setter
@@ -369,9 +376,6 @@ class Equation(gt.Equation, operable.Operable):
 
         if self.description:
             output += ' "' + self.description + '"'
-
-        if not self.domain:
-            output += " / /"
 
         output += ";"
         return output

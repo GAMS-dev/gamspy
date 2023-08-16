@@ -91,9 +91,7 @@ class Parameter(gt.Parameter, operable.Operable):
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
         domain = utils._toList(indices)
-        return implicits.ImplicitParameter(
-            self.ref_container, name=self.name, domain=domain
-        )
+        return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
@@ -103,9 +101,7 @@ class Parameter(gt.Parameter, operable.Operable):
         domain = utils._toList(indices)
 
         statement = expression.Expression(
-            implicits.ImplicitParameter(
-                self.ref_container, name=self.name, domain=domain
-            ),
+            implicits.ImplicitParameter(self, name=self.name, domain=domain),
             "=",
             assignment,
         )
@@ -119,7 +115,7 @@ class Parameter(gt.Parameter, operable.Operable):
 
     def __neg__(self):
         return implicits.ImplicitParameter(
-            self.ref_container, name=f"-{self.name}", domain=self._domain
+            self, name=f"-{self.name}", domain=self._domain
         )
 
     @property
@@ -132,7 +128,7 @@ class Parameter(gt.Parameter, operable.Operable):
 
         self._is_dirty = True
         statement = expression.Expression(
-            implicits.ImplicitParameter(self.ref_container, name=self.name),
+            implicits.ImplicitParameter(self, name=self.name),
             "=",
             assignment,
         )
@@ -199,7 +195,5 @@ class Parameter(gt.Parameter, operable.Operable):
             output += ' "' + self.description + '"'
 
         output += ";"
-
-        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output

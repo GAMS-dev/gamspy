@@ -33,13 +33,13 @@ import gamspy._symbols._implicits as implicits
 from typing import List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Set, Equation
 
 
 class ImplicitEquation:
     def __init__(
         self,
-        container: "Container",
+        parent: "Equation",
         name: str,
         type: str,
         domain: List[Union["Set", str]],
@@ -48,11 +48,12 @@ class ImplicitEquation:
 
         Parameters
         ----------
-        container : Container
+        parent : Equation
         name : str
         domain : List[Set | str]
         """
-        self.ref_container = container
+        self.parent = parent
+        self.ref_container = parent.ref_container
         self.name = name
         self.type = type
         self.domain = domain
@@ -67,9 +68,7 @@ class ImplicitEquation:
         self.where = condition.Condition(self)
 
     def _create_attr(self, attr_name: str):
-        return ImplicitParameter(
-            self.ref_container, f"{self.gamsRepr()}.{attr_name}"
-        )
+        return ImplicitParameter(self, f"{self.gamsRepr()}.{attr_name}")
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
@@ -147,7 +146,7 @@ class ImplicitEquation:
 
         statement = _expression.Expression(
             implicits.ImplicitEquation(
-                self.ref_container,
+                self.parent,
                 name=self.name,
                 type=self.type,
                 domain=self.domain,

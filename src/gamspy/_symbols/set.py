@@ -325,6 +325,4 @@ class Set(gt.Set, operable.Operable):
 
         output += ";"
 
-        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
-
         return output

@@ -26,14 +26,14 @@
 from __future__ import annotations
 import gamspy._algebra._condition as condition
 import gamspy.utils as utils
-import gamspy._algebra._operable as _operable
+import gamspy._algebra._operable as operable
 import gamspy._algebra._domain as _domain
 import gamspy._symbols as syms
 import gamspy._symbols._implicits as implicits
 from typing import Tuple
 
 
-class Expression(_operable.Operable):
+class Expression(operable.Operable):
     """
     Expression of two operands and an operation.
 

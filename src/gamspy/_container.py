@@ -758,22 +758,23 @@ class Container(gt.Container):
         -------
         str
         """
+        symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+
         dictionary = (
             self._statements_dict if dictionary is None else dictionary
         )
-        return (
-            "\n".join(
-                [
-                    (
-                        statement
-                        if isinstance(statement, str)
-                        else statement.getStatement()
-                    )
-                    for statement in dictionary.values()
-                ]
-            )
-            + "\n"
-        )
+
+        string = ""
+        for statement in dictionary.values():
+            if isinstance(statement, str):
+                string += statement + "\n"
+            else:
+                string += statement.getStatement() + "\n"
+
+                if isinstance(statement, symbol_types):
+                    string += f"$gdxLoad {self._gdx_path} {statement.name}\n"
+
+        return string
 
     def _run(
         self,

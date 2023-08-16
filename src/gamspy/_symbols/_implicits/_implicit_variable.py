@@ -33,7 +33,7 @@ import gamspy._symbols._implicits as implicits
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gams.transfer import Container
+    from gams.transfer import Variable
     from gams.transfer import Set
 
 
@@ -43,18 +43,19 @@ class ImplicitVariable(_operable.Operable):
 
     Parameters
     ----------
-    container : Container
+    parent : Variable
     name : str
     domain : List[Set | str]
     """
 
     def __init__(
         self,
-        container: "Container",
+        parent: "Variable",
         name: str,
         domain: list[Union["Set", str]],
     ):
-        self.ref_container = container
+        self.parent = parent
+        self.ref_container = parent.ref_container
         self.name = name
         self.domain = domain
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -65,7 +66,7 @@ class ImplicitVariable(_operable.Operable):
 
     def _create_attr(self, attr_name: str):
         return implicits.ImplicitParameter(
-            self.ref_container, f"{self.gamsRepr()}.{attr_name}"
+            self, f"{self.gamsRepr()}.{attr_name}"
         )
 
     def _init_attributes(self):
@@ -110,7 +111,7 @@ class ImplicitVariable(_operable.Operable):
 
     def __neg__(self):
         return implicits.ImplicitVariable(
-            self.ref_container, name=f"-{self.name}", domain=self.domain
+            self.parent, name=f"-{self.name}", domain=self.domain
         )
 
     def __eq__(self, other):  # type: ignore

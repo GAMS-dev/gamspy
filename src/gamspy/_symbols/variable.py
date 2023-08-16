@@ -133,13 +133,11 @@ class Variable(gt.Variable, operable.Operable):
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
         domain = utils._toList(indices)
-        return implicits.ImplicitVariable(
-            self.ref_container, name=self.name, domain=domain
-        )
+        return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
         return implicits.ImplicitVariable(
-            self.ref_container, name=f"-{self.name}", domain=self.domain
+            self, name=f"-{self.name}", domain=self.domain
         )
 
     def __eq__(self, other):  # type: ignore
@@ -155,7 +153,7 @@ class Variable(gt.Variable, operable.Operable):
 
     def _create_attr(self, attr_name):
         return implicits.ImplicitParameter(
-            self.ref_container,
+            self,
             name=f"{self.name}.{attr_name}",
             records=self.records,
         )
@@ -194,6 +192,11 @@ class Variable(gt.Variable, operable.Operable):
 
     @property
     def records(self):
+        if not self._is_dirty:
+            return self._records
+
+        self.ref_container._loadOnDemand()
+
         return self._records
 
     @records.setter
@@ -249,6 +252,5 @@ class Variable(gt.Variable, operable.Operable):
             output += ' "' + self.description + '"'
 
         output += ";"
-        output += f"\n$gdxLoad {self.ref_container._gdx_path} {self.name}"
 
         return output

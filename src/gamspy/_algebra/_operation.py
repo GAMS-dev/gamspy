@@ -24,7 +24,7 @@
 #
 
 import gamspy.utils as utils
-import gamspy._algebra._operable as _operable
+import gamspy._algebra._operable as operable
 import gamspy._algebra._expression as expression
 import gamspy._algebra._condition as condition
 import gamspy._algebra._domain as domain
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from gamspy._algebra._expression import Expression
 
 
-class Operation(_operable.Operable):
+class Operation(operable.Operable):
     def __init__(
         self,
         domain: Union[
@@ -239,7 +239,7 @@ class Smax(Operation):
         super().__init__(domain, expression, "smax")
 
 
-class Ord(_operable.Operable):
+class Ord(operable.Operable):
     """
     Operator ord may be used only with one-dimensional sets.
 
@@ -264,7 +264,7 @@ class Ord(_operable.Operable):
         return f"ord({self._set.name})"
 
 
-class Card(_operable.Operable):
+class Card(operable.Operable):
     """
     The operator card may be used with any set.
 
