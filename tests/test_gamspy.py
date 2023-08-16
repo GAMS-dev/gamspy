@@ -29,6 +29,10 @@ from gamspy import (
     Sum,
     Variable,
     ModelStatus,
+    VariableType,
+    EquationType,
+    Problem,
+    Sense,
 )
 
 
@@ -2299,17 +2303,41 @@ class GamspySuite(unittest.TestCase):
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["j"], Alias))
 
-        _ = gt.Parameter(self.m, "a")
+        a = gt.Parameter(self.m, "a")
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["a"], Parameter))
 
-        _ = gt.Variable(self.m, "v")
+        v = gt.Variable(self.m, "v")
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["v"], Variable))
 
-        _ = gt.Equation(self.m, "e", type="eq")
+        e = gt.Equation(self.m, "e", type="eq")
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["e"], Equation))
+
+        # Test getters
+        m = Container()
+
+        i = Set(m, "i")
+        self.assertTrue(isinstance(m["i"], Set))
+
+        j = Alias(m, "j", i)
+        self.assertTrue(isinstance(m["j"], Alias))
+
+        a = Parameter(m, "a")
+        self.assertTrue(isinstance(m["a"], Parameter))
+
+        v = Variable(m, "v")
+        self.assertTrue(isinstance(m["v"], Variable))
+
+        e = Equation(m, "e")
+        self.assertTrue(isinstance(m["e"], Equation))
+
+        self.assertEqual(m.getSets(), [i])
+        self.assertEqual(m.getAliases(), [j])
+        self.assertEqual(m.getParameters(), [a])
+        self.assertEqual(m.getVariables(), [v])
+        self.assertEqual(m.getEquations(), [e])
 
         # test addX syntax
         m = Container()
@@ -2409,7 +2437,7 @@ class GamspySuite(unittest.TestCase):
         self.assertRaises(Exception, utils._getDomainStr, [5])
 
         # invalid system directory
-        self.assertRaises(Exception, utils._openGdxFile, "bla", "bla")
+        self.assertRaises(utils.GdxException, utils._openGdxFile, "bla", "bla")
 
         self.assertFalse(utils.checkAllSame([1, 2], [2]))
         self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))
@@ -2435,6 +2463,56 @@ class GamspySuite(unittest.TestCase):
         self.assertEqual(
             list(m._statements_dict.values())[-1].gamsRepr(),
             "defopLS(o,p) .. op(o,p) =e= (ifthen(sumc(o,p) >= 0.5, 1, 0)  );",
+        )
+
+    def test_enums(self):
+        self.assertEqual(str(VariableType.FREE), "FREE")
+        self.assertEqual(str(EquationType.REGULAR), "REGULAR")
+        self.assertEqual(str(Problem.LP), "LP")
+        self.assertEqual(str(Sense.MAX), "MAX")
+
+        self.assertEqual(
+            Problem.values(),
+            [
+                "LP",
+                "NLP",
+                "QCP",
+                "DNLP",
+                "MIP",
+                "RMIP",
+                "MINLP",
+                "RMINLP",
+                "MIQCP",
+                "RMIQCP",
+                "MCP",
+                "CNS",
+                "MPEC",
+                "RMPEC",
+                "EMP",
+                "MPSGE",
+            ],
+        )
+
+        self.assertEqual(Sense.values(), ["MIN", "MAX"])
+
+        self.assertEqual(
+            VariableType.values(),
+            [
+                "BINARY",
+                "INTEGER",
+                "POSITIVE",
+                "NEGATIVE",
+                "FREE",
+                "SOS1",
+                "SOS2",
+                "SEMICONT",
+                "SEMIINT",
+            ],
+        )
+
+        self.assertEqual(
+            EquationType.values(),
+            ["REGULAR", "NONBINDING", "EXTERNAL", "CONE", "BOOLEAN"],
         )
 
 
