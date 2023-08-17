@@ -25,6 +25,7 @@
 
 from __future__ import annotations
 import io
+import os
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
@@ -279,6 +280,7 @@ class Model:
     def _prepare_gams_options(
         self,
         commandline_options: Optional[dict] = None,
+        solver_options: Optional[dict] = None,
     ) -> GamsOptions:
         options = GamsOptions(self.ref_container.workspace)
         options.gdx = self.ref_container._gdx_path
@@ -292,6 +294,33 @@ class Model:
                     raise Exception(f"Invalid commandline option: {option}")
 
                 setattr(options, option, value)
+
+        if solver_options:
+            if not commandline_options or not any(
+                commandline_options[problem] for problem in Problem.values()
+            ):
+                raise Exception(
+                    f"You need to provide one of {Problem.values()} to apply"
+                    " solver options."
+                )
+
+            solver_name = ""
+            for problem in Problem.values():
+                if problem in commandline_options.keys():
+                    solver_name = commandline_options[problem]
+                    break
+
+            solver_file_name = (
+                self.ref_container.workspace.working_directory
+                + os.sep
+                + f"{solver_name}.1"
+            )
+
+            with open(solver_file_name) as solver_file:
+                for key, value in solver_options.items():
+                    solver_file.write(f"{key} {value}\n")
+
+            options.optfile = solver_file_name
 
         return options
 
@@ -368,10 +397,15 @@ class Model:
                 )
 
     def _remove_dummy_symbols(self):
+        """
+        Removes model attributes, dummy variable and dummy equation from
+        the container
+        """
         attribute_names = [
             f"{self.name}_{attr_name}"
             for attr_name in self._get_attribute_names()
         ]
+
         dummy_symbol_names = [
             name for name in self.ref_container.data.keys() if "dummy_" in name
         ] + attribute_names
@@ -389,7 +423,8 @@ class Model:
 
     def solve(
         self,
-        commandline_options: Optional[dict] = None,
+        commandline_options: Optional[Dict[str, str]] = None,
+        solver_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine-one", "engine-sass"] = "local",
         engine_config: Optional["EngineConfig"] = None,
@@ -412,7 +447,9 @@ class Model:
         self._append_solve_string()
         self._assign_model_attributes()
 
-        options = self._prepare_gams_options(commandline_options)
+        options = self._prepare_gams_options(
+            commandline_options, solver_options
+        )
 
         self.ref_container._run(options, output, backend, engine_config)
 
