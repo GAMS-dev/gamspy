@@ -228,6 +228,15 @@ class VariableSuite(unittest.TestCase):
             and isinstance(test.stage, implicits.ImplicitParameter)
         )
 
+        k = Set(self.m, "k")
+        x = Variable(self.m, "x", domain=[k])
+        x.l[k] = 5
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            "x.l(k) = 5;",
+        )
+        self.assertTrue(x._is_dirty)
+
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
         a = Variable(self.m, "a", "free", [i])

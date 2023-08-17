@@ -23,6 +23,7 @@ class ModelSuite(unittest.TestCase):
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Sets
         i = Set(
@@ -35,6 +36,7 @@ class ModelSuite(unittest.TestCase):
 
         # Params
         a = Parameter(self.m, name="a", domain=[i], records=capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
@@ -59,6 +61,37 @@ class ModelSuite(unittest.TestCase):
             description="observe supply limit at plant i",
         )
         supply[i] = Sum(j, x[i, j]) <= a[i]
+
+        demand = Equation(self.m, name="demand", domain=[j])
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        # Model with implicit objective
+        test_model = Model(
+            self.m,
+            name="test_model",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        test_model.solve()
+        self.assertEqual(
+            list(self.m.data.keys()),
+            [
+                "i",
+                "j",
+                "a",
+                "b",
+                "d",
+                "c",
+                "x",
+                "z",
+                "cost",
+                "supply",
+                "demand",
+            ],
+        )
+        self.assertEqual(test_model.objective_value, 153.675)
 
         # Equation definition with more than one index
         bla = Equation(
