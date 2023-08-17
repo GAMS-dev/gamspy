@@ -296,31 +296,28 @@ class Model:
                 setattr(options, option, value)
 
         if solver_options:
-            if not commandline_options or not any(
-                commandline_options[problem] for problem in Problem.values()
+            if (
+                not commandline_options
+                or "solver" not in commandline_options.keys()
             ):
                 raise Exception(
-                    f"You need to provide one of {Problem.values()} to apply"
-                    " solver options."
+                    "You need to provide 'solver' in commandline_options to"
+                    " apply solver options."
                 )
 
-            solver_name = ""
-            for problem in Problem.values():
-                if problem in commandline_options.keys():
-                    solver_name = commandline_options[problem]
-                    break
+            solver_name = commandline_options["solver"]
 
             solver_file_name = (
                 self.ref_container.workspace.working_directory
                 + os.sep
-                + f"{solver_name}.1"
+                + f"{solver_name}.123"
             )
 
-            with open(solver_file_name) as solver_file:
+            with open(solver_file_name, "w") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            options.optfile = solver_file_name
+            options.optfile = 123
 
         return options
 
