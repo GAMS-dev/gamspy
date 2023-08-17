@@ -145,7 +145,7 @@ class ContainerSuite(unittest.TestCase):
         new_container2 = Container()
         i = Set(new_container2, name="i")
         a = Parameter(new_container2, name="a", domain=[i])
-        new_container2.loadRecordsFromGdx("test.gdx", [i])
+        new_container2.loadRecordsFromGdx("test.gdx", ["i"])
 
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
         self.assertIsNone(a.records)

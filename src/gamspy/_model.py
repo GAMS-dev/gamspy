@@ -368,9 +368,13 @@ class Model:
                 )
 
     def _remove_dummy_symbols(self):
+        attribute_names = [
+            f"{self.name}_{attr_name}"
+            for attr_name in self._get_attribute_names()
+        ]
         dummy_symbol_names = [
             name for name in self.ref_container.data.keys() if "dummy_" in name
-        ]
+        ] + attribute_names
 
         for name in dummy_symbol_names:
             del self.ref_container.data[name]

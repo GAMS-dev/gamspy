@@ -34,6 +34,7 @@ from gams import (
     DebugLevel,
 )
 import gams.transfer as gt
+from gams.core import gdx
 import gamspy as gp
 import gamspy.utils as utils
 import gamspy._algebra._expression as expression
@@ -850,32 +851,62 @@ class Container(gt.Container):
 
         self.loadRecordsFromGdx(self._gdx_path)
 
+    def _get_symbol_names_from_gdx(self, gdx_handle: str) -> Tuple[list, list]:
+        _, symCount, _ = gdx.gdxSystemInfo(gdx_handle)
+
+        existing_names = []
+        new_names = []
+        for i in range(1, symCount + 1):
+            _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
+            if symbol_name in self.data.keys():
+                existing_names.append(symbol_name)
+            else:
+                new_names.append(symbol_name)
+
+        return existing_names, new_names
+
+    def _get_symbol_names_to_load(
+        self,
+        symbol_names: Optional[List[str]] = None,
+        gdx_handle=None,
+    ) -> List[str]:
+        if not symbol_names:
+            existing_names, new_names = self._get_symbol_names_from_gdx(
+                gdx_handle
+            )
+
+            symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+
+            symbol_names = new_names
+            for name in existing_names:
+                if isinstance(self[name], symbol_types):
+                    symbol_names.append(name)
+
+        return symbol_names
+
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbols: Optional[
-            List[Union["Set", "Parameter", "Variable", "Equation"]]
-        ] = None,
+        symbol_names: Optional[List[str]] = None,
     ) -> None:
         """
-        Loads data of the given symbols from a gdx file. If no symbols
-        are given, data of all symbols are loaded.
+        Loads data of the given symbols from a gdx file. If no
+        symbol names are given, data of all symbols are loaded.
 
         Parameters
         ----------
         load_from : str
             Path to the gdx file
-        symbols : List[Set | Parameter | Variable | Equation], optional
+        symbols : List[str], optional
             Symbols whose data will be load from gdx, by default None
         """
-        symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-
         gdxHandle = utils._openGdxFile(self.system_directory, load_from)
 
-        iterable = symbols if symbols else self._statements_dict.values()
+        symbol_names = self._get_symbol_names_to_load(symbol_names, gdxHandle)
 
-        for statement in iterable:
-            if isinstance(statement, symbol_types):
+        for name in symbol_names:
+            if name in self.data.keys():
+                statement = self[name]
                 updated_records = utils._getSymbolData(
                     self._gams2np, gdxHandle, statement.name
                 )
@@ -884,6 +915,8 @@ class Container(gt.Container):
 
                 if updated_records is not None:
                     statement.domain_labels = statement.domain_names
+            else:
+                self.read(self._gdx_path, [name])
 
         utils._closeGdxHandle(gdxHandle)
 
