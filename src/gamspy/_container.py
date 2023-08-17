@@ -952,7 +952,8 @@ class Container(gt.Container):
         symbol_names : List[str], optional
         """
         sequence = symbol_names if symbol_names else self.data.keys()
-        for symbol_name in sequence:
-            self[symbol_name]._is_dirty = False
+        for name in sequence:
+            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
+                self[name]._is_dirty = False
 
         super().write(write_to, symbol_names)

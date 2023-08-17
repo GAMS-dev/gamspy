@@ -214,6 +214,12 @@ class ContainerSuite(unittest.TestCase):
             list(self.m._unsaved_statements.values())[-1], "Set i / i1*i3 /;"
         )
 
+        m = Container(working_directory=".")
+        m._addGamsCode("scalar piHalf / [pi/2] /;")
+        m._run()
+        self.assertTrue("piHalf" in m.data.keys())
+        self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
+
     def test_system_directory(self):
         import platform
         import gamspy
