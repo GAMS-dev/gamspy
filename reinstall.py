@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 
@@ -23,7 +22,7 @@ def install_gamspy():
         "install",
         "gamspy",
         "--find-links",
-        "dist" + os.sep,
+        "dist",
         "--force-reinstall",
         "--user",
     ]
