@@ -1,39 +1,14 @@
 import os
 import subprocess
-import platform
-import glob
-
-
-def find_wheel_path():
-    paths = [path.split(os.sep)[-1] for path in glob.glob("wheels/*")]
-    user_os = platform.system().lower()
-
-    for path in paths:
-        if (
-            user_os == "darwin"
-            and "macosx" in path
-            and platform.machine() in path
-        ):
-            return path
-
-        if user_os == "windows" and "win" in path:
-            return path
-
-        if user_os in path and platform.machine() in path:
-            return path
-
-    raise Exception("Couldn't find the path")
 
 
 def install_transfer():
-    wheel_path = find_wheel_path()
-
     command = [
         "pip",
         "install",
         "gams",
         "--find-links",
-        "wheels" + os.sep + wheel_path,
+        "wheels",
         "--user",
     ]
 
