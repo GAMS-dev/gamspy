@@ -1,0 +1,97 @@
+test-leg-3.8:
+  stage: test
+  when: on_success
+  tags: [linux]
+  image:
+    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
+    entrypoint: [""]
+  script:
+    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+    - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
+    - source anaconda3/bin/activate
+    - conda create -y -n gamspy-env-3.8 python=3.8
+    - conda activate gamspy-env-3.8
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - python reinstall.py
+    - coverage run --source=gamspy tests/test_gamspy.py --integration
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    name: linux_3.8
+    expire_in: 2 hours
+    paths: [dist/*]
+  coverage: '/TOTAL.*\s+(\d+\%)/'
+
+test-deg-3.8:
+  stage: test
+  when: on_success
+  tags: [macos]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - conda create -y -n gamspy-env-3.8 python=3.8
+    - conda activate gamspy-env-3.8
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - python reinstall.py
+    - coverage run --source=gamspy tests/test_gamspy.py --integration
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+  artifacts:
+    name: macos_x86_64_3.8
+    expire_in: 2 hours
+    paths: [dist/*]
+
+test-dac-3.8:
+  stage: test
+  when: on_success
+  tags: [macos-arm64]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - conda create -y -n gamspy-env-3.8 python=3.8
+    - conda activate gamspy-env-3.8
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo && python reinstall.py && cd ..
+    - pip install wheel build
+    - python reinstall.py
+    - coverage run --source=gamspy tests/test_gamspy.py --integration
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+  artifacts:
+    name: macos_arm64_3.8
+    expire_in: 2 hours
+    paths: [dist/*]
+
+test-wei-3.8:
+  stage: test
+  when: on_success
+  tags: [windows]
+  image:
+    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
+    entrypoint: [""]
+  script:
+    - conda create -y -n gamspy-env-3.8 python=3.8
+    - conda env list
+    - conda activate gamspy-env-3.8
+    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.8;C:\Miniconda\envs\gamspy-env-3.8\Scripts;" + $env:Path
+    - python --version
+    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
+    - cd transfer-repo; python reinstall.py; cd ..
+    - python -m pip install wheel build
+    - python reinstall.py
+    - coverage run --source=gamspy tests\test_gamspy.py --integration
+    - coverage report -m --data-file=".coverage"
+    - coverage xml --data-file=".coverage"
+  artifacts:
+    name: windows_3.8
+    expire_in: 2 hours
+    paths: [dist/*]

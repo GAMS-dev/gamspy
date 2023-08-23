@@ -30,4 +30,7 @@ variables:
     description: "GAMS license string used for testing"
 
 include: ['ci/.gitlab-ci-formatter.yml',
-          'ci/.gitlab-ci-test.yml']
+          'ci/.gitlab-ci-test-3.8.yml',
+          'ci/.gitlab-ci-test-3.9.yml',
+          'ci/.gitlab-ci-test-3.10.yml',
+          'ci/.gitlab-ci-test-3.11.yml']
