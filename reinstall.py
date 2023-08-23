@@ -9,11 +9,15 @@ def find_wheel_path():
     user_os = platform.system().lower()
 
     for path in paths:
-        if user_os in path and platform.machine() in path:
+        if (
+            user_os == "darwin"
+            and "macosx" in path
+            and platform.machine() in path
+        ):
             return path
 
-    print(paths)
-    print(user_os, platform.machine())
+        if user_os in path and platform.machine() in path:
+            return path
 
     raise Exception("Couldn't find the path")
 
