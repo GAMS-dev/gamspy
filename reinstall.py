@@ -16,6 +16,9 @@ def find_wheel_path():
         ):
             return path
 
+        if user_os == "windows" and "win" in path:
+            return path
+
         if user_os in path and platform.machine() in path:
             return path
 
