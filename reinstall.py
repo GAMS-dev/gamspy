@@ -12,6 +12,9 @@ def find_wheel_path():
         if user_os in path and platform.machine() in path:
             return path
 
+    print(paths)
+    print(user_os, platform.machine())
+
     raise Exception("Couldn't find the path")
 
 
