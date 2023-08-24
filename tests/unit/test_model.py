@@ -150,6 +150,25 @@ class ModelSuite(unittest.TestCase):
             "Model test_model5 / supply.x,cost.z /;",
         )
 
+        # Equations provided as strings
+        self.assertRaises(
+            TypeError, Model, self.m, "test_model5", ["cost", "supply"], "LP"
+        )
+
+        # Test matches
+        test_model6 = Model(
+            self.m,
+            name="test_model6",
+            equations=[supply],
+            matches={demand: x},
+            problem="LP",
+            sense="min",
+        )
+        self.assertEqual(
+            test_model6.getStatement(),
+            "Model test_model6 / supply,demand.x /;",
+        )
+
 
 def model_suite():
     suite = unittest.TestSuite()

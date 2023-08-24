@@ -5,6 +5,7 @@ from gamspy import (
     Container,
     Set,
     Parameter,
+    Variable,
     Sum,
     Ord,
     Alias,
@@ -95,12 +96,21 @@ class ParameterSuite(unittest.TestCase):
 
         a[i] = Sum(i, a[i])
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1], "a(i) = sum(i, a(i));"
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            "a(i) = sum(i,a(i));",
         )
 
         a[i].assign = Sum(i, a[i])
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1], "a(i) = sum(i, a(i));"
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            "a(i) = sum(i,a(i));",
+        )
+
+        v = Variable(self.m, "v", domain=[i])
+        v.l[i] = v.l[i] * 5
+        self.assertEqual(
+            list(self.m._statements_dict.values())[-1].getStatement(),
+            "v.l(i) = (v.l(i) * 5);",
         )
 
     def test_equality(self):

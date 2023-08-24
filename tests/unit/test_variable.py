@@ -140,6 +140,11 @@ class VariableSuite(unittest.TestCase):
             ],
         )
 
+        v4 = Variable(
+            self.m, name="v4", domain=[i], type=VariableType.POSITIVE
+        )
+        self.assertEqual(v4.type, "positive")
+
     def test_variable_attributes(self):
         pi = Variable(
             self.m,

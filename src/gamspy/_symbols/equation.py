@@ -83,7 +83,7 @@ class Equation(gt.Equation, operable.Operable):
         self,
         container: "Container",
         name: str,
-        type: Optional[Union[str, EquationType]] = "regular",
+        type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
@@ -127,11 +127,8 @@ class Equation(gt.Equation, operable.Operable):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-    def _cast_type(self, type: Optional[Union[str, EquationType]]) -> str:
-        if type is None:
-            return "EQ"
-
-        elif isinstance(type, str):
+    def _cast_type(self, type: Union[str, EquationType]) -> str:
+        if isinstance(type, str):
             if type.upper() not in EquationType.values():
                 raise ValueError(
                     "Allowed equation types:"
