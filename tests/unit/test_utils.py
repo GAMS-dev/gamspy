@@ -14,12 +14,12 @@ class UtilsSuite(unittest.TestCase):
     def test_utils(self):
         string = "(bla))"
         self.assertRaises(
-            Exception, utils._getMatchingParanthesisIndices, string
+            AssertionError, utils._getMatchingParanthesisIndices, string
         )
 
         string2 = "((bla)"
         self.assertRaises(
-            Exception, utils._getMatchingParanthesisIndices, string2
+            AssertionError, utils._getMatchingParanthesisIndices, string2
         )
 
         i = Set(self.m, "i", records=["i1", "i2"])

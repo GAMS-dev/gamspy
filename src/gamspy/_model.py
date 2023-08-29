@@ -29,6 +29,7 @@ import os
 from enum import Enum
 import gamspy.utils as utils
 import gamspy as gp
+from gamspy.exceptions import GamspyException
 from gams import GamsOptions
 from gamspy._engine import EngineConfig
 import gamspy._algebra._expression as expression
@@ -287,11 +288,13 @@ class Model:
 
         if commandline_options:
             if not isinstance(commandline_options, dict):
-                raise Exception("commandline_options must be a dict")
+                raise GamspyException("commandline_options must be a dict")
 
             for option, value in commandline_options.items():
                 if option.lower() not in utils.COMMANDLINE_OPTIONS:
-                    raise Exception(f"Invalid commandline option: {option}")
+                    raise GamspyException(
+                        f"Invalid commandline option: {option}"
+                    )
 
                 setattr(options, option, value)
 
@@ -300,7 +303,7 @@ class Model:
                 not commandline_options
                 or "solver" not in commandline_options.keys()
             ):
-                raise Exception(
+                raise GamspyException(
                     "You need to provide 'solver' in commandline_options to"
                     " apply solver options."
                 )

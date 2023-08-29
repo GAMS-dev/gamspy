@@ -37,6 +37,12 @@ import gams.transfer as gt
 from gams.core import gdx
 import gamspy as gp
 import gamspy.utils as utils
+from gamspy.exceptions import (
+    GamsException,
+    GamspyException,
+    EngineException,
+    EarlyQuit,
+)
 import gamspy._algebra._expression as expression
 from typing import (
     Any,
@@ -816,33 +822,44 @@ class Container(gt.Container):
 
         # Actual run depending on the backend
         if backend == "local":
-            job.run(
-                gams_options=options,
-                checkpoint=self._save_to,
-                create_out_db=False,
-                output=output,
-            )
+            try:
+                job.run(
+                    gams_options=options,
+                    checkpoint=self._save_to,
+                    create_out_db=False,
+                    output=output,
+                )
+            except KeyboardInterrupt:
+                raise EarlyQuit(
+                    "Keyboard interrupt was received while solving the model"
+                )
+            except Exception as e:
+                raise GamsException(e)
+
         elif backend in ["engine-one", "engine-sass"]:
             options.gdx = "default.gdx"
 
             if engine_config is None:
-                raise Exception(
+                raise GamspyException(
                     "Engine configuration must be defined to run the job with"
                     " GAMS Engine"
                 )
 
-            job.run_engine(
-                engine_configuration=engine_config.get_engine_configuration(),
-                extra_model_files=self._gdx_path,
-                gams_options=options,
-                checkpoint=self._save_to,
-                output=output,
-                create_out_db=False,
-                engine_options=engine_config.engine_options,
-                remove_results=engine_config.remove_results,
-            )
+            try:
+                job.run_engine(
+                    engine_configuration=engine_config.get_engine_config(),
+                    extra_model_files=self._gdx_path,
+                    gams_options=options,
+                    checkpoint=self._save_to,
+                    output=output,
+                    create_out_db=False,
+                    engine_options=engine_config.engine_options,
+                    remove_results=engine_config.remove_results,
+                )
+            except Exception as engine_error:
+                raise EngineException(engine_error)
         else:
-            raise Exception(
+            raise GamspyException(
                 "Specified backend is not supported. Possible backends: local,"
                 " engine-one, engine-sass"
             )

@@ -14,7 +14,7 @@ class EngineConfig:
     engine_options: Optional[dict] = None
     remove_results: bool = True
 
-    def get_engine_configuration(self):
+    def get_engine_config(self):
         return GamsEngineConfiguration(
             self.host,
             self.username,

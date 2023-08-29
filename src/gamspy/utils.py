@@ -32,6 +32,7 @@ import gamspy._symbols._implicits as implicits
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
+from gamspy.exceptions import GdxException
 from typing import Tuple, Union, Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -39,10 +40,6 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra._expression import Expression
-
-
-class GdxException(Exception):
-    """Exception raised if there is a GDX related issue"""
 
 
 def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
@@ -121,9 +118,7 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
         )
         return _convert_to_categoricals(arrkeys, arrvals, unique_uels)
     except Exception as e:
-        raise GdxException(
-            f"No symbol with id {symbol_id} in the gdx file! Message: {e}"
-        )
+        raise GdxException(e)
 
 
 def _getSystemDirectory(system_directory: Optional[str] = None) -> str:
@@ -220,10 +215,7 @@ def _openGdxFile(system_directory: str, load_from: str):
         rc = gdx.gdxCreateD(gdxHandle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
     except AssertionError as e:
-        raise GdxException(
-            "Could not properly load GDX DLL, check system_directory"
-            f" path. {e}"
-        )
+        raise GdxException(e)
 
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
@@ -232,7 +224,7 @@ def _openGdxFile(system_directory: str, load_from: str):
         rc = _set_special_values(gdxHandle)
         assert rc
     except AssertionError as e:
-        raise GdxException(f"Could not open the GDX file at: {load_from}. {e}")
+        raise GdxException(e)
 
     return gdxHandle
 
@@ -407,10 +399,10 @@ def _getMatchingParanthesisIndices(string: str) -> dict:
             try:
                 matching_indices[stack.pop()] = index
             except IndexError:
-                raise Exception("Too many closing parentheses!")
+                raise AssertionError("Too many closing parentheses!")
 
     if stack:
-        raise Exception("Too many opening parentheses!")
+        raise AssertionError("Too many opening parentheses!")
 
     return matching_indices
 
