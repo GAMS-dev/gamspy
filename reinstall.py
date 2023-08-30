@@ -8,6 +8,7 @@ def install_transfer():
         "gams",
         "--find-links",
         "wheels",
+        "--force-reinstall",
         "--user",
     ]
 
