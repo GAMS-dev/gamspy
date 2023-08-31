@@ -28,17 +28,26 @@ import io
 import os
 from enum import Enum
 import gamspy.utils as utils
+import gamspy._symbols._implicits as implicits
 import gamspy as gp
 from gamspy.exceptions import GamspyException
-from gams import GamsOptions
+from gams import (
+    GamsOptions,
+    GamsModifier,
+    UpdateAction,
+    VarType,
+    EquType,
+)
 from gamspy._engine import EngineConfig
 import gamspy._algebra._expression as expression
 import gamspy._algebra._operation as operation
+import math
 
 from typing import (
     Dict,
     Iterable,
     Literal,
+    List,
     Optional,
     Union,
     Tuple,
@@ -46,7 +55,8 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Variable, Equation, Container
+    from gamspy import Parameter, Variable, Equation, Container
+    from gamspy._symbols._implicits import ImplicitParameter
     from gamspy._algebra._expression import Expression
     from gamspy._algebra._operation import Operation
 
@@ -111,6 +121,148 @@ class ModelStatus(Enum):
     InfeasibleNoSolution = 19
 
 
+variable_map = {
+    "binary": VarType.Binary,
+    "integer": VarType.Integer,
+    "positive": VarType.Positive,
+    "negative": VarType.Negative,
+    "free": VarType.Free,
+    "sos1": VarType.SOS1,
+    "sos2": VarType.SOS2,
+    "semicont": VarType.SemiCont,
+    "semiint": VarType.SemiInt,
+}
+
+
+equation_map = {
+    "eq": EquType.E,
+    "leq": EquType.L,
+    "geq": EquType.G,
+    "nonbinding": EquType.N,
+    "external": EquType.X,
+    "cone": EquType.C,
+}
+
+update_map = {
+    "l": UpdateAction.Primal,
+    "m": UpdateAction.Dual,
+    "up": UpdateAction.Upper,
+    "lo": UpdateAction.Lower,
+    "fx": UpdateAction.Fixed,
+}
+
+
+class ModelInstance:
+    def __init__(
+        self,
+        container: "Container",
+        model: "Model",
+        modifiables: List[Union["Parameter", "ImplicitParameter"]],
+    ) -> None:
+        self.modifiables = modifiables
+        self.main_container = container
+
+        self.checkpoint = self.main_container._restart_from
+        self.instance = self.checkpoint.add_modelinstance()
+        self.instantiate(model)
+
+    def update_sync_db(self):
+        self.main_container.write(self.instance.sync_db._gmd)
+
+    def _create_modifiers(self):
+        modifiers = []
+
+        for modifiable in self.modifiables:
+            if isinstance(modifiable, gp.Parameter):
+                modifiers.append(
+                    GamsModifier(
+                        self.instance.sync_db.add_parameter(
+                            modifiable.name,
+                            modifiable.dimension,
+                            modifiable.description,
+                        )
+                    )
+                )
+            elif isinstance(modifiable, implicits.ImplicitParameter):
+                attribute = modifiable.name.split(".")[-1]
+                update_action = update_map[attribute]
+
+                if isinstance(modifiable.parent, gp.Variable):
+                    sync_db_symbol = self.instance.sync_db.add_variable(
+                        modifiable.parent.name,
+                        modifiable.parent.dimension,
+                        variable_map[modifiable.parent.type],
+                    )
+
+                elif isinstance(modifiable.parent, gp.Equation):
+                    sync_db_symbol = self.instance.sync_db.add_equation(
+                        modifiable.parent.name,
+                        modifiable.parent.dimension,
+                        equation_map[modifiable.parent.type],
+                    )
+
+                attr_name = "_".join(modifiable.name.split("."))
+
+                attr_param = gp.Parameter(
+                    self.main_container,
+                    attr_name,
+                    domain=modifiable.parent.domain,
+                )
+
+                def value_func(seed=None, size=None):
+                    return math.inf
+
+                attr_param.generateRecords(density=1.0, func=value_func)
+                print(attr_param.records)
+
+                data_symbol = self.instance.sync_db.add_parameter(
+                    attr_name,
+                    modifiable.parent.dimension,
+                )
+
+                modifiers.append(
+                    GamsModifier(sync_db_symbol, update_action, data_symbol)
+                )
+            else:
+                raise GamspyException(
+                    f"Symbol type {type(modifiable)} cannot be modified in a"
+                    " frozen solve"
+                )
+
+        return modifiers
+
+    def instantiate(self, model: "Model"):
+        solve_string = (
+            f"{model.name} use"  # type: ignore
+            f" {model.problem} {model.sense} {model._objective_variable.name}"
+        )
+
+        modifiers = self._create_modifiers()
+
+        self.instance.instantiate(solve_string, modifiers)
+
+    def solve(self):
+        self.instance.solve()
+
+    @property
+    def model_status(self):
+        return self.instance.model_status
+
+    @property
+    def solver_status(self):
+        return self.instance.solver_status
+
+    def update_main_container(self):
+        instance_container = gp.Container(name="instance_container")
+        instance_container.read(self.instance.sync_db._gmd)
+
+        for name in instance_container.data.keys():
+            if name in self.main_container.data.keys():
+                self.main_container[name].setRecords(
+                    instance_container[name].records
+                )
+
+
 class Model:
     """
     Represents a list of equations to be solved.
@@ -161,6 +313,9 @@ class Model:
         self.ref_container._addStatement(self)
         self._generate_attribute_symbols()
 
+        # allow freezing
+        self.is_frozen = False
+
         # Attributes
         self.num_domain_violations = None
         self.algorithm_time = None
@@ -170,7 +325,7 @@ class Model:
         self.marginals = None
         self.max_infeasibility = None
         self.mean_infeasibility = None
-        self.status = None
+        self.status: Optional[ModelStatus] = None
         self.num_nodes_used = None
         self.num_dependencies = None
         self.num_discrete_variables = None
@@ -421,6 +576,15 @@ class Model:
     def equations(self, new_equations) -> None:
         self._equations = new_equations
 
+    def freeze(self, modifiables):
+        self.ref_container._run()
+
+        self.instance = ModelInstance(self.ref_container, self, modifiables)
+        self.is_frozen = True
+
+    def unfreeze(self):
+        self.is_frozen = False
+
     def solve(
         self,
         commandline_options: Optional[Dict[str, str]] = None,
@@ -444,17 +608,24 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
-        self._append_solve_string()
-        self._assign_model_attributes()
+        if not self.is_frozen:
+            self._append_solve_string()
+            self._assign_model_attributes()
 
-        options = self._prepare_gams_options(
-            commandline_options, solver_options
-        )
+            options = self._prepare_gams_options(
+                commandline_options, solver_options
+            )
 
-        self.ref_container._run(options, output, backend, engine_config)
+            self.ref_container._run(options, output, backend, engine_config)
 
-        self._update_model_attributes()
-        self._remove_dummy_symbols()
+            self._update_model_attributes()
+            self._remove_dummy_symbols()
+        else:
+            self.instance.update_sync_db()
+            self.instance.solve()
+            self.instance.update_main_container()
+
+            self.status = ModelStatus(self.instance.model_status)
 
     def getStatement(self) -> str:
         """
