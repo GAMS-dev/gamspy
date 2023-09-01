@@ -23,18 +23,21 @@
 # SOFTWARE.
 #
 
-from typing import Any, List, Optional, Union, TYPE_CHECKING
 import gams.transfer as gt
 import pandas as pd
-import gamspy._algebra._expression as expression
-import gamspy._algebra._operable as operable
-import gamspy._algebra._condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy._algebra.condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
+
+from gamspy._symbols.symbol import Symbol
 from enum import Enum
+from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
+    from gamspy._algebra.expression import Expression
 
 
 class EquationType(Enum):
@@ -52,7 +55,7 @@ class EquationType(Enum):
         return self.value
 
 
-class Equation(gt.Equation, operable.Operable):
+class Equation(gt.Equation, operable.Operable, Symbol):
     """
     Represents an Equation symbol in GAMS.
     https://www.gams.com/latest/docs/UG_Equations.html
@@ -89,7 +92,7 @@ class Equation(gt.Equation, operable.Operable):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition: Optional[expression.Expression] = None,
+        definition: Optional["Expression"] = None,
         definition_domain: Optional[list] = None,
     ):
         type = self._cast_type(type)
@@ -157,7 +160,7 @@ class Equation(gt.Equation, operable.Operable):
     def __setitem__(
         self,
         indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: expression.Expression,
+        assignment: "Expression",
     ):
         domain = utils._toList(indices)
 
@@ -257,13 +260,11 @@ class Equation(gt.Equation, operable.Operable):
         return self._infeas
 
     @property
-    def definition(self) -> Optional[expression.Expression]:
+    def definition(self) -> Optional["Expression"]:
         return self._definition
 
     @definition.setter
-    def definition(
-        self, assignment: Optional[expression.Expression] = None
-    ) -> None:
+    def definition(self, assignment: Optional["Expression"] = None) -> None:
         """
         Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;

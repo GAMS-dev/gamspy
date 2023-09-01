@@ -43,7 +43,7 @@ from gamspy.exceptions import (
     EngineException,
     EarlyQuit,
 )
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 from typing import (
     Any,
     Dict,
@@ -57,7 +57,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation, EquationType
-    from gamspy._algebra._expression import Expression
+    from gamspy._algebra.expression import Expression
     from gamspy._engine import EngineConfig
 
 

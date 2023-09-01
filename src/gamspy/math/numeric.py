@@ -1,13 +1,13 @@
 import math
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy._algebra._expression import Expression
-    from gamspy._algebra._operable import Operable
+    from gamspy._algebra.expression import Expression
+    from gamspy._symbols.symbol import Symbol
 
 
-def abs(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def abs(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Absolute value of x (i.e. ``|x|``)
 
@@ -20,7 +20,7 @@ def abs(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("abs(", x.gamsRepr(), ")")
 
 
-def ceil(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def ceil(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     The smallest integer greater than or equal to x
 
@@ -33,7 +33,7 @@ def ceil(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("ceil(", x.gamsRepr(), ")")
 
 
-def floor(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def floor(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     The greatest integer less than or equal to x
 
@@ -71,7 +71,7 @@ def max(*values) -> "Expression":
 
 
 def mod(
-    x: Union[float, "Operable"], y: Union[float, "Operable"]
+    x: Union[float, "Symbol"], y: Union[float, "Symbol"]
 ) -> Union["Expression", int, float]:
     """
     Remainder of x divided by y.
@@ -88,7 +88,7 @@ def mod(
     return expression.Expression("mod(" + x_str, ",", y_str + ")")
 
 
-def Round(x: "Operable", num_decimals: int = 0) -> "Expression":
+def Round(x: "Symbol", num_decimals: int = 0) -> "Expression":
     """
     Round x to num_decimals decimal places.
 
@@ -106,7 +106,7 @@ def Round(x: "Operable", num_decimals: int = 0) -> "Expression":
     )
 
 
-def sign(x: "Operable") -> "Expression":
+def sign(x: "Symbol") -> "Expression":
     """
     Sign of x returns 1 if x > 0, -1 if x < 0, and 0 if x = 0
 
@@ -121,7 +121,7 @@ def sign(x: "Operable") -> "Expression":
     return expression.Expression("sign(", x.gamsRepr(), ")")
 
 
-def sqrt(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def sqrt(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Square root of x
 

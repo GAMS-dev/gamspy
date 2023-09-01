@@ -5,7 +5,6 @@ from gamspy import Sum, Sense
 def main():
     m = Container(
         working_directory=".",
-        system_directory="/opt/gams/gams44.0_linux_x64_64_sfx",
     )
 
     # Prepare data

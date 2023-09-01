@@ -23,20 +23,23 @@
 # SOFTWARE.
 #
 
-from typing import Any, List, Optional, Union, TYPE_CHECKING
 import gams.transfer as gt
-import gamspy._algebra._expression as expression
-import gamspy._algebra._operable as operable
-import gamspy._algebra._condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy._algebra.condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
 import pandas as pd
 
+from gamspy._symbols.symbol import Symbol
+from typing import Any, List, Optional, Union, TYPE_CHECKING
+
 if TYPE_CHECKING:
     from gamspy import Set, Container
+    from gamspy._algebra.expression import Expression
 
 
-class Parameter(gt.Parameter, operable.Operable):
+class Parameter(gt.Parameter, operable.Operable, Symbol):
     """
     Represents a parameter symbol in GAMS.
     https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
@@ -96,7 +99,7 @@ class Parameter(gt.Parameter, operable.Operable):
     def __setitem__(
         self,
         indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: expression.Expression,
+        assignment: "Expression",
     ) -> None:
         domain = utils._toList(indices)
 

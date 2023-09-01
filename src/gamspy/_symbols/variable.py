@@ -23,15 +23,17 @@
 # SOFTWARE.
 #
 
-from typing import Any, List, Optional, Union, TYPE_CHECKING
 import gams.transfer as gt
 import pandas as pd
-import gamspy._algebra._expression as expression
-import gamspy._algebra._operable as operable
-import gamspy._algebra._condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy._algebra.condition as condition
 import gamspy._symbols._implicits as implicits
 import gamspy.utils as utils
+
 from enum import Enum
+from gamspy._symbols.symbol import Symbol
+from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -56,7 +58,7 @@ class VariableType(Enum):
         return self.value
 
 
-class Variable(gt.Variable, operable.Operable):
+class Variable(gt.Variable, operable.Operable, Symbol):
     """
     Represents a variable symbol in GAMS.
     https://www.gams.com/latest/docs/UG_Variables.html

@@ -1,9 +1,9 @@
 from typing import Union, TYPE_CHECKING
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
-    from gamspy._algebra._expression import Expression
+    from gamspy._algebra.expression import Expression
 
 
 def ifthen(

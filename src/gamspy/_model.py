@@ -39,8 +39,8 @@ from gams import (
     EquType,
 )
 from gamspy._engine import EngineConfig
-import gamspy._algebra._expression as expression
-import gamspy._algebra._operation as operation
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operation as operation
 import math
 
 from typing import (
@@ -57,8 +57,8 @@ from typing import (
 if TYPE_CHECKING:
     from gamspy import Parameter, Variable, Equation, Container
     from gamspy._symbols._implicits import ImplicitParameter
-    from gamspy._algebra._expression import Expression
-    from gamspy._algebra._operation import Operation
+    from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
 
 
 class Problem(Enum):

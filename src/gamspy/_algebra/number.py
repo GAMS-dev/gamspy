@@ -23,48 +23,34 @@
 # SOFTWARE.
 #
 
-from __future__ import annotations
-
-import gamspy._algebra._condition as condition
-import gamspy.utils as utils
+from typing import Union
+import gamspy._algebra.condition as condition
 
 
-class DomainException(Exception):
-    """Exception raised if a domain is not valid."""
-
-
-class Domain:
+class Number:
     """
-    Domain class needed for where statements on multidimensional index list
-    in operations
+    Needed for conditions on numbers.
 
     Parameters
     ----------
-    sets: tuple[Set | str]
+    value : int | float
 
-    >>> equation = Equation(name="equation", domain=[i,j])
-    >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
+    Examples
+    --------
+    >>> Number(1).where[sig[i] == 0]
+    1$(sig(i) = 0)
     """
 
-    def __init__(self, *sets: tuple) -> None:
-        self._sanity_check(sets)
-        self.sets = sets
-        self.ref_container = self._find_container()  # type: ignore
+    def __init__(self, value: Union[int, float]):
+        self._value = value
         self.where = condition.Condition(self)
 
-    def _sanity_check(self, sets: tuple):
-        if len(sets) < 2:
-            raise DomainException("Domain requires at least 2 sets")
-
-        if all(not hasattr(set, "ref_container") for set in sets):
-            raise DomainException(
-                "At least one of the sets in the domain must be a Set or Alias"
-            )
-
-    def _find_container(self):
-        for set in self.sets:
-            if hasattr(set, "ref_container"):
-                return set.ref_container
-
     def gamsRepr(self) -> str:
-        return utils._getDomainStr(self.sets)
+        """
+        Representation of this Number in GAMS language.
+
+        Returns
+        -------
+        str
+        """
+        return f"{self._value}"

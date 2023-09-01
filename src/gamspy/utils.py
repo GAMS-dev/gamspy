@@ -33,13 +33,13 @@ from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
 from gamspy.exceptions import GdxException
-from typing import Tuple, Union, Optional, List, TYPE_CHECKING
+from typing import Iterable, Tuple, Union, Optional, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy._symbols._implicits import ImplicitSet
     from gamspy import Alias, Set
     from gamspy import Domain
-    from gamspy._algebra._expression import Expression
+    from gamspy._algebra.expression import Expression
 
 
 def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
@@ -334,7 +334,9 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
     return all_same
 
 
-def _getDomainStr(domain: Union["Set", "Alias", "ImplicitSet", str]) -> str:
+def _getDomainStr(
+    domain: Iterable[Union["Set", "Alias", "ImplicitSet", str]]
+) -> str:
     """
     Creates the string format of a given domain
 
@@ -351,7 +353,7 @@ def _getDomainStr(domain: Union["Set", "Alias", "ImplicitSet", str]) -> str:
     Exception
         Given domain must contain only sets, aliases or strings
     """
-    from gamspy._algebra._domain import DomainException
+    from gamspy._algebra.domain import DomainException
 
     set_strs = []
     for set in domain:

@@ -1,14 +1,14 @@
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy._algebra._expression import Expression
-    from gamspy._algebra._operable import Operable
+    from gamspy._algebra.expression import Expression
+    from gamspy._symbols.symbol import Symbol
 
 
 def centropy(
-    x: "Operable",
-    y: "Operable",
+    x: "Symbol",
+    y: "Symbol",
     z: float = 1e-20,
 ) -> "Expression":
     """

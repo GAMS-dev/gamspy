@@ -25,10 +25,10 @@
 
 from __future__ import annotations
 
-import gamspy._algebra._operable as _operable
-import gamspy._algebra._condition as _condition
+import gamspy._algebra.operable as operable
+import gamspy._algebra.condition as condition
 import gamspy.utils as utils
-import gamspy._algebra._expression as _expression
+import gamspy._algebra.expression as expression
 import gamspy._symbols._implicits as implicits
 from typing import Union, TYPE_CHECKING
 
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from gams.transfer import Set
 
 
-class ImplicitVariable(_operable.Operable):
+class ImplicitVariable(operable.Operable):
     """
     Implicit Variable
 
@@ -62,7 +62,7 @@ class ImplicitVariable(_operable.Operable):
         self._fx = self._create_attr("fx")
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
-        self.where = _condition.Condition(self)
+        self.where = condition.Condition(self)
 
     def _create_attr(self, attr_name: str):
         return implicits.ImplicitParameter(
@@ -115,7 +115,7 @@ class ImplicitVariable(_operable.Operable):
         )
 
     def __eq__(self, other):  # type: ignore
-        return _expression.Expression(self, "=e=", other)
+        return expression.Expression(self, "=e=", other)
 
     def gamsRepr(self) -> str:
         representation = self.name

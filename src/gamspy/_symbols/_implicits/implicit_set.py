@@ -23,34 +23,54 @@
 # SOFTWARE.
 #
 
-from typing import Union
-import gamspy._algebra._condition as condition
+from __future__ import annotations
+
+import gamspy._algebra.condition as condition
+import gamspy._algebra.operable as operable
+import gamspy._algebra.expression as expression
+import gamspy.utils as utils
+from typing import List, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gamspy import Set, Container
+    from gamspy._algebra.expression import Expression
 
 
-class Number:
+class ImplicitSet(operable.Operable):
     """
-    Needed for conditions on numbers.
+    Implicit Set
 
     Parameters
     ----------
-    value : int | float
-
-    Examples
-    --------
-    >>> Number(1).where[sig[i] == 0]
-    1$(sig(i) = 0)
+    container : Container
+    name : str
+    domain : List[Set | str], optional
     """
 
-    def __init__(self, value: Union[int, float]):
-        self._value = value
+    def __init__(
+        self,
+        container: "Container",
+        name: str,
+        domain: List[Union["Set", str]] = [],
+    ) -> None:
+        self.ref_container = container
+        self.name = name
+        self.domain = domain
         self.where = condition.Condition(self)
 
-    def gamsRepr(self) -> str:
-        """
-        Representation of this Number in GAMS language.
+    def __invert__(self) -> "Expression":
+        return expression.Expression("", "not", self)
 
-        Returns
-        -------
-        str
-        """
-        return f"{self._value}"
+    def __ge__(self, other) -> "Expression":
+        return expression.Expression(self, ">=", other)
+
+    def __le__(self, other) -> "Expression":
+        return expression.Expression(self, "<=", other)
+
+    def gamsRepr(self) -> str:
+        representation = self.name
+
+        if self.domain:
+            representation += utils._getDomainStr(self.domain)
+
+        return representation

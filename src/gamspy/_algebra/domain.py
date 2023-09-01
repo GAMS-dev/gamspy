@@ -25,52 +25,46 @@
 
 from __future__ import annotations
 
-import gamspy._algebra._condition as _condition
-import gamspy._algebra._operable as operable
-import gamspy._algebra._expression as _expression
+import gamspy._algebra.condition as condition
 import gamspy.utils as utils
-from typing import List, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from gamspy import Container
-    from gamspy import Set
 
 
-class ImplicitSet(operable.Operable):
+class DomainException(Exception):
+    """Exception raised if a domain is not valid."""
+
+
+class Domain:
     """
-    Implicit Set
+    Domain class needed for where statements on multidimensional index list
+    in operations
 
     Parameters
     ----------
-    container : Container
-    name : str
-    domain : List[Set | str], optional
+    sets: tuple[Set | str]
+
+    >>> equation = Equation(name="equation", domain=[i,j])
+    >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
     """
 
-    def __init__(
-        self,
-        container: "Container",
-        name: str,
-        domain: List[Union["Set", str]] = [],
-    ) -> None:
-        self.ref_container = container
-        self.name = name
-        self.domain = domain
-        self.where = _condition.Condition(self)
+    def __init__(self, *sets: tuple) -> None:
+        self._sanity_check(sets)
+        self.sets = sets
+        self.ref_container = self._find_container()  # type: ignore
+        self.where = condition.Condition(self)
 
-    def __invert__(self) -> _expression.Expression:
-        return _expression.Expression("", "not", self)
+    def _sanity_check(self, sets: tuple):
+        if len(sets) < 2:
+            raise DomainException("Domain requires at least 2 sets")
 
-    def __ge__(self, other) -> _expression.Expression:
-        return _expression.Expression(self, ">=", other)
+        if all(not hasattr(set, "ref_container") for set in sets):
+            raise DomainException(
+                "At least one of the sets in the domain must be a Set or Alias"
+            )
 
-    def __le__(self, other) -> _expression.Expression:
-        return _expression.Expression(self, "<=", other)
+    def _find_container(self):
+        for set in self.sets:
+            if hasattr(set, "ref_container"):
+                return set.ref_container
 
     def gamsRepr(self) -> str:
-        representation = self.name
-
-        if self.domain:
-            representation += utils._getDomainStr(self.domain)
-
-        return representation
+        return utils._getDomainStr(self.sets)

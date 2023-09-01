@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 import gamspy.utils as utils
 
 

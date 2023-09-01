@@ -27,16 +27,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-import gamspy._algebra._condition as _condition
-import gamspy._algebra._expression as _expression
-import gamspy._algebra._operable as operable
+import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
 import gamspy.utils as utils
+from gamspy._symbols._implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
     from gamspy import Set, Parameter, Variable, Equation
+    from gamspy._algebra.expression import Expression
 
 
-class ImplicitParameter(operable.Operable):
+class ImplicitParameter(operable.Operable, ImplicitSymbol):
     def __init__(
         self,
         parent: Union["Parameter", "Variable", "Equation"],
@@ -59,7 +61,7 @@ class ImplicitParameter(operable.Operable):
         self.domain = domain
         self._records = records
         self._assignment = None
-        self.where = _condition.Condition(self)
+        self.where = condition.Condition(self)
 
     @property
     def assign(self):
@@ -69,7 +71,7 @@ class ImplicitParameter(operable.Operable):
     def assign(self, assignment) -> None:
         self._assignment = assignment
 
-        statement = _expression.Expression(
+        statement = expression.Expression(
             ImplicitParameter(
                 name=self.name,
                 domain=self.domain,
@@ -91,7 +93,7 @@ class ImplicitParameter(operable.Operable):
         )
 
     def __invert__(self):
-        return _expression.Expression("", "not", self)
+        return expression.Expression("", "not", self)
 
     def __getitem__(self, indices: Union[list, str]) -> ImplicitParameter:
         domain: list = utils._toList(indices)
@@ -100,11 +102,11 @@ class ImplicitParameter(operable.Operable):
         )
 
     def __setitem__(
-        self, indices: Union[list, str], assignment: _expression.Expression
+        self, indices: Union[list, str], assignment: "Expression"
     ) -> None:
         domain: list = utils._toList(indices)
 
-        statement = _expression.Expression(
+        statement = expression.Expression(
             ImplicitParameter(
                 parent=self.parent, name=self.name, domain=domain
             ),
@@ -117,7 +119,7 @@ class ImplicitParameter(operable.Operable):
         self.parent._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
-        return _expression.Expression(self, "==", other)
+        return expression.Expression(self, "==", other)
 
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.

@@ -1,13 +1,13 @@
 import math
-import gamspy._algebra._expression as expression
+import gamspy._algebra.expression as expression
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy._algebra._expression import Expression
-    from gamspy._algebra._operable import Operable
+    from gamspy._algebra.expression import Expression
+    from gamspy._symbols.symbol import Symbol
 
 
-def cos(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def cos(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Cosine of x.
 
@@ -20,7 +20,7 @@ def cos(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("cos(", x.gamsRepr(), ")")
 
 
-def sin(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def sin(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Sine of x.
 
@@ -33,7 +33,7 @@ def sin(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("sin(", x.gamsRepr(), ")")
 
 
-def tan(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def tan(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Tangent of x.
 
@@ -46,7 +46,7 @@ def tan(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("tan(", x.gamsRepr(), ")")
 
 
-def acos(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def acos(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Inverse cosine of x.
 
@@ -59,7 +59,7 @@ def acos(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("arccos(", x.gamsRepr(), ")")
 
 
-def asin(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def asin(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Inver sinus of x.
 
@@ -72,7 +72,7 @@ def asin(x: Union[float, "Operable"]) -> Union["Expression", float]:
     return expression.Expression("arcsin(", x.gamsRepr(), ")")
 
 
-def atan(x: Union[float, "Operable"]) -> Union["Expression", float]:
+def atan(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     """
     Inverse tangent of x.
 

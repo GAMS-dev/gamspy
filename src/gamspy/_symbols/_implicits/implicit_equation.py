@@ -24,9 +24,9 @@
 #
 
 from __future__ import annotations
-from gamspy._symbols._implicits._implicit_parameter import ImplicitParameter
-import gamspy._algebra._condition as condition
-import gamspy._algebra._expression as _expression
+from gamspy._symbols._implicits.implicit_parameter import ImplicitParameter
+import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
 import gamspy._symbols.set as gams_set
 import gamspy._symbols.alias as alias
 import gamspy._symbols._implicits as implicits
@@ -34,6 +34,7 @@ from typing import List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Equation
+    from gamspy._algebra.expression import Expression
 
 
 class ImplicitEquation:
@@ -123,13 +124,11 @@ class ImplicitEquation:
         return self._infeas
 
     @property
-    def definition(self) -> Optional[_expression.Expression]:
+    def definition(self) -> Optional["Expression"]:
         return self._definition  # pragma: no cover
 
     @definition.setter
-    def definition(
-        self, assignment: Optional[_expression.Expression] = None
-    ) -> None:
+    def definition(self, assignment: Optional["Expression"] = None) -> None:
         """Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
         >>> eq.definition = Sum(wh, build[wh]) <= 1
@@ -144,7 +143,7 @@ class ImplicitEquation:
         if assignment is not None and self.type in equation_map.keys():
             assignment._op_type = equation_map[self.type]
 
-        statement = _expression.Expression(
+        statement = expression.Expression(
             implicits.ImplicitEquation(
                 self.parent,
                 name=self.name,
