@@ -26,28 +26,23 @@
 from __future__ import annotations
 import io
 import os
-from enum import Enum
 import gamspy.utils as utils
-import gamspy._symbols._implicits as implicits
 import gamspy as gp
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operation as operation
+
+from enum import Enum
+from gamspy._model_instance import ModelInstance
 from gamspy.exceptions import GamspyException
 from gams import (
     GamsOptions,
-    GamsModifier,
-    UpdateAction,
-    VarType,
-    EquType,
 )
 from gamspy._engine import EngineConfig
-import gamspy._algebra.expression as expression
-import gamspy._algebra.operation as operation
-import math
 
 from typing import (
     Dict,
     Iterable,
     Literal,
-    List,
     Optional,
     Union,
     Tuple,
@@ -55,8 +50,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Parameter, Variable, Equation, Container
-    from gamspy._symbols._implicits import ImplicitParameter
+    from gamspy import Variable, Equation, Container
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
 
@@ -121,146 +115,32 @@ class ModelStatus(Enum):
     InfeasibleNoSolution = 19
 
 
-variable_map = {
-    "binary": VarType.Binary,
-    "integer": VarType.Integer,
-    "positive": VarType.Positive,
-    "negative": VarType.Negative,
-    "free": VarType.Free,
-    "sos1": VarType.SOS1,
-    "sos2": VarType.SOS2,
-    "semicont": VarType.SemiCont,
-    "semiint": VarType.SemiInt,
+attribute_map = {
+    "domUsd": "num_domain_violations",
+    "etAlg": "algorithm_time",
+    "etSolve": "solve_time",
+    "etSolver": "solver_time",
+    "iterUsd": "num_iterations",
+    "marginals": "marginals",
+    "maxInfes": "max_infeasibility",
+    "meanInfes": "mean_infeasibility",
+    "modelStat": "status",
+    "nodUsd": "num_nodes_used",
+    "numDepnd": "num_dependencies",
+    "numDVar": "num_discrete_variables",
+    "numInfes": "num_infeasibilities",
+    "numNLIns": "num_nonlinear_insts",
+    "numNLNZ": "num_nonlinear_zeros",
+    "numNOpt": "num_nonoptimalities",
+    "numNZ": "num_nonzeros",
+    "numVar": "num_variables",
+    "numVarProj": "num_bound_projections",
+    "objEst": "objective_estimation",
+    "objVal": "objective_value",
+    "resGen": "model_generation_time",
+    "sumInfes": "sum_infeasibilities",
+    "sysVer": "solver_version",
 }
-
-
-equation_map = {
-    "eq": EquType.E,
-    "leq": EquType.L,
-    "geq": EquType.G,
-    "nonbinding": EquType.N,
-    "external": EquType.X,
-    "cone": EquType.C,
-}
-
-update_map = {
-    "l": UpdateAction.Primal,
-    "m": UpdateAction.Dual,
-    "up": UpdateAction.Upper,
-    "lo": UpdateAction.Lower,
-    "fx": UpdateAction.Fixed,
-}
-
-
-class ModelInstance:
-    def __init__(
-        self,
-        container: "Container",
-        model: "Model",
-        modifiables: List[Union["Parameter", "ImplicitParameter"]],
-    ) -> None:
-        self.modifiables = modifiables
-        self.main_container = container
-
-        self.checkpoint = self.main_container._restart_from
-        self.instance = self.checkpoint.add_modelinstance()
-        self.instantiate(model)
-
-    def update_sync_db(self):
-        self.main_container.write(self.instance.sync_db._gmd)
-
-    def _create_modifiers(self):
-        modifiers = []
-
-        for modifiable in self.modifiables:
-            if isinstance(modifiable, gp.Parameter):
-                modifiers.append(
-                    GamsModifier(
-                        self.instance.sync_db.add_parameter(
-                            modifiable.name,
-                            modifiable.dimension,
-                            modifiable.description,
-                        )
-                    )
-                )
-            elif isinstance(modifiable, implicits.ImplicitParameter):
-                attribute = modifiable.name.split(".")[-1]
-                update_action = update_map[attribute]
-
-                if isinstance(modifiable.parent, gp.Variable):
-                    sync_db_symbol = self.instance.sync_db.add_variable(
-                        modifiable.parent.name,
-                        modifiable.parent.dimension,
-                        variable_map[modifiable.parent.type],
-                    )
-
-                elif isinstance(modifiable.parent, gp.Equation):
-                    sync_db_symbol = self.instance.sync_db.add_equation(
-                        modifiable.parent.name,
-                        modifiable.parent.dimension,
-                        equation_map[modifiable.parent.type],
-                    )
-
-                attr_name = "_".join(modifiable.name.split("."))
-
-                attr_param = gp.Parameter(
-                    self.main_container,
-                    attr_name,
-                    domain=modifiable.parent.domain,
-                )
-
-                def value_func(seed=None, size=None):
-                    return math.inf
-
-                attr_param.generateRecords(density=1.0, func=value_func)
-                print(attr_param.records)
-
-                data_symbol = self.instance.sync_db.add_parameter(
-                    attr_name,
-                    modifiable.parent.dimension,
-                )
-
-                modifiers.append(
-                    GamsModifier(sync_db_symbol, update_action, data_symbol)
-                )
-            else:
-                raise GamspyException(
-                    f"Symbol type {type(modifiable)} cannot be modified in a"
-                    " frozen solve"
-                )
-
-        return modifiers
-
-    def instantiate(self, model: "Model"):
-        solve_string = (
-            f"{model.name} use"  # type: ignore
-            f" {model.problem} {model.sense} {model._objective_variable.name}"
-        )
-
-        modifiers = self._create_modifiers()
-
-        self.instance.instantiate(solve_string, modifiers)
-
-    def solve(self):
-        self.instance.solve()
-
-    @property
-    def model_status(self):
-        return self.instance.model_status
-
-    @property
-    def solver_status(self):
-        return self.instance.solver_status
-
-    def update_main_container(self):
-        instance_container = gp.Container(name="instance_container")
-        instance_container.read(self.instance.sync_db._gmd)
-
-        for name in instance_container.data.keys():
-            if name in self.main_container.data.keys():
-                self.main_container[name].setRecords(
-                    instance_container[name].records
-                )
 
 
 class Model:
@@ -397,41 +277,11 @@ class Model:
         return assignment
 
     def _generate_attribute_symbols(self) -> None:
-        for attr_name in self._get_attribute_names():
+        for attr_name in attribute_map.keys():
             symbol_name = f"{self.name}_{attr_name}"
             self.ref_container._unsaved_statements[symbol_name] = (
                 f"Scalar {symbol_name};"
             )
-
-    def _get_attribute_names(self) -> Dict[str, str]:
-        attributes = {
-            "domUsd": "num_domain_violations",
-            "etAlg": "algorithm_time",
-            "etSolve": "solve_time",
-            "etSolver": "solver_time",
-            "iterUsd": "num_iterations",
-            "marginals": "marginals",
-            "maxInfes": "max_infeasibility",
-            "meanInfes": "mean_infeasibility",
-            "modelStat": "status",
-            "nodUsd": "num_nodes_used",
-            "numDepnd": "num_dependencies",
-            "numDVar": "num_discrete_variables",
-            "numInfes": "num_infeasibilities",
-            "numNLIns": "num_nonlinear_insts",
-            "numNLNZ": "num_nonlinear_zeros",
-            "numNOpt": "num_nonoptimalities",
-            "numNZ": "num_nonzeros",
-            "numVar": "num_variables",
-            "numVarProj": "num_bound_projections",
-            "objEst": "objective_estimation",
-            "objVal": "objective_value",
-            "resGen": "model_generation_time",
-            "sumInfes": "sum_infeasibilities",
-            "sysVer": "solver_version",
-        }
-
-        return attributes
 
     def _prepare_gams_options(
         self,
@@ -519,7 +369,7 @@ class Model:
         )
 
     def _assign_model_attributes(self) -> None:
-        for attr_name in self._get_attribute_names().keys():
+        for attr_name in attribute_map.keys():
             symbol_name = f"{self.name}_{attr_name}"
 
             self.ref_container._unsaved_statements[utils._getUniqueName()] = (
@@ -531,7 +381,7 @@ class Model:
             self.ref_container.system_directory, self.ref_container._gdx_path
         )
 
-        for gams_attr, python_attr in self._get_attribute_names().items():
+        for gams_attr, python_attr in attribute_map.items():
             symbol_name = f"{self.name}_{gams_attr}"
 
             records = utils._getSymbolData(
@@ -557,8 +407,7 @@ class Model:
         the container
         """
         attribute_names = [
-            f"{self.name}_{attr_name}"
-            for attr_name in self._get_attribute_names()
+            f"{self.name}_{attr_name}" for attr_name in attribute_map.keys()
         ]
 
         dummy_symbol_names = [

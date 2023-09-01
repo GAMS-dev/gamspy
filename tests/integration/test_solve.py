@@ -259,7 +259,10 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
-        for attr_name in transport._get_attribute_names().values():
+
+        from gamspy._model import attribute_map
+
+        for attr_name in attribute_map.values():
             self.assertTrue(hasattr(transport, attr_name))
 
             # Make sure model attributes are not in the container
