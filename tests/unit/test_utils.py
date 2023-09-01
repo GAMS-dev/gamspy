@@ -5,6 +5,8 @@ from gamspy import (
     Container,
     Set,
 )
+from gamspy.exceptions import GdxException
+from gamspy._algebra.domain import DomainException
 
 
 class UtilsSuite(unittest.TestCase):
@@ -24,7 +26,7 @@ class UtilsSuite(unittest.TestCase):
 
         i = Set(self.m, "i", records=["i1", "i2"])
         self.assertEqual(utils._getDomainStr([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(Exception, utils._getDomainStr, [5])
+        self.assertRaises(DomainException, utils._getDomainStr, [5])
 
         # invalid system directory
         self.assertRaises(utils.GdxException, utils._openGdxFile, "bla", "bla")
@@ -39,7 +41,7 @@ class UtilsSuite(unittest.TestCase):
         )
 
         # invalid symbol
-        self.assertRaises(Exception, utils._getSymbolData, None, None, "i")
+        self.assertRaises(GdxException, utils._getSymbolData, None, None, "i")
 
     def test_isin(self):
         i = Set(self.m, "i")

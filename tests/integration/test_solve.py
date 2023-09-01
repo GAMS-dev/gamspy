@@ -13,6 +13,8 @@ from gamspy import (
     ModelStatus,
 )
 
+from gamspy.exceptions import GamsException, GamspyException
+
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
@@ -281,18 +283,18 @@ class SolveSuite(unittest.TestCase):
 
         # Test invalid commandline options
         self.assertRaises(
-            Exception,
+            GamspyException,
             transport.solve,
             {"bla": 100},
         )
 
-        self.assertRaises(Exception, transport.solve, 5)
+        self.assertRaises(GamspyException, transport.solve, 5)
 
         # Try to solve invalid model
         m = Container()
         cost = Equation(m, "cost")
         model = Model(m, "model", equations=[cost], problem="LP", sense="min")
-        self.assertRaises(Exception, model.solve)
+        self.assertRaises(GamsException, model.solve)
 
         # Test limited variables
         transport = Model(

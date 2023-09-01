@@ -1,6 +1,7 @@
 import unittest
 
 from gamspy import Container, Set, Domain
+from gamspy._algebra.domain import DomainException
 
 
 class DomainSuite(unittest.TestCase):
@@ -16,10 +17,10 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(domain.gamsRepr(), "(i,j)")
 
         # Domain with less than two sets
-        self.assertRaises(Exception, Domain, i)
+        self.assertRaises(DomainException, Domain, i)
 
         # Domain with no set or alias symbols
-        self.assertRaises(Exception, Domain, "i", "j")
+        self.assertRaises(DomainException, Domain, "i", "j")
 
 
 def domain_suite():

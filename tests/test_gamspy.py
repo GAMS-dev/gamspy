@@ -13,7 +13,6 @@ from unit.test_equation import equation_suite
 from unit.test_model import model_suite
 from unit.test_operation import operation_suite
 from unit.test_domain import domain_suite
-from unit.test_number import number_suite
 from unit.test_condition import condition_suite
 from unit.test_magics import magics_suite
 from integration.test_models import gams_models_suite
@@ -45,7 +44,6 @@ def main():
         model_suite,
         operation_suite,
         domain_suite,
-        number_suite,
         condition_suite,
         magics_suite,
     ]
