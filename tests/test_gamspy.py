@@ -17,6 +17,7 @@ from unit.test_condition import condition_suite
 from unit.test_magics import magics_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
+from integration.test_model_instance import model_instance_suite
 
 
 def get_args():
@@ -58,7 +59,11 @@ def main():
         print("=" * 80)
 
     if args.integration:
-        integration_suites = [solve_suite, gams_models_suite]
+        integration_suites = [
+            solve_suite,
+            model_instance_suite,
+            gams_models_suite,
+        ]
 
         print(f"Running integration tests\n{'='*80}")
         for suite in integration_suites:
