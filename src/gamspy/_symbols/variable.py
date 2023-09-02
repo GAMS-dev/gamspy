@@ -107,6 +107,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # enable load on demand
         self._is_dirty = False
 
+        # allow freezing
+        self._is_frozen = False
+
         # allow conditions
         self.where = condition.Condition(self)
 
@@ -221,8 +224,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 self._domainForwarding()
 
                 # reset state check flags for all symbols in the container
-                for symnam, symobj in self.ref_container.data.items():
-                    symobj._requires_state_check = True
+                for _, symbol in self.ref_container.data.items():
+                    symbol._requires_state_check = True
 
     def gamsRepr(self) -> str:
         """

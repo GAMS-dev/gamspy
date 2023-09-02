@@ -194,7 +194,7 @@ class Model:
         self._generate_attribute_symbols()
 
         # allow freezing
-        self.is_frozen = False
+        self._is_frozen = False
 
         # Attributes
         self.num_domain_violations = None
@@ -429,10 +429,12 @@ class Model:
         self.ref_container._run()
 
         self.instance = ModelInstance(self.ref_container, self, modifiables)
-        self.is_frozen = True
+        self._is_frozen = True
 
     def unfreeze(self):
-        self.is_frozen = False
+        for symbol in self.ref_container.data.values():
+            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
+                symbol._is_frozen = False
 
     def solve(
         self,
@@ -457,7 +459,7 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
-        if not self.is_frozen:
+        if not self._is_frozen:
             self._append_solve_string()
             self._assign_model_attributes()
 
@@ -470,11 +472,7 @@ class Model:
             self._update_model_attributes()
             self._remove_dummy_symbols()
         else:
-            self.instance.update_sync_db()
             self.instance.solve()
-            self.instance.update_main_container()
-
-            self.status = ModelStatus(self.instance.model_status)
 
     def getStatement(self) -> str:
         """

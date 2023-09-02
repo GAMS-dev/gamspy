@@ -111,6 +111,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # enable load on demand
         self._is_dirty = False
 
+        # allow freezing
+        self._is_frozen = False
+
         # allow conditions
         self.where = condition.Condition(self)
 

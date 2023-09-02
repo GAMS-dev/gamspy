@@ -1,4 +1,3 @@
-import math
 import gamspy as gp
 import gamspy._symbols._implicits as implicits
 from gamspy.exceptions import GamspyException
@@ -61,13 +60,67 @@ class ModelInstance:
     ) -> None:
         self.modifiables = modifiables
         self.main_container = container
+        self.instance_container = gp.Container(name="instance_container")
+        self.model = model
 
         self.checkpoint = self.main_container._restart_from
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model)
 
-    def update_sync_db(self):
+    def instantiate(self, model: "Model"):
+        solve_string = (
+            f"{model.name} use"  # type: ignore
+            f" {model.problem} {model.sense} {model._objective_variable.name}"
+        )
+
+        modifiers = self._create_modifiers()
+
+        self.instance.instantiate(solve_string, modifiers)
+
+    def solve(self):
+        # update sync_db
         self.main_container.write(self.instance.sync_db._gmd)
+
+        for modifiable in self.modifiables:
+            if isinstance(modifiable, implicits.ImplicitParameter):
+                if modifiable.parent.records is not None:
+                    parent_name, attr = modifiable.name.split(".")
+                    attr_name = "_".join([parent_name, attr])
+
+                    columns = self._get_columns_to_drop(attr)
+
+                    self.instance_container[attr_name].setRecords(
+                        self.main_container[parent_name].records.drop(
+                            columns, axis=1
+                        )
+                    )
+
+                    self.instance_container.write(self.instance.sync_db._gmd)
+
+        # solve
+        self.instance.solve()
+
+        # update main container
+        self._update_main_container()
+
+        # update model status
+        self.model.status = gp.ModelStatus(self.instance.model_status)
+
+    def _get_columns_to_drop(self, attr):
+        attr_map = {
+            "l": "level",
+            "m": "marginal",
+            "lo": "lower",
+            "up": "upper",
+            "scale": "scale",
+        }
+
+        columns = []
+        for key, value in attr_map.items():
+            if key != attr:
+                columns.append(value)
+
+        return columns
 
     def _create_modifiers(self):
         modifiers = []
@@ -83,6 +136,8 @@ class ModelInstance:
                         )
                     )
                 )
+
+                modifiable._is_frozen = True
             elif isinstance(modifiable, implicits.ImplicitParameter):
                 attribute = modifiable.name.split(".")[-1]
                 update_action = update_action_map[attribute]
@@ -103,17 +158,16 @@ class ModelInstance:
 
                 attr_name = "_".join(modifiable.name.split("."))
 
-                attr_param = gp.Parameter(
-                    self.main_container,
-                    attr_name,
-                    domain=modifiable.parent.domain,
+                domain = (
+                    ["*"] * modifiable.parent.dimension
+                    if modifiable.parent.dimension
+                    else None
                 )
-
-                def value_func(seed=None, size=None):
-                    return math.inf
-
-                attr_param.generateRecords(density=1.0, func=value_func)
-                print(attr_param.records)
+                _ = gp.Parameter(
+                    self.instance_container,
+                    attr_name,
+                    domain=domain,
+                )
 
                 data_symbol = self.instance.sync_db.add_parameter(
                     attr_name,
@@ -123,6 +177,8 @@ class ModelInstance:
                 modifiers.append(
                     GamsModifier(sync_db_symbol, update_action, data_symbol)
                 )
+
+                modifiable.parent._is_frozen = True
             else:
                 raise GamspyException(
                     f"Symbol type {type(modifiable)} cannot be modified in a"
@@ -131,33 +187,14 @@ class ModelInstance:
 
         return modifiers
 
-    def instantiate(self, model: "Model"):
-        solve_string = (
-            f"{model.name} use"  # type: ignore
-            f" {model.problem} {model.sense} {model._objective_variable.name}"
-        )
-
-        modifiers = self._create_modifiers()
-
-        self.instance.instantiate(solve_string, modifiers)
-
-    def solve(self):
-        self.instance.solve()
-
-    @property
-    def model_status(self):
-        return self.instance.model_status
-
     @property
     def solver_status(self):
         return self.instance.solver_status
 
-    def update_main_container(self):
-        instance_container = gp.Container(name="instance_container")
-        instance_container.read(self.instance.sync_db._gmd)
+    def _update_main_container(self):
+        temp = gp.Container()
+        temp.read(self.instance.sync_db._gmd)
 
-        for name in instance_container.data.keys():
+        for name in temp.data.keys():
             if name in self.main_container.data.keys():
-                self.main_container[name].setRecords(
-                    instance_container[name].records
-                )
+                self.main_container[name].records = temp[name].records

@@ -3,9 +3,7 @@ from gamspy import Sum, Sense
 
 
 def main():
-    m = Container(
-        working_directory=".",
-    )
+    m = Container(working_directory=".")
 
     # Prepare data
     distances = [
@@ -55,10 +53,15 @@ def main():
     )
 
     transport.freeze(modifiables=[x.up])
+    print("First solve starts")
     transport.solve()
+    print("First solve ends")
     print(z.records)
-    m["x_up"].records.at[1, "value"] = 0
+    # print(x.records)
+    x.records.loc[1, "upper"] = 0
+    print("Second solve starts")
     transport.solve()
+    print("Second solve ends")
     print(z.records)
 
 
