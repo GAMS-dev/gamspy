@@ -415,7 +415,8 @@ class Model:
         ] + attribute_names
 
         for name in dummy_symbol_names:
-            del self.ref_container.data[name]
+            if name in self.ref_container.data.keys():
+                del self.ref_container.data[name]
 
     @property
     def equations(self) -> Iterable["Equation"]:
@@ -470,9 +471,10 @@ class Model:
             self.ref_container._run(options, output, backend, engine_config)
 
             self._update_model_attributes()
-            self._remove_dummy_symbols()
         else:
             self.instance.solve()
+
+        self._remove_dummy_symbols()
 
     def getStatement(self) -> str:
         """
