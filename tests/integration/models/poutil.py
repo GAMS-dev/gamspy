@@ -551,7 +551,7 @@ def main():
 
     energy.solve()
 
-    print("Objective Function Value: ", c.records.level[0])
+    print("Objective Function Value: ", energy.objective_value)
 
 
 if __name__ == "__main__":

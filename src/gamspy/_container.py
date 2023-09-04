@@ -108,6 +108,9 @@ class Container(gt.Container):
             self._gdx_path,
         ) = self._setup_paths()
 
+        # allows interrupt
+        self._job: Optional[GamsJob] = None
+
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
         Casts all symbols in the GAMS Transfer container to GAMSpy symbols
@@ -783,6 +786,9 @@ class Container(gt.Container):
 
         return string
 
+    def interrupt(self):
+        self._job.interrupt()
+
     def _run(
         self,
         options: Optional["GamsOptions"] = None,
@@ -814,7 +820,7 @@ class Container(gt.Container):
             else None
         )
 
-        job = GamsJob(
+        self._job = GamsJob(
             self.workspace,
             source=gams_string,
             checkpoint=checkpoint,
@@ -823,7 +829,7 @@ class Container(gt.Container):
         # Actual run depending on the backend
         if backend == "local":
             try:
-                job.run(
+                self._job.run(
                     gams_options=options,
                     checkpoint=self._save_to,
                     create_out_db=False,
@@ -846,7 +852,7 @@ class Container(gt.Container):
                 )
 
             try:
-                job.run_engine(
+                self._job.run_engine(
                     engine_configuration=engine_config.get_engine_config(),
                     extra_model_files=self._gdx_path,
                     gams_options=options,

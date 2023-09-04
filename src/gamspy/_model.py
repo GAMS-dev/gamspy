@@ -428,6 +428,9 @@ class Model:
     def equations(self, new_equations) -> None:
         self._equations = new_equations
 
+    def interrupt(self):
+        self.ref_container.interrupt()
+
     def freeze(
         self,
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
