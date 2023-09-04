@@ -11,6 +11,9 @@ from gamspy import (
     Alias,
 )
 
+import numpy as np
+import os
+
 
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
@@ -139,6 +142,19 @@ class ParameterSuite(unittest.TestCase):
 
         # Try to add the same parameter
         self.assertRaises(ValueError, self.m.addParameter, "c", [s, s])
+
+    def test_undef(self):
+        m = Container()
+        _ = Parameter(
+            m, name="rho", records=[np.nan]
+        )  # Instead of using numpy there might be a NA from the math package
+
+        self.assertEqual(
+            m.generateGamsString(),
+            "$onUNDF\nParameter rho;\n$gdxLoad"
+            f" {m.workspace.working_directory}{os.sep}default.gdx"
+            " rho\n$offUNDF\n",
+        )
 
 
 def parameter_suite():

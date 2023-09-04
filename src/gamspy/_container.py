@@ -769,6 +769,7 @@ class Container(gt.Container):
         str
         """
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
         dictionary = (
             self._statements_dict if dictionary is None else dictionary
@@ -779,10 +780,20 @@ class Container(gt.Container):
             if isinstance(statement, str):
                 string += statement + "\n"
             else:
-                string += statement.getStatement() + "\n"
+                statement_str = statement.getStatement() + "\n"
 
                 if isinstance(statement, symbol_types):
-                    string += f"$gdxLoad {self._gdx_path} {statement.name}\n"
+                    statement_str += (
+                        f"$gdxLoad {self._gdx_path} {statement.name}\n"
+                    )
+
+                if isinstance(statement, possible_undef_types):
+                    num_undef = statement.countUndef()
+
+                    if num_undef:
+                        statement_str = f"$onUNDF\n{statement_str}$offUNDF"
+
+                string += statement_str + "\n"
 
         return string
 
