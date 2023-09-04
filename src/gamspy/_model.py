@@ -43,6 +43,7 @@ from typing import (
     Dict,
     Iterable,
     Literal,
+    List,
     Optional,
     Union,
     Tuple,
@@ -50,9 +51,10 @@ from typing import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Variable, Equation, Container
+    from gamspy import Parameter, Variable, Equation, Container
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols._implicits import ImplicitParameter
 
 
 class Problem(Enum):
@@ -426,10 +428,16 @@ class Model:
     def equations(self, new_equations) -> None:
         self._equations = new_equations
 
-    def freeze(self, modifiables):
+    def freeze(
+        self,
+        modifiables: List[Union["Parameter", "ImplicitParameter"]],
+        freeze_options: Optional[dict] = None,
+    ):
         self.ref_container._run()
 
-        self.instance = ModelInstance(self.ref_container, self, modifiables)
+        self.instance = ModelInstance(
+            self.ref_container, self, modifiables, freeze_options
+        )
         self._is_frozen = True
 
     def unfreeze(self):
@@ -441,6 +449,7 @@ class Model:
         self,
         commandline_options: Optional[Dict[str, str]] = None,
         solver_options: Optional[dict] = None,
+        model_instance_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine-one", "engine-sass"] = "local",
         engine_config: Optional["EngineConfig"] = None,
@@ -461,18 +470,18 @@ class Model:
             In case sense is different than "MIN" or "MAX"
         """
         if not self._is_frozen:
-            self._append_solve_string()
-            self._assign_model_attributes()
-
             options = self._prepare_gams_options(
                 commandline_options, solver_options
             )
+
+            self._append_solve_string()
+            self._assign_model_attributes()
 
             self.ref_container._run(options, output, backend, engine_config)
 
             self._update_model_attributes()
         else:
-            self.instance.solve()
+            self.instance.solve(model_instance_options, output)
 
         self._remove_dummy_symbols()
 

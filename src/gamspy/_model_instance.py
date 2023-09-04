@@ -1,9 +1,13 @@
+import io
 import gamspy as gp
 import gamspy._symbols._implicits as implicits
 from gamspy.exceptions import GamspyException
 from gams import (
     GamsModifier,
+    GamsOptions,
     UpdateAction,
+    SymbolUpdateType,
+    GamsModelInstanceOpt,
     VarType,
     EquType,
 )
@@ -12,6 +16,8 @@ from gams import (
 from typing import (
     List,
     Union,
+    Optional,
+    Tuple,
     TYPE_CHECKING,
 )
 
@@ -50,6 +56,13 @@ update_action_map = {
     "fx": UpdateAction.Fixed,
 }
 
+update_type_map = {
+    "0": SymbolUpdateType.Zero,
+    "base_case": SymbolUpdateType.BaseCase,
+    "accumulate": SymbolUpdateType.Accumulate,
+    "inherit": SymbolUpdateType._Inherit,
+}
+
 
 class ModelInstance:
     def __init__(
@@ -57,6 +70,7 @@ class ModelInstance:
         container: "Container",
         model: "Model",
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
+        freeze_options: Optional[dict] = None,
     ) -> None:
         self.modifiables = modifiables
         self.main_container = container
@@ -65,9 +79,13 @@ class ModelInstance:
 
         self.checkpoint = self.main_container._restart_from
         self.instance = self.checkpoint.add_modelinstance()
-        self.instantiate(model)
+        self.instantiate(model, freeze_options)
 
-    def instantiate(self, model: "Model"):
+    def instantiate(
+        self, model: "Model", freeze_options: Optional[dict] = None
+    ):
+        options = self._prepare_freeze_options(freeze_options)
+
         solve_string = (
             f"{model.name} use"  # type: ignore
             f" {model.problem} {model.sense} {model._objective_variable.name}"
@@ -75,9 +93,16 @@ class ModelInstance:
 
         modifiers = self._create_modifiers()
 
-        self.instance.instantiate(solve_string, modifiers)
+        self.instance.instantiate(solve_string, modifiers, options)
 
-    def solve(self):
+    def solve(
+        self,
+        options_dict: Optional[dict] = None,
+        output: Optional[io.TextIOWrapper] = None,
+    ):
+        # get options from dict
+        options, update_type = self._prepare_options(options_dict)
+
         # update sync_db
         self.main_container.write(self.instance.sync_db._gmd)
 
@@ -98,13 +123,57 @@ class ModelInstance:
                     self.instance_container.write(self.instance.sync_db._gmd)
 
         # solve
-        self.instance.solve()
+        self.instance.solve(
+            update_type=update_type, output=output, mi_opt=options
+        )
 
         # update main container
         self._update_main_container()
 
         # update model status
         self.model.status = gp.ModelStatus(self.instance.model_status)
+
+    def _prepare_freeze_options(
+        self, options_dict: Optional[dict]
+    ) -> GamsOptions:
+        if options_dict is None:
+            return
+
+        options = GamsOptions(self.model.ref_container.workspace)
+
+        for key, value in options_dict.items():
+            setattr(options, key, value)
+
+    def _prepare_options(
+        self, options_dict: Optional[dict]
+    ) -> Tuple[Optional[GamsModelInstanceOpt], SymbolUpdateType]:
+        update_type = SymbolUpdateType.BaseCase
+
+        if options_dict is None:
+            return None, update_type
+
+        possible_options = [
+            "solver",
+            "opt_file",
+            "no_match_limit",
+            "debug",
+            "update_type",
+        ]
+        options = GamsModelInstanceOpt()
+
+        for key, value in options_dict.items():
+            if key in possible_options:
+                setattr(options, key, value)
+            else:
+                raise GamspyException(
+                    f"{key} is not a model instance option. All options:"
+                    f" {possible_options}"
+                )
+
+            if key == "update_type":
+                update_type = update_type_map[key]
+
+        return options, update_type
 
     def _get_columns_to_drop(self, attr):
         attr_map = {
