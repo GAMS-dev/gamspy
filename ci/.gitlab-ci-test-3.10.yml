@@ -15,7 +15,6 @@ test-leg-3.10:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
-    - PATH=$PATH:/root/.local/bin
     - coverage run --source=gamspy tests/test_gamspy.py --integration
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -42,7 +41,6 @@ test-deg-3.10:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
-    - PATH=$PATH:/Users/gitlab/.local/bin
     - coverage run --source=gamspy tests/test_gamspy.py --integration
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -64,7 +62,6 @@ test-dac-3.10:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
-    - PATH=$PATH:/Users/gitlab/.local/bin
     - coverage run --source=gamspy tests/test_gamspy.py --integration
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -91,7 +88,6 @@ test-wei-3.10:
     - cd transfer-repo; python reinstall.py; cd ..
     - python -m pip install wheel build
     - python reinstall.py
-    - $env:Path = "C:\Users\distrib\AppData\Roaming\Python\Python310\Scripts" + $env:Path
     - coverage run --source=gamspy tests\test_gamspy.py --integration
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
