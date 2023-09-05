@@ -15,21 +15,26 @@ class CmdSuite(unittest.TestCase):
         this_folder = str(Path(__file__).parent)
 
         process = subprocess.run(
-            [
-                "gamspy",
-                "install",
-                "license",
-                this_folder + os.sep + "gamslice.txt",
-            ],
+            " ".join(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.path.abspath(this_folder + os.sep + "gamslice.txt"),
+                ]
+            ),
             shell=True,
             capture_output=True,
         )
 
+        print(process.stderr)
         print(process.stdout)
 
         new_license_modified_time = os.path.getmtime(
             minigams_dir + os.sep + "gamslice.txt"
         )
+
+        print(new_license_modified_time, old_license_modified_time)
         self.assertTrue(new_license_modified_time > old_license_modified_time)
 
 
