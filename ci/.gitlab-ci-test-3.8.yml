@@ -42,7 +42,7 @@ test-deg-3.8:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
-    - PATH=$PATH:/root/.local/bin
+    - PATH=$PATH:/Users/gitlab/.local/bin
     - coverage run --source=gamspy tests/test_gamspy.py --integration
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -64,7 +64,7 @@ test-dac-3.8:
     - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
-    - PATH=$PATH:/root/.local/bin
+    - PATH=$PATH:/Users/gitlab/.local/bin
     - coverage run --source=gamspy tests/test_gamspy.py --integration
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
