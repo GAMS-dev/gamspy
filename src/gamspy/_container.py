@@ -91,7 +91,12 @@ class Container(gt.Container):
         name: str = "default",
         working_directory: Optional[str] = None,
     ):
-        self.system_directory = utils._getSystemDirectory(system_directory)
+        self.system_directory = (
+            system_directory
+            if system_directory
+            else utils._getMinigamsDirectory()
+        )
+
         self.workspace = GamsWorkspace(
             working_directory, self.system_directory, DebugLevel.KeepFiles
         )

@@ -233,9 +233,9 @@ class ContainerSuite(unittest.TestCase):
             expected_path += f"_{platform.machine()}"
 
         m = Container()
-        self.assertEqual(m.system_directory.lower(), expected_path.lower())
+        self.assertEqual(m.system_directory, expected_path)
 
-        self.assertEqual(utils._getSystemDirectory("bla/bla"), "bla/bla")
+        self.assertEqual(utils._getMinigamsDirectory(), expected_path)
 
 
 def container_suite():

@@ -33,7 +33,7 @@ from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
 from gamspy.exceptions import GdxException
-from typing import Iterable, Tuple, Union, Optional, List, TYPE_CHECKING
+from typing import Iterable, Tuple, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy._symbols._implicits import ImplicitSet
@@ -121,32 +121,24 @@ def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
         raise GdxException(e)
 
 
-def _getSystemDirectory(system_directory: Optional[str] = None) -> str:
+def _getMinigamsDirectory() -> str:
     """
-    Finds the system directory. If no existing GAMS installation provided,
-    returns minigams directory.
-
-    Parameters
-    ----------
-    system_directory : str, optional
+    Returns the minigams directory.
 
     Returns
     -------
     str
         System directory
     """
-    if system_directory:
-        return system_directory
-
-    system_directory = os.path.dirname(__file__) + os.sep
+    gamspy_directory = os.path.dirname(__file__) + os.sep
 
     user_os = platform.system().lower()
-    system_directory += "minigams" + os.sep + user_os
+    minigams_directory = gamspy_directory + "minigams" + os.sep + user_os
 
     if user_os == "darwin":
-        system_directory += f"_{platform.machine()}"  # pragma: no cover
+        minigams_directory += f"_{platform.machine()}"  # pragma: no cover
 
-    return system_directory
+    return minigams_directory
 
 
 def _closeGdxHandle(handle):

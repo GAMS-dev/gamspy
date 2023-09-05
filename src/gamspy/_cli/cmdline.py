@@ -13,7 +13,7 @@ def get_args():
 
 
 def install_license(args: dict):
-    minigams_dir = utils._getSystemDirectory()
+    minigams_dir = utils._getMinigamsDirectory()
     shutil.copy(args["name"], minigams_dir)
 
 
