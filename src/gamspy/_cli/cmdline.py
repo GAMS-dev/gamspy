@@ -1,3 +1,4 @@
+import os
 import shutil
 import argparse
 import gamspy.utils as utils
@@ -14,7 +15,13 @@ def get_args():
 
 def install_license(args: dict):
     minigams_dir = utils._getMinigamsDirectory()
-    shutil.copy(args["name"], minigams_dir)
+
+    # remove existing license
+    if os.path.exists(minigams_dir + os.sep + "gamslice.txt"):
+        os.remove(minigams_dir + os.sep + "gamslice.txt")
+
+    # install new license
+    shutil.copy(args["name"], minigams_dir + os.sep + "gamslice.txt")
 
 
 def install_solver(args: dict):

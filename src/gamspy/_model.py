@@ -478,8 +478,6 @@ class Model:
                 commandline_options, solver_options
             )
 
-            self.solver_name = getattr(options, self.problem.lower())
-
             self._append_solve_string()
             self._assign_model_attributes()
 

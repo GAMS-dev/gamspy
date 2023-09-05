@@ -18,6 +18,7 @@ from unit.test_magics import magics_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
 from integration.test_model_instance import model_instance_suite
+from integration.test_cmd_script import cmd_suite
 
 
 def get_args():
@@ -62,6 +63,7 @@ def main():
         integration_suites = [
             solve_suite,
             model_instance_suite,
+            cmd_suite,
             gams_models_suite,
         ]
 
