@@ -85,6 +85,7 @@ class ModelInstance:
         self, model: "Model", freeze_options: Optional[dict] = None
     ):
         options = self._prepare_freeze_options(freeze_options)
+        self.model.solver_name = getattr(options, self.model.problem)
 
         solve_string = (
             f"{model.name} use"  # type: ignore

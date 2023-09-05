@@ -223,6 +223,7 @@ class Model:
         self.model_generation_time = None
         self.sum_infeasibilities = None
         self.solver_version = None
+        self.solver_name = ""
 
     def _set_objective_variable(
         self,
@@ -476,6 +477,8 @@ class Model:
             options = self._prepare_gams_options(
                 commandline_options, solver_options
             )
+
+            self.solver_name = getattr(options, self.problem.lower())
 
             self._append_solve_string()
             self._assign_model_attributes()
