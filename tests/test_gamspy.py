@@ -63,8 +63,8 @@ def main():
         integration_suites = [
             solve_suite,
             model_instance_suite,
-            cmd_suite,
             gams_models_suite,
+            cmd_suite,
         ]
 
         print(f"Running integration tests\n{'='*80}")
