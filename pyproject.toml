@@ -33,7 +33,6 @@ dev = [
     "black == 23.7.0",
     "pre-commit == 3.3.3",
     "flake8 == 5.0.0",
-    "bandit == 1.7.5"
 ]
 test = [
     "mypy == 1.4.1",

@@ -1,10 +1,48 @@
+import importlib
+import subprocess
 import shutil
 import argparse
 import gamspy.utils as utils
 
 
+SOLVERS = [
+    "cbc",
+    "soplex",
+    "highs",
+    "copt",
+    "cplex",
+    "gurobi",
+    "xpress",
+    "odhcplex",
+    "mosek",
+    "path",
+    "mpsge",
+    "miles",
+    "nlpec",
+    "knitro",
+    "ipopt",
+    "minos",
+    "snopt",
+    "conopt",
+    "ipopth",
+    "sbb",
+    "dicopt",
+    "alphaecp",
+    "shot",
+    "octeract",
+    "scip",
+    "antigone",
+    "baron",
+    "lindo",
+    "decis",
+]
+
+
 def get_args():
-    parser = argparse.ArgumentParser(prog="gamspy")
+    parser = argparse.ArgumentParser(
+        prog="gamspy",
+        description="A script for installing solvers and licenses",
+    )
     parser.add_argument("command", choices=["install"], type=str)
     parser.add_argument("component", choices=["license", "solver"], type=str)
     parser.add_argument("name", type=str)
@@ -18,6 +56,22 @@ def install_license(args: dict):
 
 
 def install_solver(args: dict):
+    solver_name = args["name"]
+    if solver_name not in SOLVERS:
+        raise Exception(
+            f"Solver name is not valid. Possible solver names: {SOLVERS}"
+        )
+
+    # install specified solver
+    _ = subprocess.run(["pip", "install", f"gamspy_{solver_name}"])
+
+    # move solver files to minigams
+    minigams_dir = utils._getMinigamsDirectory()
+    solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+    for file in solver_lib.file_paths:
+        shutil.copy(file, minigams_dir)
+
+    # update gamspy egg for uninstall
     ...
 
 
