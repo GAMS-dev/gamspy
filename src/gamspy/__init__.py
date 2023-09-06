@@ -14,7 +14,7 @@ from gamspy._symbols import (
 from gamspy._algebra import Domain, Number, Sum, Product, Smax, Smin, Ord, Card
 
 _order = 0  # Global order for newly generated symbols with no name
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "Container",
