@@ -78,8 +78,14 @@ def install_solver(args: dict):
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
 
     with open(dist_info_path + os.sep + "RECORD", "a") as record:
+        minigams_relative_path = os.sep.join(minigams_dir.split(os.sep)[-3:])
+
+        lines = []
         for file in solver_lib.files:
-            record.write(f"\n{minigams_dir}{os.sep}{file},,")
+            line = f"{minigams_relative_path}{os.sep}{file},,"
+            lines.append(line)
+
+        record.write("\n".join(lines))
 
 
 def install(args: dict):
