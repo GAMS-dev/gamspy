@@ -1,8 +1,11 @@
+import subprocess
 import os
 import importlib
 import shutil
 import argparse
 import gamspy.utils as utils
+from gamspy.exceptions import GamspyException
+from typing import Dict
 
 
 SOLVERS = [
@@ -50,12 +53,12 @@ def get_args():
     return vars(parser.parse_args())
 
 
-def install_license(args: dict):
+def install_license(args: Dict[str, str]):
     minigams_dir = utils._getMinigamsDirectory()
-    shutil.copy(args["name"], minigams_dir)
+    shutil.copy(args["name"], minigams_dir + os.sep + "gamslice.txt")
 
 
-def install_solver(args: dict):
+def install_solver(args: Dict[str, str]):
     solver_name = args["name"]
     if solver_name not in SOLVERS:
         raise Exception(
@@ -63,15 +66,24 @@ def install_solver(args: dict):
         )
 
     # install specified solver
-    # _ = subprocess.run(["pip", "install", f"gamspy_{solver_name}"])
+    try:
+        _ = subprocess.run(["pip", "install", f"gamspy_{solver_name}"])
+    except subprocess.CalledProcessError as e:
+        raise GamspyException(
+            f"Could not install gamspy_{solver_name}: {e.output}"
+        )
 
-    # move solver files to minigams
+    # copy solver files to minigams
     minigams_dir = utils._getMinigamsDirectory()
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
     for file in solver_lib.file_paths:
         shutil.copy(file, minigams_dir)
 
-    # update gamspy egg for uninstall
+    update_dist_info(solver_lib, minigams_dir)
+
+
+def update_dist_info(solver_lib, minigams_dir: str):
+    """Updates dist-info/RECORD in site-packages for pip uninstall"""
     import gamspy as gp
 
     gamspy_path: str = gp.__path__[0]
@@ -88,7 +100,7 @@ def install_solver(args: dict):
         record.write("\n".join(lines))
 
 
-def install(args: dict):
+def install(args: Dict[str, str]):
     if args["component"] == "license":
         install_license(args)
     elif args["component"] == "solver":
