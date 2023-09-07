@@ -24,5 +24,33 @@
 #
 
 from gamspy.functions.logical import ifthen
+from gamspy.functions.functions import (
+    beta,
+    regularized_beta,
+    gamma,
+    regularized_gamma,
+    entropy,
+    lse_max,
+    lse_max_sc,
+    ncp_cm,
+    ncp_f,
+    ncpVUpow,
+    ncpVUsin,
+)
 
-__all__ = ["ifthen"]
+__all__ = [
+    "ifthen",
+    "beta",
+    "regularized_beta",
+    "gamma",
+    "regularized_gamma",
+    "entropy",
+    "lse_max",
+    "lse_max_sc",
+    "lse_min",
+    "lse_min_sc",
+    "ncp_cm",
+    "ncp_f",
+    "ncpVUpow",
+    "ncpVUsin",
+]

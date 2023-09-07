@@ -6,6 +6,18 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
+def binomial(
+    n: Union[int, float, "Symbol"], k: Union[int, float, "Symbol"]
+) -> "Expression":
+    if isinstance(n, (int, float)) and isinstance(k, (int, float)):
+        return expression.Expression("binomial(", f"{n},{k}", ")")
+
+    n_string = str(n) if isinstance(n, (int, float)) else n.gamsRepr()
+    k_string = str(k) if isinstance(k, (int, float)) else k.gamsRepr()
+
+    return expression.Expression("binomial(", f"{n_string},{k_string}", ")")
+
+
 def centropy(
     x: "Symbol",
     y: "Symbol",
@@ -56,16 +68,17 @@ def uniform(lower_bound: float, upper_bound: float) -> "Expression":
     )
 
 
-def uniformInt(lower_bound: float, upper_bound: float) -> "Expression":
+def uniformInt(
+    lower_bound: Union[int, float], upper_bound: Union[int, float]
+) -> "Expression":
     """
     Generates an integer random number from the discrete uniform distribution
     whose outcomes are the integers between lower_bound and higher_bound.
 
     Parameters
     ----------
-    lower_bound : float
-    upper_bound : float
-
+    lower_bound : int | float
+    upper_bound : int | float
     Returns
     -------
     Expression

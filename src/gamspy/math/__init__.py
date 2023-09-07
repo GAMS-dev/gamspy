@@ -23,12 +23,36 @@
 # SOFTWARE.
 #
 
-from gamspy.math.trigonometric import cos, sin, acos, asin, tan, atan
-from gamspy.math.log_power import exp, power, sqr, log, log2, log10
+from gamspy.math.trigonometric import (
+    cos,
+    cosh,
+    sin,
+    acos,
+    asin,
+    tan,
+    atan,
+    atan2,
+)
+from gamspy.math.log_power import (
+    exp,
+    power,
+    sqr,
+    log,
+    log2,
+    log10,
+    log_beta,
+    log_gamma,
+    logit,
+)
 from gamspy.math.numeric import (
     abs,
     ceil,
+    dist,
+    div,
+    div0,
+    factorial,
     floor,
+    fractional,
     min,
     max,
     mod,
@@ -40,11 +64,13 @@ from gamspy.math.probability import centropy, normal, uniform, uniformInt
 
 __all__ = [
     "cos",
+    "cosh",
     "sin",
     "acos",
     "asin",
     "tan",
     "atan",
+    "atan2",
     "exp",
     "power",
     "sqr",
@@ -52,9 +78,17 @@ __all__ = [
     "log",
     "log2",
     "log10",
+    "log_beta",
+    "log_gamma",
+    "logit",
     "abs",
     "ceil",
+    "dist",
+    "div",
+    "div0",
+    "factorial",
     "floor",
+    "fractional",
     "min",
     "max",
     "mod",
