@@ -109,8 +109,8 @@ def power(
 
     Parameters
     ----------
-    base : float | Operable
-    exponent : float | Operable
+    base : float | Symbol
+    exponent : float | Symbol
 
     Returns
     -------
@@ -138,8 +138,8 @@ def cv_power(
 
     Parameters
     ----------
-    base : float | Operable
-    exponent : float | Operable
+    base : float | Symbol
+    exponent : float | Symbol
 
     Returns
     -------
@@ -160,6 +160,18 @@ def cv_power(
 
 
 def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    """
+    Returns x^y for x > 0 and also for x = 0 and restricted values of y
+
+    Parameters
+    ----------
+    base : float | Symbol
+    exponent : float | Symbol
+
+    Returns
+    -------
+    Expression | float
+    """
     if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
         return math.pow(base, exponent)
 
@@ -175,6 +187,18 @@ def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
 
 
 def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    """
+    Signed power for y > 0.
+
+    Parameters
+    ----------
+    base : float | Symbol
+    exponent : float | Symbol
+
+    Returns
+    -------
+    Expression | float
+    """
     if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
         return math.pow(base, exponent)
 
@@ -230,6 +254,18 @@ def sqlog10(
 
 
 def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    """
+    Returns x^y for x >= 0
+
+    Parameters
+    ----------
+    base : float | Symbol
+    exponent : float | Symbol
+
+    Returns
+    -------
+    Expression | float
+    """
     if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
         return math.pow(base, exponent)
 
@@ -250,7 +286,7 @@ def sqr(x: Union[float, "Symbol"]) -> Union["Expression", float]:
 
     Parameters
     ----------
-    x : float | Operable
+    x : float | Symbol
 
     Returns
     -------

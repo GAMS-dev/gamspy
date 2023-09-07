@@ -9,6 +9,18 @@ if TYPE_CHECKING:
 def binomial(
     n: Union[int, float, "Symbol"], k: Union[int, float, "Symbol"]
 ) -> "Expression":
+    """
+    (Generalized) Binomial coefficient for n > -1, -1 < k < n + 1
+
+    Parameters
+    ----------
+    n : int | float | Symbol
+    k : int | float | Symbol
+
+    Returns
+    -------
+    Expression
+    """
     if isinstance(n, (int, float)) and isinstance(k, (int, float)):
         return expression.Expression("binomial(", f"{n},{k}", ")")
 
