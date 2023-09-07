@@ -153,7 +153,7 @@ def fractional(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     Expression | float
     """
     if isinstance(x, (int, float)):
-        fraction, integer = math.modf(x)
+        fraction, _ = math.modf(x)
         return fraction
     return expression.Expression("frac(", x.gamsRepr(), ")")
 
@@ -233,15 +233,45 @@ def sign(x: "Symbol") -> "Expression":
     return expression.Expression("sign(", x.gamsRepr(), ")")
 
 
-def slexp():
-    ...
+def slexp(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 150
+) -> "Expression":
+    """
+    Smooth (linear) exponential
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 150
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("slexp(", f"{x_str},{S}", ")")
 
 
-def sqexp():
-    ...
+def sqexp(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 150
+) -> "Expression":
+    """
+    Smooth (quadratic) exponential
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 150
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("sqexp(", f"{x_str},{S}", ")")
 
 
-def sqrt(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def sqrt(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     """
     Square root of x
 
@@ -254,5 +284,15 @@ def sqrt(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     return expression.Expression("sqrt(", x.gamsRepr(), ")")
 
 
-def trunc():
-    ...
+def truncate(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+    """
+    Returns the integer part of x
+
+    Returns
+    -------
+    Expression | float
+    """
+    if isinstance(x, (int, float)):
+        _, integer = math.modf(x)
+        return integer
+    return expression.Expression("trunc(", x.gamsRepr(), ")")

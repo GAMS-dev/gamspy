@@ -159,24 +159,89 @@ def cv_power(
     return expression.Expression("cvPower(", f"{base_str},{exponent_str}", ")")
 
 
-def rpower():
-    ...
+def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
+        return math.pow(base, exponent)
+
+    base_str = (
+        str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
+    )
+    exponent_str = (
+        str(exponent)
+        if isinstance(exponent, (int, float, str))
+        else exponent.gamsRepr()
+    )
+    return expression.Expression("rPower(", f"{base_str},{exponent_str}", ")")
 
 
-def sign_power():
-    ...
+def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
+        return math.pow(base, exponent)
+
+    base_str = (
+        str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
+    )
+    exponent_str = (
+        str(exponent)
+        if isinstance(exponent, (int, float, str))
+        else exponent.gamsRepr()
+    )
+    return expression.Expression(
+        "signPower(", f"{base_str},{exponent_str}", ")"
+    )
 
 
-def sllog10():
-    ...
+def sllog10(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
+) -> "Expression":
+    """
+    Smooth (linear) logarithm base 10
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 1.0e-150
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("sllog10(", f"{x_str},{S}", ")")
 
 
-def sqlog10():
-    ...
+def sqlog10(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
+) -> "Expression":
+    """
+    Smooth (quadratic) logarithm base 10
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 1.0e-150
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("sqlog10(", f"{x_str},{S}", ")")
 
 
-def vc_power():
-    ...
+def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
+        return math.pow(base, exponent)
+
+    base_str = (
+        str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
+    )
+    exponent_str = (
+        str(exponent)
+        if isinstance(exponent, (int, float, str))
+        else exponent.gamsRepr()
+    )
+    return expression.Expression("vcPower(", f"{base_str},{exponent_str}", ")")
 
 
 def sqr(x: Union[float, "Symbol"]) -> Union["Expression", float]:
