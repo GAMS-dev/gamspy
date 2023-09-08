@@ -20,7 +20,7 @@ from gamspy import (
 
 import time
 
-from gamspy.exceptions import GamsException, GamspyException
+from gamspy.exceptions import GamspyException
 
 
 class SolveSuite(unittest.TestCase):
@@ -304,7 +304,7 @@ class SolveSuite(unittest.TestCase):
         m = Container()
         cost = Equation(m, "cost")
         model = Model(m, "model", equations=[cost], problem="LP", sense="min")
-        self.assertRaises(GamsException, model.solve)
+        self.assertRaises(Exception, model.solve)
 
         # Test limited variables
         transport = Model(

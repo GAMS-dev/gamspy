@@ -38,9 +38,7 @@ from gams.core import gdx
 import gamspy as gp
 import gamspy.utils as utils
 from gamspy.exceptions import (
-    GamsException,
     GamspyException,
-    EngineException,
     EarlyQuit,
 )
 import gamspy._algebra.expression as expression
@@ -855,9 +853,6 @@ class Container(gt.Container):
                 raise EarlyQuit(
                     "Keyboard interrupt was received while solving the model"
                 )
-            except Exception as e:
-                raise GamsException(e)
-
         elif backend in ["engine-one", "engine-sass"]:
             options.gdx = "default.gdx"
 
@@ -867,19 +862,16 @@ class Container(gt.Container):
                     " GAMS Engine"
                 )
 
-            try:
-                self._job.run_engine(
-                    engine_configuration=engine_config.get_engine_config(),
-                    extra_model_files=self._gdx_path,
-                    gams_options=options,
-                    checkpoint=self._save_to,
-                    output=output,
-                    create_out_db=False,
-                    engine_options=engine_config.engine_options,
-                    remove_results=engine_config.remove_results,
-                )
-            except Exception as engine_error:
-                raise EngineException(engine_error)
+            self._job.run_engine(
+                engine_configuration=engine_config.get_engine_config(),
+                extra_model_files=self._gdx_path,
+                gams_options=options,
+                checkpoint=self._save_to,
+                output=output,
+                create_out_db=False,
+                engine_options=engine_config.engine_options,
+                remove_results=engine_config.remove_results,
+            )
         else:
             raise GamspyException(
                 "Specified backend is not supported. Possible backends: local,"
