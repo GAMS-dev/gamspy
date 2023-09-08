@@ -1,3 +1,28 @@
+#
+# GAMS - General Algebraic Modeling System Python API
+#
+# Copyright (c) 2023 GAMS Development Corp. <support@gams.com>
+# Copyright (c) 2023 GAMS Software GmbH <support@gams.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
 from typing import Union, TYPE_CHECKING
 import gamspy._algebra.expression as expression
 
@@ -230,16 +255,61 @@ def poly(x: "Symbol", *args) -> "Expression":
     return expression.Expression("poly(", f"{x.gamsRepr()}, {args_str}", ")")
 
 
-def rand_binomial():
-    ...
+def rand_binomial(n: Union[int, float], p: Union[int, float]) -> "Expression":
+    """
+    Generate a random number from the binomial distribution, where n is the
+    number of trials and p the probability of success for each trial
+
+    Parameters
+    ----------
+    n : int | float
+    p : int | float
+
+    Returns
+    -------
+    Expression
+    """
+    return expression.Expression("randBinomial(", f"{n},{p}", ")")
 
 
-def rand_linear():
-    ...
+def rand_linear(
+    low: Union[int, float], slope: Union[int, float], high: Union[int, float]
+) -> "Expression":
+    """
+    Generate a random number between low and high with linear distribution.
+    slope must be greater than 2 / (high - low)
+
+    Parameters
+    ----------
+    low : int | float
+    slope : int | float
+    high : int | float
+
+    Returns
+    -------
+    Expression
+    """
+    return expression.Expression("randLinear(", f"{low},{slope},{high}", ")")
 
 
-def rand_triangle():
-    ...
+def rand_triangle(
+    low: Union[int, float], mid: Union[int, float], high: Union[int, float]
+) -> "Expression":
+    """
+    Generate a random number between low and high with triangular distribution.
+    mid is the most probable number.
+
+    Parameters
+    ----------
+    low : int | float
+    mid : int | float
+    high : int | float
+
+    Returns
+    -------
+    Expression
+    """
+    return expression.Expression("randTriangle(", f"{low},{mid},{high}", ")")
 
 
 def regularized_gamma(
@@ -261,12 +331,42 @@ def regularized_gamma(
     return expression.Expression("gammaReg(", f"{x},{y},{z}", ")")
 
 
-def slrec():
-    ...
+def slrec(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 10e-10
+) -> "Expression":
+    """
+    Smooth (linear) reciprocal
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 10e-10
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("slrec(", f"{x_str},{S}", ")")
 
 
-def sqrec():
-    ...
+def sqrec(
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 10e-10
+) -> "Expression":
+    """
+    Smooth (quadratic) reciprocal
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+    S : int | float, by default 10e-10
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("sqrec(", f"{x_str},{S}", ")")
 
 
 def entropy(x: Union[int, float, "Symbol"]) -> "Expression":
