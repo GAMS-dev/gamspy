@@ -25,7 +25,6 @@
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
-from gamspy._symbols.symbol import Symbol
 from gamspy._symbols._implicits.implicit_symbol import ImplicitSymbol
 import gamspy._symbols._implicits as implicits
 import gamspy._symbols as syms
@@ -58,12 +57,12 @@ class Condition:
             self._symbol, "ref_container"  # pragma: no cover
         ), f"Container must be defined for symbol {self._symbol.name}"
 
-        if isinstance(self._symbol, Symbol):
-            self._symbol.ref_container[self._symbol.name]._is_dirty = True
-        elif isinstance(self._symbol, ImplicitSymbol):
+        if isinstance(self._symbol, ImplicitSymbol):
             self._symbol.ref_container[self._symbol.parent.name]._is_dirty = (
                 True
             )
+        else:
+            self._symbol.ref_container[self._symbol.name]._is_dirty = True
 
         if isinstance(right_hand_expression, bool):
             right_hand_expression = (
