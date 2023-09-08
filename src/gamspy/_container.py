@@ -33,6 +33,7 @@ from gams import (
     GamsCheckpoint,
     DebugLevel,
 )
+from gams.control.workspace import GamsExceptionExecution
 import gams.transfer as gt
 from gams.core import gdx
 import gamspy as gp
@@ -801,7 +802,10 @@ class Container(gt.Container):
         return string
 
     def interrupt(self):
-        self._job.interrupt()
+        if self._job:
+            self._job.interrupt()
+        else:
+            raise GamspyException("There is no job initialized.")
 
     def _run(
         self,
@@ -853,6 +857,10 @@ class Container(gt.Container):
                 raise EarlyQuit(
                     "Keyboard interrupt was received while solving the model"
                 )
+            except GamsExceptionExecution as e:
+                message = self._parse_message(options, self._job)
+                e.value = message + e.value
+                raise e
         elif backend in ["engine-one", "engine-sass"]:
             options.gdx = "default.gdx"
 
@@ -881,6 +889,54 @@ class Container(gt.Container):
         self._restart_from, self._save_to = self._save_to, self._restart_from
 
         self.loadRecordsFromGdx(self._gdx_path)
+
+    def _parse_message(self, options: "GamsOptions", job: "GamsJob") -> str:
+        default_message = ""
+        header = "=" * 80
+        footer = "=" * 80
+        message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
+
+        lst_filename = (
+            options.output if options.output else job._job_name + ".lst"
+        )
+
+        lst_path = (
+            self.workspace._working_directory + os.path.sep + lst_filename
+        )
+
+        with open(lst_path) as lst_file:
+            all_lines = lst_file.readlines()
+            num_lines = len(all_lines)
+
+            index = 0
+            while index < num_lines:
+                line = all_lines[index]
+
+                if line.startswith("---"):
+                    temp_lines = []
+                    temp_index = index + 1
+
+                    while not all_lines[temp_index].startswith("---"):
+                        temp_lines.append(all_lines[temp_index])
+                        temp_index += 1
+
+                    for idx, temp_line in enumerate(temp_lines):
+                        if temp_line.startswith("****"):
+                            error_lines = [temp_lines[idx - 1][5:]]
+
+                            error_idx = idx
+                            while temp_lines[error_idx].startswith("***"):
+                                error_lines.append(temp_lines[error_idx][5:])
+                                error_idx += 1
+
+                            return message_format.format(
+                                message="".join(error_lines),
+                                header=header,
+                                footer=footer,
+                            )
+                index += 1
+
+        return default_message
 
     def _get_symbol_names_from_gdx(self, gdx_handle: str) -> Tuple[list, list]:
         _, symCount, _ = gdx.gdxSystemInfo(gdx_handle)
