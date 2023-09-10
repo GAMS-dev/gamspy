@@ -171,13 +171,13 @@ class Container(gt.Container):
                 if symbol.type in ["eq", "leq", "geq"]:
                     symbol_type = "regular"
                 _ = gp.Equation(
-                    self,
-                    symbol.name,
-                    symbol_type,
-                    new_domain,
-                    symbol.records,
-                    symbol.domain_forwarding,
-                    symbol.description,
+                    container=self,
+                    name=symbol.name,
+                    type=symbol_type,
+                    domain=new_domain,
+                    records=symbol.records,
+                    domain_forwarding=symbol.domain_forwarding,
+                    description=symbol.description,
                 )
 
     def _setup_paths(
@@ -546,12 +546,12 @@ class Container(gt.Container):
         name: str,
         type: Union[str, "EquationType"] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
+        expr: Optional["Expression"] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition: Optional["Expression"] = None,
-        definition_domain: Optional[List[Union["Set", str]]] = None,
+        expr_domain: Optional[List[Union["Set", str]]] = None,
     ) -> "Equation":
         """
         Creates an Equation and adds it to the Container
@@ -561,12 +561,12 @@ class Container(gt.Container):
         name : str
         type : str
         domain : List[Set | str], optional
+        expr : Expression, optional
         records : Any, optional
         domain_forwarding : bool, optional
         description : str, optional
         uels_on_axes : bool, optional
-        definition : Expression, optional
-        definition_domain : List[Set | str], optional
+        expr_domain : List[Set | str], optional
 
         Returns
         -------
@@ -586,12 +586,12 @@ class Container(gt.Container):
                 name,
                 type,
                 domain,
+                expr,
                 records,
                 domain_forwarding,
                 description,
                 uels_on_axes,
-                definition,
-                definition_domain,
+                expr_domain,
             )
             return obj
 

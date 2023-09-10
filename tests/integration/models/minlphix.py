@@ -288,7 +288,7 @@ def main():
     hidirect = Equation(cont, name="hidirect", domain=[i, j])
     heat = Equation(cont, name="heat", domain=[i])
 
-    nlpobj.definition = zoau == (
+    nlpobj.expr = zoau == (
         alpha
         * (
             Sum(i, fc[i] * ycol[i] + vc[i] * (tc[i] - tcmin[i]) * f[i])
@@ -335,7 +335,7 @@ def main():
 
     material[m] = Sum(pm[i, m], spltfrc[i, m] * f[i]) == Sum(fm[i, m], f[i])
 
-    feed.definition = Sum(zlead[i], f[i]) == totflow
+    feed.expr = Sum(zlead[i], f[i]) == totflow
 
     duty[i] = (
         qc[i] == (kf[i, "a"] + kf[i, "b"] * (tc[i] - tcmin[i])) + s3[i] - s4[i]
@@ -373,7 +373,7 @@ def main():
 
     sequen[m] = Sum(pm[i, m], ycol[i]) == Sum(fm[i, m], ycol[i])
 
-    lead.definition = Sum(zlead[i], ycol[i]) == 1
+    lead.expr = Sum(zlead[i], ycol[i]) == 1
 
     limutil[j] = Sum(hu, yhu[hu, j]) <= 1
 

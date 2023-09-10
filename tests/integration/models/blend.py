@@ -54,7 +54,7 @@ def main():
     mb = Equation(m, name="mb")
 
     pc[elem] = Sum(alloy, compdat[elem, alloy] * v[alloy]) == rb[elem]
-    mb.definition = Sum(alloy, v[alloy]) == 1
+    mb.expr = Sum(alloy, v[alloy]) == 1
 
     b1 = Model(
         m,

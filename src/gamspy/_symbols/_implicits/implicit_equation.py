@@ -124,14 +124,14 @@ class ImplicitEquation:
         return self._infeas
 
     @property
-    def definition(self) -> Optional["Expression"]:
-        return self._definition  # pragma: no cover
+    def expr(self) -> Optional["Expression"]:
+        return self._expr  # pragma: no cover
 
-    @definition.setter
-    def definition(self, assignment: Optional["Expression"] = None) -> None:
+    @expr.setter
+    def expr(self, assignment: Optional["Expression"] = None) -> None:
         """Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.definition = Sum(wh, build[wh]) <= 1
+        >>> eq.expr = Sum(wh, build[wh]) <= 1
         """
         equation_map = {
             "nonbinding": "=n=",
@@ -155,7 +155,7 @@ class ImplicitEquation:
         )
 
         self.ref_container._addStatement(statement)
-        self._definition = statement
+        self._expr = statement
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

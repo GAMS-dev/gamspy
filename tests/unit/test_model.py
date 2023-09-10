@@ -51,7 +51,7 @@ class ModelSuite(unittest.TestCase):
             name="cost",
             description="define objective function",
         )
-        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
 
         # Equation definition with an index
         supply = Equation(

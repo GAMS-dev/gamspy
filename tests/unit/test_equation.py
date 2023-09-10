@@ -41,7 +41,7 @@ class EquationSuite(unittest.TestCase):
 
         # Equations
         eq1 = Equation(self.m, "eq1", type="nonbinding")
-        eq1.definition = x == c
+        eq1.expr = x == c
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].gamsRepr(),
             "eq1 .. x =n= c;",
@@ -55,7 +55,7 @@ class EquationSuite(unittest.TestCase):
             "eq2(i) .. x(i) =n= c(i);",
         )
 
-        eq2[i].definition = x[i] == c[i]
+        eq2[i].expr = x[i] == c[i]
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].gamsRepr(),
             "eq2(i) .. x(i) =n= c(i);",
@@ -179,11 +179,11 @@ class EquationSuite(unittest.TestCase):
             name="cost",
             description="define objective function",
         )
-        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
         with self.assertRaises(TypeError):
             cost.records = 5
 
-        self.assertIsNotNone(cost.definition)
+        self.assertIsNotNone(cost.expr)
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
@@ -209,7 +209,7 @@ class EquationSuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla[i, j].definition = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, j].expr = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
@@ -226,7 +226,7 @@ class EquationSuite(unittest.TestCase):
             self.m,
             name="cost2",
             description="define objective function",
-            definition=Sum((i, j), c[i, j] * x[i, j]) == z,
+            expr=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
@@ -237,21 +237,21 @@ class EquationSuite(unittest.TestCase):
         _ = self.m.addEquation(
             name="cost2",
             description="define objective function",
-            definition=Sum((i, j), c[i, j] * x[i, j]) == z,
+            expr=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
-        # eq[bla].definition test
+        # eq[bla].expr test
         bla2 = Equation(
             self.m,
             name="bla2",
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla2[i, j].definition = Sum((i, j), x[i, j]) <= a[i]
+        bla2[i, j].expr = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
             "bla2(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
@@ -263,8 +263,8 @@ class EquationSuite(unittest.TestCase):
             name="bla3",
             domain=[i, j],
             description="observe supply limit at plant i",
-            definition=Sum((i, j), x[i, j]) <= a[i],
-            definition_domain=[i, "bla"],
+            expr=Sum((i, j), x[i, j]) <= a[i],
+            expr_domain=[i, "bla"],
         )
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
@@ -432,7 +432,7 @@ class EquationSuite(unittest.TestCase):
             records={"lower": 1.0, "level": 1.5, "upper": 3.75},
         )
         f = Equation(self.m, name="f", domain=[], type="nonbinding")
-        f.definition = x - c
+        f.expr = x - c
 
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].gamsRepr(),

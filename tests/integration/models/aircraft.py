@@ -131,12 +131,10 @@ def main():
     db[j] = Sum(i, p[i, j] * x[i, j]) >= Sum(h.where[deltb[j, h]], y[j, h])
     yd[j, h] = y[j, h] <= Sum(i, p[i, j] * x[i, j])
     bd[j, h] = b[j, h] == dd[j, h] - y[j, h]
-    ocd.definition = oc == Sum([i, j], c[i, j] * x[i, j])
-    bcd1.definition = bc == Sum(
-        j, k[j] * (ed[j] - Sum(h, gamma[j, h] * y[j, h]))
-    )
-    bcd2.definition = bc == Sum([j, h], k[j] * lamda[j, h] * b[j, h])
-    obj.definition = phi == oc + bc
+    ocd.expr = oc == Sum([i, j], c[i, j] * x[i, j])
+    bcd1.expr = bc == Sum(j, k[j] * (ed[j] - Sum(h, gamma[j, h] * y[j, h])))
+    bcd2.expr = bc == Sum([j, h], k[j] * lamda[j, h] * b[j, h])
+    obj.expr = phi == oc + bc
 
     alloc1 = Model(
         m,

@@ -69,8 +69,8 @@ def main():
     eq2 = Equation(m, name="eq2")
     eq3 = Equation(m, name="eq3", domain=[bus])
 
-    eq1.definition = Sum(bus, PMU[bus]) <= NPMU
-    eq2.definition = OF == Sum(node, alpha[node])
+    eq1.expr = Sum(bus, PMU[bus]) <= NPMU
+    eq2.expr = OF == Sum(node, alpha[node])
     eq3[bus] = (
         PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
     )

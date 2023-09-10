@@ -146,7 +146,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
 
     eStartFaster[g, t1] = Sum(sMinDownFast[g, t1, t2], vStart[g, t2]) <= 1
 
-    defobj.definition = z == Sum([g, t], vStart[g, t])
+    defobj.expr = z == Sum([g, t], vStart[g, t])
 
     maxStarts = Model(
         m,

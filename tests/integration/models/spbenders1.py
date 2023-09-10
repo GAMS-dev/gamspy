@@ -132,7 +132,7 @@ def main():
     receive = Equation(m, name="receive", domain=[j])
     optcut = Equation(m, name="optcut", domain=[iter])
 
-    masterobj.definition = zmaster == theta - Sum(
+    masterobj.expr = zmaster == theta - Sum(
         (i, j), transcost[i, j] * ship[i, j]
     ) - Sum(i, prodcost * product[i])
     receive[j] = received[j] == Sum(i, ship[i, j])
@@ -161,7 +161,7 @@ def main():
     selling = Equation(m, name="selling", domain=[j])
     market = Equation(m, name="market", domain=[j])
 
-    subobj.definition = zsub == Sum(j, price * sales[j]) - Sum(
+    subobj.expr = zsub == Sum(j, price * sales[j]) - Sum(
         j, wastecost * waste[j]
     )
     selling[j] = sales[j] + waste[j] == received.l[j]

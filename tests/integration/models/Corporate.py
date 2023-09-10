@@ -182,7 +182,7 @@ def main():
         description="MAD constraints",
     )
 
-    ObjDef.definition = ObjValue == Sum(l, pr[l] * PortRet[l])
+    ObjDef.expr = ObjValue == Sum(l, pr[l] * PortRet[l])
 
     BroadPortRetDef[l] = PortRet[l] == Sum(j, z[j] * BroadAssetReturns[j, l])
 
@@ -190,9 +190,9 @@ def main():
 
     MADCon[l] = PortRet[l] >= Benchmark[l] - EpsTolerance
 
-    BroadNormalCon.definition = Sum(j, z[j]) == 1.0
+    BroadNormalCon.expr = Sum(j, z[j]) == 1.0
 
-    NormalCon.definition = Sum(a, x[a]) == CurrentWeight
+    NormalCon.expr = Sum(a, x[a]) == CurrentWeight
 
     m.addOptions({"SOLVEOPT": "REPLACE"})
 

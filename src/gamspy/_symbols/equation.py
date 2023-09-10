@@ -66,12 +66,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     name : str
     type : str
     domain : List[Set | str], optional
+    expr: Expression, optional
     records : Any, optional
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes: bool
-    definition: Expression, optional
-    definition_domain: list, optional
+    expr_domain: list, optional
 
     Examples
     --------
@@ -88,12 +88,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         name: str,
         type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
+        expr: Optional["Expression"] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition: Optional["Expression"] = None,
-        definition_domain: Optional[list] = None,
+        expr_domain: Optional[list] = None,
     ):
         type = self._cast_type(type)
 
@@ -121,8 +121,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.ref_container._addStatement(self)
 
         # add defition if exists
-        self._definition_domain = definition_domain
-        self.definition = definition
+        self._expr_domain = expr_domain
+        self.expr = expr
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -263,18 +263,18 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return self._infeas
 
     @property
-    def definition(self) -> Optional["Expression"]:
-        return self._definition
+    def expr(self) -> Optional["Expression"]:
+        return self._expr
 
-    @definition.setter
-    def definition(self, assignment: Optional["Expression"] = None) -> None:
+    @expr.setter
+    def expr(self, assignment: Optional["Expression"] = None) -> None:
         """
         Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.definition = Sum(wh, build[wh]) <= 1
+        >>> eq.expr = Sum(wh, build[wh]) <= 1
         """
         if assignment is None:
-            self._definition = assignment
+            self._expr = assignment
             return
 
         eq_types = ["=e=", "=l=", "=g="]
@@ -301,9 +301,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         else:
             self.type = regular_map[assignment._op_type]  # type: ignore
 
-        domain = (
-            self._definition_domain if self._definition_domain else self.domain
-        )
+        domain = self._expr_domain if self._expr_domain else self.domain
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,
@@ -316,7 +314,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         )
 
         self.ref_container._addStatement(statement)
-        self._definition = statement
+        self._expr = statement
 
     @property
     def records(self):

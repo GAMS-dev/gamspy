@@ -49,7 +49,7 @@ def main():
         ]
     )
 
-    objdef.definition = obj == w1 * Sum(
+    objdef.expr = obj == w1 * Sum(
         Domain(j, k).where[vc[j, k]], z[j, k]
     ) + w2 * Sum(
         Domain(j, k).where[vc[j, k]], a[j, "dist"] * z[j, k]

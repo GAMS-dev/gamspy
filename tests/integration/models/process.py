@@ -50,20 +50,18 @@ def main():
     rngdf4 = Equation(m, name="rngdf4")
     dprofit = Equation(m, name="dprofit")
 
-    yield1.definition = alkylate == olefin * (
+    yield1.expr = alkylate == olefin * (
         1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)
     )
-    makeup.definition = alkylate == olefin + isom - 0.22 * alkylate
-    sdef.definition = (
-        acid == alkylate * dilute * strength / (98 - strength) / 1000
-    )
-    motor.definition = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
+    makeup.expr = alkylate == olefin + isom - 0.22 * alkylate
+    sdef.expr = acid == alkylate * dilute * strength / (98 - strength) / 1000
+    motor.expr = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
         ratio
     ) - 0.325 * (89 - strength)
-    drat.definition = ratio == (isor + isom) / olefin
-    ddil.definition = dilute == 35.82 - 0.222 * f4
-    df4.definition = f4 == -133 + 3 * octane
-    dprofit.definition = (
+    drat.expr = ratio == (isor + isom) / olefin
+    ddil.expr = dilute == 35.82 - 0.222 * f4
+    df4.expr = f4 == -133 + 3 * octane
+    dprofit.expr = (
         profit
         == 0.063 * alkylate * octane
         - 5.04 * olefin
@@ -71,15 +69,14 @@ def main():
         - 10 * acid
         - 3.36 * isom
     )
-    rngyield.definition = rangey * alkylate == olefin * (
+    rngyield.expr = rangey * alkylate == olefin * (
         1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)
     )
-    rngmotor.definition = (
-        rangem * octane
-        == 86.35 + 1.098 * ratio - 0.038 * sqr(ratio) - 0.325 * (89 - strength)
-    )
-    rngddil.definition = ranged * dilute == 35.82 - 0.222 * f4
-    rngdf4.definition = rangef * f4 == -133 + 3 * octane
+    rngmotor.expr = rangem * octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
+        ratio
+    ) - 0.325 * (89 - strength)
+    rngddil.expr = ranged * dilute == 35.82 - 0.222 * f4
+    rngdf4.expr = rangef * f4 == -133 + 3 * octane
 
     # Define Models
     process = Model(

@@ -122,23 +122,21 @@ def main():
         <= flab[t] + tlab[t]
     )
 
-    amisc.definition = mcost == Sum(c, xcrop[c] * miscost[c])
+    amisc.expr = mcost == Sum(c, xcrop[c] * miscost[c])
 
-    alab.definition = labcost == Sum(t, tlab[t] * twage)
+    alab.expr = labcost == Sum(t, tlab[t] * twage)
 
-    ares.definition = rescost == Sum(t, flab[t] * rwage)
+    ares.expr = rescost == Sum(t, flab[t] * rwage)
 
-    aplow.definition = pcost == Sum(s, thire[s] * trent)
+    aplow.expr = pcost == Sum(s, thire[s] * trent)
 
-    acost.definition = tcost == mcost + labcost + rescost + pcost
+    acost.expr = tcost == mcost + labcost + rescost + pcost
 
-    lclover.definition = xcrop["clover"] * yields["clover"] >= Sum(
+    lclover.expr = xcrop["clover"] * yields["clover"] >= Sum(
         r, xlive[r] * lio["clover", r]
     )
 
-    lstraw.definition = xcrop["wheat"] * straw >= Sum(
-        r, xlive[r] * lio["straw", r]
-    )
+    lstraw.expr = xcrop["wheat"] * straw >= Sum(r, xlive[r] * lio["straw", r])
 
     plow[s] = (
         Sum(c.where[sc[s, c]], xcrop[c]) <= Sum(r, xlive[r]) * hpa + thire[s]
@@ -151,7 +149,7 @@ def main():
         == natprod[cn] + imports[cn].where[cm[cn]] - exports[cn].where[ce[cn]]
     )
 
-    objn.definition = cps == (
+    objn.expr = cps == (
         Sum(cn, alpha[cn] * natcon[cn] + 0.5 * beta[cn] * sqr(natcon[cn]))
         + Sum(ce, exports[ce] * pe[ce])
         - Sum(cm, imports[cm] * pm[cm])

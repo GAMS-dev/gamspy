@@ -64,15 +64,15 @@ def main():
     e4x = Equation(m, name="e4x")
     e4y = Equation(m, name="e4y")
 
-    obj.definition = z == a**2 + b**2
-    e1x.definition = fx(t["1"]) == x
-    e1y.definition = fy(t["1"]) == y
-    e2x.definition = fx(t["2"]) == x + a
-    e2y.definition = fy(t["2"]) == y + b
-    e3x.definition = fx(t["3"]) == x - b
-    e3y.definition = fy(t["3"]) == y + a
-    e4x.definition = fx(t["4"]) == x + a - b
-    e4y.definition = fy(t["4"]) == y + a + b
+    obj.expr = z == a**2 + b**2
+    e1x.expr = fx(t["1"]) == x
+    e1y.expr = fy(t["1"]) == y
+    e2x.expr = fx(t["2"]) == x + a
+    e2y.expr = fy(t["2"]) == y + b
+    e3x.expr = fx(t["3"]) == x - b
+    e3y.expr = fy(t["3"]) == y + a
+    e4x.expr = fx(t["4"]) == x + a - b
+    e4y.expr = fy(t["4"]) == y + a + b
 
     square = Model(
         m,

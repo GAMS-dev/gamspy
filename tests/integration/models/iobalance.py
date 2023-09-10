@@ -139,7 +139,7 @@ def main():
 
     colbal[j] = Sum(i, a[i, j] * x[j]) == v[j]
 
-    defobjent.definition = obj == Sum(
+    defobjent.expr = obj == Sum(
         [i, j], x[j] * a[i, j] * gams_math.log(a[i, j] / a0[i, j])
     )
 
@@ -175,7 +175,7 @@ def main():
     zbar[i, j] = a0[i, j] * x[j]
     zv.lo[i, j] = 1
 
-    defobjentz.definition = obj == Sum(
+    defobjentz.expr = obj == Sum(
         [i, j], zv[i, j] * gams_math.log(zv[i, j] / zbar[i, j])
     )
 
@@ -217,15 +217,15 @@ def main():
 
     defmaxn[i, j] = a[i, j] - a0[i, j] >= -amax
 
-    defmad.definition = obj == 1 / gams_math.power(Card(i), 2) * Sum(
+    defmad.expr = obj == 1 / gams_math.power(Card(i), 2) * Sum(
         [i, j], ap[i, j] + an[i, j]
     )
 
-    defmade.definition = obj == 100 / gams_math.power(Card(i), 2) * Sum(
+    defmade.expr = obj == 100 / gams_math.power(Card(i), 2) * Sum(
         [i, j], (ap[i, j] + an[i, j]) / a0[i, j]
     )
 
-    deflinf.definition = obj == amax
+    deflinf.expr = obj == amax
 
     # Model
     mMAD = Model(
@@ -267,11 +267,9 @@ def main():
     defsd = Equation(m, name="defsd")
     defrsd = Equation(m, name="defrsd")
 
-    defsd.definition = obj == Sum(
-        [i, j], gams_math.power(a[i, j] + a0[i, j], 2)
-    )
+    defsd.expr = obj == Sum([i, j], gams_math.power(a[i, j] + a0[i, j], 2))
 
-    defrsd.definition = obj == Sum(
+    defrsd.expr = obj == Sum(
         [i, j], gams_math.power(a[i, j] + a0[i, j], 2) / a0[i, j]
     )
 

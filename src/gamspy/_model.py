@@ -272,7 +272,7 @@ class Model:
             assignment = assignment == variable
 
             # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
-            equation.definition = assignment
+            equation.expr = assignment
             self._equations.append(equation)
 
             return variable

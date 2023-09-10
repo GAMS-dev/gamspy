@@ -67,7 +67,7 @@ def main():
     demcons = Equation(m, name="demcons", domain=[t])
     oileq = Equation(m, name="oileq", domain=[t])
 
-    costfn.definition = cost == Sum(
+    costfn.expr = cost == Sum(
         t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2)
     )
     lowoil[t] = poil[t] >= 100 * status[t]

@@ -121,11 +121,11 @@ def main():
         description="investment funds available",
     )
 
-    objj.definition = obj == Sum(s, mean[s] * invest[s]) - rap * (
+    objj.expr = obj == Sum(s, mean[s] * invest[s]) - rap * (
         Sum([s, sp], invest[s] * covar[s, sp] * invest[sp])
     )
 
-    investav.definition = Sum(s, prices[s] * invest[s]) <= funds
+    investav.expr = Sum(s, prices[s] * invest[s]) <= funds
 
     evportfol = Model(cont, name="evportfol", equations=cont.getEquations())
 

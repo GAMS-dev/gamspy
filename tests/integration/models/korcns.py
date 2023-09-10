@@ -488,7 +488,7 @@ def main():
 
     pkdef[i] = pk[i] == Sum(j, p[j] * imat[j, i])
 
-    pindexdef.definition = pindex == Sum(i, pwts[i] * p[i])
+    pindexdef.expr = pindex == Sum(i, pwts[i] * p[i])
 
     # output and factors of production block
     activity[i] = xd[i] == ad[i] * Product(
@@ -531,11 +531,11 @@ def main():
         hh, cles[i, hh] * (1 - mps[hh]) * yh[hh] * (1 - htax[hh])
     )
 
-    gdp.definition = y == Sum(hh, yh[hh])
+    gdp.expr = y == Sum(hh, yh[hh])
 
-    labory.definition = yh["lab_hh"] == Sum(lc, wa[lc] * ls[lc]) + remit * er
+    labory.expr = yh["lab_hh"] == Sum(lc, wa[lc] * ls[lc]) + remit * er
 
-    capitaly.definition = (
+    capitaly.expr = (
         yh["cap_hh"]
         == Sum(i, pva[i] * xd[i])
         - deprecia
@@ -544,27 +544,27 @@ def main():
         + ypr
     )
 
-    hhsaveq.definition = hhsav == Sum(hh, mps[hh] * yh[hh] * (1 - htax[hh]))
+    hhsaveq.expr = hhsav == Sum(hh, mps[hh] * yh[hh] * (1 - htax[hh]))
 
-    greq.definition = gr == tariff - netsub + indtax + tothhtax
+    greq.expr = gr == tariff - netsub + indtax + tothhtax
 
-    gruse.definition = gr == Sum(i, p[i] * gd[i]) + govsav
+    gruse.expr = gr == Sum(i, p[i] * gd[i]) + govsav
 
     gdeq[i] = gd[i] == gles[i] * gdtot
 
-    tariffdef.definition = tariff == Sum(it, tm[it] * m[it] * pwm[it]) * er
+    tariffdef.expr = tariff == Sum(it, tm[it] * m[it] * pwm[it]) * er
 
-    indtaxdef.definition = indtax == Sum(i, itax[i] * px[i] * xd[i])
+    indtaxdef.expr = indtax == Sum(i, itax[i] * px[i] * xd[i])
 
-    netsubdef.definition = netsub == Sum(it, te[it] * e[it] * pwe[it]) * er
+    netsubdef.expr = netsub == Sum(it, te[it] * e[it] * pwe[it]) * er
 
-    premium.definition = ypr == Sum(it, pwm[it] * m[it]) * er * pr
+    premium.expr = ypr == Sum(it, pwm[it] * m[it]) * er * pr
 
-    hhtaxdef.definition = tothhtax == Sum(hh, htax[hh] * yh[hh])
+    hhtaxdef.expr = tothhtax == Sum(hh, htax[hh] * yh[hh])
 
-    depreq.definition = deprecia == Sum(i, depr[i] * pk[i] * k[i])
+    depreq.expr = deprecia == Sum(i, depr[i] * pk[i] * k[i])
 
-    totsav.definition = savings == hhsav + govsav + deprecia + fsav * er
+    totsav.expr = savings == hhsav + govsav + deprecia + fsav * er
 
     prodinv[i] = pk[i] * dk[i] == kio[i] * invest - kio[i] * Sum(
         j, dst[j] * p[j]
@@ -573,7 +573,7 @@ def main():
     ieq[i] = id[i] == Sum(j, imat[i, j] * dk[j])
 
     # balance of payments
-    caeq.definition = (
+    caeq.expr = (
         Sum(it, pwm[it] * m[it])
         == Sum(it, pwe[it] * e[it]) + fsav + remit + fbor
     )
@@ -581,7 +581,7 @@ def main():
     equil[i] = x[i] == intr[i] + cd[i] + gd[i] + id[i] + dst[i]
 
     # objective function
-    obj.definition = omega == Product(
+    obj.expr = omega == Product(
         i.where[cles[i, "lab_hh"]], cd[i] ** cles[i, "lab_hh"]
     )
 

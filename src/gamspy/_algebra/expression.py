@@ -155,7 +155,7 @@ class Expression(operable.Operable):
             out_str = out_str.replace(" ", "")  # remove spaces
 
         if self._op_type in ["..", "="]:
-            # add ; to equation definitions and assignments
+            # add ; to equation expressions and assignments
             out_str += ";"
 
         if self._op_type == "==":

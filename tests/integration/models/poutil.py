@@ -460,13 +460,13 @@ def main():
     )
 
     # the objective function: total cost eq. (6)
-    obj.definition = c == cPP + cSM + cLFC
+    obj.expr = c == cPP + cSM + cLFC
 
     # meet the power demand for each time period exactly eq. (23)
     demand[t] = pPP[t] + pSM[t] + pLFC[t] == PowerForecast[t]
 
     # (fix cost +) variable cost * energy amount produced eq. (7) & (8)
-    PPcost.definition = cPP == cPPvar * Sum(t, 0.25 * pPP[t])
+    PPcost.expr = cPP == cPPvar * Sum(t, 0.25 * pPP[t])
 
     # power produced by the power plant eq. (26)
     PPpower[t] = pPP[t] == pPPMax * Sum(
@@ -505,31 +505,29 @@ def main():
 
     # cost for the spot market eq. (12)
     # consistent of the base load (alpha) and peak load (beta) contracts
-    SMcost.definition = cSM == 24 * cBL * alpha + 12 * cPL * beta
+    SMcost.expr = cSM == 24 * cBL * alpha + 12 * cPL * beta
 
     # Spot Market power contribution eq. (9)
     SMpower[t] = pSM[t] == alpha + IPL[t] * beta
 
     # cost of the LFC is given by the energy rate eq. (14) & (21)
-    LFCcost.definition = cLFC == Sum(
-        b, cLFCs[b] * mu[b] + cLFCvar[b] * eLFCs[b]
-    )
+    LFCcost.expr = cLFC == Sum(b, cLFCs[b] * mu[b] + cLFCvar[b] * eLFCs[b])
 
     # total energy from the LFC eq. (16)
     # connect the eLFC[t] variables with eLFCtot
-    LFCenergy.definition = eLFCtot == Sum(t, 0.25 * pLFC[t])
+    LFCenergy.expr = eLFCtot == Sum(t, 0.25 * pLFC[t])
 
     # indicator variable 'mu':
     # we are in exactly one price segment b eq. (18)
-    LFCmu.definition = Sum(b, mu[b]) == 1
+    LFCmu.expr = Sum(b, mu[b]) == 1
 
     # connect the 'mu' variables with the total energy amount eq. (19)
-    LFCenergyS.definition = eLFCtot == Sum(
+    LFCenergyS.expr = eLFCtot == Sum(
         b.where[Ord(b) > 1], eLFCb[b.lag(1)] * mu[b]
     ) + Sum(b, eLFCs[b])
 
     # accumulated energy amount for segment "b1" eq. (20)
-    LFCemuo.definition = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
+    LFCemuo.expr = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
 
     # accumulated energy amount for all other segments (then "b1") eq. (20)
     LFCemug[b].where[Ord(b) > 1] = (
