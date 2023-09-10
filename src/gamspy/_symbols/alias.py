@@ -27,7 +27,7 @@ import gams.transfer as gt
 import gamspy._algebra.operable as operable
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 
 from gamspy._symbols.symbol import Symbol
 from typing import Literal, TYPE_CHECKING, Union
@@ -113,13 +113,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} -- {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} -- {jump}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} - {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} - {jump}")
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -148,13 +144,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} ++ {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} ++ {jump}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} + {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} + {jump}")
 
         raise ValueError("Lead type must be linear or circular")
 

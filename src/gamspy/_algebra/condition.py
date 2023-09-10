@@ -25,8 +25,8 @@
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
-from gamspy._symbols._implicits.implicit_symbol import ImplicitSymbol
-import gamspy._symbols._implicits as implicits
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+import gamspy._symbols.implicits as implicits
 import gamspy._symbols as syms
 
 

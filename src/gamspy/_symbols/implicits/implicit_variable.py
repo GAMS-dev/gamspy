@@ -26,10 +26,10 @@
 from __future__ import annotations
 
 import gamspy._algebra.operable as operable
-import gamspy._algebra.condition as condition
 import gamspy.utils as utils
 import gamspy._algebra.expression as expression
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from gams.transfer import Set
 
 
-class ImplicitVariable(operable.Operable):
+class ImplicitVariable(ImplicitSymbol, operable.Operable):
     """
     Implicit Variable
 
@@ -54,19 +54,15 @@ class ImplicitVariable(operable.Operable):
         name: str,
         domain: list[Union["Set", str]],
     ):
-        self.parent = parent
-        self.ref_container = parent.ref_container
-        self.name = name
-        self.domain = domain
+        super().__init__(parent, name, domain)
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
         self._fx = self._create_attr("fx")
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
-        self.where = condition.Condition(self)
 
     def _create_attr(self, attr_name: str):
         return implicits.ImplicitParameter(
-            self, f"{self.gamsRepr()}.{attr_name}"
+            self.parent, f"{self.gamsRepr()}.{attr_name}"
         )
 
     def _init_attributes(self):

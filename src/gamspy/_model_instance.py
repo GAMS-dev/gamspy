@@ -25,7 +25,7 @@
 
 import io
 import gamspy as gp
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
 from gams import (
     GamsModifier,
@@ -48,7 +48,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Model, Container
-    from gamspy._symbols._implicits import ImplicitParameter
+    from gamspy._symbols.implicits import ImplicitParameter
 
 
 variable_map = {

@@ -28,7 +28,7 @@ import pandas as pd
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.condition as condition
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 from enum import Enum

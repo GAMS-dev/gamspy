@@ -28,7 +28,7 @@ import platform
 import gamspy
 import pandas as pd
 import gams.transfer as gt
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 from collections.abc import Sequence
@@ -36,7 +36,7 @@ from gamspy.exceptions import GdxException
 from typing import Iterable, Tuple, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy._symbols._implicits import ImplicitSet
+    from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra.expression import Expression

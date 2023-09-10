@@ -29,7 +29,7 @@ import pandas as pd
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.condition as condition
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 from gamspy._symbols.symbol import Symbol
@@ -117,9 +117,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitSet:
         domain = utils._toList(indices)
-        return implicits.ImplicitSet(
-            self.ref_container, name=self.name, domain=domain
-        )
+        return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
@@ -132,9 +130,7 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment = "yes" if assignment is True else "no"  # type: ignore
 
         statement = expression.Expression(
-            implicits.ImplicitSet(
-                self.ref_container, name=self.name, domain=domain
-            ),
+            implicits.ImplicitSet(self, name=self.name, domain=domain),
             "=",
             assignment,
         )
@@ -212,13 +208,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} -- {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} -- {jump}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} - {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} - {jump}")
 
         raise ValueError("Lag type must be linear or circular")
 
@@ -247,13 +239,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} ++ {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} ++ {jump}")
         elif type == "linear":
-            return implicits.ImplicitSet(
-                self.ref_container, name=f"{self.name} + {jump}"
-            )
+            return implicits.ImplicitSet(self, name=f"{self.name} + {jump}")
 
         raise ValueError("Lead type must be linear or circular")
 

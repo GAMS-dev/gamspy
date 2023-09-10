@@ -25,18 +25,18 @@
 
 from __future__ import annotations
 
-import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from typing import List, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
 
 
-class ImplicitSet(operable.Operable):
+class ImplicitSet(ImplicitSymbol, operable.Operable):
     """
     Implicit Set
 
@@ -49,14 +49,11 @@ class ImplicitSet(operable.Operable):
 
     def __init__(
         self,
-        container: "Container",
+        parent: Union["Set", "Alias"],
         name: str,
         domain: List[Union["Set", str]] = [],
     ) -> None:
-        self.ref_container = container
-        self.name = name
-        self.domain = domain
-        self.where = condition.Condition(self)
+        super().__init__(parent, name, domain)
 
     def __invert__(self) -> "Expression":
         return expression.Expression("", "not", self)

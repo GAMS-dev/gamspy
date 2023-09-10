@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from gamspy import Parameter, Variable, Equation, Container
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols._implicits import ImplicitParameter
+    from gamspy._symbols.implicits import ImplicitParameter
 
 
 class Problem(Enum):

@@ -29,7 +29,7 @@ import gamspy.utils as utils
 import gamspy._algebra.operable as operable
 import gamspy._algebra.domain as domain
 import gamspy._symbols as syms
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 from typing import Tuple
 
 

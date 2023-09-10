@@ -28,7 +28,7 @@ import pandas as pd
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.condition as condition
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 from gamspy._symbols.symbol import Symbol
@@ -36,7 +36,8 @@ from enum import Enum
 from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Set, Variable, Container
+    from gamspy._algebra.operation import Operation
     from gamspy._algebra.expression import Expression
 
 
@@ -88,7 +89,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         name: str,
         type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        expr: Optional["Expression"] = None,
+        expr: Optional[Union["Variable", "Operation", "Expression"]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -263,11 +264,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return self._infeas
 
     @property
-    def expr(self) -> Optional["Expression"]:
+    def expr(self) -> Optional[Union["Variable", "Operation", "Expression"]]:
         return self._expr
 
     @expr.setter
-    def expr(self, assignment: Optional["Expression"] = None) -> None:
+    def expr(
+        self,
+        assignment: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
+    ) -> None:
         """
         Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;

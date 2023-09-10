@@ -27,18 +27,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy.utils as utils
-from gamspy._symbols._implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
     from gamspy import Set, Parameter, Variable, Equation
     from gamspy._algebra.expression import Expression
 
 
-class ImplicitParameter(operable.Operable, ImplicitSymbol):
+class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __init__(
         self,
         parent: Union["Parameter", "Variable", "Equation"],
@@ -55,13 +54,9 @@ class ImplicitParameter(operable.Operable, ImplicitSymbol):
         domain : List[Set | str], optional
         records : Any, optional
         """
-        self.parent = parent
-        self.ref_container = parent.ref_container
-        self.name = name
-        self.domain = domain
+        super().__init__(parent, name, domain)
         self._records = records
         self._assignment = None
-        self.where = condition.Condition(self)
 
     @property
     def assign(self):

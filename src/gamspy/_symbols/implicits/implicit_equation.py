@@ -24,12 +24,12 @@
 #
 
 from __future__ import annotations
-from gamspy._symbols._implicits.implicit_parameter import ImplicitParameter
-import gamspy._algebra.condition as condition
+from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 import gamspy._algebra.expression as expression
 import gamspy._symbols.set as gams_set
 import gamspy._symbols.alias as alias
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from typing import List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-class ImplicitEquation:
+class ImplicitEquation(ImplicitSymbol):
     def __init__(
         self,
         parent: "Equation",
@@ -53,11 +53,9 @@ class ImplicitEquation:
         name : str
         domain : List[Set | str]
         """
-        self.parent = parent
-        self.ref_container = parent.ref_container
-        self.name = name
+        super().__init__(parent, name, domain)
         self.type = type
-        self.domain = domain
+
         # level, marginal, lower, upper, scale
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
         self._stage = self._create_attr("stage")
@@ -66,10 +64,9 @@ class ImplicitEquation:
         self._slackup = self._create_attr("slackup")
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
-        self.where = condition.Condition(self)
 
     def _create_attr(self, attr_name: str):
-        return ImplicitParameter(self, f"{self.gamsRepr()}.{attr_name}")
+        return ImplicitParameter(self.parent, f"{self.gamsRepr()}.{attr_name}")
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")

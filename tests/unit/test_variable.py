@@ -1,7 +1,7 @@
 import unittest
 
 import pandas as pd
-import gamspy._symbols._implicits as implicits
+import gamspy._symbols.implicits as implicits
 from gamspy import Container, Set, Variable, VariableType
 
 
