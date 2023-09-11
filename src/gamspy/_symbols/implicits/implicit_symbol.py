@@ -1,4 +1,5 @@
 from abc import ABC
+
 import gamspy._algebra.condition as condition
 
 

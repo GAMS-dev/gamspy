@@ -22,37 +22,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import os
 import io
-import pandas as pd
-from gams import (
-    GamsWorkspace,
-    GamsOptions,
-    GamsJob,
-    GamsCheckpoint,
-    DebugLevel,
-)
-from gams.control.workspace import GamsExceptionExecution
+import os
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Literal
+from typing import Optional
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
+
 import gams.transfer as gt
+import pandas as pd
+from gams import DebugLevel
+from gams import GamsCheckpoint
+from gams import GamsJob
+from gams import GamsOptions
+from gams import GamsWorkspace
+from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
+
 import gamspy as gp
-import gamspy.utils as utils
-from gamspy.exceptions import (
-    GamspyException,
-    EarlyQuit,
-)
 import gamspy._algebra.expression as expression
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Union,
-    Optional,
-    Tuple,
-    TYPE_CHECKING,
-)
+import gamspy.utils as utils
+from gamspy.exceptions import EarlyQuit
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Alias, Set, Parameter, Variable, Equation, EquationType

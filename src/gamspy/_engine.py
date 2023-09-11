@@ -23,7 +23,9 @@
 # SOFTWARE.
 #
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from gams import GamsEngineConfiguration
 
 

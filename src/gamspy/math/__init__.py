@@ -22,62 +22,53 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-from gamspy.math.trigonometric import (
-    cos,
-    cosh,
-    sin,
-    sinh,
-    acos,
-    asin,
-    tan,
-    tanh,
-    atan,
-    atan2,
-)
-from gamspy.math.log_power import (
-    exp,
-    power,
-    cv_power,
-    rpower,
-    sign_power,
-    sllog10,
-    sqlog10,
-    vc_power,
-    sqr,
-    log,
-    log2,
-    log10,
-    log_beta,
-    log_gamma,
-    logit,
-)
-from gamspy.math.numeric import (
-    abs,
-    ceil,
-    dist,
-    div,
-    div0,
-    factorial,
-    floor,
-    fractional,
-    min,
-    max,
-    mod,
-    Round,
-    sign,
-    sqrt,
-    slexp,
-    sqexp,
-    truncate,
-)
-from gamspy.math.probability import (
-    binomial,
-    centropy,
-    normal,
-    uniform,
-    uniformInt,
-)
+from gamspy.math.log_power import cv_power
+from gamspy.math.log_power import exp
+from gamspy.math.log_power import log
+from gamspy.math.log_power import log10
+from gamspy.math.log_power import log2
+from gamspy.math.log_power import log_beta
+from gamspy.math.log_power import log_gamma
+from gamspy.math.log_power import logit
+from gamspy.math.log_power import power
+from gamspy.math.log_power import rpower
+from gamspy.math.log_power import sign_power
+from gamspy.math.log_power import sllog10
+from gamspy.math.log_power import sqlog10
+from gamspy.math.log_power import sqr
+from gamspy.math.log_power import vc_power
+from gamspy.math.numeric import abs
+from gamspy.math.numeric import ceil
+from gamspy.math.numeric import dist
+from gamspy.math.numeric import div
+from gamspy.math.numeric import div0
+from gamspy.math.numeric import factorial
+from gamspy.math.numeric import floor
+from gamspy.math.numeric import fractional
+from gamspy.math.numeric import max
+from gamspy.math.numeric import min
+from gamspy.math.numeric import mod
+from gamspy.math.numeric import Round
+from gamspy.math.numeric import sign
+from gamspy.math.numeric import slexp
+from gamspy.math.numeric import sqexp
+from gamspy.math.numeric import sqrt
+from gamspy.math.numeric import truncate
+from gamspy.math.probability import binomial
+from gamspy.math.probability import centropy
+from gamspy.math.probability import normal
+from gamspy.math.probability import uniform
+from gamspy.math.probability import uniformInt
+from gamspy.math.trigonometric import acos
+from gamspy.math.trigonometric import asin
+from gamspy.math.trigonometric import atan
+from gamspy.math.trigonometric import atan2
+from gamspy.math.trigonometric import cos
+from gamspy.math.trigonometric import cosh
+from gamspy.math.trigonometric import sin
+from gamspy.math.trigonometric import sinh
+from gamspy.math.trigonometric import tan
+from gamspy.math.trigonometric import tanh
 
 __all__ = [
     "cos",

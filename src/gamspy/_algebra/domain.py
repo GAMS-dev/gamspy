@@ -22,12 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from __future__ import annotations
+
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
-from typing import Union, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Alias

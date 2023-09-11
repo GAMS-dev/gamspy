@@ -22,29 +22,24 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import io
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
+
+from gams import EquType
+from gams import GamsModelInstanceOpt
+from gams import GamsModifier
+from gams import GamsOptions
+from gams import SymbolUpdateType
+from gams import UpdateAction
+from gams import VarType
+
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
-from gams import (
-    GamsModifier,
-    GamsOptions,
-    UpdateAction,
-    SymbolUpdateType,
-    GamsModelInstanceOpt,
-    VarType,
-    EquType,
-)
-
-
-from typing import (
-    List,
-    Union,
-    Optional,
-    Tuple,
-    TYPE_CHECKING,
-)
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Model, Container

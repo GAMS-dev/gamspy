@@ -22,10 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import math
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
+
 import gamspy._algebra.expression as expression
-from typing import Union, TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression

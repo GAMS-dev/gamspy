@@ -22,21 +22,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
+from gamspy.functions.functions import beta
+from gamspy.functions.functions import entropy
+from gamspy.functions.functions import gamma
+from gamspy.functions.functions import lse_max
+from gamspy.functions.functions import lse_max_sc
+from gamspy.functions.functions import ncp_cm
+from gamspy.functions.functions import ncp_f
+from gamspy.functions.functions import ncpVUpow
+from gamspy.functions.functions import ncpVUsin
+from gamspy.functions.functions import regularized_beta
+from gamspy.functions.functions import regularized_gamma
 from gamspy.functions.logical import ifthen
-from gamspy.functions.functions import (
-    beta,
-    regularized_beta,
-    gamma,
-    regularized_gamma,
-    entropy,
-    lse_max,
-    lse_max_sc,
-    ncp_cm,
-    ncp_f,
-    ncpVUpow,
-    ncpVUsin,
-)
 
 __all__ = [
     "ifthen",

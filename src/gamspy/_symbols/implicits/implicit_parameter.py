@@ -22,10 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import Any
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable

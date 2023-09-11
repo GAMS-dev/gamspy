@@ -22,15 +22,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from __future__ import annotations
+
+from typing import Tuple
+
 import gamspy._algebra.condition as condition
-import gamspy.utils as utils
-import gamspy._algebra.operable as operable
 import gamspy._algebra.domain as domain
+import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
-from typing import Tuple
+import gamspy.utils as utils
 
 
 class Expression(operable.Operable):

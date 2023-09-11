@@ -22,15 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from __future__ import annotations
-from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
+
+from typing import List
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
+
 import gamspy._algebra.expression as expression
-import gamspy._symbols.set as gams_set
 import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
+import gamspy._symbols.set as gams_set
+from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-from typing import List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Equation

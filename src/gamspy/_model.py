@@ -22,33 +22,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 from __future__ import annotations
+
 import io
 import os
-import gamspy.utils as utils
-import gamspy as gp
-import gamspy._algebra.expression as expression
-import gamspy._algebra.operation as operation
-
 from enum import Enum
-from gamspy._model_instance import ModelInstance
-from gamspy.exceptions import GamspyException
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Literal
+from typing import Optional
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
+
 from gams import (
     GamsOptions,
 )
-from gamspy._engine import EngineConfig
 
-from typing import (
-    Dict,
-    Iterable,
-    Literal,
-    List,
-    Optional,
-    Union,
-    Tuple,
-    TYPE_CHECKING,
-)
+import gamspy as gp
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operation as operation
+import gamspy.utils as utils
+from gamspy._engine import EngineConfig
+from gamspy._model_instance import ModelInstance
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Variable, Equation, Container

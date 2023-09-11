@@ -22,10 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 # flake8: noqa
-
-from gamspy._symbols.implicits.implicit_set import ImplicitSet
-from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
-from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 from gamspy._symbols.implicits.implicit_equation import ImplicitEquation
+from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
+from gamspy._symbols.implicits.implicit_set import ImplicitSet
+from gamspy._symbols.implicits.implicit_variable import ImplicitVariable

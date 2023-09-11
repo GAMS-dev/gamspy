@@ -22,11 +22,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 # flake8: noqa
-
 from gamspy._symbols.alias import Alias
-from gamspy._symbols.set import Set
+from gamspy._symbols.equation import Equation
+from gamspy._symbols.equation import EquationType
 from gamspy._symbols.parameter import Parameter
-from gamspy._symbols.variable import Variable, VariableType
-from gamspy._symbols.equation import Equation, EquationType
+from gamspy._symbols.set import Set
+from gamspy._symbols.variable import Variable
+from gamspy._symbols.variable import VariableType

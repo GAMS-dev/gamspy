@@ -22,17 +22,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
 import gams.transfer as gt
-import gamspy._algebra.expression as expression
-import gamspy._algebra.operable as operable
-import gamspy._algebra.condition as condition
-import gamspy._symbols.implicits as implicits
-import gamspy.utils as utils
 import pandas as pd
 
+import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy._symbols.implicits as implicits
+import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from typing import Any, List, Optional, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy import Set, Container

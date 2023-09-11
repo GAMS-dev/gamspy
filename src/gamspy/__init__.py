@@ -22,21 +22,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 # flake8: noqa
-
+from gamspy._algebra import Card
+from gamspy._algebra import Domain
+from gamspy._algebra import Number
+from gamspy._algebra import Ord
+from gamspy._algebra import Product
+from gamspy._algebra import Smax
+from gamspy._algebra import Smin
+from gamspy._algebra import Sum
 from gamspy._container import Container
-from gamspy._model import Model, ModelStatus, Problem, Sense
-from gamspy._symbols import (
-    Alias,
-    Set,
-    Parameter,
-    Variable,
-    VariableType,
-    Equation,
-    EquationType,
-)
-from gamspy._algebra import Domain, Number, Sum, Product, Smax, Smin, Ord, Card
+from gamspy._model import Model
+from gamspy._model import ModelStatus
+from gamspy._model import Problem
+from gamspy._model import Sense
+from gamspy._symbols import Alias
+from gamspy._symbols import Equation
+from gamspy._symbols import EquationType
+from gamspy._symbols import Parameter
+from gamspy._symbols import Set
+from gamspy._symbols import Variable
+from gamspy._symbols import VariableType
 
 _order = 0  # Global order for newly generated symbols with no name
 __version__ = "0.1.0"

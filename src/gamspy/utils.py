@@ -22,18 +22,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
 import os
 import platform
-import gamspy
-import pandas as pd
+from collections.abc import Sequence
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
+
 import gams.transfer as gt
-import gamspy._symbols.implicits as implicits
+import pandas as pd
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
-from collections.abc import Sequence
+
+import gamspy
+import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GdxException
-from typing import Iterable, Tuple, Union, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
@@ -230,7 +235,7 @@ def _toList(
         "Domain",
         "Expression",
         list,
-        implicits.ImplicitSet,
+        "ImplicitSet",
     ]
 ) -> list:
     """

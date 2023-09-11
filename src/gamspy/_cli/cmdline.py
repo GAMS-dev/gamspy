@@ -22,15 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import subprocess
-import os
-import importlib
-import shutil
 import argparse
+import importlib
+import os
+import shutil
+import subprocess
+from typing import Dict
+
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
-from typing import Dict
 
 
 SOLVERS = [

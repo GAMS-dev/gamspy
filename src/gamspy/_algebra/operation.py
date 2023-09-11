@@ -22,13 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import Union
 
-import gamspy.utils as utils
-import gamspy._algebra.operable as operable
-import gamspy._algebra.expression as expression
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
-from typing import Tuple, Union, TYPE_CHECKING
+import gamspy._algebra.expression as expression
+import gamspy._algebra.operable as operable
+import gamspy.utils as utils
 
 if TYPE_CHECKING:
     from gams.transfer import Set, Alias
