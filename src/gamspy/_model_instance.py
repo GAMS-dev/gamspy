@@ -94,7 +94,10 @@ class ModelInstance:
     ) -> None:
         self.modifiables = modifiables
         self.main_container = container
-        self.instance_container = gp.Container(name="instance_container")
+        self.instance_container = gp.Container(
+            name="instance_container",
+            system_directory=container.system_directory,
+        )
         self.model = model
 
         self.checkpoint = self.main_container._restart_from
@@ -281,7 +284,9 @@ class ModelInstance:
         return self.instance.solver_status
 
     def _update_main_container(self):
-        temp = gp.Container()
+        temp = gp.Container(
+            system_directory=self.main_container.system_directory
+        )
         temp.read(self.instance.sync_db._gmd)
 
         for name in temp.data.keys():

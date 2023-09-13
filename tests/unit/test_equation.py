@@ -1,18 +1,17 @@
 import unittest
 
 import pandas as pd
+
 import gamspy._symbols.implicits as implicits
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Sum,
-    Ord,
-    EquationType,
-    Alias,
-)
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import EquationType
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 class EquationSuite(unittest.TestCase):
@@ -77,6 +76,8 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(eq5.type, "leq")
 
         self.assertEqual(str(EquationType.REGULAR), "REGULAR")
+        eq6 = Equation(self.m, "eq6", type=EquationType.REGULAR, domain=[i])
+        self.assertEqual(eq6.type, "eq")
 
         self.assertEqual(
             EquationType.values(),

@@ -309,7 +309,7 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            m = Container()
+            m = Container(system_directory=self.system_directory)
             obj = gp.Set(
                 m,
                 name,
@@ -400,7 +400,7 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            m = Container()
+            m = Container(system_directory=self.system_directory)
             obj = gp.Parameter(
                 m,
                 name,
@@ -492,7 +492,7 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            m = Container()
+            m = Container(system_directory=self.system_directory)
             obj = gp.Variable(
                 m,
                 name,
@@ -592,7 +592,7 @@ class Container(gt.Container):
 
         else:
             # try if argument formats are valid
-            m = Container()
+            m = Container(system_directory=self.system_directory)
             obj = gp.Equation(
                 m,
                 name,
