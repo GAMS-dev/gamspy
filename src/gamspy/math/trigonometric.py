@@ -166,4 +166,4 @@ def atan2(
     x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
     y_str = str(y) if isinstance(y, (int, float)) else y.gamsRepr()
 
-    return expression.Expression("arctan(", f"{y_str}, {x_str}", ")")
+    return expression.Expression("arctan2(", f"{y_str}, {x_str}", ")")

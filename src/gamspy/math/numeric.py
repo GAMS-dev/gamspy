@@ -112,6 +112,9 @@ def div0(
     if isinstance(dividend, (int, float)) and isinstance(
         divisor, (int, float)
     ):
+        if divisor == 0:
+            return 1e299
+
         return dividend / divisor
 
     dividend_str = (
@@ -140,9 +143,10 @@ def dist(
     if isinstance(x1, tuple) or isinstance(x2, tuple):
         raise Exception("Both should be a tuple or none")
 
-    return expression.Expression(
-        "eDist(", f"{x1.gamsRepr()}, {x2.gamsRepr()}", ")"
-    )
+    x1_str = str(x1) if isinstance(x1, (int, float)) else x1.gamsRepr()
+    x2_str = str(x2) if isinstance(x2, (int, float)) else x2.gamsRepr()
+
+    return expression.Expression("eDist(", f"{x1_str}, {x2_str}", ")")
 
 
 def factorial(x: Union[int, "Symbol"]) -> Union["Expression", int]:
@@ -155,7 +159,7 @@ def factorial(x: Union[int, "Symbol"]) -> Union["Expression", int]:
     """
     if isinstance(x, int):
         return math.factorial(x)
-    return expression.Expression("ceil(", x.gamsRepr(), ")")
+    return expression.Expression("fact(", x.gamsRepr(), ")")
 
 
 def floor(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
