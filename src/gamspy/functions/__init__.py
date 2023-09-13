@@ -24,15 +24,24 @@
 #
 from gamspy.functions.functions import beta
 from gamspy.functions.functions import entropy
+from gamspy.functions.functions import errorf
 from gamspy.functions.functions import gamma
 from gamspy.functions.functions import lse_max
 from gamspy.functions.functions import lse_max_sc
+from gamspy.functions.functions import lse_min
+from gamspy.functions.functions import lse_min_sc
 from gamspy.functions.functions import ncp_cm
 from gamspy.functions.functions import ncp_f
 from gamspy.functions.functions import ncpVUpow
 from gamspy.functions.functions import ncpVUsin
+from gamspy.functions.functions import poly
+from gamspy.functions.functions import rand_binomial
+from gamspy.functions.functions import rand_linear
+from gamspy.functions.functions import rand_triangle
 from gamspy.functions.functions import regularized_beta
 from gamspy.functions.functions import regularized_gamma
+from gamspy.functions.functions import slrec
+from gamspy.functions.functions import sqrec
 from gamspy.functions.logical import ifthen
 
 __all__ = [
@@ -50,4 +59,11 @@ __all__ = [
     "ncp_f",
     "ncpVUpow",
     "ncpVUsin",
+    "poly",
+    "rand_binomial",
+    "rand_linear",
+    "rand_triangle",
+    "slrec",
+    "sqrec",
+    "errorf",
 ]

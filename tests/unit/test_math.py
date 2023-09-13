@@ -325,10 +325,11 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "(sign( p(i) ))")
 
         # binomial
-        # uniform
         op1 = gams_math.binomial(3, 5)
         self.assertTrue(isinstance(op1, expression.Expression))
         self.assertEqual(op1.gamsRepr(), "(binomial( 3,5 ))")
+        op2 = gams_math.binomial(b[i], 3)
+        self.assertEqual(op2.gamsRepr(), "(binomial( b(i),3 ))")
 
 
 def math_suite():

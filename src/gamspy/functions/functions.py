@@ -83,6 +83,25 @@ def gamma(x: Union[int, float], y: Union[int, float]) -> "Expression":
     return expression.Expression("gamma(", f"{x},{y}", ")")
 
 
+def regularized_gamma(
+    x: Union[int, float], y: Union[int, float], z: Union[int, float]
+) -> "Expression":
+    """
+    Gamma function
+
+    Parameters
+    ----------
+    x : int | float
+    y : int | float
+    z : int | float
+
+    Returns
+    -------
+    Expression
+    """
+    return expression.Expression("gammaReg(", f"{x},{y},{z}", ")")
+
+
 def lse_max(x: "Symbol") -> "Expression":
     """
     Smoothed Max via the Logarithm of the Sum of Exponentials
@@ -251,9 +270,9 @@ def poly(x: "Symbol", *args) -> "Expression":
     -------
     Expression
     """
-    args_str = ",".join(args)
+    args_str = ",".join(str(arg) for arg in args)
 
-    return expression.Expression("poly(", f"{x.gamsRepr()}, {args_str}", ")")
+    return expression.Expression("poly(", f"{x.gamsRepr()},{args_str}", ")")
 
 
 def rand_binomial(n: Union[int, float], p: Union[int, float]) -> "Expression":
@@ -313,27 +332,8 @@ def rand_triangle(
     return expression.Expression("randTriangle(", f"{low},{mid},{high}", ")")
 
 
-def regularized_gamma(
-    x: Union[int, float], y: Union[int, float], z: Union[int, float]
-) -> "Expression":
-    """
-    Gamma function
-
-    Parameters
-    ----------
-    x : int | float
-    y : int | float
-    z : int | float
-
-    Returns
-    -------
-    Expression
-    """
-    return expression.Expression("gammaReg(", f"{x},{y},{z}", ")")
-
-
 def slrec(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 10e-10
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 1e-10
 ) -> "Expression":
     """
     Smooth (linear) reciprocal
@@ -341,7 +341,7 @@ def slrec(
     Parameters
     ----------
     x : int | float | Symbol
-    S : int | float, by default 10e-10
+    S : int | float, by default 1e-10
 
     Returns
     -------
@@ -352,7 +352,7 @@ def slrec(
 
 
 def sqrec(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 10e-10
+    x: Union[int, float, "Symbol"], S: Union[int, float] = 1e-10
 ) -> "Expression":
     """
     Smooth (quadratic) reciprocal
@@ -360,7 +360,7 @@ def sqrec(
     Parameters
     ----------
     x : int | float | Symbol
-    S : int | float, by default 10e-10
+    S : int | float, by default 1e-10
 
     Returns
     -------
