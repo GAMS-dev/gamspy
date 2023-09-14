@@ -183,14 +183,14 @@ class Model:
         limited_variables: Optional[Iterable["Variable"]] = None,
     ):
         self.name = name
-        self.ref_container = container
+        self.container = container
         self._equations, self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
-        self.ref_container._addStatement(self)
+        self.container._addStatement(self)
         self._generate_attribute_symbols()
 
         # allow freezing
@@ -258,12 +258,12 @@ class Model:
         ):
             # Create a dummy objective variable
             variable = gp.Variable(
-                self.ref_container, f"dummy_objective{utils._getUniqueName()}"
+                self.container, f"dummy_objective{utils._getUniqueName()}"
             )
 
             # Create a dummy equation
             equation = gp.Equation(
-                self.ref_container, f"dummy_equation{utils._getUniqueName()}"
+                self.container, f"dummy_equation{utils._getUniqueName()}"
             )
 
             # Sum((i,j),c[i,j]*x[i,j])->Sum((i,j),c[i,j]*x[i,j]) =e= var
@@ -280,7 +280,7 @@ class Model:
     def _generate_attribute_symbols(self) -> None:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self.name}_{attr_name}"
-            self.ref_container._unsaved_statements[symbol_name] = (
+            self.container._unsaved_statements[symbol_name] = (
                 f"Scalar {symbol_name};"
             )
 
@@ -289,8 +289,8 @@ class Model:
         commandline_options: Optional[dict] = None,
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
-        options = GamsOptions(self.ref_container.workspace)
-        options.gdx = self.ref_container._gdx_path
+        options = GamsOptions(self.container.workspace)
+        options.gdx = self.container._gdx_path
 
         if commandline_options:
             if not isinstance(commandline_options, dict):
@@ -317,7 +317,7 @@ class Model:
             solver_name = commandline_options["solver"]
 
             solver_file_name = (
-                self.ref_container.workspace.working_directory
+                self.container.workspace.working_directory
                 + os.sep
                 + f"{solver_name}.123"
             )
@@ -365,7 +365,7 @@ class Model:
         if self._objective_variable:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        self.ref_container._unsaved_statements[utils._getUniqueName()] = (
+        self.container._unsaved_statements[utils._getUniqueName()] = (
             solve_string + ";\n"
         )
 
@@ -373,20 +373,20 @@ class Model:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self.name}_{attr_name}"
 
-            self.ref_container._unsaved_statements[utils._getUniqueName()] = (
+            self.container._unsaved_statements[utils._getUniqueName()] = (
                 f"{symbol_name} = {self.name}.{attr_name};"
             )
 
     def _update_model_attributes(self) -> None:
         gdxHandle = utils._openGdxFile(
-            self.ref_container.system_directory, self.ref_container._gdx_path
+            self.container.system_directory, self.container._gdx_path
         )
 
         for gams_attr, python_attr in attribute_map.items():
             symbol_name = f"{self.name}_{gams_attr}"
 
             records = utils._getSymbolData(
-                self.ref_container._gams2np, gdxHandle, symbol_name
+                self.container._gams2np, gdxHandle, symbol_name
             )
 
             if python_attr == "status":
@@ -412,12 +412,12 @@ class Model:
         ]
 
         dummy_symbol_names = [
-            name for name in self.ref_container.data.keys() if "dummy_" in name
+            name for name in self.container.data.keys() if "dummy_" in name
         ] + attribute_names
 
         for name in dummy_symbol_names:
-            if name in self.ref_container.data.keys():
-                del self.ref_container.data[name]
+            if name in self.container.data.keys():
+                del self.container.data[name]
 
     @property
     def equations(self) -> Iterable["Equation"]:
@@ -428,22 +428,22 @@ class Model:
         self._equations = new_equations
 
     def interrupt(self):
-        self.ref_container.interrupt()
+        self.container.interrupt()
 
     def freeze(
         self,
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
         freeze_options: Optional[dict] = None,
     ):
-        self.ref_container._run()
+        self.container._run()
 
         self.instance = ModelInstance(
-            self.ref_container, self, modifiables, freeze_options
+            self.container, self, modifiables, freeze_options
         )
         self._is_frozen = True
 
     def unfreeze(self):
-        for symbol in self.ref_container.data.values():
+        for symbol in self.container.data.values():
             if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
                 symbol._is_frozen = False
 
@@ -479,7 +479,7 @@ class Model:
             self._append_solve_string()
             self._assign_model_attributes()
 
-            self.ref_container._run(options, output, backend, engine_config)
+            self.container._run(options, output, backend, engine_config)
 
             self._update_model_attributes()
         else:

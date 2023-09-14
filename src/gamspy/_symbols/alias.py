@@ -68,7 +68,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.ref_container._addStatement(self)
+        self.container._addStatement(self)
 
         # iterator index
         self._current_index = 0

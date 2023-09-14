@@ -98,7 +98,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.ref_container._addStatement(self)
+        self.container._addStatement(self)
 
         # iterator index
         self._current_index = 0
@@ -141,7 +141,7 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
-        self.ref_container._addStatement(statement)
+        self.container._addStatement(statement)
         self._is_dirty = True
 
     # Set Attributes
@@ -256,7 +256,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.ref_container._loadOnDemand()
+        self.container._loadOnDemand()
 
         return self._records
 
@@ -272,15 +272,15 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._requires_state_check = True
         self.modified = True
 
-        self.ref_container._requires_state_check = True
-        self.ref_container.modified = True
+        self.container._requires_state_check = True
+        self.container.modified = True
 
         if self._records is not None:
             if self.domain_forwarding:  # pragma: no cover
                 self._domainForwarding()
 
                 # reset state check flags for all symbols in the container
-                for symnam, symobj in self.ref_container.data.items():
+                for symnam, symobj in self.container.data.items():
                     symobj._requires_state_check = True
 
     def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":

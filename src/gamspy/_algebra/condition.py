@@ -53,15 +53,13 @@ class Condition:
 
     def __setitem__(self, condition_expression, right_hand_expression) -> None:
         assert hasattr(
-            self._symbol, "ref_container"  # pragma: no cover
+            self._symbol, "container"  # pragma: no cover
         ), f"Container must be defined for symbol {self._symbol.name}"
 
         if isinstance(self._symbol, ImplicitSymbol):
-            self._symbol.ref_container[self._symbol.parent.name]._is_dirty = (
-                True
-            )
+            self._symbol.container[self._symbol.parent.name]._is_dirty = True
         else:
-            self._symbol.ref_container[self._symbol.name]._is_dirty = True
+            self._symbol.container[self._symbol.name]._is_dirty = True
 
         if isinstance(right_hand_expression, bool):
             right_hand_expression = (
@@ -86,4 +84,4 @@ class Condition:
             right_hand_expression,
         )
 
-        self._symbol.ref_container._addStatement(statement)
+        self._symbol.container._addStatement(statement)

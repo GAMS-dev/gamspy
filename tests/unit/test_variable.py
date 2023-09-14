@@ -1,8 +1,12 @@
 import unittest
 
 import pandas as pd
+
 import gamspy._symbols.implicits as implicits
-from gamspy import Container, Set, Variable, VariableType
+from gamspy import Container
+from gamspy import Set
+from gamspy import Variable
+from gamspy import VariableType
 
 
 class VariableSuite(unittest.TestCase):
@@ -124,19 +128,19 @@ class VariableSuite(unittest.TestCase):
             "integer Variable v3(i);",
         )
 
-        self.assertEqual(str(VariableType.FREE), "FREE")
+        self.assertEqual(str(VariableType.FREE), "free")
         self.assertEqual(
             VariableType.values(),
             [
-                "BINARY",
-                "INTEGER",
-                "POSITIVE",
-                "NEGATIVE",
-                "FREE",
-                "SOS1",
-                "SOS2",
-                "SEMICONT",
-                "SEMIINT",
+                "binary",
+                "integer",
+                "positive",
+                "negative",
+                "free",
+                "sos1",
+                "sos2",
+                "semicont",
+                "semiint",
             ],
         )
 

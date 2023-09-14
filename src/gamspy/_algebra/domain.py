@@ -56,7 +56,7 @@ class Domain:
     def __init__(self, *sets: Union["Set", "Alias", "ImplicitSet"]) -> None:
         self._sanity_check(sets)
         self.sets = sets
-        self.ref_container = self._find_container()  # type: ignore
+        self.container = self._find_container()  # type: ignore
         self.where = condition.Condition(self)
 
     def _sanity_check(
@@ -65,15 +65,15 @@ class Domain:
         if len(sets) < 2:
             raise DomainException("Domain requires at least 2 sets")
 
-        if all(not hasattr(set, "ref_container") for set in sets):
+        if all(not hasattr(set, "container") for set in sets):
             raise DomainException(
                 "At least one of the sets in the domain must be a Set or Alias"
             )
 
     def _find_container(self):
         for set in self.sets:
-            if hasattr(set, "ref_container"):
-                return set.ref_container
+            if hasattr(set, "container"):
+                return set.container
 
     def gamsRepr(self) -> str:
         return utils._getDomainStr(self.sets)

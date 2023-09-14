@@ -155,7 +155,7 @@ class ImplicitEquation(ImplicitSymbol):
             assignment,
         )
 
-        self.ref_container._addStatement(statement)
+        self.container._addStatement(statement)
         self._expr = statement
 
     def gamsRepr(self) -> str:

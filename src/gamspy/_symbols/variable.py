@@ -44,15 +44,15 @@ if TYPE_CHECKING:
 
 
 class VariableType(Enum):
-    BINARY = "BINARY"
-    INTEGER = "INTEGER"
-    POSITIVE = "POSITIVE"
-    NEGATIVE = "NEGATIVE"
-    FREE = "FREE"
-    SOS1 = "SOS1"
-    SOS2 = "SOS2"
-    SEMICONT = "SEMICONT"
-    SEMIINT = "SEMIINT"
+    BINARY = "binary"
+    INTEGER = "integer"
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+    FREE = "free"
+    SOS1 = "sos1"
+    SOS2 = "sos2"
+    SEMICONT = "semicont"
+    SEMIINT = "semiint"
 
     @classmethod
     def values(cls):
@@ -118,7 +118,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.ref_container._addStatement(self)
+        self.container._addStatement(self)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -127,7 +127,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._stage = self._create_attr("stage")
 
     def _cast_type(self, type: Union[str, VariableType]) -> str:
-        if isinstance(type, str) and type.upper() not in VariableType.values():
+        if isinstance(type, str) and type.lower() not in VariableType.values():
             raise ValueError(
                 f"Allowed variable types: {VariableType.values()} but"
                 f" found {type}."
@@ -136,7 +136,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if isinstance(type, VariableType):
             type = type.value
 
-        return type
+        return type.lower()
 
     def __getitem__(
         self, indices: Union[tuple, str]
@@ -204,7 +204,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.ref_container._loadOnDemand()
+        self.container._loadOnDemand()
 
         return self._records
 
@@ -220,15 +220,15 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._requires_state_check = True
         self.modified = True
 
-        self.ref_container._requires_state_check = True
-        self.ref_container.modified = True
+        self.container._requires_state_check = True
+        self.container.modified = True
 
         if self._records is not None:
             if self.domain_forwarding:  # pragma: no cover
                 self._domainForwarding()
 
                 # reset state check flags for all symbols in the container
-                for _, symbol in self.ref_container.data.items():
+                for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
 
     def gamsRepr(self) -> str:

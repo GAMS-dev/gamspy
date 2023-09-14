@@ -162,7 +162,7 @@ class ModelInstance:
         if options_dict is None:
             return
 
-        options = GamsOptions(self.model.ref_container.workspace)
+        options = GamsOptions(self.model.container.workspace)
 
         for key, value in options_dict.items():
             setattr(options, key, value)

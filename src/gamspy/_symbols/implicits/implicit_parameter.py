@@ -78,7 +78,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             assignment,
         )
 
-        self.ref_container._addStatement(statement)
+        self.container._addStatement(statement)
 
         self.parent._is_dirty = True
 
@@ -111,7 +111,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             assignment,
         )
 
-        self.ref_container._addStatement(statement)
+        self.container._addStatement(statement)
 
         self.parent._is_dirty = True
 
