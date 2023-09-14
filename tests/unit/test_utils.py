@@ -1,11 +1,8 @@
 import unittest
 
 import gamspy.utils as utils
-from gamspy import (
-    Container,
-    Set,
-)
-from gamspy.exceptions import GdxException
+from gamspy import Container
+from gamspy import Set
 from gamspy._algebra.domain import DomainException
 
 
@@ -39,9 +36,6 @@ class UtilsSuite(unittest.TestCase):
         self.assertRaises(
             Exception, utils._openGdxFile, self.m.system_directory, "bla.gdx"
         )
-
-        # invalid symbol
-        self.assertRaises(GdxException, utils._getSymbolData, None, None, "i")
 
     def test_isin(self):
         i = Set(self.m, "i")

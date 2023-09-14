@@ -32,7 +32,6 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 
@@ -45,40 +44,6 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
-
-
-def _convert_to_categoricals(arrkeys, arrvals, unique_uels):
-    # Temporary function to be removed when Gams Transfer is updated.
-    has_domains = arrkeys.size > 0
-    has_values = arrvals.size > 0
-
-    dfs = []
-    if has_domains:
-        dfs.append(pd.DataFrame(arrkeys))
-
-    if has_values:
-        dfs.append(pd.DataFrame(arrvals))
-
-    if has_domains and has_values:
-        df = pd.concat(dfs, axis=1, copy=False)
-        df.columns = pd.RangeIndex(start=0, stop=len(df.columns))
-    elif has_domains or has_values:
-        df = dfs[0]
-        df.columns = pd.RangeIndex(start=0, stop=len(df.columns))
-    else:
-        df = None  # pragma: no cover
-
-    if has_domains:
-        rk, ck = arrkeys.shape
-        for i in range(ck):
-            dtype = pd.CategoricalDtype(
-                categories=unique_uels[i], ordered=True
-            )
-            df.isetitem(
-                i, pd.Categorical(values=df[i], dtype=dtype, fastpath=True)
-            )
-
-    return df
 
 
 def _loadPackageGlobals() -> None:  # pragma: no cover
@@ -96,34 +61,6 @@ def _getUniqueName() -> str:
     """
     gamspy._order += 1  # type: ignore
     return str(gamspy._order)  # type: ignore
-
-
-def _getSymbolData(gams2np, gdxHandle, symbol_id: str) -> pd.DataFrame:
-    """
-    Gets the data of single symbol from GDX.
-
-    Parameters
-    ----------
-    gams2np : gams.numpy.Gams2Numpy
-    gdxHandle : gdxHandle
-    symbol_id : str
-
-    Returns
-    -------
-    return pandas.DataFrame (w/categoricals) if records exist
-
-    Raises
-    -------
-    Exception
-        In case there is no such symbol in the gdx
-    """
-    try:
-        arrkeys, arrvals, unique_uels = gams2np.gdxReadSymbolCat(
-            gdxHandle, symbol_id
-        )
-        return _convert_to_categoricals(arrkeys, arrvals, unique_uels)
-    except Exception as e:
-        raise GdxException(e)
 
 
 def _getMinigamsDirectory() -> str:

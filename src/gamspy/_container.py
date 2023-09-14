@@ -101,6 +101,10 @@ class Container(gt.Container):
 
         super().__init__(load_from, self.system_directory)
 
+        self.workspace = GamsWorkspace(
+            working_directory, self.system_directory, DebugLevel.KeepFiles
+        )
+
         (
             self._save_to,
             self._restart_from,
@@ -983,15 +987,16 @@ class Container(gt.Container):
             Symbols whose data will be load from gdx, by default None
         """
         gdxHandle = utils._openGdxFile(self.system_directory, load_from)
-
         symbol_names = self._get_symbol_names_to_load(symbol_names, gdxHandle)
+        utils._closeGdxHandle(gdxHandle)
+
+        temp_container = Container(system_directory=self.system_directory)
+        temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
                 statement = self[name]
-                updated_records = utils._getSymbolData(
-                    self._gams2np, gdxHandle, statement.name
-                )
+                updated_records = temp_container[name].records
 
                 statement.records = updated_records
 
@@ -999,8 +1004,6 @@ class Container(gt.Container):
                     statement.domain_labels = statement.domain_names
             else:
                 self.read(self._gdx_path, [name])
-
-        utils._closeGdxHandle(gdxHandle)
 
         self._unsaved_statements = {}
 

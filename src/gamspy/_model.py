@@ -378,28 +378,30 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        gdxHandle = utils._openGdxFile(
-            self.container.system_directory, self.container._gdx_path
+        temp_container = gp.Container(
+            system_directory=self.container.system_directory
+        )
+        temp_container.read(
+            self.container._gdx_path,
+            [f"{self.name}_{gams_attr}" for gams_attr in attribute_map.keys()],
         )
 
         for gams_attr, python_attr in attribute_map.items():
             symbol_name = f"{self.name}_{gams_attr}"
 
-            records = utils._getSymbolData(
-                self.container._gams2np, gdxHandle, symbol_name
-            )
-
             if python_attr == "status":
                 setattr(
                     self,
                     python_attr,
-                    ModelStatus(records.values[0][0]),
+                    ModelStatus(
+                        temp_container[symbol_name].records.values[0][0]
+                    ),
                 )
             else:
                 setattr(
                     self,
                     python_attr,
-                    records.values[0][0],
+                    temp_container[symbol_name].records.values[0][0],
                 )
 
     def _remove_dummy_symbols(self):
