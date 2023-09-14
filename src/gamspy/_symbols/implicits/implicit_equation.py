@@ -158,6 +158,9 @@ class ImplicitEquation(ImplicitSymbol):
         self.container._addStatement(statement)
         self._expr = statement
 
+        if self.container.debug:
+            self.container._loadOnDemand()
+
     def gamsRepr(self) -> str:
         representation = f"{self.name}"
         if len(self.domain):

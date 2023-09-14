@@ -84,6 +84,7 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         name: str = "default",
         working_directory: Optional[str] = None,
+        debug: bool = False,
     ):
         self.system_directory = (
             system_directory
@@ -96,6 +97,7 @@ class Container(gt.Container):
         )
 
         self.name = name
+        self.debug = debug
         self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
 
@@ -915,7 +917,10 @@ class Container(gt.Container):
                     temp_lines = []
                     temp_index = index + 1
 
-                    while not all_lines[temp_index].startswith("---"):
+                    while (
+                        not all_lines[temp_index].startswith("---")
+                        and temp_index < len(all_lines) - 1
+                    ):
                         temp_lines.append(all_lines[temp_index])
                         temp_index += 1
 

@@ -81,6 +81,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._addStatement(statement)
 
         self.parent._is_dirty = True
+        if self.container.debug:
+            self.container._loadOnDemand()
 
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
@@ -114,6 +116,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._addStatement(statement)
 
         self.parent._is_dirty = True
+        if self.container.debug:
+            self.container._loadOnDemand()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)

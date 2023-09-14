@@ -1,18 +1,16 @@
+import os
 import unittest
 
-import pandas as pd
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Sum,
-    Ord,
-    Alias,
-)
-
 import numpy as np
-import os
+import pandas as pd
+
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 class ParameterSuite(unittest.TestCase):
@@ -67,10 +65,10 @@ class ParameterSuite(unittest.TestCase):
         )
 
         self.assertEqual(a[i].gamsRepr(), "a(i)")
-        a[i].assign = a * 5
+        a[i].assign = a[i] * 5
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].gamsRepr(),
-            "a(i) = (a * 5);",
+            "a(i) = (a(i) * 5);",
         )
 
         a[i] = -a[i] * 5
@@ -97,16 +95,19 @@ class ParameterSuite(unittest.TestCase):
             ),
         )
 
-        a[i] = Sum(i, a[i])
-        self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
-            "a(i) = sum(i,a(i));",
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[i],
+            records=pd.DataFrame(
+                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
+            ),
         )
 
-        a[i].assign = Sum(i, a[i])
+        a[i] = Sum(i, b[i])
         self.assertEqual(
             list(self.m._statements_dict.values())[-1].getStatement(),
-            "a(i) = sum(i,a(i));",
+            "a(i) = sum(i,b(i));",
         )
 
         v = Variable(self.m, "v", domain=[i])

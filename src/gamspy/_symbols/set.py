@@ -144,6 +144,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         self.container._addStatement(statement)
         self._is_dirty = True
 
+        if self.container.debug:
+            self.container._loadOnDemand()
+
     # Set Attributes
     @property
     def pos(self):
