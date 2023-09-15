@@ -1,0 +1,373 @@
+"""
+Stochastic Dedication model with borrowing and lending variables
+
+* StochDedicationBL.gms: Stochastic Dedication model with borrowing and lending variables.
+* Consiglio, Nielsen and Zenios.
+* PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 6.2.2
+* Last modified: Apr 2008.
+"""
+
+from gamspy import (
+    Set,
+    Alias,
+    Parameter,
+    Variable,
+    Equation,
+    Container,
+    Model,
+    Sum,
+    Ord,
+    Card,
+    Number,
+)
+import gamspy.math as gams_math
+import pandas as pd
+import numpy as np
+
+
+def main():
+    # Define container
+    m = Container(system_directory="/opt/gams/gams44.0_linux_x64_64_sfx")
+
+    # Bond data. Prices, coupons and maturities from the Danish market
+    bond_data_recs = pd.DataFrame(
+        np.array(
+            [
+                [112.35, 2006, 8],
+                [105.33, 2003, 8],
+                [111.25, 2007, 7],
+                [107.30, 2004, 7],
+                [107.62, 2011, 6],
+                [106.68, 2009, 6],
+                [101.93, 2002, 6],
+                [101.30, 2005, 5],
+                [101.61, 2003, 5],
+                [100.06, 2002, 4],
+            ]
+        ),
+        columns=["Price", "Maturity", "Coupon"],
+        index=[
+            "DS-8-06",
+            "DS-8-03",
+            "DS-7-07",
+            "DS-7-04",
+            "DS-6-11",
+            "DS-6-09",
+            "DS-6-02",
+            "DS-5-05",
+            "DS-5-03",
+            "DS-4-02",
+        ],
+    )
+
+    bond_data_recs = bond_data_recs.reset_index().melt(
+        id_vars="index", var_name="Category", value_name="Value"
+    )
+
+    beta_trans_recs = np.array(
+        [
+            [-0.18, 0, 0],
+            [-0.16, 0.02, -0.02],
+            [-0.14, 0.04, -0.03],
+            [-0.12, 0.06, -0.05],
+            [-0.11, 0.08, -0.06],
+            [-0.10, 0.10, -0.07],
+            [-0.09, 0.11, -0.09],
+            [-0.08, 0.12, -0.10],
+            [-0.07, 0.14, -0.12],
+            [-0.06, 0.14, -0.13],
+            [-0.05, 0.14, -0.15],
+        ]
+    )
+
+    # SETS #
+    Time = Set(
+        m,
+        name="Time",
+        records=[str(i) for i in range(2001, 2012)],
+        description="Time periods",
+    )
+
+    Scenarios = Set(
+        m,
+        name="Scenarios",
+        records=[f"SS_{i}" for i in range(1, 151)],
+        description="Set of scenarios",
+    )
+    Factors = Set(
+        m,
+        name="Factors",
+        records=["FF_1", "FF_2", "FF_3"],
+        description="Term structure factors",
+    )
+
+    Bonds = Set(
+        m,
+        name="Bonds",
+        records=[
+            "DS-8-06",
+            "DS-8-03",
+            "DS-7-07",
+            "DS-7-04",
+            "DS-6-11",
+            "DS-6-09",
+            "DS-6-02",
+            "DS-5-05",
+            "DS-5-03",
+            "DS-4-02",
+        ],
+        description="Bonds universe",
+    )
+
+    # ALIASES #
+    t = Alias(m, name="t", alias_with=Time)
+    i = Alias(m, name="i", alias_with=Bonds)
+    l = Alias(m, name="l", alias_with=Scenarios)
+    j = Alias(m, name="j", alias_with=Factors)
+
+    # SCALARS #
+    Now = Parameter(m, name="Now", description="Current year")
+    Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
+    spread = Parameter(
+        m,
+        name="spread",
+        description="Borrowing spread over the reinvestment rate",
+    )
+
+    Now.assign = 2001
+    Horizon.assign = Card(t) - 1
+
+    # PARAMETER #
+    tau = Parameter(m, name="tau", domain=[t], description="Time in years")
+
+    # Note: time starts from 0
+    tau[t] = Ord(t) - 1
+
+    Price = Parameter(m, name="Price", domain=[i], description="Bond prices")
+    Coupon = Parameter(m, name="Coupon", domain=[i], description="Coupons")
+    Maturity = Parameter(
+        m, name="Maturity", domain=[i], description="Maturities"
+    )
+    rf = Parameter(m, name="rf", domain=[t], description="Reinvestment rates")
+    F = Parameter(m, name="F", domain=[t, i], description="Cashflows")
+    BondData = Parameter(
+        m, name="BondData", domain=[i, "*"], records=bond_data_recs
+    )
+    Liability = Parameter(
+        m, name="Liability", domain=[t], description="Stream of liabilities"
+    )
+
+    betaTrans = Parameter(
+        m,
+        name="betaTrans",
+        domain=[t, j],
+        records=beta_trans_recs,
+        description="Transposed factor loadings",
+    )
+    beta = Parameter(
+        m, name="beta", domain=[j, t], description="Factor loadings"
+    )
+
+    # Transpose factor loadings
+    beta[j, t] = betaTrans[t, j]
+
+    # Copy/transform data. Note division by 100 to get unit data, and
+    # subtraction of "Now" from Maturity date (so consistent with tau):
+    Coupon[i] = BondData[i, "Coupon"] / 100
+    Maturity[i] = BondData[i, "Maturity"] - Now
+
+    # Calculate the ex-coupon cashflow of Bond i in year t:
+    F[t, i] = (
+        Number(1).where[tau[t] == Maturity[i]]
+        + Coupon[i].where[(tau[t] <= Maturity[i]) & (tau[t] > 0)]
+    )
+
+    rf[t] = 0.04
+    spread = 0.02
+
+    Liability.setRecords(
+        np.array(
+            [
+                0,
+                80000,
+                100000,
+                110000,
+                120000,
+                140000,
+                120000,
+                90000,
+                50000,
+                75000,
+                150000,
+            ]
+        )
+    )
+
+    # Read spot rates
+    r = Parameter(
+        m,
+        name="r",
+        domain=[t],
+        records=np.array(
+            [
+                0,
+                0.0422,
+                0.0440,
+                0.0450,
+                0.0466,
+                0.0480,
+                0.0482,
+                0.0485,
+                0.0488,
+                0.0491,
+                0.0493,
+            ]
+        ),
+        description="spot rates",
+    )
+
+    # Generate spot rate scenarios, Sr(t,s), using factors from FactorData.inc .
+    Sr = Parameter(
+        m, name="Sr", domain=[t, l], description="Spot rate scenarios"
+    )
+
+    FactorWeights = Parameter(
+        m,
+        name="FactorWeights",
+        domain=[j, l],
+        description="Weights of each factor under each scenario",
+    )
+
+    fw = [
+        ("FF_1", "SS_1*SS_50", 0.01),
+        ("FF_1", "SS_51*SS_100", -0.02),
+        ("FF_1", "SS_101*SS_150", 0.04),
+        ("FF_2", "SS_1*SS_50", 0.02),
+        ("FF_2", "SS_51*SS_100", 0.01),
+        ("FF_2", "SS_101*SS_150", 0.01),
+        ("FF_3", "SS_1*SS_50", -0.01),
+        ("FF_3", "SS_51*SS_100", -0.01),
+        ("FF_3", "SS_101*SS_150", -0.02),
+    ]
+    FactorWeights.setRecords(fw)
+
+    pr = Parameter(
+        m, name="pr", domain=[l], description="Scenario probability"
+    )
+
+    pr[l] = 1.0 / Card(l)
+
+    # Generate stochastic cashflows and liabilities, over a scenario set.
+    # For this simple model they are randomly generated, but in a real-life
+    # model they would depend on e.g., prepayment/lapse models, models for
+    # options and derivatives, etc. etc.
+
+    Srf = Parameter(
+        m,
+        name="Srf",
+        domain=[t, l],
+        description="Scenarios of short term rates",
+    )
+    SF = Parameter(
+        m, name="SF", domain=[t, i, l], description="Scenarios of cashflows"
+    )
+    SFactorWeights = Parameter(
+        m,
+        name="SFactorWeights",
+        domain=[j, l],
+        description="Scenarios of factor weights",
+    )
+    SLiability = Parameter(
+        m,
+        name="SLiability",
+        domain=[t, l],
+        description="Scenarios of liabilities",
+    )
+
+    # Note: The cashflows generated may be negative, modeling complicated derivatives
+    SF[t, i, l] = F[t, i] * gams_math.uniform(0.6, 2.0)
+
+    SFactorWeights["FF_1", l] = FactorWeights["FF_1", l] * gams_math.uniform(
+        0.8, 1.4
+    )
+
+    SFactorWeights["FF_2", l] = FactorWeights["FF_2", l] * gams_math.uniform(
+        0.9, 1.1
+    )
+
+    SFactorWeights["FF_3", l] = FactorWeights["FF_3", l] * gams_math.uniform(
+        0.95, 1.05
+    )
+
+    SLiability[t, l] = Liability[t] * gams_math.uniform(0.8, 1.4)
+
+    Srf[t, l] = rf[t] * gams_math.uniform(0.8, 1.2)
+
+    Sr[t, l].where[r[t] != 0] = r[t] + Sum(
+        j, SFactorWeights[j, l] * beta[j, t]
+    )
+
+    SF["2001", i, l] = Sum(t, SF[t, i, l] * gams_math.exp(-Sr[t, l] * tau[t]))
+
+    # Implied market price
+    Price[i] = (1.0 / Card(l)) * Sum(l, SF["2001", i, l])
+
+    # VARIABLES #
+    x = Variable(
+        m,
+        name="x",
+        type="positive",
+        domain=[i],
+        description="Face value purchased",
+    )
+    surplus = Variable(
+        m,
+        name="surplus",
+        type="positive",
+        domain=[t, l],
+        description="Amount of money reinvested",
+    )
+    borrow = Variable(
+        m,
+        name="borrow",
+        type="positive",
+        domain=[t, l],
+        description="Amount of money borrowed",
+    )
+    v0 = Variable(m, name="v0", description="Upfront investment")
+
+    # EQUATION #
+    CashFlowCon = Equation(
+        m,
+        name="CashFlowCon",
+        type="regular",
+        domain=[t, l],
+        description="Equations defining the cashflow balance",
+    )
+
+    CashFlowCon[t, l] = (
+        Sum(i, SF[t, i, l] * x[i]).where[tau[t] > 0]
+        + (v0 - Sum(i, Price[i] * x[i])).where[tau[t] == 0]
+        + ((1 + Srf[t.lag(1), l]) * surplus[t.lag(1), l]).where[tau[t] > 0]
+        + borrow[t, l].where[tau[t] < Horizon]
+        == surplus[t, l]
+        + SLiability[t, l].where[tau[t] > 0]
+        + ((1 + Srf[t.lag(1), l] + spread) * borrow[t.lag(1), l]).where[
+            tau[t] > 0
+        ]
+    )
+
+    StochDedicationBL = Model(
+        m, name="StochDedicationBL", equations=[CashFlowCon]
+    )
+
+    m.solve(
+        StochDedicationBL, problem="LP", sense="MIN", objective=v0
+    )
+    print("Objective Function Value: ", round(v0.records.level[0], 3))
+
+    print(x.description, ": \n", x.records.loc[:, ["i", "level"]])
+
+
+if __name__ == "__main__":
+    main()

@@ -21,7 +21,7 @@ def install_gamspy():
     command = [
         "pip",
         "install",
-        "gamspy",
+        "gamspy[dev,test]",
         "--find-links",
         "dist",
         "--force-reinstall",

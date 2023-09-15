@@ -6,24 +6,26 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 8.3
 Last modified: May 2008.
 """
-from pathlib import Path
 
+from pathlib import Path
+from gamspy import (
+    Parameter,
+    Variable,
+    Equation,
+    Container,
+    Model,
+    Sum,
+    Card,
+    Number,
+)
 import gamspy.math as gams_math
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Sum
-from gamspy import Variable
 
 
 def main():
     # Define container
     m = Container(
-        load_from=str(Path(__file__).parent.absolute()) + "/Corporate.gdx",
+        load_from=str(Path(__file__).parent.absolute()) + "/Corporate_data.gdx",
+        system_directory="/opt/gams/gams44.0_linux_x64_64_sfx"
     )
 
     # SETS #
@@ -144,6 +146,7 @@ def main():
     ObjDef = Equation(
         m,
         name="ObjDef",
+        type="regular",
         description=(
             "Objective function for the strategic model (Expected return)"
         ),
@@ -151,18 +154,21 @@ def main():
     BroadPortRetDef = Equation(
         m,
         name="BroadPortRetDef",
+        type="regular",
         domain=[l],
         description="Portfolio return definition for broad asset classes",
     )
     PortRetDef = Equation(
         m,
         name="PortRetDef",
+        type="regular",
         domain=[l],
         description="Portfolio return definition",
     )
     BroadNormalCon = Equation(
         m,
         name="BroadNormalCon",
+        type="regular",
         description=(
             "Equation defining the normalization contraint for broad asset"
             " classes"
@@ -171,13 +177,11 @@ def main():
     NormalCon = Equation(
         m,
         name="NormalCon",
+        type="regular",
         description="Equation defining the normalization contraint",
     )
     MADCon = Equation(
-        m,
-        name="MADCon",
-        domain=[l],
-        description="MAD constraints",
+        m, name="MADCon", type="regular", domain=[l], description="MAD constraints"
     )
 
     ObjDef.expr = ObjValue == Sum(l, pr[l] * PortRet[l])
@@ -199,17 +203,11 @@ def main():
         m,
         name="StrategicModel",
         equations=[ObjDef, BroadPortRetDef, MADCon, BroadNormalCon],
-        problem="LP",
-        sense=Sense.MAX,
-        objective=ObjValue,
     )
     TacticalModel = Model(
         m,
         name="TacticalModel",
         equations=[ObjDef, PortRetDef, MADCon, NormalCon],
-        problem="LP",
-        sense=Sense.MAX,
-        objective=ObjValue,
     )
 
     # Solve strategic model
@@ -218,7 +216,9 @@ def main():
 
     EpsTolerance.assign = 0.02
 
-    StrategicModel.solve()
+    m.solve(
+        StrategicModel, problem="LP", sense="MAX", objective=ObjValue
+    )
 
     print("## Strategic Asset Allocation ##")
     print("z: \n", z.records.level.to_list())
@@ -234,7 +234,12 @@ def main():
     ACTIVE[i] = BroadAssetClassOne[i]
 
     if CurrentWeight.records.value[0] > 0.05:
-        TacticalModel.solve()
+        m.solve(
+            TacticalModel,
+            problem="LP",
+            sense="MAX",
+            objective=ObjValue,
+        )
 
         print("\n## Model BA_1 ##")
         print("\nx: \n", x.records.level.tolist())
@@ -250,7 +255,12 @@ def main():
     EpsTolerance.assign = 0.03
 
     if CurrentWeight.records.value[0] > 0.05:
-        TacticalModel.solve()
+        m.solve(
+            TacticalModel,
+            problem="LP",
+            sense="MAX",
+            objective=ObjValue,
+        )
 
         print("\n## Model BA_2 ##")
         print("\nx: \n", x.records.level.tolist())
@@ -266,7 +276,12 @@ def main():
     EpsTolerance.assign = 0.02
 
     if CurrentWeight.records.value[0] > 0.05:
-        TacticalModel.solve()
+        m.solve(
+            TacticalModel,
+            problem="LP",
+            sense="MAX",
+            objective=ObjValue,
+        )
 
         print("\n## Model BA_3 ##")
         print("\nx: \n", x.records.level.tolist())
@@ -281,7 +296,9 @@ def main():
 
     ACTIVE[i] = Number(1)
 
-    TacticalModel.solve()
+    m.solve(
+        TacticalModel, problem="LP", sense="MAX", objective=ObjValue
+    )
     print("\n## Model Integrated ##")
     print("x: \n", x.records.level.tolist())
 

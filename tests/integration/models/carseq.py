@@ -44,6 +44,7 @@ from gamspy import (
 )
 from gamspy.functions import ifthen
 import gamspy.math as gams_math
+from gamspy.functions import ifthen
 import pandas as pd
 import numpy as np
 

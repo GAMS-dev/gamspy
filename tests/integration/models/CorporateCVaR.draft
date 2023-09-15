@@ -1,0 +1,144 @@
+"""
+Conditional Value at Risk models for corporate bond management
+
+CorporateCVaR.gms: Conditional Value at Risk models for corporate bond management.
+Consiglio, Nielsen and Zenios.
+PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 8.3
+Last modified: May 2008.
+"""
+
+from pathlib import Path
+import numpy as np
+import pandas as pd
+from gamspy import (
+    Parameter,
+    Variable,
+    Equation,
+    Container,
+    Model,
+    Sum,
+    Card,
+    Smin,
+    Smax
+)
+
+
+def main():
+    gdx_file = str(Path(__file__).parent.absolute()) + "/Corporate_data.gdx"
+    m = Container(load_from=gdx_file)
+
+    # SETS #
+    i,l = m.getSymbols(["i","l"])
+
+    # Data Parameter #
+    AssetReturns = m.getSymbols(["AssetReturns"])[0]
+
+    # SCALARS #
+    Budget = Parameter(m, name="Budget", description="Nominal investment budget")
+    alpha = Parameter(m, name="alpha", description="Confidence level")
+    MU_TARGET = Parameter(m, name="MU_TARGET", description="Target portfolio return")
+    MU_STEP = Parameter(m, name="MU_STEP", description="Target return step")
+    MIN_MU = Parameter(m, name="MIN_MU", description="Minimum return in universe")
+    MAX_MU = Parameter(m, name="MAX_MU", description="Maximum return in universe")
+
+
+    Budget.assign = 100.0
+    alpha.assign  = 0.997
+
+    # PARAMETERS #
+    pr = Parameter(m, name="pr", domain=[l], description="Scenario probability")
+    P = Parameter(m, name="P", domain=[i,l], description="Final values")
+    EP = Parameter(m, name="EP", domain=[i], description="Expected final values")
+
+    pr[l] = 1.0 / Card(l)
+
+    P[i,l] = 1 + AssetReturns[i,l]
+
+    EP[i] = Sum(l, pr[l] * P[i,l])
+
+    MIN_MU.assign = Smin(i, EP[i])
+    MAX_MU.assign = Smax(i, EP[i])
+
+    # Assume we want 20 portfolios in the frontier
+
+    MU_STEP.assign = (MAX_MU - MIN_MU) / 20
+
+
+    # DISPLAY P,EP,MIN_MU,MAX_MU
+
+
+    # VARIABLES #
+    x = Variable(m, name="x", type="positive", domain=[i], description="Holdings of assets in monetary units (not proportions)")
+    VaRDev = Variable(m, name="VaRDev", type="positive", domain=[l], description="Measures of the deviations from the VaR")
+    VaR = Variable(m, name="VaR", type="free", description="Value-at-Risk")
+    ObjValue = Variable(m, name="ObjValue", type="free", description="Objective function value")
+    Losses = Variable(m, name="Losses", type="free", domain=[l], description="Measures of the losses")
+
+    # EQUATIONS #
+    BudgetCon = Equation(m, name="BudgetCon", type="regular", description="Equation defining the budget contraint")
+    ReturnCon = Equation(m, name="ReturnCon", type="regular", description="Equation defining the portfolio return constraint")
+    ObjDefCVaR = Equation(m, name="ObjDefCVaR", type="regular", description="Objective function definition for CVaR minimization")
+    LossDef = Equation(m, name="LossDef", type="regular", domain=[l], description="Equations defining the losses")
+    VaRDevCon = Equation(m, name="VaRDevCon", type="regular", domain=[l], description="Equations defining the VaR deviation constraints")
+
+    BudgetCon.expr   =      Sum(i, x[i]) == Budget
+
+    ReturnCon.expr   =      Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+
+    VaRDevCon[l]           =      VaRDev[l] >= Losses[l] - VaR
+
+    LossDef[l]             =      Losses[l] == (Budget - Sum(i, P[i,l] * x[i]))
+
+    ObjDefCVaR.expr  =      ObjValue == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
+
+
+    MinCVaR = Model(m, name="MinCVaR", equations=[BudgetCon, ReturnCon, LossDef, VaRDevCon, ObjDefCVaR], problem="LP", sense="MIN", objective=ObjValue)
+
+
+    # REPORT RESULTS #
+    # METHOD 1 #
+    output_csv = '"Status","VaR","CVaR","Mean",'
+    i_recs = [f'"{i_rec}"' for i_rec in  i.toList()]
+    output_csv += ','.join(i_recs) + '\n'
+    mu = MIN_MU.records.value[0]
+    while mu <= MAX_MU.records.value[0]:
+        MU_TARGET.assign = mu
+        MinCVaR.solve()
+
+        model_status = str(MinCVaR.status).split('.')[-1]
+        VaR_rec = round(VaR.toList()[0],3)
+        obj_val = round(ObjValue.toList()[0],3)
+        mean = round(MU_TARGET.toList()[0] * Budget.toList()[0], 3)
+        x_recs = [f'{round(x_rec[-1],3)}' for x_rec in  x.toList()]
+
+        output_csv += f'"{model_status}",{VaR_rec},{obj_val},{mean},{",".join(x_recs)}\n'
+
+        mu += MU_STEP.records.value[0]
+
+    FrontierHandle = open("CVaRFrontiers_new.csv", "w", encoding="UTF-8")
+    FrontierHandle.write(output_csv)
+    FrontierHandle.close()
+
+    # METHOD 2 #
+    # cols = ["Status","VaR","CVaR","Mean",*i.toList()]
+    # data = []    
+    # mu = MIN_MU.records.value[0]
+    # while mu <= MAX_MU.records.value[0]:
+    #     MU_TARGET.assign = mu
+    #     m.solve(MinCVaR, problem="LP", sense="MIN", objective=ObjValue)
+
+    #     model_status = str(MinCVaR.status).split('.')[-1]
+    #     VaR_rec = round(VaR.toList()[0],3)
+    #     obj_val = round(ObjValue.toList()[0],3)
+    #     mean = round(MU_TARGET.toList()[0] * Budget.toList()[0], 3)
+    #     x_recs = [round(x_rec[-1],3) for x_rec in  x.toList()]
+
+    #     data.append([model_status, VaR_rec, obj_val, mean, *x_recs])
+
+    #     mu += MU_STEP.records.value[0]
+
+    # CVaRFrontiers = pd.DataFrame(data, columns=cols)
+    # CVaRFrontiers.to_csv("CVaRFrontiers_new2.csv", index=None)
+
+if __name__ == "__main__":
+    main()
