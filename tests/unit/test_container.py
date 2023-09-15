@@ -4,16 +4,14 @@ import unittest
 import pandas as pd
 
 import gamspy.utils as utils
-from gamspy import (
-    Alias,
-    Container,
-    Equation,
-    Parameter,
-    Set,
-    Variable,
-    Problem,
-    Sense,
-)
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Variable
 
 
 class ContainerSuite(unittest.TestCase):
@@ -233,9 +231,11 @@ class ContainerSuite(unittest.TestCase):
             expected_path += f"_{platform.machine()}"
 
         m = Container()
-        self.assertEqual(m.system_directory, expected_path)
+        self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
-        self.assertEqual(utils._getMinigamsDirectory(), expected_path)
+        self.assertEqual(
+            utils._getMinigamsDirectory().lower(), expected_path.lower()
+        )
 
 
 def container_suite():
