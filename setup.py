@@ -1,15 +1,11 @@
-from setuptools import setup, Distribution
-import platform
 import os
+import platform
+
+from setuptools import setup
 
 
 with open("requirements.txt") as f:
     requirements = f.read().splitlines()
-
-
-class BinaryDistribution(Distribution):
-    def has_ext_modules(self):
-        return True
 
 
 def get_minigams_path():
@@ -27,6 +23,5 @@ setup(
     packages=["gamspy"],
     package_dir={"gamspy": "src/gamspy"},
     package_data={"gamspy": [get_minigams_path()]},
-    distclass=BinaryDistribution,
     install_requires=requirements,
 )
