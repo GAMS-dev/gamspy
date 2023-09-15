@@ -9,7 +9,6 @@ def install_transfer():
         "--find-links",
         "wheels",
         "--force-reinstall",
-        "--user",
     ]
 
     subprocess.run(command)
@@ -25,7 +24,6 @@ def install_gamspy():
         "--find-links",
         "dist",
         "--force-reinstall",
-        "--user",
     ]
 
     subprocess.run(command)
