@@ -11,8 +11,6 @@ test-leg-3.10:
     - source anaconda3/bin/activate
     - conda create -y -n gamspy-env-3.10 python=3.10
     - conda activate gamspy-env-3.10
-    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration
@@ -37,8 +35,6 @@ test-deg-3.10:
     - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n gamspy-env-3.10 python=3.10
     - conda activate gamspy-env-3.10
-    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration
@@ -58,8 +54,6 @@ test-dac-3.10:
     - eval "$($MINICONDA shell.bash hook)"
     - conda create -y -n gamspy-env-3.10 python=3.10
     - conda activate gamspy-env-3.10
-    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - cd transfer-repo && python reinstall.py && cd ..
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration
@@ -84,8 +78,6 @@ test-wei-3.10:
     - conda activate gamspy-env-3.10
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.10;C:\Miniconda\envs\gamspy-env-3.10\Scripts;" + $env:Path
     - python --version
-    - git clone --recursive https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/devel/gams-transfer-python.git transfer-repo
-    - cd transfer-repo; python reinstall.py; cd ..
     - python -m pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests\test_gamspy.py --integration
