@@ -100,6 +100,7 @@ class Container(gt.Container):
         self.debug = debug
         self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
+        self._use_restart_from = False
 
         super().__init__(load_from, self.system_directory)
 
@@ -832,12 +833,14 @@ class Container(gt.Container):
         else:
             gams_string = self.generateGamsString(self._unsaved_statements)
 
-        # If there is no restart checkpoint, set it to None
+        # If there is no restart checkpoint or _run is called for the first time, set it to None
         checkpoint = (
             self._restart_from
             if os.path.exists(self._restart_from._checkpoint_file_name)
+            and self._use_restart_from
             else None
         )
+        self._use_restart_from = True
 
         self._job = GamsJob(
             self.workspace,
