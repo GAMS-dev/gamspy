@@ -120,7 +120,7 @@ If you have a design request or concern, please write to support@gams.com.
 
 setup(
     name="gamspy",
-    version=0.9.0,
+    version="0.9.0",
     description="Algebraic modeling interface to GAMS",
     url="http://www.gams.com",
     long_description=long_description,
