@@ -39,6 +39,8 @@ import gamspy
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GdxException
 
+import gamspy_base
+
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
@@ -72,14 +74,7 @@ def _getMinigamsDirectory() -> str:
     str
         System directory
     """
-    gamspy_directory = os.path.dirname(__file__) + os.sep
-
-    user_os = platform.system().lower()
-    minigams_directory = gamspy_directory + "minigams" + os.sep + user_os
-
-    if user_os == "darwin":
-        minigams_directory += f"_{platform.machine()}"  # pragma: no cover
-
+    minigams_directory = gamspy_base.__path__[0]
     return minigams_directory
 
 

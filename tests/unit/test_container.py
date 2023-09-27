@@ -223,14 +223,10 @@ class ContainerSuite(unittest.TestCase):
     def test_system_directory(self):
         import platform
         import gamspy
+        import gamspy_base
 
         gamspy_dir = os.path.dirname(gamspy.__file__)
-
-        expected_path = ""
-        user_os = platform.system().lower()
-        expected_path += gamspy_dir + os.sep + "minigams" + os.sep + user_os
-        if user_os == "darwin":
-            expected_path += f"_{platform.machine()}"
+        expected_path = gamspy_base.__path__[0]
 
         m = Container()
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
