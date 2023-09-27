@@ -748,10 +748,6 @@ class Container(gt.Container):
 
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
-        dirty_symbols = []
-        for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
-                dirty_symbols.append(symbol)
 
         self._run()
 
@@ -817,8 +813,12 @@ class Container(gt.Container):
             options.gdx = self._gdx_path
             options.forcework = 1
 
+        for name in self.data.keys():
+            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
+                self[name]._is_dirty = False
+
         # Create gdx file to read records from
-        self.write(self._gdx_path)
+        super().write(self._gdx_path)
 
         if backend in ["engine-one", "engine-sass"]:
             # Engine expects gdx file to be next to the gms file
@@ -1041,8 +1041,11 @@ class Container(gt.Container):
         symbol_names : List[str], optional
         """
         sequence = symbol_names if symbol_names else self.data.keys()
+        dirty_symbols = []
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                self[name]._is_dirty = False
+                dirty_symbols.append(name)
+        if len(dirty_symbols) > 0:
+            self._loadOnDemand()
 
         super().write(write_to, symbol_names)
