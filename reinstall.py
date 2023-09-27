@@ -44,14 +44,17 @@ def get_artifacts():
 
     subprocess.run(command, check=True)
 
+    command = ["unzip", "artifacts.zip"]
+    subprocess.run(command, check=True)
+
 
 def install_transfer():
     command = [
         "pip",
         "install",
-        "gams",
+        "gamsapi",
         "--find-links",
-        "wheels",
+        ".",
         "--force-reinstall",
     ]
 
@@ -66,7 +69,7 @@ def install_gamspy():
         "install",
         "gamspy[dev,test]",
         "--find-links",
-        "dist",
+        "gamspy_base/dist",
         "--force-reinstall",
     ]
 
