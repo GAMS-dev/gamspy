@@ -61,6 +61,19 @@ def install_transfer():
     subprocess.run(command, check=True)
 
 
+def install_gamspy_base():
+    command = [
+        "pip",
+        "install",
+        "gamspy_base",
+        "--find-links",
+        "gamspy_base/dist",
+        "--force-reinstall",
+    ]
+
+    subprocess.run(command, check=True)
+
+
 def install_gamspy():
     subprocess.run(["python", "setup.py", "bdist_wheel"])
 
@@ -69,7 +82,7 @@ def install_gamspy():
         "install",
         "gamspy[dev,test]",
         "--find-links",
-        "gamspy_base/dist",
+        "dist",
         "--force-reinstall",
     ]
 
@@ -79,4 +92,5 @@ def install_gamspy():
 if __name__ == "__main__":
     get_artifacts()
     install_transfer()
+    install_gamspy_base()
     install_gamspy()
