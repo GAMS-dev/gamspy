@@ -92,10 +92,6 @@ class Container(gt.Container):
             else utils._getMinigamsDirectory()
         )
 
-        self.workspace = GamsWorkspace(
-            working_directory, self.system_directory, DebugLevel.KeepFiles
-        )
-
         self.name = name
         self.debug = debug
         self._statements_dict: dict = {}

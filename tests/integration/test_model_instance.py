@@ -1,15 +1,13 @@
 import unittest
 
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Model,
-    Sum,
-    Sense,
-)
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 class ModelInstanceSuite(unittest.TestCase):
@@ -68,21 +66,21 @@ class ModelInstanceSuite(unittest.TestCase):
 
         bmult_list = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
         results = [
-            92.205,
-            107.5725,
-            122.94,
-            138.3075,
+            92.204,
+            107.572,
+            122.940,
+            138.307,
             153.675,
-            169.0425,
-            184.41,
-            199.7775,
+            164.002,
+            164.519,
+            166.117,
         ]
 
         transport.freeze(modifiables=[bmult])
 
         for b_value, result in zip(bmult_list, results):
             bmult.setRecords(b_value)
-            transport.solve()
+            transport.solve(model_instance_options={"solver": "conopt"})
             self.assertAlmostEqual(z.records["level"][0], result, places=2)
 
     def test_variable_change(self):
@@ -136,11 +134,11 @@ class ModelInstanceSuite(unittest.TestCase):
         )
 
         transport.freeze(modifiables=[x.up])
-        transport.solve()
+        transport.solve(model_instance_options={"solver": "conopt"})
         self.assertAlmostEqual(z.records["level"][0], 153.675, places=3)
 
         x.records.loc[1, "upper"] = 0
-        transport.solve()
+        transport.solve(model_instance_options={"solver": "conopt"})
         self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
 
 

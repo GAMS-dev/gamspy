@@ -19,6 +19,7 @@ repos:
     -   id: end-of-file-fixer
         exclude: ^docs/
     -   id: check-added-large-files
+        args: ['--maxkb=50000']
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/pre-commit/mirrors-mypy
