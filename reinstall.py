@@ -90,7 +90,19 @@ def install_gamspy():
     subprocess.run(command, check=True)
 
 
+def install_development_dependencies():
+    command = [
+        "pip",
+        "install",
+        "-r",
+        "dev_requirements.txt"
+    ]
+
+    subprocess.run(command, check=True)
+
+
 if __name__ == "__main__":
+    install_development_dependencies()
     get_artifacts()
     install_transfer()
     install_gamspy_base()
