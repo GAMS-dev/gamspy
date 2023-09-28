@@ -77,7 +77,7 @@ def install_gamspy_base():
 
 
 def install_gamspy():
-    subprocess.run(["python", "setup.py", "bdist_wheel"])
+    subprocess.run(["python", "setup.py", "sdist"])
 
     command = [
         "pip",
