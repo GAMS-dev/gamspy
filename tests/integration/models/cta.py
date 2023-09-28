@@ -19,6 +19,7 @@ Keywords: mixed integer linear programming, statistical disclosure limitations
 """
 
 import math
+import os
 import sys
 from gams.connect import ConnectDatabase
 from gamspy import (
@@ -59,11 +60,12 @@ def main():
     )
 
     # extract data from Excel
+    file_dir = os.path.dirname(os.path.abspath(__file__))
     cdb = ConnectDatabase(m.system_directory)
     cdb.exec_task(
         {
             "PandasExcelReader": {
-                "file": "cox3.xlsx",
+                "file": os.path.join(file_dir, "cox3.xlsx"),
                 "symbols": [
                     {
                         "name": "dat",
@@ -197,7 +199,7 @@ def main():
     cdb.exec_task(
         {
             "PandasExcelWriter": {
-                "file": "results.xlsx",
+                "file": os.path.join(file_dir, "results.xlsx"),
                 "symbols": [
                     {
                         "name": "adjrep",
@@ -282,7 +284,7 @@ def main():
     cdb.exec_task(
         {
             "PandasExcelWriter": {
-                "file": "results.xlsx",
+                "file": os.path.join(file_dir, "results.xlsx"),
                 "symbols": [
                     {
                         "name": "binrep",
