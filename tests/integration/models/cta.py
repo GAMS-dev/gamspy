@@ -18,6 +18,7 @@ S Raghavan and Edward A Wasil, Springer, 2005, pp 45-59.
 Keywords: mixed integer linear programming, statistical disclosure limitations
 """
 
+import math
 import sys
 from gams.connect import ConnectDatabase
 from gamspy import (
@@ -56,11 +57,6 @@ def main():
         description="information sensitive cells",
         domain=[k, i, j],
     )
-    BigM = Parameter(
-        m,
-        name="BigM",
-        description="the famous big M - make it as small as possible",
-    )
 
     # extract data from Excel
     cdb = ConnectDatabase(m.system_directory)
@@ -91,9 +87,26 @@ def main():
     pro.setRecords(cdb.container["pro"].records)
 
     # do some basic data checks
-    # abort$sum((i,k), round(sum(j, dat(k,i,j)) - 2*dat(k,i,'total'))) 'row totals are incorrect', dat;
-    # abort$sum((j,k), round(sum(i, dat(k,i,j)) - 2*dat(k,'total',j))) 'column totals are incorrect', dat;
-    # abort$sum((i,j), round(sum(k, dat(k,i,j)) - 2*dat('total',i,j))) 'plane totals are incorrect', dat;
+    check = Parameter(m, name="check")
+    check.assign = Sum(
+        [i, k], Round(Sum(j, dat[k, i, j]) - 2 * dat[k, i, "total"])
+    )
+    assert math.isclose(check.toList()[0], 0), "row totals are incorrect"
+    check.assign = Sum(
+        [j, k], Round(Sum(i, dat[k, i, j]) - 2 * dat[k, "total", j])
+    )
+    assert math.isclose(check.toList()[0], 0), "column totals are incorrect"
+    check.assign = Sum(
+        [i, j], Round(Sum(k, dat[k, i, j]) - 2 * dat["total", i, j])
+    )
+    assert math.isclose(check.toList()[0], 0), "plane totals are incorrect"
+
+    # Parameter BigM
+    BigM = Parameter(
+        m,
+        name="BigM",
+        description="the famous big M - make it as small as possible",
+    )
 
     # Variables
     t = Variable(
