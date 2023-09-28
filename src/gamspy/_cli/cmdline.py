@@ -79,8 +79,8 @@ def get_args():
 
 
 def install_license(args: Dict[str, str]):
-    minigams_dir = utils._getMinigamsDirectory()
-    shutil.copy(args["name"], minigams_dir + os.sep + "gamslice.txt")
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
 
 
 def install_solver(args: Dict[str, str]):
@@ -98,16 +98,16 @@ def install_solver(args: Dict[str, str]):
             f"Could not install gamspy_{solver_name}: {e.output}"
         )
 
-    # copy solver files to minigams
-    minigams_dir = utils._getMinigamsDirectory()
+    # copy solver files to gamspy_base
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
     for file in solver_lib.file_paths:
-        shutil.copy(file, minigams_dir)
+        shutil.copy(file, gamspy_base_dir)
 
-    update_dist_info(solver_lib, minigams_dir)
+    update_dist_info(solver_lib, gamspy_base_dir)
 
 
-def update_dist_info(solver_lib, minigams_dir: str):
+def update_dist_info(solver_lib, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
     import gamspy as gp
 
@@ -115,11 +115,13 @@ def update_dist_info(solver_lib, minigams_dir: str):
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
 
     with open(dist_info_path + os.sep + "RECORD", "a") as record:
-        minigams_relative_path = os.sep.join(minigams_dir.split(os.sep)[-3:])
+        gamspy_base_relative_path = os.sep.join(
+            gamspy_base_dir.split(os.sep)[-3:]
+        )
 
         lines = []
         for file in solver_lib.files:
-            line = f"{minigams_relative_path}{os.sep}{file},,"
+            line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
         record.write("\n".join(lines))

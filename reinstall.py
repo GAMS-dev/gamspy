@@ -2,6 +2,8 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
+
 
 platform_to_job_prefix = {
     "windows": "test-wei-",
@@ -52,7 +54,7 @@ def install_transfer():
     command = [
         "pip",
         "install",
-        "gamsapi",
+        "gamsapi[transfer, connect]",
         "--find-links",
         ".",
         "--force-reinstall",
@@ -84,13 +86,45 @@ def install_gamspy():
         "--find-links",
         "dist",
         "--force-reinstall",
+        "--no-deps"
+    ]
+
+    subprocess.run(command, check=True)
+
+
+def install_gams_license():
+    lice =  os.environ["GAMS_LICENSE"]
+    command = [
+        "gamspy",
+        "install",
+        "license"
+    ]
+
+    try:
+        f = tempfile.NamedTemporaryFile(mode='wt', suffix='.txt', delete=False)
+        f.write(lice)
+        f.close()
+        command.append(f.name)
+        subprocess.run(command, check=True)
+    finally:
+        os.unlink(f.name)
+
+
+def install_development_dependencies():
+    command = [
+        "pip",
+        "install",
+        "-r",
+        "dev_requirements.txt"
     ]
 
     subprocess.run(command, check=True)
 
 
 if __name__ == "__main__":
+    install_development_dependencies()
     get_artifacts()
     install_transfer()
     install_gamspy_base()
     install_gamspy()
+    install_gams_license()

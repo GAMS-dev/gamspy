@@ -39,6 +39,8 @@ import gamspy
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GdxException
 
+import gamspy_base
+
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
@@ -63,24 +65,17 @@ def _getUniqueName() -> str:
     return str(gamspy._order)  # type: ignore
 
 
-def _getMinigamsDirectory() -> str:
+def _getGAMSPyBaseDirectory() -> str:
     """
-    Returns the minigams directory.
+    Returns the gamspy_base directory.
 
     Returns
     -------
     str
         System directory
     """
-    gamspy_directory = os.path.dirname(__file__) + os.sep
-
-    user_os = platform.system().lower()
-    minigams_directory = gamspy_directory + "minigams" + os.sep + user_os
-
-    if user_os == "darwin":
-        minigams_directory += f"_{platform.machine()}"  # pragma: no cover
-
-    return minigams_directory
+    gamspy_base_directory = gamspy_base.__path__[0]
+    return gamspy_base_directory
 
 
 def _closeGdxHandle(handle):
@@ -451,9 +446,9 @@ COMMANDLINE_OPTIONS = _getValidCommandlineOptions()
 
 def _getDefaultSolvers():
     return {
-        "LP": "HIGHS",
-        "MIP": "HIGHS",
-        "RMIP": "HIGHS",
+        "LP": "CPLEX",
+        "MIP": "CPLEX",
+        "RMIP": "CPLEX",
         "NLP": "CONOPT",
         "MCP": "PATH",
         "MPEC": "NLPEC",
