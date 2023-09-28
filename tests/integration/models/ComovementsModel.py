@@ -98,7 +98,7 @@ def main():
         objective=z,
     )
 
-    EpsTolerance.assign = 0.1
+    EpsTolerance.assignment = 0.1
 
     while IndexFund.status in [
         ModelStatus.OptimalGlobal,
@@ -113,9 +113,9 @@ def main():
                 f"EpsTolerance: {round(EpsTolerance.toValue(),3)}\t-->\t z:"
                 f" {round(z.toValue(),6)}"
             )
-        EpsTolerance.assign = EpsTolerance - 0.01
+        EpsTolerance.assignment = EpsTolerance - 0.01
 
-    EpsTolerance.assign = EpsTolerance + 0.02
+    EpsTolerance.assignment = EpsTolerance + 0.02
     IndexFund.solve()
 
     x_recs = {k: round(v, 3) for k, v in x.toDict().items() if v != 0}

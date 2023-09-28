@@ -125,7 +125,7 @@ def main():
     END3.solve()
     report[gen, "penalty"] = P.l[gen]
 
-    TE.up.assign = 90000
+    TE.up.assignment = 90000
     END1.solve()
     report[gen, "limit"] = P.l[gen]
 

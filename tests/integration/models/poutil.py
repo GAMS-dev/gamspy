@@ -365,8 +365,8 @@ def main():
         description="indicator for segment b (for zone prices)",
     )
 
-    alpha.up.assign = Smax(t, PowerForecast[t])
-    beta.up.assign = alpha.up
+    alpha.up.assignment = Smax(t, PowerForecast[t])
+    beta.up.assignment = alpha.up
     pLFC.up[t] = pLFCref
 
     # Equations

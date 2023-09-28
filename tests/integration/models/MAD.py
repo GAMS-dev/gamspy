@@ -48,7 +48,7 @@ def main():
         m, name="MAX_MU", description="Maximum return in universe"
     )
 
-    Budget.assign = 100.0
+    Budget.assignment = 100.0
 
     # PARAMETERS #
     pr = Parameter(
@@ -66,12 +66,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i, l])
 
-    MIN_MU.assign = Smin(i, EP[i])
-    MAX_MU.assign = Smax(i, EP[i])
+    MIN_MU.assignment = Smin(i, EP[i])
+    MAX_MU.assignment = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assign = (MAX_MU - MIN_MU) / 20
+    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
 
     print("MAX_MU: ", MAX_MU.records.value.round(3)[0])
 
@@ -152,7 +152,7 @@ def main():
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
         # MU_TARGET = MIN_MU TO MAX_MU BY MU_STEP,
-        MU_TARGET.assign = mu_target
+        MU_TARGET.assignment = mu_target
 
         MeanAbsoluteDeviation.solve()
 
@@ -206,10 +206,10 @@ def main():
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu_target
+        MU_TARGET.assignment = mu_target
 
         MeanVariance.solve()
-        z.l.assign = gams_math.sqrt(z.l)
+        z.l.assignment = gams_math.sqrt(z.l)
 
         output_csv += (
             f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
@@ -231,8 +231,8 @@ def main():
         description="Weight attached to negative deviations",
     )
 
-    lambdaPos.assign = 0.5
-    lambdaNeg.assign = 0.5
+    lambdaPos.assignment = 0.5
+    lambdaNeg.assignment = 0.5
 
     # EQUATIONS
     yPosWeightDef = Equation(
@@ -275,7 +275,7 @@ def main():
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu_target
+        MU_TARGET.assignment = mu_target
 
         MeanAbsoluteDeviationWeighted.solve()
 
@@ -287,14 +287,14 @@ def main():
 
         mu_target += MU_STEP.records.value[0]
 
-    lambdaPos.assign = 0.2
-    lambdaNeg.assign = 0.8
+    lambdaPos.assignment = 0.2
+    lambdaNeg.assignment = 0.8
 
     output_csv += '"MADWeighted","Mean"\n'
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu_target
+        MU_TARGET.assignment = mu_target
 
         MeanAbsoluteDeviationWeighted.solve()
 

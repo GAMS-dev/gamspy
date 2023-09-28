@@ -105,7 +105,7 @@ def main():
     gamma = Parameter(m, name="gamma", domain=[j, h])
     deltb = Parameter(m, name="deltb", domain=[j, h])
 
-    ed[j].assign = Sum(h, lamda[j, h] * dd[j, h])
+    ed[j].assignment = Sum(h, lamda[j, h] * dd[j, h])
     gamma[j, h] = Sum(hp.where[(Ord(hp) >= Ord(h))], lamda[j, hp])
     deltb[j, h] = dd[j, h] - dd[j, h.lag(1, "linear")].where[dd[j, h]]
 

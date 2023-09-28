@@ -67,7 +67,7 @@ def main():
     # Normalize the random weights
     WeightsSum = Parameter(m, name="WeightsSum")
 
-    WeightsSum.assign = Sum(i, AssetWeights[i])
+    WeightsSum.assignment = Sum(i, AssetWeights[i])
 
     AssetWeights[i] = AssetWeights[i] / WeightsSum
 
@@ -216,7 +216,7 @@ def main():
 
     Benchmark[l] = IndexReturns[l]
 
-    EpsTolerance.assign = 0.02
+    EpsTolerance.assignment = 0.02
 
     StrategicModel.solve()
 
@@ -225,11 +225,11 @@ def main():
 
     # Solve tactical model for Broad Asset 1 (BA_1)
 
-    CurrentWeight.assign = z.l["BA_1"]
+    CurrentWeight.assignment = z.l["BA_1"]
 
     Benchmark[l] = BroadAssetReturns["BA_1", l]
 
-    EpsTolerance.assign = 0.02
+    EpsTolerance.assignment = 0.02
 
     ACTIVE[i] = BroadAssetClassOne[i]
 
@@ -241,13 +241,13 @@ def main():
 
     # Solve tactical model for Broad Asset 2 (BA_2)
 
-    CurrentWeight.assign = z.l["BA_2"]
+    CurrentWeight.assignment = z.l["BA_2"]
 
     ACTIVE[i] = BroadAssetClassTwo[i]
 
     Benchmark[l] = BroadAssetReturns["BA_2", l]
 
-    EpsTolerance.assign = 0.03
+    EpsTolerance.assignment = 0.03
 
     if CurrentWeight.records.value[0] > 0.05:
         TacticalModel.solve()
@@ -257,13 +257,13 @@ def main():
 
     # Solve tactical model for Broad Asset 3 (BA_3)
 
-    CurrentWeight.assign = z.l["BA_3"]
+    CurrentWeight.assignment = z.l["BA_3"]
 
     ACTIVE[i] = BroadAssetClassThree[i]
 
     Benchmark[l] = BroadAssetReturns["BA_3", l]
 
-    EpsTolerance.assign = 0.02
+    EpsTolerance.assignment = 0.02
 
     if CurrentWeight.records.value[0] > 0.05:
         TacticalModel.solve()
@@ -273,11 +273,11 @@ def main():
 
     # Solve integrated model
 
-    CurrentWeight.assign = 1.0
+    CurrentWeight.assignment = 1.0
 
     Benchmark[l] = IndexReturns[l]
 
-    EpsTolerance.assign = 0.02
+    EpsTolerance.assignment = 0.02
 
     ACTIVE[i] = Number(1)
 

@@ -102,8 +102,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assign = 2001
-    Horizon.assign = Card(t) - 1
+    Now.assignment = 2001
+    Horizon.assignment = Card(t) - 1
 
     # PARAMETER #
     tau = Parameter(m, name="tau", domain=[t], description="Time in years")
@@ -239,13 +239,13 @@ def main():
     # Calculate the corresponding amounts for Liabilities. Use its PV as its
     # "price".
 
-    PV_Liab.assign = Sum(t, Liability[t] * gams_math.exp(-r[t] * tau[t]))
+    PV_Liab.assignment = Sum(t, Liability[t] * gams_math.exp(-r[t] * tau[t]))
 
-    Dur_Liab.assign = (1.0 / PV_Liab) * Sum(
+    Dur_Liab.assignment = (1.0 / PV_Liab) * Sum(
         t, tau[t] * Liability[t] * gams_math.exp(-r[t] * tau[t])
     )
 
-    Conv_Liab.assign = (1.0 / PV_Liab) * Sum(
+    Conv_Liab.assignment = (1.0 / PV_Liab) * Sum(
         t, sqr(tau[t]) * Liability[t] * gams_math.exp(-r[t] * tau[t])
     )
 
@@ -314,7 +314,7 @@ def main():
     ImmunizationOne.solve()
 
     Convexity = Parameter(m, name="Convexity")
-    Convexity.assign = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x.l[i])
+    Convexity.assignment = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x.l[i])
     x_results = []
 
     x_results.append(x.records.level.tolist())
@@ -331,9 +331,9 @@ def main():
     )
     ImmunizationTwo.solve()
 
-    DurationMatch.l.assign = DurationMatch.l / PV_Liab
+    DurationMatch.l.assignment = DurationMatch.l / PV_Liab
 
-    ConvexityMatch.l.assign = ConvexityMatch.l / PV_Liab
+    ConvexityMatch.l.assignment = ConvexityMatch.l / PV_Liab
 
     x_results.append(x.records.level.tolist())
     print("PresentValueMatch: ", PresentValueMatch.records.level[0])

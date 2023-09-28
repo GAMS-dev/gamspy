@@ -80,8 +80,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assign = 2001
-    Horizon.assign = Card(t) - 1
+    Now.assignment = 2001
+    Horizon.assignment = Card(t) - 1
 
     # PARAMETER #
     tau = Parameter(m, name="tau", domain=[t], description="Time in years")
@@ -149,7 +149,7 @@ def main():
 
     # For simplicity, we set the short term rate to be 0.03 in each period
     rf[t] = 0.04
-    spread.assign = 0.02
+    spread.assignment = 0.02
 
     Liability.setRecords(
         np.array(

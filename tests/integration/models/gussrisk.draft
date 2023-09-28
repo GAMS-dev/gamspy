@@ -229,11 +229,11 @@ def main():
         rap = riskaver[rr]
         #  load in solution information
         invest.l[s] = stockoutput[rr, s]
-        obj.l.assign = objlevel[rr]
-        investav.m.assign = investavshadow[rr]
+        obj.l.assignment = objlevel[rr]
+        investav.m.assignment = investavshadow[rr]
         #  compute some items
-        investav.l.assign = Sum(s, invest.l[s])
-        variance.assign = Sum(
+        investav.l.assignment = Sum(s, invest.l[s])
+        variance.assignment = Sum(
             [s, sp], invest.l[s] * covar[s, sp] * invest.l[sp]
         )
         output["rap", rr] = rap

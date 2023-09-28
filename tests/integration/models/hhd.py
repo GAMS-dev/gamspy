@@ -120,34 +120,34 @@ def main():
     e.definition = obj == 1
 
     # Initial point (Variant 1)
-    # x1.l.assign = 0.299
-    # x2.l.assign = 0.186
-    # x3.l.assign = -0.0273
-    # x4.l.assign = 0.0254
-    # x5.l.assign = -0.474
-    # x6.l.assign = 0.474
-    # x7.l.assign = -0.0892
-    # x8.l.assign = 0.0892
+    # x1.l.assignment = 0.299
+    # x2.l.assignment = 0.186
+    # x3.l.assignment = -0.0273
+    # x4.l.assignment = 0.0254
+    # x5.l.assignment = -0.474
+    # x6.l.assignment = 0.474
+    # x7.l.assignment = -0.0892
+    # x8.l.assignment = 0.0892
 
     # Initial point (Variant 2)
-    # x1.l.assign = -0.3
-    # x2.l.assign = -0.39
-    # x3.l.assign =  0.3
-    # x4.l.assign = -0.344
-    # x5.l.assign = -1.2
-    # x6.l.assign =  2.69
-    # x7.l.assign =  1.59
-    # x8.l.assign = -1.5
+    # x1.l.assignment = -0.3
+    # x2.l.assignment = -0.39
+    # x3.l.assignment =  0.3
+    # x4.l.assignment = -0.344
+    # x5.l.assignment = -1.2
+    # x6.l.assignment =  2.69
+    # x7.l.assignment =  1.59
+    # x8.l.assignment = -1.5
 
     # Initial point (Variant 3)
-    x1.l.assign = -0.041
-    x2.l.assign = -0.775
-    x3.l.assign = 0.03
-    x4.l.assign = -0.047
-    x5.l.assign = -2.565
-    x6.l.assign = 2.565
-    x7.l.assign = -0.754
-    x8.l.assign = 0.754
+    x1.l.assignment = -0.041
+    x2.l.assignment = -0.775
+    x3.l.assignment = 0.03
+    x4.l.assignment = -0.047
+    x5.l.assignment = -2.565
+    x6.l.assignment = 2.565
+    x7.l.assignment = -0.754
+    x8.l.assignment = 0.754
 
     hhd = Model(
         m,

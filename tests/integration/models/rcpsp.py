@@ -257,7 +257,7 @@ def build_abstract_model():
         sense=Sense.MIN,
         objective=makespan,
     )
-    makespan.lo.assign = 0
+    makespan.lo.assignment = 0
 
     return dict(
         m=m,

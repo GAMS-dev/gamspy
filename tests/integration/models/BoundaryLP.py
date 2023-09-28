@@ -50,12 +50,12 @@ def main():
         objective=of,
     )
 
-    x1.lo.assign = 0
-    x1.up.assign = 5
-    x2.lo.assign = 0
-    x2.up.assign = 3
-    x3.lo.assign = 0
-    x3.up.assign = 2
+    x1.lo.assignment = 0
+    x1.up.assignment = 5
+    x2.lo.assignment = 0
+    x2.up.assignment = 3
+    x3.lo.assignment = 0
+    x3.up.assignment = 2
 
     LP1.solve()
 

@@ -99,7 +99,7 @@ def main():
     y.fx["n0"] = a_y
     x.fx[f"n{N}"] = b_x
     y.fx[f"n{N}"] = b_y
-    unit.fx.assign = 1
+    unit.fx.assignment = 1
 
     spring.solve()
 

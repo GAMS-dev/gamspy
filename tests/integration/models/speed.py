@@ -91,20 +91,20 @@ def main():
     g11.definition = (1.1 * x7 + 1.9) / x5 - 1 <= 0
 
     # Bounds on variables
-    x1.lo.assign = 2.6
-    x1.up.assign = 3.6
-    x2.lo.assign = 0.7
-    x2.up.assign = 0.8
-    x3.lo.assign = 17
-    x3.up.assign = 28
-    x4.lo.assign = 7.3
-    x4.up.assign = 8.3
-    x5.lo.assign = 7.8
-    x5.up.assign = 8.3
-    x6.lo.assign = 2.9
-    x6.up.assign = 3.9
-    x7.lo.assign = 5.0
-    x7.up.assign = 5.5
+    x1.lo.assignment = 2.6
+    x1.up.assignment = 3.6
+    x2.lo.assignment = 0.7
+    x2.up.assignment = 0.8
+    x3.lo.assignment = 17
+    x3.up.assignment = 28
+    x4.lo.assignment = 7.3
+    x4.up.assignment = 8.3
+    x5.lo.assignment = 7.8
+    x5.up.assignment = 8.3
+    x6.lo.assignment = 2.9
+    x6.up.assignment = 3.9
+    x7.lo.assignment = 5.0
+    x7.up.assignment = 5.5
 
     speed = Model(
         m,

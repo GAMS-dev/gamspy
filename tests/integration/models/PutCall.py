@@ -205,7 +205,7 @@ def main():
         m, name="Omega", description="Bound on the expected shortfalls"
     )
 
-    Budget.assign = 100.0
+    Budget.assignment = 100.0
 
     # PARAMETERS #
     pr = Parameter(
@@ -313,7 +313,7 @@ def main():
 
     # Set the average level of downside (risk) allowed
 
-    Omega.assign = 0.1
+    Omega.assignment = 0.1
     UnConPutCallModel.solve()
 
     # Dual of the UnConstrained Put/Call model
@@ -424,7 +424,7 @@ def main():
     x.up[i] = 100.0
 
     for jj in j.toList():
-        Omega.assign = OmegaLevels[jj]
+        Omega.assignment = OmegaLevels[jj]
         UnConPutCallModel.solve()
 
         FrontierPortfolios[jj, i] = x.l[i]
@@ -441,7 +441,7 @@ def main():
     x.up[i] = 20.0
 
     for jj in j.toList():
-        Omega.assign = OmegaLevels[jj]
+        Omega.assignment = OmegaLevels[jj]
         UnConPutCallModel.solve()
 
         FrontierPortfolios[jj, i] = x.l[i]
@@ -455,7 +455,7 @@ def main():
     # Determine the liquidity and discount premium
     # for one put/call efficient portfolio.
 
-    Omega.assign = 0.475
+    Omega.assignment = 0.475
 
     UnConPutCallModel.solve()
 
@@ -478,7 +478,7 @@ def main():
 
     Premium[i] = 0.0
 
-    Df.assign = Sum(l, -TargetDevDef.m[l])
+    Df.assignment = Sum(l, -TargetDevDef.m[l])
 
     Psi[l] = -TargetDevDef.m[l] / Df
 
@@ -513,7 +513,7 @@ def main():
     )
 
     for jj in j.toList():
-        Omega.assign = OmegaLevels[jj]
+        Omega.assignment = OmegaLevels[jj]
         PutCallModel.solve()
         FrontierPortfolios[jj, i] = x.l[i]
         PutCall[jj, "Put side"] = PutCon.l

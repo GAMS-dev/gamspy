@@ -61,8 +61,8 @@ def main(output=None):
         m, name="pr", domain=[l], description="Scenario probability"
     )
 
-    USDDEMForwardRate.assign = -0.005
-    USDCHFForwardRate.assign = 0.001
+    USDDEMForwardRate.assignment = -0.005
+    USDCHFForwardRate.assignment = 0.001
 
     BondReturns = Parameter(
         m, name="BondReturns", domain=[SS, BB], description="Bond returns"
@@ -200,7 +200,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assign = Frontiers[pp, "mu"]
+        mu.assignment = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
@@ -222,7 +222,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assign = Frontiers[pp, "mu"]
+        mu.assignment = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
@@ -246,7 +246,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assign = Frontiers[pp, "mu"]
+        mu.assignment = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))

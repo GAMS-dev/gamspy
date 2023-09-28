@@ -232,7 +232,7 @@ def main():
     )
 
     for case, _ in rhoset.records.itertuples(index=False):
-        rho.assign = rhoval[case]
+        rho.assignment = rhoval[case]
         forest.solve()
         landcl[s, k] = Round(landc.l[s, k], 3)
         rep[cl, case] = r.l[cl]

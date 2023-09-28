@@ -101,14 +101,14 @@ def main():
     oldr = Parameter(m, name="oldr", domain=[i])
     olds = Parameter(m, name="olds", domain=[j])
     maxdelta = Parameter(m, name="maxdelta")
-    maxdelta.assign = 1
+    maxdelta.assignment = 1
 
     while True:
         oldr[i] = r[i]
         olds[j] = s[j]
         r[i] = r[i] * u[i] / Sum(j, r[i] * a0[i, j] * x[j] * s[j])
         s[j] = s[j] * v[j] / Sum(i, r[i] * a0[i, j] * x[j] * s[j])
-        maxdelta.assign = max(
+        maxdelta.assignment = max(
             Smax(i, gams_math.abs(oldr[i] - r[i])),
             Smax(j, gams_math.abs(olds[j] - s[j])),
         )

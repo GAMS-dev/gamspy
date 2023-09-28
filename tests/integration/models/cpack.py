@@ -77,8 +77,8 @@ y.up[i] = 1
 x.l[i] = -0.2 + Ord(i) * 0.1
 y.l[i] = -0.2 + Ord(i) * 0.1
 
-r.lo.assign = 0.05
-r.up.assign = 0.4
+r.lo.assignment = 0.05
+r.up.assignment = 0.4
 
 # solve with a good global solver
 c.addOptions({"optcr": "0.01"})

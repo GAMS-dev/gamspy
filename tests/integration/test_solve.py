@@ -77,10 +77,10 @@ class SolveSuite(unittest.TestCase):
         )
         self.assertFalse(c._is_dirty)
 
-        e.assign = 5
+        e.assignment = 5
         self.assertTrue(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
-        self.assertEqual(e.assign, 5)
+        self.assertEqual(e.assignment, 5)
 
         with self.assertRaises(TypeError):
             e.records = 5
@@ -648,8 +648,8 @@ class SolveSuite(unittest.TestCase):
             description="indicator for segment b (for zone prices)",
         )
 
-        alpha.up.assign = Smax(t, PowerForecast[t])
-        beta.up.assign = alpha.up
+        alpha.up.assignment = Smax(t, PowerForecast[t])
+        beta.up.assignment = alpha.up
         pLFC.up[t] = pLFCref
 
         # Equations

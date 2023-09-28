@@ -270,28 +270,28 @@ def main():
     ga7.definition = a7 == gams_math.power(q7, 2)
 
     # Bounds
-    # q1.up.assign = 3.4329
-    # q2.up.assign = 0.1627
-    # q3.up.assign = 0.1139
-    # q4.lo.assign = 0.2539
-    # q5.up.assign = 0.0208
-    # q6.lo.assign = 2.0247
-    # q7.lo.assign = 1
-    w.lo.assign = 0
-    w.up.assign = 10
-    k.lo.assign = 0
-    k.up.assign = 10
+    # q1.up.assignment = 3.4329
+    # q2.up.assignment = 0.1627
+    # q3.up.assignment = 0.1139
+    # q4.lo.assignment = 0.2539
+    # q5.up.assignment = 0.0208
+    # q6.lo.assignment = 2.0247
+    # q7.lo.assignment = 1
+    w.lo.assignment = 0
+    w.up.assignment = 10
+    k.lo.assignment = 0
+    k.up.assignment = 10
 
     # Initial point
-    q1.l.assign = 0.2
-    q2.l.assign = 0.02
-    q3.l.assign = 0.1
-    q4.l.assign = 0.3
-    q5.l.assign = 0
-    q6.l.assign = 2
-    q7.l.assign = 4.5
-    w.l.assign = 0
-    k.l.assign = 2
+    q1.l.assignment = 0.2
+    q2.l.assignment = 0.02
+    q3.l.assignment = 0.1
+    q4.l.assignment = 0.3
+    q5.l.assignment = 0
+    q6.l.assignment = 2
+    q7.l.assignment = 4.5
+    w.l.assignment = 0
+    k.l.assignment = 2
 
     fiat = Model(
         m,

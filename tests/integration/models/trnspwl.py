@@ -203,7 +203,7 @@ def main():
     transport.solve()
     print("Initial Objective Function Value: ", round(z.records.level[0], 3))
 
-    localopt.assign = z.l
+    localopt.assignment = z.l
 
     # The first model (formulation a) implements a piecewise linear
     # approximation based on the convex combination of neighboring points
@@ -235,7 +235,7 @@ def main():
     xhigh = Parameter(m, name="xhigh", records=400)
     xmax = Parameter(m, name="xmax")
 
-    xmax.assign = Smax(i, a[i])
+    xmax.assignment = Smax(i, a[i])
 
     if xmax.records.value[0] < xhigh.records.value[0]:
         raise Exception("xhigh too big")

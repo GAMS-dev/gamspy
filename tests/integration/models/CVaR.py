@@ -212,8 +212,8 @@ def main():
         m, name="LossFlag", description="Flag selecting the type of loss"
     )
 
-    Budget.assign = 100.0
-    alpha.assign = 0.99
+    Budget.assignment = 100.0
+    alpha.assignment = 0.99
 
     # PARAMETERS #
     pr = Parameter(
@@ -231,12 +231,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i, l])
 
-    MIN_MU.assign = Smin(i, EP[i])
-    MAX_MU.assign = Smax(i, EP[i])
+    MIN_MU.assignment = Smin(i, EP[i])
+    MAX_MU.assignment = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assign = (MAX_MU - MIN_MU) / 20
+    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
 
     TargetIndex = Parameter(
         m, name="TargetIndex", domain=[l], description="Target index returns"
@@ -352,14 +352,14 @@ def main():
     i_recs = [f'"{i_rec}"' for i_rec in i.records.uni.tolist()]
     output_csv += ",".join(i_recs) + "\n"
 
-    LossFlag.assign = 2
+    LossFlag.assignment = 2
 
     # Comment the following line if you want to track the market index.
     TargetIndex[l] = 1.01
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu_target
+        MU_TARGET.assignment = mu_target
 
         MinCVaR.solve()
 

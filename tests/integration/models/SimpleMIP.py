@@ -47,7 +47,7 @@ def main():
         objective=of,
     )
 
-    x.up.assign = 0.3
+    x.up.assignment = 0.3
     MIP1.solve()
 
     print("Objective Function Value:  ", round(of.toValue(), 4))

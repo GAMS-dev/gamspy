@@ -48,7 +48,7 @@ def main():
         m, name="x5_0", records=1, description="initial value for x5"
     )
     h = Parameter(m, name="h")
-    h.assign = tf / n
+    h.assignment = tf / n
 
     # VARIABLES #
     x1 = Variable(m, name="x1", domain=[nh])

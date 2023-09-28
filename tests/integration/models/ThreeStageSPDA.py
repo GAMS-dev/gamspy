@@ -259,7 +259,7 @@ def main():
 
     # Model 1: Maximize the expected wealth, without transaction cost
 
-    PropCost.assign = 0.0
+    PropCost.assignment = 0.0
 
     ThreeStageExpWealth.solve()
 
@@ -273,7 +273,7 @@ def main():
 
     # Model 2: Maximize the expected wealth, with transaction cost
 
-    PropCost.assign = 0.01
+    PropCost.assignment = 0.01
 
     ThreeStageExpWealth.solve()
 
@@ -393,7 +393,7 @@ def main():
         objective=z,
     )
 
-    EpsTolerance.assign = 0.09
+    EpsTolerance.assignment = 0.09
 
     ThreeStageMAD.solve()
 

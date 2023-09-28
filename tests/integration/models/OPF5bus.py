@@ -214,7 +214,7 @@ def main():
     report[bus, "Angle"] = delta.l[bus]
     report[bus, "load(MW)"] = BusData[bus, "pd"]
     report[bus, "LMP($/MWh)"] = const2.m[bus] / Sbase
-    Congestioncost.assign = (
+    Congestioncost.assignment = (
         Sum([bus, node], Pij.l[bus, node] * (-const2.m[bus] + const2.m[node]))
         / 2
     )

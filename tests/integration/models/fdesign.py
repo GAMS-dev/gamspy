@@ -105,8 +105,8 @@ def main():
         <= beta
     )
 
-    t.lo.assign = 1
-    v.fx.assign = 2
+    t.lo.assignment = 1
+    v.fx.assignment = 2
 
     fir_socp = Model(
         m,

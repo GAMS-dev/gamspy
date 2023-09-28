@@ -84,10 +84,10 @@ def main():
     )
 
     t.l[i] = -math.pi + (Ord(i) - 1) * 2 * math.pi / Card(i)
-    x.l.assign = fx(t.l["1"])
-    y.l.assign = fy(t.l["1"])
-    a.l.assign = 1
-    b.l.assign = 1
+    x.l.assignment = fx(t.l["1"])
+    y.l.assignment = fy(t.l["1"])
+    a.l.assignment = 1
+    b.l.assignment = 1
 
     square.solve()
 

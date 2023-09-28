@@ -69,12 +69,12 @@ def main():
     tmin = Parameter(m, name="tmin")
 
     if b.toValue() > a.toValue():
-        tmin.assign = 0.25
+        tmin.assignment = 0.25
     else:
-        tmin.assign = 0.75
+        tmin.assignment = 0.75
 
-    n.assign = Card(nh) - 1
-    h.assign = tf / n
+    n.assignment = Card(nh) - 1
+    h.assignment = tf / n
 
     # VARIABLES #
     x = Variable(m, name="x", domain=[i], description="height of the chain")

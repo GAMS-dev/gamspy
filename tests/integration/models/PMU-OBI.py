@@ -91,7 +91,7 @@ def main():
     OBIrep = Parameter(m, "OBIrep", domain=[counter])
 
     for idx, iter, _ in counter.records.itertuples():
-        NPMU.assign = idx + 1
+        NPMU.assignment = idx + 1
         placement3.solve()
         report[bus, iter] = PMU.l[bus]
         OBIrep[iter] = OF.l

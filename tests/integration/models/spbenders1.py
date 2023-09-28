@@ -187,12 +187,14 @@ def main():
     received.l[j] = 0
 
     for iteration, _ in iter.records.itertuples(index=False):
-        objSub.assign = 0
+        objSub.assignment = 0
 
         for scenario, _ in s.records.itertuples(index=False):
             demand[j] = ScenarioData[scenario, j]
             subproblem.solve()
-            objSub.assign = objSub + ScenarioData[scenario, "prob"] * zsub.l
+            objSub.assignment = (
+                objSub + ScenarioData[scenario, "prob"] * zsub.l
+            )
             cutconst[iteration] = cutconst[iteration] + ScenarioData[
                 scenario, "prob"
             ] * Sum(j, market.m[j] * demand[j])
@@ -207,9 +209,9 @@ def main():
             lowerBound.records.values[0][0]
             < objMaster.records.values[0][0] + objSub.records.values[0][0]
         ):
-            lowerBound.assign = objMaster + objSub
+            lowerBound.assignment = objMaster + objSub
 
-        rgap.assign = (upperBound - lowerBound) / (
+        rgap.assignment = (upperBound - lowerBound) / (
             1 + gams_math.abs(upperBound)
         )
         if rgap.records.values[0][0] < rtol:

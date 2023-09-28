@@ -156,7 +156,7 @@ def main():
     branch[bus, node, "bij"].where[conex[bus, node]] = (
         1 / branch[bus, node, "x"]
     )
-    M.assign = Smax(
+    M.assignment = Smax(
         Domain(bus, node).where[conex[bus, node]],
         branch[bus, node, "bij"] * 3.14 * 2,
     )

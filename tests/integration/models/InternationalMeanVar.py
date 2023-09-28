@@ -75,7 +75,7 @@ def main():
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assign = MAX_MU / 20
+    MU_STEP.assignment = MAX_MU / 20
 
     # VARIABLES #
     x = Variable(
@@ -146,7 +146,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -176,7 +176,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -206,7 +206,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -238,7 +238,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -362,12 +362,12 @@ def main():
     FrontierHandle.write(",".join(i_recs) + "\n")
 
     # Re-estimate MU_STEP as MAX_MU is different for the tracking problem
-    MAX_MU.assign = 0.1587
-    MU_STEP.assign = MAX_MU / 20
+    MAX_MU.assignment = 0.1587
+    MU_STEP.assignment = MAX_MU / 20
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MeanVarTrack.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 

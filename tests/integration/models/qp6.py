@@ -56,7 +56,7 @@ def main():
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)
     dev[s, d] = returns[s, d] - mean[s]
-    totmean.assign = Sum(s, mean[s]) / (Card(s))
+    totmean.assignment = Sum(s, mean[s]) / (Card(s))
 
     # Variable
     x = Variable(
@@ -119,7 +119,7 @@ def main():
     qp6.solve()
 
     z = Parameter(cont, name="z")
-    z.assign = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
+    z.assignment = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
     print("\ninvestments: ", x.records.set_index("stocks").level.round(3))
     print("\nObjective Function Value: ", z.records.value.round(3).tolist()[0])
 

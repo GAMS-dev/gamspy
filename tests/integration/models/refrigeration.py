@@ -103,34 +103,34 @@ def main():
     e15.definition = x12 / x11 <= 1
 
     # Bounds on variables:
-    x1.lo.assign = 0.001
-    x1.up.assign = 5
-    x2.lo.assign = 0.001
-    x2.up.assign = 5
-    x3.lo.assign = 0.001
-    x3.up.assign = 5
-    x4.lo.assign = 0.001
-    x4.up.assign = 5
-    x5.lo.assign = 0.001
-    x5.up.assign = 5
-    x6.lo.assign = 0.001
-    x6.up.assign = 5
-    x7.lo.assign = 0.001
-    x7.up.assign = 5
-    x8.lo.assign = 0.001
-    x8.up.assign = 5
-    x9.lo.assign = 0.001
-    x9.up.assign = 5
-    x10.lo.assign = 0.001
-    x10.up.assign = 5
-    x11.lo.assign = 0.001
-    x11.up.assign = 5
-    x12.lo.assign = 0.001
-    x12.up.assign = 5
-    x13.lo.assign = 0.001
-    x13.up.assign = 5
-    x14.lo.assign = 0.001
-    x14.up.assign = 5
+    x1.lo.assignment = 0.001
+    x1.up.assignment = 5
+    x2.lo.assignment = 0.001
+    x2.up.assignment = 5
+    x3.lo.assignment = 0.001
+    x3.up.assignment = 5
+    x4.lo.assignment = 0.001
+    x4.up.assignment = 5
+    x5.lo.assignment = 0.001
+    x5.up.assignment = 5
+    x6.lo.assignment = 0.001
+    x6.up.assignment = 5
+    x7.lo.assignment = 0.001
+    x7.up.assignment = 5
+    x8.lo.assignment = 0.001
+    x8.up.assignment = 5
+    x9.lo.assignment = 0.001
+    x9.up.assignment = 5
+    x10.lo.assignment = 0.001
+    x10.up.assignment = 5
+    x11.lo.assignment = 0.001
+    x11.up.assignment = 5
+    x12.lo.assignment = 0.001
+    x12.up.assignment = 5
+    x13.lo.assignment = 0.001
+    x13.up.assignment = 5
+    x14.lo.assignment = 0.001
+    x14.up.assignment = 5
 
     refrigeration = Model(
         m,

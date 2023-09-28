@@ -205,7 +205,7 @@ def main():
                         continue
                     fromi[ix_loop] = True
 
-        nosubtours.assign = Sum(
+        nosubtours.assignment = Sum(
             t, gams_math.max(Number(0), Smax(tour[i, j, t], Number(1)))
         )
 

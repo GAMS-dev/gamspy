@@ -146,38 +146,38 @@ def main():
     eobj.definition = obj == x10
 
     # Bounds on variables
-    x1.lo.assign = 0
-    x1.up.assign = 10
-    x2.lo.assign = 0
-    x2.up.assign = 10
-    x3.lo.assign = 0
-    x3.up.assign = 10
-    x4.lo.assign = 0
-    x4.up.assign = 10
-    x5.lo.assign = 0
-    x5.up.assign = 10
-    x6.lo.assign = 0
-    x6.up.assign = 10
-    x7.lo.assign = 0
-    x7.up.assign = 10
-    x8.lo.assign = 0
-    x8.up.assign = 10
-    x9.lo.assign = 0
-    x9.up.assign = 10
-    x10.lo.assign = 0
-    x10.up.assign = 10
+    x1.lo.assignment = 0
+    x1.up.assignment = 10
+    x2.lo.assignment = 0
+    x2.up.assignment = 10
+    x3.lo.assignment = 0
+    x3.up.assignment = 10
+    x4.lo.assignment = 0
+    x4.up.assignment = 10
+    x5.lo.assignment = 0
+    x5.up.assignment = 10
+    x6.lo.assignment = 0
+    x6.up.assignment = 10
+    x7.lo.assignment = 0
+    x7.up.assignment = 10
+    x8.lo.assignment = 0
+    x8.up.assignment = 10
+    x9.lo.assignment = 0
+    x9.up.assignment = 10
+    x10.lo.assignment = 0
+    x10.up.assignment = 10
 
     # Initial point
-    x1.l.assign = 0.7
-    x2.l.assign = 0.38
-    x3.l.assign = 0.8
-    x4.l.assign = 1.5
-    x5.l.assign = 6
-    x6.l.assign = 6
-    x7.l.assign = 4
-    x8.l.assign = 1
-    x9.l.assign = 1.6
-    x10.l.assign = 1
+    x1.l.assignment = 0.7
+    x2.l.assignment = 0.38
+    x3.l.assignment = 0.8
+    x4.l.assignment = 1.5
+    x5.l.assignment = 6
+    x6.l.assignment = 6
+    x7.l.assignment = 4
+    x8.l.assignment = 1
+    x9.l.assignment = 1.6
+    x10.l.assignment = 1
 
     circuit = Model(
         cont,

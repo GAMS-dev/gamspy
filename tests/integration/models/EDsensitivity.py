@@ -92,7 +92,7 @@ def main():
     )
 
     for idx, cc in enumerate(counter.toList()):
-        load.assign = Sum(gen, data[gen, "Pmin"]) + (
+        load.assignment = Sum(gen, data[gen, "Pmin"]) + (
             (idx) / (Card(counter) - 1)
         ) * Sum(gen, data[gen, "Pmax"] - data[gen, "Pmin"])
         ECD.solve()

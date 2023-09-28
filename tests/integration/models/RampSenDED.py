@@ -167,7 +167,7 @@ def main():
     report1 = Parameter(m, name="report1", domain=[counter, "*"])
 
     for idx, c in enumerate(counter.toList()):
-        Rscale.assign = 1 - (idx) * 0.02
+        Rscale.assignment = 1 - (idx) * 0.02
         gendata[i, "RU"] = gendata[i, "RU0"] * Rscale
         gendata[i, "RD"] = gendata[i, "RD0"] * Rscale
         DEDcostbased.solve()

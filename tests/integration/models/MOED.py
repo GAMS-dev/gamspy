@@ -118,10 +118,10 @@ def main():
     report["minTE"] = TE.l
 
     for idx, cc in enumerate(counter.toList()):
-        Elim.assign = (report["maxTE"] - report["minTE"]) * (idx) / (
+        Elim.assignment = (report["maxTE"] - report["minTE"]) * (idx) / (
             Card(counter) - 1
         ) + report["minTE"]
-        TE.up.assign = Elim
+        TE.up.assignment = Elim
         END1.solve()
         rep[cc, "TC"] = TC.l
         rep[cc, "TE"] = TE.l

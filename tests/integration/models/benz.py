@@ -86,18 +86,18 @@ def main():
     b2l.definition = 20.0 - 15.0 * k <= q2
     b2u.definition = q2 <= 20.0 + 15.0 * k
 
-    q1.lo.assign = 0
-    q1.up.assign = 2
-    q2.lo.assign = 0
-    q2.up.assign = 2
-    w.lo.assign = 0
-    w.up.assign = 2
-    k.lo.assign = 0
-    k.up.assign = 2
-    q1.l.assign = 0.1
-    q2.l.assign = 0.1
-    w.l.assign = 0.1
-    k.l.assign = 0.1
+    q1.lo.assignment = 0
+    q1.up.assignment = 2
+    q2.lo.assignment = 0
+    q2.up.assignment = 2
+    w.lo.assignment = 0
+    w.up.assignment = 2
+    k.lo.assignment = 0
+    k.up.assignment = 2
+    q1.l.assignment = 0.1
+    q2.l.assignment = 0.1
+    w.l.assignment = 0.1
+    k.l.assignment = 0.1
 
     benz = Model(
         m,

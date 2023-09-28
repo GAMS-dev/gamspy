@@ -429,8 +429,8 @@ def main(is_centropy=False):
     # could have been used instead, depending on knowledge of data quality
     # and any other prior information.
     ColSum0[ii] = (SAM[ii, "total"] + SAM["total", ii]) / 2
-    gdpfc0.assign = SAM["fac", "act"]
-    gdp0.assign = (
+    gdpfc0.assignment = SAM["fac", "act"]
+    gdp0.assignment = (
         SAM["fac", "act"]
         + SAM["gov", "act"]
         - SAM["act", "gov"]
@@ -796,13 +796,13 @@ def main(is_centropy=False):
     Diffrnce[i, j] = Macsam1[i, j] - SAM0[i, j]
     SAMBALCHK[jj] = TSAM.l["TOTAL", jj] - TSAM.l[jj, "TOTAL"]
 
-    gdp00.assign = (
+    gdp00.assignment = (
         Macsam1["fac", "act"]
         + Macsam1["gov", "act"]
         - Macsam1["act", "gov"]
         + Macsam1["gov", "com"]
     )
-    gdpfc00.assign = Macsam1["fac", "act"]
+    gdpfc00.assignment = Macsam1["fac", "act"]
 
     # print some stuff
     ANEW[ii, jj] = A.l[ii, jj]
@@ -813,8 +813,8 @@ def main(is_centropy=False):
 
     meanerr1 = Parameter(m, name="meanerr1")
     meanerr2 = Parameter(m, name="meanerr2")
-    meanerr1.assign = Sum(ii, abs(ERR1.l[ii])) / Card(ii)
-    meanerr2.assign = Sum(macro, abs(ERR2.l[macro])) / Card(macro)
+    meanerr1.assignment = Sum(ii, abs(ERR1.l[ii])) / Card(ii)
+    meanerr2.assignment = Sum(macro, abs(ERR2.l[macro])) / Card(macro)
 
     print("Objective Function Value: ", round(DENTROPY.records.level[0], 3))
     print("meanerr1: ", round(meanerr1.records.value[0], 3))

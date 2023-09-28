@@ -84,8 +84,8 @@ def main():
 
     P.lo[gen] = data[gen, "Pmin"] / Sbase
     P.up[gen] = data[gen, "Pmax"] / Sbase
-    P12.lo.assign = -P12_max
-    P12.up.assign = P12_max
+    P12.lo.assignment = -P12_max
+    P12.up.assignment = P12_max
     delta.fx["1"] = 0
 
     OPF = Model(

@@ -109,38 +109,38 @@ def main():
     eobj.definition = obj == 1
 
     # Bound on variables:
-    x1.lo.assign = 0.000001
-    x1.up.assign = 100
-    x2.lo.assign = 0.000001
-    x2.up.assign = 100
-    x3.lo.assign = 0.000001
-    x3.up.assign = 100
-    x4.lo.assign = 0.000001
-    x4.up.assign = 100
-    x5.lo.assign = 0.000001
-    x5.up.assign = 100
-    x6.lo.assign = 0.000001
-    x6.up.assign = 100
-    x7.lo.assign = 0.000001
-    x7.up.assign = 100
-    x8.lo.assign = 0.000001
-    x8.up.assign = 100
-    x9.lo.assign = 0.000001
-    x9.up.assign = 100
-    x10.lo.assign = 0.000001
-    x10.up.assign = 100
+    x1.lo.assignment = 0.000001
+    x1.up.assignment = 100
+    x2.lo.assignment = 0.000001
+    x2.up.assignment = 100
+    x3.lo.assignment = 0.000001
+    x3.up.assignment = 100
+    x4.lo.assignment = 0.000001
+    x4.up.assignment = 100
+    x5.lo.assignment = 0.000001
+    x5.up.assignment = 100
+    x6.lo.assignment = 0.000001
+    x6.up.assignment = 100
+    x7.lo.assignment = 0.000001
+    x7.up.assignment = 100
+    x8.lo.assignment = 0.000001
+    x8.up.assignment = 100
+    x9.lo.assignment = 0.000001
+    x9.up.assignment = 100
+    x10.lo.assignment = 0.000001
+    x10.up.assignment = 100
 
     # Initial point:
-    x1.l.assign = 2
-    x2.l.assign = 5
-    x3.l.assign = 40
-    x4.l.assign = 1
-    x5.l.assign = 0
-    x6.l.assign = 0
-    x7.l.assign = 0
-    x8.l.assign = 0
-    x9.l.assign = 0
-    x10.l.assign = 5
+    x1.l.assignment = 2
+    x2.l.assignment = 5
+    x3.l.assignment = 40
+    x4.l.assignment = 1
+    x5.l.assignment = 0
+    x6.l.assignment = 0
+    x7.l.assignment = 0
+    x8.l.assignment = 0
+    x9.l.assignment = 0
+    x10.l.assignment = 5
 
     cpa = Model(
         m,
