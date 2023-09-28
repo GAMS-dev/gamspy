@@ -131,11 +131,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         )
 
     @property
-    def assign(self):
+    def assignment(self):
         return self._assignment
 
-    @assign.setter
-    def assign(self, assignment):
+    @assignment.setter
+    def assignment(self, assignment):
         self._assignment = assignment
 
         self._is_dirty = True
