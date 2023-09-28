@@ -72,15 +72,15 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.expr = OF == Sum(
+    eq1.definition = OF == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
-    eq2.expr = P["G1"] == P12
-    eq3.expr = P["G2"] + P12 == L2 / Sbase
-    eq4.expr = P12 == (delta["1"] - delta["2"]) / X12
+    eq2.definition = P["G1"] == P12
+    eq3.definition = P["G2"] + P12 == L2 / Sbase
+    eq4.definition = P12 == (delta["1"] - delta["2"]) / X12
 
     P.lo[gen] = data[gen, "Pmin"] / Sbase
     P.up[gen] = data[gen, "Pmax"] / Sbase

@@ -71,7 +71,7 @@ def main():
     const1 = Equation(m, name="const1", type="regular")
     const2 = Equation(m, name="const2", type="regular", domain=[bus])
 
-    const1.expr = OF == Sum(bus, PMU[bus])
+    const1.definition = OF == Sum(bus, PMU[bus])
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
     m.addOptions({"optCr": 0, "profile": 1})

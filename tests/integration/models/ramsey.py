@@ -131,7 +131,7 @@ def main():
         description="minimal investment in final period",
     )
 
-    utility.expr = W == Sum(t, beta[t] * gams_math.log(C[t]))
+    utility.definition = W == Sum(t, beta[t] * gams_math.log(C[t]))
     production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
     allocation[t] = Y[t] == C[t] + I[t]
     accumulation[tnotlast[t]] = K[t.lead(1)] == (1 - delta) * K[t] + I[t]

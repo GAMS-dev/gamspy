@@ -122,19 +122,19 @@ def main():
         description="Objective function definition",
     )
 
-    ReturnDef.expr = PortReturn == Sum(i, ExpectedReturns[i] * x[i])
+    ReturnDef.definition = PortReturn == Sum(i, ExpectedReturns[i] * x[i])
 
-    VarDef.expr = PortVariance == Sum([i, j], x[i] * VarCov[i, j] * x[j])
+    VarDef.definition = PortVariance == Sum([i, j], x[i] * VarCov[i, j] * x[j])
 
-    LimitCon.expr = Sum(i, Y[i]) <= StockMax
+    LimitCon.definition = Sum(i, Y[i]) <= StockMax
 
     UpBounds[i] = x[i] <= x.up[i] * Y[i]
 
     LoBounds[i] = x[i] >= xlow[i] * Y[i]
 
-    NormalCon.expr = Sum(i, x[i]) == 1
+    NormalCon.definition = Sum(i, x[i]) == 1
 
-    ObjDef.expr = z == (1 - lamda) * PortReturn - lamda * PortVariance
+    ObjDef.definition = z == (1 - lamda) * PortReturn - lamda * PortVariance
 
     MeanVarMip = Model(
         m,
@@ -239,7 +239,7 @@ def main():
 
     HoldingCon[i] = x[i] == x_0[i] + x_1[i]
 
-    ReturnDefWithCost.expr = PortReturn == Sum(
+    ReturnDefWithCost.definition = PortReturn == Sum(
         i, (ExpectedReturns[i] * x_0[i] - FlatCost * Y[i])
     ) + Sum(i, (ExpectedReturns[i] - PropCost) * x_1[i])
 
@@ -382,7 +382,7 @@ def main():
 
     BinSellLimits[i] = sell[i] <= Ys[i]
 
-    BuyTurnover.expr = Sum(i, buy[i]) <= 0.05
+    BuyTurnover.definition = Sum(i, buy[i]) <= 0.05
 
     MeanVarRevision = Model(
         m,

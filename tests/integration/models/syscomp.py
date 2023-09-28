@@ -77,7 +77,7 @@ def main():
         m, name="eobj", type="regular", description="name of the objective"
     )
 
-    eobj.expr = obj == 0
+    eobj.definition = obj == 0
     real[i] = (
         Sum(j, data["real", i, j] * rx[j] - data["imag", i, j] * ix[j])
         == data["real", i, "rhs"]

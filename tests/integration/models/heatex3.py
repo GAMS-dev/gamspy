@@ -85,7 +85,7 @@ def main():
     f = Equation(m, name="f", type="regular", description="objective function")
 
     # Objective function:
-    f.expr = (
+    f.definition = (
         objval
         == 1300
         * (1000 / ((1 / 30) * (dT11 * dT12) + (1 / 6) * (dT11 + dT12))) ** 0.6
@@ -94,19 +94,19 @@ def main():
     )
 
     # Constraints:
-    g1.expr = f11 + f21 == 10
-    g2.expr = f11 + f23 - f12 == 0
-    g3.expr = f21 + f13 - f22 == 0
-    g4.expr = f14 + f13 - f12 == 0
-    g5.expr = f24 + f23 - f22 == 0
-    g6.expr = Tcin * f11 + t2o * f23 - t1i * f12 == 0
-    g7.expr = Tcin * f21 + t1o * f13 - t2i * f22 == 0
-    g8.expr = f12 * (t1o - t1i) == 1000
-    g9.expr = f22 * (t2o - t2i) == 600
-    g10.expr = dT11 + t1o == 500
-    g11.expr = dT12 + t1i == 250
-    g12.expr = dT21 + t2o == 350
-    g13.expr = dT22 + t2i == 200
+    g1.definition = f11 + f21 == 10
+    g2.definition = f11 + f23 - f12 == 0
+    g3.definition = f21 + f13 - f22 == 0
+    g4.definition = f14 + f13 - f12 == 0
+    g5.definition = f24 + f23 - f22 == 0
+    g6.definition = Tcin * f11 + t2o * f23 - t1i * f12 == 0
+    g7.definition = Tcin * f21 + t1o * f13 - t2i * f22 == 0
+    g8.definition = f12 * (t1o - t1i) == 1000
+    g9.definition = f22 * (t2o - t2i) == 600
+    g10.definition = dT11 + t1o == 500
+    g11.definition = dT12 + t1i == 250
+    g12.definition = dT21 + t2o == 350
+    g13.definition = dT22 + t2i == 200
 
     # Bounds on variables:
     dT11.lo.assign = 10

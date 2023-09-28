@@ -81,9 +81,9 @@ def main():
 
     wdef[d] = w[d] == Sum(s, x[s] * dev[s, d])
 
-    budget.expr = Sum(s, x[s]) == 1.0
+    budget.definition = Sum(s, x[s]) == 1.0
 
-    retcon.expr = Sum(s, mean[s] * x[s]) >= totmean * 1.25
+    retcon.definition = Sum(s, mean[s] * x[s]) >= totmean * 1.25
 
     # Equation
     d_x = Equation(cont, name="d_x", domain=[stocks])

@@ -126,15 +126,15 @@ def main():
         description="Equations defining the negative deviations",
     )
 
-    BudgetCon.expr = Sum(i, x[i]) == Budget
+    BudgetCon.definition = Sum(i, x[i]) == Budget
 
-    ReturnCon.expr = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
     yPosDef[l] = y[l] >= Sum(i, P[i, l] * x[i]) - Sum(i, EP[i] * x[i])
 
     yNegDef[l] = y[l] >= Sum(i, EP[i] * x[i]) - Sum(i, P[i, l] * x[i])
 
-    ObjDef.expr = z == Sum(l, pr[l] * y[l])
+    ObjDef.definition = z == Sum(l, pr[l] * y[l])
 
     MeanAbsoluteDeviation = Model(
         m,
@@ -190,7 +190,7 @@ def main():
         description="Objective function definition for Mean-Variance",
     )
 
-    ObjDefMV.expr = z == Sum([i1, i2], x[i1] * VP[i1, i2] * x[i2])
+    ObjDefMV.definition = z == Sum([i1, i2], x[i1] * VP[i1, i2] * x[i2])
 
     MeanVariance = Model(
         m,

@@ -149,11 +149,11 @@ def main():
         ),
     )
 
-    BudgetCon.expr = Sum(i, x[i]) == Budget
+    BudgetCon.definition = Sum(i, x[i]) == Budget
 
-    ReturnCon.expr = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
-    ExpRegretCon.expr = Sum(l, pr[l] * Regrets[l]) <= RISK_TARGET
+    ExpRegretCon.definition = Sum(l, pr[l] * Regrets[l]) <= RISK_TARGET
 
     RegretCon[l] = Regrets[l] >= TargetIndex[l] * Budget - Sum(
         i, P[i, l] * x[i]
@@ -163,9 +163,9 @@ def main():
         TargetIndex[l] - EpsRegret
     ) * Budget - Sum(i, P[i, l] * x[i])
 
-    ObjDefRegret.expr = z == Sum(l, pr[l] * Regrets[l])
+    ObjDefRegret.definition = z == Sum(l, pr[l] * Regrets[l])
 
-    ObjDefReturn.expr = z == Sum(i, EP[i] * x[i])
+    ObjDefReturn.definition = z == Sum(i, EP[i] * x[i])
 
     MinRegret = Model(
         m,

@@ -289,15 +289,19 @@ def main():
         description="Objective function definition",
     )
 
-    ObjDef.expr = z == Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (
+    ObjDef.definition = z == Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (
         PV_Liab * Dur_Liab
     )
 
-    PresentValueMatch.expr = Sum(i, PV[i] * x[i]) == PV_Liab
+    PresentValueMatch.definition = Sum(i, PV[i] * x[i]) == PV_Liab
 
-    DurationMatch.expr = Sum(i, Dur[i] * PV[i] * x[i]) == PV_Liab * Dur_Liab
+    DurationMatch.definition = (
+        Sum(i, Dur[i] * PV[i] * x[i]) == PV_Liab * Dur_Liab
+    )
 
-    ConvexityMatch.expr = Sum(i, Conv[i] * PV[i] * x[i]) >= PV_Liab * Conv_Liab
+    ConvexityMatch.definition = (
+        Sum(i, Conv[i] * PV[i] * x[i]) >= PV_Liab * Conv_Liab
+    )
 
     ImmunizationOne = Model(
         m,
@@ -338,7 +342,9 @@ def main():
 
     ConvexityObj = Equation(m, name="ConvexityObj")
 
-    ConvexityObj.expr = z == (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x[i])
+    ConvexityObj.definition = z == (1.0 / PV_Liab) * Sum(
+        i, Conv[i] * PV[i] * x[i]
+    )
 
     ImmunizationThree = Model(
         m,

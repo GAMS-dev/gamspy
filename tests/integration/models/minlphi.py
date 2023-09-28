@@ -467,7 +467,7 @@ def main():
     # =====================================================================
     #                         capital costs
 
-    nlpobj.expr = (
+    nlpobj.definition = (
         zoau
         == alpha
         * (
@@ -518,7 +518,7 @@ def main():
         == 0
     )
 
-    feed.expr = Sum(i.where[zlead[i]], f[i]) == totflow
+    feed.definition = Sum(i.where[zlead[i]], f[i]) == totflow
 
     duty[i] = (
         qc[i]
@@ -743,7 +743,7 @@ def main():
     )
 
     # select 1 sequence
-    lead.expr = Sum(i.where[zlead[i]], ycol[i]) == 1
+    lead.definition = Sum(i.where[zlead[i]], ycol[i]) == 1
 
     # limit choice of hot utility to 1
     limutil[j] = Sum(hu, yhu[hu, j]) <= 1

@@ -104,7 +104,7 @@ def main():
     eq4 = Equation(m, name="eq4", type="regular", domain=[t])
     eq5 = Equation(m, name="eq5", type="regular", domain=[t])
 
-    eq1.expr = cost == Sum(t, data[t, "lamda"] * E[t] + 12 * G[t])
+    eq1.definition = cost == Sum(t, data[t, "lamda"] * E[t] + 12 * G[t])
     eq2[t] = eta_ee * E[t] == data[t, "De"]
     eq3[t] = H1[t] == data[t, "Dh"]
     eq4[t] = eta_ghf * G[t] == H1[t] + H2[t]

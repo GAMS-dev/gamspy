@@ -42,7 +42,7 @@ def main():
     ek1 = Equation(m, domain=[nh], name="ek1")
     ek2 = Equation(m, domain=[nh], name="ek2")
 
-    eobj.expr = obj == cb["100"]
+    eobj.definition = obj == cb["100"]
 
     ek1[nh[k]] = k1[k] == 4000 * gams_math.exp(-2500 / t[k])
     ek2[nh[k]] = k2[k] == 620000 * gams_math.exp(-5000 / t[k])

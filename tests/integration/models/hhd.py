@@ -80,11 +80,11 @@ def main():
     e8 = Equation(m, name="e8", type="regular")
     e = Equation(m, name="e", type="regular")
 
-    e1.expr = x1 + x2 - summx == 0
-    e2.expr = x3 + x4 - summy == 0
-    e3.expr = x5 * x1 + x6 * x2 - x7 * x3 - x8 * x4 - suma == 0
-    e4.expr = x7 * x1 + x8 * x2 + x5 * x3 + x6 * x4 - sumb == 0
-    e5.expr = (
+    e1.definition = x1 + x2 - summx == 0
+    e2.definition = x3 + x4 - summy == 0
+    e3.definition = x5 * x1 + x6 * x2 - x7 * x3 - x8 * x4 - suma == 0
+    e4.definition = x7 * x1 + x8 * x2 + x5 * x3 + x6 * x4 - sumb == 0
+    e5.definition = (
         x1 * (gams_math.power(x5, 2) - gams_math.power(x7, 2))
         - 2 * x3 * x5 * x7
         + x2 * (gams_math.power(x6, 2) - gams_math.power(x8, 2))
@@ -92,7 +92,7 @@ def main():
         - sumc
         == 0
     )
-    e6.expr = (
+    e6.definition = (
         x3 * (gams_math.power(x5, 2) - gams_math.power(x7, 2))
         - 2 * x1 * x5 * x7
         + x4 * (gams_math.power(x6, 2) - gams_math.power(x8, 2))
@@ -100,7 +100,7 @@ def main():
         - sumd
         == 0
     )
-    e7.expr = (
+    e7.definition = (
         x1 * x5 * (gams_math.power(x5, 2) - 3 * gams_math.power(x7, 2))
         + x3 * x7 * (gams_math.power(x7, 2) - 3 * gams_math.power(x5, 2))
         + x2 * x6 * (gams_math.power(x6, 2) - 3 * gams_math.power(x8, 2))
@@ -108,7 +108,7 @@ def main():
         - sume
         == 0
     )
-    e8.expr = (
+    e8.definition = (
         x3 * x5 * (gams_math.power(x5, 2) - 3 * gams_math.power(x7, 2))
         + x1 * x7 * (gams_math.power(x7, 2) - 3 * gams_math.power(x5, 2))
         + x4 * x6 * (gams_math.power(x6, 2) - 3 * gams_math.power(x8, 2))
@@ -117,7 +117,7 @@ def main():
         == 0
     )
 
-    e.expr = obj == 1
+    e.definition = obj == 1
 
     # Initial point (Variant 1)
     # x1.l.assign = 0.299

@@ -121,7 +121,7 @@ def main():
 
     choice[j] = Sum(i, x[i, j]) == 1
 
-    defz.expr = z == Sum([i, j], f[i, j] * x[i, j])
+    defz.definition = z == Sum([i, j], f[i, j] * x[i, j])
 
     _ = Model(
         m,
@@ -231,7 +231,7 @@ def main():
 
     knapsack[id] = Sum(j, a[id, j] * x[id, j]) <= b[id]
 
-    defzlrx.expr = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
+    defzlrx.definition = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
 
     pknap = Model(
         m,

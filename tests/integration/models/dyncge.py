@@ -533,7 +533,7 @@ def main():
 
     # [government behavior] -
     # lump Sum direct tax revenue
-    eqTd.expr = Td == Sum(i, pq[i] * Xg[i]) - Sum(i, Tm[i] + Tz[i])
+    eqTd.definition = Td == Sum(i, pq[i] * Xg[i]) - Sum(i, Tm[i] + Tz[i])
 
     # production tax revenue
     eqTz[j] = Tz[j] == tauz[j] * pz[j] * Z[j]
@@ -547,7 +547,7 @@ def main():
 
     # [savings] ----------
     # savings function
-    eqSp.expr = Sp == ssp * (Sum([h, j], pf[h, j] * F[h, j]) - Td)
+    eqSp.definition = Sp == ssp * (Sum([h, j], pf[h, j] * F[h, j]) - Td)
 
     # [household consumption] --                          (Cobb-Douglas)
     eqXp[i] = (
@@ -560,7 +560,7 @@ def main():
     eqpm[i] = pm[i] == epsilon * pWm[i]
 
     # BOP constraint
-    eqepsilon.expr = Sum(i, pWe[i] * E[i]) + Sf == Sum(i, pWm[i] * M[i])
+    eqepsilon.definition = Sum(i, pWe[i] * E[i]) + Sf == Sum(i, pWm[i] * M[i])
 
     # [Armington function] --
     # Armington's composite good production function              (CES)
@@ -620,11 +620,11 @@ def main():
     eqpf3[j] = F["CAP", j] == ror * KK[j]
 
     # investment goods market
-    eqpk.expr = Sum(j, II[j]) == III
+    eqpk.definition = Sum(j, II[j]) == III
 
     # [dynamic equations]
     # composite investment good market clearing condition
-    eqIII.expr = III == iota * Product(i, Xv[i] ** lamda[i])
+    eqIII.definition = III == iota * Product(i, Xv[i] ** lamda[i])
 
     # sectoral investment allocation
     eqII[j] = pk * II[j] == pf["CAP", j] ** zeta * F["CAP", j] / Sum(
@@ -632,10 +632,10 @@ def main():
     ) * (Sp + epsilon * Sf)
 
     # felicity function
-    eqCC.expr = CC == a * Product(i, Xp[i] ** alpha[i])
+    eqCC.definition = CC == a * Product(i, Xp[i] ** alpha[i])
 
     # Price level [numeraire]
-    eqPRICE.expr = PRICE == Sum(j, pq[j] * Q00[j] / Sum(i, Q00[i]))
+    eqPRICE.definition = PRICE == Sum(j, pq[j] * Q00[j] / Sum(i, Q00[i]))
 
     # ===============================================================
     # Initializing variables ----------------------------------------

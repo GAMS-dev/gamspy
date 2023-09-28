@@ -67,7 +67,7 @@ def main():
     )
 
     # the assignment problem is a relaxation of the TSP
-    objective.expr = z == Sum([i, j], c[i, j] * x[i, j])
+    objective.definition = z == Sum([i, j], c[i, j] * x[i, j])
     rowsum[i] = Sum(j, x[i, j]) == 1
     colsum[j] = Sum(i, x[i, j]) == 1
 

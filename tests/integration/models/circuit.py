@@ -141,9 +141,9 @@ def main():
         <= g["r4", n]
     )
 
-    e.expr = x1 * x3 - x2 * x4 == 0
+    e.definition = x1 * x3 - x2 * x4 == 0
 
-    eobj.expr = obj == x10
+    eobj.definition = obj == x10
 
     # Bounds on variables
     x1.lo.assign = 0

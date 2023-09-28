@@ -26,11 +26,11 @@ def main():
     eobj = Equation(m, name="eobj", type="regular")
 
     # Objective function:
-    eobj.expr = obj == -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
+    eobj.definition = obj == -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
 
     # Constraints:
-    e1.expr = 675 - (x1**2) * x2 >= 0
-    e2.expr = 0.419 - (x1**2) * (x3**2) / 10000000 >= 0
+    e1.definition = 675 - (x1**2) * x2 >= 0
+    e2.definition = 0.419 - (x1**2) * (x3**2) / 10000000 >= 0
 
     # Bounds on variables:
     x1.lo.assign = 0

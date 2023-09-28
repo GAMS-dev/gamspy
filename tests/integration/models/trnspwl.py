@@ -170,7 +170,7 @@ def main():
         description="satisfy demand at market j",
     )
 
-    cost.expr = z == Sum([i, j], c[i, j] * sqrt(x[i, j]))
+    cost.definition = z == Sum([i, j], c[i, j] * sqrt(x[i, j]))
 
     supply[i] = Sum(j, x[i, j]) <= a[i]
 
@@ -268,7 +268,7 @@ def main():
 
     defsos3[i, j] = Sum(ss, xs[i, j, ss]) == 1
 
-    defobjdisc.expr = z == Sum([i, j], c[i, j] * sqrtx[i, j])
+    defobjdisc.definition = z == Sum([i, j], c[i, j] * sqrtx[i, j])
 
     trnsdiscA = Model(
         m,

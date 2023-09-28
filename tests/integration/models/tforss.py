@@ -172,21 +172,21 @@ def main():
 
     landc[s, k] = Sum(at, v[s, k, at] * age[at]) <= land[s] * scd[k]
 
-    ainvc.expr = phik == rho / (1 - power((1 + rho), (-life))) * Sum(
+    ainvc.definition = phik == rho / (1 - power((1 + rho), (-life))) * Sum(
         m, nu[m] * h[m]
     )
 
-    aproc.expr = phir == Sum(p, pc[p] * z[p])
+    aproc.definition = phir == Sum(p, pc[p] * z[p])
 
-    asales.expr = phix == Sum(cf, pd[cf] * x[cf])
+    asales.definition = phix == Sum(cf, pd[cf] * x[cf])
 
-    acutc.expr = phil == muc * Sum(cl, r[cl])
+    acutc.definition = phil == muc * Sum(cl, r[cl])
 
-    aplnt.expr = phip == mup * Sum(
+    aplnt.definition = phip == mup * Sum(
         [s, k, at], v[s, k, at] * (1 + rho) ** age[at]
     )
 
-    benefit.expr = phi == phix - phik - phir - phil - phip
+    benefit.definition = phi == phix - phik - phir - phil - phip
 
     # Model definition
     forest = Model(

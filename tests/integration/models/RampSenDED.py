@@ -132,7 +132,7 @@ def main():
     balance = Equation(m, name="balance", type="regular", domain=[t])
     EMcalc = Equation(m, name="EMcalc", type="regular")
 
-    costThermalcalc.expr = costThermal == Sum(
+    costThermalcalc.definition = costThermal == Sum(
         [t, i],
         gendata[i, "a"] * sqr(p[i, t])
         + gendata[i, "b"] * p[i, t]
@@ -141,7 +141,7 @@ def main():
     Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU"]
     Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD"]
     balance[t] = Sum(i, p[i, t]) >= demand[t]
-    EMcalc.expr = EM == Sum(
+    EMcalc.definition = EM == Sum(
         [t, i],
         gendata[i, "d"] * sqr(p[i, t])
         + gendata[i, "e"] * p[i, t]

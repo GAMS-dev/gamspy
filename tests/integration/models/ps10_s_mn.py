@@ -145,7 +145,7 @@ def main():
         description="monotonicity constraint",
     )
 
-    obj.expr = Util == Sum(i, p[i] * (b[i] - w[i]))
+    obj.definition = Util == Sum(i, p[i] * (b[i] - w[i]))
 
     rev[i] = b[i] == x[i] ** (0.5)
 

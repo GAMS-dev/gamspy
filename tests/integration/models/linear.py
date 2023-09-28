@@ -161,27 +161,27 @@ def main():
 
     ddeva[i] = devp[i] - devn[i] == dat[i, "y"] - Sum(n, b[n] * dat[i, n])
 
-    ls1.expr = obj == Sum(i, gams_math.abs(dev[i]))
+    ls1.definition = obj == Sum(i, gams_math.abs(dev[i]))
 
-    ls1a.expr = obj == Sum(i, devp[i] + devn[i])
+    ls1a.definition = obj == Sum(i, devp[i] + devn[i])
 
-    ls2.expr = obj == Sum(i, gams_math.power(dev[i], 2))
+    ls2.definition = obj == Sum(i, gams_math.power(dev[i], 2))
 
-    ls3.expr = obj == Sum(i, gams_math.power(gams_math.abs(dev[i]), 3))
+    ls3.definition = obj == Sum(i, gams_math.power(gams_math.abs(dev[i]), 3))
 
-    ls4.expr = obj == Sum(i, gams_math.power(dev[i], 4))
+    ls4.definition = obj == Sum(i, gams_math.power(dev[i], 4))
 
-    ls5.expr = obj == Sum(i, gams_math.abs(dev[i] / dat[i, "y"]))
+    ls5.definition = obj == Sum(i, gams_math.abs(dev[i] / dat[i, "y"]))
 
-    ls5a.expr = obj == Sum(i, (devp[i] + devn[i]) / dat[i, "y"])
+    ls5a.definition = obj == Sum(i, (devp[i] + devn[i]) / dat[i, "y"])
 
-    ls6.expr = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 2))
+    ls6.definition = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 2))
 
-    ls7.expr = obj == Sum(
+    ls7.definition = obj == Sum(
         i, gams_math.power(gams_math.abs(dev[i] / dat[i, "y"]), 3)
     )
 
-    ls8.expr = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 4))
+    ls8.definition = obj == Sum(i, gams_math.power(dev[i] / dat[i, "y"], 4))
 
     # Models
     mod1 = Model(

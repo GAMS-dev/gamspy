@@ -180,7 +180,7 @@ def main():
         bus, "pd"
     ] / Sbase == Sum(node.where[conex[node, bus]], Pij[bus, node])
 
-    const3.expr = OF >= Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
+    const3.definition = OF >= Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
 
     loadflow = Model(
         m,

@@ -220,9 +220,11 @@ def main():
         description="MAD constraints",
     )
 
-    ObjDef.expr = z == 1000 * Sum(l, pr[l] * (FinalCash[l] / InitVal - 1))
+    ObjDef.definition = z == 1000 * Sum(
+        l, pr[l] * (FinalCash[l] / InitVal - 1)
+    )
 
-    CashInventoryCon.expr = (
+    CashInventoryCon.definition = (
         CashInfusion
         + Sum(JxI[j, i], ExchangeRates0[j] * Y0[i] * Price0[i] * (1 - TrnCstS))
         == Sum(

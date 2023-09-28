@@ -124,7 +124,7 @@ def main(output=None):
     yPosDef = Equation(m, name="yPosDef", domain=[l])
     yNegDef = Equation(m, name="yNegDef", domain=[l])
 
-    ObjDef.expr = z == Sum(l, pr[l] * y[l])
+    ObjDef.definition = z == Sum(l, pr[l] * y[l])
 
     yPosDef[l] = y[l] >= Sum(
         i, UnhedgedBondReturns[l, i] * u[i] + HedgedBondReturns[l, i] * h[i]
@@ -137,7 +137,7 @@ def main(output=None):
         ),
     )
 
-    ReturnCon.expr = (
+    ReturnCon.definition = (
         Sum(
             l,
             pr[l]
@@ -161,7 +161,7 @@ def main(output=None):
         i, UnhedgedBondReturns[l, i] * u[i] + HedgedBondReturns[l, i] * h[i]
     )
 
-    NormalCon.expr = Sum(i, h[i] + u[i]) == 1.0
+    NormalCon.definition = Sum(i, h[i] + u[i]) == 1.0
 
     IndexFund = Model(
         m,

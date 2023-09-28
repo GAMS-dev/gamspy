@@ -81,15 +81,15 @@ def main():
     LossDef = Equation(m, name="LossDef", type="regular", domain=[l], description="Equations defining the losses")
     VaRDevCon = Equation(m, name="VaRDevCon", type="regular", domain=[l], description="Equations defining the VaR deviation constraints")
 
-    BudgetCon.expr   =      Sum(i, x[i]) == Budget
+    BudgetCon.definition   =      Sum(i, x[i]) == Budget
 
-    ReturnCon.expr   =      Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition   =      Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
     VaRDevCon[l]           =      VaRDev[l] >= Losses[l] - VaR
 
     LossDef[l]             =      Losses[l] == (Budget - Sum(i, P[i,l] * x[i]))
 
-    ObjDefCVaR.expr  =      ObjValue == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
+    ObjDefCVaR.definition  =      ObjValue == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
 
 
     MinCVaR = Model(m, name="MinCVaR", equations=[BudgetCon, ReturnCon, LossDef, VaRDevCon, ObjDefCVaR], problem="LP", sense="MIN", objective=ObjValue)

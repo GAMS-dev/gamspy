@@ -221,7 +221,7 @@ def main():
         Domain(k, node).where[conex[node, bus]], Pij[bus, node, k]
     )
 
-    const3.expr = OF >= 10 * 8760 * (
+    const3.definition = OF >= 10 * 8760 * (
         Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
         + 100000 * Sum(bus, LS[bus])
     ) + 1e6 * Sum(

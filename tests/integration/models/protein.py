@@ -105,7 +105,7 @@ def main():
     ea2 = Equation(m, name="ea2", type="regular", domain=[nh])
     ea3 = Equation(m, name="ea3", type="regular", domain=[nh])
 
-    eobj.expr = obj == x4[str(n)] * x5[str(n)]
+    eobj.definition = obj == x4[str(n)] * x5[str(n)]
 
     state1[nh[k.lead(1)]] = x1[k.lead(1)] == (
         x1[k]

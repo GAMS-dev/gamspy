@@ -659,9 +659,9 @@ def main(is_centropy=False):
     )
 
     # Macro aggregates measured with error
-    GDPFCDEF.expr = MACROV["gdpfc2"] == TSAM["fac", "act"]
+    GDPFCDEF.definition = MACROV["gdpfc2"] == TSAM["fac", "act"]
 
-    GDPDEF.expr = (
+    GDPDEF.definition = (
         MACROV["gdp2"]
         == TSAM["fac", "act"]
         + TSAM["gov", "act"]
@@ -691,7 +691,7 @@ def main(is_centropy=False):
 
     if not is_centropy:
         # Cross-entropy objective function, explicit version
-        ENTROPY.expr = DENTROPY == (
+        ENTROPY.definition = DENTROPY == (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 W3[ii, jj, jwt3]
@@ -715,7 +715,7 @@ def main(is_centropy=False):
             )
         )
     else:
-        ENTROPY.expr = DENTROPY == (
+        ENTROPY.definition = DENTROPY == (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 centropy(W3[ii, jj, jwt3], wbar3[ii, jj, jwt3]),

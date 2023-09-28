@@ -632,7 +632,7 @@ def main():
     fp3[x, y].where[(Ord(y) == 1)] = t[x, y] == Q
     fp4[x, y].where[(Ord(y) == Card(y))] = t[x, y] == Q
 
-    eobj.expr = obj == Q
+    eobj.definition = obj == Q
 
     Diffusion2 = Model(
         m,

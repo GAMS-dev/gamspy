@@ -45,10 +45,10 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.expr = 4 * x1 - 0.5 * sqr(x2) == of1
-    eq2.expr = Number(-1) * sqr(x1) + 5 * x2 == of2
-    eq3.expr = 2 * x1 + 3 * x2 <= 10
-    eq4.expr = 2 * x1 - x2 >= 0
+    eq1.definition = 4 * x1 - 0.5 * sqr(x2) == of1
+    eq2.definition = Number(-1) * sqr(x1) + 5 * x2 == of2
+    eq3.definition = 2 * x1 + 3 * x2 <= 10
+    eq4.definition = 2 * x1 - x2 >= 0
 
     x1.lo.assign = 1
     x1.up.assign = 2

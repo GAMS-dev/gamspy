@@ -80,16 +80,16 @@ def main():
         ["lc", "kc", "sup", "fpr", "dvv", "dl", "dk", "dv"]
     )
 
-    dty.expr = td == Sum(i, y[i])
+    dty.definition = td == Sum(i, y[i])
     mb[i] = x[i] >= y[i] + Sum(j, aio[i, j] * x[j]) + (e[i] - m[i]).where[t[i]]
-    tb.expr = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
+    tb.definition = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
     dg[t] = g[t] == mew[t] + xsi[t] * m[t]
     dh[t] = h[t] == gam[t] - alp[t] * e[t]
     dem[i] = y[i] == ynot[i] * (pd * p[i]) ** thet[i]
-    lc.expr = Sum(i, l[i] * x[i]) <= lbar
-    kc.expr = Sum(i, k[i] * x[i]) == kbar
+    lc.definition = Sum(i, l[i] * x[i]) <= lbar
+    kc.definition = Sum(i, k[i] * x[i]) == kbar
     sup[i] = p[i] == Sum(j, aio[j, i] * p[j]) + v[i]
-    fpr.expr = pi == pk / plab
+    fpr.definition = pi == pk / plab
     dvv[i].where[sig[i] != 0] = vv[i] == (pi * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
     )

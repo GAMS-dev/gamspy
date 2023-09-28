@@ -70,14 +70,14 @@ def main():
     eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
 
-    eq1.expr = OF == Sum(
+    eq1.definition = OF == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
 
-    eq2.expr = Sum(gen, P[gen]) >= load
+    eq2.definition = Sum(gen, P[gen]) >= load
 
     P.lo[gen] = data[gen, "Pmin"]
     P.up[gen] = data[gen, "Pmax"]

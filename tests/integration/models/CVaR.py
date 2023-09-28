@@ -314,11 +314,13 @@ def main():
         description="Equations defining the VaR deviation constraints",
     )
 
-    BudgetCon.expr = Sum(i, x[i]) == Budget
+    BudgetCon.definition = Sum(i, x[i]) == Budget
 
-    ReturnCon.expr = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
-    CVaRCon.expr = VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha) <= RISK_TARGET
+    CVaRCon.definition = (
+        VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha) <= RISK_TARGET
+    )
 
     VaRDevCon[l] = VaRDev[l] >= Losses[l] - VaR
 
@@ -333,9 +335,9 @@ def main():
         ]
     )
 
-    ObjDefCVaR.expr = z == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
+    ObjDefCVaR.definition = z == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
 
-    ObjDefReturn.expr = z == Sum(i, EP[i] * x[i])
+    ObjDefReturn.definition = z == Sum(i, EP[i] * x[i])
 
     MinCVaR = Model(
         m,

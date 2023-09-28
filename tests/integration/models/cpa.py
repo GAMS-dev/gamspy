@@ -58,12 +58,12 @@ def main():
     eobj = Equation(m, name="eobj", type="regular")
 
     # CONSTRAINTS
-    e1.expr = x1 + x4 - 3 == 0
-    e2.expr = 2 * x1 + x2 + x4 + x7 + x8 + x9 + 2 * x10 - R == 0
-    e3.expr = 2 * x2 + 2 * x5 + x6 + x7 - 8 == 0
-    e4.expr = 2 * x3 + x5 - 4 * R == 0
-    e5.expr = x1 * x5 - 0.193 * x2 * x4 == 0
-    e6.expr = (
+    e1.definition = x1 + x4 - 3 == 0
+    e2.definition = 2 * x1 + x2 + x4 + x7 + x8 + x9 + 2 * x10 - R == 0
+    e3.definition = 2 * x2 + 2 * x5 + x6 + x7 - 8 == 0
+    e4.definition = 2 * x3 + x5 - 4 * R == 0
+    e5.definition = x1 * x5 - 0.193 * x2 * x4 == 0
+    e6.definition = (
         x6 * gams_math.sqrt(x2)
         - 0.002597
         * gams_math.sqrt(
@@ -71,7 +71,7 @@ def main():
         )
         == 0
     )
-    e7.expr = (
+    e7.definition = (
         x7 * gams_math.sqrt(x4)
         - 0.003448
         * gams_math.sqrt(
@@ -79,7 +79,7 @@ def main():
         )
         == 0
     )
-    e8.expr = (
+    e8.definition = (
         x4 * x8
         - 1.799
         * x2
@@ -87,7 +87,7 @@ def main():
         / 100000
         == 0
     )
-    e9.expr = (
+    e9.definition = (
         x4 * x9
         - 0.0002155
         * x1
@@ -96,7 +96,7 @@ def main():
         )
         == 0
     )
-    e10.expr = (
+    e10.definition = (
         x10 * sqr(x4)
         - 3.84
         * sqr(x4)
@@ -106,7 +106,7 @@ def main():
     )
 
     # OBJECTIVE
-    eobj.expr = obj == 1
+    eobj.definition = obj == 1
 
     # Bound on variables:
     x1.lo.assign = 0.000001

@@ -47,7 +47,7 @@ def main():
     ap = Equation(m, name="ap")
 
     cap[shop] = Sum(desk, labor[shop, desk] * mix[desk]) <= caplim[shop]
-    ap.expr = profit == Sum(desk, price[desk] * mix[desk])
+    ap.definition = profit == Sum(desk, price[desk] * mix[desk])
 
     pmp = Model(
         m,

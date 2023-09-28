@@ -120,7 +120,7 @@ def main():
     )
     objdef = Equation(m, name="objdef")
 
-    objdef.expr = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
+    objdef.definition = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
         s
     ) * Sum(s, z[s])
 

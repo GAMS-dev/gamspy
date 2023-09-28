@@ -78,16 +78,16 @@ def main():
     ga6 = Equation(m, name="ga6", type="regular")
     ga7 = Equation(m, name="ga7", type="regular")
 
-    f.expr = objval == k
+    f.definition = objval == k
 
-    g1.expr = (
+    g1.definition = (
         -a6 * gams_math.power(w, 6)
         + a4 * gams_math.power(w, 4)
         - a2 * gams_math.power(w, 2)
         + a0
         == 0
     )
-    g2.expr = (
+    g2.definition = (
         a7 * gams_math.power(w, 6)
         - a5 * gams_math.power(w, 4)
         + a3 * gams_math.power(w, 2)
@@ -95,28 +95,28 @@ def main():
         == 0
     )
 
-    b1l.expr = 3.4329 - 1.02721 * k <= q1
-    b1u.expr = q1 <= 3.4320 + 1.02721 * k
-    b2l.expr = 0.1627 - 0.06 * k <= q2
-    b2u.expr = q2 <= 0.1627 + 0.06 * k
-    b3l.expr = 0.1139 - 0.0782 * k <= q3
-    b3u.expr = q3 <= 0.1139 + 0.0782 * k
-    b4l.expr = 1.2539 - 0.3068 * k <= q4
-    b4u.expr = q4 <= 1.2539 + 0.3068 * k
-    b5l.expr = 0.0208 - 0.0108 * k <= q5
-    b5u.expr = q5 <= 0.0208 + 0.08 * k
-    b6l.expr = 5.0247 - 2.4715 * k <= q6
-    b6u.expr = q6 <= 5.0247 + 2.4715 * k
-    b7l.expr = 1.0 - 2 * k <= q7
-    b7u.expr = q7 <= 1.0 + 2 * k
+    b1l.definition = 3.4329 - 1.02721 * k <= q1
+    b1u.definition = q1 <= 3.4320 + 1.02721 * k
+    b2l.definition = 0.1627 - 0.06 * k <= q2
+    b2u.definition = q2 <= 0.1627 + 0.06 * k
+    b3l.definition = 0.1139 - 0.0782 * k <= q3
+    b3u.definition = q3 <= 0.1139 + 0.0782 * k
+    b4l.definition = 1.2539 - 0.3068 * k <= q4
+    b4u.definition = q4 <= 1.2539 + 0.3068 * k
+    b5l.definition = 0.0208 - 0.0108 * k <= q5
+    b5u.definition = q5 <= 0.0208 + 0.08 * k
+    b6l.definition = 5.0247 - 2.4715 * k <= q6
+    b6u.definition = q6 <= 5.0247 + 2.4715 * k
+    b7l.definition = 1.0 - 2 * k <= q7
+    b7u.definition = q7 <= 1.0 + 2 * k
 
-    ga0.expr = (
+    ga0.definition = (
         a0
         == 6.82079e-05 * q1 * q3 * gams_math.power(q4, 2)
         + 6.82079e-05 * q1 * q2 * q4 * q5
     )
 
-    ga1.expr = a1 == (
+    ga1.definition = a1 == (
         0.00076176 * gams_math.power(q2, 2) * gams_math.power(q5, 2)
         + 0.00076176 * gams_math.power(q3, 2) * gams_math.power(q4, 2)
         + 0.000402141 * q1 * q2 * gams_math.power(q5, 2)
@@ -132,7 +132,7 @@ def main():
         + 0.00051612 * q2 * q3 * q4 * q6
     )
 
-    ga2.expr = a2 == (
+    ga2.definition = a2 == (
         0.000402141 * q1 * gams_math.power(q5, 2)
         + 0.00152352 * q2 * gams_math.power(q5, 2)
         + 0.0552 * gams_math.power(q2, 2) * gams_math.power(q5, 2)
@@ -163,7 +163,7 @@ def main():
         + 0.00103224 * q2 * q5 * q6
     )
 
-    ga3.expr = a3 == (
+    ga3.definition = a3 == (
         0.189477 * q1 * gams_math.power(q5, 2)
         + 0.1104 * q2 * gams_math.power(q5, 2)
         + 0.00051612 * q5 * q6
@@ -205,7 +205,7 @@ def main():
         + 0.00304704 * q2 * q5 * q7
     )
 
-    ga4.expr = a4 == (
+    ga4.definition = a4 == (
         0.1586 * q1 * gams_math.power(q5, 2)
         + 0.000402141 * q1 * gams_math.power(q7, 2)
         + 2 * q2 * gams_math.power(q5, 2)
@@ -239,7 +239,7 @@ def main():
         + 0.2208 * q2 * q5 * q7
     )
 
-    ga5.expr = (
+    ga5.definition = (
         a5
         == 0.0189477 * q1 * gams_math.power(q7, 2)
         + 0.1104 * q2 * gams_math.power(q7, 2)
@@ -259,7 +259,7 @@ def main():
         + 4 * q2 * q5 * q7
     )
 
-    ga6.expr = a6 == (
+    ga6.definition = a6 == (
         0.1586 * q1 * gams_math.power(q7, 2)
         + 2 * q2 * gams_math.power(q7, 2)
         + 2 * q5 * q7
@@ -267,7 +267,7 @@ def main():
         + 0.0552 * gams_math.power(q7, 2)
     )
 
-    ga7.expr = a7 == gams_math.power(q7, 2)
+    ga7.definition = a7 == gams_math.power(q7, 2)
 
     # Bounds
     # q1.up.assign = 3.4329

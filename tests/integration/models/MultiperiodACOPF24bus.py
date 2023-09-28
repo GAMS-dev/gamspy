@@ -329,7 +329,7 @@ def main():
         i, "qd"
     ] / Sbase == Sum(j.where[cx[j, i]], Qij[i, j, t])
 
-    eq5.expr = OF >= Sum(
+    eq5.definition = OF >= Sum(
         [i, t], Pg[i, t] * GenD[i, "b"] * Sbase.where[GenD[i, "Pmax"]]
     )
 

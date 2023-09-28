@@ -239,7 +239,7 @@ def main():
 
     WealthRatioDef[l] = wealth[l] == cash["t2", l] / FinalLiability[l]
 
-    ExpWealthObjDef.expr = z == Sum(l, wealth[l]) / Card(l)
+    ExpWealthObjDef.definition = z == Sum(l, wealth[l]) / Card(l)
 
     ThreeStageExpWealth = Model(
         m,
@@ -333,7 +333,7 @@ def main():
         description="Utility objective function definition",
     )
 
-    UtilityObjDef.expr = z == Sum(l, gams_math.log(wealth[l])) / Card(l)
+    UtilityObjDef.definition = z == Sum(l, gams_math.log(wealth[l])) / Card(l)
 
     ThreeStageUtility = Model(
         m,

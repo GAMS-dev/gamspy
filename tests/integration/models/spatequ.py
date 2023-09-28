@@ -129,9 +129,9 @@ def main():
 
     SDBAL[c] = Sum(r, Qd[r, c]) == Sum(r, Qs[r, c])
 
-    TRANSCOST.expr = TC == Sum((r, rr, c), X[r, rr, c] * TCost[r, rr, c])
+    TRANSCOST.definition = TC == Sum((r, rr, c), X[r, rr, c] * TCost[r, rr, c])
 
-    OBJECT.expr = OBJ == Sum([r, c], DINT[r, c] - SINT[r, c]) - TC
+    OBJECT.definition = OBJ == Sum([r, c], DINT[r, c] - SINT[r, c]) - TC
 
     PDIF[r, rr, c] = P[r, c] - P[rr, c] <= TCost[r, rr, c]
 

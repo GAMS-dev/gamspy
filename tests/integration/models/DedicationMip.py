@@ -365,9 +365,11 @@ def main():
         description="Upper bounds for each variable",
     )
 
-    CostDef.expr = TotalCost == v0 + TransCosts
+    CostDef.definition = TotalCost == v0 + TransCosts
 
-    TransDef.expr = TransCosts == Sum(i, FixedCost * Z[i] + VarblCost * x[i])
+    TransDef.definition = TransCosts == Sum(
+        i, FixedCost * Z[i] + VarblCost * x[i]
+    )
 
     UpBounds[i] = x[i] <= x.up[i] * Z[i]
 
