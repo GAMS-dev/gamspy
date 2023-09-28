@@ -544,12 +544,12 @@ class Container(gt.Container):
         name: str,
         type: Union[str, "EquationType"] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        expr: Optional["Expression"] = None,
+        definition: Optional["Expression"] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        expr_domain: Optional[List[Union["Set", str]]] = None,
+        definition_domain: Optional[List[Union["Set", str]]] = None,
     ) -> "Equation":
         """
         Creates an Equation and adds it to the Container
@@ -559,12 +559,12 @@ class Container(gt.Container):
         name : str
         type : str
         domain : List[Set | str], optional
-        expr : Expression, optional
+        definition : Definition, optional
         records : Any, optional
         domain_forwarding : bool, optional
         description : str, optional
         uels_on_axes : bool, optional
-        expr_domain : List[Set | str], optional
+        definition_domain : List[Set | str], optional
 
         Returns
         -------
@@ -584,12 +584,12 @@ class Container(gt.Container):
                 name,
                 type,
                 domain,
-                expr,
+                definition,
                 records,
                 domain_forwarding,
                 description,
                 uels_on_axes,
-                expr_domain,
+                definition_domain,
             )
             return obj
 
