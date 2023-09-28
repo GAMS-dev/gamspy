@@ -42,9 +42,9 @@ from gamspy import (
     Number,
     Sense,
 )
-from gamspy.functions import ifthen
+from gamspy.math import ifthen
 import gamspy.math as gams_math
-from gamspy.functions import ifthen
+from gamspy.math import ifthen
 import pandas as pd
 import numpy as np
 
