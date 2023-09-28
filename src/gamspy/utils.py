@@ -65,17 +65,17 @@ def _getUniqueName() -> str:
     return str(gamspy._order)  # type: ignore
 
 
-def _getMinigamsDirectory() -> str:
+def _getGAMSPyBaseDirectory() -> str:
     """
-    Returns the minigams directory.
+    Returns the gamspy_base directory.
 
     Returns
     -------
     str
         System directory
     """
-    minigams_directory = gamspy_base.__path__[0]
-    return minigams_directory
+    gamspy_base_directory = gamspy_base.__path__[0]
+    return gamspy_base_directory
 
 
 def _closeGdxHandle(handle):

@@ -232,7 +232,7 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
         self.assertEqual(
-            utils._getMinigamsDirectory().lower(), expected_path.lower()
+            utils._getGAMSPyBaseDirectory().lower(), expected_path.lower()
         )
 
     def test_non_empty_working_directory(self):

@@ -89,7 +89,7 @@ class Container(gt.Container):
         self.system_directory = (
             system_directory
             if system_directory
-            else utils._getMinigamsDirectory()
+            else utils._getGAMSPyBaseDirectory()
         )
 
         self.name = name

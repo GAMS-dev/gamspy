@@ -7,9 +7,9 @@ import gamspy.utils as utils
 
 class CmdSuite(unittest.TestCase):
     def test_install_license(self):
-        minigams_dir = utils._getMinigamsDirectory()
+        gamspy_base_dir = utils._getGAMSPyBaseDirectory()
         old_license_modified_time = os.path.getmtime(
-            minigams_dir + os.sep + "gamslice.txt"
+            gamspy_base_dir + os.sep + "gamslice.txt"
         )
 
         this_folder = str(Path(__file__).parent)
@@ -31,7 +31,7 @@ class CmdSuite(unittest.TestCase):
         print(process.stdout)
 
         new_license_modified_time = os.path.getmtime(
-            minigams_dir + os.sep + "gamslice.txt"
+            gamspy_base_dir + os.sep + "gamslice.txt"
         )
 
         print(new_license_modified_time, old_license_modified_time)
