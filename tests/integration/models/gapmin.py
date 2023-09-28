@@ -302,8 +302,8 @@ def main():
     m.addOptions({"mip": "default", "rmip": "default"})
 
     results = open("solution", "w", encoding="UTF-8")
-    results.write("solvers used: RMIP = HIGHS\n")
-    results.write("               MIP = HIGHS\n")
+    results.write("solvers used: RMIP = CPLEX\n")
+    results.write("               MIP = CPLEX\n")
 
     # solve relaxed problem to get initial multipliers
     # Note that different solvers get different dual solutions

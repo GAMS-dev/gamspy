@@ -446,9 +446,9 @@ COMMANDLINE_OPTIONS = _getValidCommandlineOptions()
 
 def _getDefaultSolvers():
     return {
-        "LP": "HIGHS",
-        "MIP": "HIGHS",
-        "RMIP": "HIGHS",
+        "LP": "CPLEX",
+        "MIP": "CPLEX",
+        "RMIP": "CPLEX",
         "NLP": "CONOPT",
         "MCP": "PATH",
         "MPEC": "NLPEC",
