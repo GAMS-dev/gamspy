@@ -13,17 +13,6 @@ and flexibility of the Python language. It includes all GAMS symbols (Set, Alias
 Equation) to compose mathematical models, a math package, and various utility functions.
 
 
-## Table of Contents
-
-- [Design Philosophy](#design-philosophy)
-- [Main Features](#main-features)
-- [Dependencies](#dependencies)
-- [License](#license)
-- [Documentation](#documentation)
-- [Getting Help](#getting-help)
-- [Discussion and Development](#discussion-and-development)
-
-
 ## Design Philosophy
 GAMSPy makes extensive use of "vectorization" -- the absence of any explicit looping, indexing, etc., in native Python.
 These things are taking place, of course, just “behind the scenes” in optimized, pre-compiled C code.
@@ -47,7 +36,7 @@ Here are just a few of the things that **gamspy** does well:
 GAMSPy has dependencies to other GAMS Python packages, specifically:
 
   - [gamsapi](www.cnn.com)
-  - [minigams](www.cnn.com)
+  - [gamspy_base](www.cnn.com)
 
 
 ```sh
