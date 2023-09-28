@@ -322,7 +322,7 @@ class SolveSuite(unittest.TestCase):
             "Model transport / cost,supply,demand,x(i) /;",
         )
 
-    def donotrun_test_interrupt(self):
+    def test_interrupt(self):
         cont = Container()
 
         power_forecast_recs = np.array(
