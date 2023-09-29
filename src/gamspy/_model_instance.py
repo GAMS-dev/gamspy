@@ -39,6 +39,7 @@ from gams import VarType
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
+import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -92,7 +93,7 @@ class ModelInstance:
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
         freeze_options: Optional[dict] = None,
     ) -> None:
-        self.modifiables = modifiables
+        self.modifiables = self._init_modifiables(modifiables)
         self.main_container = container
         self.instance_container = gp.Container(
             name="instance_container",
@@ -159,6 +160,33 @@ class ModelInstance:
 
         # update model status
         self.model.status = gp.ModelStatus(self.instance.model_status)
+
+    def _init_modifiables(
+        self, modifiables: List[Union["Parameter", "ImplicitParameter"]]
+    ) -> List[Union["Parameter", "ImplicitParameter"]]:
+        will_be_modified: List[Union["Parameter", "ImplicitParameter"]] = []
+        for modifiable in modifiables:
+            if isinstance(modifiable, implicits.ImplicitParameter):
+                attr_name = modifiable.name.split(".")[-1]
+
+                # If the modifiable attr is fx, then modify level, lower and upper.
+                if attr_name == "fx":
+                    if not utils.isin(modifiable.parent.l, will_be_modified):
+                        will_be_modified.append(modifiable.parent.l)
+
+                    if not utils.isin(modifiable.parent.lo, will_be_modified):
+                        will_be_modified.append(modifiable.parent.lo)
+
+                    if not utils.isin(modifiable.parent.up, will_be_modified):
+                        will_be_modified.append(modifiable.parent.up)
+                else:
+                    # if fx already added level, lower or upper, do not add again.
+                    if not utils.isin(modifiable, will_be_modified):
+                        will_be_modified.append(modifiable)
+            else:
+                will_be_modified.append(modifiable)
+
+        return will_be_modified
 
     def _prepare_freeze_options(
         self, options_dict: Optional[dict]
