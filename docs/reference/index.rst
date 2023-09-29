@@ -11,6 +11,6 @@ gamspy
    gamspy
 
 .. automodule:: gamspy
-   :members:git
+   :members:
    :undoc-members:
    :show-inheritance:
