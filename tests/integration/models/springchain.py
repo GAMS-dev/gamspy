@@ -16,16 +16,25 @@ Applications of second-order cone programming, Linear Algebra and its
 Applications, 284:193-228, November 1998, Special Issue on Linear Algebra
 in Control, Signals and Image Processing.
 """
-
 import math
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Ord, Card
+
 import pandas as pd
-from gamspy import Problem, Sense
+
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     N = 10
     NM1 = 9

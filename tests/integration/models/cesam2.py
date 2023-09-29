@@ -76,27 +76,29 @@ Original version programmed by Sherman Robinson and Andrea Cattaneo.
 Keywords: nonlinear programming, micro economics, cross entropy, social
 accounting matrix
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Number,
-    Card,
-    Domain,
-)
-from gamspy.math import abs, exp, log, centropy
 import numpy as np
-from gamspy import Problem, Sense
+
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import abs
+from gamspy.math import centropy
+from gamspy.math import exp
+from gamspy.math import log
 
 
 def main(is_centropy=False):
-    m = Container()
+    m = Container(delayed_execution=True)
 
     SAM_recs = np.array(
         [

@@ -24,7 +24,7 @@ def sqr(x):
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     X = Set(m, name="X", records=[f"I{i}" for i in range(1, 22)])

@@ -15,14 +15,22 @@ cutting stock problem, Part II, Operations Research 11 (1963), 863-888.
 Keywords: mixed integer linear programming, cutting stock, column generation,
           paper industry
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Ord, Card, Sum, Number, Sense
 import gamspy.math as math
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Sets
     i = Set(m, "i", records=[f"w{idx}" for idx in range(1, 5)])

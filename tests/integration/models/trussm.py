@@ -46,16 +46,22 @@ Second-order Cone Programming", Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image Processing.
 284 (1998) 193-228.
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
 import pandas as pd
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import uniform
-from gamspy import Problem, Sense
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Prepare data
     forces = pd.DataFrame(

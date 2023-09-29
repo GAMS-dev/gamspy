@@ -20,16 +20,19 @@ Keywords: mixed integer nonlinear programming, storage design, global
 optimization
           continuous-time model, chemical engineering
 """
-
 from pathlib import Path
-from gamspy import Sum
+
 import gamspy.math as gams_math
-from gamspy import Model, Container, Sense
+from gamspy import Container
+from gamspy import Model
+from gamspy import Sense
+from gamspy import Sum
 
 
 def main():
     m = Container(
-        load_from=str(Path(__file__).parent.absolute()) + "/tanksize.gdx"
+        delayed_execution=True,
+        load_from=str(Path(__file__).parent.absolute()) + "/tanksize.gdx",
     )
 
     # Sets

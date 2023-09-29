@@ -12,15 +12,19 @@ Interfaces 16, 4 (1986), 356-366.
 Keywords: mixed integer linear programming, routing, naval recruitment,
           scheduling
 """
-
 from pathlib import Path
-from gamspy import Sum, Domain
-from gamspy import Model, Container, Sense
+
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Model
+from gamspy import Sense
+from gamspy import Sum
 
 
 def main():
     m = Container(
-        load_from=str(Path(__file__).parent.absolute()) + "/thai.gdx"
+        delayed_execution=True,
+        load_from=str(Path(__file__).parent.absolute()) + "/thai.gdx",
     )
 
     # Sets

@@ -36,7 +36,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SET #
     i = Set(m, name="i", records=[f"i{i}" for i in range(1, 6)])

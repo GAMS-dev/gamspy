@@ -45,9 +45,9 @@ and Sons, 1978.
 Keywords: mixed integer linear programming, food manufacturing, blending
 problem
 """
+import pandas as pd
 
 import gamspy as gp
-import pandas as pd
 
 
 def main():
@@ -102,7 +102,7 @@ def main():
 
     maxstore = 1000
 
-    c = gp.Container()
+    c = gp.Container(delayed_execution=True)
 
     # Sets
     m = gp.Set(

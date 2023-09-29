@@ -17,16 +17,25 @@ Policy Models. The World Bank, 1988.
 Keywords: quadratic constraint programming, farming, agricultural economics,
           partial equilibrium, market behavior
 """
-
 from pathlib import Path
-from gamspy import Parameter, Variable, Equation, Container, Model, Sum, Number
-from gamspy.math import sqr
+
 import numpy as np
-from gamspy import Problem, Sense
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import sqr
 
 
 def main():
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/qdemo7.gdx",
     )
 

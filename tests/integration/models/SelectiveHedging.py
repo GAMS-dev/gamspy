@@ -6,27 +6,26 @@ Indexation model with selective hedging
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 7.2.3
 * Last modified: Apr 2008.
 """
-
 from pathlib import Path
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Card,
-    Number,
-    ModelStatus,
-    Sense,
-)
+
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import ModelStatus
+from gamspy import Number
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main(output=None):
     # Define container
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute())
         + "/SelectiveHedging.gdx",
     )

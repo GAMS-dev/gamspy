@@ -124,7 +124,7 @@ def sqr(x):
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     # Set some options
     cont.addOptions(

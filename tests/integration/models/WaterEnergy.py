@@ -147,7 +147,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     t = Set(m, name="t", records=[f"t{t}" for t in range(1, 25)])

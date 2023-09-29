@@ -119,7 +119,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._addStatement(statement)
 
         self._is_dirty = True
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     def __eq__(self, other):  # type: ignore
@@ -147,7 +147,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
 
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     @property

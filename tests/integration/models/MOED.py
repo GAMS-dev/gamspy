@@ -50,7 +50,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])

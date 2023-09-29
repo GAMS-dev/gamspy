@@ -61,7 +61,7 @@ def BondDataTable():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     Time = Set(
         m,

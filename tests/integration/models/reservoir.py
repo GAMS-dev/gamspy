@@ -9,15 +9,21 @@ http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
 Andrei, N., Optimal management of system of two reservoirs.
 Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum
 import pandas as pd
-from gamspy import Problem, Sense
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     n = Set(m, name="n", records=["res1", "res2"])
