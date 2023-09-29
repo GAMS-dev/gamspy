@@ -6,6 +6,7 @@ import pandas as pd
 import gamspy._algebra.expression as expression
 import gamspy.math as gams_math
 from gamspy import Container
+from gamspy import Equation
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Variable
@@ -330,6 +331,92 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "(binomial( 3,5 ))")
         op2 = gams_math.binomial(b[i], 3)
         self.assertEqual(op2.gamsRepr(), "(binomial( b(i),3 ))")
+
+    def test_math_2(self):
+        m = Container()
+        i = Set(m, "i", records=["1", "2"])
+        a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
+
+        op1 = gams_math.entropy(1)
+        self.assertEqual(op1.gamsRepr(), "(entropy( 1 ))")
+
+        op1 = gams_math.beta(1, 2)
+        self.assertEqual(op1.gamsRepr(), "(beta( 1,2 ))")
+
+        op1 = gams_math.regularized_beta(1, 2, 3)
+        self.assertEqual(op1.gamsRepr(), "(betaReg( 1,2,3 ))")
+
+        op1 = gams_math.gamma(1, 2)
+        self.assertEqual(op1.gamsRepr(), "(gamma( 1,2 ))")
+
+        op1 = gams_math.regularized_gamma(1, 2, 3)
+        self.assertEqual(op1.gamsRepr(), "(gammaReg( 1,2,3 ))")
+
+        op1 = gams_math.lse_max(a[i])
+        self.assertEqual(op1.gamsRepr(), "(lseMax( a(i) ))")
+
+        op1 = gams_math.lse_max_sc(a[i], a[i])
+        self.assertEqual(op1.gamsRepr(), "(lseMaxSc( a(i),a(i) ))")
+
+        op1 = gams_math.lse_min(a[i])
+        self.assertEqual(op1.gamsRepr(), "(lseMin( a(i) ))")
+
+        op1 = gams_math.lse_min_sc(a[i], a[i])
+        self.assertEqual(op1.gamsRepr(), "(lseMinSc( a(i),a(i) ))")
+
+        op1 = gams_math.ncp_cm(a[i], a[i], 3)
+        self.assertEqual(op1.gamsRepr(), "(ncpCM( a(i),a(i),3 ))")
+
+        op1 = gams_math.ncp_f(a[i], a[i])
+        self.assertEqual(op1.gamsRepr(), "(ncpF( a(i),a(i),0 ))")
+
+        op1 = gams_math.ncpVUpow(a[i], a[i])
+        self.assertEqual(op1.gamsRepr(), "(ncpVUpow( a(i),a(i),0 ))")
+
+        op1 = gams_math.ncpVUsin(a[i], a[i])
+        self.assertEqual(op1.gamsRepr(), "(ncpVUsin( a(i),a(i),0 ))")
+
+        op1 = gams_math.poly(a[i], 3, 5)
+        self.assertEqual(op1.gamsRepr(), "(poly( a(i),3,5 ))")
+
+        op1 = gams_math.rand_binomial(1, 2)
+        self.assertEqual(op1.gamsRepr(), "(randBinomial( 1,2 ))")
+
+        op1 = gams_math.rand_linear(1, 2, 3)
+        self.assertEqual(op1.gamsRepr(), "(randLinear( 1,2,3 ))")
+
+        op1 = gams_math.rand_triangle(1, 2, 3)
+        self.assertEqual(op1.gamsRepr(), "(randTriangle( 1,2,3 ))")
+
+        op1 = gams_math.slrec(a[i])
+        self.assertEqual(op1.gamsRepr(), "(slrec( a(i),1e-10 ))")
+
+        op1 = gams_math.sqrec(a[i])
+        self.assertEqual(op1.gamsRepr(), "(sqrec( a(i),1e-10 ))")
+
+        op1 = gams_math.errorf(a[i])
+        self.assertEqual(op1.gamsRepr(), "(errorf( a(i) ))")
+
+        # sigmoid
+        op1 = gams_math.sigmoid(2.3)
+        self.assertEqual(op1.gamsRepr(), "(sigmoid( 2.3 ))")
+
+        op1 = gams_math.sigmoid(a[i])
+        self.assertEqual(op1.gamsRepr(), "(sigmoid( a(i) ))")
+
+    def test_logical(self):
+        m = Container()
+
+        o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
+        p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])
+        sumc = Variable(m, "sumc", domain=[o, p])
+        op = Variable(m, "op", domain=[o, p])
+        defopLS = Equation(m, "defopLS", domain=[o, p])
+        defopLS[o, p] = op[o, p] == gams_math.ifthen(sumc[o, p] >= 0.5, 1, 0)
+        self.assertEqual(
+            list(m._statements_dict.values())[-1].gamsRepr(),
+            "defopLS(o,p) .. op(o,p) =e= (ifthen(sumc(o,p) >= 0.5, 1, 0)  );",
+        )
 
 
 def math_suite():

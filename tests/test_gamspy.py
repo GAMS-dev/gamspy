@@ -3,7 +3,6 @@ import argparse
 
 from unit.test_container import container_suite
 from unit.test_math import math_suite
-from unit.test_functions import functions_suite
 from unit.test_utils import utils_suite
 from unit.test_set import set_suite
 from unit.test_alias import alias_suite
@@ -37,7 +36,6 @@ def main():
     unittest_suites = [
         container_suite,
         math_suite,
-        functions_suite,
         utils_suite,
         set_suite,
         alias_suite,
