@@ -84,7 +84,7 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         name: str = "default",
         working_directory: Optional[str] = None,
-        debug: bool = False,
+        delayed_execution: bool = False,
     ):
         self.system_directory = (
             system_directory
@@ -93,7 +93,7 @@ class Container(gt.Container):
         )
 
         self.name = name
-        self.debug = debug
+        self._delayed_execution = delayed_execution
         self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
@@ -210,6 +210,14 @@ class Container(gt.Container):
     def _addStatement(self, statement) -> None:
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
+
+    @property
+    def delayed_execution(self):
+        return self._delayed_execution
+
+    @delayed_execution.setter
+    def delayed_execution(self, status: bool):
+        self._delayed_execution = status
 
     def addAlias(
         self, name: str, alias_with: Union["Set", "Alias"]

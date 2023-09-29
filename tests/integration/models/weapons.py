@@ -12,15 +12,23 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
 Keywords: nonlinear programming, assignment problem, military application,
           nlp test problem
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Product, Card
 import pandas as pd
-from gamspy import Problem, Sense
+
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Product
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     td_data = pd.DataFrame(
         [

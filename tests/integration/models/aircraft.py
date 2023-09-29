@@ -11,24 +11,22 @@ Princeton University Press, Princeton, New Jersey, 1963.
 
 Keywords: linear programming, aircraft managing, allocation problem
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Sum,
-    Ord,
-    Model,
-    Sense,
-)
 import numpy as np
+
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Sets
     i = Set(m, name="i", records=["a", "b", "c", "d"])

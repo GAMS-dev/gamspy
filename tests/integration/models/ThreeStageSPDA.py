@@ -57,7 +57,7 @@ def prepare_yield():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     Scenarios = Set(

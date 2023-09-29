@@ -17,29 +17,27 @@ S Raghavan and Edward A Wasil, Springer, 2005, pp 45-59.
 
 Keywords: mixed integer linear programming, statistical disclosure limitations
 """
-
 import math
 import os
 import sys
+
 from gams.connect import ConnectDatabase
-from gamspy import (
-    Alias,
-    Container,
-    Domain,
-    Equation,
-    Model,
-    Number,
-    Parameter,
-    Sense,
-    Set,
-    Sum,
-    Variable,
-)
+
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import Round
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Sets
     i = Set(m, name="i", description="rows")
@@ -152,7 +150,7 @@ def main():
     v[i, j, k] = dat[k, i, j]
     s[i, j, k] = pro[k, i, j]
 
-    BigM.setRecords(2)
+    BigM.setRecords(3)
 
     defadj[v[i, j, k]] = t[v] == dat[k, i, j] + adjp[v] - adjn[v]
     addrow[i, k] = Sum(v[i, j, k], t[v]) == 2 * t[i, "total", k]
@@ -200,6 +198,7 @@ def main():
         {
             "PandasExcelWriter": {
                 "file": os.path.join(file_dir, "results.xlsx"),
+                "excelWriterArguments": {"mode": "w"},
                 "symbols": [
                     {
                         "name": "adjrep",

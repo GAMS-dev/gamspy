@@ -7,23 +7,22 @@ Stochastic Dedication model with borrowing and lending variables
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 6.2.2
 * Last modified: Apr 2008.
 """
-
 from pathlib import Path
-from gamspy import (
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Sense,
-)
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Sense
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
     # Define container
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute())
-        + "/StochDedicationBL.gdx"
+        + "/StochDedicationBL.gdx",
     )
 
     # Aliases

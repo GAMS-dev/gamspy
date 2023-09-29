@@ -1,12 +1,15 @@
 import unittest
 
-from gamspy import Container, Set, Domain, Parameter
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Parameter
+from gamspy import Set
 from gamspy._algebra.domain import DomainException
 
 
 class DomainSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_domain(self):
         # Set
@@ -23,9 +26,9 @@ class DomainSuite(unittest.TestCase):
         self.assertRaises(DomainException, Domain, "i", "j")
 
     def test_domain_forwarding(self):
-        m = Container()
+        m = Container(delayed_execution=True)
         i = Set(m, name="i")
-        p = Parameter(
+        _ = Parameter(
             m,
             name="p",
             domain=[i],

@@ -25,25 +25,22 @@ data by using method 3.
 Keywords: mixed integer linear programming, GAMS language features, dynamic
           modelling, time steps, power generation
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Number,
-    Ord,
-    Sense,
-)
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import uniformInt
 
 
 def main(mt=2016, mg=17, mindt=10, maxdt=40):
-    m = Container()
+    m = Container(delayed_execution=True)
 
     if mindt > maxdt:
         raise Exception("minimum downtime is larger than maximum downtime")

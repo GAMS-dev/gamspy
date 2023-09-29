@@ -1,25 +1,24 @@
 import unittest
 
 import pandas as pd
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Sum,
-    Ord,
-    Smax,
-    Product,
-    Smin,
-    Card,
-    Alias,
-    Equation,
-)
+
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Product
+from gamspy import Set
+from gamspy import Smax
+from gamspy import Smin
+from gamspy import Sum
+from gamspy import Variable
 
 
 class OperationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_operations(self):
         # Prepare data
@@ -111,7 +110,7 @@ class OperationSuite(unittest.TestCase):
 
     def test_operation_indices(self):
         # Test operation index
-        m = Container()
+        m = Container(delayed_execution=True)
         mt = 2016
         mg = 17
         maxdt = 40

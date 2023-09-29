@@ -87,7 +87,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     bus = Set(m, name="bus", records=[str(buses) for buses in range(1, 7)])

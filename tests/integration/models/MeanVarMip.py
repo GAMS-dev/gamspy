@@ -19,7 +19,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Read from MeanVarMip.gdx the data needed to run the mean-variance model
     m.read(

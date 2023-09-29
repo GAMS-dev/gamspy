@@ -12,25 +12,25 @@ Keywords: mixed integer linear programming, robust optimization, capacity
 expansion,
           time-dependent knapsack problem
 """
-
-from gamspy import (
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Alias,
-    Model,
-    Sum,
-    Ord,
-    Card,
-    Sense,
-)
-from gamspy.math import Round, uniform, power, normal
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import normal
+from gamspy.math import power
+from gamspy.math import Round
+from gamspy.math import uniform
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     s = Set(

@@ -1,17 +1,15 @@
 import unittest
 
-from gamspy import (
-    Container,
-    Set,
-    Alias,
-    Ord,
-    Card,
-)
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Ord
+from gamspy import Set
 
 
 class SetSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_set_string(self):
         # Without records
@@ -140,7 +138,7 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container()
+        m = Container(delayed_execution=True)
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 

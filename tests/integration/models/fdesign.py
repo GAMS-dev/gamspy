@@ -22,16 +22,24 @@ Processing. 284 (November, 1998).
 Keywords: quadratic constraint programming, second order cone programming,
           engineering, finite impulse response filter designment
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Card, Ord
-import gamspy.math as gams_math
 import math
-from gamspy import Problem, Sense
+
+import gamspy.math as gams_math
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])

@@ -21,7 +21,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
     m.read(
         load_from=str(Path(__file__).parent.absolute()) + "/BondIndex.gdx",
         symbol_names=[

@@ -23,6 +23,7 @@ from gamspy import Variable
 def main():
     # Define container
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/Corporate.gdx",
     )
 

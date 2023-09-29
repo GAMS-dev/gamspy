@@ -14,7 +14,7 @@ from gamspy import Variable
 
 class MathSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_math(self):
         # Prepare data
@@ -333,7 +333,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "(binomial( b(i),3 ))")
 
     def test_math_2(self):
-        m = Container()
+        m = Container(delayed_execution=True)
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
 
@@ -405,7 +405,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "(sigmoid( a(i) ))")
 
     def test_logical(self):
-        m = Container()
+        m = Container(delayed_execution=True)
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
         p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])

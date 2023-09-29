@@ -8,7 +8,7 @@ from gamspy._algebra.domain import DomainException
 
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_utils(self):
         string = "(bla))"

@@ -12,10 +12,10 @@ from gamspy import Variable
 
 class ModelInstanceSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_parameter_change(self):
-        m = Container()
+        m = Container(delayed_execution=True)
 
         # Prepare data
         distances = [
@@ -84,7 +84,7 @@ class ModelInstanceSuite(unittest.TestCase):
             self.assertAlmostEqual(z.records["level"][0], result, places=2)
 
     def test_variable_change(self):
-        m = Container()
+        m = Container(delayed_execution=True)
 
         # Prepare data
         distances = [
@@ -142,7 +142,7 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
 
     def test_fx(self):
-        m = Container()
+        m = Container(delayed_execution=True)
 
         # Data
         INCOME0 = Parameter(
