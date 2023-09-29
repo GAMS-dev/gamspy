@@ -1029,7 +1029,7 @@ class Container(gt.Container):
     def write(
         self,
         write_to: str,
-        symbol_names: Optional[List[str]] = None,
+        symbols: Optional[List[str]] = None,
     ) -> None:
         """
         Writes specified symbols to the gdx file. If symbol_names are
@@ -1038,9 +1038,9 @@ class Container(gt.Container):
         Parameters
         ----------
         write_to : str
-        symbol_names : List[str], optional
+        symbols : List[str], optional
         """
-        sequence = symbol_names if symbol_names else self.data.keys()
+        sequence = symbols if symbols else self.data.keys()
         dirty_symbols = []
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
@@ -1048,4 +1048,4 @@ class Container(gt.Container):
         if len(dirty_symbols) > 0:
             self._loadOnDemand()
 
-        super().write(write_to, symbol_names)
+        super().write(write_to, symbols)
