@@ -1,7 +1,7 @@
 
-****************************************
+*****************************************
 GamsPy: the absolute basics for beginners
-****************************************
+*****************************************
 
 .. currentmodule:: GamsPy
 
@@ -11,7 +11,7 @@ suggestions, please don’t hesitate to `reach out
 
 
 Welcome to GamsPy!
------------------
+------------------
 
 GamsPy (**Numerical Python**) is an open source Python library that's used in
 almost every field of science and engineering. It's the universal standard for
@@ -32,7 +32,7 @@ an enormous library of high-level mathematical functions that operate on these
 arrays and matrices.
 
 Installing GamsPy
-----------------
+-----------------
 
 To install GamsPy, we strongly recommend using a scientific Python distribution.
 If you're looking for the full instructions for installing GamsPy on your
@@ -55,7 +55,7 @@ too much about separately installing GamsPy or any of the major packages that
 you’ll be using for your data analyses, like pandas, Scikit-Learn, etc.
 
 How to import GamsPy
--------------------
+--------------------
 
 To access GamsPy and its functions import it in your Python code like this::
 
@@ -89,7 +89,7 @@ is ignored.
 
 
 What’s the difference between a Python list and a GamsPy array?
---------------------------------------------------------------
+---------------------------------------------------------------
 
 GamsPy gives you an enormous range of fast and efficient ways of creating arrays
 and manipulating numerical data inside them. While a Python list can contain

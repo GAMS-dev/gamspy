@@ -5,12 +5,12 @@ gamspy
 
 .. automodule:: gamspy
    :members:
+   :private-members:
    :undoc-members:
    :show-inheritance:
 
 .. toctree::
    :maxdepth: 3
 
-   gamspy.functions
    gamspy.math
    gamspy.utils

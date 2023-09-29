@@ -262,9 +262,6 @@ matrices and tridimensionals as lists of matrices.
       [16 17 18 19]
       [20 21 22 23]]]
 
-See :ref:`below <quickstart.shape-manipulation>` to get
-more details on ``reshape``.
-
 If an array is too large to be printed, NumPy automatically skips the
 central part of the array and only prints the corners::
 
@@ -619,16 +616,6 @@ over all the elements of the array::
     42
     43
 
-.. seealso::
-
-    :ref:`basics.indexing`,
-    :ref:`arrays.indexing` (reference),
-    `newaxis`,
-    `ndenumerate`,
-    `indices`
-
-.. _quickstart.shape-manipulation:
-
 Shape Manipulation
 ==================
 
@@ -931,7 +918,7 @@ Functions and Methods Overview
 ------------------------------
 
 Here is a list of some useful NumPy functions and methods names
-ordered in categories. See :ref:`routines` for the full list.
+ordered in categories.
 
 Array Creation
     `arange`,
@@ -1041,7 +1028,7 @@ element is assumed to be the same along that dimension for the
 "broadcast" array.
 
 After application of the broadcasting rules, the sizes of all arrays
-must match. More details can be found in :ref:`basics.broadcasting`.
+must match. 
 
 Advanced indexing and index tricks
 ==================================
@@ -1382,8 +1369,6 @@ times the number of vectors.
 Indexing with strings
 ---------------------
 
-See :ref:`structured_arrays`.
-
 Tricks and Tips
 ===============
 
@@ -1435,10 +1420,6 @@ example::
 The logic behind those functions in more than two dimensions can be
 strange.
 
-.. seealso::
-
-   :doc:`numpy-for-matlab-users`
-
 Histograms
 ----------
 
@@ -1475,4 +1456,3 @@ Further reading
 -  `SciPy Tutorial <https://docs.scipy.org/doc/scipy/tutorial/index.html>`__
 -  `SciPy Lecture Notes <https://scipy-lectures.org>`__
 -  A `matlab, R, IDL, NumPy/SciPy dictionary <http://mathesaurus.sf.net/>`__
--  :doc:`tutorial-svd <numpy-tutorials:content/tutorial-svd>`

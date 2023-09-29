@@ -18,7 +18,7 @@ Building GamsPy requires the following software installed:
     $ git clone <prefix>/gamspy.git
 
 Basic Build and Installation
-------------------
+----------------------------
 
 To install , run::
 
