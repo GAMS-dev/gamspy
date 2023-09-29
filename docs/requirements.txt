@@ -6,3 +6,7 @@ sphinx_copybutton==0.5.2
 numpy==1.24.4
 pandas==2.0.3
 IPython==8.15.0
+matplotlib
+sphinx_design
+python_docs_theme
+pydata_sphinx_theme

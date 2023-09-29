@@ -16,30 +16,37 @@ release = "0.9.0"
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.viewcode",
-    "numpydoc",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.coverage",
     "sphinx.ext.doctest",
+    "sphinx.ext.duration",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.coverage",
     "sphinx.ext.graphviz",
     "sphinx.ext.ifconfig",
+    "sphinx_design",
+    "sphinx_copybutton",
+    "nbsphinx",
+    "numpydoc",
     "matplotlib.sphinxext.plot_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
-    "sphinx.ext.mathjax",
-    "sphinx_design",
-    "sphinx_copybutton",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "pydata_sphinx_theme"
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_show_sourcelink = False
 html_theme_options = {
@@ -59,5 +66,9 @@ html_theme_options = {
     "logo": {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
-    }
+    },
 }
+
+epub_show_urls = "footnote"
+todo_include_todos = True
+autosummary_generate = True
