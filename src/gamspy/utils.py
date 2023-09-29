@@ -22,8 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import os
-import platform
 from collections.abc import Sequence
 from typing import Iterable
 from typing import List
@@ -37,9 +35,8 @@ from gams.transfer._internals.specialvalues import SpecialValues
 
 import gamspy
 import gamspy._symbols.implicits as implicits
-from gamspy.exceptions import GdxException
-
 import gamspy_base
+from gamspy.exceptions import GdxException
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet

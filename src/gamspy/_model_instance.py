@@ -215,7 +215,7 @@ class ModelInstance:
         for key, value in attr_map.items():
             if key != attr:
                 columns.append(value)
-        
+
         return columns
 
     def _create_modifiers(self):
@@ -237,9 +237,11 @@ class ModelInstance:
             elif isinstance(modifiable, implicits.ImplicitParameter):
                 attribute = modifiable.name.split(".")[-1]
                 update_action = update_action_map[attribute]
-                
+
                 try:
-                    sync_db_symbol = self.instance.sync_db[modifiable.parent.name]
+                    sync_db_symbol = self.instance.sync_db[
+                        modifiable.parent.name
+                    ]
                 except Exception:
                     if isinstance(modifiable.parent, gp.Variable):
                         sync_db_symbol = self.instance.sync_db.add_variable(

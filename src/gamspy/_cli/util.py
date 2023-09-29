@@ -22,10 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dataclasses import dataclass, field
-import platform
 import os
-from typing import Union, Tuple
+import platform
+from dataclasses import dataclass
+from dataclasses import field
+from typing import Tuple
+from typing import Union
 
 __all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
 
@@ -69,7 +71,6 @@ class SolverInfo:
 def check_solver_exists(
     capabilities_file: str, solver_name: str
 ) -> Union[Tuple[int, int], None]:
-    solver_line, num_lines = None, None
     with open(capabilities_file) as capabilities:
         lines = capabilities.readlines()
         lines = [line for line in lines if line != "\n" and line[0] != "*"]
@@ -80,10 +81,9 @@ def check_solver_exists(
             if line1 == "DEFAULTS\n":
                 break
 
-            line2 = lines[idx + 1]
             idx += 2
             splitted_line = line1.split(" ")
-            solver = SolverInfo(*splitted_line[:7])
+            solver = SolverInfo(*splitted_line[:7])  # type: ignore
             idx += int(solver.lines_to_follow)
             if solver.solver_id.lower() == solver_name.lower():
                 return start_idx, 2 + int(solver.lines_to_follow)
