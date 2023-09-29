@@ -3,13 +3,14 @@
 gamspy
 ======
 
+.. autosummary::
+   :toctree: _autosummary
+   :template: custom-module-template.rst
+   :recursive:
+
+   gamspy
+
 .. automodule:: gamspy
-   :members:
+   :members:git
    :undoc-members:
    :show-inheritance:
-
-.. toctree::
-   :maxdepth: 3
-
-   gamspy.math
-   gamspy.utils
