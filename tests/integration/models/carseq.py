@@ -42,9 +42,9 @@ from gamspy import (
     Number,
     Sense,
 )
-from gamspy.functions import ifthen
+from gamspy.math import ifthen
 import gamspy.math as gams_math
-from gamspy.functions import ifthen
+from gamspy.math import ifthen
 import pandas as pd
 import numpy as np
 
@@ -132,7 +132,7 @@ def main(mip=False):
         Sum(blkc[blk, pp], op[o, pp]) - maxc[o], Number(0)
     )
 
-    defobj.expr = obj == Sum(blk[o, p], v[o, p])
+    defobj.definition = obj == Sum(blk[o, p], v[o, p])
 
     # Model
     carseqMIP = Model(

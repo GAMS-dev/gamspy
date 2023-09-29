@@ -36,10 +36,10 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.expr = x1 + 2 * x2 >= 3
-    eq2.expr = x3 + x2 >= 5
-    eq3.expr = x1 + x3 == 4
-    eq4.expr = x1 + 3 * x2 + 3 * x3 == of
+    eq1.definition = x1 + 2 * x2 >= 3
+    eq2.definition = x3 + x2 >= 5
+    eq3.definition = x1 + x3 == 4
+    eq4.definition = x1 + 3 * x2 + 3 * x3 == of
 
     LP1 = Model(
         m,

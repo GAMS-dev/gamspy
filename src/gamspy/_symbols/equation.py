@@ -71,12 +71,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     name : str
     type : str
     domain : List[Set | str], optional
-    expr: Expression, optional
+    definition: Expression, optional
     records : Any, optional
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes: bool
-    expr_domain: list, optional
+    definition_domain: list, optional
 
     Examples
     --------
@@ -93,14 +93,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         name: str,
         type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        expr: Optional[Union["Variable", "Operation", "Expression"]] = None,
+        definition: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        expr_domain: Optional[list] = None,
+        definition_domain: Optional[list] = None,
     ):
         type = self._cast_type(type)
+
+        # enable load on demand
+        self._is_dirty = False
+
+        # allow freezing
+        self._is_frozen = False
 
         super().__init__(
             container,
@@ -113,12 +121,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             uels_on_axes,
         )
 
-        # enable load on demand
-        self._is_dirty = False
-
-        # allow freezing
-        self._is_frozen = False
-
         # allow conditions
         self.where = condition.Condition(self)
 
@@ -126,8 +128,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._addStatement(self)
 
         # add defition if exists
-        self._expr_domain = expr_domain
-        self.expr = expr
+        self._definition_domain = definition_domain
+        self.definition = definition
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -270,11 +272,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return self._infeas
 
     @property
-    def expr(self) -> Optional[Union["Variable", "Operation", "Expression"]]:
-        return self._expr
+    def definition(
+        self,
+    ) -> Optional[Union["Variable", "Operation", "Expression"]]:
+        return self._definition
 
-    @expr.setter
-    def expr(
+    @definition.setter
+    def definition(
         self,
         assignment: Optional[
             Union["Variable", "Operation", "Expression"]
@@ -283,10 +287,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         Needed for scalar equations
         >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.expr = Sum(wh, build[wh]) <= 1
+        >>> eq.definition = Sum(wh, build[wh]) <= 1
         """
         if assignment is None:
-            self._expr = assignment
+            self._definition = assignment
             return
 
         eq_types = ["=e=", "=l=", "=g="]
@@ -313,7 +317,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         else:
             self.type = regular_map[assignment._op_type]  # type: ignore
 
-        domain = self._expr_domain if self._expr_domain else self.domain
+        domain = (
+            self._definition_domain if self._definition_domain else self.domain
+        )
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,
@@ -326,7 +332,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         )
 
         self.container._addStatement(statement)
-        self._expr = statement
+        self._definition = statement
 
         if self.container.debug:
             self.container._loadOnDemand()

@@ -60,7 +60,7 @@ def main():
         m, name="RISK_TARGET", description="Bound on expected regret (risk)"
     )
 
-    Budget.assign = 100.0
+    Budget.assignment = 100.0
 
     # PARAMETERS #
     pr = Parameter(
@@ -76,12 +76,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i, l])
 
-    MIN_MU.assign = Smin(i, EP[i])
-    MAX_MU.assign = Smax(i, EP[i])
+    MIN_MU.assignment = Smin(i, EP[i])
+    MAX_MU.assignment = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assign = (MAX_MU - MIN_MU) / 20
+    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
 
     TargetIndex = Parameter(
         m, name="TargetIndex", domain=[l], description="Target index returns"
@@ -149,11 +149,11 @@ def main():
         ),
     )
 
-    BudgetCon.expr = Sum(i, x[i]) == Budget
+    BudgetCon.definition = Sum(i, x[i]) == Budget
 
-    ReturnCon.expr = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
-    ExpRegretCon.expr = Sum(l, pr[l] * Regrets[l]) <= RISK_TARGET
+    ExpRegretCon.definition = Sum(l, pr[l] * Regrets[l]) <= RISK_TARGET
 
     RegretCon[l] = Regrets[l] >= TargetIndex[l] * Budget - Sum(
         i, P[i, l] * x[i]
@@ -163,9 +163,9 @@ def main():
         TargetIndex[l] - EpsRegret
     ) * Budget - Sum(i, P[i, l] * x[i])
 
-    ObjDefRegret.expr = z == Sum(l, pr[l] * Regrets[l])
+    ObjDefRegret.definition = z == Sum(l, pr[l] * Regrets[l])
 
-    ObjDefReturn.expr = z == Sum(i, EP[i] * x[i])
+    ObjDefReturn.definition = z == Sum(i, EP[i] * x[i])
 
     MinRegret = Model(
         m,
@@ -185,13 +185,13 @@ def main():
     )
 
     TargetIndex[l] = 1.01
-    EpsRegret.assign = 0.0
+    EpsRegret.assignment = 0.0
 
     # Write a code for displaying the result into a table
     result = []
     mu_iter = MIN_MU.records.value[0]
     while mu_iter <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu_iter
+        MU_TARGET.assignment = mu_iter
         MinRegret.solve()
 
         result.append(
@@ -202,7 +202,7 @@ def main():
         )
         result[-1] += x.records.level.tolist()
 
-        RISK_TARGET.assign = z.l
+        RISK_TARGET.assignment = z.l
 
         result[-1].append("")
 

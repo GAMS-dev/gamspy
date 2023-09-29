@@ -37,23 +37,45 @@ from gamspy.math.log_power import sllog10
 from gamspy.math.log_power import sqlog10
 from gamspy.math.log_power import sqr
 from gamspy.math.log_power import vc_power
-from gamspy.math.numeric import abs
-from gamspy.math.numeric import ceil
-from gamspy.math.numeric import dist
-from gamspy.math.numeric import div
-from gamspy.math.numeric import div0
-from gamspy.math.numeric import factorial
-from gamspy.math.numeric import floor
-from gamspy.math.numeric import fractional
-from gamspy.math.numeric import max
-from gamspy.math.numeric import min
-from gamspy.math.numeric import mod
-from gamspy.math.numeric import Round
-from gamspy.math.numeric import sign
-from gamspy.math.numeric import slexp
-from gamspy.math.numeric import sqexp
-from gamspy.math.numeric import sqrt
-from gamspy.math.numeric import truncate
+from gamspy.math.misc import abs
+from gamspy.math.misc import ceil
+from gamspy.math.misc import dist
+from gamspy.math.misc import div
+from gamspy.math.misc import div0
+from gamspy.math.misc import factorial
+from gamspy.math.misc import floor
+from gamspy.math.misc import fractional
+from gamspy.math.misc import max
+from gamspy.math.misc import min
+from gamspy.math.misc import mod
+from gamspy.math.misc import Round
+from gamspy.math.misc import sign
+from gamspy.math.misc import slexp
+from gamspy.math.misc import sqexp
+from gamspy.math.misc import sqrt
+from gamspy.math.misc import truncate
+from gamspy.math.misc import beta
+from gamspy.math.misc import entropy
+from gamspy.math.misc import errorf
+from gamspy.math.misc import gamma
+from gamspy.math.misc import lse_max
+from gamspy.math.misc import lse_max_sc
+from gamspy.math.misc import lse_min
+from gamspy.math.misc import lse_min_sc
+from gamspy.math.misc import ncp_cm
+from gamspy.math.misc import ncp_f
+from gamspy.math.misc import ncpVUpow
+from gamspy.math.misc import ncpVUsin
+from gamspy.math.misc import poly
+from gamspy.math.misc import rand_binomial
+from gamspy.math.misc import rand_linear
+from gamspy.math.misc import rand_triangle
+from gamspy.math.misc import regularized_beta
+from gamspy.math.misc import regularized_gamma
+from gamspy.math.misc import slrec
+from gamspy.math.misc import sqrec
+from gamspy.math.misc import ifthen
+from gamspy.math.misc import sigmoid
 from gamspy.math.probability import binomial
 from gamspy.math.probability import centropy
 from gamspy.math.probability import normal
@@ -118,4 +140,25 @@ __all__ = [
     "slexp",
     "sqexp",
     "truncate",
+    "ifthen",
+    "beta",
+    "regularized_beta",
+    "gamma",
+    "regularized_gamma",
+    "entropy",
+    "lse_max",
+    "lse_max_sc",
+    "lse_min",
+    "lse_min_sc",
+    "ncp_cm",
+    "ncp_f",
+    "ncpVUpow",
+    "ncpVUsin",
+    "poly",
+    "rand_binomial",
+    "rand_linear",
+    "rand_triangle",
+    "slrec",
+    "sqrec",
+    "errorf",
 ]

@@ -89,7 +89,7 @@ class Container(gt.Container):
         self.system_directory = (
             system_directory
             if system_directory
-            else utils._getMinigamsDirectory()
+            else utils._getGAMSPyBaseDirectory()
         )
 
         self.name = name
@@ -544,12 +544,12 @@ class Container(gt.Container):
         name: str,
         type: Union[str, "EquationType"] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        expr: Optional["Expression"] = None,
+        definition: Optional["Expression"] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        expr_domain: Optional[List[Union["Set", str]]] = None,
+        definition_domain: Optional[List[Union["Set", str]]] = None,
     ) -> "Equation":
         """
         Creates an Equation and adds it to the Container
@@ -559,12 +559,12 @@ class Container(gt.Container):
         name : str
         type : str
         domain : List[Set | str], optional
-        expr : Expression, optional
+        definition : Definition, optional
         records : Any, optional
         domain_forwarding : bool, optional
         description : str, optional
         uels_on_axes : bool, optional
-        expr_domain : List[Set | str], optional
+        definition_domain : List[Set | str], optional
 
         Returns
         -------
@@ -584,12 +584,12 @@ class Container(gt.Container):
                 name,
                 type,
                 domain,
-                expr,
+                definition,
                 records,
                 domain_forwarding,
                 description,
                 uels_on_axes,
-                expr_domain,
+                definition_domain,
             )
             return obj
 
@@ -748,10 +748,6 @@ class Container(gt.Container):
 
     def _loadOnDemand(self) -> pd.DataFrame:
         """Loads data of the given symbol from the gdx file."""
-        dirty_symbols = []
-        for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
-                dirty_symbols.append(symbol)
 
         self._run()
 
@@ -817,8 +813,12 @@ class Container(gt.Container):
             options.gdx = self._gdx_path
             options.forcework = 1
 
+        for name in self.data.keys():
+            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
+                self[name]._is_dirty = False
+
         # Create gdx file to read records from
-        self.write(self._gdx_path)
+        super().write(self._gdx_path)
 
         if backend in ["engine-one", "engine-sass"]:
             # Engine expects gdx file to be next to the gms file
@@ -1029,7 +1029,7 @@ class Container(gt.Container):
     def write(
         self,
         write_to: str,
-        symbol_names: Optional[List[str]] = None,
+        symbols: Optional[List[str]] = None,
     ) -> None:
         """
         Writes specified symbols to the gdx file. If symbol_names are
@@ -1038,11 +1038,14 @@ class Container(gt.Container):
         Parameters
         ----------
         write_to : str
-        symbol_names : List[str], optional
+        symbols : List[str], optional
         """
-        sequence = symbol_names if symbol_names else self.data.keys()
+        sequence = symbols if symbols else self.data.keys()
+        dirty_symbols = []
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                self[name]._is_dirty = False
+                dirty_symbols.append(name)
+        if len(dirty_symbols) > 0:
+            self._loadOnDemand()
 
-        super().write(write_to, symbol_names)
+        super().write(write_to, symbols)

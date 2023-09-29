@@ -223,20 +223,16 @@ class ContainerSuite(unittest.TestCase):
     def test_system_directory(self):
         import platform
         import gamspy
+        import gamspy_base
 
         gamspy_dir = os.path.dirname(gamspy.__file__)
-
-        expected_path = ""
-        user_os = platform.system().lower()
-        expected_path += gamspy_dir + os.sep + "minigams" + os.sep + user_os
-        if user_os == "darwin":
-            expected_path += f"_{platform.machine()}"
+        expected_path = gamspy_base.__path__[0]
 
         m = Container()
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
         self.assertEqual(
-            utils._getMinigamsDirectory().lower(), expected_path.lower()
+            utils._getGAMSPyBaseDirectory().lower(), expected_path.lower()
         )
 
     def test_non_empty_working_directory(self):
@@ -272,6 +268,16 @@ class ContainerSuite(unittest.TestCase):
                 objective=Sum((i,), x),
             )
             dummy.solve()
+
+    def test_write_load_on_demand(self):
+        m = Container()
+        i = Set(m, name="i", records=["i1"])
+        p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
+        p2 = Parameter(m, name="p2", domain=[i])
+        p2[i] = p1[i]
+        m.write("data.gdx")
+        m = Container("data.gdx")
+        self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
 
 
 def container_suite():

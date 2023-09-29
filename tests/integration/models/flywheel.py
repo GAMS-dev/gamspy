@@ -26,24 +26,24 @@ def main():
     eobj = Equation(m, name="eobj", type="regular")
 
     # Objective function:
-    eobj.expr = obj == -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
+    eobj.definition = obj == -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
 
     # Constraints:
-    e1.expr = 675 - (x1**2) * x2 >= 0
-    e2.expr = 0.419 - (x1**2) * (x3**2) / 10000000 >= 0
+    e1.definition = 675 - (x1**2) * x2 >= 0
+    e2.definition = 0.419 - (x1**2) * (x3**2) / 10000000 >= 0
 
     # Bounds on variables:
-    x1.lo.assign = 0
-    x1.up.assign = 36
-    x2.lo.assign = 0
-    x2.up.assign = 5
-    x3.lo.assign = 0
-    x3.up.assign = 125
+    x1.lo.assignment = 0
+    x1.up.assignment = 36
+    x2.lo.assignment = 0
+    x2.up.assignment = 5
+    x3.lo.assignment = 0
+    x3.up.assignment = 125
 
     # Initial point:
-    x1.l.assign = 22.3
-    x2.l.assign = 0.5
-    x3.l.assign = 125
+    x1.l.assignment = 22.3
+    x2.l.assignment = 0.5
+    x3.l.assignment = 125
 
     flywheel = Model(
         m,

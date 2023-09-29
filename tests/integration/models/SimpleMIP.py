@@ -34,9 +34,9 @@ def main():
     eq2 = Equation(m, name="eq2", type="regular")
     eq3 = Equation(m, name="eq3", type="regular")
 
-    eq1.expr = -3 * x + 2 * y >= 1
-    eq2.expr = -8 * x + 10 * y <= 10
-    eq3.expr = x + y == of
+    eq1.definition = -3 * x + 2 * y >= 1
+    eq2.definition = -8 * x + 10 * y <= 10
+    eq3.definition = x + y == of
 
     MIP1 = Model(
         m,
@@ -47,7 +47,7 @@ def main():
         objective=of,
     )
 
-    x.up.assign = 0.3
+    x.up.assignment = 0.3
     MIP1.solve()
 
     print("Objective Function Value:  ", round(of.toValue(), 4))

@@ -69,8 +69,8 @@ def main():
     eq2 = Equation(m, name="eq2")
     eq3 = Equation(m, name="eq3", domain=[bus])
 
-    eq1.expr = Sum(bus, PMU[bus]) <= NPMU
-    eq2.expr = OF == Sum(node, alpha[node])
+    eq1.definition = Sum(bus, PMU[bus]) <= NPMU
+    eq2.definition = OF == Sum(node, alpha[node])
     eq3[bus] = (
         PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
     )
@@ -91,7 +91,7 @@ def main():
     OBIrep = Parameter(m, "OBIrep", domain=[counter])
 
     for idx, iter, _ in counter.records.itertuples():
-        NPMU.assign = idx + 1
+        NPMU.assignment = idx + 1
         placement3.solve()
         report[bus, iter] = PMU.l[bus]
         OBIrep[iter] = OF.l

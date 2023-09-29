@@ -121,7 +121,7 @@ def main():
 
     choice[j] = Sum(i, x[i, j]) == 1
 
-    defz.expr = z == Sum([i, j], f[i, j] * x[i, j])
+    defz.definition = z == Sum([i, j], f[i, j] * x[i, j])
 
     _ = Model(
         m,
@@ -231,7 +231,7 @@ def main():
 
     knapsack[id] = Sum(j, a[id, j] * x[id, j]) <= b[id]
 
-    defzlrx.expr = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
+    defzlrx.definition = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
 
     pknap = Model(
         m,
@@ -302,8 +302,8 @@ def main():
     m.addOptions({"mip": "default", "rmip": "default"})
 
     results = open("solution", "w", encoding="UTF-8")
-    results.write("solvers used: RMIP = HIGHS\n")
-    results.write("               MIP = HIGHS\n")
+    results.write("solvers used: RMIP = CPLEX\n")
+    results.write("               MIP = CPLEX\n")
 
     # solve relaxed problem to get initial multipliers
     # Note that different solvers get different dual solutions
@@ -313,7 +313,7 @@ def main():
     results.write(f"\nRMIP objective value = {round(z.toValue(), 3)}\n")
 
     if assign_rmip.status == ModelStatus.OptimalGlobal:
-        status.assign = 1  # everything is ok
+        status.assignment = 1  # everything is ok
     else:
         raise GamspyException(
             "*** relaxed MIP not optimal", "    no subgradient iterations", x
@@ -331,7 +331,7 @@ def main():
         description="an optimal set of multipliers",
     )
 
-    zlbest.assign = z.l
+    zlbest.assignment = z.l
 
     # use RMIP duals
     w[j] = choice.m[j]
@@ -341,7 +341,7 @@ def main():
 
     # use zero starting point
     # w[j]   = 0
-    # zlbest.assign = 0
+    # zlbest.assignment = 0
 
     results.write(
         "\n\nzlbest                    objective value  = "
@@ -357,7 +357,7 @@ def main():
     # one needs a value for zfeas
     # one can compute a valid upper bound as follows:
 
-    zfeas.assign = Sum(j, Smax(i, f[i, j]))
+    zfeas.assignment = Sum(j, Smax(i, f[i, j]))
     results.write(
         "\n\nzfeas quick and dirty bound obj value      = "
         f" {round(zfeas.toValue(),3)}"
@@ -373,7 +373,7 @@ def main():
     # assign_mip.optCr = 1
 
     # assign_mip.solve()
-    # zfeas.assign = gams_math.min(zfeas, z.l)
+    # zfeas.assignment = gams_math.min(zfeas, z.l)
     # print('final zfeas', zfeas.toValue())
     # print('heuristic solution by B-B ', z.toValue(), "\n", x.pivot())
     # results.write(f"\nzfeas IP solution bound objective value    = {zfeas.toValue()}")
@@ -394,8 +394,8 @@ def main():
     #                                                                              #
     # ============================================================================ #
     id[i] = False  # initially empty
-    count.assign = 1
-    alpha.assign = 1
+    count.assignment = 1
+    alpha.assignment = 1
 
     for iter_loop in iter.toList():
         if status.toValue() != 1:
@@ -405,28 +405,28 @@ def main():
         # problems. Note the use of the dynamic set id[i] which will
         # contain the current knapsack descriptor.
 
-        zlr.assign = 0
+        zlr.assignment = 0
         for ii_loop in ii.toList():
             id[ii_loop] = True  # assume id was empty
             pknap.solve()
-            zlr.assign = zlr + zlrx.l
+            zlr.assignment = zlr + zlrx.l
             id[ii_loop] = False  # make set empty again
 
-        improv.assign = 0
-        zl.assign = zlr + Sum(j, w[j])
+        improv.assignment = 0
+        zl.assignment = zlr + Sum(j, w[j])
         improv.where[zl > zlbest] = 1  # is zl better than zlbest?
-        zlbest.assign = gams_math.max(zlbest, zl)
+        zlbest.assignment = gams_math.max(zlbest, zl)
         s[j] = 1 - Sum(i, x.l[i, j])  # subgradient
-        norm.assign = Sum(j, sqr(s[j]))
+        norm.assignment = Sum(j, sqr(s[j]))
 
         if norm.toValue() < tol.toValue():
-            status.assign = 2
+            status.assignment = 2
 
         if abs(zlbest.toValue() - zfeas.toValue()) < 1e-4:
-            status.assign = 3
+            status.assignment = 3
 
         if pknap.status != ModelStatus.OptimalGlobal:
-            status.assign = 4
+            status.assignment = 4
 
         row = [
             iter_loop,
@@ -473,19 +473,21 @@ def main():
         xrep[j, i, iter_loop] = x.l[i, j]
 
         if status.toValue() == 1:
-            target.assign = (zlbest + zfeas) / 2
-            step.assign = (alpha * (target - zl) / norm).where[norm > tol]
+            target.assignment = (zlbest + zfeas) / 2
+            step.assignment = (alpha * (target - zl) / norm).where[norm > tol]
             w[j] = w[j] + step * s[j]
             if (
                 count.toValue() > reset.toValue()
             ):  # too many iterations w/o improvement
-                alpha.assign = alpha / 2
-                count.assign = 1
+                alpha.assignment = alpha / 2
+                count.assignment = 1
             else:
                 if improv.toValue():  # reset count if improvement
-                    count.assign = 1
+                    count.assignment = 1
                 else:
-                    count.assign = count + 1  # update count if no improvement
+                    count.assignment = (
+                        count + 1
+                    )  # update count if no improvement
 
         print(
             "iteration #: ",

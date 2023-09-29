@@ -27,10 +27,13 @@ import importlib
 import os
 import shutil
 import subprocess
+import sys
 from typing import Dict
 
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
+
+from .util import add_solver_entry, remove_solver_entry
 
 
 SOLVERS = [
@@ -38,22 +41,17 @@ SOLVERS = [
     "soplex",
     "highs",
     "copt",
-    "cplex",
     "gurobi",
     "xpress",
     "odhcplex",
     "mosek",
-    "path",
     "mpsge",
     "miles",
-    "nlpec",
     "knitro",
     "ipopt",
     "minos",
     "snopt",
-    "conopt",
     "ipopth",
-    "sbb",
     "dicopt",
     "alphaecp",
     "shot",
@@ -71,16 +69,30 @@ def get_args():
         prog="gamspy",
         description="A script for installing solvers and licenses",
     )
-    parser.add_argument("command", choices=["install"], type=str)
+    parser.add_argument("command", choices=["install", "uninstall"], type=str)
     parser.add_argument("component", choices=["license", "solver"], type=str)
-    parser.add_argument("name", type=str)
+    parser.add_argument("name", type=str, nargs="?", default=None)
+    parser.add_argument("--skip-pip-install", action="store_true")
+    parser.add_argument("--skip-pip-uninstall", action="store_true")
 
-    return vars(parser.parse_args())
+    res = vars(parser.parse_args())
+    if res["name"] is None and not (
+        res["command"] == "uninstall" and res["component"] == "license"
+    ):
+        sys.stderr.write("name must be specified\n")
+        sys.exit(1)
+
+    return res
 
 
 def install_license(args: Dict[str, str]):
-    minigams_dir = utils._getMinigamsDirectory()
-    shutil.copy(args["name"], minigams_dir + os.sep + "gamslice.txt")
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
+
+
+def uninstall_license(args: Dict[str, str]):
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
 
 
 def install_solver(args: Dict[str, str]):
@@ -90,24 +102,28 @@ def install_solver(args: Dict[str, str]):
             f"Solver name is not valid. Possible solver names: {SOLVERS}"
         )
 
-    # install specified solver
-    try:
-        _ = subprocess.run(["pip", "install", f"gamspy_{solver_name}"])
-    except subprocess.CalledProcessError as e:
-        raise GamspyException(
-            f"Could not install gamspy_{solver_name}: {e.output}"
-        )
+    if not args["skip_pip_install"]:
+        # install specified solver
+        try:
+            _ = subprocess.run(
+                ["pip", "install", f"gamspy_{solver_name}"], check=True
+            )
+        except subprocess.CalledProcessError as e:
+            raise GamspyException(
+                f"Could not install gamspy_{solver_name}: {e.output}"
+            )
 
-    # copy solver files to minigams
-    minigams_dir = utils._getMinigamsDirectory()
+    # copy solver files to gamspy_base
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
     for file in solver_lib.file_paths:
-        shutil.copy(file, minigams_dir)
+        shutil.copy(file, gamspy_base_dir)
 
-    update_dist_info(solver_lib, minigams_dir)
+    update_dist_info(solver_lib, gamspy_base_dir)
+    add_solver_entry(gamspy_base_dir, solver_name, solver_lib.verbatim)
 
 
-def update_dist_info(solver_lib, minigams_dir: str):
+def update_dist_info(solver_lib, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
     import gamspy as gp
 
@@ -115,14 +131,39 @@ def update_dist_info(solver_lib, minigams_dir: str):
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
 
     with open(dist_info_path + os.sep + "RECORD", "a") as record:
-        minigams_relative_path = os.sep.join(minigams_dir.split(os.sep)[-3:])
+        gamspy_base_relative_path = os.sep.join(
+            gamspy_base_dir.split(os.sep)[-3:]
+        )
 
         lines = []
         for file in solver_lib.files:
-            line = f"{minigams_relative_path}{os.sep}{file},,"
+            line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
         record.write("\n".join(lines))
+
+
+def uninstall_solver(args: Dict[str, str]):
+    solver_name = args["name"]
+    if solver_name not in SOLVERS:
+        raise Exception(
+            f"Solver name is not valid. Possible solver names: {SOLVERS}"
+        )
+
+    if not args["skip_pip_uninstall"]:
+        # uninstall specified solver
+        try:
+            _ = subprocess.run(
+                ["pip", "uninstall", f"gamspy_{solver_name}"], check=True
+            )
+        except subprocess.CalledProcessError as e:
+            raise GamspyException(
+                f"Could not uninstall gamspy_{solver_name}: {e.output}"
+            )
+
+    # do not delete files from gamspy_base as other solvers might depend on it
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    remove_solver_entry(gamspy_base_dir, solver_name)
 
 
 def install(args: Dict[str, str]):
@@ -130,6 +171,13 @@ def install(args: Dict[str, str]):
         install_license(args)
     elif args["component"] == "solver":
         install_solver(args)
+
+
+def uninstall(args: Dict[str, str]):
+    if args["component"] == "license":
+        uninstall_license(args)
+    elif args["component"] == "solver":
+        uninstall_solver(args)
 
 
 def main():
@@ -140,3 +188,5 @@ def main():
 
     if args["command"] == "install":
         install(args)
+    elif args["command"] == "uninstall":
+        uninstall(args)

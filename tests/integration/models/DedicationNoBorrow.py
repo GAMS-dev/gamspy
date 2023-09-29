@@ -98,8 +98,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assign = 2001
-    Horizon.assign = Card(t) - 1
+    Now.assignment = 2001
+    Horizon.assignment = Card(t) - 1
 
     # PARAMETER #
     tau = Parameter(m, name="tau", domain=[t], description="Time in years")

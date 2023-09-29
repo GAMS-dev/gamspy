@@ -2,13 +2,16 @@ import os
 import platform
 import subprocess
 import sys
+import tempfile
+
 
 platform_to_job_prefix = {
     "windows": "test-wei-",
     "linux": "test-leg-",
     "mac_x86_64": "test-deg-",
-    "mac_arm64": "test-dac-"
+    "mac_arm64": "test-dac-",
 }
+
 
 def get_default_platform():
     operating_system = platform.system().lower()
@@ -26,6 +29,7 @@ def get_job_name():
     minor = sys.version_info.minor
     return f"{job_prefix}{major}.{minor}"
 
+
 def get_artifacts():
     token = os.environ["gamspy_base_token"]
     repo = os.environ["gamspy_base_artifacts"]
@@ -39,9 +43,12 @@ def get_artifacts():
         "artifacts.zip",
         "--header",
         f"PRIVATE-TOKEN: {token}",
-        repo
+        repo,
     ]
 
+    subprocess.run(command, check=True)
+
+    command = ["unzip", "artifacts.zip"]
     subprocess.run(command, check=True)
 
 
@@ -49,9 +56,22 @@ def install_transfer():
     command = [
         "pip",
         "install",
-        "gams",
+        "gamsapi[transfer, connect]",
         "--find-links",
-        "wheels",
+        ".",
+        "--force-reinstall",
+    ]
+
+    subprocess.run(command, check=True)
+
+
+def install_gamspy_base():
+    command = [
+        "pip",
+        "install",
+        "gamspy_base",
+        "--find-links",
+        "gamspy_base/dist",
         "--force-reinstall",
     ]
 
@@ -59,7 +79,7 @@ def install_transfer():
 
 
 def install_gamspy():
-    subprocess.run(["python", "setup.py", "bdist_wheel"])
+    subprocess.run(["python", "setup.py", "sdist"])
 
     command = [
         "pip",
@@ -68,12 +88,37 @@ def install_gamspy():
         "--find-links",
         "dist",
         "--force-reinstall",
+        "--no-deps",
+        "--no-cache",
     ]
 
     subprocess.run(command, check=True)
 
 
+def install_gams_license():
+    lice = os.environ["GAMS_LICENSE"]
+    command = ["gamspy", "install", "license"]
+
+    try:
+        f = tempfile.NamedTemporaryFile(mode="wt", suffix=".txt", delete=False)
+        f.write(lice)
+        f.close()
+        command.append(f.name)
+        subprocess.run(command, check=True)
+    finally:
+        os.unlink(f.name)
+
+
+def install_development_dependencies():
+    command = ["pip", "install", "-r", "dev_requirements.txt"]
+
+    subprocess.run(command, check=True)
+
+
 if __name__ == "__main__":
+    install_development_dependencies()
     get_artifacts()
     install_transfer()
+    install_gamspy_base()
     install_gamspy()
+    install_gams_license()

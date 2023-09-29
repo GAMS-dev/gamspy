@@ -72,10 +72,10 @@ def main():
     pop = Parameter(m, name="pop")
     zeta = Parameter(m, name="zeta")
 
-    ror.assign = 0.05
-    dep.assign = 0.04
-    pop.assign = 0.02
-    zeta.assign = 1
+    ror.assignment = 0.05
+    dep.assignment = 0.04
+    pop.assignment = 0.02
+    zeta.assignment = 1
 
     sam_data = np.array(
         [
@@ -298,7 +298,7 @@ def main():
     pk1 = Parameter(m, name="pk1", domain=[t])
     PRICE1 = Parameter(m, name="PRICE1", domain=[t])
 
-    Td00.assign = SAM["GOV", "HOH"]
+    Td00.assignment = SAM["GOV", "HOH"]
     Tz00[j] = SAM["IDT", j]
     Tm00[j] = SAM["TRF", j]
     F00[h, j] = SAM[h, j]
@@ -309,12 +309,12 @@ def main():
     tauz00[j] = Tz00[j] / Z00[j]
     taum00[j] = Tm00[j] / M00[j]
     Xp00[i] = SAM[i, "HOH"]
-    CC00.assign = Sum(i, Xp00[i])
+    CC00.assignment = Sum(i, Xp00[i])
     FF00[h] = SAM["HOH", h]
     E00[i] = SAM[i, "EXT"]
     D00[i] = (1 + tauz00[i]) * Z00[i] - E00[i]
     Q00[i] = (1 + taum00[i]) * M00[i] + D00[i]
-    Sf00.assign = SAM["INV", "EXT"]
+    Sf00.assignment = SAM["INV", "EXT"]
 
     # ===============================================================
     # Adjusting Investment in the SAM for the Assumed BAU Growth Path
@@ -324,9 +324,9 @@ def main():
     III_SAM = Parameter(m, name="III_SAM")
     adj = Parameter(m, name="adj")
 
-    III_ASS.assign = (pop + dep) / ror * FF00["CAP"]
-    III_SAM.assign = Sum(i, SAM[i, "INV"])
-    adj.assign = III_ASS / III_SAM
+    III_ASS.assignment = (pop + dep) / ror * FF00["CAP"]
+    III_SAM.assignment = Sum(i, SAM[i, "INV"])
+    adj.assignment = III_ASS / III_SAM
 
     # Adjusting investment level
     Xv00[i] = SAM[i, "INV"] * adj
@@ -335,11 +335,11 @@ def main():
     Xg00[i] = SAM[i, "GOV"] - (Xv00[i] - SAM[i, "INV"])
 
     # Computing the direct tax revenue that balances the gov. budget
-    Td00.assign = Sum(i, Xg00[i]) - Sum(i, Tz00[i] + Tm00[i])
+    Td00.assignment = Sum(i, Xg00[i]) - Sum(i, Tz00[i] + Tm00[i])
 
     # Computing the household sav. that balances the household budget
-    Sp00.assign = Sum(h, FF00[h]) - (Sum(i, Xp00[i]) + Td00)
-    III00.assign = Sum(i, Xv00[i])
+    Sp00.assignment = Sum(h, FF00[h]) - (Sum(i, Xp00[i]) + Td00)
+    III00.assignment = Sum(i, Xv00[i])
     II00[j] = (Sp00 + Sf00) * F00["CAP", j] / Sum(i, F00["CAP", i])
     KK00[j] = F00["CAP", j] / ror
 
@@ -416,13 +416,13 @@ def main():
     ssp = Parameter(m, name="ssp")
 
     alpha[i] = Xp00[i] / Sum(j, Xp00[j])
-    a.assign = CC00 / Product(j, Xp00[j] ** alpha[j])
+    a.assignment = CC00 / Product(j, Xp00[j] ** alpha[j])
     beta[h, j] = F00[h, j] / Sum(k, F00[k, j])
     b[j] = Y00[j] / Product(h, F00[h, j] ** beta[h, j])
     ax[i, j] = X00[i, j] / Z00[j]
     ay[j] = Y00[j] / Z00[j]
     lamda[i] = Xv00[i] / Sum(j, Xv00[j])
-    iota.assign = III00 / Product(i, Xv00[i] ** lamda[i])
+    iota.assignment = III00 / Product(i, Xv00[i] ** lamda[i])
     deltam[i] = (
         (1 + taum00[i])
         * M00[i] ** (1 - eta[i])
@@ -443,7 +443,7 @@ def main():
     theta[i] = Z00[i] / (
         xie[i] * E00[i] ** phi[i] + xid[i] * D00[i] ** phi[i]
     ) ** (1 / phi[i])
-    ssp.assign = Sp00 / (Sum([h, j], F00[h, j]) - Td00)
+    ssp.assignment = Sp00 / (Sum([h, j], F00[h, j]) - Td00)
 
     # ===============================================================
     # Defining model system -----------------------------------------
@@ -533,7 +533,7 @@ def main():
 
     # [government behavior] -
     # lump Sum direct tax revenue
-    eqTd.expr = Td == Sum(i, pq[i] * Xg[i]) - Sum(i, Tm[i] + Tz[i])
+    eqTd.definition = Td == Sum(i, pq[i] * Xg[i]) - Sum(i, Tm[i] + Tz[i])
 
     # production tax revenue
     eqTz[j] = Tz[j] == tauz[j] * pz[j] * Z[j]
@@ -547,7 +547,7 @@ def main():
 
     # [savings] ----------
     # savings function
-    eqSp.expr = Sp == ssp * (Sum([h, j], pf[h, j] * F[h, j]) - Td)
+    eqSp.definition = Sp == ssp * (Sum([h, j], pf[h, j] * F[h, j]) - Td)
 
     # [household consumption] --                          (Cobb-Douglas)
     eqXp[i] = (
@@ -560,7 +560,7 @@ def main():
     eqpm[i] = pm[i] == epsilon * pWm[i]
 
     # BOP constraint
-    eqepsilon.expr = Sum(i, pWe[i] * E[i]) + Sf == Sum(i, pWm[i] * M[i])
+    eqepsilon.definition = Sum(i, pWe[i] * E[i]) + Sf == Sum(i, pWm[i] * M[i])
 
     # [Armington function] --
     # Armington's composite good production function              (CES)
@@ -620,11 +620,11 @@ def main():
     eqpf3[j] = F["CAP", j] == ror * KK[j]
 
     # investment goods market
-    eqpk.expr = Sum(j, II[j]) == III
+    eqpk.definition = Sum(j, II[j]) == III
 
     # [dynamic equations]
     # composite investment good market clearing condition
-    eqIII.expr = III == iota * Product(i, Xv[i] ** lamda[i])
+    eqIII.definition = III == iota * Product(i, Xv[i] ** lamda[i])
 
     # sectoral investment allocation
     eqII[j] = pk * II[j] == pf["CAP", j] ** zeta * F["CAP", j] / Sum(
@@ -632,10 +632,10 @@ def main():
     ) * (Sp + epsilon * Sf)
 
     # felicity function
-    eqCC.expr = CC == a * Product(i, Xp[i] ** alpha[i])
+    eqCC.definition = CC == a * Product(i, Xp[i] ** alpha[i])
 
     # Price level [numeraire]
-    eqPRICE.expr = PRICE == Sum(j, pq[j] * Q00[j] / Sum(i, Q00[i]))
+    eqPRICE.definition = PRICE == Sum(j, pq[j] * Q00[j] / Sum(i, Q00[i]))
 
     # ===============================================================
     # Initializing variables ----------------------------------------
@@ -657,25 +657,25 @@ def main():
     pe.l[i] = 1
     pm.l[i] = 1
     pd.l[i] = 1
-    pk.l.assign = 1
-    epsilon.l.assign = 1
-    Sp.l.assign = Sp00
-    Td.l.assign = Td00
+    pk.l.assignment = 1
+    epsilon.l.assignment = 1
+    Sp.l.assignment = Sp00
+    Td.l.assignment = Td00
     Tz.l[j] = Tz00[j]
     Tm.l[i] = Tm00[i]
     FF.l[h] = FF00[h]
-    III.l.assign = III00
+    III.l.assignment = III00
     II.l[j] = II00[j]
 
     # ---------------------------------------------------------------
     # Numeraire
-    PRICE.fx.assign = 1
+    PRICE.fx.assignment = 1
 
     # Initial factor endowments and exogenous variables
     FF.fx[h_mob] = FF00[h_mob]
     KK.fx[j] = KK00[j]
     Xg.fx[i] = Xg00[i]
-    Sf.fx.assign = Sf00
+    Sf.fx.assignment = Sf00
 
     # ===============================================================
     # Defining and solving the model --------------------------------
@@ -747,7 +747,7 @@ def main():
         KK.fx[j] = (1 - dep) * KK.l[j] + II.l[j]
         if int(iteration) < 30:
             Xg.fx[i] = Xg0[i, str(int(iteration) + 1)]
-            Sf.fx.assign = Sf0[str(int(iteration) + 1)]
+            Sf.fx.assignment = Sf0[str(int(iteration) + 1)]
 
     # ===============================================================
     # Aftermath Computation
@@ -1270,7 +1270,7 @@ def main():
 
     # Welfare measure: Hicksian equivalent variations ---------------
     EV[t] = (CC1[t] - CC0[t]) / a / Product(i, (alpha[i] / 1) ** alpha[i])
-    EV_TTL.assign = Sum(t, EV[t] / (1 + ror) ** (Ord(t) - 1))
+    EV_TTL.assignment = Sum(t, EV[t] / (1 + ror) ** (Ord(t) - 1))
 
     print("EV_TTL: ", round(EV_TTL.records.value[0], 3))
 

@@ -61,11 +61,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._assignment = None
 
     @property
-    def assign(self):
+    def assignment(self):
         return self._assignment  # pragma: no cover
 
-    @assign.setter
-    def assign(self, assignment) -> None:
+    @assignment.setter
+    def assignment(self, assignment) -> None:
         self._assignment = assignment
 
         statement = expression.Expression(

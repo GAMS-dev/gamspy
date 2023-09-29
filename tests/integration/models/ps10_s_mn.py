@@ -145,7 +145,7 @@ def main():
         description="monotonicity constraint",
     )
 
-    obj.expr = Util == Sum(i, p[i] * (b[i] - w[i]))
+    obj.definition = Util == Sum(i, p[i] * (b[i] - w[i]))
 
     rev[i] = b[i] == x[i] ** (0.5)
 
@@ -251,13 +251,13 @@ def main():
         m, name="p_Util_gap", description="no util-equality case [%]"
     )
 
-    p_noMHRC.assign = (
+    p_noMHRC.assignment = (
         Sum(t.where[noMHRC[t] > Number(0)], Number(1)) / Card(t) * 100
     )
-    p_noMN_lic.assign = (
+    p_noMN_lic.assignment = (
         Sum(t.where[MN_lic[t] > Number(0)], Number(1)) / Card(t) * 100
     )
-    p_Util_gap.assign = (
+    p_Util_gap.assignment = (
         Sum(t.where[Util_gap[t] > Number(0)], Number(1)) / Card(t) * 100
     )
 

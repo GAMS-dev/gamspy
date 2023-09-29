@@ -102,8 +102,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assign = 2001
-    Horizon.assign = Card(t) - 1
+    Now.assignment = 2001
+    Horizon.assignment = Card(t) - 1
 
     # PARAMETER #
     tau = Parameter(m, name="tau", domain=[t], description="Time in years")
@@ -239,13 +239,13 @@ def main():
     # Calculate the corresponding amounts for Liabilities. Use its PV as its
     # "price".
 
-    PV_Liab.assign = Sum(t, Liability[t] * gams_math.exp(-r[t] * tau[t]))
+    PV_Liab.assignment = Sum(t, Liability[t] * gams_math.exp(-r[t] * tau[t]))
 
-    Dur_Liab.assign = (1.0 / PV_Liab) * Sum(
+    Dur_Liab.assignment = (1.0 / PV_Liab) * Sum(
         t, tau[t] * Liability[t] * gams_math.exp(-r[t] * tau[t])
     )
 
-    Conv_Liab.assign = (1.0 / PV_Liab) * Sum(
+    Conv_Liab.assignment = (1.0 / PV_Liab) * Sum(
         t, sqr(tau[t]) * Liability[t] * gams_math.exp(-r[t] * tau[t])
     )
 
@@ -289,15 +289,19 @@ def main():
         description="Objective function definition",
     )
 
-    ObjDef.expr = z == Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (
+    ObjDef.definition = z == Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (
         PV_Liab * Dur_Liab
     )
 
-    PresentValueMatch.expr = Sum(i, PV[i] * x[i]) == PV_Liab
+    PresentValueMatch.definition = Sum(i, PV[i] * x[i]) == PV_Liab
 
-    DurationMatch.expr = Sum(i, Dur[i] * PV[i] * x[i]) == PV_Liab * Dur_Liab
+    DurationMatch.definition = (
+        Sum(i, Dur[i] * PV[i] * x[i]) == PV_Liab * Dur_Liab
+    )
 
-    ConvexityMatch.expr = Sum(i, Conv[i] * PV[i] * x[i]) >= PV_Liab * Conv_Liab
+    ConvexityMatch.definition = (
+        Sum(i, Conv[i] * PV[i] * x[i]) >= PV_Liab * Conv_Liab
+    )
 
     ImmunizationOne = Model(
         m,
@@ -310,7 +314,7 @@ def main():
     ImmunizationOne.solve()
 
     Convexity = Parameter(m, name="Convexity")
-    Convexity.assign = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x.l[i])
+    Convexity.assignment = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x.l[i])
     x_results = []
 
     x_results.append(x.records.level.tolist())
@@ -327,9 +331,9 @@ def main():
     )
     ImmunizationTwo.solve()
 
-    DurationMatch.l.assign = DurationMatch.l / PV_Liab
+    DurationMatch.l.assignment = DurationMatch.l / PV_Liab
 
-    ConvexityMatch.l.assign = ConvexityMatch.l / PV_Liab
+    ConvexityMatch.l.assignment = ConvexityMatch.l / PV_Liab
 
     x_results.append(x.records.level.tolist())
     print("PresentValueMatch: ", PresentValueMatch.records.level[0])
@@ -338,7 +342,9 @@ def main():
 
     ConvexityObj = Equation(m, name="ConvexityObj")
 
-    ConvexityObj.expr = z == (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x[i])
+    ConvexityObj.definition = z == (1.0 / PV_Liab) * Sum(
+        i, Conv[i] * PV[i] * x[i]
+    )
 
     ImmunizationThree = Model(
         m,

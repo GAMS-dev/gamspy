@@ -76,14 +76,14 @@ def main():
     eq2 = Equation(m, name="eq2", type="regular")
     eq3 = Equation(m, name="eq3", type="regular")
 
-    eq1.expr = TC == Sum(
+    eq1.definition = TC == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
-    eq2.expr = Sum(gen, P[gen]) >= load
-    eq3.expr = TE == Sum(
+    eq2.definition = Sum(gen, P[gen]) >= load
+    eq3.definition = TE == Sum(
         gen,
         data[gen, "d"] * P[gen] * P[gen]
         + data[gen, "e"] * P[gen]
@@ -118,10 +118,10 @@ def main():
     report["minTE"] = TE.l
 
     for idx, cc in enumerate(counter.toList()):
-        Elim.assign = (report["maxTE"] - report["minTE"]) * (idx) / (
+        Elim.assignment = (report["maxTE"] - report["minTE"]) * (idx) / (
             Card(counter) - 1
         ) + report["minTE"]
-        TE.up.assign = Elim
+        TE.up.assignment = Elim
         END1.solve()
         rep[cc, "TC"] = TC.l
         rep[cc, "TE"] = TE.l

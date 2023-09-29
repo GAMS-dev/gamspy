@@ -129,13 +129,13 @@ def main():
     )
 
     # Calculate initial portfolio value
-    HoldVal.assign = Sum(
+    HoldVal.assignment = Sum(
         JxI[j, i], ExchangeRates0[j] * InitialHoldings[i] * Price0[i]
     )
-    InitAccrCash.assign = Sum(
+    InitAccrCash.assignment = Sum(
         JxI[j, i], ExchangeRates0[j] * InitialHoldings[i] * Accruals0[i]
     )
-    InitVal.assign = CashInfusion + InitAccrCash + HoldVal
+    InitVal.assignment = CashInfusion + InitAccrCash + HoldVal
 
     # VARIABLES #
     X0 = Variable(
@@ -220,9 +220,11 @@ def main():
         description="MAD constraints",
     )
 
-    ObjDef.expr = z == 1000 * Sum(l, pr[l] * (FinalCash[l] / InitVal - 1))
+    ObjDef.definition = z == 1000 * Sum(
+        l, pr[l] * (FinalCash[l] / InitVal - 1)
+    )
 
-    CashInventoryCon.expr = (
+    CashInventoryCon.definition = (
         CashInfusion
         + Sum(JxI[j, i], ExchangeRates0[j] * Y0[i] * Price0[i] * (1 - TrnCstS))
         == Sum(
@@ -265,9 +267,9 @@ def main():
     low = Parameter(m, name="low", description="Lower bisection value")
     high = Parameter(m, name="high", description="Upper bisection value")
 
-    high.assign = -np.inf
-    low.assign = 0
-    EpsTolerance.assign = 0.01
+    high.assignment = -np.inf
+    low.assignment = 0
+    EpsTolerance.assignment = 0.01
 
     while high.records.value[0] <= 0:
         BondIndex.solve()
@@ -275,13 +277,13 @@ def main():
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
-            high.assign = EpsTolerance
+            high.assignment = EpsTolerance
         else:
-            EpsTolerance.assign = 2 * EpsTolerance
+            EpsTolerance.assignment = 2 * EpsTolerance
 
     # Find a small feasible EpsTolerance via bisection
     while True:
-        EpsTolerance.assign = (
+        EpsTolerance.assignment = (
             low.records.value[0] + high.records.value[0]
         ) / 2
         BondIndex.solve()
@@ -289,9 +291,9 @@ def main():
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
-            high.assign = EpsTolerance
+            high.assignment = EpsTolerance
         else:
-            low.assign = EpsTolerance
+            low.assignment = EpsTolerance
 
         if (
             (high.records.value[0] - low.records.value[0]) < 0.005

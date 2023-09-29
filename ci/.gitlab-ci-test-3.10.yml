@@ -33,8 +33,9 @@ test-deg-3.10:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.10 python=3.10
-    - conda activate gamspy-env-3.10
+    - conda create -y -n "gamspy-env-3.10${CI_COMMIT_REF_SLUG}" python=3.10
+    - conda activate "gamspy-env-3.10${CI_COMMIT_REF_SLUG}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration
@@ -52,8 +53,9 @@ test-dac-3.10:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.10 python=3.10
-    - conda activate gamspy-env-3.10
+    - conda create -y -n "gamspy-env-3.10${CI_COMMIT_REF_SLUG}" python=3.10
+    - conda activate "gamspy-env-3.10${CI_COMMIT_REF_SLUG}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration

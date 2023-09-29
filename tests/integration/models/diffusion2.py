@@ -531,7 +531,7 @@ def main():
 
     # Initial values
     t.l[x, y] = 0.0
-    Q.l.assign = 0.0
+    Q.l.assignment = 0.0
 
     # EQUATIONS #
     temp = Equation(
@@ -632,7 +632,7 @@ def main():
     fp3[x, y].where[(Ord(y) == 1)] = t[x, y] == Q
     fp4[x, y].where[(Ord(y) == Card(y))] = t[x, y] == Q
 
-    eobj.expr = obj == Q
+    eobj.definition = obj == Q
 
     Diffusion2 = Model(
         m,
@@ -648,7 +648,9 @@ def main():
         print(f"\t --- \t Time interval = {tu} \t --- \n")
         print(t.pivot().round(4))
         print("\n")
-        heat.assign = heat + Sum([x, y], t.l[x, y] - past_T[x, y]) * dx * dy
+        heat.assignment = (
+            heat + Sum([x, y], t.l[x, y] - past_T[x, y]) * dx * dy
+        )
         past_T[x, y] = t.l[x, y]
 
     # End Diffusion2

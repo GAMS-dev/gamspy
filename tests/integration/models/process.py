@@ -50,18 +50,20 @@ def main():
     rngdf4 = Equation(m, name="rngdf4")
     dprofit = Equation(m, name="dprofit")
 
-    yield1.expr = alkylate == olefin * (
+    yield1.definition = alkylate == olefin * (
         1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)
     )
-    makeup.expr = alkylate == olefin + isom - 0.22 * alkylate
-    sdef.expr = acid == alkylate * dilute * strength / (98 - strength) / 1000
-    motor.expr = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
+    makeup.definition = alkylate == olefin + isom - 0.22 * alkylate
+    sdef.definition = (
+        acid == alkylate * dilute * strength / (98 - strength) / 1000
+    )
+    motor.definition = octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
         ratio
     ) - 0.325 * (89 - strength)
-    drat.expr = ratio == (isor + isom) / olefin
-    ddil.expr = dilute == 35.82 - 0.222 * f4
-    df4.expr = f4 == -133 + 3 * octane
-    dprofit.expr = (
+    drat.definition = ratio == (isor + isom) / olefin
+    ddil.definition = dilute == 35.82 - 0.222 * f4
+    df4.definition = f4 == -133 + 3 * octane
+    dprofit.definition = (
         profit
         == 0.063 * alkylate * octane
         - 5.04 * olefin
@@ -69,14 +71,15 @@ def main():
         - 10 * acid
         - 3.36 * isom
     )
-    rngyield.expr = rangey * alkylate == olefin * (
+    rngyield.definition = rangey * alkylate == olefin * (
         1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)
     )
-    rngmotor.expr = rangem * octane == 86.35 + 1.098 * ratio - 0.038 * sqr(
-        ratio
-    ) - 0.325 * (89 - strength)
-    rngddil.expr = ranged * dilute == 35.82 - 0.222 * f4
-    rngdf4.expr = rangef * f4 == -133 + 3 * octane
+    rngmotor.definition = (
+        rangem * octane
+        == 86.35 + 1.098 * ratio - 0.038 * sqr(ratio) - 0.325 * (89 - strength)
+    )
+    rngddil.definition = ranged * dilute == 35.82 - 0.222 * f4
+    rngdf4.definition = rangef * f4 == -133 + 3 * octane
 
     # Define Models
     process = Model(
@@ -105,47 +108,47 @@ def main():
         objective=profit,
     )
 
-    rangey.lo.assign = 0.9
-    rangey.up.assign = 1.1
-    rangey.l.assign = 1
-    rangem.lo.assign = 0.9
-    rangem.up.assign = 1.1
-    rangem.l.assign = 1
-    ranged.lo.assign = 0.9
-    ranged.up.assign = 1.1
-    ranged.l.assign = 1
-    rangef.lo.assign = 0.9
-    rangef.up.assign = 1.1
-    rangef.l.assign = 1
+    rangey.lo.assignment = 0.9
+    rangey.up.assignment = 1.1
+    rangey.l.assignment = 1
+    rangem.lo.assignment = 0.9
+    rangem.up.assignment = 1.1
+    rangem.l.assignment = 1
+    ranged.lo.assignment = 0.9
+    ranged.up.assignment = 1.1
+    ranged.l.assignment = 1
+    rangef.lo.assignment = 0.9
+    rangef.up.assignment = 1.1
+    rangef.l.assignment = 1
 
-    strength.lo.assign = 85
-    strength.up.assign = 93
-    octane.lo.assign = 90
-    octane.up.assign = 95
-    ratio.lo.assign = 3
-    ratio.up.assign = 12
-    dilute.lo.assign = 1.2
-    dilute.up.assign = 4
-    f4.lo.assign = 145
-    f4.up.assign = 162
-    olefin.lo.assign = 10
-    olefin.up.assign = 2000
-    isor.up.assign = 16000
-    acid.up.assign = 120
-    alkylate.up.assign = 5000
-    isom.up.assign = 2000
+    strength.lo.assignment = 85
+    strength.up.assignment = 93
+    octane.lo.assignment = 90
+    octane.up.assignment = 95
+    ratio.lo.assignment = 3
+    ratio.up.assignment = 12
+    dilute.lo.assignment = 1.2
+    dilute.up.assignment = 4
+    f4.lo.assignment = 145
+    f4.up.assignment = 162
+    olefin.lo.assignment = 10
+    olefin.up.assignment = 2000
+    isor.up.assignment = 16000
+    acid.up.assignment = 120
+    alkylate.up.assignment = 5000
+    isom.up.assignment = 2000
 
-    olefin.l.assign = 1745
-    isor.l.assign = 12000
-    acid.l.assign = 110
-    alkylate.l.assign = 3048
-    isom.l.assign = 1974
-    strength.l.assign = 89.2
-    octane.l.assign = 92.8
-    ratio.l.assign = 8
-    dilute.l.assign = 3.6
-    f4.l.assign = 145
-    profit.l.assign = 872
+    olefin.l.assignment = 1745
+    isor.l.assignment = 12000
+    acid.l.assignment = 110
+    alkylate.l.assignment = 3048
+    isom.l.assignment = 1974
+    strength.l.assignment = 89.2
+    octane.l.assignment = 92.8
+    ratio.l.assignment = 8
+    dilute.l.assignment = 3.6
+    f4.l.assignment = 145
+    profit.l.assignment = 872
 
     process.solve()
     print("Profit in model 'process': {:.2f}".format(profit.records.level[0]))

@@ -152,7 +152,7 @@ def main():
         description="state equation",
     )
 
-    criterion.expr = j == 0.5 * Sum(
+    criterion.definition = j == 0.5 * Sum(
         [k, n, nn],
         (x[n, k] - xtilde[n, k]) * w[n, nn, k] * (x[nn, k] - xtilde[nn, k]),
     ) + 0.5 * Sum(

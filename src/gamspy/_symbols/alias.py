@@ -59,10 +59,10 @@ class Alias(gt.Alias, operable.Operable, Symbol):
     """
 
     def __init__(self, container: "Container", name: str, alias_with: "Set"):
-        super().__init__(container, name, alias_with)
-
         # enable load on demand
         self._is_dirty = False
+
+        super().__init__(container, name, alias_with)
 
         # allow conditions
         self.where = condition.Condition(self)

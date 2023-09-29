@@ -80,16 +80,16 @@ def main():
         ["lc", "kc", "sup", "fpr", "dvv", "dl", "dk", "dv"]
     )
 
-    dty.expr = td == Sum(i, y[i])
+    dty.definition = td == Sum(i, y[i])
     mb[i] = x[i] >= y[i] + Sum(j, aio[i, j] * x[j]) + (e[i] - m[i]).where[t[i]]
-    tb.expr = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
+    tb.definition = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
     dg[t] = g[t] == mew[t] + xsi[t] * m[t]
     dh[t] = h[t] == gam[t] - alp[t] * e[t]
     dem[i] = y[i] == ynot[i] * (pd * p[i]) ** thet[i]
-    lc.expr = Sum(i, l[i] * x[i]) <= lbar
-    kc.expr = Sum(i, k[i] * x[i]) == kbar
+    lc.definition = Sum(i, l[i] * x[i]) <= lbar
+    kc.definition = Sum(i, k[i] * x[i]) == kbar
     sup[i] = p[i] == Sum(j, aio[j, i] * p[j]) + v[i]
-    fpr.expr = pi == pk / plab
+    fpr.definition = pi == pk / plab
     dvv[i].where[sig[i] != 0] = vv[i] == (pi * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
     )
@@ -129,10 +129,10 @@ def main():
     p.lo[i] = 0.1
     l.up[i] = 1
     k.up[i] = 1
-    pk.lo.assign = 0.25
-    pk.up.assign = 4
-    pi.lo.assign = 0.25
-    pi.up.assign = 4
+    pk.lo.assignment = 0.25
+    pk.up.assignment = 4
+    pi.lo.assignment = 0.25
+    pi.up.assignment = 4
     v.up[i] = 100
     vv.lo[i] = 0.001
 
@@ -155,10 +155,10 @@ def main():
     m.l[t] = 0
     g.l[t] = mew[t] + xsi[t] * m.l[t]
     h.l[t] = gam[t] - alp[t] * e.l[t]
-    pd.l.assign = 0.3
+    pd.l.assignment = 0.3
     p.l[i] = 3
-    pk.l.assign = 3.5
-    pi.l.assign = pk.l / plab
+    pk.l.assignment = 3.5
+    pi.l.assignment = pk.l / plab
 
     vv.l[i].where[sig[i]] = (pi.l * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
@@ -176,7 +176,7 @@ def main():
         + deli[i].where[sig[i] == 0]
     ) / efy[i]
     v.l[i] = pk.l * k.l[i] + plab * l.l[i]
-    pd.lo.assign = 0.01
+    pd.lo.assignment = 0.01
     p.lo[i] = 0.1
 
     chenrad.solve()

@@ -158,7 +158,7 @@ def main():
     balance = Equation(m, name="balance", type="regular", domain=[t])
     wind = Equation(m, name="wind", type="regular", domain=[t])
 
-    costThermalcalc.expr = cost == Sum(t, VWC * PWC[t]) + Sum(
+    costThermalcalc.definition = cost == Sum(t, VWC * PWC[t]) + Sum(
         [t, g],
         gendata[g, "a"] * gams_math.power(p[g, t], 2)
         + gendata[g, "b"] * p[g, t]
