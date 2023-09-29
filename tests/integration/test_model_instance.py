@@ -170,7 +170,7 @@ class ModelInstanceSuite(unittest.TestCase):
             m,
             name="BALANCE",
             description="notional balance constraint",
-            expr=(1 + IADJ) + (1 + MPSADJ) == INCOME0,
+            definition=(1 + IADJ) + (1 + MPSADJ) == INCOME0,
         )
 
         mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
