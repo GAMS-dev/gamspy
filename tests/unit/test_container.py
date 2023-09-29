@@ -269,6 +269,16 @@ class ContainerSuite(unittest.TestCase):
             )
             dummy.solve()
 
+    def test_write_load_on_demand(self):
+        m = Container()
+        i = Set(m, name="i", records=["i1"])
+        p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
+        p2 = Parameter(m, name="p2", domain=[i])
+        p2[i] = p1[i]
+        m.write("data.gdx")
+        m = Container("data.gdx")
+        self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
+
 
 def container_suite():
     suite = unittest.TestSuite()
