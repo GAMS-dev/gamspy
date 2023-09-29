@@ -75,6 +75,7 @@ from gamspy.math.misc import regularized_gamma
 from gamspy.math.misc import slrec
 from gamspy.math.misc import sqrec
 from gamspy.math.misc import ifthen
+from gamspy.math.misc import sigmoid
 from gamspy.math.probability import binomial
 from gamspy.math.probability import centropy
 from gamspy.math.probability import normal

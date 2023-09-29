@@ -573,6 +573,22 @@ def poly(x: "Symbol", *args) -> "Expression":
     return expression.Expression("poly(", f"{x.gamsRepr()},{args_str}", ")")
 
 
+def sigmoid(x: Union[int, float, "Symbol"]) -> "Expression":
+    """
+    Sigmoid of x
+
+    Parameters
+    ----------
+    x : int | float | Symbol
+
+    Returns
+    -------
+    Expression
+    """
+    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    return expression.Expression("sigmoid(", x_str, ")")
+
+
 def rand_binomial(n: Union[int, float], p: Union[int, float]) -> "Expression":
     """
     Generate a random number from the binomial distribution, where n is the

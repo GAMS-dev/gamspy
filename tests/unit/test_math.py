@@ -397,6 +397,13 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.errorf(a[i])
         self.assertEqual(op1.gamsRepr(), "(errorf( a(i) ))")
 
+        # sigmoid
+        op1 = gams_math.sigmoid(2.3)
+        self.assertEqual(op1.gamsRepr(), "(sigmoid( 2.3 ))")
+
+        op1 = gams_math.sigmoid(a[i])
+        self.assertEqual(op1.gamsRepr(), "(sigmoid( a(i) ))")
+
     def test_logical(self):
         m = Container()
 
