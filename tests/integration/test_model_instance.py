@@ -141,6 +141,51 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.solve(model_instance_options={"solver": "conopt"})
         self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
 
+    def test_fx(self):
+        m = Container()
+
+        # Data
+        INCOME0 = Parameter(
+            m, name="INCOME0", description="notional income level", records=3.5
+        )
+
+        # Variable
+        IADJ = Variable(
+            m,
+            name="IADJ",
+            description=(
+                "investment scaling factor (for fixed capital formation)"
+            ),
+            type="Free",
+        )
+        MPSADJ = Variable(
+            m,
+            name="MPSADJ",
+            description="savings rate scaling factor",
+            type="Free",
+        )
+
+        # Equation
+        BALANCE = Equation(
+            m,
+            name="BALANCE",
+            description="notional balance constraint",
+            expr=(1 + IADJ) + (1 + MPSADJ) == INCOME0,
+        )
+
+        mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
+        mm.freeze(modifiables=[INCOME0, IADJ.fx, MPSADJ.fx])
+        IADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
+        mm.solve()
+
+        self.assertEqual(MPSADJ.records["level"].tolist()[0], 1.5)
+
+        IADJ.records = None
+        MPSADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
+        mm.solve()
+
+        self.assertEqual(MPSADJ.records["level"].tolist()[0], 0)
+
 
 def model_instance_suite():
     suite = unittest.TestSuite()
