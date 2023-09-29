@@ -90,15 +90,15 @@ def main():
 
     # do some basic data checks
     check = Parameter(m, name="check")
-    check.assign = Sum(
+    check.assignment = Sum(
         [i, k], Round(Sum(j, dat[k, i, j]) - 2 * dat[k, i, "total"])
     )
     assert math.isclose(check.toList()[0], 0), "row totals are incorrect"
-    check.assign = Sum(
+    check.assignment = Sum(
         [j, k], Round(Sum(i, dat[k, i, j]) - 2 * dat[k, "total", j])
     )
     assert math.isclose(check.toList()[0], 0), "column totals are incorrect"
-    check.assign = Sum(
+    check.assignment = Sum(
         [i, j], Round(Sum(k, dat[k, i, j]) - 2 * dat["total", i, j])
     )
     assert math.isclose(check.toList()[0], 0), "plane totals are incorrect"
@@ -246,7 +246,7 @@ def main():
 
         cutone = Equation(m, name=f"cutone_{it}")
         cuttwo = Equation(m, name=f"cuttwo_{it}")
-        cutone.expr = (
+        cutone.definition = (
             sum(
                 [
                     1 - b[rec[:-1]] if rec[3] > 0.5 else b[rec[:-1]]
@@ -255,7 +255,7 @@ def main():
             )
             >= 1
         )
-        cuttwo.expr = (
+        cuttwo.definition = (
             sum(
                 [
                     1 - b[rec[:-1]] if rec[3] < 0.5 else b[rec[:-1]]
