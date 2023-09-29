@@ -110,10 +110,13 @@ class ModelInstance:
     ):
         options = self._prepare_freeze_options(freeze_options)
 
-        solve_string = (
-            f"{model.name} use"  # type: ignore
-            f" {model.problem} {model.sense} {model._objective_variable.name}"
-        )
+        solve_string = f"{model.name} using {model.problem}"
+
+        if model.sense:
+            solve_string += f" {model.sense}"
+
+        if model._objective_variable:
+            solve_string += f" {model._objective_variable.gamsRepr()}"
 
         modifiers = self._create_modifiers()
 
@@ -212,7 +215,7 @@ class ModelInstance:
         for key, value in attr_map.items():
             if key != attr:
                 columns.append(value)
-
+        
         return columns
 
     def _create_modifiers(self):
@@ -234,20 +237,23 @@ class ModelInstance:
             elif isinstance(modifiable, implicits.ImplicitParameter):
                 attribute = modifiable.name.split(".")[-1]
                 update_action = update_action_map[attribute]
+                
+                try:
+                    sync_db_symbol = self.instance.sync_db[modifiable.parent.name]
+                except Exception:
+                    if isinstance(modifiable.parent, gp.Variable):
+                        sync_db_symbol = self.instance.sync_db.add_variable(
+                            modifiable.parent.name,
+                            modifiable.parent.dimension,
+                            variable_map[modifiable.parent.type],
+                        )
 
-                if isinstance(modifiable.parent, gp.Variable):
-                    sync_db_symbol = self.instance.sync_db.add_variable(
-                        modifiable.parent.name,
-                        modifiable.parent.dimension,
-                        variable_map[modifiable.parent.type],
-                    )
-
-                elif isinstance(modifiable.parent, gp.Equation):
-                    sync_db_symbol = self.instance.sync_db.add_equation(
-                        modifiable.parent.name,
-                        modifiable.parent.dimension,
-                        equation_map[modifiable.parent.type],
-                    )
+                    elif isinstance(modifiable.parent, gp.Equation):
+                        sync_db_symbol = self.instance.sync_db.add_equation(
+                            modifiable.parent.name,
+                            modifiable.parent.dimension,
+                            equation_map[modifiable.parent.type],
+                        )
 
                 attr_name = "_".join(modifiable.name.split("."))
 
