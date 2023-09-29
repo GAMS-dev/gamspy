@@ -104,6 +104,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     ):
         type = self._cast_type(type)
 
+        # enable load on demand
+        self._is_dirty = False
+
+        # allow freezing
+        self._is_frozen = False
+
         super().__init__(
             container,
             name,
@@ -114,12 +120,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             description,
             uels_on_axes,
         )
-
-        # enable load on demand
-        self._is_dirty = False
-
-        # allow freezing
-        self._is_frozen = False
 
         # allow conditions
         self.where = condition.Condition(self)

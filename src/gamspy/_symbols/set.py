@@ -80,6 +80,12 @@ class Set(gt.Set, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
+        # enable load on demand
+        self._is_dirty = False
+
+        # allow conditions
+        self.where = condition.Condition(self)
+
         super().__init__(
             container,
             name,
@@ -90,12 +96,6 @@ class Set(gt.Set, operable.Operable, Symbol):
             description,
             uels_on_axes,
         )
-
-        # enable load on demand
-        self._is_dirty = False
-
-        # allow conditions
-        self.where = condition.Condition(self)
 
         # add statement
         self.container._addStatement(self)

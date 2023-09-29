@@ -1,6 +1,6 @@
 import unittest
 
-from gamspy import Container, Set, Domain
+from gamspy import Container, Set, Domain, Parameter
 from gamspy._algebra.domain import DomainException
 
 
@@ -21,6 +21,18 @@ class DomainSuite(unittest.TestCase):
 
         # Domain with no set or alias symbols
         self.assertRaises(DomainException, Domain, "i", "j")
+
+    def test_domain_forwarding(self):
+        m = Container()
+        i = Set(m, name="i")
+        p = Parameter(
+            m,
+            name="p",
+            domain=[i],
+            domain_forwarding=True,
+            records=[["i1", 1]],
+        )
+        self.assertEqual(i.toList(), ["i1"])
 
 
 def domain_suite():
