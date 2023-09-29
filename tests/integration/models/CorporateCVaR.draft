@@ -42,8 +42,8 @@ def main():
     MAX_MU = Parameter(m, name="MAX_MU", description="Maximum return in universe")
 
 
-    Budget.assign = 100.0
-    alpha.assign  = 0.997
+    Budget.assignment = 100.0
+    alpha.assignment  = 0.997
 
     # PARAMETERS #
     pr = Parameter(m, name="pr", domain=[l], description="Scenario probability")
@@ -56,12 +56,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i,l])
 
-    MIN_MU.assign = Smin(i, EP[i])
-    MAX_MU.assign = Smax(i, EP[i])
+    MIN_MU.assignment = Smin(i, EP[i])
+    MAX_MU.assignment = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assign = (MAX_MU - MIN_MU) / 20
+    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
 
 
     # DISPLAY P,EP,MIN_MU,MAX_MU
@@ -81,15 +81,15 @@ def main():
     LossDef = Equation(m, name="LossDef", type="regular", domain=[l], description="Equations defining the losses")
     VaRDevCon = Equation(m, name="VaRDevCon", type="regular", domain=[l], description="Equations defining the VaR deviation constraints")
 
-    BudgetCon.expr   =      Sum(i, x[i]) == Budget
+    BudgetCon.definition   =      Sum(i, x[i]) == Budget
 
-    ReturnCon.expr   =      Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon.definition   =      Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
     VaRDevCon[l]           =      VaRDev[l] >= Losses[l] - VaR
 
     LossDef[l]             =      Losses[l] == (Budget - Sum(i, P[i,l] * x[i]))
 
-    ObjDefCVaR.expr  =      ObjValue == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
+    ObjDefCVaR.definition  =      ObjValue == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
 
 
     MinCVaR = Model(m, name="MinCVaR", equations=[BudgetCon, ReturnCon, LossDef, VaRDevCon, ObjDefCVaR], problem="LP", sense="MIN", objective=ObjValue)
@@ -102,7 +102,7 @@ def main():
     output_csv += ','.join(i_recs) + '\n'
     mu = MIN_MU.records.value[0]
     while mu <= MAX_MU.records.value[0]:
-        MU_TARGET.assign = mu
+        MU_TARGET.assignment = mu
         MinCVaR.solve()
 
         model_status = str(MinCVaR.status).split('.')[-1]
@@ -124,7 +124,7 @@ def main():
     # data = []    
     # mu = MIN_MU.records.value[0]
     # while mu <= MAX_MU.records.value[0]:
-    #     MU_TARGET.assign = mu
+    #     MU_TARGET.assignment = mu
     #     m.solve(MinCVaR, problem="LP", sense="MIN", objective=ObjValue)
 
     #     model_status = str(MinCVaR.status).split('.')[-1]

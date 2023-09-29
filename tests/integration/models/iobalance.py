@@ -101,14 +101,14 @@ def main():
     oldr = Parameter(m, name="oldr", domain=[i])
     olds = Parameter(m, name="olds", domain=[j])
     maxdelta = Parameter(m, name="maxdelta")
-    maxdelta.assign = 1
+    maxdelta.assignment = 1
 
     while True:
         oldr[i] = r[i]
         olds[j] = s[j]
         r[i] = r[i] * u[i] / Sum(j, r[i] * a0[i, j] * x[j] * s[j])
         s[j] = s[j] * v[j] / Sum(i, r[i] * a0[i, j] * x[j] * s[j])
-        maxdelta.assign = max(
+        maxdelta.assignment = max(
             Smax(i, gams_math.abs(oldr[i] - r[i])),
             Smax(j, gams_math.abs(olds[j] - s[j])),
         )
@@ -139,7 +139,7 @@ def main():
 
     colbal[j] = Sum(i, a[i, j] * x[j]) == v[j]
 
-    defobjent.expr = obj == Sum(
+    defobjent.definition = obj == Sum(
         [i, j], x[j] * a[i, j] * gams_math.log(a[i, j] / a0[i, j])
     )
 
@@ -175,7 +175,7 @@ def main():
     zbar[i, j] = a0[i, j] * x[j]
     zv.lo[i, j] = 1
 
-    defobjentz.expr = obj == Sum(
+    defobjentz.definition = obj == Sum(
         [i, j], zv[i, j] * gams_math.log(zv[i, j] / zbar[i, j])
     )
 
@@ -217,15 +217,15 @@ def main():
 
     defmaxn[i, j] = a[i, j] - a0[i, j] >= -amax
 
-    defmad.expr = obj == 1 / gams_math.power(Card(i), 2) * Sum(
+    defmad.definition = obj == 1 / gams_math.power(Card(i), 2) * Sum(
         [i, j], ap[i, j] + an[i, j]
     )
 
-    defmade.expr = obj == 100 / gams_math.power(Card(i), 2) * Sum(
+    defmade.definition = obj == 100 / gams_math.power(Card(i), 2) * Sum(
         [i, j], (ap[i, j] + an[i, j]) / a0[i, j]
     )
 
-    deflinf.expr = obj == amax
+    deflinf.definition = obj == amax
 
     # Model
     mMAD = Model(
@@ -267,9 +267,11 @@ def main():
     defsd = Equation(m, name="defsd")
     defrsd = Equation(m, name="defrsd")
 
-    defsd.expr = obj == Sum([i, j], gams_math.power(a[i, j] + a0[i, j], 2))
+    defsd.definition = obj == Sum(
+        [i, j], gams_math.power(a[i, j] + a0[i, j], 2)
+    )
 
-    defrsd.expr = obj == Sum(
+    defrsd.definition = obj == Sum(
         [i, j], gams_math.power(a[i, j] + a0[i, j], 2) / a0[i, j]
     )
 

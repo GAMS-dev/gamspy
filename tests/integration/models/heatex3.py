@@ -85,7 +85,7 @@ def main():
     f = Equation(m, name="f", type="regular", description="objective function")
 
     # Objective function:
-    f.expr = (
+    f.definition = (
         objval
         == 1300
         * (1000 / ((1 / 30) * (dT11 * dT12) + (1 / 6) * (dT11 + dT12))) ** 0.6
@@ -94,71 +94,71 @@ def main():
     )
 
     # Constraints:
-    g1.expr = f11 + f21 == 10
-    g2.expr = f11 + f23 - f12 == 0
-    g3.expr = f21 + f13 - f22 == 0
-    g4.expr = f14 + f13 - f12 == 0
-    g5.expr = f24 + f23 - f22 == 0
-    g6.expr = Tcin * f11 + t2o * f23 - t1i * f12 == 0
-    g7.expr = Tcin * f21 + t1o * f13 - t2i * f22 == 0
-    g8.expr = f12 * (t1o - t1i) == 1000
-    g9.expr = f22 * (t2o - t2i) == 600
-    g10.expr = dT11 + t1o == 500
-    g11.expr = dT12 + t1i == 250
-    g12.expr = dT21 + t2o == 350
-    g13.expr = dT22 + t2i == 200
+    g1.definition = f11 + f21 == 10
+    g2.definition = f11 + f23 - f12 == 0
+    g3.definition = f21 + f13 - f22 == 0
+    g4.definition = f14 + f13 - f12 == 0
+    g5.definition = f24 + f23 - f22 == 0
+    g6.definition = Tcin * f11 + t2o * f23 - t1i * f12 == 0
+    g7.definition = Tcin * f21 + t1o * f13 - t2i * f22 == 0
+    g8.definition = f12 * (t1o - t1i) == 1000
+    g9.definition = f22 * (t2o - t2i) == 600
+    g10.definition = dT11 + t1o == 500
+    g11.definition = dT12 + t1i == 250
+    g12.definition = dT21 + t2o == 350
+    g13.definition = dT22 + t2i == 200
 
     # Bounds on variables:
-    dT11.lo.assign = 10
-    dT11.up.assign = 350
-    dT12.lo.assign = 10
-    dT12.up.assign = 350
-    dT21.lo.assign = 10
-    dT21.up.assign = 200
-    dT22.lo.assign = 10
-    dT22.up.assign = 200
-    f11.lo.assign = 0
-    f11.up.assign = 10
-    f12.lo.assign = 0
-    f12.up.assign = 10
-    f13.lo.assign = 0
-    f13.up.assign = 10
-    f14.lo.assign = 0
-    f14.up.assign = 10
-    f21.lo.assign = 0
-    f21.up.assign = 10
-    f22.lo.assign = 0
-    f22.up.assign = 10
-    f23.lo.assign = 0
-    f23.up.assign = 10
-    f24.lo.assign = 0
-    f24.up.assign = 10
-    t1i.lo.assign = 150
-    t1i.up.assign = Tcout
-    t1o.lo.assign = 150
-    t1o.up.assign = Tcout
-    t2i.lo.assign = 150
-    t2i.up.assign = Tcout
-    t2o.lo.assign = 150
-    t2o.up.assign = Tcout
+    dT11.lo.assignment = 10
+    dT11.up.assignment = 350
+    dT12.lo.assignment = 10
+    dT12.up.assignment = 350
+    dT21.lo.assignment = 10
+    dT21.up.assignment = 200
+    dT22.lo.assignment = 10
+    dT22.up.assignment = 200
+    f11.lo.assignment = 0
+    f11.up.assignment = 10
+    f12.lo.assignment = 0
+    f12.up.assignment = 10
+    f13.lo.assignment = 0
+    f13.up.assignment = 10
+    f14.lo.assignment = 0
+    f14.up.assignment = 10
+    f21.lo.assignment = 0
+    f21.up.assignment = 10
+    f22.lo.assignment = 0
+    f22.up.assignment = 10
+    f23.lo.assignment = 0
+    f23.up.assignment = 10
+    f24.lo.assignment = 0
+    f24.up.assignment = 10
+    t1i.lo.assignment = 150
+    t1i.up.assignment = Tcout
+    t1o.lo.assignment = 150
+    t1o.up.assignment = Tcout
+    t2i.lo.assignment = 150
+    t2i.up.assignment = Tcout
+    t2o.lo.assignment = 150
+    t2o.up.assignment = Tcout
 
     # Initial point:
-    dT11.l.assign = 200
-    dT12.l.assign = 50
-    dT21.l.assign = 150
-    dT22.l.assign = 50
-    f11.l.assign = 10
-    f12.l.assign = 10
-    f13.l.assign = 10
-    f14.l.assign = 10
-    f21.l.assign = 10
-    f22.l.assign = 10
-    f23.l.assign = 10
-    f24.l.assign = 10
-    t1i.l.assign = 200
-    t1o.l.assign = 100
-    t2i.l.assign = 300
-    t2o.l.assign = 200
+    dT11.l.assignment = 200
+    dT12.l.assignment = 50
+    dT21.l.assignment = 150
+    dT22.l.assignment = 50
+    f11.l.assignment = 10
+    f12.l.assignment = 10
+    f13.l.assignment = 10
+    f14.l.assignment = 10
+    f21.l.assignment = 10
+    f22.l.assignment = 10
+    f23.l.assignment = 10
+    f24.l.assignment = 10
+    t1i.l.assignment = 200
+    t1o.l.assignment = 100
+    t2i.l.assignment = 300
+    t2o.l.assignment = 200
 
     HeatEx3 = Model(
         m,

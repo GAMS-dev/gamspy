@@ -77,10 +77,10 @@ class SolveSuite(unittest.TestCase):
         )
         self.assertFalse(c._is_dirty)
 
-        e.assign = 5
+        e.assignment = 5
         self.assertTrue(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
-        self.assertEqual(e.assign, 5)
+        self.assertEqual(e.assignment, 5)
 
         with self.assertRaises(TypeError):
             e.records = 5
@@ -94,7 +94,7 @@ class SolveSuite(unittest.TestCase):
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
 
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
@@ -177,10 +177,10 @@ class SolveSuite(unittest.TestCase):
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
 
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
-        cost2.expr = Sum((i, j), c[i, j] * x[i, j]) * 5 == z2
+        cost2.definition = Sum((i, j), c[i, j] * x[i, j]) * 5 == z2
 
         transport = Model(
             self.m,
@@ -244,7 +244,7 @@ class SolveSuite(unittest.TestCase):
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
 
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
@@ -648,8 +648,8 @@ class SolveSuite(unittest.TestCase):
             description="indicator for segment b (for zone prices)",
         )
 
-        alpha.up.assign = Smax(t, PowerForecast[t])
-        beta.up.assign = alpha.up
+        alpha.up.assignment = Smax(t, PowerForecast[t])
+        beta.up.assignment = alpha.up
         pLFC.up[t] = pLFCref
 
         # Equations
@@ -745,13 +745,13 @@ class SolveSuite(unittest.TestCase):
         )
 
         # the objective function: total cost eq. (6)
-        obj.expr = c == cPP + cSM + cLFC
+        obj.definition = c == cPP + cSM + cLFC
 
         # meet the power demand for each time period exactly eq. (23)
         demand[t] = pPP[t] + pSM[t] + pLFC[t] == PowerForecast[t]
 
         # (fix cost +) variable cost * energy amount produced eq. (7) & (8)
-        PPcost.expr = cPP == cPPvar * Sum(t, 0.25 * pPP[t])
+        PPcost.definition = cPP == cPPvar * Sum(t, 0.25 * pPP[t])
 
         # power produced by the power plant eq. (26)
         PPpower[t] = pPP[t] == pPPMax * Sum(
@@ -790,29 +790,31 @@ class SolveSuite(unittest.TestCase):
 
         # cost for the spot market eq. (12)
         # consistent of the base load (alpha) and peak load (beta) contracts
-        SMcost.expr = cSM == 24 * cBL * alpha + 12 * cPL * beta
+        SMcost.definition = cSM == 24 * cBL * alpha + 12 * cPL * beta
 
         # Spot Market power contribution eq. (9)
         SMpower[t] = pSM[t] == alpha + IPL[t] * beta
 
         # cost of the LFC is given by the energy rate eq. (14) & (21)
-        LFCcost.expr = cLFC == Sum(b, cLFCs[b] * mu[b] + cLFCvar[b] * eLFCs[b])
+        LFCcost.definition = cLFC == Sum(
+            b, cLFCs[b] * mu[b] + cLFCvar[b] * eLFCs[b]
+        )
 
         # total energy from the LFC eq. (16)
         # connect the eLFC[t] variables with eLFCtot
-        LFCenergy.expr = eLFCtot == Sum(t, 0.25 * pLFC[t])
+        LFCenergy.definition = eLFCtot == Sum(t, 0.25 * pLFC[t])
 
         # indicator variable 'mu':
         # we are in exactly one price segment b eq. (18)
-        LFCmu.expr = Sum(b, mu[b]) == 1
+        LFCmu.definition = Sum(b, mu[b]) == 1
 
         # connect the 'mu' variables with the total energy amount eq. (19)
-        LFCenergyS.expr = eLFCtot == Sum(
+        LFCenergyS.definition = eLFCtot == Sum(
             b.where[Ord(b) > 1], eLFCb[b.lag(1)] * mu[b]
         ) + Sum(b, eLFCs[b])
 
         # accumulated energy amount for segment "b1" eq. (20)
-        LFCemuo.expr = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
+        LFCemuo.definition = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
 
         # accumulated energy amount for all other segments (then "b1") eq. (20)
         LFCemug[b].where[Ord(b) > 1] = (

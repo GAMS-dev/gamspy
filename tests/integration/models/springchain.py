@@ -68,7 +68,7 @@ def main():
     link_up = Equation(cont, name="link_up", domain=[n])
     cone_eq = Equation(cont, name="cone_eq")
 
-    pot_energy.expr = (
+    pot_energy.definition = (
         obj
         == Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n])
         + k * v
@@ -81,7 +81,7 @@ def main():
         t_L0[n] ** 2 >= delta_x[n] ** 2 + delta_y[n] ** 2
     )
 
-    cone_eq.expr = 2 * v * unit >= Sum(n.where[Ord(n) > 1], t[n] ** 2)
+    cone_eq.definition = 2 * v * unit >= Sum(n.where[Ord(n) > 1], t[n] ** 2)
 
     spring = Model(
         cont,
@@ -99,7 +99,7 @@ def main():
     y.fx["n0"] = a_y
     x.fx[f"n{N}"] = b_x
     y.fx[f"n{N}"] = b_y
-    unit.fx.assign = 1
+    unit.fx.assignment = 1
 
     spring.solve()
 

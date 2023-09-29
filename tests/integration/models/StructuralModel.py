@@ -120,7 +120,7 @@ def main():
         description="Equation matching the index duration allocation",
     )
 
-    ObjDef.expr = (
+    ObjDef.definition = (
         z
         == Number(-1)
         * Sum(
@@ -129,7 +129,7 @@ def main():
         / IndexDollarDuration
     )
 
-    DurationMatch.expr = (
+    DurationMatch.definition = (
         Sum(i, data[i, "Duration"] * data[i, "Price"] * x[i])
         == IndexDollarDuration
     )
@@ -138,7 +138,7 @@ def main():
 
     DurCons[k] = Sum(i.where[BxD[i, k]], x[i]) == DurationWeights[k]
 
-    NormalCon.expr = Sum(i, x[i]) == 1.0
+    NormalCon.definition = Sum(i, x[i]) == 1.0
 
     IndexFund = Model(
         m,
@@ -159,7 +159,7 @@ def main():
     # If we let the duration of the portfolio unconstrained, the objective
     # function turns to nonlinear as the variable x[i] will appear in the denominator
 
-    ObjDefTwo.expr = z == Number(-1) * Sum(
+    ObjDefTwo.definition = z == Number(-1) * Sum(
         i, data[i, "Duration"] * data[i, "Price"] * data[i, "Yield"] * x[i]
     ) / Sum(i, data[i, "Duration"] * data[i, "Price"] * x[i])
 

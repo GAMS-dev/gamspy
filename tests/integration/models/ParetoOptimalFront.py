@@ -45,15 +45,15 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.expr = 4 * x1 - 0.5 * sqr(x2) == of1
-    eq2.expr = Number(-1) * sqr(x1) + 5 * x2 == of2
-    eq3.expr = 2 * x1 + 3 * x2 <= 10
-    eq4.expr = 2 * x1 - x2 >= 0
+    eq1.definition = 4 * x1 - 0.5 * sqr(x2) == of1
+    eq2.definition = Number(-1) * sqr(x1) + 5 * x2 == of2
+    eq3.definition = 2 * x1 + 3 * x2 <= 10
+    eq4.definition = 2 * x1 - x2 >= 0
 
-    x1.lo.assign = 1
-    x1.up.assign = 2
-    x2.lo.assign = 1
-    x2.up.assign = 3
+    x1.lo.assignment = 1
+    x1.up.assignment = 2
+    x2.lo.assignment = 1
+    x2.up.assignment = 3
 
     pareto1 = Model(
         m,
@@ -89,10 +89,10 @@ def main():
     ranges["OF1min"] = of1.l
 
     for idx, c in enumerate(counter.toList()):
-        E.assign = (ranges["OF2max"] - ranges["OF2min"]) * (idx) / (
+        E.assignment = (ranges["OF2max"] - ranges["OF2min"]) * (idx) / (
             Card(counter) - 1
         ) + ranges["OF2min"]
-        of2.lo.assign = E
+        of2.lo.assignment = E
         pareto1.solve()
         report[c, "OF1"] = of1.l
         report[c, "OF2"] = of2.l

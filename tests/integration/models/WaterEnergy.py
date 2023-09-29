@@ -213,7 +213,7 @@ def main():
     eq7 = Equation(m, name="eq7", type="regular", domain=[i, t])
     eq8 = Equation(m, name="eq8", type="regular", domain=[i, t])
 
-    costThermal.expr = TC == Sum(
+    costThermal.definition = TC == Sum(
         [t, i],
         gendata[i, "a"] * sqr(p[i, t])
         + gendata[i, "b"] * p[i, t]
@@ -221,7 +221,7 @@ def main():
     )
     balanceP[t] = Sum(i, p[i, t]) + Sum(c, Pc[c, t]) == PWdata[t, "Pd"]
     balanceW[t] = Sum(w, Water[w, t]) + Sum(c, Wc[c, t]) == PWdata[t, "water"]
-    costCoprodcalc.expr = CC == (
+    costCoprodcalc.definition = CC == (
         Sum(
             [c, t],
             Coproduct[c, "A11"] * sqr(Pc[c, t])
@@ -232,13 +232,13 @@ def main():
             + Coproduct[c, "C"] * Uc[c, t],
         )
     )
-    costwatercalc.expr = WaterCost == Sum(
+    costwatercalc.definition = WaterCost == Sum(
         [t, w],
         waterdata[w, "a"] * sqr(Water[w, t])
         + waterdata[w, "b"] * Water[w, t]
         + waterdata[w, "c"] * Uw[w, t],
     )
-    Objective.expr = of == TC + CC + WaterCost
+    Objective.definition = of == TC + CC + WaterCost
     ratio1[c, t] = Pc[c, t] <= Wc[c, t] * Coproduct[c, "Rmax"]
     ratio2[c, t] = Pc[c, t] >= Wc[c, t] * Coproduct[c, "Rmin"]
     eq1[w, t] = Water[w, t] <= Uw[w, t] * waterdata[w, "Wmax"]

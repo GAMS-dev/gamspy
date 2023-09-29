@@ -64,8 +64,8 @@ def main():
 
     mu_value = 100
     sigma_value = 10
-    mu.assign = mu_value
-    sigma.assign = sigma_value
+    mu.assignment = mu_value
+    sigma.assignment = sigma_value
 
     c[j] = Round(uniform(1, mu_value))
     p[j] = Round(mu_value + c[j] + uniform(-sigma_value, sigma_value))
@@ -83,7 +83,7 @@ def main():
     w = Parameter(m, name="w", description="shortage penalty")
 
     dis[t] = power(0.86, Ord(t) - 1)
-    w.assign = 5
+    w.assignment = 5
 
     # Variable
     x = Variable(
@@ -120,7 +120,7 @@ def main():
     )
     objdef = Equation(m, name="objdef")
 
-    objdef.expr = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
+    objdef.definition = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
         s
     ) * Sum(s, z[s])
 

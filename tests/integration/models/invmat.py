@@ -96,7 +96,7 @@ def main():
         m, name="ainv", domain=[i, j], description="inverse matrix of A"
     )
 
-    eobj.expr = obj == 0
+    eobj.definition = obj == 0
     lin[i] = Sum(k, a[i, k] * col[k]) == b[i]
 
     invmat1 = Model(

@@ -48,7 +48,7 @@ def main():
         m, name="x5_0", records=1, description="initial value for x5"
     )
     h = Parameter(m, name="h")
-    h.assign = tf / n
+    h.assignment = tf / n
 
     # VARIABLES #
     x1 = Variable(m, name="x1", domain=[nh])
@@ -105,7 +105,7 @@ def main():
     ea2 = Equation(m, name="ea2", type="regular", domain=[nh])
     ea3 = Equation(m, name="ea3", type="regular", domain=[nh])
 
-    eobj.expr = obj == x4[str(n)] * x5[str(n)]
+    eobj.definition = obj == x4[str(n)] * x5[str(n)]
 
     state1[nh[k.lead(1)]] = x1[k.lead(1)] == (
         x1[k]

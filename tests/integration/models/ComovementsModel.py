@@ -77,7 +77,7 @@ def main():
     TrackingConL = Equation(m, name="TrackingConL", type="regular", domain=[l])
     TrackingConG = Equation(m, name="TrackingConG", type="regular", domain=[l])
 
-    ObjDef.expr = z == Sum(i, ExpectedReturns[i] * x[i])
+    ObjDef.definition = z == Sum(i, ExpectedReturns[i] * x[i])
 
     TrackingConG[l] = (
         Sum(i, BondReturns[l, i] * x[i]) - IndexReturns[l] >= -EpsTolerance
@@ -87,7 +87,7 @@ def main():
         Sum(i, BondReturns[l, i] * x[i]) - IndexReturns[l] <= EpsTolerance
     )
 
-    NormalCon.expr = Sum(i, x[i]) == 1.0
+    NormalCon.definition = Sum(i, x[i]) == 1.0
 
     IndexFund = Model(
         m,
@@ -98,7 +98,7 @@ def main():
         objective=z,
     )
 
-    EpsTolerance.assign = 0.1
+    EpsTolerance.assignment = 0.1
 
     while IndexFund.status in [
         ModelStatus.OptimalGlobal,
@@ -113,9 +113,9 @@ def main():
                 f"EpsTolerance: {round(EpsTolerance.toValue(),3)}\t-->\t z:"
                 f" {round(z.toValue(),6)}"
             )
-        EpsTolerance.assign = EpsTolerance - 0.01
+        EpsTolerance.assignment = EpsTolerance - 0.01
 
-    EpsTolerance.assign = EpsTolerance + 0.02
+    EpsTolerance.assignment = EpsTolerance + 0.02
     IndexFund.solve()
 
     x_recs = {k: round(v, 3) for k, v in x.toDict().items() if v != 0}
