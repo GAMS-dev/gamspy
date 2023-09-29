@@ -1,2 +1,0 @@
-gamsapi[transfer]==45.0.0
-gamspy_base==45.0.0
