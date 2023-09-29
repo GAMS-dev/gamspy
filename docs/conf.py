@@ -6,10 +6,10 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "GAMSpy"
-copyright = "2023, Muhammet Soyturk"
-author = "Muhammet Soyturk"
-release = "0.1.0"
+project = "GAMSPy"
+copyright = "2023, GAMS Development Corporation"
+author = "GAMS Development Corporation"
+release = "0.9.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
