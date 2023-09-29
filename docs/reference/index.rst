@@ -5,7 +5,6 @@ gamspy
 
 .. automodule:: gamspy
    :members:
-   :private-members:
    :undoc-members:
    :show-inheritance:
 
