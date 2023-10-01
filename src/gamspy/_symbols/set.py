@@ -63,6 +63,13 @@ class Set(gt.Set, operable.Operable, Symbol):
     description : str, optional
     uels_on_axes : bool
 
+    Methods
+    -------
+    gamsRepr:
+        Returns GAMS Representation of the symbol.
+    getStatement:
+        Returns what's written to .gms file before execution
+
     Examples
     --------
     >>> m = gp.Container()
@@ -150,46 +157,130 @@ class Set(gt.Set, operable.Operable, Symbol):
     # Set Attributes
     @property
     def pos(self):
+        """
+        Element position in the current set, starting with 1.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "pos")
 
     @property
     def ord(self):
+        """
+        Same as .pos but for ordered sets only.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "ord")
 
     @property
     def off(self):
+        """
+        Element position in the current set minus 1. So .off = .pos - 1
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "off")
 
     @property
     def rev(self):
+        """
+        Reverse element position in the current set, so the value for
+        the last element is 0, the value for the penultimate is 1, etc.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "rev")
 
     @property
     def uel(self):
+        """
+        Element position in the unique element list.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "uel")
 
     @property
     def len(self):
+        """
+        Length of the set element name (a count of the number of characters).
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "len")
 
     @property
     def tlen(self):
+        """
+        Length of the set element text (a count of the number of characters).
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "tlen")
 
     @property
     def val(self):
+        """
+        If a set element is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "val")
 
     @property
     def tval(self):
+        """
+        If a set element text is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element text is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "tval")
 
     @property
     def first(self):
+        """
+        Returns 1 for the first set element, otherwise 0.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "first")
 
     @property
     def last(self):
+        """
+        Returns 1 for the last set element, otherwise 0.
+
+        Returns
+        -------
+        Expression
+        """
         return expression.Expression(f"{self.name}", ".", "last")
 
     def lag(
@@ -256,6 +347,13 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     @property
     def records(self):
+        """
+        Records of the Set
+
+        Returns
+        -------
+        DataFrame
+        """
         if not self._is_dirty:
             return self._records
 

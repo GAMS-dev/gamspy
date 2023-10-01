@@ -1,16 +1,11 @@
 .. _reference:
 
-gamspy
-======
+GAMSPy API Reference
+====================
 
-.. autosummary::
-   :toctree: _autosummary
-   :template: custom-module-template.rst
-   :recursive:
+.. toctree::
+   :maxdepth: 1
 
    gamspy
-
-.. automodule:: gamspy
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   gamspy.math
+   gamspy.utils
