@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.abspath('../src'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "GAMSpy"
-copyright = "2023, Muhammet Soyturk"
-author = "Muhammet Soyturk"
+copyright = "2023, GAMS Development Corporation"
+author = "GAMS"
 release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
@@ -64,5 +64,6 @@ html_theme_options = {
     "logo": {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
-    }
+    },
+    "show_nav_level": 2,
 }
