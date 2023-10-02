@@ -21,21 +21,19 @@ Keywords: constrained nonlinear system, general equilibrium model, economic
 growth,
           industrialization, economic policy, Korean economy
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Number,
-    Sum,
-    Product,
-)
 import numpy as np
 import pandas as pd
+
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Parameter
+from gamspy import Product
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
@@ -136,7 +134,7 @@ def main():
     )
 
     # Model's container
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     # Sets
     i = Set(cont, name="i", records=["agricult", "industry", "services"])

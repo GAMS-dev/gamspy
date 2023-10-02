@@ -1,31 +1,28 @@
+import os
+import time
 import unittest
 
-import os
 import numpy as np
 import pandas as pd
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Model,
-    Sum,
-    ModelStatus,
-    Ord,
-    Card,
-    Smax,
-    Sense,
-)
 
-import time
-
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import ModelStatus
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Smax
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.exceptions import GamspyException
 
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_read_on_demand(self):
         # Prepare data
@@ -301,7 +298,7 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(GamspyException, transport.solve, 5)
 
         # Try to solve invalid model
-        m = Container()
+        m = Container(delayed_execution=True)
         cost = Equation(m, "cost")
         model = Model(m, "model", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
@@ -323,7 +320,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_interrupt(self):
-        cont = Container()
+        cont = Container(delayed_execution=True)
 
         power_forecast_recs = np.array(
             [

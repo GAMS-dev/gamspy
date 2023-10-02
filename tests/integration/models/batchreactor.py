@@ -9,14 +9,20 @@ Renfro J.G., Morshedi, A.M., Osbjornsen, O.A., Simultaneous optimization and
 solution of systems described by differential/algebraic equations. Computer
 and Chemical Engineering, vol.11, 1987, pp.503-517.
 """
-
-from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
 import gamspy.math as gams_math
-from gamspy import Problem, Sense
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     nh = Set(m, name="nh", records=[str(idx) for idx in range(0, 101)])

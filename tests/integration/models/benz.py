@@ -14,14 +14,17 @@ Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
 1999.
 Section 7.3.5. Test problem 15, page 102.
 """
-
-from gamspy import Variable, Equation, Model, Container
 import gamspy.math as gams_math
-from gamspy import Problem, Sense
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Variable
     q1 = Variable(m, name="q1")

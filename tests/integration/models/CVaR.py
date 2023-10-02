@@ -185,7 +185,7 @@ def index_data():
 
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
-    m = Container(load_from=gdx_file)
+    m = Container(delayed_execution=True, load_from=gdx_file)
 
     # SETS #
     i, l = m.getSymbols(["i", "l"])

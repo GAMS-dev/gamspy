@@ -38,30 +38,25 @@ from gamspy.math.log_power import sqlog10
 from gamspy.math.log_power import sqr
 from gamspy.math.log_power import vc_power
 from gamspy.math.misc import abs
+from gamspy.math.misc import beta
 from gamspy.math.misc import ceil
 from gamspy.math.misc import dist
 from gamspy.math.misc import div
 from gamspy.math.misc import div0
+from gamspy.math.misc import entropy
+from gamspy.math.misc import errorf
 from gamspy.math.misc import factorial
 from gamspy.math.misc import floor
 from gamspy.math.misc import fractional
-from gamspy.math.misc import max
-from gamspy.math.misc import min
-from gamspy.math.misc import mod
-from gamspy.math.misc import Round
-from gamspy.math.misc import sign
-from gamspy.math.misc import slexp
-from gamspy.math.misc import sqexp
-from gamspy.math.misc import sqrt
-from gamspy.math.misc import truncate
-from gamspy.math.misc import beta
-from gamspy.math.misc import entropy
-from gamspy.math.misc import errorf
 from gamspy.math.misc import gamma
+from gamspy.math.misc import ifthen
 from gamspy.math.misc import lse_max
 from gamspy.math.misc import lse_max_sc
 from gamspy.math.misc import lse_min
 from gamspy.math.misc import lse_min_sc
+from gamspy.math.misc import max
+from gamspy.math.misc import min
+from gamspy.math.misc import mod
 from gamspy.math.misc import ncp_cm
 from gamspy.math.misc import ncp_f
 from gamspy.math.misc import ncpVUpow
@@ -72,10 +67,15 @@ from gamspy.math.misc import rand_linear
 from gamspy.math.misc import rand_triangle
 from gamspy.math.misc import regularized_beta
 from gamspy.math.misc import regularized_gamma
-from gamspy.math.misc import slrec
-from gamspy.math.misc import sqrec
-from gamspy.math.misc import ifthen
+from gamspy.math.misc import Round
 from gamspy.math.misc import sigmoid
+from gamspy.math.misc import sign
+from gamspy.math.misc import slexp
+from gamspy.math.misc import slrec
+from gamspy.math.misc import sqexp
+from gamspy.math.misc import sqrec
+from gamspy.math.misc import sqrt
+from gamspy.math.misc import truncate
 from gamspy.math.probability import binomial
 from gamspy.math.probability import centropy
 from gamspy.math.probability import normal
@@ -161,4 +161,5 @@ __all__ = [
     "slrec",
     "sqrec",
     "errorf",
+    "sigmoid",
 ]

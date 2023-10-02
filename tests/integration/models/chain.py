@@ -41,7 +41,7 @@ def sqr(x):
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     n_rec = int(sys.argv[1]) if len(sys.argv) > 1 else 400
 

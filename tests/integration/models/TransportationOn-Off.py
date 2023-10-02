@@ -62,7 +62,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     i = Set(m, name="i", records=[f"s{s}" for s in range(1, 4)])

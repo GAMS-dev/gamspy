@@ -44,8 +44,9 @@ from gamspy._symbols import Set
 from gamspy._symbols import Variable
 from gamspy._symbols import VariableType
 
+from .version import __version__
+
 _order = 0  # Global order for newly generated symbols with no name
-__version__ = "0.1.0"
 
 __all__ = [
     "Container",

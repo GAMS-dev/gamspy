@@ -32,6 +32,7 @@ from gamspy.exceptions import GamspyException
 
 def main():
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/tsp4.gdx",
     )
 

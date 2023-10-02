@@ -13,15 +13,22 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 86-88.
 Keywords: linear programming, nonlinear programming, discontinuous derivatives,
           linear regression, econometrics
 """
-
-from gamspy import Set, Parameter, Variable, Equation, Container, Model, Sum
-import gamspy.math as gams_math
 import pandas as pd
-from gamspy import Problem, Sense
+
+import gamspy.math as gams_math
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Data
     dat_df = pd.DataFrame(

@@ -21,7 +21,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     n = Set(m, name="n", records=["state1"], description="states")

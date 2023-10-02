@@ -35,15 +35,21 @@ Processing. 284 (November, 1998).
 Keywords: linear programming, quadratic constraint programming, robust
 optimization, second order cone programming
 """
-
-from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
 from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import uniform
-from gamspy import Problem, Sense
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     mu = 1e-2
 

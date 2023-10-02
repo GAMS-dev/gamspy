@@ -25,7 +25,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SETS #
     bus = Set(m, name="bus", records=[str(b) for b in range(1, 15)])

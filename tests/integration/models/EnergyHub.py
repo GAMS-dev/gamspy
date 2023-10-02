@@ -68,7 +68,7 @@ def data_records():
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SET #
     t = Set(

@@ -22,7 +22,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Binary Variables
     x1 = Variable(m, name="x1", type="binary")

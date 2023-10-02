@@ -58,6 +58,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     description : str, optional
     uels_on_axes : bool
 
+    Methods
+    -------
+    gamsRepr:
+        Returns GAMS Representation of the symbol.
+    getStatement:
+        Returns what's written to .gms file before execution
+
     Examples
     --------
     >>> m = gp.Container()
@@ -119,7 +126,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._addStatement(statement)
 
         self._is_dirty = True
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     def __eq__(self, other):  # type: ignore
@@ -132,6 +139,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     @property
     def assignment(self):
+        """
+        Assigned expression
+
+        Returns
+        -------
+        Expression
+        """
         return self._assignment
 
     @assignment.setter
@@ -147,11 +161,18 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
 
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     @property
     def records(self):
+        """
+        Records of the Parameter
+
+        Returns
+        -------
+        DataFrame
+        """
         if not self._is_dirty:
             return self._records
 

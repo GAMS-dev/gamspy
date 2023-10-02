@@ -14,26 +14,25 @@ Keywords: linear programming, nonlinear programming, quadratic constraints,
 statistics,
           RAS approach
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Smax,
-    Card,
-)
-import gamspy.math as gams_math
 import numpy as np
-from gamspy import Problem, Sense
+
+import gamspy.math as gams_math
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Smax
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Sets
 

@@ -1,6 +1,6 @@
-*******************
-GamsPy fundamentals
-*******************
+******
+Basics
+******
 
 These documents clarify concepts, design decisions, and technical
 constraints in GamsPy. This is a great place to understand the

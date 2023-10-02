@@ -71,6 +71,29 @@ class Container(gt.Container):
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
 
+    Methods
+    -------
+    addAlias:
+        Creates a new Alias and adds it to the container
+    addSet:
+        Creates a new Set and adds it to the container
+    addParameter:
+        Creates a new Parameter and adds it to the container
+    addVariable:
+        Creates a new Variable and adds it to the container
+    addEquation:
+        Creates a new Equation and adds it to the container
+    getAliases:
+        Returns all Aliases in the container
+    getSets:
+        Returns all Sets in the container
+    getParameters:
+        Returns all Parameters in the container
+    getVariables:
+        Returns all Variables in the container
+    getEquations:
+        Returns all Equations in the container
+
     Examples
     --------
     >>> m = gp.Container()
@@ -84,7 +107,7 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         name: str = "default",
         working_directory: Optional[str] = None,
-        debug: bool = False,
+        delayed_execution: bool = False,
     ):
         self.system_directory = (
             system_directory
@@ -93,7 +116,7 @@ class Container(gt.Container):
         )
 
         self.name = name
-        self.debug = debug
+        self._delayed_execution = delayed_execution
         self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
@@ -210,6 +233,21 @@ class Container(gt.Container):
     def _addStatement(self, statement) -> None:
         self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
+
+    @property
+    def delayed_execution(self):
+        """
+        Delayed execution status
+
+        Returns
+        -------
+        bool
+        """
+        return self._delayed_execution
+
+    @delayed_execution.setter
+    def delayed_execution(self, status: bool):
+        self._delayed_execution = status
 
     def addAlias(
         self, name: str, alias_with: Union["Set", "Alias"]

@@ -6,24 +6,25 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 3.3
 Last modified: Apr 2008.
 """
-
 from pathlib import Path
-from gamspy import (
-    Alias,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-)
-import gamspy.math as gams_math
+
 import numpy as np
 import pandas as pd
-from gamspy import Problem, Sense
+
+import gamspy.math as gams_math
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/Sharpe.gdx",
     )
 

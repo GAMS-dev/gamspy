@@ -77,6 +77,13 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     domain_forwarding : bool, optional
     description : str, optional
 
+    Methods
+    -------
+    gamsRepr:
+        Returns GAMS Representation of the symbol.
+    getStatement:
+        Returns what's written to .gms file before execution
+
     Examples
     --------
     >>> m = gp.Container()
@@ -169,38 +176,101 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @property
     def l(self):  # noqa: E741,E743
+        """
+        Level
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._l
 
     @property
     def m(self):
+        """
+        Marginal
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._m
 
     @property
     def lo(self):
+        """
+        Lower bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._lo
 
     @property
     def up(self):
+        """
+        Upper bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._up
 
     @property
     def scale(self):
+        """
+        Scale
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._s
 
     @property
     def fx(self):
+        """
+        Fx
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._fx
 
     @property
     def prior(self):
+        """
+        Prior
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._prior
 
     @property
     def stage(self):
+        """
+        Stage
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._stage
 
     @property
     def records(self):
+        """
+        Records of the Variable
+
+        Returns
+        -------
+        DataFrame
+        """
         if not self._is_dirty:
             return self._records
 

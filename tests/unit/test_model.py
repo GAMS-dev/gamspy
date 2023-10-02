@@ -1,12 +1,19 @@
 import unittest
 
 import pandas as pd
-from gamspy import Container, Set, Parameter, Variable, Model, Equation, Sum
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 class ModelSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_model(self):
         # Prepare data

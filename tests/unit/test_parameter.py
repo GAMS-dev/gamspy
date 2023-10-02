@@ -15,7 +15,7 @@ from gamspy import Variable
 
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -145,7 +145,7 @@ class ParameterSuite(unittest.TestCase):
         self.assertRaises(ValueError, self.m.addParameter, "c", [s, s])
 
     def test_undef(self):
-        m = Container()
+        m = Container(delayed_execution=True)
         _ = Parameter(
             m, name="rho", records=[np.nan]
         )  # Instead of using numpy there might be a NA from the math package

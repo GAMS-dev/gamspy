@@ -41,6 +41,7 @@ dynamic = ["dependencies"]
 
 [project.urls]
 homepage = "http://www.gams.com"
+documentation = "https://gamspy.readthedocs.io/en/latest/user/index.html"
 
 
 [project.optional-dependencies]

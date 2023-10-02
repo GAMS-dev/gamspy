@@ -2,13 +2,17 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../src'))
+
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "GAMSPy"
+project = "GAMSpy"
 copyright = "2023, GAMS Development Corporation"
-author = "GAMS Development Corporation"
+author = "GAMS"
 release = "0.9.0"
 
 # -- General configuration ---------------------------------------------------
@@ -33,20 +37,20 @@ extensions = [
     "matplotlib.sphinxext.plot_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
+    "sphinx.ext.mathjax",
+    "sphinx_design",
+    "sphinx_copybutton",
+    "sphinx.ext.napoleon",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-intersphinx_mapping = {
-    "python": ("https://docs.python.org/3/", None),
-    "sphinx": ("https://www.sphinx-doc.org/en/master/", None),
-}
+autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_rtd_theme"
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 html_show_sourcelink = False
 html_theme_options = {
@@ -67,8 +71,5 @@ html_theme_options = {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     },
+    "show_nav_level": 2,
 }
-
-epub_show_urls = "footnote"
-todo_include_todos = True
-autosummary_generate = True

@@ -78,6 +78,15 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     uels_on_axes: bool
     definition_domain: list, optional
 
+    Methods
+    -------
+    definition:
+        Definition of the equation
+    gamsRepr:
+        Returns GAMS Representation of the symbol.
+    getStatement:
+        Returns what's written to .gms file before execution
+
     Examples
     --------
     >>> m = gp.Container()
@@ -206,7 +215,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._addStatement(statement)
 
         self._is_dirty = True
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     def __eq__(self, other):  # type: ignore
@@ -229,52 +238,136 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     @property
     def l(self):  # noqa: E741, E743
+        """
+        Level
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._l
 
     @property
     def m(self):
+        """
+        Marginal
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._m
 
     @property
     def lo(self):
+        """
+        Lower bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._lo
 
     @property
     def up(self):
+        """
+        Upper bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._up
 
     @property
     def scale(self):
+        """
+        Scale
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._s
 
     @property
     def stage(self):
+        """
+        Stage
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._stage
 
     @property
     def range(self):
+        """
+        Range
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._range
 
     @property
     def slacklo(self):
+        """
+        Slack lower bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._slacklo
 
     @property
     def slackup(self):
+        """
+        Slack upper bound
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._slackup
 
     @property
     def slack(self):
+        """
+        Slack
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._slack
 
     @property
     def infeas(self):
+        """
+        Infeasability
+
+        Returns
+        -------
+        ImplicitParameter
+        """
         return self._infeas
 
     @property
     def definition(
         self,
     ) -> Optional[Union["Variable", "Operation", "Expression"]]:
+        """
+        Definition of the Equation
+
+        Returns
+        -------
+        Expression
+        """
         return self._definition
 
     @definition.setter
@@ -334,11 +427,18 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._addStatement(statement)
         self._definition = statement
 
-        if self.container.debug:
+        if not self.container.delayed_execution:
             self.container._loadOnDemand()
 
     @property
     def records(self):
+        """
+        Records of the Equation
+
+        Returns
+        -------
+        DataFrame
+        """
         if not self._is_dirty:
             return self._records
 
