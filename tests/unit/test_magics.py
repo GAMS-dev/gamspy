@@ -1,17 +1,16 @@
 import unittest
 
 import pandas as pd
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-)
+
+from gamspy import Container
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Variable
 
 
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_magics(self):
         # Prepare data

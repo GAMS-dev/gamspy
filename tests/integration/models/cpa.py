@@ -26,7 +26,7 @@ def sqr(x):
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SCALAR #
     R = Parameter(m, name="R", records=40)

@@ -1,22 +1,21 @@
 import unittest
 
 import pandas as pd
+
 import gamspy.math as gamspy_math
-from gamspy import (
-    Container,
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Number,
-    Sum,
-    Ord,
-)
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_condition_on_expression(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
@@ -85,7 +84,7 @@ class ConditionSuite(unittest.TestCase):
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
         )
 
-        m = Container()
+        m = Container(delayed_execution=True)
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -248,7 +247,7 @@ class ConditionSuite(unittest.TestCase):
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
-        m = Container()
+        m = Container(delayed_execution=True)
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -273,7 +272,7 @@ class ConditionSuite(unittest.TestCase):
         )
 
     def test_operator_comparison_in_condition(self):
-        m = Container()
+        m = Container(delayed_execution=True)
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1

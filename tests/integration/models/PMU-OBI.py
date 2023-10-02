@@ -16,13 +16,19 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
-
-from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Sense
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     bus = Set(m, name="bus", records=[str(idx) for idx in range(1, 15)])

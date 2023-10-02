@@ -86,5 +86,5 @@ class Condition:
 
         self._symbol.container._addStatement(statement)
 
-        if self._symbol.container.debug:
+        if not self._symbol.container.delayed_execution:
             self._symbol.container._loadOnDemand()

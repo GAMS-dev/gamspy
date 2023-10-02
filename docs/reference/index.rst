@@ -1,16 +1,11 @@
 .. _reference:
 
-gamspy
-======
-
-.. automodule:: gamspy
-   :members:
-   :undoc-members:
-   :show-inheritance:
+GAMSPy API Reference
+====================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   gamspy.functions
+   gamspy
    gamspy.math
    gamspy.utils

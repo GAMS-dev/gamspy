@@ -19,7 +19,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # SET #
     i = Set(m, name="i", records=["1", "2", "3"], description="components")

@@ -21,31 +21,29 @@ Research 110, 3 (1998), 474-489.
 Keywords: linear programming, mixed integer linear programming, passenger railway optimization,
           shortest path, dutch railway, public rail transport, network optimization
 """
-
 # flake8: noqa
-
 import sys
 from pathlib import Path
-from gamspy import (
-    Alias,
-    Set,
-    Parameter,
-    Card,
-    Domain,
-    Sum,
-    Smax,
-    Variable,
-    Model,
-    Equation,
-    Container,
-    Ord,
-    Sense,
-)
+
 import gamspy.math as math
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Smax
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
     m = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/lop.gdx",
         # system_directory="/opt/gams/gams44.0_linux_x64_64_sfx",
     )

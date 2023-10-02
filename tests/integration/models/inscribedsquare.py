@@ -21,11 +21,18 @@ with gnuplot (if available and a feasible solution has been found).
 
 Contributor: Benjamin Mueller and Felipe Serrano
 """
-
-from gamspy import Set, Variable, Equation, Model, Container
-from gamspy import Ord, Card, Sense
 import math
-from gamspy.math import sin, cos
+
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Variable
+from gamspy.math import cos
+from gamspy.math import sin
 
 
 def fx(t):
@@ -37,7 +44,7 @@ def fy(t):
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Set
     i = Set(m, name="i", records=["1", "2", "3", "4"])

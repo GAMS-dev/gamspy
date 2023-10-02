@@ -17,24 +17,21 @@ Keywords: mixed integer linear programming, mixed integer nonlinear
 programming,
           social golfer problem, combinatorial optimization
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Variable,
-    Equation,
-    Container,
-    Ord,
-    Model,
-    Sum,
-    Number,
-    Sense,
-)
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import max as gams_max
 
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     gf_c = gr_c * gg_c
 

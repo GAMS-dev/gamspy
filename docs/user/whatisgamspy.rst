@@ -1,8 +1,8 @@
 .. _whatisgamspy:
 
-**************
+***************
 What is GamsPy?
-**************
+***************
 
 GamsPy is a mathematical optimization package that combines the power of high performance 
 GAMS execution system and flexible Python language. It is a Python library that provides GAMS 
@@ -91,7 +91,7 @@ broadcasting.
 .. _whatis-vectorization:
 
 Why is GamsPy Fast?
-------------------
+-------------------
 
 Vectorization describes the absence of any explicit looping, indexing,
 etc., in the code - these things are taking place, of course, just
@@ -119,5 +119,4 @@ example above, ``a`` and ``b`` could be multidimensional arrays of the
 same shape, or a scalar and an array, or even two arrays of with
 different shapes, provided that the smaller array is "expandable" to
 the shape of the larger in such a way that the resulting broadcast is
-unambiguous. For detailed "rules" of broadcasting see
-:ref:`Broadcasting <basics.broadcasting>`.
+unambiguous.

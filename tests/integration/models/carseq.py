@@ -27,26 +27,23 @@ Keywords: mixed integer linear programming, mixed integer nonlinear
 programming,
           production planning, car manufacturing, line problem
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Ord,
-    Card,
-    Number,
-    Sense,
-)
-from gamspy.math import ifthen
-import gamspy.math as gams_math
-from gamspy.math import ifthen
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import gamspy.math as gams_math
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import ifthen
 
 
 def main(mip=False):
@@ -70,7 +67,7 @@ def main(mip=False):
         id_vars="index", var_name="Category", value_name="Value"
     )
 
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Sets
     p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])

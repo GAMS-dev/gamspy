@@ -1,16 +1,14 @@
 import unittest
 
-from gamspy import (
-    Container,
-    Set,
-    Alias,
-    Equation,
-)
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Set
 
 
 class AliasSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_alias_string(self):
         # Set and Alias without domain

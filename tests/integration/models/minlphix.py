@@ -76,27 +76,25 @@ Keywords: mixed integer nonlinear programming, chemical engineering,
 distillation
           sequences, heat integrated distillation
 """
-
-from gamspy import (
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Alias,
-    Model,
-    Sum,
-    Ord,
-    Domain,
-    Sense,
-)
-from gamspy.math import sqrt
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Domain
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import sqrt
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     # Set
     i = Set(cont, name="i", records=[f"c-{i}" for i in range(1, 5)])

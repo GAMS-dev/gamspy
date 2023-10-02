@@ -25,25 +25,23 @@ optimization,
           unit commitment, economic dispatch, power plant control,
           day-ahead market
 """
-
-from gamspy import (
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Smax,
-    Card,
-    Ord,
-    Sense,
-)
 import numpy as np
+
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Smax
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     power_forecast_recs = np.array(
         [

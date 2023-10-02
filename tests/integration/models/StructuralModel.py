@@ -23,7 +23,7 @@ from gamspy import Variable
 
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/InputData.gdx"
-    m = Container(load_from=gdx_file)
+    m = Container(delayed_execution=True, load_from=gdx_file)
 
     # SETS #
     BB, EE, BxE = m.getSymbols(["BB", "EE", "BxE"])

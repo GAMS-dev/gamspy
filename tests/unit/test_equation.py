@@ -16,7 +16,7 @@ from gamspy import Variable
 
 class EquationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_equation_types(self):
         # Prepare data
@@ -272,7 +272,7 @@ class EquationSuite(unittest.TestCase):
             'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
         )
 
-        m = Container()
+        m = Container(delayed_execution=True)
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
         t2 = Set(m, name="t2", records=[str(i) for i in range(1, 4)])

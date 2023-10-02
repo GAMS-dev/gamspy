@@ -6,30 +6,28 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.4
 Last modified: Apr 2008.
 """
-
-from gamspy import (
-    Set,
-    Alias,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Ord,
-    Card,
-    Number,
-    Sense,
-)
-import gamspy.math as gams_math
-from gamspy.math import sqr
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import gamspy.math as gams_math
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import sqr
 
 
 def main():
     # Define container
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(

@@ -11,7 +11,7 @@ from gamspy import VariableType
 
 class VariableSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container()
+        self.m = Container(delayed_execution=True)
 
     def test_variable_string(self):
         # Set

@@ -146,7 +146,6 @@ attribute_map = {
 class Model:
     """
     Represents a list of equations to be solved.
-    https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelStatement
 
     Parameters
     ----------
@@ -165,6 +164,13 @@ class Model:
         Objective variable to minimize or maximize
     limited_variables : Iterable, optional
         Allows limiting the domain of variables used in a model.
+
+    Methods
+    -------
+    solve:
+        Solves the model
+    getStatement:
+        Returns what's written to .gms file before execution
 
     Examples
     --------
@@ -423,6 +429,13 @@ class Model:
 
     @property
     def equations(self) -> Iterable["Equation"]:
+        """
+        Equations in which the model consists of
+
+        Returns
+        -------
+        Iterable[Equation]
+        """
         return self._equations
 
     @equations.setter

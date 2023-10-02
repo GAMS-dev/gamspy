@@ -11,25 +11,26 @@ Programs in the Paper Industry. Tech. rep., The World Bank, 1980.
 Keywords: linear programming, forestry, scenario analysis, investment planning,
           forest management planning
 """
-
 from pathlib import Path
-from gamspy import (
-    Container,
-    Model,
-    Sum,
-    Equation,
-    Variable,
-    Set,
-    Parameter,
-    Ord,
-    Sense,
-)
-from gamspy.math import power, Round
+
 import numpy as np
+
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
+from gamspy.math import power
+from gamspy.math import Round
 
 
 def main():
     cont = Container(
+        delayed_execution=True,
         load_from=str(Path(__file__).parent.absolute()) + "/tforss.gdx",
     )
 

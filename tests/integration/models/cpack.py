@@ -14,20 +14,27 @@ Journal of Global Optimization 38 (2007), 79-101.
 
 Keywords: quadratic constraint programming, circle packing problem, mathematics
 """
-
-import sys
-from gamspy import Set, Alias, Variable, Equation, Model, Container
-from gamspy import Ord, Number
-from gamspy.math import sqr
-from gamspy import Problem, Sense
 import math
+import sys
+
+from gamspy import Alias
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Number
+from gamspy import Ord
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Variable
+from gamspy.math import sqr
 
 
 # take number of circles as first argument
 k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 print("Number of circles =", k)
 
-c = Container()
+c = Container(delayed_execution=True)
 
 # Set
 i = Set(c, name="i", description="circles")

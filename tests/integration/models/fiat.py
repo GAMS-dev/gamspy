@@ -27,7 +27,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # VARIABLES #
     q1 = Variable(m, name="q1")

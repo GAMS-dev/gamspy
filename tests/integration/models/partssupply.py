@@ -30,15 +30,23 @@ the GAMS model library.
 Keywords: nonlinear programming, contract theory, principal-agent problem,
           adverse selection, parts supply problem
 """
-
-from gamspy import Alias, Set, Parameter, Variable, Equation, Model, Container
-from gamspy import Sum, Card, Ord
 import gamspy.math as gams_math
-from gamspy import Problem, Sense
+from gamspy import Alias
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     # Set
     i = Set(cont, name="i", records=["1", "2"])

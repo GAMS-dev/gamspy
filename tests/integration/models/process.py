@@ -9,14 +9,17 @@ of Nonlinear Programming. John Wiley and Sons, New York, 1968.
 
 Keywords: nonlinear programming, alkylation process, chemical engineering
 """
-
-from gamspy import Variable, Equation, Container, Model
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Problem
+from gamspy import Sense
+from gamspy import Variable
 from gamspy.math import sqr
-from gamspy import Problem, Sense
 
 
 def main():
-    m = Container()
+    m = Container(delayed_execution=True)
 
     # Variables
     olefin = Variable(m, name="olefin", type="positive")

@@ -20,7 +20,7 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container()
+    cont = Container(delayed_execution=True)
 
     # SETS #
     n = Set(cont, name="n", records=[f"c{c}" for c in range(1, 5)])
