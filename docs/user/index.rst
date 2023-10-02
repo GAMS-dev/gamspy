@@ -14,6 +14,7 @@ details are found in :ref:`reference`.
    whatisgamspy
    installation
    quickstart
+   examples
 
 .. toctree::
    :caption: Fundamentals and usage
