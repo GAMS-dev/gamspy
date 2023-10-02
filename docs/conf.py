@@ -13,21 +13,27 @@ sys.path.insert(0, os.path.abspath('../src'))
 project = "GAMSpy"
 copyright = "2023, GAMS Development Corporation"
 author = "GAMS"
-release = "0.1.0"
+release = "0.9.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.viewcode",
-    "numpydoc",
-    "sphinx.ext.intersphinx",
-    "sphinx.ext.coverage",
     "sphinx.ext.doctest",
+    "sphinx.ext.duration",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.coverage",
     "sphinx.ext.graphviz",
     "sphinx.ext.ifconfig",
+    "sphinx_design",
+    "sphinx_copybutton",
+    "nbsphinx",
+    "numpydoc",
     "matplotlib.sphinxext.plot_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "IPython.sphinxext.ipython_directive",
@@ -44,7 +50,7 @@ autosummary_generate = True
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "pydata_sphinx_theme"
+html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_show_sourcelink = False
 html_theme_options = {
