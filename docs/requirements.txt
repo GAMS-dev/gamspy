@@ -10,3 +10,4 @@ matplotlib
 sphinx_design
 python_docs_theme
 pydata_sphinx_theme
+https://test-files.pythonhosted.org/packages/1c/8f/6aeba38e4df509c2a15e587d08588c96651104b1c99e215fcc1818d65454/gamsapi-45.0.0-11-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
