@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy._algebra.expression as expression
+from gamspy.math.misc import _stringify
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -163,7 +164,7 @@ def atan2(
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         return math.atan2(y, x)
 
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
-    y_str = str(y) if isinstance(y, (int, float)) else y.gamsRepr()
+    x_str = _stringify(x)
+    y_str = _stringify(y)
 
     return expression.Expression("arctan2(", f"{y_str}, {x_str}", ")")

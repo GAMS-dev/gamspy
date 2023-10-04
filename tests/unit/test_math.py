@@ -124,12 +124,18 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "(mod(b(i) , 3))")
 
         # min
-        op2 = gams_math.min(s1, s2, s3)
+        op1 = gams_math.Min(1, 2, 3)
+        self.assertEqual(op1, 1)
+
+        op2 = gams_math.Min(s1, s2, s3)
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(min( s1,s2,s3 ))")
 
         # max
-        op2 = gams_math.max(s1, s2, s3)
+        op1 = gams_math.Max(1, 2, 3)
+        self.assertEqual(op1, 3)
+
+        op2 = gams_math.Max(s1, s2, s3)
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "(max( s1,s2,s3 ))")
 
