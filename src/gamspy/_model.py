@@ -308,7 +308,7 @@ class Model:
                         f"Invalid commandline option: {option}"
                     )
 
-                setattr(options, option, value)
+                setattr(options, option.lower(), value)
 
         if solver_options:
             if (
