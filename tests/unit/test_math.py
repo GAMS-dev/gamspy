@@ -352,11 +352,11 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.regularized_beta(1, 2, 3)
         self.assertEqual(op1.gamsRepr(), "(betaReg( 1,2,3 ))")
 
-        op1 = gams_math.gamma(1, 2)
-        self.assertEqual(op1.gamsRepr(), "(gamma( 1,2 ))")
+        op1 = gams_math.gamma(1)
+        self.assertEqual(op1.gamsRepr(), "(gamma( 1 ))")
 
-        op1 = gams_math.regularized_gamma(1, 2, 3)
-        self.assertEqual(op1.gamsRepr(), "(gammaReg( 1,2,3 ))")
+        op1 = gams_math.regularized_gamma(1, 2)
+        self.assertEqual(op1.gamsRepr(), "(gammaReg( 1,2 ))")
 
         op1 = gams_math.lse_max(a[i])
         self.assertEqual(op1.gamsRepr(), "(lseMax( a(i) ))")

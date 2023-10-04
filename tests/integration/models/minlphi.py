@@ -986,10 +986,10 @@ def main():
         # ======================================================================
         # store the smallest nlp objective value for upper bound on master
         # ======================================================================
-        zoaup.assignment = gams_math.min(zoaup, zoau.l)
+        zoaup.assignment = gams_math.Min(zoaup, zoau.l)
         zoal.up.assignment = zoaup
         #  protect against numerical errors introduced by the solver
-        zoal.lo.assignment = gams_math.min(zoal.lo, zoal.up)
+        zoal.lo.assignment = gams_math.Min(zoal.lo, zoal.up)
 
         #  now solve the milp master problem
         master.solve()

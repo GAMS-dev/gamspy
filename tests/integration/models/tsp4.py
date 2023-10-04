@@ -207,7 +207,7 @@ def main():
                     fromi[ix_loop] = True
 
         nosubtours.assignment = Sum(
-            t, gams_math.max(Number(0), Smax(tour[i, j, t], Number(1)))
+            t, gams_math.Max(Number(0), Smax(tour[i, j, t], Number(1)))
         )
 
         if nosubtours.toValue() == 1:  # done: no subtours
