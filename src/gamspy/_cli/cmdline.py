@@ -31,9 +31,9 @@ import sys
 from typing import Dict
 
 import gamspy.utils as utils
+from .util import add_solver_entry
+from .util import remove_solver_entry
 from gamspy.exceptions import GamspyException
-
-from .util import add_solver_entry, remove_solver_entry
 
 
 SOLVERS = [
@@ -70,14 +70,17 @@ def get_args():
         description="A script for installing solvers and licenses",
     )
     parser.add_argument("command", choices=["install", "uninstall"], type=str)
-    parser.add_argument("component", choices=["license", "solver"], type=str)
+    parser.add_argument(
+        "component", choices=["license", "engine_license", "solver"], type=str
+    )
     parser.add_argument("name", type=str, nargs="?", default=None)
     parser.add_argument("--skip-pip-install", action="store_true")
     parser.add_argument("--skip-pip-uninstall", action="store_true")
 
     res = vars(parser.parse_args())
     if res["name"] is None and not (
-        res["command"] == "uninstall" and res["component"] == "license"
+        res["command"] == "uninstall"
+        and res["component"] in ["license", "engine_license"]
     ):
         sys.stderr.write("name must be specified\n")
         sys.exit(1)
@@ -90,9 +93,20 @@ def install_license(args: Dict[str, str]):
     shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
 
 
-def uninstall_license(args: Dict[str, str]):
+def install_engine_license(args: Dict[str, str]):
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    shutil.copy(args["name"], gamspy_base_dir + os.sep + "enginelic.txt")
+    append_dist_info(["enginelic.txt"], gamspy_base_dir)
+
+
+def uninstall_license():
     gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
+
+
+def uninstall_engine_license():
+    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    os.unlink(gamspy_base_dir + os.sep + "enginelic.txt")
 
 
 def install_solver(args: Dict[str, str]):
@@ -119,11 +133,11 @@ def install_solver(args: Dict[str, str]):
     for file in solver_lib.file_paths:
         shutil.copy(file, gamspy_base_dir)
 
-    update_dist_info(solver_lib, gamspy_base_dir)
+    append_dist_info(solver_lib.files, gamspy_base_dir)
     add_solver_entry(gamspy_base_dir, solver_name, solver_lib.verbatim)
 
 
-def update_dist_info(solver_lib, gamspy_base_dir: str):
+def append_dist_info(files, gamspy_base_dir: str):
     """Updates dist-info/RECORD in site-packages for pip uninstall"""
     import gamspy as gp
 
@@ -136,7 +150,7 @@ def update_dist_info(solver_lib, gamspy_base_dir: str):
         )
 
         lines = []
-        for file in solver_lib.files:
+        for file in files:
             line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
@@ -169,13 +183,17 @@ def uninstall_solver(args: Dict[str, str]):
 def install(args: Dict[str, str]):
     if args["component"] == "license":
         install_license(args)
+    elif args["component"] == "engine_license":
+        install_engine_license(args)
     elif args["component"] == "solver":
         install_solver(args)
 
 
 def uninstall(args: Dict[str, str]):
     if args["component"] == "license":
-        uninstall_license(args)
+        uninstall_license()
+    elif args["component"] == "engine_license":
+        uninstall_engine_license()
     elif args["component"] == "solver":
         uninstall_solver(args)
 
