@@ -1,40 +1,40 @@
 .. _whatisgamspy:
 
 ***************
-What is GamsPy?
+What is GAMSPy?
 ***************
 
-GamsPy is a mathematical optimization package that combines the power of high performance 
+GAMSPy is a mathematical optimization package that combines the power of high performance 
 GAMS execution system and flexible Python language. It is a Python library that provides GAMS 
 symbols (`Set`, `Alias`, `Parameter`, `Variable`, and `Equation`) to compose mathematical 
 models, a math package, and various utility functions.
 
-Symbols are at the heart of the GamsPy package. Each symbol is associated with
-a `Container`. There are several important differences between GamsPy symbols and 
+Symbols are at the heart of the GAMSPy package. Each symbol is associated with
+a `Container`. There are several important differences between GAMSPy symbols and 
 the standard Python objects:
 
-- GamsPy arrays have a fixed size at creation, unlike Python lists
+- GAMSPy arrays have a fixed size at creation, unlike Python lists
   (which can grow dynamically). Changing the size of an `ndarray` will
   create a new array and delete the original.
 
-- The elements in a GamsPy array are all required to be of the same
+- The elements in a GAMSPy array are all required to be of the same
   data type, and thus will be the same size in memory.  The exception:
-  one can have arrays of (Python, including GamsPy) objects, thereby
+  one can have arrays of (Python, including GAMSPy) objects, thereby
   allowing for arrays of different sized elements.
 
-- GamsPy arrays facilitate advanced mathematical and other types of
+- GAMSPy arrays facilitate advanced mathematical and other types of
   operations on large numbers of data.  Typically, such operations are
   executed more efficiently and with less code than is possible using
   Python's built-in sequences.
 
 - A growing plethora of scientific and mathematical Python-based
-  packages are using GamsPy arrays; though these typically support
-  Python-sequence input, they convert such input to GamsPy arrays prior
-  to processing, and they often output GamsPy arrays.  In other words,
+  packages are using GAMSPy arrays; though these typically support
+  Python-sequence input, they convert such input to GAMSPy arrays prior
+  to processing, and they often output GAMSPy arrays.  In other words,
   in order to efficiently use much (perhaps even most) of today's
   scientific/mathematical Python-based software, just knowing how to
   use Python's built-in sequence types is insufficient - one also
-  needs to know how to use GamsPy arrays.
+  needs to know how to use GAMSPy arrays.
 
 The points about sequence size and speed are particularly important in
 scientific computing.  As a simple example, consider the case of
@@ -73,24 +73,24 @@ array, for example, the C code (abridged as before) expands to
     }
   }
 
-GamsPy gives us the best of both worlds: element-by-element operations
+GAMSPy gives us the best of both worlds: element-by-element operations
 are the "default mode" when an `ndarray` is involved, but the
 element-by-element operation is speedily executed by pre-compiled C
-code.  In GamsPy
+code.  In GAMSPy
 
 ::
 
   c = a * b
 
 does what the earlier examples do, at near-C speeds, but with the code
-simplicity we expect from something based on Python. Indeed, the GamsPy
-idiom is even simpler!  This last example illustrates two of GamsPy's
+simplicity we expect from something based on Python. Indeed, the GAMSPy
+idiom is even simpler!  This last example illustrates two of GAMSPy's
 features which are the basis of much of its power: vectorization and
 broadcasting.
 
 .. _whatis-vectorization:
 
-Why is GamsPy Fast?
+Why is GAMSPy Fast?
 -------------------
 
 Vectorization describes the absence of any explicit looping, indexing,
@@ -112,7 +112,7 @@ code has many advantages, among which are:
 
 Broadcasting is the term used to describe the implicit
 element-by-element behavior of operations; generally speaking, in
-GamsPy all operations, not just arithmetic operations, but
+GAMSPy all operations, not just arithmetic operations, but
 logical, bit-wise, functional, etc., behave in this implicit
 element-by-element fashion, i.e., they broadcast.  Moreover, in the
 example above, ``a`` and ``b`` could be multidimensional arrays of the

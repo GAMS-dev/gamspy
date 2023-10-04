@@ -1,5 +1,5 @@
 **************
-GamsPy license
+GAMSPy license
 **************
 
 .. include:: ../LICENSE
