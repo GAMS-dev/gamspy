@@ -54,8 +54,8 @@ from gamspy.math.misc import lse_max
 from gamspy.math.misc import lse_max_sc
 from gamspy.math.misc import lse_min
 from gamspy.math.misc import lse_min_sc
-from gamspy.math.misc import max
-from gamspy.math.misc import min
+from gamspy.math.misc import Max
+from gamspy.math.misc import Min
 from gamspy.math.misc import mod
 from gamspy.math.misc import ncp_cm
 from gamspy.math.misc import ncp_f
@@ -121,8 +121,8 @@ __all__ = [
     "factorial",
     "floor",
     "fractional",
-    "min",
-    "max",
+    "Min",
+    "Max",
     "mod",
     "Round",
     "sign",

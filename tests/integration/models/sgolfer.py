@@ -27,7 +27,7 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.math import max as gams_max
+from gamspy.math import Max as gams_max
 
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):

@@ -29,10 +29,16 @@ from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.symbol import Symbol
+    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+
+
+def _stringify(x: Union[int, float, "Symbol", "ImplicitSymbol"]):
+    return str(x) if isinstance(x, (int, float)) else x.gamsRepr()
 
 
 def abs(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
@@ -81,16 +87,8 @@ def div(
     ):
         return dividend / divisor
 
-    dividend_str = (
-        str(dividend)
-        if isinstance(dividend, (int, float))
-        else dividend.gamsRepr()
-    )
-    divisor_str = (
-        str(divisor)
-        if isinstance(divisor, (int, float))
-        else divisor.gamsRepr()
-    )
+    dividend_str = _stringify(dividend)
+    divisor_str = _stringify(divisor)
 
     return expression.Expression("div(", f"{dividend_str}, {divisor_str}", ")")
 
@@ -118,16 +116,8 @@ def div0(
 
         return dividend / divisor
 
-    dividend_str = (
-        str(dividend)
-        if isinstance(dividend, (int, float))
-        else dividend.gamsRepr()
-    )
-    divisor_str = (
-        str(divisor)
-        if isinstance(divisor, (int, float))
-        else divisor.gamsRepr()
-    )
+    dividend_str = _stringify(dividend)
+    divisor_str = _stringify(divisor)
 
     return expression.Expression(
         "div0(", f"{dividend_str}, {divisor_str}", ")"
@@ -144,8 +134,8 @@ def dist(
     if isinstance(x1, tuple) or isinstance(x2, tuple):
         raise Exception("Both should be a tuple or none")
 
-    x1_str = str(x1) if isinstance(x1, (int, float)) else x1.gamsRepr()
-    x2_str = str(x2) if isinstance(x2, (int, float)) else x2.gamsRepr()
+    x1_str = _stringify(x1)
+    x2_str = _stringify(x2)
 
     return expression.Expression("eDist(", f"{x1_str}, {x2_str}", ")")
 
@@ -190,7 +180,7 @@ def fractional(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     return expression.Expression("frac(", x.gamsRepr(), ")")
 
 
-def min(*values) -> "Expression":
+def Min(*values) -> "Expression":
     """
     Minimum value of the values, where the number of values may vary.
 
@@ -198,11 +188,14 @@ def min(*values) -> "Expression":
     -------
     Expression
     """
+    if all(isinstance(value, (int, float)) for value in values):
+        return min(values)
+
     values_str = ",".join([value.gamsRepr() for value in values])
     return expression.Expression("min(", values_str, ")")
 
 
-def max(*values) -> "Expression":
+def Max(*values) -> "Expression":
     """
     Maximum value of the values, where the number of values may vary.
 
@@ -210,6 +203,9 @@ def max(*values) -> "Expression":
     -------
     Expression
     """
+    if all(isinstance(value, (int, float)) for value in values):
+        return max(values)
+
     values_str = ",".join([value.gamsRepr() for value in values])
     return expression.Expression("max(", values_str, ")")
 
@@ -227,8 +223,8 @@ def mod(
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         return x % y
 
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
-    y_str = str(y) if isinstance(y, (int, float)) else y.gamsRepr()
+    x_str = _stringify(x)
+    y_str = _stringify(y)
     return expression.Expression("mod(" + x_str, ",", y_str + ")")
 
 
@@ -245,6 +241,9 @@ def Round(x: "Symbol", num_decimals: int = 0) -> "Expression":
     -------
     Expression
     """
+    if isinstance(x, (int, float)):
+        return round(x, num_decimals)
+
     return expression.Expression(
         "round(", x.gamsRepr() + f", {num_decimals}", ")"
     )
@@ -280,7 +279,7 @@ def slexp(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("slexp(", f"{x_str},{S}", ")")
 
 
@@ -299,7 +298,7 @@ def sqexp(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("sqexp(", f"{x_str},{S}", ")")
 
 
@@ -313,6 +312,7 @@ def sqrt(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     """
     if isinstance(x, (int, float)):
         return math.sqrt(x)
+
     return expression.Expression("sqrt(", x.gamsRepr(), ")")
 
 
@@ -330,20 +330,24 @@ def truncate(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     return expression.Expression("trunc(", x.gamsRepr(), ")")
 
 
-def beta(x: Union[int, float], y: Union[int, float]) -> "Expression":
+def beta(
+    x: Union[int, float, "Symbol"], y: Union[int, float, "Symbol"]
+) -> "Expression":
     """
     Beta function
 
     Parameters
     ----------
-    x : int | float
-    y : int | float
+    x : int | float | Symbol
+    y : int | float | Symbol
 
     Returns
     -------
     Expression
     """
-    return expression.Expression("beta(", f"{x},{y}", ")")
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("beta(", f"{x_str},{y_str}", ")")
 
 
 def regularized_beta(
@@ -362,27 +366,30 @@ def regularized_beta(
     -------
     Expression
     """
-    return expression.Expression("betaReg(", f"{x},{y},{z}", ")")
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    z_str = _stringify(z)
+    return expression.Expression("betaReg(", f"{x_str},{y_str},{z_str}", ")")
 
 
-def gamma(x: Union[int, float], y: Union[int, float]) -> "Expression":
+def gamma(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     Gamma function
 
     Parameters
     ----------
     x : int | float
-    y : int | float
 
     Returns
     -------
     Expression
     """
-    return expression.Expression("gamma(", f"{x},{y}", ")")
+    x_str = _stringify(x)
+    return expression.Expression("gamma(", f"{x_str}", ")")
 
 
 def regularized_gamma(
-    x: Union[int, float], y: Union[int, float], z: Union[int, float]
+    x: Union[int, float], a: Union[int, float]
 ) -> "Expression":
     """
     Gamma function
@@ -390,78 +397,81 @@ def regularized_gamma(
     Parameters
     ----------
     x : int | float
-    y : int | float
-    z : int | float
+    a : int | float
 
     Returns
     -------
     Expression
     """
-    return expression.Expression("gammaReg(", f"{x},{y},{z}", ")")
+    x_str = _stringify(x)
+    a_str = _stringify(a)
+    return expression.Expression("gammaReg(", f"{x_str},{a_str}", ")")
 
 
-def lse_max(x: "Symbol") -> "Expression":
+def lse_max(*xs) -> "Expression":
     """
     Smoothed Max via the Logarithm of the Sum of Exponentials
 
-    Parameters
-    ----------
-    x : Symbol
-
     Returns
     -------
     Expression
     """
-    return expression.Expression("lseMax(", x.gamsRepr(), ")")
+    if len(xs) < 1:
+        raise GamspyException("lse_max requires at least 1 x")
+
+    x_str = ",".join([_stringify(x) for x in xs])
+    return expression.Expression("lseMax(", x_str, ")")
 
 
-def lse_max_sc(t: "Symbol", x: "Symbol") -> "Expression":
+def lse_max_sc(t, *xs) -> "Expression":
     """
     Scaled smoothed Max via the Logarithm of the Sum of Exponentials
 
-    Parameters
-    ----------
-    x : Symbol
-
     Returns
     -------
     Expression
     """
-    return expression.Expression(
-        "lseMaxSc(", f"{t.gamsRepr()},{x.gamsRepr()}", ")"
-    )
+    t_str = _stringify(t)
+
+    if len(xs) < 1:
+        raise GamspyException("lse_max requires at least 1 x")
+
+    x_str = ",".join([_stringify(x) for x in xs])
+
+    return expression.Expression("lseMaxSc(", f"{t_str},{x_str}", ")")
 
 
-def lse_min(x: "Symbol") -> "Expression":
+def lse_min(*xs) -> "Expression":
     """
     Smoothed Min via the Logarithm of the Sum of Exponentials
 
-    Parameters
-    ----------
-    x : Symbol
-
     Returns
     -------
     Expression
     """
-    return expression.Expression("lseMin(", x.gamsRepr(), ")")
+    if len(xs) < 1:
+        raise GamspyException("lse_max requires at least 1 x")
+
+    x_str = ",".join([_stringify(x) for x in xs])
+    return expression.Expression("lseMin(", x_str, ")")
 
 
-def lse_min_sc(t: "Symbol", x: "Symbol") -> "Expression":
+def lse_min_sc(t, *xs) -> "Expression":
     """
     Scaled smoothed Min via the Logarithm of the Sum of Exponentials
 
-    Parameters
-    ----------
-    x : Symbol
-
     Returns
     -------
     Expression
     """
-    return expression.Expression(
-        "lseMinSc(", f"{t.gamsRepr()},{x.gamsRepr()}", ")"
-    )
+    t_str = _stringify(t)
+
+    if len(xs) < 1:
+        raise GamspyException("lse_max requires at least 1 x")
+
+    x_str = ",".join([_stringify(x) for x in xs])
+
+    return expression.Expression("lseMinSc(", f"{t_str},{x_str}", ")")
 
 
 def ncp_cm(
@@ -482,8 +492,10 @@ def ncp_cm(
     -------
     Expression
     """
+    x_str = _stringify(x)
+    y_str = _stringify(y)
     return expression.Expression(
-        "ncpCM(", ",".join([x.gamsRepr(), y.gamsRepr(), str(z)]), ")"
+        "ncpCM(", ",".join([x_str, y_str, str(z)]), ")"
     )
 
 
@@ -505,8 +517,10 @@ def ncp_f(
     -------
     Expression
     """
+    x_str = _stringify(x)
+    y_str = _stringify(y)
     return expression.Expression(
-        "ncpF(", ",".join([x.gamsRepr(), y.gamsRepr(), str(z)]), ")"
+        "ncpF(", ",".join([x_str, y_str, str(z)]), ")"
     )
 
 
@@ -528,8 +542,10 @@ def ncpVUpow(
     -------
     Expression
     """
+    r_str = _stringify(r)
+    s_str = _stringify(s)
     return expression.Expression(
-        "ncpVUpow(", ",".join([r.gamsRepr(), s.gamsRepr(), str(mu)]), ")"
+        "ncpVUpow(", ",".join([r_str, s_str, str(mu)]), ")"
     )
 
 
@@ -551,26 +567,25 @@ def ncpVUsin(
     -------
     Expression
     """
+    r_str = _stringify(r)
+    s_str = _stringify(s)
     return expression.Expression(
-        "ncpVUsin(", ",".join([r.gamsRepr(), s.gamsRepr(), str(mu)]), ")"
+        "ncpVUsin(", ",".join([r_str, s_str, str(mu)]), ")"
     )
 
 
-def poly(x: "Symbol", *args) -> "Expression":
+def poly(x, *args) -> "Expression":
     """
     Polynomial function
-
-    Parameters
-    ----------
-    x : Symbol
 
     Returns
     -------
     Expression
     """
+    x_str = _stringify(x)
     args_str = ",".join(str(arg) for arg in args)
 
-    return expression.Expression("poly(", f"{x.gamsRepr()},{args_str}", ")")
+    return expression.Expression("poly(", f"{x_str},{args_str}", ")")
 
 
 def sigmoid(x: Union[int, float, "Symbol"]) -> "Expression":
@@ -585,7 +600,7 @@ def sigmoid(x: Union[int, float, "Symbol"]) -> "Expression":
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("sigmoid(", x_str, ")")
 
 
@@ -661,7 +676,7 @@ def slrec(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("slrec(", f"{x_str},{S}", ")")
 
 
@@ -680,7 +695,7 @@ def sqrec(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("sqrec(", f"{x_str},{S}", ")")
 
 
@@ -696,7 +711,7 @@ def entropy(x: Union[int, float, "Symbol"]) -> "Expression":
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("entropy(", x_str, ")")
 
 
@@ -712,7 +727,7 @@ def errorf(x: Union[int, float, "Symbol"]) -> "Expression":
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("errorf(", x_str, ")")
 
 

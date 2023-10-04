@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy._algebra.expression as expression
+from gamspy.math.misc import _stringify
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -50,8 +51,8 @@ def binomial(
     if isinstance(n, (int, float)) and isinstance(k, (int, float)):
         return expression.Expression("binomial(", f"{n},{k}", ")")
 
-    n_string = str(n) if isinstance(n, (int, float)) else n.gamsRepr()
-    k_string = str(k) if isinstance(k, (int, float)) else k.gamsRepr()
+    n_string = _stringify(n)
+    k_string = _stringify(k)
 
     return expression.Expression("binomial(", f"{n_string},{k_string}", ")")
 

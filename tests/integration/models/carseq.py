@@ -125,7 +125,7 @@ def main(mip=False):
     defsumc[o, p] = sumc[o, p] == Sum(c.where[classData[c, o]], cp[c, p])
     defopLS[o, p] = op[o, p] == ifthen(sumc[o, p] >= 0.5, 1, 0)
     defviol[blk[o, p]] = Sum(blkc[blk, pp], op[o, pp]) <= maxc[o] + v[o, p]
-    defviolLS[blk[o, p]] = v[o, p] == gams_math.max(
+    defviolLS[blk[o, p]] = v[o, p] == gams_math.Max(
         Sum(blkc[blk, pp], op[o, pp]) - maxc[o], Number(0)
     )
 
