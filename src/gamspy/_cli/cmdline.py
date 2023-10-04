@@ -93,20 +93,9 @@ def install_license(args: Dict[str, str]):
     shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
 
 
-def install_engine_license(args: Dict[str, str]):
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
-    shutil.copy(args["name"], gamspy_base_dir + os.sep + "enginelic.txt")
-    append_dist_info(["enginelic.txt"], gamspy_base_dir)
-
-
 def uninstall_license():
     gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
-
-
-def uninstall_engine_license():
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
-    os.unlink(gamspy_base_dir + os.sep + "enginelic.txt")
 
 
 def install_solver(args: Dict[str, str]):
@@ -183,8 +172,6 @@ def uninstall_solver(args: Dict[str, str]):
 def install(args: Dict[str, str]):
     if args["component"] == "license":
         install_license(args)
-    elif args["component"] == "engine_license":
-        install_engine_license(args)
     elif args["component"] == "solver":
         install_solver(args)
 
@@ -192,8 +179,6 @@ def install(args: Dict[str, str]):
 def uninstall(args: Dict[str, str]):
     if args["component"] == "license":
         uninstall_license()
-    elif args["component"] == "engine_license":
-        uninstall_engine_license()
     elif args["component"] == "solver":
         uninstall_solver(args)
 
