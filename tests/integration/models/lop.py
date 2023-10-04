@@ -74,7 +74,7 @@ def main():
     )
 
     defspobj.definition = spobj == Sum(
-        (s, d[s1, s2]), f[s, d] * math.max(rt[s1, s2], rt[s2, s1])
+        (s, d[s1, s2]), f[s, d] * math.Max(rt[s1, s2], rt[s2, s1])
     )
 
     sp = Model(
@@ -187,7 +187,7 @@ def main():
         l[ll, s1, s2], phi[ll]
     )
 
-    dtlimit[s1, s2].where[od[s1, s2]] = dt[s1, s2] <= math.min(
+    dtlimit[s1, s2].where[od[s1, s2]] = dt[s1, s2] <= math.Min(
         od[s1, s2], maxtcap
     ) * Sum(ll.where[rp[ll, s1] & rp[ll, s2]], phi[ll])
 
@@ -204,7 +204,7 @@ def main():
         objective=obj,
     )
 
-    freq.lo[s1, s2].where[rt[s1, s2]] = math.max(
+    freq.lo[s1, s2].where[rt[s1, s2]] = math.Max(
         lfr[s1, s2], math.ceil(load[s1, s2] / maxtcap)
     )
     freq.up[s1, s2].where[rt[s1, s2]] = freq.lo[s1, s2]
@@ -300,10 +300,10 @@ def main():
                 & rp[sol, s2]
                 & rp[sol, s3]
                 & (
-                    (math.min(rp[sol, s], rp[sol, s1]) >= rp[sol, s2])
-                    & (math.max(rp[sol, s], rp[sol, s1]) <= rp[sol, s3])
-                    | (math.min(rp[sol, s], rp[sol, s1]) >= rp[sol, s3])
-                    & (math.max(rp[sol, s], rp[sol, s1]) <= rp[sol, s2])
+                    (math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s2])
+                    & (math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s3])
+                    | (math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s3])
+                    & (math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s2])
                 )
             ],
             dtr[sol, s2, s3],

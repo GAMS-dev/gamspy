@@ -3,8 +3,8 @@ Advanced
 ********
 
 These documents clarify concepts, design decisions, and technical
-constraints in GamsPy. This is a great place to understand the
-fundamental GamsPy ideas and philosophy. 
+constraints in GAMSPy. This is a great place to understand the
+fundamental GAMSPy ideas and philosophy. 
 
 .. toctree::
    :maxdepth: 1

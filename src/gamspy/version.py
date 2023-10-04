@@ -1,10 +1,6 @@
 try:
     from importlib import metadata
 except ImportError:
-    import importlib_metadata as metadata
+    import importlib_metadata as metadata  # type: ignore
 
-try:
-    __version__ = metadata.version("gamspy")
-except KeyError:
-    # Working with non-compiled version
-    __version__ = "0.9.0"
+__version__ = metadata.version("gamspy")

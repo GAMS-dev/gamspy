@@ -373,7 +373,7 @@ def main():
     # assign_mip.optCr = 1
 
     # assign_mip.solve()
-    # zfeas.assignment = gams_math.min(zfeas, z.l)
+    # zfeas.assignment = gams_math.Min(zfeas, z.l)
     # print('final zfeas', zfeas.toValue())
     # print('heuristic solution by B-B ', z.toValue(), "\n", x.pivot())
     # results.write(f"\nzfeas IP solution bound objective value    = {zfeas.toValue()}")
@@ -415,7 +415,7 @@ def main():
         improv.assignment = 0
         zl.assignment = zlr + Sum(j, w[j])
         improv.where[zl > zlbest] = 1  # is zl better than zlbest?
-        zlbest.assignment = gams_math.max(zlbest, zl)
+        zlbest.assignment = gams_math.Max(zlbest, zl)
         s[j] = 1 - Sum(i, x.l[i, j])  # subgradient
         norm.assignment = Sum(j, sqr(s[j]))
 

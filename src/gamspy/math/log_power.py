@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy._algebra.expression as expression
+from gamspy.math.misc import _stringify
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -69,8 +70,8 @@ def log_beta(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
-    y_str = str(y) if isinstance(y, (int, float)) else y.gamsRepr()
+    x_str = _stringify(x)
+    y_str = _stringify(y)
     return expression.Expression("logBeta(", f"{x_str},{y_str}", ")")
 
 
@@ -84,8 +85,8 @@ def log_gamma(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
-    y_str = str(y) if isinstance(y, (int, float)) else y.gamsRepr()
+    x_str = _stringify(x)
+    y_str = _stringify(y)
     return expression.Expression("logGamma(", f"{x_str},{y_str}", ")")
 
 
@@ -97,7 +98,7 @@ def logit(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
     -------
     Expression | float
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("logit(", x_str, ")")
 
 
@@ -256,7 +257,7 @@ def sllog10(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("sllog10(", f"{x_str},{S}", ")")
 
 
@@ -275,7 +276,7 @@ def sqlog10(
     -------
     Expression
     """
-    x_str = str(x) if isinstance(x, (int, float)) else x.gamsRepr()
+    x_str = _stringify(x)
     return expression.Expression("sqlog10(", f"{x_str},{S}", ")")
 
 
