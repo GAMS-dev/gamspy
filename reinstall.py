@@ -30,36 +30,13 @@ def get_job_name():
     return f"{job_prefix}{major}.{minor}"
 
 
-def get_artifacts():
-    token = os.environ["gamspy_base_token"]
-    repo = os.environ["gamspy_base_artifacts"]
-    job_name = get_job_name()
-    repo = repo.replace("job_name", job_name)
-
-    command = [
-        "curl",
-        "--location",
-        "--output",
-        "artifacts.zip",
-        "--header",
-        f"PRIVATE-TOKEN: {token}",
-        repo,
-    ]
-
-    subprocess.run(command, check=True)
-
-    command = ["unzip", "artifacts.zip"]
-    subprocess.run(command, check=True)
-
-
 def install_transfer():
     command = [
         "pip",
         "install",
-        "gamsapi[transfer, connect]",
-        "--find-links",
-        ".",
-        "--force-reinstall",
+        "-i",
+        "https://test.pypi.org/simple/",
+        "gamsapi",
     ]
 
     subprocess.run(command, check=True)
@@ -69,10 +46,9 @@ def install_gamspy_base():
     command = [
         "pip",
         "install",
+        "-i",
+        "https://test.pypi.org/simple/",
         "gamspy_base",
-        "--find-links",
-        "gamspy_base/dist",
-        "--force-reinstall",
     ]
 
     subprocess.run(command, check=True)
@@ -117,7 +93,6 @@ def install_development_dependencies():
 
 if __name__ == "__main__":
     install_development_dependencies()
-    get_artifacts()
     install_transfer()
     install_gamspy_base()
     install_gamspy()
