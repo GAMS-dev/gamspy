@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 
 def _stringify(x: Union[int, float, "Symbol", "ImplicitSymbol"]):
-    return _stringify(x)
+    return str(x) if isinstance(x, (int, float)) else x.gamsRepr()
 
 
 def abs(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
