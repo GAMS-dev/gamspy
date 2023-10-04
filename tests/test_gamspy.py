@@ -1,24 +1,23 @@
-import unittest
 import argparse
+import unittest
 
-from unit.test_container import container_suite
-from unit.test_math import math_suite
-from unit.test_utils import utils_suite
-from unit.test_set import set_suite
-from unit.test_alias import alias_suite
-from unit.test_parameter import parameter_suite
-from unit.test_variable import variable_suite
-from unit.test_equation import equation_suite
-from unit.test_model import model_suite
-from unit.test_operation import operation_suite
-from unit.test_domain import domain_suite
-from unit.test_condition import condition_suite
-from unit.test_magics import magics_suite
+from integration.test_cmd_script import cmd_suite
+from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
-from integration.test_model_instance import model_instance_suite
-
-# from integration.test_cmd_script import cmd_suite
+from unit.test_alias import alias_suite
+from unit.test_condition import condition_suite
+from unit.test_container import container_suite
+from unit.test_domain import domain_suite
+from unit.test_equation import equation_suite
+from unit.test_magics import magics_suite
+from unit.test_math import math_suite
+from unit.test_model import model_suite
+from unit.test_operation import operation_suite
+from unit.test_parameter import parameter_suite
+from unit.test_set import set_suite
+from unit.test_utils import utils_suite
+from unit.test_variable import variable_suite
 
 
 def get_args():
@@ -63,7 +62,7 @@ def main():
             solve_suite,
             model_instance_suite,
             gams_models_suite,
-            # cmd_suite,
+            cmd_suite,
         ]
 
         print(f"Running integration tests\n{'='*80}")
