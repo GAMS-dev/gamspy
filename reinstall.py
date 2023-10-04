@@ -56,7 +56,7 @@ def install_transfer():
     command = [
         "pip",
         "install",
-        "gamsapi[transfer, connect]",
+        "gamsapi[transfer, connect]==45.0.0",
         "--find-links",
         ".",
         "--force-reinstall",
