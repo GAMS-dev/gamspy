@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import os
+import platform
 from collections.abc import Sequence
 from typing import Iterable
 from typing import List
@@ -36,6 +38,7 @@ from gams.transfer._internals.specialvalues import SpecialValues
 
 import gamspy
 import gamspy._symbols.implicits as implicits
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import GdxException
 
 if TYPE_CHECKING:
@@ -43,6 +46,32 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
+
+
+def getAvailableSolvers() -> List[str]:
+    try:
+        import gamspy_base
+    except Exception:
+        raise GamspyException("gamspy_base must be installed!")
+
+    solver_names = []
+    capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
+    user_platform = "Windows" if platform.system() == "Windows" else "rest"
+
+    with open(
+        gamspy_base.directory + os.sep + capabilities_file[user_platform]
+    ) as capabilities:
+        lines = capabilities.readlines()
+        lines = [line for line in lines if line != "\n" and line[0] != "*"]
+
+        for line in lines:
+            if line == "DEFAULTS\n":
+                break
+
+            if line.isupper():
+                solver_names.append(line.split(" ")[0])
+
+    return solver_names
 
 
 def _loadPackageGlobals() -> None:  # pragma: no cover
