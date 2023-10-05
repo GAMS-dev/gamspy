@@ -257,7 +257,7 @@ class SolveSuite(unittest.TestCase):
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
-                commandline_options={"resLim": 100},
+                options={"resLim": 100},
                 output=file,
             )
 
@@ -292,10 +292,11 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(
             GamspyException,
             transport.solve,
+            None,
             {"bla": 100},
         )
 
-        self.assertRaises(GamspyException, transport.solve, 5)
+        self.assertRaises(GamspyException, transport.solve, None, 5)
 
         # Try to solve invalid model
         m = Container(delayed_execution=True)

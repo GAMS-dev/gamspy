@@ -285,49 +285,48 @@ class Model:
 
     def _prepare_gams_options(
         self,
-        commandline_options: Optional[dict] = None,
+        solver: Optional[str] = None,
+        options: Optional[dict] = None,
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
-        options = GamsOptions(self.container.workspace)
-        options.gdx = self.container._gdx_path
+        gams_options = GamsOptions(self.container.workspace)
+        gams_options.gdx = self.container._gdx_path
 
-        if commandline_options:
-            if not isinstance(commandline_options, dict):
-                raise GamspyException("commandline_options must be a dict")
+        if solver:
+            gams_options.all_model_types = solver
 
-            for option, value in commandline_options.items():
-                if option.lower() not in utils.COMMANDLINE_OPTIONS:
+        if options:
+            if not isinstance(options, dict):
+                raise GamspyException("options must be a dict")
+
+            for option, value in options.items():
+                if option.lower() not in utils.VALID_GAMS_OPTIONS:
                     raise GamspyException(
-                        f"Invalid commandline option: {option}"
+                        f"Invalid option `{option}`. Possible options:"
+                        f" {utils.VALID_GAMS_OPTIONS}"
                     )
 
-                setattr(options, option.lower(), value)
+                setattr(gams_options, option.lower(), value)
 
         if solver_options:
-            if (
-                not commandline_options
-                or "solver" not in commandline_options.keys()
-            ):
+            if not options or solver is None:
                 raise GamspyException(
-                    "You need to provide 'solver' in commandline_options to"
-                    " apply solver options."
+                    "You need to provide a 'solver' to apply solver options."
                 )
-
-            solver_name = commandline_options["solver"]
 
             solver_file_name = (
                 self.container.workspace.working_directory
                 + os.sep
-                + f"{solver_name}.123"
+                + f"{solver}.123"
             )
 
             with open(solver_file_name, "w") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            options.optfile = 123
+            gams_options.optfile = 123
 
-        return options
+        return gams_options
 
     def _validate_model(self, equations, problem, sense=None) -> Tuple:
         if not isinstance(equations, list) or any(
@@ -457,7 +456,8 @@ class Model:
 
     def solve(
         self,
-        commandline_options: Optional[Dict[str, str]] = None,
+        solver: Optional[str] = None,
+        options: Optional[Dict[str, str]] = None,
         solver_options: Optional[dict] = None,
         model_instance_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
@@ -469,7 +469,7 @@ class Model:
 
         Parameters
         ----------
-        commandline_options : dict, optional
+        options : dict, optional
         output : TextIOWrapper, optional
 
         Raises
@@ -480,14 +480,14 @@ class Model:
             In case sense is different than "MIN" or "MAX"
         """
         if not self._is_frozen:
-            options = self._prepare_gams_options(
-                commandline_options, solver_options
+            gams_options = self._prepare_gams_options(
+                solver, options, solver_options
             )
 
             self._append_solve_string()
             self._assign_model_attributes()
 
-            self.container._run(options, output, backend, engine_config)
+            self.container._run(gams_options, output, backend, engine_config)
 
             self._update_model_attributes()
         else:

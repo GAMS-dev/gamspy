@@ -1,4 +1,6 @@
 import argparse
+import glob
+import os
 import unittest
 
 from integration.test_cmd_script import cmd_suite
@@ -73,6 +75,25 @@ def main():
             if not result.wasSuccessful():
                 return 1
             print("=" * 80)
+
+    # clean up
+    csv_paths = glob.glob("*.csv")
+    for csv_path in csv_paths:
+        os.remove(csv_path)
+
+    xlsx_paths = glob.glob("*.xlsx")
+    for xlsx_path in xlsx_paths:
+        os.remove(xlsx_path)
+
+    txt_paths = glob.glob("*.txt")
+    for txt_path in txt_paths:
+        if txt_path.endswith("dev_requirements.txt"):
+            continue
+        os.remove(txt_path)
+
+    gdx_paths = glob.glob("*.gdx")
+    for gdx_path in gdx_paths:
+        os.remove(gdx_path)
 
     return 0
 

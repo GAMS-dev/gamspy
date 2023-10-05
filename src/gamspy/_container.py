@@ -689,10 +689,10 @@ class Container(gt.Container):
             In case the option is not valid
         """
         for key, value in options.items():
-            if not key.lower() in utils.COMMANDLINE_OPTIONS:
+            if not key.lower() in utils.VALID_OPTION_STATEMENTS:
                 raise ValueError(
                     f"{key} is not a valid option. Valid options:"
-                    f" {utils.COMMANDLINE_OPTIONS}"
+                    f" {utils.VALID_OPTION_STATEMENTS}"
                 )
 
             self._addStatement(
