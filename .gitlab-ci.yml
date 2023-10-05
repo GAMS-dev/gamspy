@@ -4,7 +4,6 @@ default:
 
 stages:
   - formatter
-  - docs
   - test
 
 variables:
@@ -31,5 +30,4 @@ variables:
     description: "GAMS license string used for testing"
 
 include: ['ci/.gitlab-ci-formatter.yml',
-          'ci/.gitlab-ci-docs.yml',
           'ci/.gitlab-ci-test-3.10.yml']
