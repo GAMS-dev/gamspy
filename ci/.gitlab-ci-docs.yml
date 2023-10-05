@@ -9,7 +9,7 @@ build_docs:
     - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
-    - conda create -y -n transfer-env python=3.10
+    - conda create -y -n transfer-env python=3.8
     - conda activate transfer-env
     - pip install -r docs/requirements.txt
     - cd docs && make html

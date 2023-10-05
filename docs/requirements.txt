@@ -10,6 +10,6 @@ matplotlib
 sphinx_design
 python_docs_theme
 pydata_sphinx_theme
-https://test-files.pythonhosted.org/packages/1c/8f/6aeba38e4df509c2a15e587d08588c96651104b1c99e215fcc1818d65454/gamsapi-45.0.0-11-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
-https://test-files.pythonhosted.org/packages/f6/32/bc8c814d31a772952b50ef69fdbf216c1fb7c776302f1e76991bd8dbbe7b/gamspy_base-45.0.0-6-cp310-cp310-manylinux_2_34_x86_64.whl
+https://test-files.pythonhosted.org/packages/a5/65/f793ea1eed5d8b0ba11420004d0ddc5a045f1ec24d290de47045a20de2a5/gamsapi-45.0.0-11-cp38-cp38-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+https://test-files.pythonhosted.org/packages/0d/99/93e370dd53b0975d8d1cdbdcdce328792214d604c6aa1ec1552a28ad0d47/gamspy_base-45.0.0-6-cp38-cp38-manylinux_2_34_x86_64.whl
 https://test-files.pythonhosted.org/packages/43/98/96d90539c87ac8e9c2afd966ea84532116c98fc30612547f13d92a1941c9/gamspy-0.9.0rc0.tar.gz
