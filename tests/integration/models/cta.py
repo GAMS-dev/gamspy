@@ -192,8 +192,7 @@ def main():
     adjsum[k, i, j, "min"] = pro[k, i, j]
     adjrep[k, i, j] = -adjn.l[i, j, k] + adjp.l[i, j, k]
 
-    cdb = ConnectDatabase(m.system_directory)
-    cdb._container = m
+    cdb = ConnectDatabase(m.system_directory, m)
     cdb.exec_task(
         {
             "PandasExcelWriter": {
@@ -278,8 +277,7 @@ def main():
         num_nodes_used = cox3c.num_nodes_used
         solve_time = cox3c.solve_time
 
-    cdb = ConnectDatabase(m.system_directory)
-    cdb._container = m
+    cdb = ConnectDatabase(m.system_directory, m)
     cdb.exec_task(
         {
             "PandasExcelWriter": {

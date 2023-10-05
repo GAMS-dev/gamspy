@@ -46,6 +46,22 @@ class UtilsSuite(unittest.TestCase):
         self.assertTrue(utils.isin(i, symbols))
         self.assertFalse(utils.isin(k, symbols))
 
+    def test_available_solvers(self):
+        solvers = utils.getAvailableSolvers()
+
+        self.assertEqual(
+            solvers,
+            [
+                "CONOPT",
+                "CONVERT",
+                "CPLEX",
+                "NLPEC",
+                "PATH",
+                "SBB",
+                "SCENSOLVER",
+            ],
+        )
+
 
 def utils_suite():
     suite = unittest.TestSuite()

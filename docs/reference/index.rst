@@ -4,8 +4,6 @@ GAMSPy API Reference
 ====================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    gamspy
-   gamspy.math
-   gamspy.utils
