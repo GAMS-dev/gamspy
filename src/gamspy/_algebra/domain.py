@@ -49,6 +49,8 @@ class Domain:
     ----------
     sets: tuple[Set | str]
 
+    Examples
+    --------
     >>> equation = Equation(name="equation", domain=[i,j])
     >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
     """
