@@ -35,11 +35,6 @@ class Number:
     ----------
     value : int | float
 
-    Methods
-    -------
-    gamsRepr:
-        Returns GAMS Representation of the symbol.
-
     Examples
     --------
     >>> Number(1).where[sig[i] == 0]

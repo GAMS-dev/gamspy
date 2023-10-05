@@ -58,13 +58,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     description : str, optional
     uels_on_axes : bool
 
-    Methods
-    -------
-    gamsRepr:
-        Returns GAMS Representation of the symbol.
-    getStatement:
-        Returns what's written to .gms file before execution
-
     Examples
     --------
     >>> m = gp.Container()

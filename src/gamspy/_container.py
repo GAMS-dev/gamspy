@@ -71,29 +71,6 @@ class Container(gt.Container):
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
 
-    Methods
-    -------
-    addAlias:
-        Creates a new Alias and adds it to the container
-    addSet:
-        Creates a new Set and adds it to the container
-    addParameter:
-        Creates a new Parameter and adds it to the container
-    addVariable:
-        Creates a new Variable and adds it to the container
-    addEquation:
-        Creates a new Equation and adds it to the container
-    getAliases:
-        Returns all Aliases in the container
-    getSets:
-        Returns all Sets in the container
-    getParameters:
-        Returns all Parameters in the container
-    getVariables:
-        Returns all Variables in the container
-    getEquations:
-        Returns all Equations in the container
-
     Examples
     --------
     >>> m = gp.Container()

@@ -69,5 +69,5 @@ html_theme_options = {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     },
-    "show_nav_level": 2,
+    "show_nav_level": 1,
 }

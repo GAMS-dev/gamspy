@@ -77,13 +77,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     domain_forwarding : bool, optional
     description : str, optional
 
-    Methods
-    -------
-    gamsRepr:
-        Returns GAMS Representation of the symbol.
-    getStatement:
-        Returns what's written to .gms file before execution
-
     Examples
     --------
     >>> m = gp.Container()

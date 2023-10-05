@@ -165,13 +165,6 @@ class Model:
     limited_variables : Iterable, optional
         Allows limiting the domain of variables used in a model.
 
-    Methods
-    -------
-    solve:
-        Solves the model
-    getStatement:
-        Returns what's written to .gms file before execution
-
     Examples
     --------
     >>> transport = Model(m, "transport", equations=[cost,supply,demand])
