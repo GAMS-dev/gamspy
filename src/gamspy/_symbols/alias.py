@@ -51,19 +51,6 @@ class Alias(gt.Alias, operable.Operable, Symbol):
     name : str
     alias_with : Set
 
-    Methods
-    -------
-    lag:
-        Lag operation shifts the values of a Set or Alias by one to the left.
-    lead:
-        Lead operation shifts the values of a Set or Alias by one to the right.
-    sameAs:
-        Checks the equivalance of the elements of this set with another set.
-    gamsRepr:
-        Returns GAMS Representation of the symbol.
-    getStatement:
-        Returns what's written to .gms file before execution
-
     Examples
     --------
     >>> m = gp.Container()

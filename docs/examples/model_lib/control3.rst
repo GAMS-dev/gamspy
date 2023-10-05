@@ -1,3 +1,5 @@
+:orphan:
+
 .. _control3:
 
 control3

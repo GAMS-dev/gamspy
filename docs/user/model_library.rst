@@ -11,9 +11,3 @@ GAMSPy has an extensive model library that includes many models implemented with
    :widths: 33, 33, 33
    :header-rows: 1
 
-.. toctree:: 
-  :glob:
-  :hidden:
-  :maxdepth: 0
-
-  ../examples/model_lib/*

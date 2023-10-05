@@ -1,3 +1,5 @@
+:orphan:
+
 .. _qp6:
 
 qp6

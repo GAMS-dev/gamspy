@@ -1,3 +1,5 @@
+:orphan:
+
 .. _spbenders1:
 
 spbenders1

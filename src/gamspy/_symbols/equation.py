@@ -78,15 +78,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     uels_on_axes: bool
     definition_domain: list, optional
 
-    Methods
-    -------
-    definition:
-        Definition of the equation
-    gamsRepr:
-        Returns GAMS Representation of the symbol.
-    getStatement:
-        Returns what's written to .gms file before execution
-
     Examples
     --------
     >>> m = gp.Container()

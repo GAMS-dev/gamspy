@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import unittest
 from pathlib import Path
@@ -16,6 +17,13 @@ class CmdSuite(unittest.TestCase):
             license_file.write(license)
 
         gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+
+        # copy existing license to recover later
+        shutil.copy(
+            gamspy_base_dir + os.sep + "gamslice.txt",
+            this_folder + os.sep + "backup.txt",
+        )
+
         old_license_modified_time = os.path.getmtime(
             gamspy_base_dir + os.sep + "gamslice.txt"
         )
@@ -38,6 +46,12 @@ class CmdSuite(unittest.TestCase):
         )
 
         self.assertTrue(new_license_modified_time > old_license_modified_time)
+
+        # recover the original license
+        shutil.copyfile(
+            this_folder + os.sep + "backup.txt",
+            gamspy_base_dir + os.sep + "gamslice.txt",
+        )
 
 
 def cmd_suite():

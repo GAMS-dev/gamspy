@@ -1,3 +1,5 @@
+:orphan:
+
 .. _ps10_s_mn:
 
 ps10_s_mn

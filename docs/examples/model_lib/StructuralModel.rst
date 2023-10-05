@@ -1,3 +1,5 @@
+:orphan:
+
 .. _StructuralModel:
 
 StructuralModel
