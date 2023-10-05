@@ -171,7 +171,7 @@ def main():
     )
 
     cmd_params = {"optCa": 0.99, "resLim": 10}
-    cox3.solve(cmd_params, output=sys.stdout)
+    cox3.solve(options=cmd_params, output=sys.stdout)
 
     rep = Parameter(
         m, name="rep", description="summary report", domain=[k, i, j]
@@ -273,7 +273,7 @@ def main():
             objective=Sum([i, j, k], adjn[i, j, k] + adjp[i, j, k]),
         )
 
-        cox3c.solve(cmd_params, output=sys.stdout)
+        cox3c.solve(options=cmd_params, output=sys.stdout)
         obj = cox3c.objective_value
         num_nodes_used = cox3c.num_nodes_used
         solve_time = cox3c.solve_time

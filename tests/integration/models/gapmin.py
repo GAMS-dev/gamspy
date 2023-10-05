@@ -301,7 +301,7 @@ def main():
     # replace 'default' with solver of your choice.
     m.addOptions({"mip": "default", "rmip": "default"})
 
-    results = open("solution", "w", encoding="UTF-8")
+    results = open("solution.txt", "w", encoding="UTF-8")
     results.write("solvers used: RMIP = CPLEX\n")
     results.write("               MIP = CPLEX\n")
 
