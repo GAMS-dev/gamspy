@@ -1,3 +1,5 @@
+:orphan:
+
 .. _heatex3:
 
 heatex3

@@ -1,3 +1,5 @@
+:orphan:
+
 .. _cpack:
 
 cpack

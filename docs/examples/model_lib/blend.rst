@@ -1,3 +1,5 @@
+:orphan:
+
 .. _blend:
 
 blend

@@ -21,6 +21,7 @@ for f in files:
         name = f.split(".")[0]
 
         file_str = (
+            f":orphan:\n\n"
             f".. _{name}:\n\n{name}\n===========================================\n\n.."
             f" literalinclude:: ../../../tests/integration/models/{name}.py\n"
         )

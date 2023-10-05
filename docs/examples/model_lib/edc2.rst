@@ -1,3 +1,5 @@
+:orphan:
+
 .. _edc2:
 
 edc2
