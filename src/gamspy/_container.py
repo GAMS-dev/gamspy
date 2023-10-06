@@ -952,7 +952,7 @@ class Container(gt.Container):
 
         return default_message
 
-    def _get_symbol_names_from_gdx(self, gdx_handle: str) -> Tuple[list, list]:
+    def _get_symbol_names_from_gdx(self, gdx_handle) -> Tuple[list, list]:
         _, symCount, _ = gdx.gdxSystemInfo(gdx_handle)
 
         existing_names = []

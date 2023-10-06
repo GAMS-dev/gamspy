@@ -4,6 +4,7 @@ import os
 import unittest
 
 from integration.test_cmd_script import cmd_suite
+from integration.test_engine import engine_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
@@ -22,6 +23,25 @@ from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
 
 
+class GamspySuite(unittest.TestCase):
+    def test_version(self):
+        import gamspy
+
+        self.assertEqual(gamspy.__version__, "0.9.0rc1")
+
+
+def gamspy_suite():
+    suite = unittest.TestSuite()
+    tests = [
+        GamspySuite(name)
+        for name in dir(GamspySuite)
+        if name.startswith("test_")
+    ]
+    suite.addTests(tests)
+
+    return suite
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integration", action="store_true")
@@ -35,6 +55,7 @@ def main():
     runner = unittest.TextTestRunner()
 
     unittest_suites = [
+        gamspy_suite,
         container_suite,
         math_suite,
         utils_suite,
@@ -65,6 +86,7 @@ def main():
             model_instance_suite,
             gams_models_suite,
             cmd_suite,
+            engine_suite,
         ]
 
         print(f"Running integration tests\n{'='*80}")

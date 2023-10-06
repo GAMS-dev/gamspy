@@ -78,4 +78,11 @@ class Domain:
                 return set.container
 
     def gamsRepr(self) -> str:
+        """
+        Representation of this Domain in GAMS language.
+
+        Returns
+        -------
+        str
+        """
         return utils._getDomainStr(self.sets)

@@ -47,6 +47,8 @@ class AliasSuite(unittest.TestCase):
             h.records.values.tolist(), [["i1"], ["i2"], ["j1"], ["j2"]]
         )
 
+        self.assertEqual(len(h), 4)
+
         self.m.write("test.gdx")
 
         bla = Container(delayed_execution=True)

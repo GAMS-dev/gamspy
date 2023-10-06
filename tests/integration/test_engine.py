@@ -1,6 +1,8 @@
 import os
 import unittest
 
+from gams import GamsEngineConfiguration
+
 from gamspy import Container
 from gamspy import EngineConfig
 from gamspy import Equation
@@ -67,6 +69,12 @@ class EngineSuite(unittest.TestCase):
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        self.assertTrue(
+            isinstance(
+                engine_config.get_engine_config(), GamsEngineConfiguration
+            )
         )
 
         transport.solve(backend="engine", engine_config=engine_config)
