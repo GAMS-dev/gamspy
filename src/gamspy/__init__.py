@@ -33,6 +33,7 @@ from gamspy._algebra import Smax
 from gamspy._algebra import Smin
 from gamspy._algebra import Sum
 from gamspy._container import Container
+from gamspy._engine import EngineConfig
 from gamspy._model import Model
 from gamspy._model import ModelStatus
 from gamspy._model import Problem
@@ -70,4 +71,5 @@ __all__ = [
     "Card",
     "Problem",
     "Sense",
+    "EngineConfig",
 ]
