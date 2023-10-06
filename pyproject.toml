@@ -54,7 +54,6 @@ test = [
     "mypy == 1.4.1",
     "coverage[toml] == 7.2.7",
     "openpyxl == 3.1.2",
-    "urllib3 == 2.0.5",
 ]
 
 [project.scripts]
