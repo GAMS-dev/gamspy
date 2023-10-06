@@ -899,6 +899,37 @@ class SolveSuite(unittest.TestCase):
             content = file.read()
             self.assertTrue("CONOPT" in content)
 
+    def test_delayed_execution(self):
+        m = Container()
+        m.delayed_execution = False
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        _ = Parameter(m, name="a", domain=[i], records=capacities)
+        _ = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        e = Parameter(m, name="e")
+        e.assignment = 5
+        with self.assertRaises(Exception):
+            c[i] = 90 * d[i, j] / 1000
+
 
 def solve_suite():
     suite = unittest.TestSuite()
