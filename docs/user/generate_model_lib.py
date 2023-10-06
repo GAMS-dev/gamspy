@@ -30,10 +30,13 @@ for f in files:
             f"https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_{name}.html",
             f"https://www.gams.com/latest/finlib_ml/libhtml/finlib_{name}.html",
             f"https://www.gams.com/latest/noalib_ml/libhtml/noalib_{name}.html",
+            f"https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_{name}.html"
         ]
 
         for link in links:
+            found = False
             if open_url(link).status == 200:
+                found = True
                 # Table
                 csv["Model"].append(name)
                 csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
@@ -42,5 +45,7 @@ for f in files:
                 with open(f"docs/examples/model_lib/{name}.rst", "w") as rst:
                     rst.write(file_str)
                 break
+        if not found:
+            print(f'{name} not found in lib')
 
 pd.DataFrame(csv).to_csv("docs/examples/model_lib/table.csv", index=False)
