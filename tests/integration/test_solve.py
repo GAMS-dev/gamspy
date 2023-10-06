@@ -894,7 +894,7 @@ class SolveSuite(unittest.TestCase):
         # Test solver change
         transport.solve(solver="CONOPT")
 
-        lst_file = glob.glob("*.lst")[0]
+        lst_file = glob.glob("tests/integration/*.lst")[0]
         with open(lst_file) as file:
             content = file.read()
             self.assertTrue("CONOPT" in content)

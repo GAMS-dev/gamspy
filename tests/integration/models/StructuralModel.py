@@ -22,7 +22,7 @@ from gamspy import Variable
 
 
 def main():
-    gdx_file = str(Path(__file__).parent.absolute()) + "/InputData.gdx"
+    gdx_file = str(Path(__file__).parent.absolute()) + "/StructuralModel.gdx"
     m = Container(delayed_execution=True, load_from=gdx_file)
 
     # SETS #
