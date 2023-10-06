@@ -5,6 +5,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Ord
 from gamspy import Set
+from gamspy import UniverseAlias
 from gamspy.exceptions import GamspyException
 
 
@@ -196,6 +197,26 @@ class SetSuite(unittest.TestCase):
         # Alias with records
         b = Set(self.m, "b", records=[str(idx) for idx in range(1, 3)])
         c = Alias(self.m, "c", b)
+
+        count = 0
+        for _ in c:
+            count += 1
+
+        self.assertEqual(count, 2)
+
+        # UniverseAlias with no records
+        m = Container(delayed_execution=True)
+        x = Set(m, "set1")
+        a = UniverseAlias(m, "universe1")
+        count = 0
+        for _ in a:
+            count += 1
+
+        self.assertEqual(count, 0)
+
+        # UniverseAlias with records
+        b = Set(m, "set2", records=[str(idx) for idx in range(1, 3)])
+        c = UniverseAlias(m, "universe2")
 
         count = 0
         for _ in c:

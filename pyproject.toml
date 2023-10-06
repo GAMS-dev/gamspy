@@ -71,7 +71,8 @@ where = ["src"]
 [tool.coverage.run]
 omit = [
     "*/_cli/*.py",
-    "__main__.py"
+    "__main__.py",
+    "*__init__.py"
 ]
 
 [tool.coverage.report]
