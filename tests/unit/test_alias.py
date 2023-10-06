@@ -4,6 +4,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Set
+from gamspy import UniverseAlias
 
 
 class AliasSuite(unittest.TestCase):
@@ -32,6 +33,15 @@ class AliasSuite(unittest.TestCase):
 
         # Try to add the same alias
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
+
+    def test_universe_alias(self):
+        _ = Set(self.m, "i", records=["i1", "i2"])
+        h = UniverseAlias(self.m, "h")
+        _ = Set(self.m, "j", records=["j1", "j2"])
+
+        self.assertEqual(
+            h.records.values.tolist(), [["i1"], ["i2"], ["j1"], ["j2"]]
+        )
 
 
 def alias_suite():
