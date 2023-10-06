@@ -181,6 +181,9 @@ class Model:
         matches: Optional[dict] = None,
         limited_variables: Optional[Iterable["Variable"]] = None,
     ):
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
+
         self.name = name
         self.container = container
         self._equations, self.problem, self.sense = self._validate_model(

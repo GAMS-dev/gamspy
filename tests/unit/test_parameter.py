@@ -11,6 +11,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 
 
 class ParameterSuite(unittest.TestCase):
@@ -19,6 +20,9 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
+
+        # Check if the name is reserved
+        self.assertRaises(GamspyException, Parameter, self.m, "set")
 
         i = Set(
             self.m,

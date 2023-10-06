@@ -5,6 +5,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Ord
 from gamspy import Set
+from gamspy.exceptions import GamspyException
 
 
 class SetSuite(unittest.TestCase):
@@ -12,6 +13,9 @@ class SetSuite(unittest.TestCase):
         self.m = Container(delayed_execution=True)
 
     def test_set_string(self):
+        # Check if the name is reserved
+        self.assertRaises(GamspyException, Set, self.m, "set")
+
         # Without records
         b = Set(self.m, "b")
         self.assertEqual(b.gamsRepr(), "b")

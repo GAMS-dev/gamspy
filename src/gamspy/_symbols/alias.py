@@ -32,6 +32,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
@@ -61,6 +62,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
     def __init__(self, container: "Container", name: str, alias_with: "Set"):
         # enable load on demand
         self._is_dirty = False
+
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
 
         super().__init__(container, name, alias_with)
 

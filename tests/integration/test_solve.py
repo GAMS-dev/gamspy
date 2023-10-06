@@ -277,16 +277,16 @@ class SolveSuite(unittest.TestCase):
         self.assertFalse(any("dummy_" in name for name in self.m.data.keys()))
 
         # Test invalid problem
-        self.assertRaises(ValueError, Model, self.m, "model", [cost], "bla")
+        self.assertRaises(ValueError, Model, self.m, "dummy", [cost], "bla")
 
         # Test invalid sense
         self.assertRaises(
-            ValueError, Model, self.m, "model", [cost], "LP", "bla"
+            ValueError, Model, self.m, "dummy", [cost], "LP", "bla"
         )
 
         # Test invalid objective variable
         self.assertRaises(
-            TypeError, Model, self.m, "model", [cost], "LP", "min", a
+            TypeError, Model, self.m, "dummy", [cost], "LP", "min", a
         )
 
         # Test invalid commandline options
@@ -302,7 +302,7 @@ class SolveSuite(unittest.TestCase):
         # Try to solve invalid model
         m = Container(delayed_execution=True)
         cost = Equation(m, "cost")
-        model = Model(m, "model", equations=[cost], problem="LP", sense="min")
+        model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
         # Test limited variables
