@@ -43,6 +43,14 @@ class AliasSuite(unittest.TestCase):
             h.records.values.tolist(), [["i1"], ["i2"], ["j1"], ["j2"]]
         )
 
+        self.m.write("bla.gdx")
+
+        bla = Container(delayed_execution=True)
+        bla.read("bla.gdx")
+        self.assertEqual(
+            bla.data["h"].records.values.tolist(), h.records.values.tolist()
+        )
+
 
 def alias_suite():
     suite = unittest.TestSuite()

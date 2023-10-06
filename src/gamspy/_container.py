@@ -135,6 +135,11 @@ class Container(gt.Container):
                     symbol.name,
                     alias_with,
                 )
+            elif isinstance(symbol, gt.UniverseAlias):
+                _ = gp.UniverseAlias(
+                    self,
+                    symbol.name,
+                )
             elif isinstance(symbol, gt.Set):
                 _ = gp.Set(
                     self,
