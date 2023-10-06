@@ -10,25 +10,23 @@ de Wetering, A V, private communication.
 
 Keywords: mixed complementarity problem, quadratic programming, finance
 """
-
 from pathlib import Path
-from gamspy import (
-    Set,
-    Parameter,
-    Variable,
-    Equation,
-    Container,
-    Model,
-    Sum,
-    Ord,
-    Card,
-)
+
+from gamspy import Card
+from gamspy import Container
+from gamspy import Equation
+from gamspy import Model
+from gamspy import Ord
+from gamspy import Parameter
+from gamspy import Set
+from gamspy import Sum
+from gamspy import Variable
 from gamspy.math import sqr
 
 
 def main():
     cont = Container(
-        load_from=str(Path(__file__).parent.absolute()) + "/qpdata.gdx"
+        load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx"
     )
 
     # Sets
