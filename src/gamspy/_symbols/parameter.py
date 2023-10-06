@@ -81,6 +81,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # allow freezing
         self._is_frozen = False
 
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
+
         super().__init__(
             container,
             name,

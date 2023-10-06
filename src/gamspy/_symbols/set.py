@@ -86,6 +86,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         # allow conditions
         self.where = condition.Condition(self)
 
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
+
         super().__init__(
             container,
             name,

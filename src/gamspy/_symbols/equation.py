@@ -110,6 +110,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # allow freezing
         self._is_frozen = False
 
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
+
         super().__init__(
             container,
             name,
@@ -401,9 +404,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         else:
             self.type = regular_map[assignment._op_type]  # type: ignore
 
-        domain = (
-            self._definition_domain if self._definition_domain else self.domain
-        )
+        domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,

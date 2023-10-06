@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import gams.transfer as gt
 
 import gamspy._algebra.condition as condition
+import gamspy.utils as utils
 
 if TYPE_CHECKING:
     from gamspy import Container
@@ -10,6 +11,9 @@ if TYPE_CHECKING:
 
 class UniverseAlias(gt.UniverseAlias):
     def __init__(self, container: "Container", name: str):
+        # check if the name is a reserved word
+        name = utils._reservedCheck(name)
+
         super().__init__(container, name)
 
         # allow conditions

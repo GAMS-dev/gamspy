@@ -5,6 +5,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Set
 from gamspy import UniverseAlias
+from gamspy.exceptions import GamspyException
 
 
 class AliasSuite(unittest.TestCase):
@@ -23,6 +24,9 @@ class AliasSuite(unittest.TestCase):
         m = Alias(self.m, name="m", alias_with=k)
         self.assertEqual(m.gamsRepr(), "m")
         self.assertEqual(m.getStatement(), "Alias(k,m);")
+
+        # Check if the name is reserved
+        self.assertRaises(GamspyException, Alias, self.m, "set", i)
 
     def test_override(self):
         # Try to add the same Alias with non-Set alias_with

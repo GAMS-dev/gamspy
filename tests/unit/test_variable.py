@@ -7,6 +7,7 @@ from gamspy import Container
 from gamspy import Set
 from gamspy import Variable
 from gamspy import VariableType
+from gamspy.exceptions import GamspyException
 
 
 class VariableSuite(unittest.TestCase):
@@ -14,6 +15,9 @@ class VariableSuite(unittest.TestCase):
         self.m = Container(delayed_execution=True)
 
     def test_variable_string(self):
+        # Check if the name is reserved
+        self.assertRaises(GamspyException, Variable, self.m, "set")
+
         # Set
         i = Set(self.m, name="i", records=["bla", "damn"])
         j = Set(self.m, name="j", records=["test", "test2"])

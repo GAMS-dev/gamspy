@@ -12,6 +12,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 
 
 class EquationSuite(unittest.TestCase):
@@ -85,6 +86,9 @@ class EquationSuite(unittest.TestCase):
         )
 
     def test_equation_declaration(self):
+        # Check if the name is reserved
+        self.assertRaises(GamspyException, Equation, self.m, "set")
+
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
