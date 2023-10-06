@@ -135,6 +135,11 @@ class Container(gt.Container):
                     symbol.name,
                     alias_with,
                 )
+            elif isinstance(symbol, gt.UniverseAlias):
+                _ = gp.UniverseAlias(
+                    self,
+                    symbol.name,
+                )
             elif isinstance(symbol, gt.Set):
                 _ = gp.Set(
                     self,
@@ -820,7 +825,7 @@ class Container(gt.Container):
         self,
         options: Optional["GamsOptions"] = None,
         output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine-one", "engine-sass"] = "local",
+        backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
         if options is None:
@@ -835,7 +840,7 @@ class Container(gt.Container):
         # Create gdx file to read records from
         super().write(self._gdx_path)
 
-        if backend in ["engine-one", "engine-sass"]:
+        if backend in ["engine"]:
             # Engine expects gdx file to be next to the gms file
             old_path = self._gdx_path
             self._gdx_path = "default.gdx"
@@ -876,7 +881,7 @@ class Container(gt.Container):
                 message = self._parse_message(options, self._job)
                 e.value = message + e.value
                 raise e
-        elif backend in ["engine-one", "engine-sass"]:
+        elif backend in ["engine"]:
             options.gdx = "default.gdx"
 
             if engine_config is None:
@@ -898,7 +903,7 @@ class Container(gt.Container):
         else:
             raise GamspyException(
                 "Specified backend is not supported. Possible backends: local,"
-                " engine-one, engine-sass"
+                " engine"
             )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
