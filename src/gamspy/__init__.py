@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 # flake8: noqa
+from .version import __version__
 from gamspy._algebra import Card
 from gamspy._algebra import Domain
 from gamspy._algebra import Number
@@ -32,6 +33,7 @@ from gamspy._algebra import Smax
 from gamspy._algebra import Smin
 from gamspy._algebra import Sum
 from gamspy._container import Container
+from gamspy._engine import EngineConfig
 from gamspy._model import Model
 from gamspy._model import ModelStatus
 from gamspy._model import Problem
@@ -43,8 +45,6 @@ from gamspy._symbols import Parameter
 from gamspy._symbols import Set
 from gamspy._symbols import Variable
 from gamspy._symbols import VariableType
-
-from .version import __version__
 
 _order = 0  # Global order for newly generated symbols with no name
 
@@ -69,4 +69,5 @@ __all__ = [
     "Card",
     "Problem",
     "Sense",
+    "EngineConfig",
 ]
