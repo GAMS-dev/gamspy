@@ -297,7 +297,7 @@ def display_results(model, dataset):
 
 def main():
     load_from_file = False
-    dataset = parse_psplib("j301_1.sm") if load_from_file else mini_project()
+    dataset = parse_psplib("rcpsp.sm") if load_from_file else mini_project()
     decorate_with_time_windows(dataset)
     model = build_abstract_model()
     fill_records(dataset, model)
