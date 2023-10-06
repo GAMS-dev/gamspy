@@ -932,31 +932,22 @@ class Container(gt.Container):
             while index < num_lines:
                 line = all_lines[index]
 
-                if line.startswith("---"):
-                    temp_lines = []
-                    temp_index = index + 1
+                if line.startswith("****"):
+                    error_lines = [all_lines[index - 1]]
+                    temp_index = index
 
                     while (
-                        not all_lines[temp_index].startswith("---")
+                        all_lines[temp_index].startswith("****")
                         and temp_index < len(all_lines) - 1
                     ):
-                        temp_lines.append(all_lines[temp_index])
+                        error_lines.append(all_lines[temp_index])
                         temp_index += 1
 
-                    for idx, temp_line in enumerate(temp_lines):
-                        if temp_line.startswith("****"):
-                            error_lines = [temp_lines[idx - 1][5:]]
-
-                            error_idx = idx
-                            while temp_lines[error_idx].startswith("***"):
-                                error_lines.append(temp_lines[error_idx][5:])
-                                error_idx += 1
-
-                            return message_format.format(
-                                message="".join(error_lines),
-                                header=header,
-                                footer=footer,
-                            )
+                    return message_format.format(
+                        message="".join(error_lines),
+                        header=header,
+                        footer=footer,
+                    )
                 index += 1
 
         return default_message

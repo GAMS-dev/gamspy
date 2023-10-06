@@ -401,9 +401,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         else:
             self.type = regular_map[assignment._op_type]  # type: ignore
 
-        domain = (
-            self._definition_domain if self._definition_domain else self.domain
-        )
+        domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,
