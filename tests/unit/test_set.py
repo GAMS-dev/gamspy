@@ -99,7 +99,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        m = Container()
+        m = Container(delayed_execution=True)
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
@@ -107,6 +107,11 @@ class SetSuite(unittest.TestCase):
             list(m._unsaved_statements.values())[-1].getStatement(),
             'i("i1") = no;',
         )
+
+        m = Container()
+        k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
+        k["k1"] = False
+        self.assertEqual(k._is_dirty, False)
 
     def test_lag_and_lead(self):
         set = Set(
