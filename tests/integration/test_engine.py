@@ -78,7 +78,16 @@ class EngineSuite(unittest.TestCase):
             )
         )
 
-        self.assertRaises(GamspyException, transport.solve, "engine")
+        self.assertRaises(
+            GamspyException,
+            transport.solve,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "engine",
+        )
 
         transport.solve(backend="engine", engine_config=engine_config)
 
