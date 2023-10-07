@@ -319,7 +319,7 @@ class Model:
                 setattr(gams_options, option.lower(), value)
 
         if solver_options:
-            if not options or solver is None:
+            if solver is None:
                 raise GamspyException(
                     "You need to provide a 'solver' to apply solver options."
                 )
