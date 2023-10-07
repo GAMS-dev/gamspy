@@ -948,6 +948,9 @@ class SolveSuite(unittest.TestCase):
             c[i] = 90 * d[i, j] / 1000
 
         m = Container()
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
         v = Variable(m, name="v", domain=[i, j])
         v.l[i, j] = 5
         self.assertIsNotNone(v.records)
