@@ -12,6 +12,7 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 
 
 class EngineSuite(unittest.TestCase):
@@ -76,6 +77,8 @@ class EngineSuite(unittest.TestCase):
                 engine_config.get_engine_config(), GamsEngineConfiguration
             )
         )
+
+        self.assertRaises(GamspyException, transport.solve, "engine")
 
         transport.solve(backend="engine", engine_config=engine_config)
 

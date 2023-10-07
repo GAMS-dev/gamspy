@@ -255,6 +255,17 @@ class SolveSuite(unittest.TestCase):
             objective=z,
         )
 
+        self.assertRaises(
+            GamspyException,
+            transport.solve,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "bla",
+        )
+
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
@@ -828,9 +839,9 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=c,
         )
+        self.assertRaises(GamspyException, energy.interrupt)
 
         # relative termination criterion for MIP (relative gap)
-        # termination criterion is decreased to 0.1 from 0.000001
         cont.addOptions({"optCr": 0.000001})
 
         def interrupt_gams(model):
