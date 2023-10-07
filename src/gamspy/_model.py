@@ -470,6 +470,8 @@ class Model:
             if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
                 symbol._is_frozen = False
 
+        self._is_frozen = False
+
     def solve(
         self,
         solver: Optional[str] = None,
