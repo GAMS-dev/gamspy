@@ -370,7 +370,7 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.lse_max_sc(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "(lseMaxSc( a(i),a(i) ))")
 
-        self.assertRaises(GamspyException, gams_math.lse_max_sc)
+        self.assertRaises(GamspyException, gams_math.lse_max_sc, 5)
 
         op1 = gams_math.lse_min(a[i])
         self.assertEqual(op1.gamsRepr(), "(lseMin( a(i) ))")
@@ -380,7 +380,7 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.lse_min_sc(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "(lseMinSc( a(i),a(i) ))")
 
-        self.assertRaises(GamspyException, gams_math.lse_min_sc)
+        self.assertRaises(GamspyException, gams_math.lse_min_sc, 5)
 
         op1 = gams_math.ncp_cm(a[i], a[i], 3)
         self.assertEqual(op1.gamsRepr(), "(ncpCM( a(i),a(i),3 ))")
