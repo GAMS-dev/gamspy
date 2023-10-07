@@ -203,9 +203,7 @@ def _reservedCheck(word: str) -> str:
         "yes",
     ]
 
-    if word.lower() in reserved_words or word.startswith(
-        gamspy.Model._generate_prefix
-    ):
+    if word.lower() in reserved_words:
         raise GamspyException(
             "Name cannot be one of the reserved words. List of reserved"
             f" words: {reserved_words}"
