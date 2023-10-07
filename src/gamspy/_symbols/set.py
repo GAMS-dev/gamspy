@@ -145,9 +145,10 @@ class Set(gt.Set, operable.Operable, Symbol):
         )
 
         self.container._addStatement(statement)
-        self._is_dirty = True
 
-        if not self.container.delayed_execution:
+        if self.container.delayed_execution:
+            self._is_dirty = True
+        else:
             self.container._loadOnDemand()
 
     # Set Attributes

@@ -80,8 +80,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         self.container._addStatement(statement)
 
-        self.parent._is_dirty = True
-        if not self.container.delayed_execution:
+        if self.container.delayed_execution:
+            self.parent._is_dirty = True
+        else:
             self.container._loadOnDemand()
 
     def __neg__(self) -> ImplicitParameter:
@@ -115,8 +116,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         self.container._addStatement(statement)
 
-        self.parent._is_dirty = True
-        if not self.container.delayed_execution:
+        if self.container.delayed_execution:
+            self.parent._is_dirty = True
+        else:
             self.container._loadOnDemand()
 
     def __eq__(self, other):  # type: ignore
