@@ -29,10 +29,6 @@ class GamspyException(Exception):
     """Plain Gamspy exception."""
 
 
-class EarlyQuit(GamspyException):
-    """Raised when there is a KeyboardInterrupt."""
-
-
 class GdxException(GamspyException):
     """Raised when there is a GDX related error"""
 

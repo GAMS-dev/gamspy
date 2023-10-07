@@ -46,7 +46,6 @@ from gams.core import gdx
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
-from gamspy.exceptions import EarlyQuit
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -94,7 +93,6 @@ class Container(gt.Container):
 
         self.name = name
         self._delayed_execution = delayed_execution
-        self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
 
@@ -213,7 +211,6 @@ class Container(gt.Container):
         return save_to, restart_from, gdx_path
 
     def _addStatement(self, statement) -> None:
-        self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
     @property
@@ -714,7 +711,6 @@ class Container(gt.Container):
         """
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
-        self._statements_dict[unique_name] = gams_code
 
     def getSets(self) -> List["Set"]:
         """
@@ -773,14 +769,9 @@ class Container(gt.Container):
 
         self._unsaved_statements = {}
 
-    def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
+    def generateGamsString(self) -> str:
         """
         Generates the GAMS code
-
-        Parameters
-        ----------
-        dictionary : Dict, optional
-            Dictionary that contains the expressions, by default None
 
         Returns
         -------
@@ -789,12 +780,8 @@ class Container(gt.Container):
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
-        dictionary = (
-            self._statements_dict if dictionary is None else dictionary
-        )
-
         string = ""
-        for statement in dictionary.values():
+        for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
             else:
@@ -851,10 +838,10 @@ class Container(gt.Container):
             # Engine expects gdx file to be next to the gms file
             old_path = self._gdx_path
             self._gdx_path = "default.gdx"
-            gams_string = self.generateGamsString(self._unsaved_statements)
+            gams_string = self.generateGamsString()
             self._gdx_path = old_path
         else:
-            gams_string = self.generateGamsString(self._unsaved_statements)
+            gams_string = self.generateGamsString()
 
         # If there is no restart checkpoint or _run is called for the first time, set it to None
         checkpoint = (
@@ -879,10 +866,6 @@ class Container(gt.Container):
                     checkpoint=self._save_to,
                     create_out_db=False,
                     output=output,
-                )
-            except KeyboardInterrupt:
-                raise EarlyQuit(
-                    "Keyboard interrupt was received while solving the model"
                 )
             except GamsExceptionExecution as e:
                 message = self._parse_message(options, self._job)
