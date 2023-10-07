@@ -43,7 +43,7 @@ class EquationSuite(unittest.TestCase):
         eq1 = Equation(self.m, "eq1", type="nonbinding")
         eq1.definition = x == c
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "eq1 .. x =n= c;",
         )
         self.assertEqual(eq1.type, "nonbinding")
@@ -51,13 +51,13 @@ class EquationSuite(unittest.TestCase):
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
         eq2[i] = x[i] == c[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "eq2(i) .. x(i) =n= c(i);",
         )
 
         eq2[i].definition = x[i] == c[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "eq2(i) .. x(i) =n= c(i);",
         )
 
@@ -190,7 +190,7 @@ class EquationSuite(unittest.TestCase):
 
         self.assertIsNotNone(cost.definition)
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -203,7 +203,7 @@ class EquationSuite(unittest.TestCase):
         )
         supply[i] = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "supply(i) .. sum(j,x(i,j)) =l= a(i);",
         )
 
@@ -216,13 +216,13 @@ class EquationSuite(unittest.TestCase):
         )
         bla[i, j].definition = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
         bla[i, "*"] = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "bla(i,*) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
@@ -234,7 +234,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -245,7 +245,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -258,7 +258,7 @@ class EquationSuite(unittest.TestCase):
         )
         bla2[i, j].definition = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             "bla2(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
@@ -272,7 +272,7 @@ class EquationSuite(unittest.TestCase):
             definition_domain=[i, "bla"],
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
             'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
         )
 
@@ -296,7 +296,7 @@ class EquationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            list(m._statements_dict.values())[-1].getStatement(),
+            list(m._unsaved_statements.values())[-1].getStatement(),
             "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and"
             " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
         )
@@ -440,7 +440,7 @@ class EquationSuite(unittest.TestCase):
         f.definition = x - c
 
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
 

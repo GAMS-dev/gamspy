@@ -432,7 +432,7 @@ class MathSuite(unittest.TestCase):
         defopLS = Equation(m, "defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == gams_math.ifthen(sumc[o, p] >= 0.5, 1, 0)
         self.assertEqual(
-            list(m._statements_dict.values())[-1].gamsRepr(),
+            list(m._unsaved_statements.values())[-1].gamsRepr(),
             "defopLS(o,p) .. op(o,p) =e= (ifthen(sumc(o,p) >= 0.5, 1, 0)  );",
         )
 

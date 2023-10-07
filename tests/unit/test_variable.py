@@ -245,7 +245,7 @@ class VariableSuite(unittest.TestCase):
         x = Variable(self.m, "x", domain=[k])
         x.l[k] = 5
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "x.l(k) = 5;",
         )
         self.assertTrue(x._is_dirty)
