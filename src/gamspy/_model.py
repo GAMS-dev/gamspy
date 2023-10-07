@@ -362,7 +362,7 @@ class Model:
 
             sense = gp.Sense(sense.upper())
 
-        return equations, problem, sense
+        return problem, sense
 
     def _append_solve_string(self) -> None:
         solve_string = f"solve {self.name} using {self.problem}"
