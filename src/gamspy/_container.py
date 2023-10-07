@@ -806,7 +806,14 @@ class Container(gt.Container):
                     )
 
                 if isinstance(statement, possible_undef_types):
+                    # save old dirty state to avoid self.records recursion
+                    old_dirty_state = statement._is_dirty
+                    statement._is_dirty = False
+
                     num_undef = statement.countUndef()
+
+                    # restore old dirty state
+                    statement._is_dirty = old_dirty_state
 
                     if num_undef:
                         statement_str = f"$onUNDF\n{statement_str}$offUNDF"
