@@ -912,6 +912,10 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("conopt.123"))
 
+        self.assertRaises(
+            GamspyException, transport.solve, None, None, {"rtmaxv": "1.e12"}
+        )
+
     def test_delayed_execution(self):
         m = Container()
         m.delayed_execution = False
