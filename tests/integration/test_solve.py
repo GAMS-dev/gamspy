@@ -892,12 +892,14 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test solver change
-        transport.solve(solver="CONOPT")
+        transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
 
         lst_file = glob.glob("*.lst")[0]
         with open(lst_file) as file:
             content = file.read()
             self.assertTrue("CONOPT" in content)
+
+        self.assertTrue(os.path.exists("conopt.123"))
 
     def test_delayed_execution(self):
         m = Container()

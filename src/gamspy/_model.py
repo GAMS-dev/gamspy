@@ -320,7 +320,7 @@ class Model:
             solver_file_name = (
                 self.container.workspace.working_directory
                 + os.sep
-                + f"{solver}.123"
+                + f"{solver.lower()}.123"
             )
 
             with open(solver_file_name, "w") as solver_file:

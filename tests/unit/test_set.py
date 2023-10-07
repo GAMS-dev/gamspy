@@ -99,11 +99,12 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        i = Set(self.m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
+        m = Container()
+        i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(m._statements_dict.values())[-1].getStatement(),
             'i("i1") = no;',
         )
 
