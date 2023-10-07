@@ -34,7 +34,6 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gams.transfer as gt
-import pandas as pd
 from gams import DebugLevel
 from gams import GamsCheckpoint
 from gams import GamsJob
@@ -762,13 +761,6 @@ class Container(gt.Container):
         """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
-    def _loadOnDemand(self) -> pd.DataFrame:
-        """Loads data of the given symbol from the gdx file."""
-
-        self._run()
-
-        self._unsaved_statements = {}
-
     def generateGamsString(self) -> str:
         """
         Generates the GAMS code
@@ -942,28 +934,31 @@ class Container(gt.Container):
 
         return default_message
 
-    def _get_symbol_names_from_gdx(self, gdx_handle) -> Tuple[list, list]:
-        _, symCount, _ = gdx.gdxSystemInfo(gdx_handle)
+    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
+        gdx_handle = utils._openGdxFile(self.system_directory, load_from)
+        _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
         existing_names = []
         new_names = []
-        for i in range(1, symCount + 1):
+        for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
             if symbol_name in self.data.keys():
                 existing_names.append(symbol_name)
             else:
                 new_names.append(symbol_name)
 
+        utils._closeGdxHandle(gdx_handle)
+
         return existing_names, new_names
 
     def _get_symbol_names_to_load(
         self,
+        load_from: str,
         symbol_names: Optional[List[str]] = None,
-        gdx_handle=None,
     ) -> List[str]:
         if not symbol_names:
             existing_names, new_names = self._get_symbol_names_from_gdx(
-                gdx_handle
+                load_from
             )
 
             symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
@@ -991,9 +986,7 @@ class Container(gt.Container):
         symbols : List[str], optional
             Symbols whose data will be load from gdx, by default None
         """
-        gdxHandle = utils._openGdxFile(self.system_directory, load_from)
-        symbol_names = self._get_symbol_names_to_load(symbol_names, gdxHandle)
-        utils._closeGdxHandle(gdxHandle)
+        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
         temp_container = Container(system_directory=self.system_directory)
         temp_container.read(load_from, symbol_names)
@@ -1047,6 +1040,6 @@ class Container(gt.Container):
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 dirty_symbols.append(name)
         if len(dirty_symbols) > 0:
-            self._loadOnDemand()
+            self._run()
 
         super().write(write_to, symbols)

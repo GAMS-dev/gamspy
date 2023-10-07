@@ -121,11 +121,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
 
-        self._is_dirty = True
         if self.container.delayed_execution:
             self._is_dirty = True
         else:
-            self.container._loadOnDemand()
+            self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
@@ -161,7 +160,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if self.container.delayed_execution:
             self._is_dirty = True
         else:
-            self.container._loadOnDemand()
+            self.container._run()
 
     @property
     def records(self):
@@ -175,7 +174,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._loadOnDemand()
+        self.container._run()
 
         return self._records
 

@@ -270,7 +270,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._loadOnDemand()
+        self.container._run()
 
         return self._records
 
