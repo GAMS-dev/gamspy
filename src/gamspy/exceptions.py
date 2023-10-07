@@ -27,18 +27,3 @@
 
 class GamspyException(Exception):
     """Plain Gamspy exception."""
-
-
-class GdxException(GamspyException):
-    """Raised when there is a GDX related error"""
-
-    FORMAT = "Gamspy failed to perform GDX operation due to %(exc)s."
-
-    def __init__(self, exception: Exception) -> None:
-        self.original_exception = exception
-        super().__init__(exception)
-
-    def __str__(self) -> str:
-        return self.FORMAT % {
-            "exc": self.original_exception,
-        }

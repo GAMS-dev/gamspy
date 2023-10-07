@@ -947,6 +947,14 @@ class SolveSuite(unittest.TestCase):
         with self.assertRaises(Exception):
             c[i] = 90 * d[i, j] / 1000
 
+        v = Variable(m, name="v", domain=[i, j])
+        v.l[i, j] = 5
+        self.assertIsNotNone(v.records)
+
+        x = Variable(m, name="x")
+        x.l.assignment = 5
+        self.assertIsNotNone(x.records)
+
 
 def solve_suite():
     suite = unittest.TestSuite()

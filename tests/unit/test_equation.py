@@ -368,7 +368,7 @@ class EquationSuite(unittest.TestCase):
         )
         self.assertEqual(pi.infeas.gamsRepr(), "pi.infeas")
 
-    def test_implicit_equation_attributes(self):
+    def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
         a = Equation(self.m, "a", "regular", [i])
 

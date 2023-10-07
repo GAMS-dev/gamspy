@@ -861,7 +861,7 @@ class Container(gt.Container):
                 )
             except GamsExceptionExecution as e:
                 message = self._parse_message(options, self._job)
-                e.value = message + e.value
+                e.value = message + e.value if message else e.value
                 raise e
         elif backend in ["engine"]:
             options.gdx = "default.gdx"
@@ -892,8 +892,7 @@ class Container(gt.Container):
 
         self.loadRecordsFromGdx(self._gdx_path)
 
-    def _parse_message(self, options: "GamsOptions", job: "GamsJob") -> str:
-        default_message = ""
+    def _parse_message(self, options: "GamsOptions", job: "GamsJob"):
         header = "=" * 80
         footer = "=" * 80
         message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
@@ -932,7 +931,7 @@ class Container(gt.Container):
                     )
                 index += 1
 
-        return default_message
+        return None
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
         gdx_handle = utils._openGdxFile(self.system_directory, load_from)

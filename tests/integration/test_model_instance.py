@@ -83,6 +83,9 @@ class ModelInstanceSuite(unittest.TestCase):
             transport.solve(model_instance_options={"solver": "conopt"})
             self.assertAlmostEqual(z.records["level"][0], result, places=2)
 
+        transport.unfreeze()
+        self.assertFalse(transport._is_frozen)
+
     def test_variable_change(self):
         m = Container(delayed_execution=True)
 
