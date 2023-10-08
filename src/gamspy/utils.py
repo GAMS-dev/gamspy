@@ -39,7 +39,6 @@ from gams.transfer._internals.specialvalues import SpecialValues
 import gamspy
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
-from gamspy.exceptions import GdxException
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
@@ -277,8 +276,8 @@ def _openGdxFile(system_directory: str, load_from: str):
         gdxHandle = gdx.new_gdxHandle_tp()
         rc = gdx.gdxCreateD(gdxHandle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
-    except AssertionError as e:
-        raise GdxException(e)
+    except AssertionError:
+        raise GamspyException("GAMSPy could not create gdx handle.")
 
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
@@ -286,8 +285,8 @@ def _openGdxFile(system_directory: str, load_from: str):
 
         rc = _set_special_values(gdxHandle)
         assert rc
-    except AssertionError as e:
-        raise GdxException(e)
+    except AssertionError:
+        raise GamspyException("GAMSPy could not open gdx file to read from.")
 
     return gdxHandle
 

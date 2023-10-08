@@ -70,7 +70,11 @@ def main():
     )
     swp.solve()
 
-    print("Objective function value: ", cost.records.level[0])
+    import math
+
+    assert math.isclose(swp.objective_value, -600, rel_tol=0.001)
+
+    print("Objective function value: ", swp.objective_value)
 
 
 if __name__ == "__main__":

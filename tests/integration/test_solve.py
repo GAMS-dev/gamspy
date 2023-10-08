@@ -255,6 +255,17 @@ class SolveSuite(unittest.TestCase):
             objective=z,
         )
 
+        self.assertRaises(
+            GamspyException,
+            transport.solve,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "bla",
+        )
+
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
@@ -828,9 +839,9 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=c,
         )
+        self.assertRaises(GamspyException, energy.interrupt)
 
         # relative termination criterion for MIP (relative gap)
-        # termination criterion is decreased to 0.1 from 0.000001
         cont.addOptions({"optCr": 0.000001})
 
         def interrupt_gams(model):
@@ -892,12 +903,61 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test solver change
-        transport.solve(solver="CONOPT")
+        transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
 
         lst_file = glob.glob("*.lst")[0]
         with open(lst_file) as file:
             content = file.read()
             self.assertTrue("CONOPT" in content)
+
+        self.assertTrue(os.path.exists("conopt.123"))
+
+        self.assertRaises(
+            GamspyException, transport.solve, None, None, {"rtmaxv": "1.e12"}
+        )
+
+    def test_delayed_execution(self):
+        m = Container()
+        m.delayed_execution = False
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        _ = Parameter(m, name="a", domain=[i], records=capacities)
+        _ = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        e = Parameter(m, name="e")
+        e.assignment = 5
+        with self.assertRaises(Exception):
+            c[i] = 90 * d[i, j] / 1000
+
+        m = Container()
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        v = Variable(m, name="v", domain=[i, j])
+        v.l[i, j] = 5
+        self.assertIsNotNone(v.records)
+
+        x = Variable(m, name="x")
+        x.l.assignment = 5
+        self.assertIsNotNone(x.records)
 
 
 def solve_suite():

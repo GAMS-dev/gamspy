@@ -166,6 +166,10 @@ def main():
     print("Number of passengers carried without limit:")
     print(y.pivot())
 
+    import math
+
+    assert math.isclose(alloc2.objective_value, 1566.042189, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

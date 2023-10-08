@@ -39,13 +39,16 @@ class AliasSuite(unittest.TestCase):
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
 
     def test_universe_alias(self):
-        _ = Set(self.m, "i", records=["i1", "i2"])
         h = UniverseAlias(self.m, "h")
+        self.assertEqual(len(h), 0)
+        _ = Set(self.m, "i", records=["i1", "i2"])
         _ = Set(self.m, "j", records=["j1", "j2"])
 
         self.assertEqual(
             h.records.values.tolist(), [["i1"], ["i2"], ["j1"], ["j2"]]
         )
+
+        self.assertEqual(len(h), 4)
 
         self.m.write("test.gdx")
 

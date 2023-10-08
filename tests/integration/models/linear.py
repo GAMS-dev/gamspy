@@ -326,6 +326,10 @@ def main():
 
     print(result.pivot())
 
+    import math
+
+    assert math.isclose(mod8.objective_value, 0.0005052, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

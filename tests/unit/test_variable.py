@@ -245,7 +245,7 @@ class VariableSuite(unittest.TestCase):
         x = Variable(self.m, "x", domain=[k])
         x.l[k] = 5
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "x.l(k) = 5;",
         )
         self.assertTrue(x._is_dirty)
@@ -258,6 +258,15 @@ class VariableSuite(unittest.TestCase):
 
         expression = -a[i] * 5
         self.assertEqual(expression.gamsRepr(), "(-a(i) * 5)")
+
+        a.l[i].assignment = 5
+        self.assertTrue(a._is_dirty)
+
+        # load the records of a
+        self.assertEqual(
+            a.records["level"].to_list(),
+            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+        )
 
         self.assertTrue(
             hasattr(a[i], "l")

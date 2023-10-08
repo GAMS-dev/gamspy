@@ -127,6 +127,10 @@ def main():
 
     TE.up.assignment = 90000
     END1.solve()
+
+    import math
+
+    assert math.isclose(END1.objective_value, 133190.1326, rel_tol=0.001)
     report[gen, "limit"] = P.l[gen]
 
     print("report  \n", report.pivot().round(4))

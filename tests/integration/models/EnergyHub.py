@@ -120,6 +120,10 @@ def main():
     )
     hub.solve()
 
+    import math
+
+    assert math.isclose(hub.objective_value, 173570.3851, rel_tol=0.001)
+
     # Reporting Parameter
     report = Parameter(m, name="report", domain=[t, "*"])
     report[t, "E"] = E.l[t]

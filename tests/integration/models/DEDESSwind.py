@@ -191,6 +191,12 @@ def main():
     )
     DEDESScostbased.solve()
 
+    import math
+
+    assert math.isclose(
+        DEDESScostbased.objective_value, 223360.0645, rel_tol=0.001
+    )
+
     # Reporting parameter
     rep = Parameter(m, name="rep", domain=[t, "*"])
     rep[t, "Pth"] = Sum(g, p.l[g, t])

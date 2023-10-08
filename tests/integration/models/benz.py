@@ -111,7 +111,10 @@ def main():
         objective=k,
     )
     benz.solve()
-    print(benz.objective_value)
+
+    import math
+
+    assert math.isclose(benz.objective_value, 1.2069, rel_tol=0.001)
 
 
 if __name__ == "__main__":

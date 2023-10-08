@@ -166,6 +166,12 @@ def main():
 
     DEDcostbased.solve()
 
+    import math
+
+    assert math.isclose(
+        DEDcostbased.objective_value, 647964.4601, rel_tol=0.001
+    )
+
     # Export results to excel
     p.pivot().round(4).to_excel("DEDcostbased.xlsx")
 

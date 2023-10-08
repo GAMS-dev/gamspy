@@ -13,5 +13,4 @@ gams-transfer-python
 225*
 docs/_build
 _gams_py_*
-*.xlsx
 tests/integration/*.txt

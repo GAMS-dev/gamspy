@@ -26,7 +26,7 @@ class UniverseAlias(gt.UniverseAlias):
         self._current_index = 0
 
     def __len__(self):
-        if self.records is not None:
+        if not self.records.empty:
             return len(self.records.index)
 
         return 0

@@ -159,7 +159,7 @@ class ImplicitEquation(ImplicitSymbol):
         self._definition = statement
 
         if not self.container.delayed_execution:
-            self.container._loadOnDemand()
+            self.container._run()
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

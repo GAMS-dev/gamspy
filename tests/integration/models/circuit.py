@@ -189,8 +189,10 @@ def main():
     )
 
     circuit.solve()
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
-    # End circuit
+
+    import math
+
+    assert math.isclose(circuit.objective_value, 0, rel_tol=0.001)
 
 
 if __name__ == "__main__":

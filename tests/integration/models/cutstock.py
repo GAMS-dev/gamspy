@@ -15,7 +15,7 @@ cutting stock problem, Part II, Operations Research 11 (1963), 863-888.
 Keywords: mixed integer linear programming, cutting stock, column generation,
           paper industry
 """
-import gamspy.math as math
+import gamspy.math as gams_math
 from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
@@ -74,7 +74,7 @@ def main():
 
     # Pricing model variables
     y = Variable(m, "y", domain=[i], type="integer")
-    y.up[i] = math.ceil(r / w[i])
+    y.up[i] = gams_math.ceil(r / w[i])
 
     defobj = Equation(
         m,
@@ -93,7 +93,7 @@ def main():
     )
 
     pp[p] = Ord(p) <= Card(i)
-    aip[i, pp[p]].where[Ord(i) == Ord(p)] = math.floor(r / w[i])
+    aip[i, pp[p]].where[Ord(i) == Ord(p)] = gams_math.floor(r / w[i])
 
     pi = Set(m, "pi", domain=[p])
     pi[p] = Ord(p) == Card(pp) + 1
@@ -107,17 +107,21 @@ def main():
         if z.records["level"].values[0] >= -0.001:
             break
 
-        aip[i, pi] = math.Round(y.l[i])
+        aip[i, pi] = gams_math.Round(y.l[i])
         pp[pi] = Number(1)
         pi[p] = pi[p.lag(1)]
 
     master.problem = "mip"
     master.solve()
 
+    import math
+
+    assert math.isclose(master.objective_value, 453.0000, rel_tol=0.001)
+
     patrep = Parameter(m, "patrep", domain=["*", "*"])
     demrep = Parameter(m, "demrep", domain=["*", "*"])
 
-    patrep["# produced", p] = math.Round(xp.l[p])
+    patrep["# produced", p] = gams_math.Round(xp.l[p])
     patrep[i, p].where[patrep["# produced", p]] = aip[i, p]
     patrep[i, "total"] = Sum(p, patrep[i, p])
     patrep["# produced", "total"] = Sum(p, patrep["# produced", p])

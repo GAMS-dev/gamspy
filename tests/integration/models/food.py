@@ -281,6 +281,10 @@ def main():
 
     food.solve()
 
+    import math
+
+    assert math.isclose(food.objective_value, 100278.7037, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

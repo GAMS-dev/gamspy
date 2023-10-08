@@ -195,6 +195,10 @@ def main():
     x.l[w, t].where[td[w, t]] = wa[w] / Card(t)
 
     war.solve()
+
+    import math
+
+    assert math.isclose(war.objective_value, 1735.5696, rel_tol=0.001)
     print(war.objective_value)
 
 

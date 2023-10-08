@@ -411,8 +411,11 @@ def main():
 
     edc2.solve()
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
-    # End edc2
+    import math
+
+    assert math.isclose(edc2.objective_value, 29850.5910, rel_tol=0.001)
+
+    print("Objective Function Value:  ", edc2.objective_value)
 
 
 if __name__ == "__main__":

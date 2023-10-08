@@ -500,6 +500,10 @@ def main():
 
         # end loop iter
 
+    import math
+
+    assert math.isclose(z.records["level"][0], 175.3883, rel_tol=0.001)
+
     results.write("\n\nDual values on assignment constraint\n")
     for idx, j_loop in enumerate(j.toList()):
         results.write(

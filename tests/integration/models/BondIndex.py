@@ -362,6 +362,10 @@ def main():
     )
     ResultHandle.close()
 
+    import math
+
+    assert math.isclose(BondIndex.objective_value, 23.206448, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

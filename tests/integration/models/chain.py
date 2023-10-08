@@ -129,7 +129,9 @@ def main():
     chain.solve()
     print("Objective Function Value:  ", round(energy.toValue(), 4))
 
-    # End Hanging Chain
+    import math
+
+    assert math.isclose(chain.objective_value, 5.0723, rel_tol=0.001)
 
 
 if __name__ == "__main__":

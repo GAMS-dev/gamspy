@@ -61,7 +61,11 @@ def main():
         objective=of,
     )
     emergency.solve()
-    print("Objective Function Value:\t", round(of.toValue(), 4))
+
+    import math
+
+    assert math.isclose(emergency.objective_value, 3.0000, rel_tol=0.001)
+    print("Objective Function Value:\t", emergency.objective_value)
 
 
 if __name__ == "__main__":
