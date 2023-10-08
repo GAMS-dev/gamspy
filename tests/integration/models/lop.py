@@ -109,7 +109,7 @@ def main():
     counter = 0
 
     for root_elem in root:
-        from_[root_elem[0]] = True
+        from_[root_elem["uni"]] = True
         unvisit[s] = True
         visit[s] = False
 
@@ -117,24 +117,28 @@ def main():
             if int(r_elem[0]) > 1 and len(unvisit):
                 unvisit[from_] = False
                 visit[from_] = True
-                to[unvisit] = Sum(tree[root_elem[0], from_, unvisit], True)
+                to[unvisit] = Sum(tree[root_elem["uni"], from_, unvisit], True)
 
                 for f_elem in from_:
-                    k[s2, s3].where[l[root_elem[0], f_elem[0], s2, s3]] = True
-                    v[s2, r1].where[lr[root_elem[0], f_elem[0], s2, r1]] = True
-                    v[f_elem[0], "1"].where[Card(k) == 0] = True
+                    k[s2, s3].where[
+                        l[root_elem["uni"], f_elem["s"], s2, s3]
+                    ] = True
+                    v[s2, r1].where[
+                        lr[root_elem["uni"], f_elem["s"], s2, r1]
+                    ] = True
+                    v[f_elem["s"], "1"].where[Card(k) == 0] = True
 
-                    l[root_elem[0], to, k].where[
-                        tree[root_elem[0], f_elem[0], to]
+                    l[root_elem["uni"], to, k].where[
+                        tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
-                    lr[root_elem[0], to, v].where[
-                        tree[root_elem[0], f_elem[0], to]
+                    lr[root_elem["uni"], to, v].where[
+                        tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
-                    l[root_elem[0], to, f_elem[0], to].where[
-                        tree[root_elem[0], f_elem[0], to]
+                    l[root_elem["uni"], to, f_elem["s"], to].where[
+                        tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
-                    lr[root_elem[0], to, to, r_elem[0]].where[
-                        tree[root_elem[0], f_elem[0], to]
+                    lr[root_elem["uni"], to, to, r_elem[0]].where[
+                        tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
 
                     k[s2, s3] = False
