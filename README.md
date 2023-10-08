@@ -4,7 +4,7 @@
 
 -----------------
 
-# gamspy: algebraic modeling interface to GAMS
+# GAMSPy: Algebraic Modeling Interface to GAMS
 
 ## Installation
 
