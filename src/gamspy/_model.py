@@ -84,6 +84,7 @@ class Problem(Enum):
 class Sense(Enum):
     MIN = "MIN"
     MAX = "MAX"
+    FEASIBILITY = "FEASIBILITY"
 
     @classmethod
     def values(cls):
@@ -159,7 +160,7 @@ class Model:
         all the equations specified before the creation of this model
     problem : str
         Problem type (e.g. LP, NLP etc.)
-    sense : "MIN" or "MAX", optional
+    sense : "MIN", "MAX", or "FEASIBILITY", optional
         Minimize or maximize
     objective_variable : Variable, optional
         Objective variable to minimize or maximize
@@ -180,7 +181,7 @@ class Model:
         name: str,
         equations: List["Equation"],
         problem: str,
-        sense: Optional[Literal["MIN", "MAX"]] = None,
+        sense: Optional[Literal["MIN", "MAX", "FEASIBILITY"]] = None,
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[Iterable["Variable"]] = None,
@@ -259,6 +260,35 @@ class Model:
                 "Objective must be a Variable or an Expression but"
                 f" {type(assignment)} given"
             )
+
+        if self.sense == gp.Sense.FEASIBILITY:
+            if assignment is not None:
+                raise GamspyException(
+                    "Cannot set an objective when the sense is FEASIBILITY!"
+                )
+
+            if self.problem in [gp.Problem.CNS, gp.Problem.MCP]:
+                raise GamspyException(
+                    "Problem type cannot be CNS or MCP when the sense is"
+                    " FEASIBILITY"
+                )
+
+            # Generate an objective variable
+            variable = gp.Variable(
+                self.container,
+                f"{self._generate_prefix}objective{utils._getUniqueName()}",
+            )
+
+            # Generate an equation
+            equation = gp.Equation(
+                self.container,
+                f"{self._generate_prefix}equation{utils._getUniqueName()}",
+            )
+
+            equation.definition = variable == 0
+            self._equations.append(equation)
+
+            return variable
 
         if isinstance(
             assignment, (expression.Expression, operation.Operation)
@@ -368,6 +398,10 @@ class Model:
         solve_string = f"solve {self.name} using {self.problem}"
 
         if self.sense:
+            if self.sense == gp.Sense.FEASIBILITY:
+                # Set sense as min or max for feasibility
+                self.sense = gp.Sense.MIN
+
             solve_string += f" {self.sense}"
 
         if self._objective_variable:
