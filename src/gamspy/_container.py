@@ -893,6 +893,7 @@ class Container(gt.Container):
         self.loadRecordsFromGdx(self._gdx_path)
 
     def _parse_message(self, options: "GamsOptions", job: "GamsJob"):
+        error_message = ""
         header = "=" * 80
         footer = "=" * 80
         message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
@@ -924,14 +925,16 @@ class Container(gt.Container):
                         error_lines.append(all_lines[temp_index])
                         temp_index += 1
 
-                    return message_format.format(
+                    error_message = message_format.format(
                         message="".join(error_lines),
                         header=header,
                         footer=footer,
                     )
+                    break
+
                 index += 1
 
-        return None
+        return error_message
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
         gdx_handle = utils._openGdxFile(self.system_directory, load_from)

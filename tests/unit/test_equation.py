@@ -370,6 +370,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
+        x = Variable(self.m, "x", domain=[i])
         a = Equation(self.m, "a", "regular", [i])
 
         self.assertTrue(
@@ -427,6 +428,14 @@ class EquationSuite(unittest.TestCase):
             and isinstance(a[i].infeas, implicits.ImplicitParameter)
         )
         self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
+
+        m = Container()
+        i = Set(m, "i", records=[f"i{i}" for i in range(10)])
+        x = Variable(m, "x", domain=[i])
+        a = Equation(m, "a", "regular", [i])
+        a[i].definition = x[i] == 5
+
+        self.assertFalse(a._is_dirty)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
