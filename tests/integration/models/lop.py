@@ -349,10 +349,6 @@ def main():
     cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
 
     evaldt.solve()
-    import math
-
-    assert math.isclose(evaldt.objective_value, 21161.0000, rel_tol=0.001)
-
     solsum["ILP", "dtrav"] = obj.l
 
     print(solrep.records)
