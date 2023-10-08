@@ -91,6 +91,10 @@ def main():
     placement0.solve()
     print("PMU:  \n", PMU.toDict())
 
+    import math
+
+    assert math.isclose(placement0.objective_value, 5, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

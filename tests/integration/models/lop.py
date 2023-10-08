@@ -25,7 +25,7 @@ Keywords: linear programming, mixed integer linear programming, passenger railwa
 import sys
 from pathlib import Path
 
-import gamspy.math as math
+import gamspy.math as gams_math
 from gamspy import Alias
 from gamspy import Card
 from gamspy import Container
@@ -74,7 +74,7 @@ def main():
     )
 
     defspobj.definition = spobj == Sum(
-        (s, d[s1, s2]), f[s, d] * math.Max(rt[s1, s2], rt[s2, s1])
+        (s, d[s1, s2]), f[s, d] * gams_math.Max(rt[s1, s2], rt[s2, s1])
     )
 
     sp = Model(
@@ -187,7 +187,7 @@ def main():
         l[ll, s1, s2], phi[ll]
     )
 
-    dtlimit[s1, s2].where[od[s1, s2]] = dt[s1, s2] <= math.Min(
+    dtlimit[s1, s2].where[od[s1, s2]] = dt[s1, s2] <= gams_math.Min(
         od[s1, s2], maxtcap
     ) * Sum(ll.where[rp[ll, s1] & rp[ll, s2]], phi[ll])
 
@@ -204,8 +204,8 @@ def main():
         objective=obj,
     )
 
-    freq.lo[s1, s2].where[rt[s1, s2]] = math.Max(
-        lfr[s1, s2], math.ceil(load[s1, s2] / maxtcap)
+    freq.lo[s1, s2].where[rt[s1, s2]] = gams_math.Max(
+        lfr[s1, s2], gams_math.ceil(load[s1, s2] / maxtcap)
     )
     freq.up[s1, s2].where[rt[s1, s2]] = freq.lo[s1, s2]
     dt.up[s1, s2].where[od[s1, s2]] = od[s1, s2]
@@ -232,10 +232,10 @@ def main():
 
     xcost[ll, lf] = (
         Ord(lf) * length[ll] * (trm + mincars * crm)
-        + mincars * math.ceil(sigma[ll] * Ord(lf)) * cfx
+        + mincars * gams_math.ceil(sigma[ll] * Ord(lf)) * cfx
     )
     ycost[ll, lf] = (
-        Ord(lf) * length[ll] * crm + math.ceil(sigma[ll] * Ord(lf)) * cfx
+        Ord(lf) * length[ll] * crm + gams_math.ceil(sigma[ll] * Ord(lf)) * cfx
     )
 
     x = Variable(m, "x", type="binary", domain=[s1, s2, lf])
@@ -251,7 +251,7 @@ def main():
         (l[ll, s1, s2], lf), Ord(lf) * x[ll, lf]
     )
 
-    defloadilp[s1, s2].where[rt[s1, s2]] = math.ceil(
+    defloadilp[s1, s2].where[rt[s1, s2]] = gams_math.ceil(
         load[s1, s2] / ccap
     ) <= Sum((l[ll, s1, s2], lf), Ord(lf) * (mincars * x[ll, lf] + y[ll, lf]))
 
@@ -300,10 +300,10 @@ def main():
                 & rp[sol, s2]
                 & rp[sol, s3]
                 & (
-                    (math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s2])
-                    & (math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s3])
-                    | (math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s3])
-                    & (math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s2])
+                    (gams_math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s2])
+                    & (gams_math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s3])
+                    | (gams_math.Min(rp[sol, s], rp[sol, s1]) >= rp[sol, s3])
+                    & (gams_math.Max(rp[sol, s], rp[sol, s1]) <= rp[sol, s2])
                 )
             ],
             dtr[sol, s2, s3],
@@ -336,7 +336,7 @@ def main():
         solrep["DT", sol, "freq"] * length[sol] * trm
         + (
             solrep["DT", sol, "freq"] * length[sol] * crm
-            + math.ceil(sigma[sol] * solrep["DT", sol, "freq"]) * cfx
+            + gams_math.ceil(sigma[sol] * solrep["DT", sol, "freq"]) * cfx
         )
         * solrep["DT", sol, "cars"],
     )
@@ -345,6 +345,10 @@ def main():
     cap[sol] = solrep["DT", sol, "freq"] * solrep["DT", sol, "cars"] * ccap
 
     evaldt.solve()
+    import math
+
+    assert math.isclose(evaldt.objective_value, 21161.0000, rel_tol=0.001)
+
     solsum["ILP", "dtrav"] = obj.l
 
     print(solrep.records)

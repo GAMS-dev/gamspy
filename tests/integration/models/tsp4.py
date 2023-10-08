@@ -249,6 +249,10 @@ def main():
     print("No subtours remaining. Solution found!!\n")
     print("x: \n", x.pivot().round(1))
 
+    import math
+
+    assert math.isclose(tspcut.objective_value, 39, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()
