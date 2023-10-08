@@ -126,8 +126,6 @@ def main():
     )
     fir_socp.solve()
 
-    import math
-
     assert math.isclose(fir_socp.objective_value, 1.0465, rel_tol=0.001)
 
 
