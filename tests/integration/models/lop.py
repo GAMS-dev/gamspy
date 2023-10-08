@@ -114,7 +114,7 @@ def main():
         visit[s] = False
 
         for r_elem in r:
-            if int(r_elem[0]) > 1 and len(unvisit):
+            if int(r_elem["uni"]) > 1 and len(unvisit):
                 unvisit[from_] = False
                 visit[from_] = True
                 to[unvisit] = Sum(tree[root_elem["uni"], from_, unvisit], True)
@@ -137,7 +137,7 @@ def main():
                     l[root_elem["uni"], to, f_elem["s"], to].where[
                         tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
-                    lr[root_elem["uni"], to, to, r_elem[0]].where[
+                    lr[root_elem["uni"], to, to, r_elem["uni"]].where[
                         tree[root_elem["uni"], f_elem["s"], to]
                     ] = True
 
