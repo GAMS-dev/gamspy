@@ -175,7 +175,7 @@ class ContainerSuite(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(Sense.values(), ["MIN", "MAX"])
+        self.assertEqual(Sense.values(), ["MIN", "MAX", "FEASIBILITY"])
 
     def test_options(self):
         options = {
