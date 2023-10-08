@@ -176,6 +176,10 @@ def main():
     )
     DEDPB.solve()
 
+    import math
+
+    assert math.isclose(DEDPB.objective_value, 99552.6661, rel_tol=0.001)
+
     # Export results to an excel file
     p.pivot().round(3).to_excel("DEDPB.xlsx")
 

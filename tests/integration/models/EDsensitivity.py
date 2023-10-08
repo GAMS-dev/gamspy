@@ -100,6 +100,10 @@ def main():
         report[cc, "OF"] = OF.l
         report[cc, "load"] = load
 
+    import math
+
+    assert math.isclose(ECD.objective_value, 911044.0900, rel_tol=0.001)
+
     print("repgen:  \n", repGen.pivot().round(3))
     print("report:  \n", report.pivot().round(3))
 

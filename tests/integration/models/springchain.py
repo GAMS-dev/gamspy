@@ -112,6 +112,8 @@ def main():
 
     spring.solve()
 
+    assert math.isclose(spring.objective_value, -185.4461, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

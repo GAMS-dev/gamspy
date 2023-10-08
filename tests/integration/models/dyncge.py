@@ -752,6 +752,9 @@ def main():
     # Aftermath Computation
     # ===============================================================
     # Display of changes --------------------------------------------
+    import math
+
+    assert math.isclose(dyncge.objective_value, 539570.5027, rel_tol=0.001)
 
     # Parameters
     # changes

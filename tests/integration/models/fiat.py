@@ -303,7 +303,10 @@ def main():
     )
 
     fiat.solve()
-    print("Objective Function Value:  ", round(objval.toValue(), 4))
+    import math
+
+    assert math.isclose(fiat.objective_value, 1.4594, rel_tol=0.001)
+    print("Objective Function Value:  ", fiat.objective_value)
     # End Fiat
 
 
