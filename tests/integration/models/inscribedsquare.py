@@ -97,7 +97,6 @@ def main():
     b.l.assignment = 1
 
     square.solve()
-    import math
 
     assert math.isclose(square.objective_value, 1.6009, rel_tol=0.001)
 
