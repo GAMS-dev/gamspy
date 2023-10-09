@@ -42,7 +42,7 @@ from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy import Alias, Set
+    from gamspy import Alias, Set, UniverseAlias
     from gamspy import Domain
     from gamspy._symbols.symbol import Symbol
     from gamspy._algebra.expression import Expression
@@ -398,14 +398,16 @@ def _toList(
 
 
 def _getDomainStr(
-    domain: Iterable[Union["Set", "Alias", "ImplicitSet", str]]
+    domain: Iterable[
+        Union["Set", "Alias", "UniverseAlias", "ImplicitSet", str]
+    ]
 ) -> str:
     """
     Creates the string format of a given domain
 
     Parameters
     ----------
-    domain : Set | Alias | ImplicitSet | str
+    domain : Set | Alias | UniverseAlias | ImplicitSet | str
 
     Returns
     -------
@@ -420,7 +422,9 @@ def _getDomainStr(
 
     set_strs = []
     for set in domain:
-        if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+        if isinstance(
+            set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
+        ):
             set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":
@@ -679,7 +683,6 @@ def _getValidGamsOptions() -> List[str]:
         "previouswork",
         "proctreememmonitor",
         "proctreememticks",
-        "profile",
         "profilefile",
         "profiletol",
         "putdir",

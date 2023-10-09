@@ -15,9 +15,9 @@ GAMSPy documentation
 **Version**: 0.9.0
 
 **Useful links**:
-`Installation <user/installation>`_ |
-`User Guide <user/index>`_ |
-`Reference Guide <reference/index>`_ |
+`Installation <user/installation.html>`_ |
+`User Guide <user/index.html>`_ |
+`Reference Guide <reference/index.html>`_ |
 `Source Repository <https://github.com/GAMS-dev/gamspy>`_ |
 `Support <https://www.gams.com/support/>`_
 
