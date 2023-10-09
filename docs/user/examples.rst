@@ -10,3 +10,4 @@ Examples
     notebooks/trnsport.ipynb
     notebooks/pickstock.ipynb
     notebooks/blend.ipynb
+    notebooks/millco
