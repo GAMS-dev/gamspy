@@ -13,3 +13,4 @@ gamspy
 
       gamspy.math
       gamspy.utils
+      gamspy.exceptions

@@ -392,6 +392,10 @@ def main():
     )
 
     mexss.solve()
+
+    import math
+
+    assert math.isclose(mexss.objective_value, 538.8112, rel_tol=0.001)
     print(mexss.objective_value)
 
 

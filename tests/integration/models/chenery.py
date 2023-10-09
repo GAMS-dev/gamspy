@@ -185,7 +185,10 @@ def main():
     p.lo[i] = 0.1
 
     chenrad.solve()
-    print(chenrad.objective_value)
+
+    import math
+
+    assert math.isclose(chenrad.objective_value, 1058.9199, rel_tol=0.001)
 
 
 if __name__ == "__main__":

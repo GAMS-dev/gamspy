@@ -123,6 +123,10 @@ def main():
         m_mn.solve()
         cont.addOptions({"solPrint": "off"})
 
+    import math
+
+    assert math.isclose(m_mn.objective_value, 0.9167, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

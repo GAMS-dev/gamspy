@@ -1,140 +1,50 @@
-[![pipeline status](https://git.gams.com/devel/gamspy/badges/master/pipeline.svg)](https://git.gams.com/devel/gamspy/-/commits/master)
-[![coverage report](https://git.gams.com/devel/gamspy/badges/master/coverage.svg)](https://git.gams.com/devel/gamspy/-/commits/master)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<div align="center">
+  <img src="https://www.gams.com/img/gams_logo.svg"><br>
+</div>
 
-# GAMSpy
+-----------------
 
-GAMS Python API for writing algebraic equations.
+# GAMSPy: Algebraic Modeling Interface to GAMS
 
-## List of tools that are used for development
+## Installation
 
-* **Black** - Formatting
-* **Flake8** - Style Guide Enforcement
-* **Pre-commit** - Managing pre-commit hooks
-* **Mypy** - Static Code Analysis
-* **Coverage** - Test Coverage
-
-## Project Structure
-
-```
-gamspy/
-    src/
-        gamspy/
-    tests/
-        models/
+```sh
+pip install gamspy
 ```
 
-## Installing
+## What is it?
 
-Either run reinstall.py
+**GAMSPy** is a mathematical optimization package that combines the power of the high performance GAMS execution system
+and flexibility of the Python language. It includes all GAMS symbols (Set, Alias, Parameter, Variable, and
+Equation) to compose mathematical models, a math package, and various utility functions.
 
-```
-python reinstall.py
-```
 
-or if you already cloned and installed Gams Transfer master branch
+## Design Philosophy
+GAMSPy makes extensive use of "vectorization" -- the absence of any explicit looping, indexing, etc., in native Python.
+These things are taking place, of course, just “behind the scenes” in optimized, pre-compiled C code.
 
-```
-python -m build
-pip install dist/gamspy-0.1.0-py3-none-any.whl
-```
+Vectorized code has many advantages:
 
-## Set, Alias, Parameter, Variable, Equation
+  - Results in more concise Python code -- avoids inefficient and difficult to read for loops
+  - Closely resembles standard mathematical notation
+  - Easier to read
+  - Fewer lines of code generally means fewer bugs
 
-You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. You don't need to change anything. Now, these symbols can be used in creating expressions.
 
-```Python
-import gamspy as gp
+## Main Features
+Here are just a few of the things that **GAMSPy** does well:
 
-m = gp.Container()
-i = gp.Set(m, "i", records=['i1','i2'])
-a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
-```
+  - Specify model algebra in Python natively
+  - Combines the flexibility of Python programming flow controls and the power of model specification in GAMS
+  - Test a variety of solvers on a model by changing only one line
 
-### Model
+## Documentation
+The official documentation is hosted on [GAMSPy Readthedocs](https://gamspy.readthedocs.io/en/latest/index.html).
 
-A model is a list of equations. 
+## Getting Help
 
-```Python
-from gamspy import Model
+For usage questions, the best place to go to is [GAMS](https://www.gams.com/latest/docs/API_PY_GETTING_STARTED.html).
+General questions and discussions can also take place on the [GAMS World Forum](https://forum.gamsworld.org).
 
-m = gp.Container()
-model1 = Model(m, name="model1", equations=[maxw, minw, etd]) # Defines equations explicitly as a list of equations
-model2 = Model(m, name="model2", equations=m.getEquations())             # This includes all defined equations
-```
-
-### Sum/Product/Smin/Smax
-
-Frequently used Gams operations which accept an index list and an expression.
-
-```Python
-from gamspy import Sum, Product, Smin, Smax
-
-m = gp.Container()
-i = gp.Set(m, "i", records=['i1','i2'])
-a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
-
-supply = gp.Equation(m, name="supply", domain=[i], type="leq")
-supply[i] = Sum(i, a[i]) <= a[i]
-```
-
-### Card/Ord
-
-Python representation of Card and Ord operations.
-
-```Python
-from gamspy import Card, Ord
-
-m = Container()
-
-i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
-step = Parameter(m, name="step", records=math.pi / 180)
-omega = Parameter(m, name="omega", domain=[i])
-omega[i] = (Ord(i) - 1) * step
-```
-
-### Domain
-
-This class is exclusively for conditioning on a domain with more than one set.
-
-```Python
-equation = gp.Equation(name="equation", domain=[i,j])
-equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j]) # Equivalent to equation(i,j) = Sum((i,j)$(i), a(i) + b(j))
-```
-
-### Number
-
-This is for conditions on numbers or yes/no statements.
-
-```Python
-from gamspy import Number
-
-Number(1).where[sig[i] == 0] # Equivalent to 1$(sig(i) = 0). It is also equivalent to yes$(sig(i) = 0)
-```
-
-### math package
-
-This package is for the mathematical operations of GAMS over a domain.
-
-```
-import gamspy.math as gams_math
-import math
-
-sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
-sigma.l[i, k] = uniform(0.1, 1) # Generates a different value from uniform distribution for each element of the domain.
-sigma.l[i, k] = math.uniform(0.1, 1) # This is not equivalent to the statement above. This generates only one value for the whole domain.
-```
-
-### Logical Operations
-
-Since it is not possible in Python to overload keywords such as **and**, **or**, and **not**, you need to use bitwise operatiors **&**, **|**, and **~**.
-
-Mapping:
-
-- **and** -> &
-- **or**  -> |
-- **not** -> ~
-
-```Python
-error01[s1,s2] = (rt[s1,s2] != 0) & (lfr[s1,s2] == 0) | ((rt[s1,s2] == 0) & (lfr[s1,s2] != 0))
-```
+## Discussion and Development
+If you have a design request or concern, please write to support@gams.com.

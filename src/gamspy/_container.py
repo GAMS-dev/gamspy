@@ -34,7 +34,6 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gams.transfer as gt
-import pandas as pd
 from gams import DebugLevel
 from gams import GamsCheckpoint
 from gams import GamsJob
@@ -46,7 +45,6 @@ from gams.core import gdx
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
-from gamspy.exceptions import EarlyQuit
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -94,7 +92,6 @@ class Container(gt.Container):
 
         self.name = name
         self._delayed_execution = delayed_execution
-        self._statements_dict: dict = {}
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
 
@@ -213,7 +210,6 @@ class Container(gt.Container):
         return save_to, restart_from, gdx_path
 
     def _addStatement(self, statement) -> None:
-        self._statements_dict[statement.name] = statement
         self._unsaved_statements[statement.name] = statement
 
     @property
@@ -714,7 +710,6 @@ class Container(gt.Container):
         """
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
-        self._statements_dict[unique_name] = gams_code
 
     def getSets(self) -> List["Set"]:
         """
@@ -766,21 +761,9 @@ class Container(gt.Container):
         """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
-    def _loadOnDemand(self) -> pd.DataFrame:
-        """Loads data of the given symbol from the gdx file."""
-
-        self._run()
-
-        self._unsaved_statements = {}
-
-    def generateGamsString(self, dictionary: Optional[Dict] = None) -> str:
+    def generateGamsString(self) -> str:
         """
         Generates the GAMS code
-
-        Parameters
-        ----------
-        dictionary : Dict, optional
-            Dictionary that contains the expressions, by default None
 
         Returns
         -------
@@ -789,12 +772,8 @@ class Container(gt.Container):
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
-        dictionary = (
-            self._statements_dict if dictionary is None else dictionary
-        )
-
         string = ""
-        for statement in dictionary.values():
+        for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
             else:
@@ -806,7 +785,14 @@ class Container(gt.Container):
                     )
 
                 if isinstance(statement, possible_undef_types):
+                    # save old dirty state to avoid self.records recursion
+                    old_dirty_state = statement._is_dirty
+                    statement._is_dirty = False
+
                     num_undef = statement.countUndef()
+
+                    # restore old dirty state
+                    statement._is_dirty = old_dirty_state
 
                     if num_undef:
                         statement_str = f"$onUNDF\n{statement_str}$offUNDF"
@@ -844,10 +830,10 @@ class Container(gt.Container):
             # Engine expects gdx file to be next to the gms file
             old_path = self._gdx_path
             self._gdx_path = "default.gdx"
-            gams_string = self.generateGamsString(self._unsaved_statements)
+            gams_string = self.generateGamsString()
             self._gdx_path = old_path
         else:
-            gams_string = self.generateGamsString(self._unsaved_statements)
+            gams_string = self.generateGamsString()
 
         # If there is no restart checkpoint or _run is called for the first time, set it to None
         checkpoint = (
@@ -873,13 +859,9 @@ class Container(gt.Container):
                     create_out_db=False,
                     output=output,
                 )
-            except KeyboardInterrupt:
-                raise EarlyQuit(
-                    "Keyboard interrupt was received while solving the model"
-                )
             except GamsExceptionExecution as e:
                 message = self._parse_message(options, self._job)
-                e.value = message + e.value
+                e.value = message + e.value if message else e.value
                 raise e
         elif backend in ["engine"]:
             options.gdx = "default.gdx"
@@ -910,8 +892,8 @@ class Container(gt.Container):
 
         self.loadRecordsFromGdx(self._gdx_path)
 
-    def _parse_message(self, options: "GamsOptions", job: "GamsJob") -> str:
-        default_message = ""
+    def _parse_message(self, options: "GamsOptions", job: "GamsJob"):
+        error_message = ""
         header = "=" * 80
         footer = "=" * 80
         message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
@@ -943,37 +925,42 @@ class Container(gt.Container):
                         error_lines.append(all_lines[temp_index])
                         temp_index += 1
 
-                    return message_format.format(
+                    error_message = message_format.format(
                         message="".join(error_lines),
                         header=header,
                         footer=footer,
                     )
+                    break
+
                 index += 1
 
-        return default_message
+        return error_message
 
-    def _get_symbol_names_from_gdx(self, gdx_handle: str) -> Tuple[list, list]:
-        _, symCount, _ = gdx.gdxSystemInfo(gdx_handle)
+    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
+        gdx_handle = utils._openGdxFile(self.system_directory, load_from)
+        _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
         existing_names = []
         new_names = []
-        for i in range(1, symCount + 1):
+        for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
             if symbol_name in self.data.keys():
                 existing_names.append(symbol_name)
             else:
                 new_names.append(symbol_name)
 
+        utils._closeGdxHandle(gdx_handle)
+
         return existing_names, new_names
 
     def _get_symbol_names_to_load(
         self,
+        load_from: str,
         symbol_names: Optional[List[str]] = None,
-        gdx_handle=None,
     ) -> List[str]:
         if not symbol_names:
             existing_names, new_names = self._get_symbol_names_from_gdx(
-                gdx_handle
+                load_from
             )
 
             symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
@@ -1001,9 +988,7 @@ class Container(gt.Container):
         symbols : List[str], optional
             Symbols whose data will be load from gdx, by default None
         """
-        gdxHandle = utils._openGdxFile(self.system_directory, load_from)
-        symbol_names = self._get_symbol_names_to_load(symbol_names, gdxHandle)
-        utils._closeGdxHandle(gdxHandle)
+        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
         temp_container = Container(system_directory=self.system_directory)
         temp_container.read(load_from, symbol_names)
@@ -1057,6 +1042,6 @@ class Container(gt.Container):
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 dirty_symbols.append(name)
         if len(dirty_symbols) > 0:
-            self._loadOnDemand()
+            self._run()
 
         super().write(write_to, symbols)

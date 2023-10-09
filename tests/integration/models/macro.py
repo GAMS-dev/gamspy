@@ -180,6 +180,10 @@ def main():
 
     macro.solve()
 
+    import math
+
+    assert math.isclose(macro.objective_value, 273.2724, rel_tol=0.001)
+
     # REPORTING PARAMETER
     rep = Parameter(cont, name="rep", domain=["*", k])
 

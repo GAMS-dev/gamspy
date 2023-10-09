@@ -80,6 +80,10 @@ def main():
     print("x3:  ", round(x3.toValue(), 3))
     print("of:  ", round(of.toValue(), 3))
 
+    import math
+
+    assert math.isclose(LP2.objective_value, -4.000000, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

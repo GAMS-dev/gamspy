@@ -4,6 +4,7 @@ import gamspy.utils as utils
 from gamspy import Container
 from gamspy import Set
 from gamspy._algebra.domain import DomainException
+from gamspy.exceptions import GamspyException
 
 
 class UtilsSuite(unittest.TestCase):
@@ -26,7 +27,7 @@ class UtilsSuite(unittest.TestCase):
         self.assertRaises(DomainException, utils._getDomainStr, [5])
 
         # invalid system directory
-        self.assertRaises(utils.GdxException, utils._openGdxFile, "bla", "bla")
+        self.assertRaises(GamspyException, utils._openGdxFile, "bla", "bla")
 
         self.assertFalse(utils.checkAllSame([1, 2], [2]))
         self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))

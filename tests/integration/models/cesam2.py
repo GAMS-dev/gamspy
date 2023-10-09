@@ -818,9 +818,13 @@ def main(is_centropy=False):
     meanerr1.assignment = Sum(ii, abs(ERR1.l[ii])) / Card(ii)
     meanerr2.assignment = Sum(macro, abs(ERR2.l[macro])) / Card(macro)
 
-    print("Objective Function Value: ", round(DENTROPY.records.level[0], 3))
+    print("Objective Function Value: ", SAMENTROP.objective_value)
     print("meanerr1: ", round(meanerr1.records.value[0], 3))
     print("meanerr2: ", round(meanerr2.records.value[0], 3))
+
+    import math
+
+    assert math.isclose(SAMENTROP.objective_value, 0.508, rel_tol=0.001)
 
 
 if __name__ == "__main__":

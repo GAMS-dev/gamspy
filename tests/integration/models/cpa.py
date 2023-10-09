@@ -164,7 +164,9 @@ def main():
     print("x9:  ", round(x9.toValue(), 3))
     print("x10:  ", round(x10.toValue(), 3))
 
-    # End cpa
+    import math
+
+    assert math.isclose(cpa.objective_value, 1, rel_tol=0.001)
 
 
 if __name__ == "__main__":

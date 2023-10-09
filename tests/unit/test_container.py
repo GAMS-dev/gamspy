@@ -175,7 +175,7 @@ class ContainerSuite(unittest.TestCase):
             ],
         )
 
-        self.assertEqual(Sense.values(), ["MIN", "MAX"])
+        self.assertEqual(Sense.values(), ["MIN", "MAX", "FEASIBILITY"])
 
     def test_options(self):
         options = {
@@ -186,21 +186,21 @@ class ContainerSuite(unittest.TestCase):
             "solveLink": "%solveLink.loadLibrary%",
         }
         self.m.addOptions(options)
-        self.assertTrue(len(self.m._statements_dict), 5)
+        self.assertTrue(len(self.m._unsaved_statements), 5)
         self.assertEqual(
-            list(self.m._statements_dict.values())[0], "limRow = 0"
+            list(self.m._unsaved_statements.values())[0], "limRow = 0"
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[1], "limCol = 0"
+            list(self.m._unsaved_statements.values())[1], "limCol = 0"
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[2], "solPrint = silent"
+            list(self.m._unsaved_statements.values())[2], "solPrint = silent"
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[3], "solver = cplex"
+            list(self.m._unsaved_statements.values())[3], "solver = cplex"
         )
         self.assertEqual(
-            list(self.m._statements_dict.values())[4],
+            list(self.m._unsaved_statements.values())[4],
             "solveLink = %solveLink.loadLibrary%",
         )
 

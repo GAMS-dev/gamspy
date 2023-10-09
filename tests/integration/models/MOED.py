@@ -130,6 +130,10 @@ def main():
     print("rep  \n", rep.pivot().round(4))
     print("rep2  \n", rep2.pivot().round(4))
 
+    import math
+
+    assert math.isclose(END1.objective_value, 131454.0003, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

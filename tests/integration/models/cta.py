@@ -63,7 +63,7 @@ def main():
     cdb.exec_task(
         {
             "PandasExcelReader": {
-                "file": os.path.join(file_dir, "cox3.xlsx"),
+                "file": os.path.join(file_dir, "cta.xlsx"),
                 "symbols": [
                     {
                         "name": "dat",

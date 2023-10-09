@@ -597,6 +597,11 @@ def main():
     )
 
     model1.solve()
+    import math
+
+    assert math.isclose(
+        omega.records["level"].tolist()[0], 339.21, rel_tol=0.001
+    )
 
     print(
         "\nObjective Function Variable <omega>: ",

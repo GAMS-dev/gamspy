@@ -36,7 +36,7 @@ def main():
 
     # PARAMETERS #
     rk = Parameter(m, name="rk", records=0.01, description="penalty control")
-    xinit = Parameter(
+    _ = Parameter(
         m,
         name="xinit",
         domain=[n],
@@ -78,16 +78,14 @@ def main():
         objective=j,
     )
 
-    x.l[n, k] = xinit[n]
-    x.fx[n, ki] = xinit[n]
-    x.fx[n, kt] = 2
-
     control3.solve()
 
     print("x:  \n", x.pivot().round(3))
     print("u:  \n", u.records.level.round(3))
 
-    # End Control3
+    import math
+
+    assert math.isclose(control3.objective_value, 0, rel_tol=0.001)
 
 
 if __name__ == "__main__":

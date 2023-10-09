@@ -92,6 +92,8 @@ c.addOptions({"optcr": "0.01"})
 print("Starting solve, be patient (log only shown afterwards)...")
 m.solve()
 
+assert math.isclose(m.objective_value, 0.3702, rel_tol=0.001)
+
 rval = r.records.loc[0, "level"]
 print("Maximized radius:", rval)
 

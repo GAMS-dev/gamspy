@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "0.9.0"
+version = "0.9.0rc1"
 authors = [
   { name = "GAMS Development Corporation", email="support@gams.com" },
 ]
@@ -71,7 +71,8 @@ where = ["src"]
 [tool.coverage.run]
 omit = [
     "*/_cli/*.py",
-    "__main__.py"
+    "__main__.py",
+    "*__init__.py"
 ]
 
 [tool.coverage.report]

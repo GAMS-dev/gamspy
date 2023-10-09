@@ -127,6 +127,10 @@ def flow_shop(process_time_df, last_machine, last_item):
 
     flowshop.solve()
 
+    import math
+
+    assert math.isclose(flowshop.objective_value, 35, rel_tol=0.001)
+
 
 def prepare_data():
     # Prepare data

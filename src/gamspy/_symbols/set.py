@@ -145,10 +145,11 @@ class Set(gt.Set, operable.Operable, Symbol):
         )
 
         self.container._addStatement(statement)
-        self._is_dirty = True
 
-        if not self.container.delayed_execution:
-            self.container._loadOnDemand()
+        if self.container.delayed_execution:
+            self._is_dirty = True
+        else:
+            self.container._run()
 
     # Set Attributes
     @property
@@ -353,7 +354,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._loadOnDemand()
+        self.container._run()
 
         return self._records
 

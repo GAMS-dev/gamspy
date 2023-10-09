@@ -98,7 +98,11 @@ def main():
     )
     OPF.solve()
 
-    print("Objective Function Value:  ", round(OF.toValue(), 4))
+    import math
+
+    assert math.isclose(OPF.objective_value, 306.1075, rel_tol=0.001)
+
+    print("Objective Function Value:  ", OPF.objective_value)
 
 
 if __name__ == "__main__":

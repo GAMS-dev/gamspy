@@ -147,7 +147,7 @@ class OperationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            list(m._statements_dict.values())[-1].gamsRepr(),
+            list(m._unsaved_statements.values())[-1].gamsRepr(),
             "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
             " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
             " =l= 1;",

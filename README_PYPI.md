@@ -4,7 +4,14 @@
 
 -----------------
 
-# gamspy: algebraic modeling interface to GAMS
+# GAMSPy: Algebraic Modeling Interface to GAMS
+
+## Installation
+
+```sh
+# from PyPI
+pip install gamspy
+```
 
 ## What is it?
 
@@ -32,23 +39,8 @@ Here are just a few of the things that **gamspy** does well:
   - Combines the flexibility of Python programming flow controls and the power of model specification in GAMS
   - Test a variety of solvers on a model by changing only one line
 
-## Dependencies
-GAMSPy has dependencies to other GAMS Python packages, specifically:
-
-  - [gamsapi](www.cnn.com)
-  - [gamspy_base](www.cnn.com)
-
-
-```sh
-# from PyPI
-pip install gamspy
-```
-
-Might need to add in other installation notes (and fix links to documentation).
-
-
 ## Documentation
-The official documentation is hosted on gams.com.
+The official documentation is hosted on [GAMSPy Readthedocs](https://gamspy.readthedocs.io/en/latest/index.html).
 
 ## Getting Help
 

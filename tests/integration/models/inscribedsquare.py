@@ -98,6 +98,8 @@ def main():
 
     square.solve()
 
+    assert math.isclose(square.objective_value, 1.6009, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

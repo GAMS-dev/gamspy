@@ -5,6 +5,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Ord
 from gamspy import Set
+from gamspy import UniverseAlias
 from gamspy.exceptions import GamspyException
 
 
@@ -78,7 +79,7 @@ class SetSuite(unittest.TestCase):
 
         k[j] = ~k[j]
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].gamsRepr(),
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "k(j) = ( not k(j));",
         )
 
@@ -98,13 +99,19 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        i = Set(self.m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
+        m = Container(delayed_execution=True)
+        i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
         self.assertEqual(
-            list(self.m._statements_dict.values())[-1].getStatement(),
+            list(m._unsaved_statements.values())[-1].getStatement(),
             'i("i1") = no;',
         )
+
+        m = Container()
+        k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
+        k["k1"] = False
+        self.assertEqual(k._is_dirty, False)
 
     def test_lag_and_lead(self):
         set = Set(
@@ -149,7 +156,7 @@ class SetSuite(unittest.TestCase):
         sMinDown = Set(m, name="sMinDown", domain=[s, t])
         sMinDown[s, t.lead((Ord(t) - Ord(s)))] = 1
         self.assertEqual(
-            list(m._statements_dict.values())[-1].gamsRepr(),
+            list(m._unsaved_statements.values())[-1].gamsRepr(),
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 
@@ -196,6 +203,26 @@ class SetSuite(unittest.TestCase):
         # Alias with records
         b = Set(self.m, "b", records=[str(idx) for idx in range(1, 3)])
         c = Alias(self.m, "c", b)
+
+        count = 0
+        for _ in c:
+            count += 1
+
+        self.assertEqual(count, 2)
+
+        # UniverseAlias with no records
+        m = Container(delayed_execution=True)
+        x = Set(m, "set1")
+        a = UniverseAlias(m, "universe1")
+        count = 0
+        for _ in a:
+            count += 1
+
+        self.assertEqual(count, 0)
+
+        # UniverseAlias with records
+        b = Set(m, "set2", records=[str(idx) for idx in range(1, 3)])
+        c = UniverseAlias(m, "universe2")
 
         count = 0
         for _ in c:

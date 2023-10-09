@@ -119,7 +119,8 @@ class Expression(operable.Operable):
         return left_str, right_str
 
     def gamsRepr(self) -> str:
-        """Representation of this Expression in GAMS language.
+        """
+        Representation of this Expression in GAMS language.
 
         Returns
         -------
@@ -172,7 +173,8 @@ class Expression(operable.Operable):
         return out_str
 
     def getStatement(self) -> str:
-        """Conditioned equations become an Expression.
+        """
+        Statement of this Expression in .gms file.
 
         Returns
         -------

@@ -420,7 +420,11 @@ def main():
 
     skip.solve()
 
-    print("Best integer solution found:", round(zoau.records.level[0], 3))
+    import math
+
+    assert math.isclose(skip.objective_value, 316.6927, rel_tol=0.001)
+
+    print("Best integer solution found:", skip.objective_value)
 
 
 if __name__ == "__main__":

@@ -297,6 +297,10 @@ def main():
     mRSD.solve()
     report["RSD", i, j] = a.l[i, j]
 
+    import math
+
+    assert math.isclose(mRSD.objective_value, 7.6203, rel_tol=0.001)
+
     print()
     print("\t SOLUTION REPORT: \n", report.pivot())
 

@@ -76,6 +76,10 @@ def main():
     )
     transport.solve(output=sys.stdout)
 
+    import math
+
+    assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
+
     print(x.records)
     print(transport.objective_value)
     print(transport.status)

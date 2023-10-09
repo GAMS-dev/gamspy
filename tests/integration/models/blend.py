@@ -89,6 +89,10 @@ def main():
 
     print(report.pivot())
 
+    import math
+
+    assert math.isclose(b2.objective_value, 4.980000, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()

@@ -96,6 +96,10 @@ def main():
 
     model.solve()
 
+    import math
+
+    assert math.isclose(model.objective_value, 8566.1190, rel_tol=0.001)
+
 
 if __name__ == "__main__":
     main()
