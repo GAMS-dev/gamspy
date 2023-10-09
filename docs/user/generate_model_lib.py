@@ -54,9 +54,9 @@ for f in files:
     # model libraries to check
     links = [
         f"https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_{name}.html",
-        # f"https://www.gams.com/latest/finlib_ml/libhtml/finlib_{name}.html",
-        # f"https://www.gams.com/latest/noalib_ml/libhtml/noalib_{name}.html",
-        # f"https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_{name}.html"
+        f"https://www.gams.com/latest/finlib_ml/libhtml/finlib_{name}.html",
+        f"https://www.gams.com/latest/noalib_ml/libhtml/noalib_{name}.html",
+        f"https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_{name}.html"
     ]
 
     # check in which lib the model is
