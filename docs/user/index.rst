@@ -13,7 +13,7 @@ details are found in :ref:`reference`.
 
    whatisgamspy
    installation
-   quickstart
+   notebooks/trnsport
    examples
 
 .. toctree::
