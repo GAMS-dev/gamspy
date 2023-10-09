@@ -3,6 +3,7 @@ import unittest
 from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
+from gamspy import Parameter
 from gamspy import Set
 from gamspy import UniverseAlias
 from gamspy.exceptions import GamspyException
@@ -57,6 +58,26 @@ class AliasSuite(unittest.TestCase):
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
         )
+
+        m = Container(delayed_execution=True)
+        _ = Set(m, name="i", records=["i1"])
+        _ = Set(m, name="j", records=["j1"])
+        p = Parameter(m, name="p", domain=["*"])
+        universe1 = m.addUniverseAlias("universe")
+        p[universe1] = 5
+
+        self.assertEqual(
+            list(m._unsaved_statements.values())[-1].getStatement(),
+            "p(*) = 5;",
+        )
+
+        # Try to add it second time
+        universe2 = m.addUniverseAlias("universe")
+        self.assertEqual(id(universe1), id(universe2))
+
+        # Try to add universe alias with existing name
+        bla = Set(m, name="bla")
+        self.assertRaises(ValueError, m.addUniverseAlias, "bla")
 
 
 def alias_suite():
