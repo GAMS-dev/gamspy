@@ -1,7 +1,7 @@
 import os
 import urllib.error
 import urllib.request
-
+import glob
 import pandas as pd
 
 
@@ -14,11 +14,17 @@ def open_url(request):
 
 files = os.listdir("tests/integration/models")
 
-csv = {"Model": [], "GAMSPy": [], "GAMS": []}
+csv = {"Model": [], "GAMSPy": [], "GAMS": [], "Data": []}
 
 for f in files:
     if "py" in f:
         name = f.split(".")[0]
+
+        data = ""
+        matching_files = glob.glob(f"tests/integration/models/{name}*")
+        for m in matching_files:
+            if not 'py' in m:
+                data = m
 
         file_str = (
             f":orphan:\n\n"
@@ -41,6 +47,7 @@ for f in files:
                 csv["Model"].append(name)
                 csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
                 csv["GAMS"].append(f"`GAMS <{link}>`__")
+                csv["Data"].append(data)
                 # rst
                 with open(f"docs/examples/model_lib/{name}.rst", "w") as rst:
                     rst.write(file_str)
@@ -48,4 +55,4 @@ for f in files:
         if not found:
             print(f'{name} not found in lib')
 
-pd.DataFrame(csv).to_csv("docs/examples/model_lib/table.csv", index=False)
+pd.DataFrame(csv).sort_values(by='Model', key=lambda col: col.str.lower()).to_csv("docs/examples/model_lib/table.csv", index=False)
