@@ -59,7 +59,7 @@ class ModelSuite(unittest.TestCase):
             name="cost",
             description="define objective function",
         )
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost.definition = Sum((i, j), c[i, j] * x[i, j]) == z
 
         # Equation definition with an index
         supply = Equation(
@@ -121,9 +121,11 @@ class ModelSuite(unittest.TestCase):
             problem="LP",
             sense="min",
             objective=z,
+            description="bla",
         )
         self.assertEqual(
-            test_model2.getStatement(), "Model test_model2 / cost,supply /;"
+            test_model2.getStatement(),
+            "Model test_model2 'bla' / cost,supply /;",
         )
         self.assertEqual(test_model2.equations, [cost, supply])
 
