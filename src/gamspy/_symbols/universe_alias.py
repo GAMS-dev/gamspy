@@ -42,3 +42,6 @@ class UniverseAlias(gt.UniverseAlias):
 
     def __iter__(self):
         return self
+
+    def gamsRepr(self):
+        return "*"
