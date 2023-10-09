@@ -28,6 +28,5 @@ details are found in :ref:`reference`.
    :caption: Extras
 
    model_library
-   ../glossary
    ../release/index
    ../license
