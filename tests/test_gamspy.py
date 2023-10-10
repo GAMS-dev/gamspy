@@ -144,9 +144,6 @@ def main():
             return 1
         print("=" * 80)
 
-    if args.integration:
-        run_integration_tests(runner)
-
     if args.doc:
         print("=" * 80)
         print(f"\nRunning {suite.__name__}...")
@@ -154,6 +151,9 @@ def main():
         if not result.wasSuccessful():
             return 1
         print("=" * 80)
+
+    if args.integration:
+        run_integration_tests(runner)
 
     # clean up
     csv_paths = glob.glob("*.csv")
