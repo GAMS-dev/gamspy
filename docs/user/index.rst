@@ -27,6 +27,7 @@ details are found in :ref:`reference`.
    :hidden:
    :caption: Extras
 
+   faq
    model_library
    ../glossary
    ../release/index
