@@ -2,9 +2,7 @@
 
 .. _chain:
 
-   Find the chain (of uniform density) of length L suspended between two
-===========================================
-
-:download:`chain.py <../../../tests/integration/models/chain.py>` 
+chain
+=====
 
 .. literalinclude:: ../../../tests/integration/models/chain.py

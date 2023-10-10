@@ -54,9 +54,11 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i")
     >>> j = gp.Alias(m, "j", i)
+
     """
 
     def __init__(self, container: "Container", name: str, alias_with: "Set"):

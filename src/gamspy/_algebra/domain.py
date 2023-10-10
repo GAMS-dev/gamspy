@@ -51,8 +51,12 @@ class Domain:
 
     Examples
     --------
-    >>> equation = Equation(name="equation", domain=[i,j])
-    >>> equation[i,j] = Sum(Domain(i,j).where[i], a[i] + b[j])
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> v = gp.Variable(m, "v")
+    >>> eq1 = gp.Equation(m, name="eq1")
+    >>> eq1 = v == 5
+
     """
 
     def __init__(self, *sets: Union["Set", "Alias", "ImplicitSet"]) -> None:

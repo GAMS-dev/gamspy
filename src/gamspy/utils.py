@@ -42,9 +42,8 @@ from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
-    from gamspy import Alias, Set, UniverseAlias
+    from gamspy import Alias, Set
     from gamspy import Domain
-    from gamspy._symbols.symbol import Symbol
     from gamspy._algebra.expression import Expression
 
 
@@ -72,79 +71,6 @@ def getAvailableSolvers() -> List[str]:
                 solver_names.append(line.split(" ")[0])
 
     return solver_names
-
-
-def isin(symbol: "Symbol", sequence: Sequence) -> bool:
-    """
-    Checks whether the given symbol in the sequence.
-    Needed for symbol comparison since __eq__ magic
-    is overloaded by the symbols.
-
-    Parameters
-    ----------
-    symbol : Symbol
-        _Symbol to check
-    sequence : Sequence
-        Sequence that holds a sequence of symbols
-
-    Returns
-    -------
-    bool
-
-    Examples
-    --------
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
-    >>> j = gp.Set(m, "j")
-    >>> k = gp.Set(m, "k")
-    >>> sets = [i, j]
-    >>> gp.utils.isin(i, sets)
-    True
-    >>> gp.utils.isin(k, sets)
-    False
-    """
-    for item in sequence:
-        if symbol is item:
-            return True
-    return False
-
-
-def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
-    """
-    Checks if all elements of a sequence are equal to the all
-    elements of another sequence.
-
-    Parameters
-    ----------
-    iterable1 : Sequence
-    iterable2 : Sequence
-
-    Returns
-    -------
-    bool
-
-    Examples
-    --------
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
-    >>> j = gp.Set(m, "j")
-    >>> k = gp.Set(m, "k")
-    >>> list1 = [i, j]
-    >>> list2 = [i, j]
-    >>> utils.checkAllSame(list1, list2)
-    True
-    >>> list3 = [i, j, k]
-    >>> utils.checkAllSame(list1, list3)
-    False
-    """
-    if len(iterable1) != len(iterable2):
-        return False
-
-    all_same = True
-    for elem1, elem2 in zip(iterable1, iterable2):
-        if elem1 is not elem2:
-            return False
-    return all_same
 
 
 def _loadPackageGlobals() -> None:  # pragma: no cover
@@ -397,17 +323,92 @@ def _toList(
     return obj
 
 
+def isin(symbol, sequence: Sequence) -> bool:
+    """
+    Checks whether the given symbol in the sequence.
+    Needed for symbol comparison since __eq__ magic
+    is overloaded by the symbols.
+
+    Parameters
+    ----------
+    symbol : Symbol
+        _Symbol to check
+    sequence : Sequence
+        Sequence that holds a sequence of symbols
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> sets = [i, j]
+    >>> gp.utils.isin(i, sets)
+    True
+    >>> gp.utils.isin(k, sets)
+    False
+
+    """
+    for item in sequence:
+        if symbol is item:
+            return True
+    return False
+
+
+def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
+    """
+    Checks if all elements of a sequence are equal to the all
+    elements of another sequence.
+
+    Parameters
+    ----------
+    iterable1 : Sequence
+    iterable2 : Sequence
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> list1 = [i, j]
+    >>> list2 = [i, j]
+    >>> gp.utils.checkAllSame(list1, list2)
+    True
+    >>> list3 = [i, j, k]
+    >>> gp.utils.checkAllSame(list1, list3)
+    False
+
+    """
+    if len(iterable1) != len(iterable2):
+        return False
+
+    all_same = True
+    for elem1, elem2 in zip(iterable1, iterable2):
+        if elem1 is not elem2:
+            return False
+    return all_same
+
+
 def _getDomainStr(
-    domain: Iterable[
-        Union["Set", "Alias", "UniverseAlias", "ImplicitSet", str]
-    ]
+    domain: Iterable[Union["Set", "Alias", "ImplicitSet", str]]
 ) -> str:
     """
     Creates the string format of a given domain
 
     Parameters
     ----------
-    domain : Set | Alias | UniverseAlias | ImplicitSet | str
+    domain : Set | Alias | ImplicitSet | str
 
     Returns
     -------
@@ -422,9 +423,7 @@ def _getDomainStr(
 
     set_strs = []
     for set in domain:
-        if isinstance(
-            set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
-        ):
+        if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
             set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":
@@ -683,6 +682,7 @@ def _getValidGamsOptions() -> List[str]:
         "previouswork",
         "proctreememmonitor",
         "proctreememticks",
+        "profile",
         "profilefile",
         "profiletol",
         "putdir",
@@ -742,3 +742,25 @@ def _getValidGamsOptions() -> List[str]:
 
 
 VALID_GAMS_OPTIONS = _getValidGamsOptions()
+
+
+def _getDefaultSolvers():
+    return {
+        "LP": "CPLEX",
+        "MIP": "CPLEX",
+        "RMIP": "CPLEX",
+        "NLP": "CONOPT",
+        "MCP": "PATH",
+        "MPEC": "NLPEC",
+        "CNS": "CONOPT",
+        "DNLP": "CONOPT",
+        "RMINLP": "CONOPT",
+        "MINLP": "SBB",
+        "QCP": "CONOPT",
+        "MIQCP": "SBB",
+        "RMIQCP": "CONOPT",
+        "EMP": "CONVERT",
+    }
+
+
+DEFAULT_SOLVERS = _getDefaultSolvers()

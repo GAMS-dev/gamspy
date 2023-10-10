@@ -2,9 +2,7 @@
 
 .. _circuit:
 
-Optimal design of an electrical circuit.
-===========================================
-
-:download:`circuit.py <../../../tests/integration/models/circuit.py>` 
+circuit
+=======
 
 .. literalinclude:: ../../../tests/integration/models/circuit.py

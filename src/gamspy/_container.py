@@ -71,9 +71,9 @@ class Container(gt.Container):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
-    >>> m = gp.Container(system_directory=path_to_the_directory)
-    >>> m = gp.Container(load_from=path_to_the_gdx)
+
     """
 
     def __init__(
@@ -271,26 +271,6 @@ class Container(gt.Container):
             else:
                 raise ValueError(
                     f"Attempting to add an Alias symbol named `{name}`,"
-                    " however a symbol with this name but different type"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if this symbol is first removed from the"
-                    " Container with the removeSymbols() method. "
-                )
-
-    def addUniverseAlias(self, name):
-        if name not in self:
-            obj = gp.UniverseAlias(self, name)
-
-            return obj
-
-        else:
-            # no overwriting necessary just return the object
-            if isinstance(self.data[name], gp.UniverseAlias):
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a UniverseAlias symbol named `{name}`,"
                     " however a symbol with this name but different type"
                     " already exists in the Container. Symbol replacement is"
                     " only possible if this symbol is first removed from the"

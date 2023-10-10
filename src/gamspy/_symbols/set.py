@@ -65,8 +65,10 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
+
     """
 
     def __init__(

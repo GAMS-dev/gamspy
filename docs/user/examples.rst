@@ -7,5 +7,7 @@ Examples
 .. toctree::
     :maxdepth: 1
     
-    notebooks/pickstock
-    notebooks/blend
+    notebooks/trnsport.ipynb
+    notebooks/pickstock.ipynb
+    notebooks/blend.ipynb
+    notebooks/millco

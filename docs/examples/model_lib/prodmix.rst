@@ -2,9 +2,7 @@
 
 .. _prodmix:
 
-A Production Mix Problem (PRODMIX)
-===========================================
-
-:download:`prodmix.py <../../../tests/integration/models/prodmix.py>` 
+prodmix
+=======
 
 .. literalinclude:: ../../../tests/integration/models/prodmix.py

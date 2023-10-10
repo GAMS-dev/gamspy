@@ -2,9 +2,7 @@
 
 .. _control3:
 
-Optimal control problem with a nonlinear dynamic constraint and boundary
-===========================================
-
-:download:`control3.py <../../../tests/integration/models/control3.py>` 
+control3
+========
 
 .. literalinclude:: ../../../tests/integration/models/control3.py

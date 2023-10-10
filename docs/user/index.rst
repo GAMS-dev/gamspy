@@ -13,7 +13,7 @@ details are found in :ref:`reference`.
 
    whatisgamspy
    installation
-   notebooks/trnsport
+   quickstart
    examples
 
 .. toctree::
@@ -28,5 +28,6 @@ details are found in :ref:`reference`.
    :caption: Extras
 
    model_library
+   ../glossary
    ../release/index
    ../license

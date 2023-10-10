@@ -2,9 +2,7 @@
 
 .. _linear:
 
-Linear Regression with Various Criteria (LINEAR)
-===========================================
-
-:download:`linear.py <../../../tests/integration/models/linear.py>` 
+linear
+======
 
 .. literalinclude:: ../../../tests/integration/models/linear.py

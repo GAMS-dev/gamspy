@@ -1,4 +1,5 @@
 import argparse
+import doctest
 import glob
 import os
 import unittest
@@ -22,12 +23,45 @@ from unit.test_set import set_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
 
+import gamspy
+
 
 class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
         self.assertEqual(gamspy.__version__, "0.9.0rc1")
+
+
+class DocsSuite(unittest.TestCase):
+    def test_docs(self):
+        root = gamspy.__path__[0]
+
+        api_files = [
+            f"{root}{os.sep}_container.py",
+            f"{root}{os.sep}_model_instance.py",
+            f"{root}{os.sep}_model.py",
+            f"{root}{os.sep}utils.py",
+            f"{root}{os.sep}_algebra{os.sep}domain.py",
+            f"{root}{os.sep}_algebra{os.sep}number.py",
+            f"{root}{os.sep}_symbols{os.sep}alias.py",
+            f"{root}{os.sep}_symbols{os.sep}equation.py",
+            f"{root}{os.sep}_symbols{os.sep}parameter.py",
+            f"{root}{os.sep}_symbols{os.sep}set.py",
+            f"{root}{os.sep}_symbols{os.sep}universe_alias.py",
+            f"{root}{os.sep}_symbols{os.sep}variable.py",
+            f"{root}{os.sep}math{os.sep}log_power.py",
+            f"{root}{os.sep}math{os.sep}misc.py",
+            f"{root}{os.sep}math{os.sep}probability.py",
+            f"{root}{os.sep}math{os.sep}trigonometric.py",
+        ]
+
+        for file in api_files:
+            results = doctest.testfile(
+                file, verbose=True, module_relative=False
+            )
+
+            self.assertEqual(results.failed, 0)
 
 
 def gamspy_suite():
@@ -42,9 +76,39 @@ def gamspy_suite():
     return suite
 
 
+def docs_suite():
+    suite = unittest.TestSuite()
+    tests = [
+        DocsSuite(name) for name in dir(DocsSuite) if name.startswith("test_")
+    ]
+    suite.addTests(tests)
+
+    return suite
+
+
+def run_integration_tests(runner: unittest.TextTestRunner):
+    integration_suites = [
+        solve_suite,
+        model_instance_suite,
+        gams_models_suite,
+        cmd_suite,
+        engine_suite,
+    ]
+
+    print(f"Running integration tests\n{'='*80}")
+    for suite in integration_suites:
+        print("=" * 80)
+        print(f"\nRunning {suite.__name__}...")
+        result = runner.run(suite())
+        if not result.wasSuccessful():
+            exit(1)
+        print("=" * 80)
+
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integration", action="store_true")
+    parser.add_argument("--doc", action="store_true")
 
     return parser.parse_args()
 
@@ -80,23 +144,16 @@ def main():
             return 1
         print("=" * 80)
 
-    if args.integration:
-        integration_suites = [
-            solve_suite,
-            model_instance_suite,
-            gams_models_suite,
-            cmd_suite,
-            engine_suite,
-        ]
+    if args.doc:
+        print("=" * 80)
+        print(f"\nRunning {suite.__name__}...")
+        result = runner.run(docs_suite())
+        if not result.wasSuccessful():
+            return 1
+        print("=" * 80)
 
-        print(f"Running integration tests\n{'='*80}")
-        for suite in integration_suites:
-            print("=" * 80)
-            print(f"\nRunning {suite.__name__}...")
-            result = runner.run(suite())
-            if not result.wasSuccessful():
-                return 1
-            print("=" * 80)
+    if args.integration:
+        run_integration_tests(runner)
 
     # clean up
     csv_paths = glob.glob("*.csv")

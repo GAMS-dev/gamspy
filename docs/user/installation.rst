@@ -33,7 +33,7 @@ Installation
 
 You can install GAMSPy from source with the following command::
 
-    python setup.py bdist_wheel
+    python setup.py sdist 
     pip install gamspy --find-links dist/
 
 Licensing
@@ -55,10 +55,6 @@ Testing
 Tests can be run with::
 
     python tests/test_gamspy.py
-
-In order to run the tests, gamspy must be installed with test dependencies.
-
-    pip install gamspy[test]
 
 .. note::
     By default, only unit tests are running. To enable integration tests, --integration argument should be provided.

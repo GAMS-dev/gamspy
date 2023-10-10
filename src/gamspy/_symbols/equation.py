@@ -80,11 +80,14 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
     >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
-    >>> e = gp.Equation(m, "e", [i])
-    >>> e[i] = gp.Sum(i, a[i]) == a
+    >>> v = gp.Variable(m, "v", domain=[i])
+    >>> e = gp.Equation(m, "e", domain=[i])
+    >>> e[i] = a[i] <= v[i]
+
     """
 
     def __init__(
@@ -374,8 +377,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     ) -> None:
         """
         Needed for scalar equations
-        >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.definition = Sum(wh, build[wh]) <= 1
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
+        >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
+        >>> eq = gp.Equation(m, "eq")
+        >>> eq.definition = gp.Sum(wh, build[wh]) <= 1
+
         """
         if assignment is None:
             self._definition = assignment

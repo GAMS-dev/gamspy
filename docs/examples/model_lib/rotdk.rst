@@ -2,9 +2,7 @@
 
 .. _rotdk:
 
-Robust Optimization (ROTDK)
-===========================================
-
-:download:`rotdk.py <../../../tests/integration/models/rotdk.py>` 
+rotdk
+=====
 
 .. literalinclude:: ../../../tests/integration/models/rotdk.py

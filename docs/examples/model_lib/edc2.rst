@@ -2,9 +2,7 @@
 
 .. _edc2:
 
-Economic load dispatch for 15 generator systems with transmission losses
-===========================================
-
-:download:`edc2.py <../../../tests/integration/models/edc2.py>` 
+edc2
+====
 
 .. literalinclude:: ../../../tests/integration/models/edc2.py

@@ -2,9 +2,7 @@
 
 .. _partssupply:
 
-Parts Supply Problem (PARTSSUPPLY)
-===========================================
-
-:download:`partssupply.py <../../../tests/integration/models/partssupply.py>` 
+partssupply
+===========
 
 .. literalinclude:: ../../../tests/integration/models/partssupply.py
