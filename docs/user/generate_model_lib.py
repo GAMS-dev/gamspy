@@ -22,7 +22,7 @@ for f in files:
 
         file_str = (
             f":orphan:\n\n"
-            f".. _{name}:\n\n{name}\n===========================================\n\n.."
+            f".. _{name}:\n\n{name}\n{'=' * len(name)}\n\n.."
             f" literalinclude:: ../../../tests/integration/models/{name}.py\n"
         )
 

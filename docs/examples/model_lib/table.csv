@@ -18,7 +18,6 @@ aircraft,:ref:`GAMSPy <aircraft>`,`GAMS <https://www.gams.com/latest/gamslib_ml/
 prodmix,:ref:`GAMSPy <prodmix>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodmix.html>`__
 Regret,:ref:`GAMSPy <Regret>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Regret.html>`__
 cutstock,:ref:`GAMSPy <cutstock>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cutstock.html>`__
-ComovementsModel,:ref:`GAMSPy <ComovementsModel>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_ComovementsModel.html>`__
 InternationalMeanVar,:ref:`GAMSPy <InternationalMeanVar>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_InternationalMeanVar.html>`__
 BondIndex,:ref:`GAMSPy <BondIndex>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_BondIndex.html>`__
 PutCall,:ref:`GAMSPy <PutCall>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_PutCall.html>`__
@@ -59,7 +58,6 @@ benz,:ref:`GAMSPy <benz>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/n
 inscribedsquare,:ref:`GAMSPy <inscribedsquare>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_inscribedsquare.html>`__
 mexss,:ref:`GAMSPy <mexss>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html>`__
 ThreeStageSPDA,:ref:`GAMSPy <ThreeStageSPDA>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_ThreeStageSPDA.html>`__
-StructuralModel,:ref:`GAMSPy <StructuralModel>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_StructuralModel.html>`__
 minlphix,:ref:`GAMSPy <minlphix>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphix.html>`__
 fdesign,:ref:`GAMSPy <fdesign>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html>`__
 refrigeration,:ref:`GAMSPy <refrigeration>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_refrigeration.html>`__
