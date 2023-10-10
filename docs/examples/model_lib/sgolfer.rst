@@ -2,9 +2,7 @@
 
 .. _sgolfer:
 
-Social Golfer Problem (SGOLFER)
+sgolfer
 ===========================================
-
-:download:`sgolfer.py <../../../tests/integration/models/sgolfer.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/sgolfer.py

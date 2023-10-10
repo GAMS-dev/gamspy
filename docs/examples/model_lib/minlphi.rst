@@ -2,9 +2,7 @@
 
 .. _minlphi:
 
-Heat Integrated Distillation Sequences (MINLPHI)
+minlphi
 ===========================================
-
-:download:`minlphi.py <../../../tests/integration/models/minlphi.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/minlphi.py

@@ -2,9 +2,7 @@
 
 .. _DedicationNoBorrow:
 
-Dedication model without borrowing
+DedicationNoBorrow
 ===========================================
-
-:download:`DedicationNoBorrow.py <../../../tests/integration/models/DedicationNoBorrow.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/DedicationNoBorrow.py

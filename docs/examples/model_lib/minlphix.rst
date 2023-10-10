@@ -2,9 +2,7 @@
 
 .. _minlphix:
 
-Heat Integrated Distillation Sequences - MINLP (MINLPHIX)
+minlphix
 ===========================================
-
-:download:`minlphix.py <../../../tests/integration/models/minlphix.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/minlphix.py

@@ -2,9 +2,7 @@
 
 .. _protein:
 
-Optimal production of secreted protein in a fed-batch reactor.
+protein
 ===========================================
-
-:download:`protein.py <../../../tests/integration/models/protein.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/protein.py

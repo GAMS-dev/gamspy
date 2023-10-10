@@ -2,9 +2,7 @@
 
 .. _trussm:
 
-Truss Toplogy Design with Multiple Loads (TRUSSM)
+trussm
 ===========================================
-
-:download:`trussm.py <../../../tests/integration/models/trussm.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/trussm.py

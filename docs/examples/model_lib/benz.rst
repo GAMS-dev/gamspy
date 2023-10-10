@@ -2,9 +2,7 @@
 
 .. _benz:
 
-Stability of a wire guided Daimler-Benz 0305 bus.
+benz
 ===========================================
-
-:download:`benz.py <../../../tests/integration/models/benz.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/benz.py

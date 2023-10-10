@@ -2,9 +2,7 @@
 
 .. _timesteps:
 
-Accessing previous (or next) Time Steps in an Equation fast (TIMESTEPS)
+timesteps
 ===========================================
-
-:download:`timesteps.py <../../../tests/integration/models/timesteps.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/timesteps.py

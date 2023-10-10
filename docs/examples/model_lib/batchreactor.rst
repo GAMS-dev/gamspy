@@ -2,9 +2,7 @@
 
 .. _batchreactor:
 
-Optimal control of a batch reactor.
+batchreactor
 ===========================================
-
-:download:`batchreactor.py <../../../tests/integration/models/batchreactor.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/batchreactor.py

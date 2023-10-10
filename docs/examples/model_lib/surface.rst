@@ -2,9 +2,7 @@
 
 .. _surface:
 
-Minimal surface problem.
+surface
 ===========================================
-
-:download:`surface.py <../../../tests/integration/models/surface.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/surface.py

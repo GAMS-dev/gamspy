@@ -277,26 +277,6 @@ class Container(gt.Container):
                     " Container with the removeSymbols() method. "
                 )
 
-    def addUniverseAlias(self, name):
-        if name not in self:
-            obj = gp.UniverseAlias(self, name)
-
-            return obj
-
-        else:
-            # no overwriting necessary just return the object
-            if isinstance(self.data[name], gp.UniverseAlias):
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a UniverseAlias symbol named `{name}`,"
-                    " however a symbol with this name but different type"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if this symbol is first removed from the"
-                    " Container with the removeSymbols() method. "
-                )
-
     def addSet(
         self,
         name: str,

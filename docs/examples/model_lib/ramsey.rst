@@ -2,9 +2,7 @@
 
 .. _ramsey:
 
-An elementary Ramsey growth model
+ramsey
 ===========================================
-
-:download:`ramsey.py <../../../tests/integration/models/ramsey.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/ramsey.py

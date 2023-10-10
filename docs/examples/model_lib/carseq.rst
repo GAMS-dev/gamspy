@@ -2,9 +2,7 @@
 
 .. _carseq:
 
-Car Sequencing (CARSEQ)
+carseq
 ===========================================
-
-:download:`carseq.py <../../../tests/integration/models/carseq.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/carseq.py

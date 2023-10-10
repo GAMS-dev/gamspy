@@ -2,9 +2,7 @@
 
 .. _food:
 
-Food Manufacturing Problem - Blending of Oils (FOOD)
+food
 ===========================================
-
-:download:`food.py <../../../tests/integration/models/food.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/food.py

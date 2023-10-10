@@ -2,9 +2,7 @@
 
 .. _gapmin:
 
-Lagrangian Relaxation for Generalized Assignment (GAPMIN,SEQ=182)
+gapmin
 ===========================================
-
-:download:`gapmin.py <../../../tests/integration/models/gapmin.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/gapmin.py

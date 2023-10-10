@@ -2,9 +2,7 @@
 
 .. _cutstock:
 
-Cutting Stock - A Column Generation Approach (CUTSTOCK)
+cutstock
 ===========================================
-
-:download:`cutstock.py <../../../tests/integration/models/cutstock.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/cutstock.py

@@ -2,9 +2,7 @@
 
 .. _dyncge:
 
-A Recursive-Dynamic Standard CGE Model (DYNCGE)
+dyncge
 ===========================================
-
-:download:`dyncge.py <../../../tests/integration/models/dyncge.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/dyncge.py

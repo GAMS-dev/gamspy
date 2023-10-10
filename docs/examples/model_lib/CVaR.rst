@@ -2,9 +2,7 @@
 
 .. _CVaR:
 
-Conditional Value at Risk models
+CVaR
 ===========================================
-
-:download:`CVaR.py <../../../tests/integration/models/CVaR.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/CVaR.py

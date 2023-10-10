@@ -2,9 +2,7 @@
 
 .. _inscribedsquare:
 
-Inscribed Square Problem (INSCRIBEDSQUARE)
+inscribedsquare
 ===========================================
-
-:download:`inscribedsquare.py <../../../tests/integration/models/inscribedsquare.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/inscribedsquare.py

@@ -2,9 +2,7 @@
 
 .. _aircraft:
 
-Aircraft Allocation under uncertain Demand (AIRCRAF)
+aircraft
 ===========================================
-
-:download:`aircraft.py <../../../tests/integration/models/aircraft.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/aircraft.py

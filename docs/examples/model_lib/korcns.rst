@@ -2,9 +2,7 @@
 
 .. _korcns:
 
-General Equilibrium Model for Korea (KORCNS)
+korcns
 ===========================================
-
-:download:`korcns.py <../../../tests/integration/models/korcns.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/korcns.py

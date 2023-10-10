@@ -2,9 +2,7 @@
 
 .. _Immunization:
 
-Immunization models
+Immunization
 ===========================================
-
-:download:`Immunization.py <../../../tests/integration/models/Immunization.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/Immunization.py

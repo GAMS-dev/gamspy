@@ -2,9 +2,7 @@
 
 .. _iobalance:
 
-Updating and Projecting Coefficients: The RAS Approach (IOBALANCE)
+iobalance
 ===========================================
-
-:download:`iobalance.py <../../../tests/integration/models/iobalance.py>` 
 
 .. literalinclude:: ../../../tests/integration/models/iobalance.py
