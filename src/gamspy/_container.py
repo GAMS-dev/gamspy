@@ -71,9 +71,9 @@ class Container(gt.Container):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
-    >>> m = gp.Container(system_directory=path_to_the_directory)
-    >>> m = gp.Container(load_from=path_to_the_gdx)
+
     """
 
     def __init__(

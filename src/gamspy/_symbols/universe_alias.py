@@ -10,7 +10,31 @@ if TYPE_CHECKING:
 
 
 class UniverseAlias(gt.UniverseAlias):
-    def __init__(self, container: "Container", name: str):
+    def __init__(self, container: "Container", name: str = "universe"):
+        """
+        Represents a UniverseAlias symbol in GAMS.
+
+        Parameters
+        ----------
+        container : Container
+        name : str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> universe = gp.UniverseAlias(m, "universe")
+        >>> universe.records
+        Empty DataFrame
+        Columns: [uni]
+        Index: []
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> universe.records
+          uni
+        0  i1
+        1  i2
+
+        """
         # check if the name is a reserved word
         name = utils._reservedCheck(name)
 

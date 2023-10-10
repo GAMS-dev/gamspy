@@ -342,6 +342,7 @@ def isin(symbol, sequence: Sequence) -> bool:
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i")
     >>> j = gp.Set(m, "j")
@@ -351,6 +352,7 @@ def isin(symbol, sequence: Sequence) -> bool:
     True
     >>> gp.utils.isin(k, sets)
     False
+
     """
     for item in sequence:
         if symbol is item:
@@ -374,17 +376,19 @@ def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i")
     >>> j = gp.Set(m, "j")
     >>> k = gp.Set(m, "k")
     >>> list1 = [i, j]
     >>> list2 = [i, j]
-    >>> utils.checkAllSame(list1, list2)
+    >>> gp.utils.checkAllSame(list1, list2)
     True
     >>> list3 = [i, j, k]
-    >>> utils.checkAllSame(list1, list3)
+    >>> gp.utils.checkAllSame(list1, list3)
     False
+
     """
     if len(iterable1) != len(iterable2):
         return False

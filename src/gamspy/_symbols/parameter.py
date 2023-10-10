@@ -60,9 +60,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
     >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+
     """
 
     def __init__(

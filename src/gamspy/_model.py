@@ -169,7 +169,12 @@ class Model:
 
     Examples
     --------
-    >>> transport = Model(m, "transport", equations=[cost,supply,demand])
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", definition= v == 5)
+    >>> my_model = gp.Model(m, "my_model", [e], "LP")
+
     """
 
     # Prefix for auto-generated symbols
