@@ -3,6 +3,6 @@
 .. _partssupply:
 
 partssupply
-===========================================
+===========
 
 .. literalinclude:: ../../../tests/integration/models/partssupply.py
