@@ -5,8 +5,8 @@ build:
   tools:
     python: "3.10"
   jobs:
-    pre_create_environment:
-      - export PIP_EXTRA_INDEX_URL="https://test.pypi.org/simple/"
+    pre_install:
+      - echo "[global]\nextra-index-url = https://test.pypi.org/simple/" > $READTHEDOCS_VIRTUALENV_PATH/pip.conf
 
 python:
   install:
