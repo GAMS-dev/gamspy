@@ -67,8 +67,8 @@ html_theme_options = {
         },
     ],
     "logo": {
-        "image_light": "_static/logo.png",
-        "image_dark": "_static/logo.png",
+        "image_light": "_static/gamspy_logo.png",
+        "image_dark": "_static/gamspy_logo.png",
     },
     "show_nav_level": 1,
 }
