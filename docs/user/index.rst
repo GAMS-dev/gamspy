@@ -28,5 +28,6 @@ details are found in :ref:`reference`.
    :caption: Extras
 
    model_library
+   migration_guide
    ../release/index
    ../license
