@@ -4,6 +4,9 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  jobs:
+    pre_create_environment:
+      - export PIP_EXTRA_INDEX_URL="https://test.pypi.org/simple/"
 
 python:
   install:
