@@ -20,7 +20,7 @@ Why is GAMSPy Fast?
 -------------------
 
 `GAMSPy` generates `GAMS` code and executes it by using the `GAMS` 
-backend to resolve assignment operations and solve models. Since `GAMS` 
+backend to resolve assignment operations, generate and solve models. Since `GAMS` 
 have been optimized for decades (since 1970s), and supports many solvers
 that have been developed by optimization experts, it provides good performance
 for model generation and solving models. This is the main source of the speed of
@@ -39,3 +39,10 @@ GAMSPy opens up entirely new opportunities to streamline optimization and data p
 **Mathematical Modeling in Python**
 - Write complex mathematical models directly in Python.
 - Leverage the convenience of the GAMS syntax.
+- Switch to another solver with one argument.
+
+**Different Runner Options***
+You can run your model on:
+- Your local machine
+- GAMS Engine One (you host your own server hardware)
+- GAMS Engine SASS (you don't even need to run a server. We make sure you have access to the right resources, any time.)
