@@ -13,7 +13,7 @@ Migrating Symbols
 You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. 
 You don't need to change anything. Now, these symbols can be used in creating expressions.
 
-GAMSPy code:
+GAMSPy:
 
 .. code-block:: python
 
@@ -30,7 +30,7 @@ GAMSPy code:
     model = gp.Model(m, "my_model", equations=[e], problem="lp", sense="min", objective=z)
     model.solve()
 
-GAMS code:
+GAMS:
 
 .. code-block:: gams
     
@@ -188,7 +188,8 @@ GAMSPy:
     sigma.l[i, k] = uniform(0.1, 1) # Generates a different value from uniform distribution for each element of the domain.
     sigma.l[i, k] = math.uniform(0.1, 1) # This is not equivalent to the statement above. This generates only one value for the whole domain.
 
-### Logical Operations
+Logical Operations
+------------------
 
 Since it is not possible in Python to overload keywords such as **and**, **or**, and **not**, you need to use bitwise operatiors **&**, **|**, and **~**.
 
