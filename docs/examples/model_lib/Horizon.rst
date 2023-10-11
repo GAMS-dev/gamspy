@@ -2,9 +2,7 @@
 
 .. _Horizon:
 
-Portfolio horizon returns model
-===========================================
-
-:download:`Horizon.py <../../../tests/integration/models/Horizon.py>` 
+Horizon
+=======
 
 .. literalinclude:: ../../../tests/integration/models/Horizon.py

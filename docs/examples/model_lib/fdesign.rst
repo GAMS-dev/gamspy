@@ -2,9 +2,7 @@
 
 .. _fdesign:
 
-Linear Phase Lowpass Filter Design (FDESIGN)
-===========================================
-
-:download:`fdesign.py <../../../tests/integration/models/fdesign.py>` 
+fdesign
+=======
 
 .. literalinclude:: ../../../tests/integration/models/fdesign.py

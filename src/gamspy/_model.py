@@ -169,7 +169,12 @@ class Model:
 
     Examples
     --------
-    >>> transport = Model(m, "transport", equations=[cost,supply,demand])
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", definition= v == 5)
+    >>> my_model = gp.Model(m, "my_model", [e], "LP")
+
     """
 
     # Prefix for auto-generated symbols
@@ -185,7 +190,6 @@ class Model:
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[Iterable["Variable"]] = None,
-        description: Optional[str] = None,
     ):
         # check if the name is a reserved word
         name = utils._reservedCheck(name)
@@ -199,7 +203,6 @@ class Model:
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
-        self.description = description
         self.container._addStatement(self)
         self._generate_attribute_symbols()
 
@@ -587,11 +590,6 @@ class Model:
             )
             equations_str += "," + limited_variables_str
 
-        model_str = f"Model {self.name}"
-
-        if self.description:
-            model_str = f"{model_str} '{self.description}'"
-
-        model_str = f"{model_str} / {equations_str} /;"
+        model_str = f"Model {self.name} / {equations_str} /;"
 
         return model_str

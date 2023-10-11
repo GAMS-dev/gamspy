@@ -2,9 +2,7 @@
 
 .. _flowshop:
 
-Flow Shop Scheduling - (FLOWSHOP)
-===========================================
-
-:download:`flowshop.py <../../../tests/integration/models/flowshop.py>` 
+flowshop
+========
 
 .. literalinclude:: ../../../tests/integration/models/flowshop.py

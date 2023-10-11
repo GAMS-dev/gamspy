@@ -2,9 +2,7 @@
 
 .. _springchain:
 
-Equilibrium of System with Piecewise Linear Springs (SPRINGCHAIN)
-===========================================
-
-:download:`springchain.py <../../../tests/integration/models/springchain.py>` 
+springchain
+===========
 
 .. literalinclude:: ../../../tests/integration/models/springchain.py

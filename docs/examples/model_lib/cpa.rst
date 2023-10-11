@@ -2,9 +2,7 @@
 
 .. _cpa:
 
-Combustion of propan in air.
-===========================================
-
-:download:`cpa.py <../../../tests/integration/models/cpa.py>` 
+cpa
+===
 
 .. literalinclude:: ../../../tests/integration/models/cpa.py

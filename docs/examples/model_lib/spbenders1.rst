@@ -2,9 +2,7 @@
 
 .. _spbenders1:
 
-Stochastic Benders - Sequential GAMS Loop (SPBENDERS1)
-===========================================
-
-:download:`spbenders1.py <../../../tests/integration/models/spbenders1.py>` 
+spbenders1
+==========
 
 .. literalinclude:: ../../../tests/integration/models/spbenders1.py

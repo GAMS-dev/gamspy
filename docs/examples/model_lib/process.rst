@@ -2,9 +2,7 @@
 
 .. _process:
 
-Alkylation Process Optimization (PROCESS)
-===========================================
-
-:download:`process.py <../../../tests/integration/models/process.py>` 
+process
+=======
 
 .. literalinclude:: ../../../tests/integration/models/process.py

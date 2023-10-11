@@ -2,9 +2,7 @@
 
 .. _whouse:
 
-Simple Warehouse Problem (WHOUSE)
-===========================================
-
-:download:`whouse.py <../../../tests/integration/models/whouse.py>` 
+whouse
+======
 
 .. literalinclude:: ../../../tests/integration/models/whouse.py
