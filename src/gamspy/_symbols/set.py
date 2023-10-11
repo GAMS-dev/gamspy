@@ -40,6 +40,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Alias, Container
@@ -90,6 +91,8 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         # check if the name is a reserved word
         name = utils._reservedCheck(name)
+
+        self._singleton_check(is_singleton, records, domain)
 
         super().__init__(
             container,
@@ -152,6 +155,18 @@ class Set(gt.Set, operable.Operable, Symbol):
             self._is_dirty = True
         else:
             self.container._run()
+
+    def _singleton_check(
+        self, is_singleton: bool, records: Union[Any, None], domain
+    ):
+        if is_singleton:
+            if domain not in [[], None]:
+                raise GamspyException("Single set cannot have a domain.")
+
+            if records is not None and len(records) > 1:
+                raise GamspyException(
+                    "Singleton set records size cannot be more than one."
+                )
 
     # Set Attributes
     @property

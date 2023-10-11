@@ -55,6 +55,11 @@ class SetSuite(unittest.TestCase):
             "Singleton Set s(*);",
         )
 
+        self.assertRaises(
+            GamspyException, Set, self.m, "s2", None, True, ["i1", "i2"]
+        )
+        self.assertRaises(GamspyException, Set, self.m, "s2", [m], True)
+
     def test_records_assignment(self):
         s = Set(self.m, "s")
         with self.assertRaises(TypeError):
