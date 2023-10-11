@@ -1,3 +1,7 @@
 .jp-RenderedHTMLCommon table, div.rendered_html table {
     table-layout: unset;
 }
+
+#module-gamspy .class {
+    border-top: 2px solid black;
+}
