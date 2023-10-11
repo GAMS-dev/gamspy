@@ -160,9 +160,6 @@ class Set(gt.Set, operable.Operable, Symbol):
         self, is_singleton: bool, records: Union[Any, None], domain
     ):
         if is_singleton:
-            if domain not in [[], None]:
-                raise GamspyException("Single set cannot have a domain.")
-
             if records is not None and len(records) > 1:
                 raise GamspyException(
                     "Singleton set records size cannot be more than one."
