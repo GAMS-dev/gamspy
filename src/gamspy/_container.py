@@ -48,7 +48,15 @@ import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, Parameter, Variable, Equation, EquationType
+    from gamspy import (
+        Alias,
+        Set,
+        Parameter,
+        Variable,
+        Equation,
+        EquationType,
+        Model,
+    )
     from gamspy._algebra.expression import Expression
     from gamspy._engine import EngineConfig
 
@@ -663,7 +671,24 @@ class Container(gt.Container):
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[list] = None,
-    ):
+    ) -> "Model":
+        """
+        Creates a Model and adds it to the Container
+
+        Parameters
+        ----------
+        name : str
+        equations : List[Equation]
+        problem : str
+        sense : Optional[Literal[MIN, MAX]], optional
+        objective : Optional[Union[Variable, Expression]], optional
+        matches : Optional[dict], optional
+        limited_variables : Optional[list], optional
+
+        Returns
+        -------
+        Model
+        """
         model = gp.Model(
             self,
             name,
@@ -802,6 +827,14 @@ class Container(gt.Container):
         return string
 
     def interrupt(self):
+        """
+        Sends interrupt signal to the running job.
+
+        Raises
+        ------
+        GamspyException
+            If the job is not initialized
+        """
         if self._job:
             self._job.interrupt()
         else:
