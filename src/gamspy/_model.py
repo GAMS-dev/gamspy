@@ -497,6 +497,15 @@ class Model:
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
         freeze_options: Optional[dict] = None,
     ):
+        """
+        Freezes all symbols except modifiable symbols.
+
+        Parameters
+        ----------
+        modifiables : List[Union[Parameter, ImplicitParameter]]
+        freeze_options : Optional[dict], optional
+        """
+
         self.container._run()
 
         self.instance = ModelInstance(
@@ -505,6 +514,7 @@ class Model:
         self._is_frozen = True
 
     def unfreeze(self):
+        """Unfreezes all symbols"""
         for symbol in self.container.data.values():
             if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
                 symbol._is_frozen = False
