@@ -26,6 +26,7 @@ import os
 import platform
 from dataclasses import dataclass
 from dataclasses import field
+from typing import List
 from typing import Tuple
 from typing import Union
 
@@ -97,22 +98,33 @@ def get_capabilities_filename() -> str:
 
 
 def add_solver_entry(
-    gamspy_base_location: str, solver_name: str, solver_lines: str
+    gamspy_base_location: str,
+    solver_name: str,
+    verbatims: List[str],
 ):
     capabilities_file = (
         gamspy_base_location + os.sep + get_capabilities_filename()
     )
 
     if check_solver_exists(capabilities_file, solver_name):
-        print("Solver already exists in the capabilities file, skipping")
-        return
+        if solver_name == "scip":
+            if check_solver_exists(capabilities_file, "mosek"):
+                print(
+                    "Solver already exists in the capabilities file, skipping"
+                )
+                return
+        else:
+            print("Solver already exists in the capabilities file, skipping")
+            return
 
     with open(capabilities_file, "r") as f:
-        old_str = f.read()
+        string = f.read()
 
-    new_str = f"{solver_lines}\n\n{old_str}"
-    with open(capabilities_file, "w") as f:
-        f.write(new_str)
+    for verbatim in verbatims:
+        string = f"{verbatim}\n\n{string}"
+
+        with open(capabilities_file, "w") as f:
+            f.write(string)
 
 
 def remove_solver_entry(gamspy_base_location: str, solver_name: str):
