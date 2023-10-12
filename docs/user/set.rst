@@ -132,7 +132,7 @@ An alternative way to define elements of a subset is with assignments: ::
     t['food+agr'] = True
 
 In the last line the element ``food+agr`` of the set ``i`` is assigned to the subset 
-``t``. Assignments may also be used to remove an element from a subset:
+``t``. Assignments may also be used to remove an element from a subset: ::
 
     t['light-ind'] = False
 
@@ -194,14 +194,16 @@ associated with a nearby mining region: ::
                    uels_on_axes=True, 
                    records=s)
 
-====  =======  =========  ==============
-  ..  i        n          element_text
-====  =======  =========  ==============
-   0  china    shanghai
-   1  ghana    accra
-   2  russia   leningrad
-   3  s-leone  freetown
-====  =======  =========  ==============
+::
+
+    In [1]: multi_in.records
+    Out[1]:
+    	      i	        n	element_text
+    0	  china	 shanghai	
+    1	  ghana     accra	
+    2	 russia	leningrad	
+    3	s-leone	 freetown	
+
 
 Here ``i`` is the set of mining regions, ``n`` is the set of ports and ``in`` is a two 
 dimensional set that associates each port with a mining region. The pairs are created 
@@ -249,14 +251,15 @@ mapping where many elements of the set ``i`` map onto one element of the set ``j
 The set ``ij3`` is the most general case: a *many-to-many* mapping where many elements 
 of the set ``i`` map to many elements of the set ``j``:
 
-====  ===  ===  ==============
-  ..  i    j    element_text
-====  ===  ===  ==============
-   0  a    c
-   1  b    c
-   2  a    d
-   3  b    d
-====  ===  ===  ==============
+::
+
+    In [1]: ij3.records
+    Out[1]:
+    	i	j	element_text
+    0	a	c	
+    1	b	c	
+    2	a	d	
+    3	b	d	
 
 ..
     # TODO: Projection and Aggregation of Sets?
@@ -861,6 +864,6 @@ discussed in depth in the next section.
     For examples see section "Conditional Indexed Operations with Dynamic Sets" below.
 
 
-Using Dollar Controls with Dynamic Sets
-----------------------------------------
+Controlling Dynamic Sets
+-------------------------
 
