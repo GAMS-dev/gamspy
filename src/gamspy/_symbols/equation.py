@@ -394,6 +394,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
+            self.type = "nonbinding"
 
         non_regular_map = {
             "nonbinding": "=n=",

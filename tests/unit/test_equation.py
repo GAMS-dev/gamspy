@@ -453,6 +453,14 @@ class EquationSuite(unittest.TestCase):
             "f .. (x - c) =n= 0;",
         )
 
+        f2 = Equation(self.m, name="f2", domain=[])
+        f2.definition = x - c
+
+        self.assertEqual(
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            "f2 .. (x - c) =n= 0;",
+        )
+
 
 def equation_suite():
     suite = unittest.TestSuite()
