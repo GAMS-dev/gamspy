@@ -3,7 +3,7 @@
 .. _tanksize:
 
 Tank Size Design Problem - (TANKSIZE)
-===========================================
+=====================================
 
 :download:`tanksize.py <../../../tests/integration/models/tanksize.py>` |tanksize.gdx|
 

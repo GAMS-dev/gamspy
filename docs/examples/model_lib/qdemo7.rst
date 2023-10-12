@@ -3,7 +3,7 @@
 .. _qdemo7:
 
 Nonlinear Simple Agricultural Sector Model (QDEMO7)
-===========================================
+===================================================
 
 :download:`qdemo7.py <../../../tests/integration/models/qdemo7.py>` |qdemo7.gdx|
 

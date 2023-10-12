@@ -3,7 +3,7 @@
 .. _spatequ:
 
 Spatial Equilibrium (SPATEQU)
-===========================================
+=============================
 
 :download:`spatequ.py <../../../tests/integration/models/spatequ.py>` |spatequ.gdx|
 

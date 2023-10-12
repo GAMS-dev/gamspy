@@ -3,7 +3,7 @@
 .. _thai:
 
 Thai Navy Problem (THAI)
-===========================================
+========================
 
 :download:`thai.py <../../../tests/integration/models/thai.py>` |thai.gdx|
 

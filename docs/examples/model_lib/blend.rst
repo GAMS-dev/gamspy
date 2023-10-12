@@ -3,7 +3,7 @@
 .. _blend:
 
 Blending Problem I (BLEND)
-===========================================
+==========================
 
 :download:`blend.py <../../../tests/integration/models/blend.py>` 
 

@@ -3,7 +3,7 @@
 .. _EDsensitivity:
 
 *** Sensitivity Analysis in Economic Load Dispatch
-===========================================
+==================================================
 
 :download:`EDsensitivity.py <../../../tests/integration/models/EDsensitivity.py>` 
 

@@ -3,7 +3,7 @@
 .. _rcpsp:
 
 Resource-Constrained Project Scheduling Problem (RCPSP)
-===========================================
+=======================================================
 
 :download:`rcpsp.py <../../../tests/integration/models/rcpsp.py>` |rcpsp.sm|
 

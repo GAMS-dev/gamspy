@@ -3,7 +3,7 @@
 .. _qp6:
 
 Standard QP Model - QP4 expressed as MCP (QP6)
-===========================================
+==============================================
 
 :download:`qp6.py <../../../tests/integration/models/qp6.py>` |qp6.gdx|
 

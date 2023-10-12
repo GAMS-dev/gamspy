@@ -3,7 +3,7 @@
 .. _StochDedicationBL:
 
 Stochastic Dedication model with borrowing and lending variables
-===========================================
+================================================================
 
 :download:`StochDedicationBL.py <../../../tests/integration/models/StochDedicationBL.py>` |StochDedicationBL.gdx|
 

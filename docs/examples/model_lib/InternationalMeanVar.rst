@@ -3,7 +3,7 @@
 .. _InternationalMeanVar:
 
 International asset allocation model
-===========================================
+====================================
 
 :download:`InternationalMeanVar.py <../../../tests/integration/models/InternationalMeanVar.py>` |InternationalMeanVar.gdx|
 

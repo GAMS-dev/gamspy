@@ -3,7 +3,7 @@
 .. _MeanVarMip:
 
 Mean-variance model with diversification constraints
-===========================================
+====================================================
 
 :download:`MeanVarMip.py <../../../tests/integration/models/MeanVarMip.py>` |MeanVarMip.gdx|
 

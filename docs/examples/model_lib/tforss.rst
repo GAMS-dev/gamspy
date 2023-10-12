@@ -3,7 +3,7 @@
 .. _tforss:
 
 Antalya Forestry Model - Steady State (TFORSS)
-===========================================
+==============================================
 
 :download:`tforss.py <../../../tests/integration/models/tforss.py>` |tforss.gdx|
 

@@ -3,7 +3,7 @@
 .. _SimpleLP:
 
 *** Simple linear programming model
-===========================================
+===================================
 
 :download:`SimpleLP.py <../../../tests/integration/models/SimpleLP.py>` 
 

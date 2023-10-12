@@ -3,7 +3,7 @@
 .. _mexss:
 
 Mexico Steel - Small Static (MEXSS)
-===========================================
+===================================
 
 :download:`mexss.py <../../../tests/integration/models/mexss.py>` 
 
