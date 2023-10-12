@@ -72,3 +72,5 @@ html_theme_options = {
     },
     "show_nav_level": 1,
 }
+
+autodoc_member_order = "bysource"
