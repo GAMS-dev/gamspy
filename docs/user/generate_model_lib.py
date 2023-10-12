@@ -1,6 +1,7 @@
-import os
 import urllib.error
 import urllib.request
+from pathlib import Path
+from pathlib import PurePosixPath
 
 import pandas as pd
 
@@ -12,35 +13,71 @@ def open_url(request):
         return e
 
 
-files = os.listdir("tests/integration/models")
+files = list(Path('tests/integration/models').glob('*.py'))
 
-csv = {"Model": [], "GAMSPy": [], "GAMS": []}
+csv = {"Model": [], "GAMSPy": [], "GAMS": [], "Data": []}
 
 for f in files:
-    if "py" in f:
-        name = f.split(".")[0]
+    name = f.stem
+    title = f.read_text().split('\n')[1]
 
-        file_str = (
-            f":orphan:\n\n"
-            f".. _{name}:\n\n{name}\n{'=' * len(name)}\n\n.."
-            f" literalinclude:: ../../../tests/integration/models/{name}.py\n"
-        )
+    # Find data files
+    data_file = ""
+    data = False
+    matching_files = list(Path(f"tests/integration/models").glob(f'{name}.*'))
+    if len(matching_files) > 1:
+        data = True
+        for m in matching_files:
+            if m.suffix != ".py":
+                data_file = m
+                data_name = m.name
 
-        links = [
-            f"https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_{name}.html",
-            f"https://www.gams.com/latest/finlib_ml/libhtml/finlib_{name}.html",
-            f"https://www.gams.com/latest/noalib_ml/libhtml/noalib_{name}.html",
-        ]
+    # configure .rst file
+    rst_head = (
+        f":orphan:\n\n"
+        f".. _{name}:\n\n{title}\n===========================================\n\n"
+        f":download:`{f.name} <{PurePosixPath('../../..', f)}>` "
+    )
 
-        for link in links:
-            if open_url(link).status == 200:
-                # Table
-                csv["Model"].append(name)
-                csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
-                csv["GAMS"].append(f"`GAMS <{link}>`__")
-                # rst
-                with open(f"docs/examples/model_lib/{name}.rst", "w") as rst:
-                    rst.write(file_str)
-                break
+    rst_foot = f"\n\n.. literalinclude:: {PurePosixPath(f'../../../tests/integration/models/{name}.py')}\n"
 
-pd.DataFrame(csv).to_csv("docs/examples/model_lib/table.csv", index=False)
+    if data:
+        data_link = f":download:`{data_name} <{PurePosixPath('../..', data_file)}>`"
+        rst_data = (
+        f"|{data_name}|\n\n"
+        f".. |{data_name}| replace::\n"
+        f"   :download:`{data_name} <{PurePosixPath('../../..', data_file)}>`\n\n"
+    )
+        rst_str = rst_head + rst_data + rst_foot
+    else:
+        data_link = ""
+        rst_str = rst_head + rst_foot
+
+    # model libraries to check
+    links = [
+        f"https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_{name}.html",
+        f"https://www.gams.com/latest/finlib_ml/libhtml/finlib_{name}.html",
+        f"https://www.gams.com/latest/noalib_ml/libhtml/noalib_{name}.html",
+        f"https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_{name}.html"
+    ]
+
+    # check in which lib the model is
+    for link in links:
+        found = False
+        if open_url(link).status == 200:
+            found = True
+            # Table
+            csv["Model"].append(name)
+            csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
+            csv["GAMS"].append(f"`GAMS <{link}>`__")
+            csv["Data"].append(data_link)
+            # write rst
+            Path(f"docs/examples/model_lib/{name}.rst").write_text(rst_str)
+            break
+    if not found:
+        print(f"{name} not found in lib")
+
+# write model lib table
+pd.DataFrame(csv).sort_values(by="Model", key=lambda col: col.str.lower()).to_csv(
+    Path("docs/examples/model_lib/table.csv"), index=False
+)
