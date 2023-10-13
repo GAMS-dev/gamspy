@@ -288,16 +288,16 @@ class SolveSuite(unittest.TestCase):
         self.assertFalse(any("dummy_" in name for name in self.m.data.keys()))
 
         # Test invalid problem
-        self.assertRaises(ValueError, Model, self.m, "dummy", [cost], "bla")
+        self.assertRaises(ValueError, Model, self.m, "dummy", "bla", [cost])
 
         # Test invalid sense
         self.assertRaises(
-            ValueError, Model, self.m, "dummy", [cost], "LP", "bla"
+            ValueError, Model, self.m, "dummy", "LP", [cost], "bla"
         )
 
         # Test invalid objective variable
         self.assertRaises(
-            TypeError, Model, self.m, "dummy", [cost], "LP", "min", a
+            TypeError, Model, self.m, "dummy", "LP", [cost], "min", a
         )
 
         # Test invalid commandline options

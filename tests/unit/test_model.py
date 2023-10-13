@@ -102,7 +102,7 @@ class ModelSuite(unittest.TestCase):
         self.assertEqual(test_model.objective_value, 153.675)
 
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Model, self.m, "set", [], "LP")
+        self.assertRaises(GamspyException, Model, self.m, "set", "LP")
 
         # Equation definition with more than one index
         bla = Equation(
@@ -163,7 +163,7 @@ class ModelSuite(unittest.TestCase):
 
         # Equations provided as strings
         self.assertRaises(
-            TypeError, Model, self.m, "test_model5", ["cost", "supply"], "LP"
+            TypeError, Model, self.m, "test_model5", "LP", ["cost", "supply"]
         )
 
         # Test matches
@@ -232,8 +232,8 @@ class ModelSuite(unittest.TestCase):
             Model,
             m,
             "transport2",
-            m.getEquations(),
             "LP",
+            m.getEquations(),
             "feasibility",
             Sum((i, j), c[i, j] * x[i, j]),
         )
@@ -243,8 +243,8 @@ class ModelSuite(unittest.TestCase):
             Model,
             m,
             "transport2",
-            m.getEquations(),
             "CNS",
+            m.getEquations(),
             "feasibility",
         )
 

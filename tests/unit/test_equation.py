@@ -7,6 +7,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import EquationType
+from gamspy import Model
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -452,6 +453,9 @@ class EquationSuite(unittest.TestCase):
             list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
+
+        model = Model(self.m, "mcp_model", "MCP", matches={f: x})
+        model.solve()
 
 
 def equation_suite():

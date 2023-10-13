@@ -665,8 +665,8 @@ class Container(gt.Container):
     def addModel(
         self,
         name: str,
-        equations: List["Equation"],
         problem: str,
+        equations: List["Equation"],
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
@@ -692,8 +692,8 @@ class Container(gt.Container):
         model = gp.Model(
             self,
             name,
-            equations,
             problem,
+            equations,
             sense,
             objective,
             matches,
