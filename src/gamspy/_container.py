@@ -797,7 +797,7 @@ class Container(gt.Container):
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
-        string = ""
+        string = f"$gdxIn {self._gdx_path}\n"
         for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
@@ -805,9 +805,7 @@ class Container(gt.Container):
                 statement_str = statement.getStatement() + "\n"
 
                 if isinstance(statement, symbol_types):
-                    statement_str += (
-                        f"$gdxLoad {self._gdx_path} {statement.name}\n"
-                    )
+                    statement_str += f"$load {statement.name}\n"
 
                 if isinstance(statement, possible_undef_types):
                     # save old dirty state to avoid self.records recursion
@@ -823,6 +821,8 @@ class Container(gt.Container):
                         statement_str = f"$onUNDF\n{statement_str}$offUNDF"
 
                 string += statement_str + "\n"
+
+        string += "$gdxIn\n"
 
         return string
 

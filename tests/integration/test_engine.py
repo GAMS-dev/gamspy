@@ -14,6 +14,11 @@ from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 
+if os.path.exists(os.getcwd() + os.sep + ".env"):
+    from dotenv import load_dotenv
+
+    load_dotenv(os.getcwd() + os.sep + ".env")
+
 
 class EngineSuite(unittest.TestCase):
     def setUp(self):
