@@ -173,7 +173,7 @@ class Model:
     >>> m = gp.Container()
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", definition= v == 5)
-    >>> my_model = gp.Model(m, "my_model", [e], "LP")
+    >>> my_model = gp.Model(m, "my_model", "LP", [e])
 
     """
 

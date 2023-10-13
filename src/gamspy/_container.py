@@ -906,9 +906,21 @@ class Container(gt.Container):
                     " GAMS Engine"
                 )
 
+            for extra_file in engine_config.extra_model_files:
+                shutil.copy(extra_file, self.workspace.working_directory)
+
+            extra_model_files = [
+                os.path.abspath(extra_file).split(os.sep)[-1]
+                for extra_file in engine_config.extra_model_files
+            ]
+
+            extra_model_files.append(
+                os.path.abspath(self._gdx_path).split(os.sep)[-1]
+            )
+
             self._job.run_engine(
                 engine_configuration=engine_config.get_engine_config(),
-                extra_model_files=self._gdx_path,
+                extra_model_files=extra_model_files,
                 gams_options=options,
                 checkpoint=self._save_to,
                 output=output,
