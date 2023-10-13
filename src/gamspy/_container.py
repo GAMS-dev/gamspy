@@ -24,6 +24,7 @@
 #
 import io
 import os
+import shutil
 from typing import Any
 from typing import Dict
 from typing import List
@@ -1004,6 +1005,39 @@ class Container(gt.Container):
                     symbol_names.append(name)
 
         return symbol_names
+
+    def copy(self) -> "Container":
+        self._run()
+
+        m = Container()
+        m.read(self._gdx_path)
+
+        try:
+            # copy save_to
+            shutil.copy(
+                self._save_to._checkpoint_file_name,
+                m._save_to._checkpoint_file_name,
+            )
+        except FileNotFoundError:
+            # save_to might not exist and it's fine
+            pass
+
+        try:
+            # copy restart_from
+            shutil.copy(
+                self._restart_from._checkpoint_file_name,
+                m._restart_from._checkpoint_file_name,
+            )
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
+
+        try:
+            # copy gdx
+            shutil.copy(self._gdx_path, m._gdx_path)
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
+
+        return m
 
     def loadRecordsFromGdx(
         self,
