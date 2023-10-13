@@ -3,7 +3,7 @@
 .. _MAD:
 
 Mean absolute deviation model
-===========================================
+=============================
 
 :download:`MAD.py <../../../tests/integration/models/MAD.py>` 
 

@@ -3,7 +3,7 @@
 .. _DED:
 
 *** Dynamic Economic Load Dispatch
-===========================================
+==================================
 
 :download:`DED.py <../../../tests/integration/models/DED.py>` 
 

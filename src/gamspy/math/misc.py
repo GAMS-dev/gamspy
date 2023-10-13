@@ -752,7 +752,13 @@ def ifthen(
 
     Examples
     --------
+    >>> from gamspy.math import ifthen
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> tt = gp.Parameter(m, "tt", records=2)
+    >>> y = gp.Parameter(m, "y", records=2)
     >>> x = ifthen(tt == 2, 3, 4 + y)
+
     """
     condition_str = condition.gamsRepr()
     condition_str = utils._replaceEqualitySigns(condition_str)

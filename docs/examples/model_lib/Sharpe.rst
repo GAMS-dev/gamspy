@@ -3,7 +3,7 @@
 .. _Sharpe:
 
 Sharpe model
-===========================================
+============
 
 :download:`Sharpe.py <../../../tests/integration/models/Sharpe.py>` |Sharpe.gdx|
 

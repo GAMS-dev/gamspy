@@ -119,11 +119,24 @@ def install_solver(args: Dict[str, str]):
     # copy solver files to gamspy_base
     gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-    for file in solver_lib.file_paths:
+
+    file_paths = solver_lib.file_paths
+    if solver_name == "scip":
+        mosek_lib = importlib.import_module("gamspy_mosek")
+        file_paths += mosek_lib.file_paths
+
+    for file in file_paths:
         shutil.copy(file, gamspy_base_dir)
 
-    append_dist_info(solver_lib.files, gamspy_base_dir)
-    add_solver_entry(gamspy_base_dir, solver_name, solver_lib.verbatim)
+    files = solver_lib.files
+    if solver_name == "scip":
+        files += mosek_lib.files
+
+    verbatims = [solver_lib.verbatim]
+    if solver_name == "scip":
+        verbatims.append(mosek_lib.verbatim)
+    append_dist_info(files, gamspy_base_dir)
+    add_solver_entry(gamspy_base_dir, solver_name, verbatims)
 
 
 def append_dist_info(files, gamspy_base_dir: str):

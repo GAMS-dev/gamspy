@@ -3,7 +3,7 @@
 .. _Regret:
 
 Regret models
-===========================================
+=============
 
 :download:`Regret.py <../../../tests/integration/models/Regret.py>` |Regret.gdx|
 

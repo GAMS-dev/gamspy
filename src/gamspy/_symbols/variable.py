@@ -79,9 +79,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     Examples
     --------
+    >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
-    >>> v = gp.Variable(m, "a", [i])
+    >>> v = gp.Variable(m, "a", domain=[i])
+
     """
 
     def __init__(

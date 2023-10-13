@@ -3,7 +3,7 @@
 .. _fiat:
 
    Analysis of the stability margin of the spark ignition engine
-===========================================
+================================================================
 
 :download:`fiat.py <../../../tests/integration/models/fiat.py>` 
 

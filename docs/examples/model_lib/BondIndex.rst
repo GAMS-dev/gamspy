@@ -3,7 +3,7 @@
 .. _BondIndex:
 
 Tracking international bond index - GDX input
-===========================================
+=============================================
 
 :download:`BondIndex.py <../../../tests/integration/models/BondIndex.py>` |BondIndex.gdx|
 

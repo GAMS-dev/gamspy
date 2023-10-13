@@ -3,7 +3,7 @@
 .. _PutCall:
 
 Put/Call efficient frontier model
-===========================================
+=================================
 
 :download:`PutCall.py <../../../tests/integration/models/PutCall.py>` 
 

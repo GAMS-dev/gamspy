@@ -4,6 +4,9 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  jobs:
+    pre_install:
+      - echo "[global]\nextra-index-url = https://test.pypi.org/simple/" > $READTHEDOCS_VIRTUALENV_PATH/pip.conf
 
 python:
   install:

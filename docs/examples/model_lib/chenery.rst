@@ -3,7 +3,7 @@
 .. _chenery:
 
 Substitution and Structural Change (CHENERY)
-===========================================
+============================================
 
 :download:`chenery.py <../../../tests/integration/models/chenery.py>` |chenery.gdx|
 

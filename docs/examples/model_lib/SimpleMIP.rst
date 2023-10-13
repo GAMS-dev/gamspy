@@ -3,7 +3,7 @@
 .. _SimpleMIP:
 
 *** Simple Mixed Integer Linear Programming model
-===========================================
+=================================================
 
 :download:`SimpleMIP.py <../../../tests/integration/models/SimpleMIP.py>` 
 

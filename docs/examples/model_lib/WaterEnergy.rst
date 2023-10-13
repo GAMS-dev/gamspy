@@ -3,7 +3,7 @@
 .. _WaterEnergy:
 
 *** Water-Energy Nexus
-===========================================
+======================
 
 :download:`WaterEnergy.py <../../../tests/integration/models/WaterEnergy.py>` 
 

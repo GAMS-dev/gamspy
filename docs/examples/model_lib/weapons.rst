@@ -3,7 +3,7 @@
 .. _weapons:
 
 Weapons Assignment (WEAPONS)
-===========================================
+============================
 
 :download:`weapons.py <../../../tests/integration/models/weapons.py>` 
 

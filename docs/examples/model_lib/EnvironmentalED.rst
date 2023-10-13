@@ -3,7 +3,7 @@
 .. _EnvironmentalED:
 
 *** Environmental Load Dispatch
-===========================================
+===============================
 
 :download:`EnvironmentalED.py <../../../tests/integration/models/EnvironmentalED.py>` 
 

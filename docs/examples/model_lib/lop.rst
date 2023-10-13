@@ -3,7 +3,7 @@
 .. _lop:
 
 Line Optimization (LOP)
-===========================================
+=======================
 
 :download:`lop.py <../../../tests/integration/models/lop.py>` |lop.gdx|
 

@@ -3,7 +3,7 @@
 .. _EnergyHub:
 
 *** Optimal operation of energy hub
-===========================================
+===================================
 
 :download:`EnergyHub.py <../../../tests/integration/models/EnergyHub.py>` 
 
