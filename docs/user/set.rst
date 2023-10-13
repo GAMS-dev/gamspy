@@ -867,3 +867,274 @@ discussed in depth in the next section.
 Controlling Dynamic Sets
 -------------------------
 
+Recall that set membership of subsets and dynamic sets may be used as a logical 
+condition. Set membership may also be a building block in complex logical conditions 
+that are constructed using the logical python operators ``~`` (not), ``&`` (and), 
+``|`` (or), ``^`` (xor), ``not(x) or y`` (logical implication) and 
+``==`` (logical equivalence). Moreover, the set operations introduced in the previous 
+section may also be used in logical conditions. Dynamic sets can be controlled in the 
+context of assignments, indexed operations and equations. We will discuss in detail 
+each of these in the following subsections.
+
+Apart from being part of logical conditions, dynamic sets may be assigned members 
+with conditional assignments. Examples are given in the next subsection.
+
+
+Dynamic Sets in Conditional Assignments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Dynamic sets may be used in two ways in conditional assignments: they may be the item 
+on the left-hand side that is assigned to and they may be part of the logical 
+condition. Below we present examples for both. ::
+
+    m = Container()
+
+    item     = Set(m, name="item", records = ["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
+    subitem1 = Set(m, name="subitem1", records = ["ink", "lipstick", "pen", "pencil"], domain = item)
+    subitem2 = Set(m, name="subitem2", domain = item)
+    
+    subitem2[item].where[subitem1[item]] = True
+
+The conditional assignment adds the members of dynamic set ``subitem1`` to the dynamic set 
+``subitem2``. Thus ``subitem2`` will have the following elements: ::
+
+    In [1]: print(*subitem2.records["item"], sep=", ")
+    Out[1]: ink, lipstick, pen, pencil
+
+Note that instead of using ``subitem1`` in ``where[]`` we could also write: ::
+
+    subitem2[subitem1] = True
+
+In the next example of a conditional assignment, a dynamic set features in the 
+logical condition on the right-hand side. The first statement clears the set 
+``subitem2`` of any previously assigned members and the second statement assigns 
+all members of ``subitem1`` to ``subitem2`` using :meth:`gamspy.Number`. The 
+following conditional assignment will have the same result: ::
+
+    subitem2[item] = False
+    subitem2[item] = Number(1).where[subitem1[item]]
+
+The logical condition in this assignment is ``subitem1[item]``. It is satisfied 
+for all members of the set ``subitem1``. Hence the statement assigns all elements 
+of the domain ``item`` that are members of the set ``subitem1`` to the dynamic set 
+``subitem2``. Note that in this assignment the ``where[]`` is on the right. 
+Conditional assignments with ``where[]`` on the right-hand side imply an 
+``if-then-else `` structure where the ``else`` case is automatically zero. Unlike 
+parameters, dynamic sets cannot be assigned the value of zero, they are assigned 
+``False`` instead. Therefore a more explicit formulation of the conditional 
+assignment above would be: ::
+
+    subitem2[item] = False
+    subitem2[item] = Number(1).where[subitem1[item]] + Number(0).where[subitem1[item]]
+
+
+Conditional Indexed Operations with Dynamic Sets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Indexed operations in GAMSPy may be controlled by ``where[]`` conditions. The domain 
+of conditional indexed operations is often restricted by a set, called the 
+*conditional set*. Dynamic sets may be used as conditional sets or they may be assigned 
+to with a statement that features a conditional indexed operation on the right-hand 
+side. We will illustrate both cases with examples.
+
+Suppose we have a set of origins, a set of destinations and a parameter specifying the 
+flight distance between them: ::
+
+    m = Container()
+
+    distances = pd.DataFrame(
+        [
+            ["Chicago", "Vancouver", 1777],
+            ["Chicago", "Bogota", 2691],
+            ["Chicago", "Dublin", 3709],
+            ["Chicago", "Rio", 5202],
+            ["Chicago", "Marrakech", 4352],
+            ["Philadelphia", "Vancouver", 2438],
+            ["Philadelphia", "Bogota", 2419],
+            ["Philadelphia", "Dublin", 3306],
+            ["Philadelphia", "Rio", 4695],
+            ["Philadelphia", "Marrakech", 3757],
+        ],
+        columns=["from", "to", "distance"],
+    ).set_index(["from", "to"])    
+
+    i = Set(m, name="i", records = ["Chicago", "Philadelphia"], description = "origins")
+    j = Set(m, name="j", records = ["Vancouver", "Bogota", "Dublin", "Rio", "Marrakech"], description = "destinations")    
+
+    d = Parameter(m, "d", domain = [i, j], records = distances.reset_index(), description = "distance (miles)")
+
+We wish to find the longest distance that we can travel given that we have a limit of 
+3500 miles. ::
+
+    can_do = Set(m, name="can_do", domain = [i, j], description = "connections with less than 3500 miles")
+    can_do[i,j].where[d[i,j] < 3500] = True
+    
+    maxd = Parameter(m, "maxd", description = "longest distance possible")
+    maxd.assignment = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
+
+The dynamic set ``can_do`` contains all connections that are less than 3500 miles. 
+The scalar ``maxd`` is defined by a conditional assignment where the indexed operation 
+:meth:`gamspy.Smax` scans all entries of the parameter ``d`` whose label combinations 
+are members of the set ``can_do`` and chooses the largest value. ::
+
+    In [1]: can_do.pivot(index = "i", columns = "j")
+    Out[1]: 
+    	           Vancouver	Bogota	Dublin
+    Chicago             True	  True	 False
+    Philadelphia        True	  True	  True
+
+    In [2]: maxd.records
+    Out[2]: 
+    	 value
+    0	3306.0
+
+There is a shorter alternative formulation for this assignment; see subsection 
+"Filtering through Dynamic Sets" below for details.
+
+Finally, we also wish to know which flight connection is linked to the longest possible 
+distance. Consider the following two lines: ::
+
+    maxc = Set(m, name="maxc", domain = [i, j], is_singleton = True, description = "maximum distance connection")
+    maxc[i,j] = Number(1).where[can_do[i,j] & (d[i,j] == maxd)]
+
+Which gives ::
+
+    In [1]: maxc.records
+    Out[1]:
+                   i	       j	element_text
+    0	Philadelphia	  Dublin	
+
+The dynamic singleton set is assigned the member of the dynamic set ``can_do`` whose 
+distance equals the maximum distance.
+
+The full power of indexed operators becomes apparent with multi-dimensional dynamic sets ::
+
+    m = Container()
+    
+    dep = Set(m, "dep", description="departments", 
+              records=["cosmetics", "hardware", "household", "stationary", "toy"])
+    sup = Set(m, "sup", description="suppliers", 
+              records=["bic", "dupont", "parker", "revlon"])
+    item = Set(m, "item", description="items_sold", 
+               records=["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
+    
+    sales_data = {
+        ("cosmetics", "lipstick"),
+        ("cosmetics", "perfume"),
+        ("hardware", "ink"),
+        ("household", "dish"),
+        ("household", "pen"),
+        ("stationary", "dish"),
+        ("stationary", "ink"),
+        ("stationary", "pen"),
+        ("stationary", "pencil"),
+        ("toy", "ink"),
+        ("toy", "pen"),
+        ("toy", "pencil")
+    }
+    
+    sales = Set(m, name="sales", domain=[dep, item], 
+                description="departments and items sold", uels_on_axes=True, 
+                records=sales_data)
+    
+    # Note the alternative, more compact notation of the supply data. 
+    # GAMSPy still needs flat data in the end
+    supply_data = {
+        "dish": ("bic", "dupont"),
+        "ink": ("bic", "parker"),
+        "lipstick": "revlon",
+        "pen": ("parker", "revlon"),
+        "pencil": ("bic", "parker"),
+        "perfume": "revlon"
+    }
+    
+    supply = Set(m, name="supply", domain=[item, sup], 
+                 description="items and suppliers", uels_on_axes=True, 
+                 records=[(item, sup) for item, sups in supply_data.items() 
+                          for sup in (sups if isinstance(sups, (list, tuple)) 
+                                      else [sups])])
+                         
+    g03 = Set(m, name = "g03", domain = dep, 
+                description = "departments selling items supplied by Parker")
+    
+    g03[dep] = Sum(item.where[supply[item,'parker']], sales[dep,item])
+
+    
+
+The assignment above is used to create the set of departments that sell items supplied 
+by ``'parker'``. Note that the set ``g03`` is a subset of the set ``dep``. Its members 
+are specified by assignment, hence it is a dynamic set. Note that the assignment is made 
+to a set, therefore the indexed operator :meth:`gamspy.Sum` refers to a set union (and 
+not to an addition as would be the case if the assignment were made to a parameter). 
+The indexed operation is controlled by the two-dimensional set ``supply`` with the label 
+``'parker'`` in the second index position. This logical condition is True for all members 
+of the set ``supply`` where the second index is ``'parker'``. Hence the summation is over 
+all items sold, provided that the supplier is ``'parker'``. Given the declaration of the 
+set ``supply``, this means `'ink'`, `'pen'` and `'pencil'`. The associated departments are 
+thus all departments except for ``'cosmetics'``: ::
+
+    In [1]: print(*g03.records["dep"], sep=", ")
+    Out[1]: hardware, household, stationary, toy
+
+Now suppose we are interested in the departments that are selling *only* items supplied by 
+``'parker'``. We introduce a new dynamic set ``g11`` and the following assignment adds the 
+desired departments: ::
+
+    g11 = Set(m, name = "g11", domain = dep, 
+                description = "departments only selling items supplied by parker")
+    
+    g11[dep] = Product(sales[dep,item], supply[item,"parker"]);
+
+Note that the indexed operation :meth:`gamspy.Product` refers to set intersections in the 
+context of assignments to dynamic sets. From all departments linked with items only those 
+are included where *all* items sold are supplied by ``'parker'``. This means that 
+departments that additionally sell items that are not supplied by ``'parker'`` are 
+excluded. Hence, only ``'hardware'`` and ``'toy'`` are added to ``g11``. ::
+
+    In [1]: print(*g11.records["dep"], sep=", ")
+    Out[1]: hardware, toy
+
+
+Conditional Equations with Dynamic Sets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``where[]`` conditions in the context of equations may restrict the domain of the equation 
+and they may also feature in the algebraic formulation of the equation. In both instances 
+dynamic sets may be used as part of the logical condition. ``where[]`` conditions with 
+dynamic sets in the algebra of equations are similar to conditional assignments with dynamic 
+sets; see section "Dynamic Sets in Conditional Assignments" above. The example that follows 
+illustrates the use of a dynamic set to restrict the domain of definition of an equation. In 
+section "Equations Defined over the Domain of Dynamic Sets" above we had the following 
+equation definition: ::
+
+    prodbal1[r] =   activity2[r]*price == revenue[r]
+
+Recall that ``r`` is a dynamic set and a subset of the set ``allr``. Hence this equation may 
+be rewritten in the following way: ::
+
+    prodbal1[allr.where[r[allr]]] =   activity2[allr]*price == revenue[allr]
+
+Note that both formulations achieve the same result: restricting the domain of definition to 
+those elements that belong to the dynamic set ``r``. While in the second formulation the 
+condition is specified explicitly, in the first formulation the domain is filtered through 
+the dynamic set ``r``. This is the topic of the next subsection.
+
+Filtering through Dynamic Sets
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In certain circumstances the filtering process is an alternative to the ``where[]`` condition 
+to restrict the domain of equations, sets, variables, parameters and indexed operations. We 
+already saw an example for restricting the domain of definition of an equation in the previous 
+subsection. The next example refers to restricting the domain in an indexed operation. In 
+section "Conditional Indexed Operations with Dynamic Sets" we had the following assignment: ::
+
+    maxd.assignment = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
+
+Recall that ``maxd`` is a scalar, ``i`` and ``j`` are sets, ``can_do`` is a dynamic set and 
+``d`` is a two-dimensional parameter. Note that the conditional set is the dynamic set 
+``can_do``. The assignment may be rewritten in the following way: ::
+
+    maxd.assignment = Smax(can_do[i,j], d[i,j])
+
+Here the indexed operation is filtered through the dynamic set ``can_do``, a ``where[]`` 
+condition is not necessary.
