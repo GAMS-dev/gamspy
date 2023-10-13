@@ -156,9 +156,10 @@ class ParameterSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            "$onUNDF\nParameter rho;\n$gdxLoad"
-            f" {m.workspace.working_directory}{os.sep}default.gdx"
-            " rho\n$offUNDF\n",
+            f"$gdxIn {m.workspace.working_directory}{os.sep}default.gdx\n"
+            "$onUNDF\nParameter rho;\n$load"
+            " rho\n$offUNDF\n"
+            "$gdxIn\n",
         )
 
 
