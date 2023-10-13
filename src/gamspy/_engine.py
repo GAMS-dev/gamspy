@@ -36,7 +36,7 @@ class EngineConfig:
     password: Optional[str] = None
     jwt: Optional[str] = None
     namespace: str = "global"
-    extra_model_files: Optional[List[str]] = None
+    extra_model_files: List[str] = []
     engine_options: Optional[dict] = None
     remove_results: bool = True
 
