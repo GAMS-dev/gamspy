@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 from dataclasses import dataclass
+from dataclasses import field
 from typing import List
 from typing import Optional
 
@@ -36,7 +37,7 @@ class EngineConfig:
     password: Optional[str] = None
     jwt: Optional[str] = None
     namespace: str = "global"
-    extra_model_files: List[str] = []
+    extra_model_files: List[str] = field(default_factory=list)
     engine_options: Optional[dict] = None
     remove_results: bool = True
 
