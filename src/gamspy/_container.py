@@ -905,9 +905,12 @@ class Container(gt.Container):
                     " GAMS Engine"
                 )
 
+            extra_model_files = engine_config.extra_model_files + [
+                self._gdx_path
+            ]
             self._job.run_engine(
                 engine_configuration=engine_config.get_engine_config(),
-                extra_model_files=self._gdx_path,
+                extra_model_files=extra_model_files,
                 gams_options=options,
                 checkpoint=self._save_to,
                 output=output,
