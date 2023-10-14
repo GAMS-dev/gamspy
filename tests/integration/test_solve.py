@@ -288,16 +288,16 @@ class SolveSuite(unittest.TestCase):
         self.assertFalse(any("dummy_" in name for name in self.m.data.keys()))
 
         # Test invalid problem
-        self.assertRaises(ValueError, Model, self.m, "dummy", [cost], "bla")
+        self.assertRaises(ValueError, Model, self.m, "dummy", "bla", [cost])
 
         # Test invalid sense
         self.assertRaises(
-            ValueError, Model, self.m, "dummy", [cost], "LP", "bla"
+            ValueError, Model, self.m, "dummy", "LP", [cost], "bla"
         )
 
         # Test invalid objective variable
         self.assertRaises(
-            TypeError, Model, self.m, "dummy", [cost], "LP", "min", a
+            TypeError, Model, self.m, "dummy", "LP", [cost], "min", a
         )
 
         # Test invalid commandline options
@@ -857,7 +857,7 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(energy.objective_value)
 
     def test_solver_options(self):
-        m = Container(delayed_execution=True, working_directory=".")
+        m = Container(delayed_execution=True)
 
         # Prepare data
         distances = [
@@ -905,12 +905,18 @@ class SolveSuite(unittest.TestCase):
         # Test solver change
         transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
 
-        lst_file = glob.glob("*.lst")[0]
+        lst_file = glob.glob(f"{m.workspace.working_directory}{os.sep}*.lst")[
+            0
+        ]
         with open(lst_file) as file:
             content = file.read()
             self.assertTrue("CONOPT" in content)
 
-        self.assertTrue(os.path.exists("conopt.123"))
+        self.assertTrue(
+            os.path.exists(
+                f"{m.workspace.working_directory}{os.sep}conopt.123"
+            )
+        )
 
         self.assertRaises(
             GamspyException, transport.solve, None, None, {"rtmaxv": "1.e12"}

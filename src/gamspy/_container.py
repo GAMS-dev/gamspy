@@ -24,6 +24,7 @@
 #
 import io
 import os
+import shutil
 from typing import Any
 from typing import Dict
 from typing import List
@@ -665,8 +666,8 @@ class Container(gt.Container):
     def addModel(
         self,
         name: str,
-        equations: List["Equation"],
         problem: str,
+        equations: List["Equation"],
         sense: Optional[Literal["MIN", "MAX"]] = None,
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
@@ -692,8 +693,8 @@ class Container(gt.Container):
         model = gp.Model(
             self,
             name,
-            equations,
             problem,
+            equations,
             sense,
             objective,
             matches,
@@ -797,7 +798,7 @@ class Container(gt.Container):
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
-        string = ""
+        string = f"$gdxIn {self._gdx_path}\n"
         for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
@@ -805,9 +806,7 @@ class Container(gt.Container):
                 statement_str = statement.getStatement() + "\n"
 
                 if isinstance(statement, symbol_types):
-                    statement_str += (
-                        f"$gdxLoad {self._gdx_path} {statement.name}\n"
-                    )
+                    statement_str += f"$load {statement.name}\n"
 
                 if isinstance(statement, possible_undef_types):
                     # save old dirty state to avoid self.records recursion
@@ -823,6 +822,8 @@ class Container(gt.Container):
                         statement_str = f"$onUNDF\n{statement_str}$offUNDF"
 
                 string += statement_str + "\n"
+
+        string += "$gdxIn\n"
 
         return string
 
@@ -905,9 +906,21 @@ class Container(gt.Container):
                     " GAMS Engine"
                 )
 
+            for extra_file in engine_config.extra_model_files:
+                shutil.copy(extra_file, self.workspace.working_directory)
+
+            extra_model_files = [
+                os.path.abspath(extra_file).split(os.sep)[-1]
+                for extra_file in engine_config.extra_model_files
+            ]
+
+            extra_model_files.append(
+                os.path.abspath(self._gdx_path).split(os.sep)[-1]
+            )
+
             self._job.run_engine(
                 engine_configuration=engine_config.get_engine_config(),
-                extra_model_files=self._gdx_path,
+                extra_model_files=extra_model_files,
                 gams_options=options,
                 checkpoint=self._save_to,
                 output=output,

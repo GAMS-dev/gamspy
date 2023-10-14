@@ -173,7 +173,7 @@ class Model:
     >>> m = gp.Container()
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", definition= v == 5)
-    >>> my_model = gp.Model(m, "my_model", [e], "LP")
+    >>> my_model = gp.Model(m, "my_model", "LP", [e])
 
     """
 
@@ -184,8 +184,8 @@ class Model:
         self,
         container: "Container",
         name: str,
-        equations: List["Equation"],
         problem: str,
+        equations: List["Equation"] = [],
         sense: Optional[Literal["MIN", "MAX", "FEASIBILITY"]] = None,
         objective: Optional[Union["Variable", "Expression"]] = None,
         matches: Optional[dict] = None,
@@ -374,11 +374,6 @@ class Model:
         return gams_options
 
     def _validate_model(self, equations, problem, sense=None) -> Tuple:
-        if not isinstance(equations, list) or any(
-            not isinstance(equation, gp.Equation) for equation in equations
-        ):
-            raise TypeError("equations must be list of Equation objects")
-
         if isinstance(problem, str):
             if problem.upper() not in gp.Problem.values():
                 raise ValueError(
@@ -396,6 +391,15 @@ class Model:
                 )
 
             sense = gp.Sense(sense.upper())
+
+        if (
+            problem not in [Problem.CNS, Problem.MCP]
+            and not isinstance(equations, list)
+            or any(
+                not isinstance(equation, gp.Equation) for equation in equations
+            )
+        ):
+            raise TypeError("equations must be list of Equation objects")
 
         return problem, sense
 

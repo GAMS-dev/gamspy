@@ -10,6 +10,7 @@ fundamental GAMSPy ideas and philosophy.
    :maxdepth: 1
 
    ./card_ord
+   ./lag_lead
    ./number
    ./domain
    ./model_options
