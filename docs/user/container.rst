@@ -12,18 +12,19 @@ Container
     i = Set(m, "i", records = ["seattle", "san-diego"])
     j = Set(m, "j", records = ['new-york', 'chicago', 'topeka'])
 
-``Container`` acts as a centralized hub, gathering essential data, sets, parameters, variables, and constraints, 
-providing a clear structure for our optimization problem. Every symbol must belong to a ``Container``. 
+The ``Container`` class in GAMSPy serves as a central hub for managing essential data, sets, parameters, variables, 
+and constraints, providing a structured approach for optimization problems. Every symbol in your optimization problem 
+should belong to a ``Container``.
 
 ===========================
 Reading and Writing Symbols
 ===========================
 
-``Container`` provides I/O functions to read and write symbols.
+The ``Container`` class offers I/O functions for reading and writing symbols.
 
 Writing
 -------
-Symbols that were created with a specific ``Container`` can be written to a GDX file with ``write`` function.
+Symbols created within a specific ``Container`` can be saved to a GDX file using the ``write`` function.
 
 .. code-block:: python
     
@@ -35,10 +36,9 @@ Symbols that were created with a specific ``Container`` can be written to a GDX 
 
 Reading
 -------
-Symbol records can be read by either providing ``load_from`` argument to the Container at construction or by using ``read`` function.
-Let's say we have a GDX file that contains the records of our symbols as in the example above.
+Symbol records can be read from a GDX file by either specifying the `load_from` argument during the ``Container`` construction or by using the ``read`` function.
 
-In order to create a ``Container`` with the symbols in our GDX file, we can create a ``Container`` with ``load_from`` argument which points to the GDX file:
+To create a ``Container`` with symbols from a GDX file, use the `load_from` argument:
 
 .. code-block:: python
 
@@ -48,7 +48,7 @@ In order to create a ``Container`` with the symbols in our GDX file, we can crea
 
 We can verify that symbol ``i`` is in the container ``m``.
 
-Alternatively, ``read`` function of ``Container`` can be used to populate it.
+Alternatively, you can use the ``read`` function to populate the container.
 
 .. code-block:: python
 
@@ -61,13 +61,13 @@ Alternatively, ``read`` function of ``Container`` can be used to populate it.
 Execution Types
 ===============
 
-``GAMSPy`` supports two form of execution through ``Container``.
+GAMSPy supports two execution modes through the ``Container``.
 
 Normal Execution
 ----------------
-By default, this execution type is enabled. In normal execution, every record assignment or record reading attempt
-causes ``GAMSPy`` to execute the generated code and save the results. This type of execution is better for debugging
-even though it is slower compared to delayed execution.
+By default, normal execution is enabled. In this mode, each assignment or record reading attempt triggers 
+the execution of generated code, and the results are saved. This mode is suitable for debugging, although 
+it may be slower than delayed execution.
 
 .. code-block:: python
 
@@ -81,9 +81,9 @@ In normal execution, the last line executes the actual computation in GAMS, as s
 
 Delayed Execution
 -----------------
-Delayed execution is an execution mode for better performance. With this mode, the assignments are not run until
-the solve function of a model is called or an attempt to read the records of a dirty symbol. Dirty symbol is a 
-symbol that was assigned a new value in previous lines. 
+Delayed execution is a mode designed for better performance. Assignments are not executed until the 
+`solve` function of a model is called or an attempt is made to read the records of a dirty symbol.
+A dirty symbol is a symbol that was assigned a new value in previous lines.
 
 .. code-block:: python
 
@@ -116,11 +116,11 @@ you can specify the working directory of the ``Container``
     ....
     model.solve()
 
-In this example, since the working directory specified as the current directory, temporary GAMS files
-will be dumped to the current directory. 
+In this example, specifying the working directory as the current directory causes temporary GAMS files 
+to be saved in the current directory.
 
-Another alternative is to use ``generateGamsString`` function. This function returns the GAMS code that
-will be generated with up until that point as a string.
+Another alternative is to use the ``generateGamsString`` function. This function returns the GAMS code 
+generated up to that point as a string.
 
 .. code-block:: python
 

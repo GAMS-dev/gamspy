@@ -174,6 +174,14 @@ def main():
     for gdx_path in gdx_paths:
         os.remove(gdx_path)
 
+    workfile_paths = glob.glob("*.g00")
+    for workfile_path in workfile_paths:
+        os.remove(workfile_path)
+
+    gams_paths = glob.glob("_gams*")
+    for gams_path in gams_paths:
+        os.remove(gams_path)
+
     return 0
 
 

@@ -1019,13 +1019,28 @@ class Container(gt.Container):
         return symbol_names
 
     def copy(self, working_directory: Optional[str] = None) -> "Container":
+        """
+        Creates a copy of the Container
+
+        Parameters
+        ----------
+        working_directory : str, optional
+            Working directory of the new Container, by default None
+
+        Returns
+        -------
+        Container
+
+        Raises
+        ------
+        GamspyException
+        """
         self._run()
 
         m = Container(working_directory=working_directory)
         m.read(self._gdx_path)
 
         try:
-            # copy save_to
             shutil.copy(
                 self._save_to._checkpoint_file_name,
                 m._save_to._checkpoint_file_name,
@@ -1036,27 +1051,27 @@ class Container(gt.Container):
         except shutil.SameFileError:
             # They can be the same file if their working directories are the same.
             pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
 
         try:
-            # copy restart_from
             shutil.copy(
                 self._restart_from._checkpoint_file_name,
                 m._restart_from._checkpoint_file_name,
             )
-        except FileNotFoundError as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
         except shutil.SameFileError:
-            # They can be the same file if their working directories are the same.
+            # They can be the same files if their working directories are the same.
             pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
 
         try:
-            # copy gdx
             shutil.copy(self._gdx_path, m._gdx_path)
-        except FileNotFoundError as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
         except shutil.SameFileError:
-            # They can be the same file if their working directories are the same.
+            # They can be the same files if their working directories are the same.
             pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
