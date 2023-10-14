@@ -88,8 +88,6 @@ def install_gamspy():
         "--find-links",
         "dist",
         "--force-reinstall",
-        "--no-deps",
-        "--no-cache",
     ]
 
     subprocess.run(command, check=True)

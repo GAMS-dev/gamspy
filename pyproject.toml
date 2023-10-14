@@ -37,7 +37,10 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: Microsoft :: Windows",
 ]
-dynamic = ["dependencies"]
+dependencies = [
+  "gamsapi[transfer] == 45.0.0",
+  "gamspy_base == 45.0.0",
+]
 
 [project.urls]
 homepage = "http://www.gams.com"
