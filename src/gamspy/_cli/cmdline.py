@@ -30,38 +30,12 @@ import subprocess
 import sys
 from typing import Dict
 
+import gamspy_base
+
 import gamspy.utils as utils
 from .util import add_solver_entry
 from .util import remove_solver_entry
 from gamspy.exceptions import GamspyException
-
-
-SOLVERS = [
-    "cbc",
-    "soplex",
-    "highs",
-    "copt",
-    "gurobi",
-    "xpress",
-    "odhcplex",
-    "mosek",
-    "mpsge",
-    "miles",
-    "knitro",
-    "ipopt",
-    "minos",
-    "snopt",
-    "ipopth",
-    "dicopt",
-    "alphaecp",
-    "shot",
-    "octeract",
-    "scip",
-    "antigone",
-    "baron",
-    "lindo",
-    "decis",
-]
 
 
 def get_args():
@@ -69,7 +43,9 @@ def get_args():
         prog="gamspy",
         description="A script for installing solvers and licenses",
     )
-    parser.add_argument("command", choices=["install", "uninstall"], type=str)
+    parser.add_argument(
+        "command", choices=["install", "update", "uninstall"], type=str
+    )
     parser.add_argument(
         "component", choices=["license", "engine_license", "solver"], type=str
     )
@@ -100,20 +76,35 @@ def uninstall_license():
 
 def install_solver(args: Dict[str, str]):
     solver_name = args["name"]
-    if solver_name not in SOLVERS:
-        raise Exception(
-            f"Solver name is not valid. Possible solver names: {SOLVERS}"
-        )
 
     if not args["skip_pip_install"]:
         # install specified solver
         try:
             _ = subprocess.run(
-                ["pip", "install", f"gamspy_{solver_name}"], check=True
+                [
+                    "pip",
+                    "install",
+                    f"gamspy_{solver_name}=={gamspy_base.__version__}",
+                ],
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             raise GamspyException(
                 f"Could not install gamspy_{solver_name}: {e.output}"
+            )
+    else:
+        try:
+            solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+        except ModuleNotFoundError:
+            raise GamspyException(
+                f"You must install gamspy_{solver_name} first!"
+            )
+
+        if solver_lib.__version__ != gamspy_base.__version__:
+            raise GamspyException(
+                f"gamspy_base version ({gamspy_base.__version__}) and solver"
+                f" version ({solver_lib.__version__}) must match! Run `gamspy"
+                f" update solver {solver_name}` to update your solver."
             )
 
     # copy solver files to gamspy_base
@@ -159,12 +150,32 @@ def append_dist_info(files, gamspy_base_dir: str):
         record.write("\n".join(lines))
 
 
+def update_solver(args: Dict[str, str]):
+    try:
+        _ = importlib.import_module(f"gamspy_{args['name']}")
+    except ModuleNotFoundError:
+        raise GamspyException(
+            f"You must install gamspy_{args['name']} first to update it"
+        )
+
+    try:
+        _ = subprocess.run(
+            [
+                "pip",
+                "install",
+                f"gamspy_{args['name']}=={gamspy_base.__version__}",
+                "--force-reinstall",
+            ],
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise GamspyException(
+            f"Could not update gamspy_{args['name']}: {e.output}"
+        )
+
+
 def uninstall_solver(args: Dict[str, str]):
     solver_name = args["name"]
-    if solver_name not in SOLVERS:
-        raise Exception(
-            f"Solver name is not valid. Possible solver names: {SOLVERS}"
-        )
 
     if not args["skip_pip_uninstall"]:
         # uninstall specified solver
@@ -189,6 +200,17 @@ def install(args: Dict[str, str]):
         install_solver(args)
 
 
+def update(args: Dict[str, str]):
+    if args["component"] == "solver":
+        install_solver(args)
+        return
+
+    raise GamspyException(
+        "Unknown argument to `gamspy update`. Possible commands with"
+        " update:\n\n`gamspy update solver <solver_name>`"
+    )
+
+
 def uninstall(args: Dict[str, str]):
     if args["component"] == "license":
         uninstall_license()
@@ -204,5 +226,7 @@ def main():
 
     if args["command"] == "install":
         install(args)
+    elif args["command"] == "update":
+        update(args)
     elif args["command"] == "uninstall":
         uninstall(args)
