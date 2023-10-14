@@ -261,8 +261,6 @@ of the set ``i`` map to many elements of the set ``j``:
     2	a	d	
     3	b	d	
 
-..
-    # TODO: Projection and Aggregation of Sets?
 
 
 
@@ -316,8 +314,6 @@ a compilation error: ::
     m = Container()
     j = Set(m, name = "j", is_singleton = True, records = range(1,5))
 
-..
-    #TODO: Add compilation error as soon as GAMSPy is fixed
 
 It also possible to assign an element to a singleton set. In this case the singleton set 
 is automatically cleared of the previous element first. For example, adding the following 
@@ -479,8 +475,6 @@ interested in. Then we assign the new value to the elements of this subset. The 
 the parameter ``k`` remain unchanged. For examples using conditionals and tuples, see sections 
 Restricting the Domain: Conditionals and Restricting the Domain: Tuples respectively.
 
-..
-    #TODO: Add links
 
 
 
