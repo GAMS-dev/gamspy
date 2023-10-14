@@ -166,8 +166,6 @@ def main():
 
     txt_paths = glob.glob("*.txt")
     for txt_path in txt_paths:
-        if txt_path.endswith("dev_requirements.txt"):
-            continue
         os.remove(txt_path)
 
     gdx_paths = glob.glob("*.gdx")
