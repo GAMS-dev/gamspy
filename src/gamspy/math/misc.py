@@ -765,3 +765,74 @@ def ifthen(
 
     ifthen_str = f"ifthen({condition_str}, {yes_return}, {no_return})"
     return expression.Expression(ifthen_str, "", "")
+
+
+def bool_and(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("bool_and(", f"{x_str},{y_str}", ")")
+
+
+def bool_eqv(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("bool_eqv(", f"{x_str},{y_str}", ")")
+
+
+def bool_imp(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("bool_imp(", f"{x_str},{y_str}", ")")
+
+
+def bool_not(x: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    return expression.Expression("bool_not(", x_str, ")")
+
+
+def bool_or(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("bool_or(", f"{x_str},{y_str}", ")")
+
+
+def bool_xor(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("bool_xor(", f"{x_str},{y_str}", ")")
+
+
+def rel_eq(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_eq(", f"{x_str},{y_str}", ")")
+
+
+def rel_ge(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_ge(", f"{x_str},{y_str}", ")")
+
+
+def rel_gt(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_gt(", f"{x_str},{y_str}", ")")
+
+
+def rel_le(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_le(", f"{x_str},{y_str}", ")")
+
+
+def rel_lt(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_lt(", f"{x_str},{y_str}", ")")
+
+
+def rel_ne(x: Union[int, "Symbol"], y: Union[int, "Symbol"]) -> "Expression":
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+    return expression.Expression("rel_ne(", f"{x_str},{y_str}", ")")
