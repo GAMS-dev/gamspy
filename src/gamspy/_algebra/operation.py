@@ -243,11 +243,21 @@ class Smax(Operation):
 
 class Ord(operable.Operable):
     """
-    Operator ord may be used only with one-dimensional sets.
+    The operator ord may be used only with one-dimensional sets.
 
     Parameters
     ----------
     set : Set | Alias
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>>
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, name="i", records=["i1", "i2", "i3"])
+    >>> p = gp.Parameter(m, name="p", domain=[i])
+    >>> p[i] = gp.Ord(i)
+    >>> print(p.toList())  # [('i1', 1.0), ('i2', 2.0), ('i3', 3.0)]
     """
 
     def __init__(self, set: Union["Set", "Alias"]):
@@ -268,18 +278,41 @@ class Ord(operable.Operable):
 
 class Card(operable.Operable):
     """
-    The operator card may be used with any set.
+    The operator card may be used with any symbol and returns its number of records.
 
     Parameters
     ----------
-    set : Set | Alias
+    symbol : Set | Alias | Parameter | Variable | Equation | Model
+
+    Examples
+    --------
+    >>> import gamspy as gt
+    >>>
+    >>> m = gt.Container()
+    >>> i = gt.Set(m, name="i", records=["i1", "i2", "i3"])
+    >>> p = gt.Parameter(
+    >>>     m,
+    >>>     name="p",
+    >>>     domain=["*", "*"],
+    >>>     records=[["i1", "j1", 1.0], ["i1", "j2", 2.0]],
+    >>> )
+    >>> s = gt.Parameter(m, name="s")
+    >>> s.assignment = gt.Card(i)
+    >>> print(s.toList())  # [3.0]
+    >>> s.assignment = gt.Card(p)
+    >>> print(s.toList())  # [2.0]
     """
 
-    def __init__(self, set: Union["Set", "Alias"]) -> None:
-        self._set = set
+    def __init__(
+        self,
+        symbol: Union[
+            "Set", "Alias", "Parameter", "Variable", "Equation", "Model"
+        ],
+    ) -> None:
+        self._symbol = symbol
 
     def __eq__(self, other) -> "Expression":  # type: ignore
         return expression.Expression(self, "==", other)
 
     def gamsRepr(self) -> str:
-        return f"card({self._set.name})"
+        return f"card({self._symbol.name})"
