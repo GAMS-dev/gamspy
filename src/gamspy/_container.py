@@ -93,7 +93,7 @@ class Container(gt.Container):
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
     ):
-        self.system_directory = (
+        system_directory = (
             system_directory
             if system_directory
             else utils._getGAMSPyBaseDirectory()
@@ -104,7 +104,7 @@ class Container(gt.Container):
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
 
-        super().__init__(load_from, self.system_directory)
+        super().__init__(load_from, system_directory)
 
         self.workspace = GamsWorkspace(
             working_directory, self.system_directory, DebugLevel.KeepFiles
@@ -841,6 +841,34 @@ class Container(gt.Container):
         else:
             raise GamspyException("There is no job initialized.")
 
+    def _preprocess_extra_model_files(
+        self, engine_config: "EngineConfig"
+    ) -> List[str]:
+        """
+        Conforms model files to the path requirements of GAMS Engine
+
+        Parameters
+        ----------
+        engine_config : EngineConfig
+
+        Returns
+        -------
+        List[str]
+        """
+        for extra_file in engine_config.extra_model_files:
+            shutil.copy(extra_file, self.workspace.working_directory)
+
+        extra_model_files = [
+            os.path.abspath(extra_file).split(os.sep)[-1]
+            for extra_file in engine_config.extra_model_files
+        ]
+
+        extra_model_files.append(
+            os.path.abspath(self._gdx_path).split(os.sep)[-1]
+        )
+
+        return extra_model_files
+
     def _run(
         self,
         options: Optional["GamsOptions"] = None,
@@ -848,11 +876,13 @@ class Container(gt.Container):
         backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
+        # Set default options if not provided
         if options is None:
             options = GamsOptions(self.workspace)
             options.gdx = self._gdx_path
             options.forcework = 1
 
+        # Reset dirty flags for symbols
         for name in self.data.keys():
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 self[name]._is_dirty = False
@@ -860,7 +890,8 @@ class Container(gt.Container):
         # Create gdx file to read records from
         super().write(self._gdx_path)
 
-        if backend in ["engine"]:
+        # Generate GAMS code as a string
+        if backend == "engine":
             # Engine expects gdx file to be next to the gms file
             old_path = self._gdx_path
             self._gdx_path = "default.gdx"
@@ -869,14 +900,8 @@ class Container(gt.Container):
         else:
             gams_string = self.generateGamsString()
 
-        # If there is no restart checkpoint or _run is called for the first time, set it to None
-        checkpoint = (
-            self._restart_from
-            if os.path.exists(self._restart_from._checkpoint_file_name)
-            and self._use_restart_from
-            else None
-        )
-        self._use_restart_from = True
+        # If there is no restart checkpoint, set it to None
+        checkpoint = self._restart_from if self._use_restart_from else None
 
         self._job = GamsJob(
             self.workspace,
@@ -884,7 +909,7 @@ class Container(gt.Container):
             checkpoint=checkpoint,
         )
 
-        # Actual run depending on the backend
+        # Run the job based on the selected backend
         if backend == "local":
             try:
                 self._job.run(
@@ -897,7 +922,7 @@ class Container(gt.Container):
                 message = self._parse_message(options, self._job)
                 e.value = message + e.value if message else e.value
                 raise e
-        elif backend in ["engine"]:
+        elif backend == "engine":
             options.gdx = "default.gdx"
 
             if engine_config is None:
@@ -906,16 +931,8 @@ class Container(gt.Container):
                     " GAMS Engine"
                 )
 
-            for extra_file in engine_config.extra_model_files:
-                shutil.copy(extra_file, self.workspace.working_directory)
-
-            extra_model_files = [
-                os.path.abspath(extra_file).split(os.sep)[-1]
-                for extra_file in engine_config.extra_model_files
-            ]
-
-            extra_model_files.append(
-                os.path.abspath(self._gdx_path).split(os.sep)[-1]
+            extra_model_files = self._preprocess_extra_model_files(
+                engine_config
             )
 
             self._job.run_engine(
@@ -933,6 +950,8 @@ class Container(gt.Container):
                 "Specified backend is not supported. Possible backends: local,"
                 " engine"
             )
+
+        self._use_restart_from = True
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
 
