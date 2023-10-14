@@ -1018,10 +1018,10 @@ class Container(gt.Container):
 
         return symbol_names
 
-    def copy(self) -> "Container":
+    def copy(self, working_directory: Optional[str] = None) -> "Container":
         self._run()
 
-        m = Container()
+        m = Container(working_directory=working_directory)
         m.read(self._gdx_path)
 
         try:
@@ -1033,6 +1033,9 @@ class Container(gt.Container):
         except FileNotFoundError:
             # save_to might not exist and it's fine
             pass
+        except shutil.SameFileError:
+            # They can be the same file if their working directories are the same.
+            pass
 
         try:
             # copy restart_from
@@ -1040,14 +1043,25 @@ class Container(gt.Container):
                 self._restart_from._checkpoint_file_name,
                 m._restart_from._checkpoint_file_name,
             )
-        except Exception as e:
+        except FileNotFoundError as e:
             raise GamspyException(f"Copy failed because {str(e)}")
+        except shutil.SameFileError:
+            # They can be the same file if their working directories are the same.
+            pass
 
         try:
             # copy gdx
             shutil.copy(self._gdx_path, m._gdx_path)
-        except Exception as e:
+        except FileNotFoundError as e:
             raise GamspyException(f"Copy failed because {str(e)}")
+        except shutil.SameFileError:
+            # They can be the same file if their working directories are the same.
+            pass
+
+        # if already defined equations exist, add them to .gms file
+        for equation in self.getEquations():
+            if equation.definition is not None:
+                m._addStatement(equation.definition)
 
         return m
 
