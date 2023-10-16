@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-def getAvailableSolvers() -> List[str]:
+def getInstalledSolvers() -> List[str]:
     try:
         import gamspy_base
     except Exception:
@@ -71,6 +71,15 @@ def getAvailableSolvers() -> List[str]:
                 solver_names.append(line.split(" ")[0])
 
     return solver_names
+
+
+def getAvailableSolvers() -> List[str]:
+    try:
+        import gamspy_base
+    except Exception:
+        raise GamspyException("gamspy_base must be installed!")
+
+    return gamspy_base.available_solvers
 
 
 def _loadPackageGlobals() -> None:  # pragma: no cover

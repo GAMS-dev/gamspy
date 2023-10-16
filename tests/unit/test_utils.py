@@ -48,7 +48,7 @@ class UtilsSuite(unittest.TestCase):
         self.assertFalse(utils.isin(k, symbols))
 
     def test_available_solvers(self):
-        solvers = utils.getAvailableSolvers()
+        solvers = utils.getInstalledSolvers()
 
         self.assertEqual(
             solvers,
