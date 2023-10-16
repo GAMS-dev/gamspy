@@ -756,7 +756,7 @@ class Container(gt.Container):
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> c.addOptions({"optcr": "0.01"})
+        >>> m.addOptions({"optcr": "0.01"})
 
         """
         for key, value in options.items():
