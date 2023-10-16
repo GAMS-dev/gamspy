@@ -143,6 +143,8 @@ In the last line the element ``food+agr`` of the set ``i`` is assigned to the su
       parameters and in equations as long as it is no dynamic set.
 
 
+.. _multi-dimensional-sets:
+
 Multi-Dimensional Sets
 =======================
 
@@ -262,6 +264,62 @@ of the set ``i`` map to many elements of the set ``j``:
     3	b	d	
 
 
+Projection and Aggregation of Sets 
+-----------------------------------
+
+ In GAMSPy aggregation operations on sets may be performed with an assignment and 
+ the :meth:`gamspy.Sum` operator. Assignments and the sum operator are introduced 
+ and discussed in detail in chapter :ref:`indexed-operations`.
+ discussion, see section Aggregation of Sets and Parameters. Here we only show how 
+ they may be used in the context of sets to perform projections and aggregations. 
+ The following example serves as illustration. ::
+
+    m = Container()
+
+    i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,4)])
+    j = Set(m, "j", records = [("j" + str(j), j) for j in range(1,3)])
+    k = Set(m, "k", records = [("k" + str(k), k) for k in range(1,5)])
+    
+    s = pd.Series(
+       index=pd.MultiIndex.from_tuples([("i1","j1","k1"),("i1","j1","k2"),("i1","j1","k3"),
+                                        ("i1","j1","k4"),("i1","j2","k1"),("i1","j2","k2"),
+                                        ("i1","j2","k3"),("i1","j2","k4"),("i2","j1","k1"),
+                                        ("i2","j1","k2"),("i2","j1","k3"),("i2","j1","k4"),
+                                        ("i2","j2","k1"),("i2","j2","k2"),("i2","j2","k3"),
+                                        ("i2","j2","k4"),("i3","j1","k1"),("i3","j1","k2"),
+                                        ("i3","j1","k3"),("i3","j1","k4"),("i3","j2","k1"),
+                                        ("i3","j2","k2"),("i3","j2","k3"),("i3","j2","k4"),])
+    )
+    ijk = Set(m, name = "ijk", domain = [i,j,k], uels_on_axes=True, records=s)
+    ij1a = Set(m, name = "ij1a", domain = [i,j])
+    ij1b = Set(m, name = "ij1b", domain = [i,j])
+    
+    Count_1a = Parameter(m, "Count_1a")
+    Count_1b = Parameter(m, "Count_1b")
+    Count_2a = Parameter(m, "Count_2a")
+    Count_2b = Parameter(m, "Count_2b")
+    
+    # Method 1: Using an assignment and the sum operator for a projection
+    ij1a[i,j] = Sum(k,ijk[i,j,k])
+    
+    # Method 2: Using an assignment and the sum operator for aggregations
+    Count_2a.assignment  = Sum(ijk[i,j,k],1)
+    Count_1a.assignment  = Sum(ij1a[i,j],1)
+
+Note that the set ``ijk`` is a three-dimensional set, its elements are 3-tuples and all 
+permutations of the elements of the three sets ``i``, ``j`` and ``k`` are in its domain. 
+Thus the number of elements of the set ``ijk`` is 3 x 2 x 4 = 24. The sets ``ij1a`` and 
+``ij1b`` are two-dimensional sets that are declared in the set statement, but not defined. 
+The first assignment statement defines the members of the set ``ij1a``. This is a projection 
+from the set ``ijk`` to the set ``ij1a`` where the three-tuples of the first set are mapped 
+onto the pairs of the second set, such that the dimension ``k`` is eliminated. This means 
+that the four elements ``"i1.j1.k1"``, ``"i1.j1.k2"``, ``"i1.j1.k3"`` and ``"i1.j1.k4"`` of 
+the set ``ijk`` are all mapped to the element ``"i1.j1"`` of the set ``ij1a``. Note that in 
+this context, the result of the :meth:`gamspy.Sum` operation is not a number but a set. The 
+second and third assignments are aggregations, where the number of elements of the two sets 
+are computed. As already mentioned, the result of the first aggregation is 24 and the result 
+of the second aggregation is 6 = 24 / 4.
+
 
 
 Singleton Sets
@@ -314,6 +372,8 @@ a compilation error: ::
     m = Container()
     j = Set(m, name = "j", is_singleton = True, records = range(1,5))
 
+..
+    #TODO: Add compilation error as soon as GAMSPy is fixed
 
 It also possible to assign an element to a singleton set. In this case the singleton set 
 is automatically cleared of the previous element first. For example, adding the following 
@@ -423,6 +483,8 @@ Observe that the universal set is assumed to be ordered and operators for ordere
 lag and lead may be applied to any sets aliased with the universal set.
 
 
+.. _set-and-set-element-referencing:
+
 Set and Set Element Referencing
 ===============================
 
@@ -442,7 +504,7 @@ Most commonly whole sets are referenced as in the following examples: ::
     i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,101)])
 
     k = Parameter(m, "k", domain = i)
-    k[i].assignment = 4
+    k[i] = 4
     
     z = Parameter(m, "z")
     z.assignment = Sum(i, k[i]) 
@@ -473,8 +535,7 @@ code illustrate how easily this may be accomplished with a subset: ::
 First we define the set ``j`` to be a subset of the set ``i`` with exactly the elements we are 
 interested in. Then we assign the new value to the elements of this subset. The other values of 
 the parameter ``k`` remain unchanged. For examples using conditionals and tuples, see sections 
-Restricting the Domain: Conditionals and Restricting the Domain: Tuples respectively.
-
+:ref:`restricting-the-domain-conditionals` and :ref:`restricting-the-domain-tuples` respectively.
 
 
 
@@ -1106,7 +1167,7 @@ equation definition: ::
 Recall that ``r`` is a dynamic set and a subset of the set ``allr``. Hence this equation may 
 be rewritten in the following way: ::
 
-    prodbal1[allr.where[r[allr]]] =   activity2[allr]*price == revenue[allr]
+    prodbal1[allr].where[r[allr]] =   activity2[allr]*price == revenue[allr]
 
 Note that both formulations achieve the same result: restricting the domain of definition to 
 those elements that belong to the dynamic set ``r``. While in the second formulation the 
@@ -1132,3 +1193,12 @@ Recall that ``maxd`` is a scalar, ``i`` and ``j`` are sets, ``can_do`` is a dyna
 
 Here the indexed operation is filtered through the dynamic set ``can_do``, a ``where[]`` 
 condition is not necessary.
+
+
+Sets as Sequences: Ordered Sets
+================================
+
+Introduction
+-------------
+
+We initially stated that in general, sets in GAMS are regarded as an unordered collection of labels. 

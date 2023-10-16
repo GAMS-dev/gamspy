@@ -339,7 +339,8 @@ at first. In the first assignment statement ``k[i] = 4``
 all elements of the set ``i`` are assigned the value 4. ``k['i77']`` refers to 
 a specific set elements and is assigned the value 15. The third assignment assignes 
 the value 10 to the first 8 elements of the set ``i`` by using a subset ``j``. Read 
-more about Set and Set Element Referencing here: :ref:`set-and-element-referencing`.
+more about Set and Set Element Referencing here: 
+:ref:`set-and-set-element-referencing`.
 
 
 Explicit Labels
@@ -369,14 +370,20 @@ Since the set ``sro`` was declared as a subset of the set ``row``, we can use
 ``sro`` as a controlling index in the assignment above to make the assignment 
 only for the elements of ``sro``.
 
+.. _restricting-the-domain-conditionals:
+
 Conditionals
 """""""""""""
 
-a[row,col].where[a[row,col] >= 100] = INF
+::
+
+    a[row,col].where[a[row,col] >= 100] = INF
 
 This assignment has the following effect: all elements of the parameter ``a`` 
 whose value was at least 100 are assigned the value INF, while all other elements 
 of ``a`` remain unchanged.
+
+.. _restricting-the-domain-tuples:
 
 Tuples
 """""""
@@ -411,18 +418,18 @@ We repeat the whole code here for clarity. ::
                                       ("r-10", "c-10")])
     )
     
-    tuple = Set(m, name = "tuple", domain = [row, col], 
+    tuples = Set(m, name = "tuples", domain = [row, col], 
                 uels_on_axes=True, records = s)
 
     a = Parameter(m, "a", domain = [row, col])
     a[row,col]  =  13.2 + r[row]*c[col]
-    a[tuple[row,col]] = 7 + r[row]*c[col]
-    a[tuple] = 0.25 * a[tuple] 
+    a[tuples[row,col]] = 7 + r[row]*c[col]
+    a[tuples] = 0.25 * a[tuples] 
 
-Note that we have introduced the new set ``tuple``. It is two-dimensional and contains 
+Note that we have introduced the new set ``tuples``. It is two-dimensional and contains 
 just four elements. As before, the parameter ``a`` is first assigned values for all its 
-100 elements. We then change some of these values using the set ``tuple`` as domain. 
-The values of the elements of the parameter ``a`` that are not elements of the set tuple 
+100 elements. We then change some of these values using the set ``tuples`` as domain. 
+The values of the elements of the parameter ``a`` that are not elements of the set ``tuples`` 
 remain unchanged.
 
 Issues with Controlling Indices
@@ -432,10 +439,7 @@ Issues with Controlling Indices
     The number of controlling indices on the left of the = sign should be at least as 
     large as the number of indices on the right. There should be no index on the right-hand 
     side of the assignment that is not present on the left unless it is operated on by an 
-    indexed operator. For more on indexed operators, see section Indexed Operations.
-
-..
-    #TODO: add link
+    indexed operator. For more on indexed operators, see section :ref:`indexed-operations`.
 
 Consider the following statement: ::
 
@@ -472,3 +476,71 @@ full Cartesian product. The following example illustrates this method: ::
     b[row,rowp] = 7.7 - [r[row] + r[rowp]]/2
 
 
+.. _indexed-operations:
+
+Indexed Operations
+^^^^^^^^^^^^^^^^^^^
+
+GAMSPy provides the following four indexed operations: :meth:`gamspy.Sum`, 
+:meth:`gamspy.Product`, :meth:`gamspy.Smax`, :meth:`gamspy.Smin`. These operations are 
+performed over one or more controlling indices. Consider the following simple example: ::
+
+    m = Container()
+
+    i = Set(m, "i", records = ["cartagena", "callao", "moron"], description = "plants")
+    p = Set(m, "p", records = ["nitr-acid", "sulf-acid", "amm-sulf"], description = "product")
+    
+    capacity = Parameter(m, "capacity", domain = [i, p], description = "capacity in tons per day", 
+                         records = [["cartagena","nitr-acid",10], ["cartagena","sulf-acid",20], ["cartagena","amm-sulf",30],
+                                    ["callao","nitr-acid",20], ["callao","sulf-acid",30], ["callao","amm-sulf",40], 
+                                    ["moron","nitr-acid",30], ["moron","sulf-acid",40], ["moron","amm-sulf",50]])
+    
+    totcap = Parameter(m, "totcap", domain = p, description = "total capacity by process")
+    
+    totcap[p] = Sum(i, capacity[i,p]);
+
+The index over which the summation is done, ``i``, is separated from the word ``Sum`` 
+by a left bracket and from the data term capacity[i,m] by a comma. The set ``i`` is called 
+the *controlling index* for this operation. The scope of the control is the pair of 
+brackets ``[]`` that start immediately after the Sum. Note that using normal mathematical 
+representation the last line could be written as: :math:`totC_p = \sum_{i}C_{ip}`.
+
+It is also possible to sum simultaneously over the domain of two or more sets as in the 
+first assignment that follows. The second assignment demonstrates the use of a less trivial 
+expression than an identifier within the indexed operation. ::
+
+    count.assignment = Sum((i,j), a[i,j])
+    emp.assignment = Sum(t, l[t]*p[t])
+
+The equivalent mathematical forms are:
+
+:math:`count = \sum_{i}\sum_{j}A_{ij}` and :math:`emp = \sum_{t}L_tP_t`
+
+Note that the following alternative notation may be used for the first assignment above: ::
+
+    count.assignment = Sum(i, Sum(j, a[i,j]))
+
+.. note::
+    In the context of sets the :meth:`gamspy.Sum` operator may be used to compute the 
+    number of elements in a set. 
+
+The :meth:`gamspy.Smin` and :meth:`gamspy.Smax` operations are used to find the largest 
+and smallest values over the domain of the index set or sets. The index for the ``Smin`` 
+and ``Smax`` operators is specified in the same manner as in the index for the 
+:meth:`gamspy.Smum` operator. In the following example we want to find the largest 
+capacity: ::
+
+    max_cap.assignment = Smax((i,m),capacity[i,m])
+
+
+..
+    TODO: add references in note block
+
+.. note::
+    - In the context of assignment statements, the attributes of variables and 
+    equations (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars 
+    and parameters are used. For more on variable and equations attributes, see sections 
+    Variable Attributes and Equation Attributes respectively.
+    - In the context of equation definitions, scalars, parameters and variables may appear 
+    freely in indexed operations. For more on equation definitions, see section 
+    Defining Equations.
