@@ -121,8 +121,8 @@ class Container(gt.Container):
         self._job: Optional[GamsJob] = None
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
-        """
-        Casts all symbols in the GAMS Transfer container to GAMSpy symbols
+        """Casts all symbols in the GAMS Transfer container to GAMSpy symbols
+        github_pass = blablalblaabl
         """
         symbol_names = symbol_names if symbol_names else list(self.data.keys())
 
