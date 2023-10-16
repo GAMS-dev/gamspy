@@ -372,8 +372,9 @@ a compilation error: ::
     m = Container()
     j = Set(m, name = "j", is_singleton = True, records = range(1,5))
 
-..
-    #TODO: Add compilation error as soon as GAMSPy is fixed
+::
+   
+    GamspyException: Singleton set records size cannot be more than one.
 
 It also possible to assign an element to a singleton set. In this case the singleton set 
 is automatically cleared of the previous element first. For example, adding the following 
@@ -638,6 +639,7 @@ Note, that ``domain_forwarding`` can also pass as a list of *bool* to control wh
 domains to forward. Also ``domain_forwarding`` is not limited to one symbol. One 
 domain set can be defined through multiple symbols using the same domain.
 
+.. _dynamic-sets:
 
 Dynamic Sets
 ============
@@ -647,8 +649,9 @@ Introduction
 
 In this section we introduce a special type of sets: *dynamic sets*. The sets that 
 we discuss in detail above have their elements stated at compile time and during 
-execution time the membership is never changed. Therefore they are called *static* 
-*sets*. In contrast, the elements of dynamic sets are not fixed, but may be added 
+execution time the membership is never changed. Therefore they are called 
+_`static` *static sets*. In contrast, the elements of dynamic sets are not 
+fixed, but may be added 
 and removed during execution of the program. Dynamic sets are most often used as 
 controlling indices in assignments or equation definitions and as the conditional 
 set in an indexed operation. We will first show how assignments 
@@ -1201,4 +1204,107 @@ Sets as Sequences: Ordered Sets
 Introduction
 -------------
 
-We initially stated that in general, sets in GAMS are regarded as an unordered collection of labels. 
+We initially stated that in general, sets in GAMS are regarded as an unordered collection 
+of labels. However, in some contexts, say, multi-period planning models, some sets need to 
+be treated as if they were sequences. In this chapter we will establish the notion of *ordered* 
+sets and we will cover their special features and the associated operations.
+
+Examples where ordered sets are needed include economic models that explicitly represent 
+conditions in different time periods that are linked, location problems where the formulation 
+may require a representation of contiguous areas, as in a grid representation of a city, 
+scheduling problems and programs that model stocks of capital with equations of the form 
+'stocks at the end of period :math:`n` are equal to stocks at the end of period :math:`n-1` 
+plus net gains during period :math:`n`'.
+
+.. note::
+    Models involving sequences of time periods are often called dynamic models, because they 
+    describe how conditions change over time. This use of the word dynamic unfortunately has 
+    a different meaning from that used in connection with :ref:`dynamic-sets`, but this is 
+    unavoidable.
+
+
+Ordered and Unordered Sets
+---------------------------
+
+Certain one-dimensional sets may be treated as if they were a sequence. Those sets need to 
+be ordered and `static`_. A one-dimensional set is ordered if the 
+definition or initialization of the elements in the set corresponds to the order of the 
+labels in the GAMSPy Entry order. 
+
+.. note::
+    - The GAMS entry order is the order in which the individual labels first appear in the GAMSPy program.
+    - For the sake of simplicity, sets that are static and ordered are often just referred to as *ordered sets*.
+
+GAMS maintains a *unique element list* where all labels that are used as elements in one or 
+more sets are listed. The order of the elements in any one set is the same as the order of 
+those elements in the unique element list. This means that the order of a set may not be 
+what it appears to be if some of the labels were used in an earlier definition. The internal 
+GAMS order of the labels can be made visible with the ``getUELs()`` method of the 
+:meth:`gamspy.Container` class. A good rule of thumb is that if the user wants a set to be 
+ordered and the labels in the set have not been used already, then they will be ordered.
+
+In the example below we show ordered and unordered sets and the map showing the order. The 
+input is: ::
+
+    m = Container()
+    t1= Set(m, name = "t1", records = ["1987","1988","1989","1990","1991"])
+    t2= Set(m, name = "t2", records = ["1983","1984","1985","1986","1987"])
+    t3= Set(m, name = "t3", records = ["1987","1989","1991","1983","1985"])
+
+Note that the label ``"1987"`` is the first label seen by GAMS. It appears again as the 
+last label in the initialization list for the set ``t2``. This means that the set ``t2`` 
+is not ordered and any attempt to use ``t2`` in a context implying order will cause error 
+messages. Observe that the set ``t3`` is ordered, as all the members of ``t3`` have appeared 
+in the GAMS program before, and in the same order that they are listed in the definition of 
+``t3``. ::
+
+    In [1]: m.getUELs()
+    Out[1]: ['1987', '1988', '1989', '1990', '1991', '1983', '1984', '1985', '1986']
+
+.. note::
+    A set can always be made ordered by moving its declaration closer to the beginning of the program. 
+
+
+Sorting a Set
+--------------
+
+``reorderUELs`` is a method of all GAMS symbol classes. This method allows the user to 
+reorder UELs of a specific symbol dimension – ``reorderUELs`` will not all any new UELs 
+to be create nor can they be removed. For example: ::
+
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", i, records=["j1", "j2", "j3"])
+    a = Parameter(m, "a", [i, j], records=[(f"i{i}", f"j{i}", i) for i in range(1,4)])
+
+::
+
+    In [1]: i.getUELs()
+    Out[1]: ['i1', 'i2', 'i3']
+     
+    In [2]: m.getUELs()
+    Out[2]: ['i1', 'i2', 'i3', 'j1', 'j2', 'j3']
+
+But perhaps we want to reorder the UELs ``i1``, ``i2``, ``i3`` to ``i3``, ``i2``, ``i1``. ::
+    
+    In [1]: i.reorderUELs(['i3', 'i2', 'i1'])
+    In [2]: i.getUELs()
+    Out[2]: ['i3', 'i2', 'i1']
+     
+    In [3]: i.records
+    Out[3]:
+        uni   element_text
+    0    i1
+    1    i2
+    2    i3
+
+Note that this example does not change the indexing scheme of the Pandas DataFrame at all, 
+it only changes the underlying integer numbering scheme for the categories. We can see this 
+by looking at the Pandas codes: ::
+
+    In [1]: i.records["uni"].cat.codes
+    Out[1]:
+    0    2
+    1    1
+    2    0
+    dtype: int8
