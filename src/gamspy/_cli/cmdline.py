@@ -174,8 +174,31 @@ def install(args: Dict[str, str]):
 
 
 def update():
-    installed_solvers = utils.getAvailableSolvers()
-    for solver in installed_solvers:
+    prev_installed_solvers = utils.getInstalledSolvers()
+
+    try:
+        _ = subprocess.run(
+            [
+                "pip",
+                "install",
+                "gamspy_base",
+                "--force-reinstall",
+            ],
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise GamspyException(f"Could not uninstall gamspy_base: {e.output}")
+
+    import gamspy_base
+
+    new_installed_solvers = utils.getInstalledSolvers()
+
+    solvers_to_update = []
+    for solver in prev_installed_solvers:
+        if solver not in new_installed_solvers:
+            solvers_to_update.append(solver)
+
+    for solver in solvers_to_update:
         try:
             _ = subprocess.run(
                 [
