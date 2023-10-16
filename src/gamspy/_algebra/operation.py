@@ -254,10 +254,14 @@ class Ord(operable.Operable):
     >>> import gamspy as gp
     >>>
     >>> m = gp.Container()
-    >>> i = gp.Set(m, name="i", records=["i1", "i2", "i3"])
-    >>> p = gp.Parameter(m, name="p", domain=[i])
-    >>> p[i] = gp.Ord(i)
-    >>> print(p.toList())  # [('i1', 1.0), ('i2', 2.0), ('i3', 3.0)]
+    >>> t = gp.Set(
+    >>>     m,
+    >>>     name="t",
+    >>>     description="time periods",
+    >>>     records=[str(x) for x in range(1985, 1996)],
+    >>> )
+    >>> val = gp.Parameter(m, name="val", domain=[t])
+    >>> val[t] = gp.Ord(t)
     """
 
     def __init__(self, set: Union["Set", "Alias"]):
@@ -286,21 +290,18 @@ class Card(operable.Operable):
 
     Examples
     --------
-    >>> import gamspy as gt
+    >>> import gamspy as gp
     >>>
-    >>> m = gt.Container()
-    >>> i = gt.Set(m, name="i", records=["i1", "i2", "i3"])
-    >>> p = gt.Parameter(
-    >>>     m,
-    >>>     name="p",
-    >>>     domain=["*", "*"],
-    >>>     records=[["i1", "j1", 1.0], ["i1", "j2", 2.0]],
+    >>> m = gp.Container()
+    >>>
+    >>> t = gp.Set(
+    >>>    m,
+    >>>    name="t",
+    >>>    description="time periods",
+    >>>    records=[str(x) for x in range(1985, 1996)],
     >>> )
-    >>> s = gt.Parameter(m, name="s")
-    >>> s.assignment = gt.Card(i)
-    >>> print(s.toList())  # [3.0]
-    >>> s.assignment = gt.Card(p)
-    >>> print(s.toList())  # [2.0]
+    >>> s = gp.Parameter(m, name="s")
+    >>> s.assignment = gp.Card(t)
     """
 
     def __init__(
