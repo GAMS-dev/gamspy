@@ -225,7 +225,7 @@ def main():
     obj = cox3.objective_value
     best = round(obj)
     num_nodes_used = cox3.num_nodes_used
-    solve_time = cox3.solve_time
+    solve_time = cox3.total_solve_time
 
     for it in range(5):
         if (obj - best) / best > 0.01:
@@ -275,7 +275,7 @@ def main():
         cox3c.solve(options=cmd_params, output=sys.stdout)
         obj = cox3c.objective_value
         num_nodes_used = cox3c.num_nodes_used
-        solve_time = cox3c.solve_time
+        solve_time = cox3c.total_solve_time
 
     cdb = ConnectDatabase(m.system_directory, m)
     cdb.exec_task(
