@@ -259,9 +259,6 @@ def main():
         sense="MAX",
         objective=z,
     )
-    m.addOptions(
-        {"LIMROW": 0, "LIMCOL": 0, "SOLPRINT": "off"}
-    )  # 'Turn off row and colum listing'
 
     # Find a feasible EpsTolerance
     low = Parameter(m, name="low", description="Lower bisection value")

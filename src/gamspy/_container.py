@@ -26,7 +26,6 @@ import io
 import os
 import shutil
 from typing import Any
-from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
@@ -44,7 +43,6 @@ from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
 import gamspy as gp
-import gamspy._algebra.expression as expression
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
 
@@ -741,37 +739,6 @@ class Container(gt.Container):
             limited_variables,
         )
         return model
-
-    def addOptions(self, options: Dict[str, str]) -> None:
-        """
-        Allows adding options to .gms file
-
-        Parameters
-        ----------
-        options : Dict[str, str]
-
-        Raises
-        ------
-        ValueError
-            In case the option is not valid
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> m.addOptions({"optcr": "0.01"})
-
-        """
-        for key, value in options.items():
-            if not key.lower() in utils.VALID_OPTION_STATEMENTS:
-                raise ValueError(
-                    f"{key} is not a valid option. Valid options:"
-                    f" {utils.VALID_OPTION_STATEMENTS}"
-                )
-
-            self._addStatement(
-                expression.Expression(f"option {key}", "=", value)
-            )
 
     def _addGamsCode(self, gams_code: str) -> None:
         """

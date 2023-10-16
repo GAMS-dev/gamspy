@@ -162,14 +162,12 @@ def main(mip=False):
         objective=obj,
     )
 
-    m.addOptions({"optCr": 0})
-
     if mip:
         v.type = "positive"
         op.type = "binary"
-        carseqMIP.solve()
+        carseqMIP.solve(options={"optCr": 0})
     else:
-        carseqLS.solve()
+        carseqLS.solve(options={"optCr": 0})
 
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]

@@ -257,8 +257,7 @@ def main():
         -1 * branch[bus, node, "Limit"] / Sbase
     )
 
-    m.addOptions({"optCr": 0, "mip": "CPLEX"})
-    loadflow.solve()
+    loadflow.solve(options={"optCr": 0, "mip": "CPLEX"})
 
     print("Objective Function Value:  ", round(OF.toValue(), 3))
 

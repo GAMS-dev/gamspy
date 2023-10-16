@@ -117,8 +117,6 @@ def main():
 
     NormalCon.definition = Sum(a, x[a]) == 1
 
-    m.addOptions({"SOLVEOPT": "REPLACE"})
-
     MeanVar = Model(
         m,
         name="MeanVar",
@@ -336,8 +334,6 @@ def main():
     )
 
     NormalConTrack.definition = Sum(a, x[a]) == 0
-
-    m.addOptions({"SOLVEOPT": "REPLACE"})
 
     MeanVarTrack = Model(
         m,

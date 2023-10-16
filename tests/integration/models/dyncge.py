@@ -28,8 +28,6 @@ from gamspy import Variable
 def main():
     m = Container(delayed_execution=True)
 
-    m.addOptions({"limRow": 0, "limCol": 0})
-
     # ===============================================================
     # Definition of sets for suffix ---------------------------------
     # ===============================================================
@@ -689,14 +687,6 @@ def main():
     )
 
     dyncge.solve()
-    m.addOptions(
-        {
-            "limRow": 0,
-            "limCol": 0,
-            "solPrint": "off",
-            "solveLink": "%solveLink.loadlibrary%",
-        }
-    )
 
     # ===============================================================
     # Simulation Runs: Abolition of Import Tariffs

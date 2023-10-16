@@ -114,14 +114,11 @@ def main():
         objective=util,
     )
 
-    cont.addOptions({"limRow": 0, "limCol": 0})
-
     for iter, _ in t.records.itertuples(index=False):
         p[i] = pt[i, iter]
         icweight[i] = theta[i]
         m.solve()
         m_mn.solve()
-        cont.addOptions({"solPrint": "off"})
 
     import math
 

@@ -145,8 +145,6 @@ def main():
         objective=z,
     )
 
-    m.addOptions({"SOLVEOPT": "REPLACE"})
-
     output_csv = '"MAD","Mean"\n'
 
     mu_target = MIN_MU.records.value[0]

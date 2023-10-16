@@ -74,8 +74,6 @@ def main():
     const1.definition = OF == Sum(bus, PMU[bus])
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
-    m.addOptions({"optCr": 0, "profile": 1})
-
     placement = Model(
         m,
         name="placement",
