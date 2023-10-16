@@ -233,7 +233,7 @@ number of constraints generated so that there are no references to non-existent
 variables.
 
 For a more realistic model that illustrates the usage of linear lag operators
-in equations, see for example the optimal economic growth model ``ramsey.py``.
+in equations, see for example the optimal economic growth model :ref:`ramsey.py <ramsey>`  .
 
 **Linear Lag and Lead Operators in Equations - Reference**
 
