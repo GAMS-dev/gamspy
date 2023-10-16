@@ -814,41 +814,6 @@ is *added* to the set ``ii``, ``it`` *replaces* the original element in the sing
     In [2]: print(*si.records["i"], sep=", ")
     Out[2]: c
 
-The assignment behavior can be changed with :meth:`gamspy.Container.addOptions` 
-`strictSingleton <https://www.gams.com/latest/docs/UG_GamsCall.html#GAMSAOstrictsingleton>`_  
-which affects the behavior of a membership assignment to a Singleton Set. With 
-``strictSingleton=0`` GAMS does not complain about an assignment with more than one element on the 
-right hand side but takes the first one. With ``strictSingleton=1`` (default), such an assignment 
-raises an error. Consider the following example: ::
-
-    m = Container()
-
-    i = Set(m, "i", records = ["a", "b", "c"], description = "Static Set")
-    si = Set(m, "s", domain = i, is_singleton = True)
-    
-    si[i].where[Ord(i) > 1] = True
-
-By default, the above code will trigger an error as an assignment to a singleton set with more than 
-one element on the right hand side is forbidden: ::
-
-    **** Exec Error at line 5: Multiple assignment to Singleton Set not allowed (see option strictSingleton)
-
-However, with option ``strictSingleton=0`` GAMS does not complain about such an assignment with more than 
-one element on the right hand side but takes the first one: ::
-
-    m = Container()
-
-    i = Set(m, "i", records = ["a", "b", "c"], description = "Static Set")
-    si = Set(m, "s", domain = i, is_singleton = True)
-    
-    m.addOptions({"strictSingleton": 0})
-    si[i].where[Ord(i) > 1] = True
-
-::
-
-    In [1]: print(*si.records["i"])
-    Out[1]: b
-
 
 Set Operations
 ---------------
