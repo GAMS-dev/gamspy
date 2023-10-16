@@ -82,6 +82,7 @@ class Container(gt.Container):
     --------
     >>> import gamspy as gp
     >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
 
     """
 
@@ -318,8 +319,15 @@ class Container(gt.Container):
         err
             In case arguments are not valid
         ValueError
-            If there is symbol with same name but different type in the
+            When there is symbol with same name in the
             Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+
         """
         if name not in self:
             obj = gp.Set(
@@ -413,6 +421,13 @@ class Container(gt.Container):
         ValueError
             If there is symbol with same name but different type in the
             Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = m.addParameter("a")
+
         """
         if name not in self:
             obj = gp.Parameter(
@@ -504,6 +519,13 @@ class Container(gt.Container):
         ValueError
             If there is symbol with same name but different type in the
             Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = m.addVariable("v")
+
         """
         if name not in self:
             obj = gp.Variable(
@@ -602,6 +624,13 @@ class Container(gt.Container):
         ValueError
             If there is symbol with same name but different type in the
             Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addEquation("i")
+
         """
         if name not in self:
             obj = gp.Equation(
@@ -689,6 +718,14 @@ class Container(gt.Container):
         Returns
         -------
         Model
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> e = gp.Equation(m, "e")
+        >>> model = m.addModel("my_model", "LP", [e])
+
         """
         model = gp.Model(
             self,
@@ -714,6 +751,13 @@ class Container(gt.Container):
         ------
         ValueError
             In case the option is not valid
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> c.addOptions({"optcr": "0.01"})
+
         """
         for key, value in options.items():
             if not key.lower() in utils.VALID_OPTION_STATEMENTS:
@@ -1053,6 +1097,16 @@ class Container(gt.Container):
         Raises
         ------
         GamspyException
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> new_cont = m.copy()
+        >>> new_cont.data.keys() == m.data.keys()
+        True
+
         """
         self._run()
 
@@ -1145,6 +1199,18 @@ class Container(gt.Container):
         ----------
         load_from : str
         symbol_names : List[str], optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+        >>> new_container = gp.Container()
+        >>> new_container.read("test.gdx")
+        >>> new_container.data.keys() == m.data.keys()
+        True
+
         """
         super().read(load_from, symbol_names)
         self._cast_symbols(symbol_names)
@@ -1162,6 +1228,14 @@ class Container(gt.Container):
         ----------
         write_to : str
         symbols : List[str], optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+
         """
         sequence = symbols if symbols else self.data.keys()
         dirty_symbols = []
