@@ -37,8 +37,6 @@ def main():
 
     m = Container(delayed_execution=True)
 
-    m.addOptions({"limCol": 0, "limRow": 0, "solPrint": "off"})
-
     # Sets
     i = Set(
         m,
@@ -180,9 +178,6 @@ def main():
         objective=Util,
     )
 
-    # Options to solve models quickly
-    m.addOptions({"solveLink": 5})
-
     # Parameters
     Util_lic = Parameter(
         m, name="Util_lic", domain=[t], description="util solved w/o MN"
@@ -219,7 +214,7 @@ def main():
         p[i] = pt[i, tt]
 
         #  Solving the model w/o MN
-        SB_lic.solve()
+        SB_lic.solve(options={"solveLink": 5})
 
         Util_lic[tt] = Util.l
         x_lic[i, tt] = x.l[i]
@@ -228,7 +223,7 @@ def main():
         )
 
         #  Solving the model w/ MN
-        SB_lic2.solve()
+        SB_lic2.solve(options={"solveLink": 5})
 
         Util_lic2[tt] = Util.l
         x_lic2[i, tt] = x.l[i]

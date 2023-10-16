@@ -81,8 +81,6 @@ def main():
         PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
     )
 
-    m.addOptions({"optCr": 0, "profile": 1})
-
     placement3 = Model(
         m,
         name="placement3",
@@ -98,7 +96,7 @@ def main():
 
     for idx, iter, _ in counter.records.itertuples():
         NPMU.assignment = idx + 1
-        placement3.solve()
+        placement3.solve(options={"optCr": 0, "profile": 1})
         report[bus, iter] = PMU.l[bus]
         OBIrep[iter] = OF.l
 

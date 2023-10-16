@@ -50,6 +50,7 @@ from gamspy._symbols import VariableType
 _order = 0  # Global order for newly generated symbols with no name
 
 __all__ = [
+    "Container",
     "Set",
     "Alias",
     "UniverseAlias",
@@ -57,7 +58,6 @@ __all__ = [
     "Variable",
     "Equation",
     "Model",
-    "Container",
     "Problem",
     "Sense",
     "VariableType",

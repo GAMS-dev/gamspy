@@ -192,8 +192,6 @@ def main():
         objective=cps,
     )
 
-    m.addOptions({"limCol": 0, "limRow": 0})
-
     demo7n.solve()
 
     print("Value of objective:  ", round(cps.records.level[0], 3))

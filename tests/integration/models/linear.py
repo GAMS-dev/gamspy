@@ -282,8 +282,6 @@ def main():
     devp.up[i] = 100
     devn.up[i] = 100
 
-    m.addOptions({"limRow": 0, "limCol": 0})
-
     mod1.solve()
     result["mod1", n] = b.l[n]
     result["mod1", "obj"] = obj.l

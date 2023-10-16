@@ -137,9 +137,7 @@ def main():
         objective=obj,
     )
 
-    m.addOptions({"limCol": 0, "limRow": 0, "resLim": 3})
-
-    rotdk.solve()
+    rotdk.solve(options={"limCol": 0, "limRow": 0, "resLim": 3})
 
     print("Objective Function Value: ", round(obj.records.level[0], 2))
 

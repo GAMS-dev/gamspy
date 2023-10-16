@@ -79,7 +79,6 @@ def main():
     const1.definition = OFc == Sum(bus, cost[bus] * PMU[bus])
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
-    m.addOptions({"optCr": 0})
     placement0 = Model(
         m,
         name="placement0",
@@ -88,7 +87,7 @@ def main():
         sense="min",
         objective=OFc,
     )
-    placement0.solve()
+    placement0.solve(options={"optCr": 0})
     print("PMU:  \n", PMU.toDict())
 
     import math

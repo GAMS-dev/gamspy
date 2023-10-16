@@ -126,11 +126,6 @@ def sqr(x):
 def main():
     cont = Container(delayed_execution=True)
 
-    # Set some options
-    cont.addOptions(
-        {"limCol": 0, "limRow": 0, "bRatio": 1, "domLim": 1000, "optCr": 0}
-    )
-
     # SETS #
     # the set of all columns and their condensers in the superstructure
     i = Set(cont, name="i", records=[f"c-{i}" for i in range(1, 5)])
@@ -937,15 +932,14 @@ def main():
         # ======================================================================
         lmtd.l[i] = lmtd.l[i] + 1
 
-        cont.addOptions({"resLim": 15})
         #  solve the nlp subproblem
-        nlpsub.solve()
+        nlpsub.solve(
+            options={"bRatio": 1, "domLim": 1000, "optCr": 0, "resLim": 15}
+        )
 
         #  resolve with Conopt to get marginals for lmtdsn, if not provided by used NLP solver *****
         if nlpsub.marginals == 0:
-            cont.addOptions({"nlp": "conopt"})
-            nlpsub.solve()
-            cont.addOptions({"nlp": "%system.nlp%"})
+            nlpsub.solve(options={"nlp": "conopt"})
 
         # ======================================================================
         # update the optimal solution storage parameters if new nlp

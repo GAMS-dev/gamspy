@@ -841,9 +841,6 @@ class SolveSuite(unittest.TestCase):
         )
         self.assertRaises(GamspyException, energy.interrupt)
 
-        # relative termination criterion for MIP (relative gap)
-        cont.addOptions({"optCr": 0.000001})
-
         def interrupt_gams(model):
             time.sleep(2)
             model.interrupt()
@@ -852,7 +849,7 @@ class SolveSuite(unittest.TestCase):
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
 
-        energy.solve()
+        energy.solve(options={"optCr": 0.000001})
 
         self.assertIsNotNone(energy.objective_value)
 

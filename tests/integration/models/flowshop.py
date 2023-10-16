@@ -122,10 +122,7 @@ def flow_shop(process_time_df, last_machine, last_item):
         objective=totwait,
     )
 
-    # set optCr to 0
-    c.addOptions({"optcr": 0})
-
-    flowshop.solve()
+    flowshop.solve(options={"optcr": 0})
 
     import math
 
