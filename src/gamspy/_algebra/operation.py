@@ -295,10 +295,10 @@ class Card(operable.Operable):
     >>> m = gp.Container()
     >>>
     >>> t = gp.Set(
-    >>>    m,
-    >>>    name="t",
-    >>>    description="time periods",
-    >>>    records=[str(x) for x in range(1985, 1996)],
+    >>>     m,
+    >>>     name="t",
+    >>>     description="time periods",
+    >>>     records=[str(x) for x in range(1985, 1996)],
     >>> )
     >>> s = gp.Parameter(m, name="s")
     >>> s.assignment = gp.Card(t)
