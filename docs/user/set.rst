@@ -325,7 +325,7 @@ of the second aggregation is 6 = 24 / 4.
 Singleton Sets
 ===============
 
-A singleton set in GAMS is a special set that has at most one element (zero elements 
+A singleton set in GAMSPy is a special set that has at most one element (zero elements 
 are allowed as well). Like other sets, singleton sets may have a domain with several 
 dimensions. Singleton sets are declared with the boolean ``is_singleton`` in the 
 :meth:`gamspy.Set` class (or the :meth:`gamspy.Container` class). ::
@@ -414,7 +414,7 @@ controlling index or an indexed operation.
 The Universal Set: * as Set Identifier
 =======================================
 
-GAMS provides the universal set denoted by ``*`` for cases where the user wishes not to 
+GAMSPy provides the universal set denoted by ``*`` for cases where the user wishes not to 
 specify an index but have only a placeholder for it. The following examples show two ways 
 how the universal set is introduced in a model. We will discuss the advantages and 
 disadvantages of using the universal set later. First example:  ::
@@ -450,7 +450,7 @@ be an element of ``k``. Any item may be added freely to ``k``.
     checking and thus typos will not be detected and data that the user intends to be in the 
     model might actually not be part of it.
 
-Observe that in GAMS a simple set is always regarded as a subset of the universal set. Thus the 
+Observe that in GAMSPy a simple set is always regarded as a subset of the universal set. Thus the 
 set definition ::
 
     i = Set(m, "i", records = range(1,10))
@@ -490,8 +490,8 @@ Set and Set Element Referencing
 ===============================
 
 Sets or set elements are referenced in many contexts, including assignments, calculations, 
-equation definitions and loops. Usually GAMS statements refer to the whole set or a single set 
-element. In addition, GAMS provides several ways to refer to more than one, but not all elements 
+equation definitions and loops. Usually GAMSPy statements refer to the whole set or a single set 
+element. In addition, GAMSPy provides several ways to refer to more than one, but not all elements 
 of a set. In the following subsections we will show by example how this is done. 
 
 
@@ -666,7 +666,7 @@ The Syntax
 ^^^^^^^^^^
 Like any other set, a dynamic set has to be declared before it may be used in the 
 model. Often, a dynamic set is declared as subset of a static set. Dynamic sets in 
-GAMS may also be multi-dimensional like static sets. The maximum number of permitted 
+GAMSPy may also be multi-dimensional like static sets. The maximum number of permitted 
 dimensions follows the rules of the basic Data Types and Definitions. For 
 multi-dimensional dynamic sets the index sets can also be specified explicitly at 
 declaration. That way dynamic sets are domain checked. Of course it is also possible 
@@ -674,11 +674,11 @@ to use dynamic sets that are not domain checked. This provides additional power 
 flexibility but also a lack of intelligibility and danger. Any label is legal as long 
 as such a set's dimension, once established, is preserved.
 
-In general, the syntax for assigning membership to dynamic sets in GAMS is: ::
+In general, the syntax for assigning membership to dynamic sets in GAMSPy is: ::
 
     set_name[index_list | label] = True | False
 
-``Set_name`` is the internal name of the set in GAMS, ``index_list`` refers to the 
+``Set_name`` is the internal name of the set in GAMSPy, ``index_list`` refers to the 
 domain of the dynamic set and ``label`` is one specific element of the domain. An 
 assignment statement may assign membership to the dynamic set either to the whole 
 domain or to a subset of the domain or to one specific element. Note that, as usual, 
@@ -854,7 +854,7 @@ Set Operations
 ---------------
 
 GAMSPy provides symbols for arithmetic set operations that may be used with dynamic sets. An 
-overview of the set operations in GAMS is given below. Examples and alternative formulations 
+overview of the set operations in GAMSPy is given below. Examples and alternative formulations 
 for each operation follow. Note that in the table below the set ``i`` is the static superset 
 and the sets ``j`` and ``k`` are dynamic sets.
 
@@ -1204,7 +1204,7 @@ Sets as Sequences: Ordered Sets
 Introduction
 -------------
 
-We initially stated that in general, sets in GAMS are regarded as an unordered collection 
+We initially stated that in general, sets in GAMSPy are regarded as an unordered collection 
 of labels. However, in some contexts, say, multi-period planning models, some sets need to 
 be treated as if they were sequences. In this chapter we will establish the notion of *ordered* 
 sets and we will cover their special features and the associated operations.
@@ -1232,7 +1232,7 @@ definition or initialization of the elements in the set corresponds to the order
 labels in the GAMSPy Entry order. 
 
 .. note::
-    - The GAMS entry order is the order in which the individual labels first appear in the GAMSPy program.
+    - The GAMSPy entry order is the order in which the individual labels first appear in the GAMSPy program.
     - For the sake of simplicity, sets that are static and ordered are often just referred to as *ordered sets*.
 
 GAMS maintains a *unique element list* where all labels that are used as elements in one or 
@@ -1255,7 +1255,7 @@ Note that the label ``"1987"`` is the first label seen by GAMS. It appears again
 last label in the initialization list for the set ``t2``. This means that the set ``t2`` 
 is not ordered and any attempt to use ``t2`` in a context implying order will cause error 
 messages. Observe that the set ``t3`` is ordered, as all the members of ``t3`` have appeared 
-in the GAMS program before, and in the same order that they are listed in the definition of 
+in the GAMSPy program before, and in the same order that they are listed in the definition of 
 ``t3``. ::
 
     In [1]: m.getUELs()
@@ -1268,7 +1268,7 @@ in the GAMS program before, and in the same order that they are listed in the de
 Sorting a Set
 --------------
 
-``reorderUELs`` is a method of all GAMS symbol classes. This method allows the user to 
+``reorderUELs`` is a method of all GAMSPy symbol classes. This method allows the user to 
 reorder UELs of a specific symbol dimension – ``reorderUELs`` will not all any new UELs 
 to be create nor can they be removed. For example: ::
 

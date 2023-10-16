@@ -170,7 +170,7 @@ Example with a pandas MultiIndex object: ::
 The Assignment Statement
 -------------------------
 
-The assignment statement is the fundamental data manipulation statement in GAMS. 
+The assignment statement is the fundamental data manipulation statement in GAMSPy. 
 It may be used to define or alter values associated with sets, parameters, variables 
 or equations.
 
