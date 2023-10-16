@@ -6,9 +6,9 @@ Lag and Lead
 
 ``Lag`` and ``Lead`` operators can be used on ordered sets only via the methods
 ``lag()`` and ``lead()``. They are used to relate the current member of an
-ordered set to the previous or next member if the set. Both ``lag()`` and
-``lead()`` some with an argument ``n`` indicating the element offset to be
-applied as well as an argument ``type="linear"`` which can be used to specify
+ordered set to the previous or next member of the set. Both ``lag()`` and
+``lead()`` require the argument ``n`` indicating the element offset to be
+applied. The optional argument ``type="linear"`` can be used to specify
 the behavior of the operator (``"linear"`` or ``"circular"``). The following
 table gives an overview of the available combinations:
 
@@ -23,7 +23,7 @@ table gives an overview of the available combinations:
    * - ``i.lead(n, "linear")``
      - Refers to the element of the ordered set ``i`` whose relative position in the set is ``Ord(i)+n``.
    * - ``i.lag(n, "circular")``
-     - Same as ``i.lag(n, "linear")``, only here the first element of the set ``i`` is assumed to be preceded by the last element of the set, thus forming a circle of elements.
+     - Same as ``i.lag(n, "linear")``, only here the first element of the set is assumed to be preceded by the last element of the set, thus forming a circle of elements.
    * - ``i.lead(n, "circular")``
      - Same as ``i.lead(n, "linear")``, only here the last element of the set is assumed to be followed by the first element of the set, thus forming a circle of elements.
 
@@ -32,12 +32,12 @@ is how endpoints are treated. Linear operators assume that there are no
 elements preceding the first and following the last element of the ordered set.
 This assumption may result in elements of the set being referenced that
 actually do not exist. Therefore the user must think carefully about the
-treatment of endpoints: models with linear lag and lead operators will need
-special exception handling logic to deal with them. The next two sections will
+treatment of endpoints. Models with linear lag and lead operators will need
+special exception handling logic to deal with them. The following sections will
 describe how this issue is handled in ``GAMSPy`` in the context in which these
-operators are typically used: assignments and equations. Linear lag and lead
+operators are typically used: assignments and equation definitions. Linear lag and lead
 operators are useful for modeling time periods that do not repeat, like a set
-of years (say 1990 to 1997).
+of years (say ``"1990"`` to ``"1997"``).
 
 Circular lag and lead operators assume that the first and last element of the
 set are adjacent, so as to form a circular sequence of members. All references
@@ -82,13 +82,13 @@ The following example shows the use of ``lag()`` on the right-hand side of an as
     print(a.records)
     print(b.records)
 
-This sets the values for the parameter ``a`` to 1987, 1988 up to 1991
-corresponding to the labels "y-1987", "y-1988" and so on.
+This sets the values for the parameter ``a`` to ``1987``, ``1988`` up to ``1991``
+corresponding to the labels ``"y-1987"``, ``"y-1988"`` and so on.
 Observe that the parameter ``b`` is initialized to ``-1`` so that the result of
 the next assignment can be seen clearly. The last assignment
 uses ``lag()`` on the right-hand side, resulting in the values for ``b`` to
 equal the values for ``a`` from the previous period. If there is no previous
-period, as with the first element, "y-1987", the value zero is assigned,
+period, as with the first element, ``"y-1987"``, the value zero is assigned,
 replacing the previous value of ``-1`` (values of zero for parameters are not
 displayed).
 
@@ -120,9 +120,9 @@ Here, the assignment to ``c`` involves the ``lead()`` operator on the left-hand
 side. It is best to spell out step by step how this assignment is made. For
 each element in ``t``, find the element of ``c`` associated with ``t+2``. If it
 exists, replace its value with the value of ``a[t]``. If not (as with labels
-"y-1990" and "y-1991") make no assignment. The first element of the set ``t`` is
-"y-1987", therefore the first assignment is made to ``c["y-1989"]`` which takes
-the value of ``a["y-1987"]``, that is 1987. No assignments at all are made to
+``"y-1990"`` and ``"y-1991"``) make no assignment. The first element of the set ``t`` is
+``"y-1987"``, therefore the first assignment is made to ``c["y-1989"]`` which takes
+the value of ``a["y-1987"]``, that is ``1987``. No assignments at all are made to
 ``c["y-1987"]`` and ``c["y-1988"]``: these two retain their previous values of
 ``-1``.
 
@@ -178,7 +178,7 @@ The use of reference and assignment have been reversed with no difference in eff
 Lags and Leads in Equations
 ---------------------------
 
-A lag or lead to the left of an equation definition is a modification of the
+A ``lag()`` or ``lead()`` to the left of an equation definition is a modification of the
 domain of definition of the equation. The linear form may cause one or more
 individual equations to be suppressed. A lag or lead operation to the right of
 an equation definition is a reference. If the associated label is not defined,
