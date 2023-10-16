@@ -324,6 +324,7 @@ class ContainerSuite(unittest.TestCase):
 
         transport.solve()
 
+        self.assertIsNotNone(m.gams_job_name)
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 

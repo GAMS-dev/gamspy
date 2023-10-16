@@ -237,6 +237,9 @@ class Container(gt.Container):
     def delayed_execution(self, status: bool):
         self._delayed_execution = status
 
+    def gams_job_name(self):
+        return self._job.name if self._job is not None else None
+
     def addAlias(
         self, name: str, alias_with: Union["Set", "Alias"]
     ) -> "Alias":

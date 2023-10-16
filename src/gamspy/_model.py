@@ -534,7 +534,7 @@ class Model:
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine-one", "engine-sass"] = "local",
         engine_config: Optional["EngineConfig"] = None,
-    ):
+    ) -> None:
         """
         Generates the gams string, writes it to a file and runs it
 
