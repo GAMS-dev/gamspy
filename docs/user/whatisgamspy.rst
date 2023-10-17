@@ -20,14 +20,14 @@ One key element in writing good quality, good readable, good maintainable, and t
 models that can be used for long time in production comes down to the algebraic formulation.
 The algebraic formulation is something that is around and accepted for years and allows 
 to understand models. Consequently, being able to write mathematical models in a language
-that can be processed by computers **and** are close to the origitnal algebraic notation is 
-what will be key to achive maintable models.
+that can be processed by computers **and** are close to the original algebraic notation is 
+what will be key to achieve mainabel models.
 
 With this goal in mind we developed GAMSPy to be able to generate mathematical models instead
-of model instances. While a mathematical model is soley composed of mathematical symbols, a
+of model instances. While a mathematical model is solely composed of mathematical symbols, a
 model instance is the translation of a mathematical model filled with the according instance data.
-Thus, sum expressions are resolved into its individual components and equation domains are resoveld to
-individual scalar equations. 
+Thus, sum expressions are resolved into its individual components and equation domains are resolved to
+individual scalar equations for a model instance. 
 
 Mathematical Model
 
@@ -43,8 +43,9 @@ Model Instance
     2 \cdot x_{i1,j2} + 6 \cdot x_{i2,j2} + 4 \cdot x_{i3,j2} \le 10
 
 Especially for large models with many variables and equations, a model instance becomes large
-and heavy to handle, maintain, and read. 
-
+and heavy to handle, maintain, and read. Therefore, GAMSPy leverages the idea of a standalone,
+thus, data independent and indexed representation of a mathematical model which is very close 
+to the original algebraic formulation.
 
 
 Sparsity
@@ -96,18 +97,21 @@ GAMSPy.
 Optimization Pipeline Management
 ---------------------------------
 
-GAMSPy opens up entirely new opportunities to streamline optimization and data pipelines:
+Working on an optimization problem does not solely include the mathematical model but also includes tasks regarding
+data pre- and postprocessing as well as visualization. At GAMS, we understand the importance of making these tasks as 
+comfortable and efficient as possible. With GAMSPy we are now able to streamline the complete optimization pipeline
+starting with data input and preprocessing followed by the implementation of the mathematical model and data postprocessing
+and visualization, in a single, intuitive Python environment. GAMSPy allows you to leverage your favorite Python libraries 
+(e.g. Numpy, Pandas, Networkx) to comfortably manipulate and visualize data. And it allows to import and export data and 
+optimization results to many data formats. 
 
-**Seamless Pipeline Management**
-- No switching of environments: Manage data preprocessing and optimization tasks within a single, intuitive environment.
-- Leverage your favorite Python libraries (e.g. Numpy, Pandas, Networkx) to comfortably manipulate and visualize data.
-- Import and export data and optimization results to many data formats.
+On top, GAMSPy seamlessly works with GAMS MIRO and GAMS Engine which allows you to run your GAMSPy optimization either on
+your local machine or on your own server hardware (GAMS Engine One) as well as on GAMS Engine SaaS, where you don't even 
+need to run a server. We make sure you have access to the right resources, any time.
 
-**Different Runner Options***
-You can run your model on:
-- Your local machine
-- GAMS Engine One (you host your own server hardware)
-- GAMS Engine SASS (you don't even need to run a server. We make sure you have access to the right resources, any time.)
+
+How is GAMSPy different from GAMS?
+--------------------------------
 
 
 Summarizing the Benefits
