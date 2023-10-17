@@ -149,8 +149,10 @@ Multi-Dimensional Sets
 =======================
 
 It is often necessary to provide mappings between elements of different sets. For 
-this purpose, GAMSPy allows the use of multi-dimensional sets. The current maximum 
-number of permitted dimensions is 20. The next two subsections explain how 
+this purpose, GAMSPy allows the use of multi-dimensional sets. 
+For the current maximum number of permitted dimensions, see 
+`Dimensions <https://www.gams.com/latest/docs/UG_GAMSPrograms.html#UG_GAMSPrograms_Dimensions/>`_ 
+in the GAMS documentation. The next two subsections explain how 
 to express one-to-one and many-to-many mappings between sets.
 
 One-to-one Mapping
@@ -412,6 +414,7 @@ controlling index or an indexed operation.
     Singleton sets cannot be used as domains.
 
 
+.. _the-universal-set:
 The Universal Set: * as Set Identifier
 =======================================
 
@@ -671,9 +674,10 @@ The Syntax
 ^^^^^^^^^^
 Like any other set, a dynamic set has to be declared before it may be used in the 
 model. Often, a dynamic set is declared as subset of a static set. Dynamic sets in 
-GAMSPy may also be multi-dimensional like static sets. The 
-:ref:`maximum number <multi-dimensional-sets>` of permitted 
-dimensions follows the rules of the basic Data Types and Definitions. For 
+GAMSPy may also be multi-dimensional like static sets. 
+For the current maximum number of permitted dimensions, see 
+`Dimensions <https://www.gams.com/latest/docs/UG_GAMSPrograms.html#UG_GAMSPrograms_Dimensions/>`_ 
+in the GAMS documentation. For 
 multi-dimensional dynamic sets the index sets can also be specified explicitly at 
 declaration. That way dynamic sets are domain checked. Of course it is also possible 
 to use dynamic sets that are not domain checked. This provides additional power and 

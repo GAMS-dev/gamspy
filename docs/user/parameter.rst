@@ -171,8 +171,8 @@ The Assignment Statement
 -------------------------
 
 The assignment statement is the fundamental data manipulation statement in GAMSPy. 
-It may be used to define or alter values associated with sets, parameters, variables 
-or equations.
+It may be used to define or alter values associated with :ref:`sets <set>`, 
+:ref:`variables <variable>`, :ref:`parameters <parameter>` or :ref:`equations <equation>`.
 
 Scalar Assignments
 ^^^^^^^^^^^^^^^^^^^
@@ -527,7 +527,7 @@ Note that the following alternative notation may be used for the first assignmen
 The :meth:`gamspy.Smin` and :meth:`gamspy.Smax` operations are used to find the largest 
 and smallest values over the domain of the index set or sets. The index for the ``Smin`` 
 and ``Smax`` operators is specified in the same manner as in the index for the 
-:meth:`gamspy.Smum` operator. In the following example we want to find the largest 
+:meth:`gamspy.Sum` operator. In the following example we want to find the largest 
 capacity: ::
 
     max_cap.assignment = Smax((i,m),capacity[i,m])
@@ -537,10 +537,5 @@ capacity: ::
     TODO: add references in note block
 
 .. note::
-    - In the context of assignment statements, the attributes of variables and 
-    equations (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars 
-    and parameters are used. For more on variable and equations attributes, see sections 
-    Variable Attributes and Equation Attributes respectively.
-    - In the context of equation definitions, scalars, parameters and variables may appear 
-    freely in indexed operations. For more on equation definitions, see section 
-    Defining Equations.
+    - In the context of assignment statements, the attributes of variables and equations (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars and parameters are used. For more on variable and equations attributes, see sections Variable Attributes and Equation Attributes respectively.
+    - In the context of equation definitions, scalars, parameters and variables may appear freely in indexed operations. For more on equation definitions, see section Defining Equations.

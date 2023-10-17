@@ -47,6 +47,11 @@ as the ``alias_with`` property. We can see this behavior in the following exampl
     In [2]: ipp.alias_with.name
     Out[2]: 'i'
 
+.. warning::
+    If an alias is to be used for the *universal set*, the :meth:`gamspy.UniverseAlias` 
+    class has to be used. More about this in :ref:`the-universal-set`.
+
+
 Typical examples for the usage of aliases are problems where transportation costs between 
 members of one set have to be modeled. Example: ::
 
