@@ -1,5 +1,5 @@
 """
-*** Cost based Dynamic Economic Dispatch integrated with Energy Storage and Wind
+Cost based Dynamic Economic Dispatch integrated with Energy Storage and Wind
 
 
 For more details please refer to Chapter 7 (Gcode7.2), of the following book:

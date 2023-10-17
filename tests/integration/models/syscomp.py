@@ -1,5 +1,5 @@
 """
-Solving complex linear algebraic systems of equations.
+Solving complex linear algebraic systems of equations
 
 References
 Kalvelagen, E., (2002) Solving systems of linear equations with GAMS.

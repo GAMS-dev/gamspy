@@ -1,5 +1,5 @@
 """
-Optimal design of industrial refrigeration system.
+Optimal design of industrial refrigeration system
 
 Paul H and Tay, Optimal design of an industrial refrigeration system.
 Proc. of Int. Conf. on Optimization Techniques and Applications, 1987,

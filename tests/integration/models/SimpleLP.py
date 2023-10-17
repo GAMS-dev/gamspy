@@ -1,5 +1,5 @@
 """
-*** Simple linear programming model
+Simple linear programming model
 
 For more details please refer to Chapter 2 (Gcode2.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

@@ -1,5 +1,5 @@
 """
-*** Water-Energy Nexus
+Water-Energy Nexus
 
 For more details please refer to Chapter 10 (Gcode10.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

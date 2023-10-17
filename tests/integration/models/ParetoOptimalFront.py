@@ -1,5 +1,5 @@
 """
-*** Pareto optimal front determination
+Pareto optimal front determination
 
 For more details please refer to Chapter 2 (Gcode2.16), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

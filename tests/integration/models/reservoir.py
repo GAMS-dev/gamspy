@@ -1,5 +1,5 @@
 """
-Onstream and offstream optimal reservoir management.
+Onstream and offstream optimal reservoir management
 
 Adapted from:
 McKinney, D.C., Savitsky, A.G., Basic optimization models for water and

@@ -1,5 +1,5 @@
 """
-*** Ramp rate sensitivity analysis for Dynamic Economic Load Dispatch
+Ramp rate sensitivity analysis for Dynamic Economic Load Dispatch
 
 For more details please refer to Chapter 4 (Gcode4.2), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
