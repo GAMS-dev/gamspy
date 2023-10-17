@@ -3,3 +3,547 @@
 *********
 Parameter
 *********
+
+Data Entry with Parameters
+===========================
+
+Introduction
+-------------
+
+One very important principle will motivate all our discussions on data:
+
+.. note::
+    Data should be entered in its most basic form and each data item should be entered 
+    only once.
+
+There are two reasons for adopting this principle. Numbers are almost certain to change, 
+and when they do, we want to be able to make the process of changing them as easy and 
+safe as possible. We also want to make our model easy for others to read and understand. 
+Keeping the amount of data as small as possible will certainly help. The reader should 
+always be kept aware of all the assumptions made during data manipulation in order to be 
+able to reproduce the results of a study.
+
+This chapter deals with the data type *parameter*. Data for *parameters* can be enetered 
+in scalar and in list oriented format. 
+
+
+Scalars
+--------
+
+A GAMSPy parameter of dimensionality zero is called *scalar*. This means that there are 
+no associated sets, so there is exactly one number associated with the parameter: ::
+
+    m = Container()
+
+    rho = Parameter(m, "rho", records = 0.15)
+    irr = Parameter(m, "irr")
+    life = Parameter(m, "life", records = 20)
+
+The statement above initializes ``rho`` and ``life``, but not ``irr``. Later on an 
+assignment statement could be used to provide the value: ::
+
+    irr.assignment = 0.07
+
+.. note::
+    When assigning values to scalar parameters, one needs to provide the keyword 
+    ``.assignment``. This is not necessary for non-scalar parameters. 
+
+
+Parameters
+-----------
+
+The parameter format is used to enter list oriented data which can be indexed over one 
+or several sets.
+
+The Syntax
+^^^^^^^^^^^
+
+The following example illustrates the parameter statement ::
+
+    m = Container()
+
+    j = Set(m, "j", records = ["mexico-df", "monterrey", "guadalaja"], 
+            description = "markets")
+    
+    dd = Parameter(m, name = "dd", domain = j, description = "distribution of demand",
+                   records = [["mexico-df", 55], 
+                              ["guadalaja", 15]])
+
+The class :meth:`gamspy.Parameter` indicates that this is a parameter statement and 
+``name = "dd"`` is the internal name of the parameter in GAMSPy, it is an *identifier*. 
+A parameter may be defined over one or more sets that may be specified in the ``domain`` 
+list. The domain specification for the parameter ``dd`` means that there will be a 
+vector of data associated with it, one number corresponding to every member of the 
+set ``j``. The optional description is used to describe the parameter.
+
+The Parameter initialization requires a list of data elements, each consisting of a 
+label or label-tuple and a value. The label is an element of the defining set or - if 
+there is more than one defining set - a combination of the elements of the defining 
+sets. The referenced set elements must belong to the set that the parameter is indexed 
+over. Finally, the value assigned to the record defined by the set element or element 
+tuple. 
+
+Besides using the :meth:`gamspy.Parameter` class directly, one can also facilitate the 
+``addParameter()`` method of the :meth:`gamspy.Container` class: ::
+
+    dd = AddParameter("dd", domain = j, description = "distribution of demand",
+                      records = [["mexico-df", 55], 
+                                 ["guadalaja", 15]])
+
+
+Parameter Data for Higher Dimensions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A parameter may have several dimensions. For the current maximum number of permitted 
+dimensions, see 
+`Dimensions <https://www.gams.com/latest/docs/UG_GAMSPrograms.html#UG_GAMSPrograms_Dimensions/>`_ 
+in the GAMS documentation. The list oriented data initialization through the parameter 
+statement can be easily extended to data of higher dimensionality. The label that 
+appears in the one-dimensional case is replaced by a label tuple for higher dimensions. 
+Just like in the case of :ref:`multi-dimensional-sets`, the elements in the :math:`n`-tuple 
+can be created using simple data frames or tuples in a pandas MultiIndex object. ::
+
+    dist = pd.DataFrame(
+        [
+            ("seattle", "new-york", 2.5),
+            ("seattle", "chicago", 1.7),
+            ("seattle", "topeka", 1.8),
+            ("san-diego", "new-york", 2.5),
+            ("san-diego", "chicago", 1.8),
+            ("san-diego", "topeka", 1.4),
+        ],
+        columns=["from", "to", "thousand_miles"],
+    )
+     
+    m = Container()
+    i = Set(m, "i", ["*"], records = dist["from"].unique())
+    j = Set(m, "j", ["*"], records = dist["to"].unique())
+    a = Parameter(m, "a", [i, j], records = dist)
+
+::
+
+    In [1]: a.records
+    Out[1]:
+    	     from	      to	value
+    0	  seattle	new-york	  2.5
+    1	  seattle	 chicago	  1.7
+    2	  seattle	  topeka	  1.8
+    3	san-diego	new-york	  2.5
+    4	san-diego	 chicago	  1.8
+    5	san-diego	  topeka	  1.4
+
+
+It is also possible to define an empty parameter at declaration and fill it with data 
+(e.g. from other sources like databases or spreadsheets) later on using the 
+``setRecords()`` method of the :meth:`gamspy.Parameter` class: ::
+
+    a = Parameter(m, "a", [i, j])
+    a.setRecords(dist)
+
+Example with a pandas MultiIndex object: ::
+
+    dim1 = ["a", "b", "c"]
+    dim2 = ["z", "y", "x"]
+     
+    s = pd.Series(
+        index=pd.MultiIndex.from_product([dim1, dim2]),
+        data=[i + 1 for i in range(len(dim1) * len(dim2))],
+    )
+     
+    m = Container()
+    i = Parameter(m, "i", ["*", "*"], records = s, uels_on_axes=True)
+     
+Note that for indexed assignments a copy of the symbols on the right hand side is 
+installed before the assignment is carried out. That means it does not work 
+"in-place" or recursively. ::
+    
+    Out[1]:
+      uni_0 uni_1  value
+    0     a     z    1.0
+    1     a     y    2.0
+    2     a     x    3.0
+    3     b     z    4.0
+    4     b     y    5.0
+    5     b     x    6.0
+    6     c     z    7.0
+    7     c     y    8.0
+    8     c     x    9.0
+
+
+The Assignment Statement
+-------------------------
+
+The assignment statement is the fundamental data manipulation statement in GAMSPy. 
+It may be used to define or alter values associated with :ref:`sets <set>`, 
+:ref:`variables <variable>`, :ref:`parameters <parameter>` or :ref:`equations <equation>`.
+
+Scalar Assignments
+^^^^^^^^^^^^^^^^^^^
+
+Consider the following artificial sequence: ::
+
+    x = Parameter(m, "x", records = 1.5)
+    x.assignment = 1.2
+    x.assignment = x + 2
+
+The scalar ``x`` is initialized to be 1.5. The second statement changes the value to 
+1.2, and the third changes it to 3.2. The second and third statements are *assignments*: 
+each replaces the current value of x with a new one.
+
+Note that the same symbol can be used on the left and right of the ``=`` sign. The new 
+value is not available until the calculation is complete, and the operation gives the 
+expected result.
+
+
+
+Indexed Assignments
+^^^^^^^^^^^^^^^^^^^^
+
+Performing indexed assignments offers what may be thought of as simultaneous or 
+parallel assignments and provides a concise way of specifying large amounts of data.
+
+Consider the mathematical statement :math:`DJ_d = 2.75 * DA_d` for all elements of 
+:math:`d`. This means that for every member of the set :math:`d`, a value is assigned 
+to :math:`DJ`. This can be written in GAMSPy as follows: ::
+
+    dj[d] = 2.75*da[d]
+
+This assignment is known technically as an *indexed assignment* and set ``d`` as the
+controlling index or controlling set. 
+
+.. note::
+    The index set(s) on the left hand side of an indexed assignment are referred to 
+    synonymously as the *controlling indices*, *controlling sets*, or 
+    *controlling domain* of the assignment.
+
+The extension to two or more controlling indices should be obvious. There will be an 
+assignment made for each label combination that can be constructed using the indices 
+inside the parentheses. Consider the following example of an assignment to all 100 
+data elements of the parameter ``a``. ::
+
+    m = Container()
+    row = Set(m, "row", records = [("r-" + str(i), i) for i in range(1,11)])
+    col = Set(m, "col", records = [("c-" + str(i), i) for i in range(1,11)])
+    sro = Set(m, "sro", records = row.records[-4:])
+    
+    r = Parameter(m, "r", domain = row, 
+                  records = [[record, 4] 
+                             if record in row.records["uni"][:7].values 
+                             else [record, 5] 
+                             for record in row.records["uni"]])
+    c = Parameter(m, "c", domain = col, 
+                  records = [[record, 3] 
+                             if record in col.records["uni"][:5].values 
+                             else [record, 2] 
+                             for record in col.records["uni"]])
+    
+    a = Parameter(m, "a", domain = [row, col])
+    a[row,col]  =  13.2 + r[row]*c[col]
+
+The calculation in the last statement is carried out for each of the 100 unique 
+two-label combinations that can be formed from the elements of ``row`` and ``col``. 
+An explicit formulation of the first of these assignments follows: ::
+
+    a['r-1','c-1'] = 100 + r['r-1']*c['c-1']
+
+::
+
+    In [1]: a.records.pivot(index="row",columns="col", values="value")
+    Out[1]:
+    col	    c-1	    c-2	    c-3	    c-4   	c-5 	c-6 	c-7 	c-8 	c-9 	c-10
+    row										
+    r-1	    112.0	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-2	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-3	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-4	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-5	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-6	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-7	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
+    r-8	    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
+    r-9	    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
+    r-10    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
+
+
+Note that for indexed assignments a copy of the symbols on the right hand side 
+is installed before the assignment is carried out. That means it does not work 
+"in-place" or recursively. Consider the following example where we compute the 
+first ten Fibonacci numbers and store them in parameter ``f`` using a loop. The 
+example also illustrates how such a recursive calculation does not work with a 
+parallel assignment statement for parameter ``g``. ::
+    
+    m = Container()
+    i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,11)])
+    
+    f = Parameter(m, "f", domain = i, records = [["i1",1]])
+    g = Parameter(m, "g", domain = i, records = [["i1",1]])
+    
+    
+    for idx, elem in enumerate(i):
+        if idx >= 2:
+            f[elem["uni"]] = f[i.records.iloc[idx - 1]["uni"]] + 
+                             f[i.records.iloc[idx - 2]["uni"]]
+
+    g[i].where[Ord(i)>=2] = g[i.records.iloc[idx - 2]["uni"]] + g[i.records.iloc[idx - 1]["uni"]]
+
+
+..
+    #TODO: Fix code and output
+    
+Resulting in the following output ::
+
+    In [1]: f.records
+    Out[1]:
+    	  i	value
+    0	 i1	  1.0
+    1	 i3	  1.0
+    2	 i4	  1.0
+    3	 i5	  2.0
+    4	 i6	  3.0
+    5	 i7	  5.0
+    6	 i8	  8.0
+    7	 i9	 13.0
+    8	i10	 21.0
+
+    In [2]: g.records
+    Out[2]:
+    	 i	value
+    0	i1	  1.0
+
+
+
+
+Restricting the Domain in Assignments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Sometimes it is necessary to make assignments over selected elements of a set instead 
+of over the entire domain. There are several ways to accomplish this: using 
+explicit labels, subsets, conditionals and tuples. 
+Before we look at each method in more detail, below is an introductory example: ::
+
+    m = Container()
+    
+    # Set with element range from 'i1' to 'i100'
+    i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,101)]) 
+    
+    k = Parameter(m, "k", domain = i)
+
+    # Assign all values of k[i] to 4
+    k[i] = 4
+    
+    # Assign to specific set elements of k[i]
+    k['i77'] = 15
+
+    # Assign to a part of a Set
+    j = Set(m, "j", domain = i, records = i.records[0:8])
+    k[j] = 10
+
+The parameter ``k`` is declared over the set ``i`` but not assigned any values 
+at first. In the first assignment statement ``k[i] = 4``
+all elements of the set ``i`` are assigned the value 4. ``k['i77']`` refers to 
+a specific set elements and is assigned the value 15. The third assignment assignes 
+the value 10 to the first 8 elements of the set ``i`` by using a subset ``j``. Read 
+more about Set and Set Element Referencing here: 
+:ref:`set-and-set-element-referencing`.
+
+
+Explicit Labels
+""""""""""""""""
+
+The strongest restriction of the domain is assigning a value to just one element. 
+Labels may be used explicitly in the context of assignments to accomplish this. 
+The following example illustrates: ::
+
+    a['r-7','c-4'] = -2.36
+
+This statement assigns a constant value to just one element of the parameter ``a``. 
+All other elements of ``a`` remain unchanged. Labels must be quoted when used in 
+this way.
+
+Subsets
+""""""""
+
+In general, wherever a set name may occur in an indexed assignment, a subset 
+may be used instead.
+
+Consider the following example: ::
+
+    a[sro,'col-10'] = 2.44 -33*r[sro]
+
+Since the set ``sro`` was declared as a subset of the set ``row``, we can use 
+``sro`` as a controlling index in the assignment above to make the assignment 
+only for the elements of ``sro``.
+
+.. _restricting-the-domain-conditionals:
+
+Conditionals
+"""""""""""""
+
+::
+
+    a[row,col].where[a[row,col] >= 100] = float('inf')
+
+This assignment has the following effect: all elements of the parameter ``a`` 
+whose value was at least 100 are assigned the value ``float('inf')``, while all other elements 
+of ``a`` remain unchanged.
+
+.. _restricting-the-domain-tuples:
+
+Tuples
+"""""""
+
+Tuples or multi-dimensional sets are introduced in section 
+:ref:`multi-dimensional-sets`. In this simple example we show how they may be used 
+to restrict the domain. The example builds on a previous example in this section. 
+We repeat the whole code here for clarity. ::
+
+    m = Container()
+    row = Set(m, "row", records = [("r-" + str(i), i) for i in range(1,11)])
+    col = Set(m, "col", records = [("c-" + str(i), i) for i in range(1,11)])
+    sro = Set(m, "sro", records = row.records[-4:])
+    
+    r = Parameter(m, "r", domain = row, 
+                  records = [[record, 4] 
+                             if record in row.records["uni"][:7].values 
+                             else [record, 5] 
+                             for record in row.records["uni"]])
+    
+    c = Parameter(m, "c", domain = col, 
+                  records = [[record, 3] 
+                             if record in col.records["uni"][:5].values 
+                             else [record, 2] 
+                             for record in col.records["uni"]])
+    
+        
+    s = pd.Series(
+       index=pd.MultiIndex.from_tuples([("r-1", "c-1"),
+                                      ("r-1", "c-10"),
+                                      ("r-10", "c-1"),
+                                      ("r-10", "c-10")])
+    )
+    
+    tuples = Set(m, name = "tuples", domain = [row, col], 
+                uels_on_axes=True, records = s)
+
+    a = Parameter(m, "a", domain = [row, col])
+    a[row,col]  =  13.2 + r[row]*c[col]
+    a[tuples[row,col]] = 7 + r[row]*c[col]
+    a[tuples] = 0.25 * a[tuples] 
+
+Note that we have introduced the new set ``tuples``. It is two-dimensional and contains 
+just four elements. As before, the parameter ``a`` is first assigned values for all its 
+100 elements. We then change some of these values using the set ``tuples`` as domain. 
+The values of the elements of the parameter ``a`` that are not elements of the set ``tuples`` 
+remain unchanged.
+
+Issues with Controlling Indices
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+    The number of controlling indices on the left of the = sign should be at least as 
+    large as the number of indices on the right. There should be no index on the right-hand 
+    side of the assignment that is not present on the left unless it is operated on by an 
+    indexed operator. For more on indexed operators, see section :ref:`indexed-operations`.
+
+Consider the following statement: ::
+
+    a[row,'col-2'] = 22 - c[col]
+
+GAMSPy will flag this statement as an error since ``col`` is an index on the right-hand side 
+of the equation but not on the left. 
+
+Note that there would be no error here if ``col`` were a singleton set. Since there is only 
+one element in a singleton set, the intent and behavior is well-defined even when col is not 
+under control.
+
+.. warning::
+    Each set is counted only once to determine the number of controlling indices. If the 
+    intent is for a set to appear independently more than once within the controlling domain, 
+    the second and subsequent occurrences of the set should be aliases of the original set, 
+    so that the number of controlling indices is equal to the number of indices. For details 
+    on aliases, see section :ref:`alias`.
+
+Consider the following statement as an illustration: ::
+
+    b[row,row] = 7.7 - r[row]
+
+This statement has only one controlling index, namely ``row``. One element (on the diagonal 
+of ``b``) is assigned for each element of ``row``, for a total of 10 assigned values. None 
+of the off-diagonal elements of ``b`` will be changed!
+
+If the intent is to assign values to each element of ``b``, this can be done by introducing 
+an alias ``rowp`` for ``row`` and using this alias in the second index position. There will 
+then be two controlling indices and GAMSPy will make assignments over all 100 values of the 
+full Cartesian product. The following example illustrates this method: ::
+
+    rowp = Alias(m, name = "rowp", , alias_with = row)
+    b[row,rowp] = 7.7 - [r[row] + r[rowp]]/2
+
+
+.. _indexed-operations:
+
+Indexed Operations
+^^^^^^^^^^^^^^^^^^^
+
+GAMSPy provides the following four indexed operations: :meth:`gamspy.Sum`, 
+:meth:`gamspy.Product`, :meth:`gamspy.Smax`, :meth:`gamspy.Smin`. These operations are 
+performed over one or more controlling indices. Consider the following simple example: ::
+
+    m = Container()
+
+    i = Set(m, "i", records = ["cartagena", "callao", "moron"], description = "plants")
+    p = Set(m, "p", records = ["nitr-acid", "sulf-acid", "amm-sulf"], description = "product")
+    
+    capacity = Parameter(m, "capacity", domain = [i, p], description = "capacity in tons per day", 
+                         records = [["cartagena","nitr-acid",10], ["cartagena","sulf-acid",20], ["cartagena","amm-sulf",30],
+                                    ["callao","nitr-acid",20], ["callao","sulf-acid",30], ["callao","amm-sulf",40], 
+                                    ["moron","nitr-acid",30], ["moron","sulf-acid",40], ["moron","amm-sulf",50]])
+    
+    totcap = Parameter(m, "totcap", domain = p, description = "total capacity by process")
+    
+    totcap[p] = Sum(i, capacity[i,p]);
+
+The index over which the summation is done, ``i``, is separated from the word ``Sum`` 
+by a left bracket and from the data term capacity[i,m] by a comma. The set ``i`` is called 
+the *controlling index* for this operation. The scope of the control is the pair of 
+brackets ``[]`` that start immediately after the Sum. Note that using normal mathematical 
+representation the last line could be written as: :math:`totC_p = \sum_{i}C_{ip}`.
+
+It is also possible to sum simultaneously over the domain of two or more sets as in the 
+first assignment that follows. The second assignment demonstrates the use of a less trivial 
+expression than an identifier within the indexed operation. ::
+
+    count.assignment = Sum((i,j), a[i,j])
+    emp.assignment = Sum(t, l[t]*p[t])
+
+The equivalent mathematical forms are:
+
+:math:`count = \sum_{i}\sum_{j}A_{ij}` and :math:`emp = \sum_{t}L_tP_t`
+
+Note that the following alternative notation may be used for the first assignment above: ::
+
+    count.assignment = Sum(i, Sum(j, a[i,j]))
+
+.. note::
+    In the context of sets the :meth:`gamspy.Sum` operator may be used to compute the 
+    number of elements in a set. 
+
+The :meth:`gamspy.Smin` and :meth:`gamspy.Smax` operations are used to find the largest 
+and smallest values over the domain of the index set or sets. The index for the ``Smin`` 
+and ``Smax`` operators is specified in the same manner as in the index for the 
+:meth:`gamspy.Sum` operator. In the following example we want to find the largest 
+capacity: ::
+
+    max_cap.assignment = Smax((i,m),capacity[i,m])
+
+
+..
+    TODO: add references in note block
+
+.. note::
+    - In the context of assignment statements, the attributes of variables and equations 
+      (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars 
+      and parameters are used. For more on variable and equations attributes, see sections 
+      :ref:`variable-attributes` and Equation Attributes respectively.
+    - In the context of equation definitions, scalars, parameters and variables may appear 
+      freely in indexed operations. For more on equation definitions, see section Defining 
+      Equations.
