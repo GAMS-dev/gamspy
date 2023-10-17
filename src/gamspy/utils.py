@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
     from gamspy import Domain
-    from gamspy._symbols.symbol import Symbol
     from gamspy._algebra.expression import Expression
 
 
@@ -107,9 +106,7 @@ def getAvailableSolvers() -> List[str]:
     return gamspy_base.available_solvers
 
 
-def checkAllSame(
-    iterable1: Sequence["Symbol"], iterable2: Sequence["Symbol"]
-) -> bool:
+def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
     """
     Checks if all elements of a sequence are equal to the all
     elements of another sequence.
@@ -149,7 +146,7 @@ def checkAllSame(
     return all_same
 
 
-def isin(symbol: "Symbol", sequence: Sequence) -> bool:
+def isin(symbol, sequence: Sequence) -> bool:
     """
     Checks whether the given symbol in the sequence.
     Needed for symbol comparison since __eq__ magic
@@ -509,108 +506,6 @@ def _getMatchingParanthesisIndices(string: str) -> dict:
         raise AssertionError("Too many opening parentheses!")
 
     return matching_indices
-
-
-def _getValidOptionStatements() -> List[str]:
-    # https://www.gams.com/latest/docs/UG_OptionStatement.html#UG_OptionStatement_ListOfOptions
-    def lowercase(options):
-        return [option.lower() for option in options]
-
-    output_details = [
-        "asyncSolLst",
-        "decimals",
-        "dispWidth",
-        "eject",
-        "epsToZero",
-        "limCol",
-        "limRow",
-        "maxGenericFiles",
-        "MCPRHoldFx",
-        "profile",
-        "profileTol",
-        "solPrint",
-        "solSlack",
-        "sysOut",
-    ]
-
-    solver_specific = [
-        "bRatio",
-        "domLim",
-        "holdFixedAsync",
-        "intVarUp",
-        "iterLim",
-        "optCA",
-        "optCR",
-        "reform",
-        "resLim",
-        "savePoint",
-        "solveLink",
-        "sys12",
-        "threads",
-    ]
-
-    choice_of_solver = [
-        "CNS",
-        "DNLP",
-        "EMP",
-        "LP",
-        "MCP",
-        "MINLP",
-        "MIP",
-        "MIQCP",
-        "MPEC",
-        "NLP",
-        "QCP",
-        "RMINLP",
-        "RMIP",
-        "RMIQCP",
-        "RMPEC",
-        "solver",
-    ]
-
-    input_control = [
-        "ECImplicitLoad",
-        "fdDelta",
-        "fdOpt",
-        "gdxUels",
-        "seed",
-        "solveOpt",
-        "strictSingleton",
-        "sys18",
-        "zeroToEps",
-    ]
-
-    others = [
-        "checkErrorLevel",
-        "dmpOpt",
-        "dmpSym",
-        "dmpUserSym",
-        "dualCheck",
-        "forLim",
-        "integer1..5",
-        "measure",
-        "memoryStat",
-        "real1..5",
-        "subSystems",
-        "sys10",
-        "sys11",
-        "sys15",
-        "sys16",
-        "sys17",
-        "sys19",
-        "threadsAsync",
-    ]
-
-    return (
-        lowercase(output_details)
-        + lowercase(solver_specific)
-        + lowercase(choice_of_solver)
-        + lowercase(input_control)
-        + lowercase(others)
-    )
-
-
-VALID_OPTION_STATEMENTS = _getValidOptionStatements()
 
 
 def _getValidGamsOptions() -> List[str]:

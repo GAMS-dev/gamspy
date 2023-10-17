@@ -389,8 +389,9 @@ statement, this condition is satisfied.
 
 
 .. _types-of-discrete-variables:
+
 Types of Discrete Variables
-============================
+===========================
 
 GAMS provides six discrete variable types: ``binary``, ``integer``, ``sos1``, ``sos2``, 
 ``semicont`` and ``semiint``. In the following subsections we will present details and 
