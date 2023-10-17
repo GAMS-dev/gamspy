@@ -98,11 +98,9 @@ def main():
     pi = Set(m, "pi", domain=[p])
     pi[p] = Ord(p) == Card(pp) + 1
 
-    m.addOptions({"optCr": 0, "limRow": 0, "limCol": 0, "solPrint": "off"})
-
     while len(pp) < len(p):
-        master.solve()
-        pricing.solve()
+        master.solve(options={"optCr": 0})
+        pricing.solve(options={"optCr": 0})
 
         if z.records["level"].values[0] >= -0.001:
             break
@@ -112,7 +110,7 @@ def main():
         pi[p] = pi[p.lag(1)]
 
     master.problem = "mip"
-    master.solve()
+    master.solve(options={"optCr": 0})
 
     import math
 

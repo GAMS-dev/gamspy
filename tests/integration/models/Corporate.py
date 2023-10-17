@@ -193,8 +193,6 @@ def main():
 
     NormalCon.definition = Sum(a, x[a]) == CurrentWeight
 
-    m.addOptions({"SOLVEOPT": "REPLACE"})
-
     # MODELS #
     StrategicModel = Model(
         m,

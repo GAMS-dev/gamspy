@@ -1,5 +1,5 @@
 """
-*** Optimal power flow for a simple two-bus system
+Optimal power flow for a simple two-bus system
 
 For more details please refer to Chapter 6 (Gcode6.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

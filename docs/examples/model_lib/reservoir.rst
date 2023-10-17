@@ -2,8 +2,8 @@
 
 .. _reservoir:
 
-Onstream and offstream optimal reservoir management.
-====================================================
+Onstream and offstream optimal reservoir management
+===================================================
 
 :download:`reservoir.py <../../../tests/integration/models/reservoir.py>` 
 

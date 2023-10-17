@@ -148,8 +148,6 @@ def main(is_centropy=False):
         ]
     )
 
-    m.addOptions({"limCol": 0, "limRow": 0, "solPrint": "off"})
-
     # Set
     i = Set(
         m,
@@ -749,17 +747,12 @@ def main(is_centropy=False):
         objective=DENTROPY,
     )
 
-    m.addOptions(
-        {
-            "limRow": 100,
-            "limCol": 0,
-            "solPrint": "on",
+    SAMENTROP.solve(
+        options={
             "domLim": 100,
             "holdfixedasync": 1,
         }
     )
-
-    SAMENTROP.solve()
 
     # Parameters for reporting results
     Macsam1 = Parameter(

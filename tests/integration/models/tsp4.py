@@ -80,7 +80,6 @@ def main():
     i.setRecords([f"i{ir}" for ir in range(1, 13)])
 
     # options. Make sure MIP solver finds global optima.
-    m.addOptions({"optCr": 0})
     assign = Model(
         m,
         name="assign",
@@ -89,7 +88,7 @@ def main():
         sense="min",
         objective=z,
     )
-    assign.solve()
+    assign.solve(options={"optCr": 0})
 
     # find and display tours
     t = Set(
@@ -235,7 +234,6 @@ def main():
             curcut[cc] = curcut[cc.lag(1)]
 
         tspcut.solve()
-        m.addOptions({"limRow": 0, "limCol": 0})
         print(
             "Cut: ",
             ccc_loop,

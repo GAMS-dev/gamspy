@@ -2,8 +2,8 @@
 
 .. _fiat:
 
-   Analysis of the stability margin of the spark ignition engine
-================================================================
+Fiat - Analysis of Stability Margin of Spark Ignition Engine Fiat Dedra
+=======================================================================
 
 :download:`fiat.py <../../../tests/integration/models/fiat.py>` 
 

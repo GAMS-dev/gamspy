@@ -279,9 +279,7 @@ def main():
     y.up[ll, lf] = Card(ac) - 1
     freq.up[s1, s2].where[rt[s1, s2]] = 100
 
-    m.addOptions({"optCr": 0, "resLim": 100})
-
-    ilp.solve()
+    ilp.solve(options={"optCr": 0})
 
     solrep["ILP", ll, "freq"] = Sum(lf.where[x.l[ll, lf]], Ord(lf))
     solrep["ILP", ll, "cars"] = Sum(

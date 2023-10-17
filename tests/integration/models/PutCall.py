@@ -192,8 +192,6 @@ def main():
 
     output = argv[1] if len(argv) > 1 else "PutCallModel"
 
-    m.addOptions({"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
-
     # SETS #
     i, l = m.getSymbols(["i", "l"])
 
@@ -314,7 +312,7 @@ def main():
     # Set the average level of downside (risk) allowed
 
     Omega.assignment = 0.1
-    UnConPutCallModel.solve()
+    UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
 
     # Dual of the UnConstrained Put/Call model
 
@@ -346,7 +344,9 @@ def main():
         objective=z,
     )
 
-    UnConDualPutCallModel.solve()
+    UnConDualPutCallModel.solve(
+        options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+    )
 
     # Display PiOmega.l and Pi.l and check that they are, respectively, equal
     # to TargetDevDef.m and PutCon.m
@@ -370,8 +370,6 @@ def main():
     # We propose an alternative way to build a frontier using
     # the loop statement. Such a structure is suitable for the
     # GDX utility (for details, see gdxutility.pdf included in the doc folder )
-
-    m.addOptions({"SOLPRINT": "OFF"})
 
     # SET
     FrontierPoints = Set(
@@ -425,7 +423,9 @@ def main():
 
     for jj in j.toList():
         Omega.assignment = OmegaLevels[jj]
-        UnConPutCallModel.solve()
+        UnConPutCallModel.solve(
+            options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+        )
 
         FrontierPortfolios[jj, i] = x.l[i]
         CallValues[jj, "Mild Constraint"] = z.l
@@ -442,7 +442,9 @@ def main():
 
     for jj in j.toList():
         Omega.assignment = OmegaLevels[jj]
-        UnConPutCallModel.solve()
+        UnConPutCallModel.solve(
+            options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+        )
 
         FrontierPortfolios[jj, i] = x.l[i]
         CallValues[jj, "Tight Constraint"] = z.l
@@ -457,7 +459,7 @@ def main():
 
     Omega.assignment = 0.475
 
-    UnConPutCallModel.solve()
+    UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
 
     # SCALAR
     Df = Parameter(m, name="Df")
@@ -514,7 +516,7 @@ def main():
 
     for jj in j.toList():
         Omega.assignment = OmegaLevels[jj]
-        PutCallModel.solve()
+        PutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
         FrontierPortfolios[jj, i] = x.l[i]
         PutCall[jj, "Put side"] = PutCon.l
         PutCall[jj, "Call side"] = z.l

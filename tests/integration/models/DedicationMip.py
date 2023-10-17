@@ -212,7 +212,6 @@ def main():
         + ((1 + rf[t.lag(1)] + spread) * borrow[t.lag(1)]).where[tau[t] > 0]
     )
 
-    m.addOptions({"SOLVEOPT": "REPLACE"})
     Dedication = Model(
         m,
         name="Dedication",
@@ -222,7 +221,7 @@ def main():
         objective=v0,
     )
 
-    Dedication.solve()
+    Dedication.solve(options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100})
 
     print("* First Model Results\n")
     print("v0: ", v0.records.level.round(3).tolist(), "\n")
@@ -295,8 +294,9 @@ def main():
         objective=v0,
     )
 
-    m.addOptions({"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100})
-    DedicationMIPEvenLot.solve()
+    DedicationMIPEvenLot.solve(
+        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+    )
     print("* Second Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
     print("Y: ", Y.records.level.round(3).tolist(), "\n")
@@ -386,7 +386,9 @@ def main():
 
     x.up[i] = LotSize * Y.up[i]
 
-    DedicationMIPTrnCosts.solve()
+    DedicationMIPTrnCosts.solve(
+        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+    )
     print("* Third Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
     print("v0: ", v0.records.level.round(3).tolist(), "\n")
@@ -424,7 +426,9 @@ def main():
         objective=TotalCost,
     )
 
-    DedicationMIPAll.solve()
+    DedicationMIPAll.solve(
+        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+    )
     print("* Fourth Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
     print("v0: ", v0.records.level.round(3).tolist(), "\n")

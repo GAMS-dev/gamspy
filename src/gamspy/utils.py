@@ -47,7 +47,19 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-def getAvailableSolvers() -> List[str]:
+def getInstalledSolvers() -> List[str]:
+    """
+    Returns the list of installed solvers
+
+    Returns
+    -------
+    List[str]
+
+    Raises
+    ------
+    GamspyException
+        In case gamspy_base is not installed.
+    """
     try:
         import gamspy_base
     except Exception:
@@ -71,6 +83,104 @@ def getAvailableSolvers() -> List[str]:
                 solver_names.append(line.split(" ")[0])
 
     return solver_names
+
+
+def getAvailableSolvers() -> List[str]:
+    """
+    Returns all available solvers that can be installed.
+
+    Returns
+    -------
+    List[str]
+
+    Raises
+    ------
+    GamspyException
+        In case gamspy_base is not installed.
+    """
+    try:
+        import gamspy_base
+    except Exception:
+        raise GamspyException("gamspy_base must be installed!")
+
+    return gamspy_base.available_solvers
+
+
+def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
+    """
+    Checks if all elements of a sequence are equal to the all
+    elements of another sequence.
+
+    Parameters
+    ----------
+    iterable1 : Sequence of Symbols
+    iterable2 : Sequence of Symbols
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> list1 = [i, j]
+    >>> list2 = [i, j]
+    >>> gp.utils.checkAllSame(list1, list2)
+    True
+    >>> list3 = [i, j, k]
+    >>> gp.utils.checkAllSame(list1, list3)
+    False
+
+    """
+    if len(iterable1) != len(iterable2):
+        return False
+
+    all_same = True
+    for elem1, elem2 in zip(iterable1, iterable2):
+        if elem1 is not elem2:
+            return False
+    return all_same
+
+
+def isin(symbol, sequence: Sequence) -> bool:
+    """
+    Checks whether the given symbol in the sequence.
+    Needed for symbol comparison since __eq__ magic
+    is overloaded by the symbols.
+
+    Parameters
+    ----------
+    symbol : Symbol
+        Symbol to check
+    sequence : Sequence
+        Sequence that holds a sequence of symbols
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> sets = [i, j]
+    >>> gp.utils.isin(i, sets)
+    True
+    >>> gp.utils.isin(k, sets)
+    False
+
+    """
+    for item in sequence:
+        if symbol is item:
+            return True
+    return False
 
 
 def _loadPackageGlobals() -> None:  # pragma: no cover
@@ -323,83 +433,6 @@ def _toList(
     return obj
 
 
-def isin(symbol, sequence: Sequence) -> bool:
-    """
-    Checks whether the given symbol in the sequence.
-    Needed for symbol comparison since __eq__ magic
-    is overloaded by the symbols.
-
-    Parameters
-    ----------
-    symbol : Symbol
-        _Symbol to check
-    sequence : Sequence
-        Sequence that holds a sequence of symbols
-
-    Returns
-    -------
-    bool
-
-    Examples
-    --------
-    >>> import gamspy as gp
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
-    >>> j = gp.Set(m, "j")
-    >>> k = gp.Set(m, "k")
-    >>> sets = [i, j]
-    >>> gp.utils.isin(i, sets)
-    True
-    >>> gp.utils.isin(k, sets)
-    False
-
-    """
-    for item in sequence:
-        if symbol is item:
-            return True
-    return False
-
-
-def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
-    """
-    Checks if all elements of a sequence are equal to the all
-    elements of another sequence.
-
-    Parameters
-    ----------
-    iterable1 : Sequence
-    iterable2 : Sequence
-
-    Returns
-    -------
-    bool
-
-    Examples
-    --------
-    >>> import gamspy as gp
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i")
-    >>> j = gp.Set(m, "j")
-    >>> k = gp.Set(m, "k")
-    >>> list1 = [i, j]
-    >>> list2 = [i, j]
-    >>> gp.utils.checkAllSame(list1, list2)
-    True
-    >>> list3 = [i, j, k]
-    >>> gp.utils.checkAllSame(list1, list3)
-    False
-
-    """
-    if len(iterable1) != len(iterable2):
-        return False
-
-    all_same = True
-    for elem1, elem2 in zip(iterable1, iterable2):
-        if elem1 is not elem2:
-            return False
-    return all_same
-
-
 def _getDomainStr(
     domain: Iterable[Union["Set", "Alias", "ImplicitSet", str]]
 ) -> str:
@@ -473,108 +506,6 @@ def _getMatchingParanthesisIndices(string: str) -> dict:
         raise AssertionError("Too many opening parentheses!")
 
     return matching_indices
-
-
-def _getValidOptionStatements() -> List[str]:
-    # https://www.gams.com/latest/docs/UG_OptionStatement.html#UG_OptionStatement_ListOfOptions
-    def lowercase(options):
-        return [option.lower() for option in options]
-
-    output_details = [
-        "asyncSolLst",
-        "decimals",
-        "dispWidth",
-        "eject",
-        "epsToZero",
-        "limCol",
-        "limRow",
-        "maxGenericFiles",
-        "MCPRHoldFx",
-        "profile",
-        "profileTol",
-        "solPrint",
-        "solSlack",
-        "sysOut",
-    ]
-
-    solver_specific = [
-        "bRatio",
-        "domLim",
-        "holdFixedAsync",
-        "intVarUp",
-        "iterLim",
-        "optCA",
-        "optCR",
-        "reform",
-        "resLim",
-        "savePoint",
-        "solveLink",
-        "sys12",
-        "threads",
-    ]
-
-    choice_of_solver = [
-        "CNS",
-        "DNLP",
-        "EMP",
-        "LP",
-        "MCP",
-        "MINLP",
-        "MIP",
-        "MIQCP",
-        "MPEC",
-        "NLP",
-        "QCP",
-        "RMINLP",
-        "RMIP",
-        "RMIQCP",
-        "RMPEC",
-        "solver",
-    ]
-
-    input_control = [
-        "ECImplicitLoad",
-        "fdDelta",
-        "fdOpt",
-        "gdxUels",
-        "seed",
-        "solveOpt",
-        "strictSingleton",
-        "sys18",
-        "zeroToEps",
-    ]
-
-    others = [
-        "checkErrorLevel",
-        "dmpOpt",
-        "dmpSym",
-        "dmpUserSym",
-        "dualCheck",
-        "forLim",
-        "integer1..5",
-        "measure",
-        "memoryStat",
-        "real1..5",
-        "subSystems",
-        "sys10",
-        "sys11",
-        "sys15",
-        "sys16",
-        "sys17",
-        "sys19",
-        "threadsAsync",
-    ]
-
-    return (
-        lowercase(output_details)
-        + lowercase(solver_specific)
-        + lowercase(choice_of_solver)
-        + lowercase(input_control)
-        + lowercase(others)
-    )
-
-
-VALID_OPTION_STATEMENTS = _getValidOptionStatements()
 
 
 def _getValidGamsOptions() -> List[str]:

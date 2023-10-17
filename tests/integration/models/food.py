@@ -276,10 +276,7 @@ def main():
         objective=profit,
     )
 
-    # set optCr to 0
-    c.addOptions({"optcr": 0})
-
-    food.solve()
+    food.solve(options={"optcr": 0})
 
     import math
 

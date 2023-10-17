@@ -1,5 +1,5 @@
 """
-*** Transmission Expansion Planning
+Transmission Expansion Planning
 
 For more details please refer to Chapter 9 (Gcode9.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
@@ -257,8 +257,7 @@ def main():
         -1 * branch[bus, node, "Limit"] / Sbase
     )
 
-    m.addOptions({"optCr": 0, "mip": "CPLEX"})
-    loadflow.solve()
+    loadflow.solve(options={"optCr": 0, "mip": "CPLEX"})
 
     print("Objective Function Value:  ", round(OF.toValue(), 3))
 

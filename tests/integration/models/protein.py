@@ -186,8 +186,7 @@ def main():
         objective=obj,
     )
 
-    m.addOptions({"reslim": 60000, "iterlim": 80000})
-    protein.solve()
+    protein.solve(options={"reslim": 60000, "iterlim": 80000})
 
     print("Objective Function Value:  ", round(obj.toValue(), 4), "\n")
 

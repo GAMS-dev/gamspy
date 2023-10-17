@@ -49,6 +49,50 @@ Please copy all six lines into a file (typically named gamslice.txt). Then, run:
 
     gamspy install license <path_to_your_license_file>
 
+Solvers
+-------
+
+GAMSPy comes with 6 default solvers (CPLEX, CONOPT, PATH, NLPEC, SBB, and CONVERT) and
+more solvers can be installed on demand.
+
+Listing Solvers
+===============
+
+In order to list the installed solvers, you can run either::
+
+    gamspy list solvers
+
+or if you want to list all available solvers, you can run the following::
+
+    gamspy list solvers --all
+    
+The same information can also be reached programatically via utils module of GAMSPy::
+    
+    import gamspy as gp
+    print(gp.utils.getInstalledSolvers())
+    print(gp.utils.getAvailableSolvers())
+
+
+Installing/Uninstalling New Solvers
+===================================
+
+The following command is available for installating new solvers::
+
+    gamspy install solver <solver_name>
+
+Similarly, a solver can be uninstalled with::
+
+    gamspy uninstall solver <solver_name>
+
+Updating Solvers
+================
+
+If the solvers in your machine are not up-to-date, you can run::
+
+    gamspy update
+
+To update all solvers to a version that is compatible with GAMSPy.
+
 Testing
 -------
 

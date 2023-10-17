@@ -153,8 +153,6 @@ def main():
         objective=z,
     )
 
-    m.addOptions({"MINLP": "SBB", "optcr": 0})
-
     MeanVarianceMIP = '"Lambda","z","Variance","ExpReturn",'
     i_recs = [f'"{i_rec}"' for i_rec in i.records.ASSETS.tolist()]
     MeanVarianceMIP += ",".join(i_recs)
@@ -165,7 +163,7 @@ def main():
         if lamda_loop > 1:
             break
         lamda.assignment = lamda_loop
-        MeanVarMip.solve()
+        MeanVarMip.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceMIP += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         MeanVarianceMIP += ",".join(x_recs)
@@ -264,8 +262,6 @@ def main():
         objective=z,
     )
 
-    m.addOptions({"MINLP": "SBB", "optcr": 0})
-
     MeanVarianceWithCost = '"Lambda","z","Variance","ExpReturn",'
     MeanVarianceWithCost += ",".join(i_recs) + ","
     MeanVarianceWithCost += ",".join(i_recs)
@@ -276,7 +272,7 @@ def main():
         if lamda_loop > 1:
             break
         lamda.assignment = lamda_loop
-        MeanVarWithCost.solve()
+        MeanVarWithCost.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x0_recs = [
             str(round(x_rec, 4)) for x_rec in x_0.records.level.tolist()
@@ -407,8 +403,6 @@ def main():
         objective=z,
     )
 
-    m.addOptions({"MINLP": "SBB", "optcr": 0})
-
     MeanVarianceRevision = (
         '"Model status","Lambda","z","Variance","ExpReturn",'
     )
@@ -422,7 +416,7 @@ def main():
         if lamda_loop > 1:
             break
         lamda.assignment = lamda_loop
-        MeanVarRevision.solve()
+        MeanVarRevision.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         buy_recs = [

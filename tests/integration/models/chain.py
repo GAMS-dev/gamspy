@@ -1,25 +1,27 @@
 """
-   Find the chain (of uniform density) of length L suspended between two
-   points with minimal potential energy.
+Hanging Chain COPS 2.0 #3
 
-   This model is from the COPS benchmarking suite.
-   See http://www-unix.mcs.anl.gov/~more/cops/.
+Find the chain (of uniform density) of length L suspended between two
+points with minimal potential energy.
 
-   The number of intervals for the discretization can be specified using
-   the command line parameter --nh. COPS performance tests have been
-   reported for nh = 50, 100, 200, 400
+This model is from the COPS benchmarking suite.
+See http://www-unix.mcs.anl.gov/~more/cops/.
 
-   Tested with nh=3000, 4000, 5000     May 26, 2005
+The number of intervals for the discretization can be specified using
+the command line parameter --nh. COPS performance tests have been
+reported for nh = 50, 100, 200, 400
 
-   References:
-   Neculai Andrei, "Models, Test Problems and Applications for
-   Mathematical Programming". Technical Press, Bucharest, 2003.
-   Application A7, page 350.
+Tested with nh=3000, 4000, 5000     May 26, 2005
 
-   Dolan, E D, and More, J J, Benchmarking Optimization Software with COPS.
-   Tech. rep., Mathematics and Computer Science Division, 2000.
+References:
+Neculai Andrei, "Models, Test Problems and Applications for
+Mathematical Programming". Technical Press, Bucharest, 2003.
+Application A7, page 350.
 
-   Cesari, L, Optimization - Theory and Applications. Springer Verlag, 1983.
+Dolan, E D, and More, J J, Benchmarking Optimization Software with COPS.
+Tech. rep., Mathematics and Computer Science Division, 2000.
+
+Cesari, L, Optimization - Theory and Applications. Springer Verlag, 1983.
 """
 import sys
 

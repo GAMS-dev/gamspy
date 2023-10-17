@@ -15,3 +15,4 @@ gams-transfer-python
 docs/_build
 _gams_py_*
 tests/integration/*.txt
+tests/integration/models/results.xlsx

@@ -88,9 +88,8 @@ r.lo.assignment = 0.05
 r.up.assignment = 0.4
 
 # solve with a good global solver
-c.addOptions({"optcr": "0.01"})
 print("Starting solve, be patient (log only shown afterwards)...")
-m.solve()
+m.solve(options={"optcr": 0.01})
 
 assert math.isclose(m.objective_value, 0.3702, rel_tol=0.001)
 

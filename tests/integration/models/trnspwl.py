@@ -197,9 +197,7 @@ def main():
         description="objective of local optimum that is not globally optimal",
     )
 
-    m.addOptions({"nlp": "conopt"})
-
-    transport.solve()
+    transport.solve(options={"nlp": "conopt"})
     print("Initial Objective Function Value: ", round(z.records.level[0], 3))
 
     localopt.assignment = z.l
@@ -278,9 +276,7 @@ def main():
         objective=z,
     )
 
-    m.addOptions({"optCr": 0})
-
-    trnsdiscA.solve()
+    trnsdiscA.solve(options={"optCr": 0})
 
     # The next model (formulation b) uses the convex combinations of
     # neighboring points but requires the discretization to be bounded

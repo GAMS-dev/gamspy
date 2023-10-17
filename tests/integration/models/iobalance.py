@@ -187,9 +187,6 @@ def main():
         objective=obj,
     )
 
-    # turn off detailed outputs
-    m.addOptions({"limRow": 0, "limCol": 0, "solPrint": "off"})
-
     mEntropyz.solve()
     report["EntropyZ", i, j] = zv.l[i, j] / x[j]
 

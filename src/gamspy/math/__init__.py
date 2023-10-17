@@ -39,6 +39,12 @@ from gamspy.math.log_power import sqr
 from gamspy.math.log_power import vc_power
 from gamspy.math.misc import abs
 from gamspy.math.misc import beta
+from gamspy.math.misc import bool_and
+from gamspy.math.misc import bool_eqv
+from gamspy.math.misc import bool_imp
+from gamspy.math.misc import bool_not
+from gamspy.math.misc import bool_or
+from gamspy.math.misc import bool_xor
 from gamspy.math.misc import ceil
 from gamspy.math.misc import dist
 from gamspy.math.misc import div
@@ -67,6 +73,12 @@ from gamspy.math.misc import rand_linear
 from gamspy.math.misc import rand_triangle
 from gamspy.math.misc import regularized_beta
 from gamspy.math.misc import regularized_gamma
+from gamspy.math.misc import rel_eq
+from gamspy.math.misc import rel_ge
+from gamspy.math.misc import rel_gt
+from gamspy.math.misc import rel_le
+from gamspy.math.misc import rel_lt
+from gamspy.math.misc import rel_ne
 from gamspy.math.misc import Round
 from gamspy.math.misc import sigmoid
 from gamspy.math.misc import sign
@@ -162,4 +174,16 @@ __all__ = [
     "sqrec",
     "errorf",
     "sigmoid",
+    "bool_and",
+    "bool_eqv",
+    "bool_imp",
+    "bool_not",
+    "bool_or",
+    "bool_xor",
+    "rel_eq",
+    "rel_ge",
+    "rel_gt",
+    "rel_le",
+    "rel_lt",
+    "rel_ne",
 ]

@@ -1,5 +1,5 @@
 """
-*** Multi-period AC-OPF for IEEE 24-bus network considering wind and load shedding
+Multi-period AC-OPF for IEEE 24-bus network considering wind and load shedding
 
 For more details please refer to Chapter 6 (Gcode6.7), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

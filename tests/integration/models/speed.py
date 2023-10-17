@@ -1,5 +1,6 @@
 """
-Minimization of the weight of a speed reducer.
+Minimization of the weight of a speed reducer
+
 The weight of the speed reducer is to be minimized subject to constraints
 on bending stress of the gear teeth, surface stress, transverse deflections
 of the shafts and stresses in the shaft.

@@ -177,36 +177,6 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertEqual(Sense.values(), ["MIN", "MAX", "FEASIBILITY"])
 
-    def test_options(self):
-        options = {
-            "limRow": 0,
-            "limCol": 0,
-            "solPrint": "silent",
-            "solver": "cplex",
-            "solveLink": "%solveLink.loadLibrary%",
-        }
-        self.m.addOptions(options)
-        self.assertTrue(len(self.m._unsaved_statements), 5)
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[0], "limRow = 0"
-        )
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[1], "limCol = 0"
-        )
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[2], "solPrint = silent"
-        )
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[3], "solver = cplex"
-        )
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[4],
-            "solveLink = %solveLink.loadLibrary%",
-        )
-
-        options = {"bla": 0}
-        self.assertRaises(ValueError, self.m.addOptions, options)
-
     def test_arbitrary_gams_code(self):
         self.m._addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(
@@ -274,6 +244,59 @@ class ContainerSuite(unittest.TestCase):
         m.write("data.gdx")
         m = Container(delayed_execution=True, load_from="data.gdx")
         self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
+
+    def test_copy(self):
+        m = Container(delayed_execution=True, working_directory=".")
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        b = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+        # Equation
+        supply = Equation(m, name="supply", domain=[i])
+        demand = Equation(m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        new_cont = m.copy(working_directory=".")
+        transport = Model(
+            new_cont,
+            name="transport",
+            equations=new_cont.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport.solve()
+
+        self.assertIsNotNone(m.gams_job_name)
+        self.assertAlmostEqual(transport.objective_value, 153.675, 3)
+        self.assertEqual(m.data.keys(), new_cont.data.keys())
 
 
 def container_suite():

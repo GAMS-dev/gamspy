@@ -72,6 +72,26 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(Set)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(Set)
+        else:
+            if isinstance(symobj, Set):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not a Set object)"
+                )
+
     def __init__(
         self,
         container: "Container",
@@ -149,6 +169,9 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
 
         if self.container.delayed_execution:
@@ -315,6 +338,20 @@ class Set(gt.Set, operable.Operable, Symbol):
         ------
         ValueError
             When type is not circular or linear
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>>
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
+        >>> a = gp.Parameter(m, name="a", domain=[t])
+        >>> b = gp.Parameter(m, name="b", domain=[t])
+        >>>
+        >>> a[t] = 1986 + gp.Ord(t)
+        >>> b[t] = -1
+        >>> b[t] = a[t.lag(1, "linear")]
+
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
@@ -346,6 +383,20 @@ class Set(gt.Set, operable.Operable, Symbol):
         ------
         ValueError
             When type is not circular or linear
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>>
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
+        >>> a = gp.Parameter(m, name="a", domain=[t])
+        >>> c = gp.Parameter(m, name="c", domain=[t])
+        >>>
+        >>> a[t] = 1986 + gp.Ord(t)
+        >>> c[t] = -1
+        >>> c[t.lead(2, "linear")] = a[t]
+
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 

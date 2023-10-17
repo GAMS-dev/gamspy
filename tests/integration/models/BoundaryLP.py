@@ -1,6 +1,6 @@
 """
-*** Simple linear programming model for determination of boundary values of an
-objective function
+Simple linear programming model for determination of boundary values of an objective function
+
 For more details please refer to Chapter 2 (Gcode2.2), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 --------------------------------------------------------------------------------

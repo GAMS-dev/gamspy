@@ -1,5 +1,5 @@
 """
-*** Min Cost PMU allocation for IEEE 14 network without considering zero injection nodes
+Min Cost PMU allocation for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.2), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
@@ -79,7 +79,6 @@ def main():
     const1.definition = OFc == Sum(bus, cost[bus] * PMU[bus])
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
-    m.addOptions({"optCr": 0})
     placement0 = Model(
         m,
         name="placement0",
@@ -88,7 +87,7 @@ def main():
         sense="min",
         objective=OFc,
     )
-    placement0.solve()
+    placement0.solve(options={"optCr": 0})
     print("PMU:  \n", PMU.toDict())
 
     import math

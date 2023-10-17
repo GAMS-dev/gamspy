@@ -173,8 +173,7 @@ def main():
     # if one wants to check the data, one can
     # solve the MIP problem, this is just a check
 
-    # m.addOptions({"optCr": 0})
-    # assign_mip.solve()
+    # assign_mip.solve(options={"optCr": 0})
 
     # check = 0
     # for r_loop, i_loop in xopt.toList():
@@ -299,7 +298,6 @@ def main():
     # is simply to start with zero multipliers.
 
     # replace 'default' with solver of your choice.
-    m.addOptions({"mip": "default", "rmip": "default"})
 
     results = open("solution.txt", "w", encoding="UTF-8")
     results.write("solvers used: RMIP = CPLEX\n")

@@ -416,9 +416,8 @@ def main():
         sense=Sense.MIN,
         objective=zoau,
     )
-    cont.addOptions({"domLim": 100})
 
-    skip.solve()
+    skip.solve(options={"domLim": 100})
 
     import math
 

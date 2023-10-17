@@ -1,4 +1,6 @@
 """
+Optimal Design of Network of Heat Exchangers in Parallel (with Recirculation) with Two Hot Streams and One Cold Stream
+
 Design of a network of heat exchangers in parallel (with recirculation)
 with two hot streams and one cold stream.
 

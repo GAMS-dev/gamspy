@@ -1,5 +1,5 @@
 """
-*** Sensitivity Analysis in Economic Load Dispatch
+Sensitivity Analysis in Economic Load Dispatch
 
 For more details please refer to Chapter 3 (Gcode3.2), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

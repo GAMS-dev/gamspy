@@ -1,5 +1,6 @@
 """
-Minimal surface problem.
+Minimal surface problem
+
 Find a function f that minimizes the array of its graph subject to some
 constraints on the boundary of the domain of f.
 

@@ -1,5 +1,5 @@
 """
-*** Dynamic Economic Load Dispatch
+Dynamic Economic Load Dispatch
 
 For more details please refer to Chapter 4 (Gcode4.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
