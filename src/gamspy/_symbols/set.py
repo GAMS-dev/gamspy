@@ -338,6 +338,20 @@ class Set(gt.Set, operable.Operable, Symbol):
         ------
         ValueError
             When type is not circular or linear
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>>
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
+        >>> a = gp.Parameter(m, name="a", domain=[t])
+        >>> b = gp.Parameter(m, name="b", domain=[t])
+        >>>
+        >>> a[t] = 1986 + gp.Ord(t)
+        >>> b[t] = -1
+        >>> b[t] = a[t.lag(1, "linear")]
+
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
@@ -369,6 +383,20 @@ class Set(gt.Set, operable.Operable, Symbol):
         ------
         ValueError
             When type is not circular or linear
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>>
+        >>> m = gp.Container()
+        >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
+        >>> a = gp.Parameter(m, name="a", domain=[t])
+        >>> c = gp.Parameter(m, name="c", domain=[t])
+        >>>
+        >>> a[t] = 1986 + gp.Ord(t)
+        >>> c[t] = -1
+        >>> c[t.lead(2, "linear")] = a[t]
+
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
