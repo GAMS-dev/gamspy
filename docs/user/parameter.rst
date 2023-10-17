@@ -377,10 +377,10 @@ Conditionals
 
 ::
 
-    a[row,col].where[a[row,col] >= 100] = INF
+    a[row,col].where[a[row,col] >= 100] = float('inf')
 
 This assignment has the following effect: all elements of the parameter ``a`` 
-whose value was at least 100 are assigned the value INF, while all other elements 
+whose value was at least 100 are assigned the value ``float('inf')``, while all other elements 
 of ``a`` remain unchanged.
 
 .. _restricting-the-domain-tuples:

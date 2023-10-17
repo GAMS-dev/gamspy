@@ -16,7 +16,7 @@ consists of a set name and the elements of the set. Example: ::
 
     m = Container()
     i = Set(m, name = "i", records = ["seattle", "san-diego"], description = "plants")
-    j = Set(m, name = "j", records = ['new-york', 'chicago', ‘topeka’], description = "markets")
+    j = Set(m, name = "j", records = ['new-york', 'chicago', 'topeka'], description = "markets")
 
 The effect of these statements is probably self-evident. We declared two sets using 
 the :meth:`gamspy.Set` class and gave them the names ``i`` and ``j``. We also 

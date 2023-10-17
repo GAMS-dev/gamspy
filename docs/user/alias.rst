@@ -14,7 +14,7 @@ the problem without ambiguity. Example: ::
     m = Container()
     
     i = Set(m, name = "i", records=["i" + str(i) for i in range(5)])
-    ip = Alias(m, name = "ip", , alias_with = i)
+    ip = Alias(m, name = "ip", alias_with = i)
 
 A second name ``ip`` for the set ``i`` is established that can be used instead of the original 
 set name ``i``. 
