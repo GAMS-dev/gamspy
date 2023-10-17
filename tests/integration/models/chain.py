@@ -71,12 +71,12 @@ def main():
     tmin = Parameter(m, name="tmin")
 
     if b.toValue() > a.toValue():
-        tmin.assignment = 0.25
+        tmin[...] = 0.25
     else:
-        tmin.assignment = 0.75
+        tmin[...] = 0.75
 
-    n.assignment = Card(nh) - 1
-    h.assignment = tf / n
+    n[...] = Card(nh) - 1
+    h[...] = tf / n
 
     # VARIABLES #
     x = Variable(m, name="x", domain=[i], description="height of the chain")
@@ -100,7 +100,7 @@ def main():
     x_eqn = Equation(m, name="x_eqn", type="regular", domain=[i])
     length_eqn = Equation(m, name="length_eqn", type="regular")
 
-    obj.definition = energy == 0.5 * h * Sum(
+    obj[...] = energy == 0.5 * h * Sum(
         nh[i.lead(1)],
         x[i] * gams_math.sqrt(1 + sqr(u[i]))
         + x[i.lead(1)] * gams_math.sqrt(1 + sqr(u[i.lead(1)])),
@@ -108,7 +108,7 @@ def main():
 
     x_eqn[i.lead(1)] = x[i.lead(1)] == x[i] + 0.5 * h * (u[i] + u[i.lead(1)])
 
-    length_eqn.definition = (
+    length_eqn[...] = (
         0.5
         * h
         * Sum(

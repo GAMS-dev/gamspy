@@ -122,19 +122,19 @@ def main():
         description="Objective function definition",
     )
 
-    ReturnDef.definition = PortReturn == Sum(i, ExpectedReturns[i] * x[i])
+    ReturnDef[...] = PortReturn == Sum(i, ExpectedReturns[i] * x[i])
 
-    VarDef.definition = PortVariance == Sum([i, j], x[i] * VarCov[i, j] * x[j])
+    VarDef[...] = PortVariance == Sum([i, j], x[i] * VarCov[i, j] * x[j])
 
-    LimitCon.definition = Sum(i, Y[i]) <= StockMax
+    LimitCon[...] = Sum(i, Y[i]) <= StockMax
 
     UpBounds[i] = x[i] <= x.up[i] * Y[i]
 
     LoBounds[i] = x[i] >= xlow[i] * Y[i]
 
-    NormalCon.definition = Sum(i, x[i]) == 1
+    NormalCon[...] = Sum(i, x[i]) == 1
 
-    ObjDef.definition = z == (1 - lamda) * PortReturn - lamda * PortVariance
+    ObjDef[...] = z == (1 - lamda) * PortReturn - lamda * PortVariance
 
     MeanVarMip = Model(
         m,
@@ -162,7 +162,7 @@ def main():
     while True:
         if lamda_loop > 1:
             break
-        lamda.assignment = lamda_loop
+        lamda[...] = lamda_loop
         MeanVarMip.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceMIP += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
@@ -237,7 +237,7 @@ def main():
 
     HoldingCon[i] = x[i] == x_0[i] + x_1[i]
 
-    ReturnDefWithCost.definition = PortReturn == Sum(
+    ReturnDefWithCost[...] = PortReturn == Sum(
         i, (ExpectedReturns[i] * x_0[i] - FlatCost * Y[i])
     ) + Sum(i, (ExpectedReturns[i] - PropCost) * x_1[i])
 
@@ -271,7 +271,7 @@ def main():
     while True:
         if lamda_loop > 1:
             break
-        lamda.assignment = lamda_loop
+        lamda[...] = lamda_loop
         MeanVarWithCost.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x0_recs = [
@@ -378,7 +378,7 @@ def main():
 
     BinSellLimits[i] = sell[i] <= Ys[i]
 
-    BuyTurnover.definition = Sum(i, buy[i]) <= 0.05
+    BuyTurnover[...] = Sum(i, buy[i]) <= 0.05
 
     MeanVarRevision = Model(
         m,
@@ -415,7 +415,7 @@ def main():
     while True:
         if lamda_loop > 1:
             break
-        lamda.assignment = lamda_loop
+        lamda[...] = lamda_loop
         MeanVarRevision.solve(options={"MINLP": "SBB", "optcr": 0})
         MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]

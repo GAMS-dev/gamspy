@@ -134,7 +134,7 @@ def main():
     volumeeq[i, k] = 2 * tk[i, k] * sigma[i, k] >= s[i, k] ** 2
     deftk[i, k] = tk[i, k] == t[i]
     reseq[k] = Sum(i, sigma[i, k]) <= tau
-    trusscomp.definition = Sum(i, t[i]) <= max_volume
+    trusscomp[...] = Sum(i, t[i]) <= max_volume
     stiffness[j, k] = Sum(i, s[i, k] * b[j, i]) == f[j, k]
 
     truss = Model(

@@ -374,13 +374,13 @@ def main():
     cc[m, i] = Sum(p, b[m, p] * z[p, i]) <= k[m, i]
     mr[cf, j] = Sum(i, x[cf, i, j]) + v[cf, j] >= d[cf, j]
     me[cf] = Sum(i, e[cf, i]) <= eb
-    obj.definition = phi == phipsi + philam + phipi - phieps
-    apsi.definition = phipsi == Sum((cr, i), pd[cr] * u[cr, i])
-    alam.definition = philam == Sum((cf, i, j), muf[i, j] * x[cf, i, j]) + Sum(
+    obj[...] = phi == phipsi + philam + phipi - phieps
+    apsi[...] = phipsi == Sum((cr, i), pd[cr] * u[cr, i])
+    alam[...] = philam == Sum((cf, i, j), muf[i, j] * x[cf, i, j]) + Sum(
         (cf, j), muv[j] * v[cf, j]
     ) + Sum((cf, i), mue[i] * e[cf, i])
-    api.definition = phipi == Sum((cf, j), pv[cf] * v[cf, j])
-    aeps.definition = phieps == Sum((cf, i), pe[cf] * e[cf, i])
+    api[...] = phipi == Sum((cf, j), pv[cf] * v[cf, j])
+    aeps[...] = phieps == Sum((cf, i), pe[cf] * e[cf, i])
 
     mexss = Model(
         cont,

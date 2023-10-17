@@ -60,34 +60,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._records = records
         self._assignment = None
 
-    @property
-    def assignment(self):
-        return self._assignment  # pragma: no cover
-
-    @assignment.setter
-    def assignment(self, assignment) -> None:
-        self._assignment = assignment
-
-        statement = expression.Expression(
-            ImplicitParameter(
-                name=self.name,
-                domain=self.domain,
-                parent=self.parent,
-            ),
-            "=",
-            assignment,
-        )
-
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
-        self.container._addStatement(statement)
-
-        if self.container.delayed_execution:
-            self.parent._is_dirty = True
-        else:
-            self.container._run()
-
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
             parent=self.parent,
@@ -99,7 +71,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return expression.Expression("", "not", self)
 
     def __getitem__(self, indices: Union[list, str]) -> ImplicitParameter:
-        domain: list = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain
         )
@@ -107,7 +79,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __setitem__(
         self, indices: Union[list, str], assignment: "Expression"
     ) -> None:
-        domain: list = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
 
         statement = expression.Expression(
             ImplicitParameter(

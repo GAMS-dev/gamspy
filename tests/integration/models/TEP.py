@@ -156,7 +156,7 @@ def main():
     branch[bus, node, "bij"].where[conex[bus, node]] = (
         1 / branch[bus, node, "x"]
     )
-    M.assignment = Smax(
+    M[...] = Smax(
         Domain(bus, node).where[conex[bus, node]],
         branch[bus, node, "bij"] * 3.14 * 2,
     )
@@ -221,7 +221,7 @@ def main():
         Domain(k, node).where[conex[node, bus]], Pij[bus, node, k]
     )
 
-    const3.definition = OF >= 10 * 8760 * (
+    const3[...] = OF >= 10 * 8760 * (
         Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
         + 100000 * Sum(bus, LS[bus])
     ) + 1e6 * Sum(

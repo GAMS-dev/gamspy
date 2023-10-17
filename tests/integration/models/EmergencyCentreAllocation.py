@@ -44,13 +44,13 @@ def main():
     eq6 = Equation(m, name="eq6", type="regular")
     eq7 = Equation(m, name="eq7", type="regular")
 
-    eq1.definition = x1 + x6 >= 1
-    eq2.definition = x2 >= 1
-    eq3.definition = x3 + x5 >= 1
-    eq4.definition = x4 + x5 >= 1
-    eq5.definition = x3 + x4 + x5 + x6 >= 1
-    eq6.definition = x1 + x5 + x6 >= 1
-    eq7.definition = x1 + x2 + x3 + x4 + x5 + x6 == of
+    eq1[...] = x1 + x6 >= 1
+    eq2[...] = x2 >= 1
+    eq3[...] = x3 + x5 >= 1
+    eq4[...] = x4 + x5 >= 1
+    eq5[...] = x3 + x4 + x5 + x6 >= 1
+    eq6[...] = x1 + x5 + x6 >= 1
+    eq7[...] = x1 + x2 + x3 + x4 + x5 + x6 == of
 
     emergency = Model(
         m,

@@ -38,7 +38,7 @@ def main():
     feedmf["2"] = 0.085
     feedmf["3"] = 0.085
 
-    feedz.assignment = 0.55716
+    feedz[...] = 0.55716
 
     feedfc["1"] = -0.244654
     feedfc["2"] = -1.33572
@@ -73,7 +73,7 @@ def main():
     molesum = Equation(m, name="molesum", type="regular")
 
     # Objective function to be minimized:
-    obj.definition = dist == (
+    obj[...] = dist == (
         Sum(i, x[i] * gams_math.log(x[i]))
         + bmix / (z - bmix)
         - gams_math.log(z - bmix)
@@ -82,7 +82,7 @@ def main():
     )
 
     # Constraints:
-    eos.definition = (
+    eos[...] = (
         gams_math.power(z, 3)
         - (bmix + 1) * gams_math.power(z, 2)
         + amix * z
@@ -90,14 +90,14 @@ def main():
         == 0
     )
 
-    defa.definition = amix - Sum(i, Sum(j, a[i, j] * x[i] * x[j])) == 0
+    defa[...] = amix - Sum(i, Sum(j, a[i, j] * x[i] * x[j])) == 0
 
-    defb.definition = bmix - Sum(i, b[i] * x[i]) == 0
+    defb[...] = bmix - Sum(i, b[i] * x[i]) == 0
 
-    molesum.definition = Sum(i, x[i]) == 1.0
+    molesum[...] = Sum(i, x[i]) == 1.0
 
     # Simple Bounds of variables
-    z.lo.assignment = 0.001
+    z.lo[...] = 0.001
     x.lo["1"] = 0.001
     x.lo["2"] = 0.001
     x.lo["3"] = 0.001

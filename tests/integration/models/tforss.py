@@ -173,21 +173,21 @@ def main():
 
     landc[s, k] = Sum(at, v[s, k, at] * age[at]) <= land[s] * scd[k]
 
-    ainvc.definition = phik == rho / (1 - power((1 + rho), (-life))) * Sum(
+    ainvc[...] = phik == rho / (1 - power((1 + rho), (-life))) * Sum(
         m, nu[m] * h[m]
     )
 
-    aproc.definition = phir == Sum(p, pc[p] * z[p])
+    aproc[...] = phir == Sum(p, pc[p] * z[p])
 
-    asales.definition = phix == Sum(cf, pd[cf] * x[cf])
+    asales[...] = phix == Sum(cf, pd[cf] * x[cf])
 
-    acutc.definition = phil == muc * Sum(cl, r[cl])
+    acutc[...] = phil == muc * Sum(cl, r[cl])
 
-    aplnt.definition = phip == mup * Sum(
+    aplnt[...] = phip == mup * Sum(
         [s, k, at], v[s, k, at] * (1 + rho) ** age[at]
     )
 
-    benefit.definition = phi == phix - phik - phir - phil - phip
+    benefit[...] = phi == phix - phik - phir - phil - phip
 
     # Model definition
     forest = Model(
@@ -233,7 +233,7 @@ def main():
     )
 
     for case, _ in rhoset.records.itertuples(index=False):
-        rho.assignment = rhoval[case]
+        rho[...] = rhoval[case]
         forest.solve()
         landcl[s, k] = Round(landc.l[s, k], 3)
         rep[cl, case] = r.l[cl]

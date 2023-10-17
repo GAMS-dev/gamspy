@@ -462,7 +462,7 @@ def main():
     # =====================================================================
     #                         capital costs
 
-    nlpobj.definition = (
+    nlpobj[...] = (
         zoau
         == alpha
         * (
@@ -513,7 +513,7 @@ def main():
         == 0
     )
 
-    feed.definition = Sum(i.where[zlead[i]], f[i]) == totflow
+    feed[...] = Sum(i.where[zlead[i]], f[i]) == totflow
 
     duty[i] = (
         qc[i]
@@ -738,7 +738,7 @@ def main():
     )
 
     # select 1 sequence
-    lead.definition = Sum(i.where[zlead[i]], ycol[i]) == 1
+    lead[...] = Sum(i.where[zlead[i]], ycol[i]) == 1
 
     # limit choice of hot utility to 1
     limutil[j] = Sum(hu, yhu[hu, j]) <= 1
@@ -840,7 +840,7 @@ def main():
     yhuopt[hu, j] = yhup[hu, j]
     ycuopt[i, cu] = ycup[i, cu]
     ycolopt[i] = ycolp[i]
-    kopt.assignment = 1
+    kopt[...] = 1
 
     # ======================================================================
     # assign the initial configuration to the binary proposal parameter
@@ -857,7 +857,7 @@ def main():
     ycol.l[i] = ycolp[i]
 
     # set an arbitrary initial lower bound
-    zoal.l.assignment = -10e6
+    zoal.l[...] = -10e6
 
     # ======================================================================
     # give the continuous variables a starting point for 1st nlp
@@ -924,7 +924,7 @@ def main():
         yhup[hu, j] = yhu.l[hu, j]
         ycup[i, cu] = ycu.l[i, cu]
         ycolp[i] = ycol.l[i]
-        zoal.lo.assignment = zoal.l
+        zoal.lo[...] = zoal.l
 
         # ======================================================================
         # the current levels of the lmtds are moved away from zero
@@ -950,7 +950,7 @@ def main():
             yhuopt[hu, j] = yhu.l[hu, j]
             ycuopt[i, cu] = ycu.l[i, cu]
             ycolopt[i] = ycol.l[i]
-            kopt.assignment = idx + 1
+            kopt[...] = idx + 1
 
         # ======================================================================
         # assign the solution levels of the variables that appear in the
@@ -980,10 +980,10 @@ def main():
         # ======================================================================
         # store the smallest nlp objective value for upper bound on master
         # ======================================================================
-        zoaup.assignment = gams_math.Min(zoaup, zoau.l)
-        zoal.up.assignment = zoaup
+        zoaup[...] = gams_math.Min(zoaup, zoau.l)
+        zoal.up[...] = zoaup
         #  protect against numerical errors introduced by the solver
-        zoal.lo.assignment = gams_math.Min(zoal.lo, zoal.up)
+        zoal.lo[...] = gams_math.Min(zoal.lo, zoal.up)
 
         #  now solve the milp master problem
         master.solve()

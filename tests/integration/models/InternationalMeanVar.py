@@ -75,7 +75,7 @@ def main():
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assignment = MAX_MU / 20
+    MU_STEP[...] = MAX_MU / 20
 
     # VARIABLES #
     x = Variable(
@@ -109,13 +109,11 @@ def main():
         description="Equation defining the normalization contraint",
     )
 
-    ReturnCon.definition = Sum(a, ExpectedReturns[a] * x[a]) == MU_TARGET
+    ReturnCon[...] = Sum(a, ExpectedReturns[a] * x[a]) == MU_TARGET
 
-    VarDef.definition = PortVariance == Sum(
-        [a1, a2], x[a1] * VarCov[a1, a2] * x[a2]
-    )
+    VarDef[...] = PortVariance == Sum([a1, a2], x[a1] * VarCov[a1, a2] * x[a2])
 
-    NormalCon.definition = Sum(a, x[a]) == 1
+    NormalCon[...] = Sum(a, x[a]) == 1
 
     MeanVar = Model(
         m,
@@ -144,7 +142,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assignment = mu
+        MU_TARGET[...] = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -174,7 +172,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assignment = mu
+        MU_TARGET[...] = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -204,7 +202,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assignment = mu
+        MU_TARGET[...] = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -236,7 +234,7 @@ def main():
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assignment = mu
+        MU_TARGET[...] = mu
         MeanVar.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 
@@ -263,11 +261,11 @@ def main():
     RiskFreeReturnDef = Equation(m, name="RiskFreeReturnDef", type="regular")
     SharpeRatio = Equation(m, name="SharpeRatio", type="regular")
 
-    RiskFreeReturnDef.definition = (
+    RiskFreeReturnDef[...] = (
         d_bar == Sum(a, ExpectedReturns[a] * x[a]) - RiskFree
     )
 
-    SharpeRatio.definition = z == d_bar / gams_math.sqrt(PortVariance)
+    SharpeRatio[...] = z == d_bar / gams_math.sqrt(PortVariance)
 
     Sharpe = Model(
         m,
@@ -333,7 +331,7 @@ def main():
         ),
     )
 
-    NormalConTrack.definition = Sum(a, x[a]) == 0
+    NormalConTrack[...] = Sum(a, x[a]) == 0
 
     MeanVarTrack = Model(
         m,
@@ -358,12 +356,12 @@ def main():
     FrontierHandle.write(",".join(i_recs) + "\n")
 
     # Re-estimate MU_STEP as MAX_MU is different for the tracking problem
-    MAX_MU.assignment = 0.1587
-    MU_STEP.assignment = MAX_MU / 20
+    MAX_MU[...] = 0.1587
+    MU_STEP[...] = MAX_MU / 20
 
     mu = 0
     while round(mu, 7) < round(MAX_MU.toList()[0], 7):
-        MU_TARGET.assignment = mu
+        MU_TARGET[...] = mu
         MeanVarTrack.solve()
         print("PortVariance: ", round(PortVariance.toValue(), 3))
 

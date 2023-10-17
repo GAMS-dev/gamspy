@@ -25,21 +25,17 @@
 from __future__ import annotations
 
 from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
 from typing import Union
 
-import gamspy._algebra.expression as expression
 import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
 import gamspy._symbols.set as gams_set
-import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
     from gamspy import Set, Equation
-    from gamspy._algebra.expression import Expression
 
 
 class ImplicitEquation(ImplicitSymbol):
@@ -124,46 +120,6 @@ class ImplicitEquation(ImplicitSymbol):
     @property
     def infeas(self) -> ImplicitParameter:
         return self._infeas
-
-    @property
-    def definition(self) -> Optional["Expression"]:
-        return self._definition  # pragma: no cover
-
-    @definition.setter
-    def definition(self, assignment: Optional["Expression"] = None) -> None:
-        """Needed for scalar equations
-        >>> eq..  sum(wh,build(wh)) =l= 1;
-        >>> eq.definition = Sum(wh, build[wh]) <= 1
-        """
-        equation_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        if assignment is not None and self.type in equation_map.keys():
-            assignment._op_type = equation_map[self.type]
-
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self.parent,
-                name=self.name,
-                type=self.type,
-                domain=self.domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
-        self.container._addStatement(statement)
-        self._definition = statement
-
-        if not self.container.delayed_execution:
-            self.container._run()
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"

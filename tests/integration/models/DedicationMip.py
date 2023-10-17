@@ -80,8 +80,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assignment = 2001
-    Horizon.assignment = Card(t) - 1
+    Now[...] = 2001
+    Horizon[...] = Card(t) - 1
 
     # PARAMETER #
     tau = Parameter(m, name="tau", domain=[t], description="Time in years")
@@ -149,7 +149,7 @@ def main():
 
     # For simplicity, we set the short term rate to be 0.03 in each period
     rf[t] = 0.04
-    spread.assignment = 0.02
+    spread[...] = 0.02
 
     Liability.setRecords(
         np.array(
@@ -365,11 +365,9 @@ def main():
         description="Upper bounds for each variable",
     )
 
-    CostDef.definition = TotalCost == v0 + TransCosts
+    CostDef[...] = TotalCost == v0 + TransCosts
 
-    TransDef.definition = TransCosts == Sum(
-        i, FixedCost * Z[i] + VarblCost * x[i]
-    )
+    TransDef[...] = TransCosts == Sum(i, FixedCost * Z[i] + VarblCost * x[i])
 
     UpBounds[i] = x[i] <= x.up[i] * Z[i]
 

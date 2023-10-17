@@ -311,7 +311,7 @@ def main():
         n1.where[n_to_nr[n, n1]], U[n1, t]
     )
 
-    Objective.definition = obj == Sum(
+    Objective[...] = obj == Sum(
         t, Sum(n.where[nr[n]], gams_math.power((U[n, t] - Demand[n, t]), 2))
     )
 

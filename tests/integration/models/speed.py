@@ -48,7 +48,7 @@ def main():
     g = Equation(m, name="g", type="regular")
 
     # Objective function to be minimized:
-    g.definition = obj == (
+    g[...] = obj == (
         0.7854
         * x1
         * gams_math.power(x2, 2)
@@ -59,53 +59,53 @@ def main():
     )
 
     # Constraints:
-    g1.definition = 27 / (x1 * gams_math.power(x2, 2) * x3) - 1 <= 0
+    g1[...] = 27 / (x1 * gams_math.power(x2, 2) * x3) - 1 <= 0
 
-    g2.definition = (
+    g2[...] = (
         397.5 / (x1 * gams_math.power(x2, 2) * gams_math.power(x3, 2)) - 1 <= 0
     )
 
-    g3.definition = (1.93 * gams_math.power(x4, 3)) / (
+    g3[...] = (1.93 * gams_math.power(x4, 3)) / (
         x2 * x3 * gams_math.power(x6, 4)
     ) - 1 <= 0
 
-    g4.definition = (1.93 * gams_math.power(x5, 3)) / (
+    g4[...] = (1.93 * gams_math.power(x5, 3)) / (
         x2 * x3 * gams_math.power(x7, 4)
     ) - 1 <= 0
 
-    g5.definition = (
+    g5[...] = (
         gams_math.sqrt(gams_math.power((745 * x4) / (x2 * x3), 2) + 16900000)
     ) / (110 * gams_math.power(x6, 3)) - 1 <= 0
 
-    g6.definition = (
+    g6[...] = (
         gams_math.sqrt(gams_math.power((745 * x5) / (x2 * x3), 2) + 15750000)
     ) / (85 * gams_math.power(x7, 3)) - 1 <= 0
 
-    g7.definition = (x2 * x3) / 40 - 1 <= 0
+    g7[...] = (x2 * x3) / 40 - 1 <= 0
 
-    g8.definition = (5 * x2) / x1 - 1 <= 0
+    g8[...] = (5 * x2) / x1 - 1 <= 0
 
-    g9.definition = x1 / (12 * x2) - 1 <= 0
+    g9[...] = x1 / (12 * x2) - 1 <= 0
 
-    g10.definition = (1.5 * x6 + 1.9) / x4 - 1 <= 0
+    g10[...] = (1.5 * x6 + 1.9) / x4 - 1 <= 0
 
-    g11.definition = (1.1 * x7 + 1.9) / x5 - 1 <= 0
+    g11[...] = (1.1 * x7 + 1.9) / x5 - 1 <= 0
 
     # Bounds on variables
-    x1.lo.assignment = 2.6
-    x1.up.assignment = 3.6
-    x2.lo.assignment = 0.7
-    x2.up.assignment = 0.8
-    x3.lo.assignment = 17
-    x3.up.assignment = 28
-    x4.lo.assignment = 7.3
-    x4.up.assignment = 8.3
-    x5.lo.assignment = 7.8
-    x5.up.assignment = 8.3
-    x6.lo.assignment = 2.9
-    x6.up.assignment = 3.9
-    x7.lo.assignment = 5.0
-    x7.up.assignment = 5.5
+    x1.lo[...] = 2.6
+    x1.up[...] = 3.6
+    x2.lo[...] = 0.7
+    x2.up[...] = 0.8
+    x3.lo[...] = 17
+    x3.up[...] = 28
+    x4.lo[...] = 7.3
+    x4.up[...] = 8.3
+    x5.lo[...] = 7.8
+    x5.up[...] = 8.3
+    x6.lo[...] = 2.9
+    x6.up[...] = 3.9
+    x7.lo[...] = 5.0
+    x7.up[...] = 5.5
 
     speed = Model(
         m,

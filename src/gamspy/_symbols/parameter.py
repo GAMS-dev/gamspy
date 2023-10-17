@@ -37,6 +37,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -68,12 +69,23 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     """
 
     def __new__(cls, *args, **kwargs):
-        if len(args) == 0:
-            return object.__new__(Parameter)
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
-            symobj = args[0][args[1]]
-        except:
+            container = (
+                kwargs["container"]
+                if "container" in kwargs.keys()
+                else args[0]
+            )
+        except IndexError:
+            raise GamspyException("Container of the symbol must be provided!")
+
+        try:
+            symobj = container[name]
+        except KeyError:
             symobj = None
 
         if symobj is None:
@@ -125,7 +137,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -133,7 +145,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: "Expression",
     ) -> None:
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
@@ -158,37 +170,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return implicits.ImplicitParameter(
             self, name=f"-{self.name}", domain=self._domain
         )
-
-    @property
-    def assignment(self):
-        """
-        Assigned expression
-
-        Returns
-        -------
-        Expression
-        """
-        return self._assignment
-
-    @assignment.setter
-    def assignment(self, assignment):
-        self._assignment = assignment
-
-        statement = expression.Expression(
-            implicits.ImplicitParameter(self, name=self.name),
-            "=",
-            assignment,
-        )
-
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
-        self.container._addStatement(statement)
-
-        if self.container.delayed_execution:
-            self._is_dirty = True
-        else:
-            self.container._run()
 
     @property
     def records(self):

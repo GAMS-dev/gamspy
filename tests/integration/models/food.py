@@ -243,7 +243,7 @@ def main():
     maxNuse = gp.Equation(c, name="maxNuse", domain=m)
     defLogic1 = gp.Equation(c, name="defLogic1", domain=m)
 
-    defObj.definition = profit == gp.Sum(m, sp * produce[m]) - gp.Sum(
+    defObj[...] = profit == gp.Sum(m, sp * produce[m]) - gp.Sum(
         (m, p), cost[m, p] * buy[m, p]
     ) - gp.Sum((m, p), sc * store[m, p])
     defUsePv[m] = gp.Sum(pv, use[m, pv]) <= maxusepv

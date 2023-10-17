@@ -40,7 +40,7 @@ def main():
     b2l = Equation(m, name="b2l")
     b2u = Equation(m, name="b2u")
 
-    g1.definition = (gams_math.power(q1, 2)) * (gams_math.power(q2, 2)) * (
+    g1[...] = (gams_math.power(q1, 2)) * (gams_math.power(q2, 2)) * (
         gams_math.power(w, 8)
     ) - (
         1.25 * 1000 * (gams_math.power(q1, 2)) * (gams_math.power(q2, 2))
@@ -64,7 +64,7 @@ def main():
     ) + (
         453 * (10**6) * (gams_math.power(q1, 2))
     ) == 0
-    g2.definition = (
+    g2[...] = (
         50 * (gams_math.power(q1, 2)) * (gams_math.power(q2, 2))
         + 1080 * q1 * q2
     ) * (gams_math.power(w, 6)) - (
@@ -84,23 +84,23 @@ def main():
         528 * (10**6) * (gams_math.power(q1, 2)) + 3640 * (10**6) * q1
     ) == 0
 
-    b1l.definition = 17.5 - 14.5 * k <= q1
-    b1u.definition = q1 <= 17.5 + 14.5 * k
-    b2l.definition = 20.0 - 15.0 * k <= q2
-    b2u.definition = q2 <= 20.0 + 15.0 * k
+    b1l[...] = 17.5 - 14.5 * k <= q1
+    b1u[...] = q1 <= 17.5 + 14.5 * k
+    b2l[...] = 20.0 - 15.0 * k <= q2
+    b2u[...] = q2 <= 20.0 + 15.0 * k
 
-    q1.lo.assignment = 0
-    q1.up.assignment = 2
-    q2.lo.assignment = 0
-    q2.up.assignment = 2
-    w.lo.assignment = 0
-    w.up.assignment = 2
-    k.lo.assignment = 0
-    k.up.assignment = 2
-    q1.l.assignment = 0.1
-    q2.l.assignment = 0.1
-    w.l.assignment = 0.1
-    k.l.assignment = 0.1
+    q1.lo[...] = 0
+    q1.up[...] = 2
+    q2.lo[...] = 0
+    q2.up[...] = 2
+    w.lo[...] = 0
+    w.up[...] = 2
+    k.lo[...] = 0
+    k.up[...] = 2
+    q1.l[...] = 0.1
+    q2.l[...] = 0.1
+    w.l[...] = 0.1
+    k.l[...] = 0.1
 
     benz = Model(
         m,

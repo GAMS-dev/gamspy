@@ -33,7 +33,7 @@ import gamspy._algebra.operable as operable
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
-    from gams.transfer import Set, Alias
+    from gams.transfer import Set, Alias, Parameter
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
 
@@ -301,13 +301,15 @@ class Card(operable.Operable):
     >>>     records=[str(x) for x in range(1985, 1996)],
     >>> )
     >>> s = gp.Parameter(m, name="s")
-    >>> s.assignment = gp.Card(t)
+    >>> s[...] = gp.Card(t)
     """
 
     def __init__(
         self,
         symbol: Union[
-            "Set", "Alias", "Parameter", "Variable", "Equation", "Model"
+            "Set",
+            "Alias",
+            "Parameter",
         ],
     ) -> None:
         self._symbol = symbol

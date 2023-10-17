@@ -69,11 +69,6 @@ class ParameterSuite(unittest.TestCase):
         )
 
         self.assertEqual(a[i].gamsRepr(), "a(i)")
-        a[i].assignment = a[i] * 5
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
-            "a(i) = (a(i) * 5);",
-        )
 
         a[i] = -a[i] * 5
         self.assertEqual(

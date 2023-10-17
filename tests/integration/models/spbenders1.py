@@ -138,7 +138,7 @@ def main():
     receive = Equation(m, name="receive", domain=[j])
     optcut = Equation(m, name="optcut", domain=[iter])
 
-    masterobj.definition = zmaster == theta - Sum(
+    masterobj[...] = zmaster == theta - Sum(
         (i, j), transcost[i, j] * ship[i, j]
     ) - Sum(i, prodcost * product[i])
     receive[j] = received[j] == Sum(i, ship[i, j])
@@ -167,7 +167,7 @@ def main():
     selling = Equation(m, name="selling", domain=[j])
     market = Equation(m, name="market", domain=[j])
 
-    subobj.definition = zsub == Sum(j, price * sales[j]) - Sum(
+    subobj[...] = zsub == Sum(j, price * sales[j]) - Sum(
         j, wastecost * waste[j]
     )
     selling[j] = sales[j] + waste[j] == received.l[j]
@@ -193,14 +193,12 @@ def main():
     received.l[j] = 0
 
     for iteration, _ in iter.records.itertuples(index=False):
-        objSub.assignment = 0
+        objSub[...] = 0
 
         for scenario, _ in s.records.itertuples(index=False):
             demand[j] = ScenarioData[scenario, j]
             subproblem.solve()
-            objSub.assignment = (
-                objSub + ScenarioData[scenario, "prob"] * zsub.l
-            )
+            objSub[...] = objSub + ScenarioData[scenario, "prob"] * zsub.l
             cutconst[iteration] = cutconst[iteration] + ScenarioData[
                 scenario, "prob"
             ] * Sum(j, market.m[j] * demand[j])
@@ -215,11 +213,9 @@ def main():
             lowerBound.records.values[0][0]
             < objMaster.records.values[0][0] + objSub.records.values[0][0]
         ):
-            lowerBound.assignment = objMaster + objSub
+            lowerBound[...] = objMaster + objSub
 
-        rgap.assignment = (upperBound - lowerBound) / (
-            1 + gams_math.abs(upperBound)
-        )
+        rgap[...] = (upperBound - lowerBound) / (1 + gams_math.abs(upperBound))
         if rgap.records.values[0][0] < rtol:
             break
 

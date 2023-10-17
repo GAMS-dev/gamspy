@@ -48,7 +48,7 @@ def main():
         m, name="MAX_MU", description="Maximum return in universe"
     )
 
-    Budget.assignment = 100.0
+    Budget[...] = 100.0
 
     # PARAMETERS #
     pr = Parameter(
@@ -66,12 +66,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i, l])
 
-    MIN_MU.assignment = Smin(i, EP[i])
-    MAX_MU.assignment = Smax(i, EP[i])
+    MIN_MU[...] = Smin(i, EP[i])
+    MAX_MU[...] = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
+    MU_STEP[...] = (MAX_MU - MIN_MU) / 20
 
     print("MAX_MU: ", MAX_MU.records.value.round(3)[0])
 
@@ -126,15 +126,15 @@ def main():
         description="Equations defining the negative deviations",
     )
 
-    BudgetCon.definition = Sum(i, x[i]) == Budget
+    BudgetCon[...] = Sum(i, x[i]) == Budget
 
-    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon[...] = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
     yPosDef[l] = y[l] >= Sum(i, P[i, l] * x[i]) - Sum(i, EP[i] * x[i])
 
     yNegDef[l] = y[l] >= Sum(i, EP[i] * x[i]) - Sum(i, P[i, l] * x[i])
 
-    ObjDef.definition = z == Sum(l, pr[l] * y[l])
+    ObjDef[...] = z == Sum(l, pr[l] * y[l])
 
     MeanAbsoluteDeviation = Model(
         m,
@@ -150,7 +150,7 @@ def main():
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
         # MU_TARGET = MIN_MU TO MAX_MU BY MU_STEP,
-        MU_TARGET.assignment = mu_target
+        MU_TARGET[...] = mu_target
 
         MeanAbsoluteDeviation.solve()
 
@@ -188,7 +188,7 @@ def main():
         description="Objective function definition for Mean-Variance",
     )
 
-    ObjDefMV.definition = z == Sum([i1, i2], x[i1] * VP[i1, i2] * x[i2])
+    ObjDefMV[...] = z == Sum([i1, i2], x[i1] * VP[i1, i2] * x[i2])
 
     MeanVariance = Model(
         m,
@@ -204,10 +204,10 @@ def main():
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assignment = mu_target
+        MU_TARGET[...] = mu_target
 
         MeanVariance.solve()
-        z.l.assignment = gams_math.sqrt(z.l)
+        z.l[...] = gams_math.sqrt(z.l)
 
         output_csv += (
             f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
@@ -229,8 +229,8 @@ def main():
         description="Weight attached to negative deviations",
     )
 
-    lambdaPos.assignment = 0.5
-    lambdaNeg.assignment = 0.5
+    lambdaPos[...] = 0.5
+    lambdaNeg[...] = 0.5
 
     # EQUATIONS
     yPosWeightDef = Equation(
@@ -273,7 +273,7 @@ def main():
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assignment = mu_target
+        MU_TARGET[...] = mu_target
 
         MeanAbsoluteDeviationWeighted.solve()
 
@@ -285,14 +285,14 @@ def main():
 
         mu_target += MU_STEP.records.value[0]
 
-    lambdaPos.assignment = 0.2
-    lambdaNeg.assignment = 0.8
+    lambdaPos[...] = 0.2
+    lambdaNeg[...] = 0.8
 
     output_csv += '"MADWeighted","Mean"\n'
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assignment = mu_target
+        MU_TARGET[...] = mu_target
 
         MeanAbsoluteDeviationWeighted.solve()
 

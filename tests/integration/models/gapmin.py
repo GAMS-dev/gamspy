@@ -121,7 +121,7 @@ def main():
 
     choice[j] = Sum(i, x[i, j]) == 1
 
-    defz.definition = z == Sum([i, j], f[i, j] * x[i, j])
+    defz[...] = z == Sum([i, j], f[i, j] * x[i, j])
 
     _ = Model(
         m,
@@ -230,7 +230,7 @@ def main():
 
     knapsack[id] = Sum(j, a[id, j] * x[id, j]) <= b[id]
 
-    defzlrx.definition = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
+    defzlrx[...] = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
 
     pknap = Model(
         m,
@@ -311,7 +311,7 @@ def main():
     results.write(f"\nRMIP objective value = {round(z.toValue(), 3)}\n")
 
     if assign_rmip.status == ModelStatus.OptimalGlobal:
-        status.assignment = 1  # everything is ok
+        status[...] = 1  # everything is ok
     else:
         raise GamspyException(
             "*** relaxed MIP not optimal", "    no subgradient iterations", x
@@ -329,7 +329,7 @@ def main():
         description="an optimal set of multipliers",
     )
 
-    zlbest.assignment = z.l
+    zlbest[...] = z.l
 
     # use RMIP duals
     w[j] = choice.m[j]
@@ -339,7 +339,7 @@ def main():
 
     # use zero starting point
     # w[j]   = 0
-    # zlbest.assignment = 0
+    # zlbest[...] = 0
 
     results.write(
         "\n\nzlbest                    objective value  = "
@@ -355,7 +355,7 @@ def main():
     # one needs a value for zfeas
     # one can compute a valid upper bound as follows:
 
-    zfeas.assignment = Sum(j, Smax(i, f[i, j]))
+    zfeas[...] = Sum(j, Smax(i, f[i, j]))
     results.write(
         "\n\nzfeas quick and dirty bound obj value      = "
         f" {round(zfeas.toValue(),3)}"
@@ -371,7 +371,7 @@ def main():
     # assign_mip.optCr = 1
 
     # assign_mip.solve()
-    # zfeas.assignment = gams_math.Min(zfeas, z.l)
+    # zfeas[...] = gams_math.Min(zfeas, z.l)
     # print('final zfeas', zfeas.toValue())
     # print('heuristic solution by B-B ', z.toValue(), "\n", x.pivot())
     # results.write(f"\nzfeas IP solution bound objective value    = {zfeas.toValue()}")
@@ -392,8 +392,8 @@ def main():
     #                                                                              #
     # ============================================================================ #
     id[i] = False  # initially empty
-    count.assignment = 1
-    alpha.assignment = 1
+    count[...] = 1
+    alpha[...] = 1
 
     for iter_loop in iter.toList():
         if status.toValue() != 1:
@@ -403,28 +403,28 @@ def main():
         # problems. Note the use of the dynamic set id[i] which will
         # contain the current knapsack descriptor.
 
-        zlr.assignment = 0
+        zlr[...] = 0
         for ii_loop in ii.toList():
             id[ii_loop] = True  # assume id was empty
             pknap.solve()
-            zlr.assignment = zlr + zlrx.l
+            zlr[...] = zlr + zlrx.l
             id[ii_loop] = False  # make set empty again
 
-        improv.assignment = 0
-        zl.assignment = zlr + Sum(j, w[j])
+        improv[...] = 0
+        zl[...] = zlr + Sum(j, w[j])
         improv.where[zl > zlbest] = 1  # is zl better than zlbest?
-        zlbest.assignment = gams_math.Max(zlbest, zl)
+        zlbest[...] = gams_math.Max(zlbest, zl)
         s[j] = 1 - Sum(i, x.l[i, j])  # subgradient
-        norm.assignment = Sum(j, sqr(s[j]))
+        norm[...] = Sum(j, sqr(s[j]))
 
         if norm.toValue() < tol.toValue():
-            status.assignment = 2
+            status[...] = 2
 
         if abs(zlbest.toValue() - zfeas.toValue()) < 1e-4:
-            status.assignment = 3
+            status[...] = 3
 
         if pknap.status != ModelStatus.OptimalGlobal:
-            status.assignment = 4
+            status[...] = 4
 
         row = [
             iter_loop,
@@ -471,21 +471,19 @@ def main():
         xrep[j, i, iter_loop] = x.l[i, j]
 
         if status.toValue() == 1:
-            target.assignment = (zlbest + zfeas) / 2
-            step.assignment = (alpha * (target - zl) / norm).where[norm > tol]
+            target[...] = (zlbest + zfeas) / 2
+            step[...] = (alpha * (target - zl) / norm).where[norm > tol]
             w[j] = w[j] + step * s[j]
             if (
                 count.toValue() > reset.toValue()
             ):  # too many iterations w/o improvement
-                alpha.assignment = alpha / 2
-                count.assignment = 1
+                alpha[...] = alpha / 2
+                count[...] = 1
             else:
                 if improv.toValue():  # reset count if improvement
-                    count.assignment = 1
+                    count[...] = 1
                 else:
-                    count.assignment = (
-                        count + 1
-                    )  # update count if no improvement
+                    count[...] = count + 1  # update count if no improvement
 
         print(
             "iteration #: ",

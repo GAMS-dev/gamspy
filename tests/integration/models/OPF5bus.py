@@ -180,7 +180,7 @@ def main():
         bus, "pd"
     ] / Sbase == Sum(node.where[conex[node, bus]], Pij[bus, node])
 
-    const3.definition = OF >= Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
+    const3[...] = OF >= Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
 
     loadflow = Model(
         m,
@@ -214,7 +214,7 @@ def main():
     report[bus, "Angle"] = delta.l[bus]
     report[bus, "load(MW)"] = BusData[bus, "pd"]
     report[bus, "LMP($/MWh)"] = const2.m[bus] / Sbase
-    Congestioncost.assignment = (
+    Congestioncost[...] = (
         Sum([bus, node], Pij.l[bus, node] * (-const2.m[bus] + const2.m[node]))
         / 2
     )

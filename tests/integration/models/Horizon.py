@@ -76,8 +76,8 @@ def main():
     Now = Parameter(m, name="Now", description="Current year")
     Horizon = Parameter(m, name="Horizon", description="End of the Horizon")
 
-    Now.assignment = 2001
-    Horizon.assignment = Card(t) - 1
+    Now[...] = 2001
+    Horizon[...] = Card(t) - 1
 
     # PARAMETER #
 
@@ -151,11 +151,11 @@ def main():
     # For simplicity, we set the short term rate to be 0.03 in each period
 
     rf[t] = 0.04
-    spread.assignment = 0.02
+    spread[...] = 0.02
 
     # Initial available budget to buy the matching portfolio
 
-    Budget.assignment = 803021.814
+    Budget[...] = 803021.814
     # 803021.814
     # 850000
 
@@ -244,7 +244,7 @@ def main():
 
     budget = 778985.948
     while budget <= 818985.948:
-        Budget.assignment = budget
+        Budget[...] = budget
         HorizonMod.solve()
 
         for ii in i.toList():

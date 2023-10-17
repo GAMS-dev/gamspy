@@ -4,6 +4,7 @@ import gams.transfer as gt
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Container
@@ -11,12 +12,23 @@ if TYPE_CHECKING:
 
 class UniverseAlias(gt.UniverseAlias):
     def __new__(cls, *args, **kwargs):
-        if len(args) == 0:
-            return object.__new__(UniverseAlias)
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
-            symobj = args[0][args[1]]
-        except:
+            container = (
+                kwargs["container"]
+                if "container" in kwargs.keys()
+                else args[0]
+            )
+        except IndexError:
+            raise GamspyException("Container of the symbol must be provided!")
+
+        try:
+            symobj = container[name]
+        except KeyError:
             symobj = None
 
         if symobj is None:

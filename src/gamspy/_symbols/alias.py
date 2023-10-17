@@ -34,6 +34,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -62,12 +63,23 @@ class Alias(gt.Alias, operable.Operable, Symbol):
     """
 
     def __new__(cls, *args, **kwargs):
-        if len(args) == 0:
-            return object.__new__(Alias)
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
-            symobj = args[0][args[1]]
-        except:
+            container = (
+                kwargs["container"]
+                if "container" in kwargs.keys()
+                else args[0]
+            )
+        except IndexError:
+            raise GamspyException("Container of the symbol must be provided!")
+
+        try:
+            symobj = container[name]
+        except KeyError:
             symobj = None
 
         if symobj is None:

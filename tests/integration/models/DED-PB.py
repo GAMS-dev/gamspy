@@ -140,7 +140,7 @@ def main():
     EMlim = Equation(m, name="EMlim", type="regular")
     benefitcalc = Equation(m, name="benefitcalc", type="regular")
 
-    costThermalcalc.definition = costThermal == Sum(
+    costThermalcalc[...] = costThermal == Sum(
         [t, i],
         gendata[i, "a"] * gams_math.power(p[i, t], 2)
         + gendata[i, "b"] * p[i, t]
@@ -153,16 +153,16 @@ def main():
 
     balance[t] = Sum(i, p[i, t]) <= data[t, "load"]
 
-    EMcalc.definition = EM == Sum(
+    EMcalc[...] = EM == Sum(
         [t, i],
         gendata[i, "d"] * gams_math.power(p[i, t], 2)
         + gendata[i, "e"] * p[i, t]
         + gendata[i, "f"],
     )
 
-    EMlim.definition = EM <= lim
+    EMlim[...] = EM <= lim
 
-    benefitcalc.definition = (
+    benefitcalc[...] = (
         OF == Sum([i, t], 1 * data[t, "lamda"] * p[i, t]) - costThermal
     )
 

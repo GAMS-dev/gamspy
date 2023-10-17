@@ -74,7 +74,7 @@ def main():
     defobj = Equation(m, name="defobj")
     cons = Equation(m, name="cons", domain=[i])
 
-    defobj.definition = obj == Sum(j, c[j] * x[j])
+    defobj[...] = obj == Sum(j, c[j] * x[j])
     cons[i] = Sum(j, a[i, j] * x[j]) <= b[i]
 
     lpmod = Model(
