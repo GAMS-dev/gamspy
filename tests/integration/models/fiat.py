@@ -1,25 +1,25 @@
 """
-   Fiat - Analysis of Stability Margin of Spark Ignition Engine Fiat Dedra
+Fiat - Analysis of Stability Margin of Spark Ignition Engine Fiat Dedra
 
-   Analysis of the stability margin of the spark ignition engine
-   Fiat Dedra.
+Analysis of the stability margin of the spark ignition engine
+Fiat Dedra.
 
-   References:
-   B.R. Barmish, New tools for robustness of linear systems.
-   McMillan Publishing Company, New York, 1994.
+References:
+B.R. Barmish, New tools for robustness of linear systems.
+McMillan Publishing Company, New York, 1994.
 
-   M. Abate, B. Barmish, C. Murillo-Sanchez, R. Tempo, Application of
-   some new tools to robust stability analysis of spark ignition engines:
-   A case study. IEEE Trans. Contr. syst. tech., vol.2, 1994, pp. 22.
+M. Abate, B. Barmish, C. Murillo-Sanchez, R. Tempo, Application of
+some new tools to robust stability analysis of spark ignition engines:
+A case study. IEEE Trans. Contr. syst. tech., vol.2, 1994, pp. 22.
 
-   Neculai Andrei, "Models, Test Problems and Applications for
-   Mathematical Programming". Technical Press, Bucharest, 2003.
-   Application A41, page 407.
+Neculai Andrei, "Models, Test Problems and Applications for
+Mathematical Programming". Technical Press, Bucharest, 2003.
+Application A41, page 407.
 
-   Floudas, C.A., Pardalos, P.M., et al. "Handbook of Test Problems in
-   Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
-   1999.
-   Problem 7.3.6. Test problem 16, page 103.
+Floudas, C.A., Pardalos, P.M., et al. "Handbook of Test Problems in
+Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
+1999.
+Problem 7.3.6. Test problem 16, page 103.
 """
 import gamspy.math as gams_math
 from gamspy import Container
