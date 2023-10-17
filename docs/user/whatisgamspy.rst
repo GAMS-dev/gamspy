@@ -4,11 +4,12 @@
 What is GAMSPy?
 ***************
 
-GAMSPy is a mathematical optimization package that combines the power of our high performance 
-GAMS execution system and the flexible Python language. It is a Python library that provides 
-GAMS-like syntax to write mathematical models and thus, GAMSPy combines the best of two world.
+GAMSPy blends the power of our high performance GAMS execution system with the flexible Python 
+language, creating a powerful mathematical optimization package. It's like a bridge between 
+the expressive Python language and the robust GAMS system, allowing you to create complex 
+mathematical models effortlessly.
 
-In this section we will provide an overview of the features and benefits that are unique
+In this section we provide an overview of the features and benefits that are unique
 to GAMSPy and which are supposed to help you to find the perfect modeling language and
 environment for your modeling experience. 
 
@@ -16,18 +17,15 @@ environment for your modeling experience.
 Model Instances vs. Mathematical Models
 ---------------------------------------
 
-One key element in writing good quality, good readable, good maintainable, and thus, transparent
-models that can be used for long time in production comes down to the algebraic formulation.
-The algebraic formulation is something that is around and accepted for years and allows 
-to understand models. Consequently, being able to write mathematical models in a language
-that can be processed by computers **and** are close to the original algebraic notation is 
-what will be key to achieve mainabel models.
+Creating robust, readable, and maintainable models is an art rooted in algebraic formulation. 
+The ability to express mathematical models in a language that retains the essence of algebraic 
+notation and is machine-processable is paramount. 
 
 With this goal in mind we developed GAMSPy to be able to generate mathematical models instead
-of model instances. While a mathematical model is solely composed of mathematical symbols, a
-model instance is the translation of a mathematical model filled with the according instance data.
-Thus, sum expressions are resolved into its individual components and equation domains are resolved to
-individual scalar equations for a model instance. 
+of model instances. Think of a mathematical model as a pure representation of mathematical symbols, 
+devoid of specific data. In contrast, a model instance is the same model filled with actual data, 
+In a model instance sum expressions are resolved into its individual components and equation 
+domains are resolved to individual scalar equations.
 
 Mathematical Model
 
@@ -42,9 +40,9 @@ Model Instance
     5 \cdot x_{i1,j1} + 3 \cdot x_{i2,j1} + 2 \cdot x_{i3,j1} \le 7
     2 \cdot x_{i1,j2} + 6 \cdot x_{i2,j2} + 4 \cdot x_{i3,j2} \le 10
 
-Especially for large models with many variables and equations, a model instance becomes large
-and heavy to handle, maintain, and read. Therefore, GAMSPy leverages the idea of a standalone,
-thus, data independent and indexed representation of a mathematical model which is very close 
+Especially for large models with many variables and equations, a model instance becomes large, machine
+making it complex and harder to manage. Therefore, GAMSPy leverages the idea of a standalone,
+data independent, and indexed representation of a mathematical model which is very close 
 to the original algebraic formulation.
 
 
