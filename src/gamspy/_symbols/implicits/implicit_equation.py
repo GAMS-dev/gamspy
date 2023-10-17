@@ -33,6 +33,7 @@ import gamspy._algebra.expression as expression
 import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
 import gamspy._symbols.set as gams_set
+import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
@@ -155,6 +156,9 @@ class ImplicitEquation(ImplicitSymbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
         self._definition = statement
 

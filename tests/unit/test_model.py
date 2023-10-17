@@ -123,7 +123,8 @@ class ModelSuite(unittest.TestCase):
             objective=z,
         )
         self.assertEqual(
-            test_model2.getStatement(), "Model test_model2 / cost,supply /;"
+            test_model2.getStatement(),
+            "$onMultiR\nModel test_model2 / cost,supply /;",
         )
         self.assertEqual(test_model2.equations, [cost, supply])
 
@@ -158,7 +159,7 @@ class ModelSuite(unittest.TestCase):
         )
         self.assertEqual(
             test_model5.getStatement(),
-            "Model test_model5 / supply.x,cost.z /;",
+            "$onMultiR\nModel test_model5 / supply.x,cost.z /;",
         )
 
         # Equations provided as strings
@@ -177,7 +178,7 @@ class ModelSuite(unittest.TestCase):
         )
         self.assertEqual(
             test_model6.getStatement(),
-            "Model test_model6 / supply,demand.x /;",
+            "$onMultiR\nModel test_model6 / supply,demand.x /;",
         )
 
     def test_feasibility(self):

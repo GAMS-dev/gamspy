@@ -6,7 +6,7 @@ Card and Ord
 
 The ``Card`` and ``Ord`` operators help to formulate position related
 expressions on sets which hold labels that do not have a numerical
-representation. Both operators ``Card`` and ``Ord``return integer values
+representation. Both operators ``Card`` and ``Ord`` return integer values
 when applied to sets. While the integer values returned do not represent
 the numerical value of the label, they can be used for the same purpose.
 
@@ -73,7 +73,7 @@ Card
 
 The ``Card`` operator takes any symbol as argument and returns its number of
 records. It can be used in any expression like e.g. equation definitions and
-parameter assignments. When used with in instance of type ``Model``, the number
+parameter assignments. When used with an instance of type ``Model``, the number
 of equation symbols contained in the model (plus 1 for the objective) is
 returned. The following example shows how ``Card`` can be used to get the
 number of records of a set::
@@ -91,7 +91,7 @@ number of records of a set::
     s = gp.Parameter(m, name="s")
     s.assignment = gp.Card(t)
 
-Note that ``s`` will be assigned the value 11 since the set ``t`` has 11 elements.
+Note that ``s`` will be assigned the value ``11`` since the set ``t`` has 11 elements.
 
 A common use case for the combination of both operators is to formulate a
 condition that is only valid for the last element of a set. The following
@@ -105,7 +105,7 @@ example does fix a variable for the final period found in set ``t`` only::
     c.fx[t].where[gp.Ord(t) == gp.Card(t)] = 1
 
 Note that the logical condition ``[gp.Ord(t) == gp.Card(t)]`` restricts the
-assignment to the last element of the set ``t``: no assignment is made for
+assignment to the last element of the set ``t`` - no assignment is made for
 other elements of ``t``. The advantage of this way of fixing the variable ``c``
 is that the membership of ``t`` can be changed safely and this statement will
 always fix ``c`` for the last element.

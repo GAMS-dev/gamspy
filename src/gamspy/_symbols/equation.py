@@ -90,6 +90,26 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(Equation)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(Equation)
+        else:
+            if isinstance(symobj, Equation):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not an Equation object)"
+                )
+
     def __init__(
         self,
         container: "Container",
@@ -209,6 +229,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
         self._definition = statement
 
@@ -426,6 +449,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
         self._definition = statement
 
