@@ -106,7 +106,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not an Equation object)"
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not an Equation object)"
                 )
 
     def __init__(

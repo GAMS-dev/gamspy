@@ -77,7 +77,8 @@ class Alias(gt.Alias, operable.Operable, Symbol):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not an Alias object)"
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not an Alias object)"
                 )
 
     def __init__(self, container: "Container", name: str, alias_with: "Set"):

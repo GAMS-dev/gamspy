@@ -83,7 +83,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not a Parameter object)"
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not a Parameter object)"
                 )
 
     def __init__(

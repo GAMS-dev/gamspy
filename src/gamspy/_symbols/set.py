@@ -88,7 +88,8 @@ class Set(gt.Set, operable.Operable, Symbol):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not a Set object)"
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not a Set object)"
                 )
 
     def __init__(

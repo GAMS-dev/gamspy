@@ -26,7 +26,8 @@ class UniverseAlias(gt.UniverseAlias):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not a UniverseAlias object)"
+                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    " because it is not a UniverseAlias object)"
                 )
 
     def __init__(self, container: "Container", name: str = "universe"):
