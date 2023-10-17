@@ -97,7 +97,6 @@ class Set(gt.Set, operable.Operable, Symbol):
             if isinstance(symobj, Set):
                 return symobj
             else:
-                print(type(symobj))
                 raise TypeError(
                     f"Cannot overwrite symbol `{symobj.name}` in container"
                     " because it is not a Set object)"
