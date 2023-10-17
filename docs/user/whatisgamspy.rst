@@ -23,7 +23,8 @@ notation and is machine-processable is paramount.
 
 With this goal in mind we developed GAMSPy to be able to generate mathematical models instead
 of model instances. Think of a mathematical model as a pure representation of mathematical symbols, 
-devoid of specific data. In contrast, a model instance is the same model filled with actual data, 
+devoid of specific data. In contrast, a model instance is a model instance is the unrolled and 
+constant folded representation of a model with its actual data.
 In a model instance sum expressions are resolved into its individual components and equation 
 domains are resolved to individual scalar equations.
 
@@ -31,7 +32,7 @@ Mathematical Model
 
 .. math::
 
-    \sum_{i \in \mathcal{I}} p_{i,j} \cdot x_{i,j} \le d_j \forall j \in \mathcal{J}
+    \sum_{i \in \mathcal{I}} \frac{p_{i,j} - q_i}{a_j} \cdot x_{i,j} \le \sum_{k in \mathcal{K}} d_{k,j} \hspace{1cm} \forall \: j \in \mathcal{J}
 
 Model Instance
 
@@ -44,7 +45,7 @@ Model Instance
 Especially for large models with many variables and equations, a model instance becomes large, machine
 making it complex and harder to manage. Therefore, GAMSPy leverages the idea of a standalone,
 data independent, and indexed representation of a mathematical model which is very close 
-to the original algebraic formulation.
+to the original mathematical algebraic formulation.
 
 
 Sparsity
@@ -56,41 +57,25 @@ has a lot of zeros and only a few non-zeros, a characteristic referred to as spa
 optimization problems, it is often necessary to account for complex mappings of indices 
 to subsets.
 
-.. attention::
-    Do we want the sparsity example from the blog post here?
-
 While you might be used to taking on the full responsibility to make sure only the relevant combinations
 of indices go into your variable definition in the Python modeling world, we especially focused on 
 transferring the convenience and mindset of GAMS into Python by designing GAMSPy. Thus, GAMSPy 
 automatically takes care of generating variables only for the relevant combinations of indices based 
 on the algebraic formulation. This feature is particularly useful when working with a large multidimensional 
 index space, where generating all possible combinations of indices would be computationally expensive and unnecessary. 
-GAMSPy quietly handles this task in the background, allowing us to focus on the formulation of the model::
-
-    Variable(container, "x", [i, j], type="Positive")
-
-The same argument holds for equation domain and sum definitions::
-
-    e = Equation(container, ...)
-    e[...] = ... 
+GAMSPy quietly handles this task in the background, allowing us to focus on the formulation of the model.
 
 
 Performance
 -----------
 
-GAMSPy generates GAMS code and executes it by using the GAMS 
-backend to resolve assignment operations, generate and solve models. Since GAMS 
-have been optimized for decades (since 1970s), and supports many solvers
-that have been developed by optimization experts, it provides good performance
-for model generation and solving models. This is the main source of the speed of
-GAMSPy.
+GAMSPy utilizes the GAMS backend to resolve assignment operations, generate and solve models. Since GAMS 
+have been optimized for decades, and supports many solvers that have been developed by optimization experts, 
+it provides outstanding performance for model generation and solving models. This is the main source of the 
+speed of GAMSPy.
 
 .. seealso::
     `Performance in Optimization Models: A Comparative Analysis of GAMS, Pyomo, GurobiPy, and JuMP <https://www.gams.com/blog/2023/07/performance-in-optimization-models-a-comparative-analysis-of-gams-pyomo-gurobipy-and-jump/>`_
-
-
-.. attention::
-    Do we want a plot showing the differences of GAMS vs GAMSPy performance based on the performance blog post?
 
 
 Optimization Pipeline Management
@@ -98,7 +83,7 @@ Optimization Pipeline Management
 
 Working on an optimization problem does not solely include the mathematical model but also includes tasks regarding
 data pre- and postprocessing as well as visualization. At GAMS, we understand the importance of making these tasks as 
-comfortable and efficient as possible. With GAMSPy we are now able to streamline the complete optimization pipeline
+comfortable and efficient as possible. With GAMSPy we introduce a new way to streamline the complete optimization pipeline
 starting with data input and preprocessing followed by the implementation of the mathematical model and data postprocessing
 and visualization, in a single, intuitive Python environment. GAMSPy allows you to leverage your favorite Python libraries 
 (e.g. Numpy, Pandas, Networkx) to comfortably manipulate and visualize data. And it allows to import and export data and 
@@ -118,7 +103,7 @@ How is GAMSPy different from GAMS?
 Summarizing the Benefits
 ------------------------
 
-- Generation of mathematical models
-- Data independent modeling
-- Convenient handling of sparse data structures
-- Streamlined optimization pipeline management
+- Generation of mathematical models in Python
+- Abstract algebraic data independent modeling in Python
+- Convenient handling of sparse data structures in Python
+- Streamlined optimization pipeline management in Python
