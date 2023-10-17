@@ -1,6 +1,4 @@
-<div align="center">
-  <img src="https://www.gams.com/img/gams_logo.svg"><br>
-</div>
+![plot](./docs/_static/gamspy_logo.png)
 
 -----------------
 
