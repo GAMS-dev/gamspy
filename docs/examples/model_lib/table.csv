@@ -91,6 +91,7 @@ thai,:ref:`GAMSPy <thai>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/
 ThreeStageSPDA,:ref:`GAMSPy <ThreeStageSPDA>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_ThreeStageSPDA.html>`__,
 timesteps,:ref:`GAMSPy <timesteps>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_timesteps.html>`__,
 TransportationOn-Off,:ref:`GAMSPy <TransportationOn-Off>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TransportationOn-Off.html>`__,
+trnsport,:ref:`GAMSPy <trnsport>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html>`__,
 trnspwl,:ref:`GAMSPy <trnspwl>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html>`__,
 trussm,:ref:`GAMSPy <trussm>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html>`__,
 tsp4,:ref:`GAMSPy <tsp4>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tsp4.html>`__,:download:`tsp4.gdx <../../tests/integration/models/tsp4.gdx>`

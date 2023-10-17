@@ -2,8 +2,8 @@
 
 .. _chain:
 
-   Find the chain (of uniform density) of length L suspended between two
-========================================================================
+Hanging Chain COPS 2.0 #3
+=========================
 
 :download:`chain.py <../../../tests/integration/models/chain.py>` 
 
