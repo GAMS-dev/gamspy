@@ -1,5 +1,5 @@
 """
-*** Environmental Load Dispatch
+Environmental Load Dispatch
 
 For more details please refer to Chapter 3 (Gcode3.3), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

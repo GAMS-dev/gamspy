@@ -1,5 +1,5 @@
 """
-Design of a disc flywheel.
+Design of a disc flywheel
 
 Schittkowski, K., More test examples for nonlinear programming codes.
 Lecture Notes in Economics and Mathematical Systems, Vol.282, Springer-Verlag,

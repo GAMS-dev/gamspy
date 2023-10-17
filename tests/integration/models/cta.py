@@ -1,4 +1,6 @@
 """
+Controlled Tabular Adjustments (CTA)
+
 Statistical agencies publish data which contains items that need to be
 altered to protect confidentiality. Controlled Tabular Adjustments (CTA)
 is a recent method to limit disclosure and can be elegantly expressed

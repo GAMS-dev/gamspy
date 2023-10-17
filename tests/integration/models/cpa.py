@@ -1,5 +1,5 @@
 """
-Combustion of propan in air.
+Combustion of propan in air
 
 Hiebert's (1983) reduced variant.
 Hiebert, K.L., An evaluation of mathematical software that solves systems
