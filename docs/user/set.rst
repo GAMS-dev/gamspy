@@ -61,7 +61,7 @@ The order in which the set members are listed is usually not important.
 However, if the members represent, for example, time periods, then it 
 may be useful to refer to the *next* or *previous* member. 
 There are special operations to do this, and they are  discussed in 
-chapter "Sets as Sequences: Ordered Sets". For now, 
+chapter :ref:`ordered-sets`. For now, 
 it is enough to remember that the order in which set elements are 
 specified is not relevant, unless and until some operation implying 
 order is used. At that time, the rules change, and the set becomes what 
@@ -138,7 +138,7 @@ In the last line the element ``food+agr`` of the set ``i`` is assigned to the su
 
 
 .. note::
-    - Note that if a subset is assigned to, it then becomes a dynamic set.
+    - Note that if a subset is assigned to, it then becomes a :ref:`dynamic set <dynamic-sets>`.
     - A subset can be used as a domain in the declaration of other sets, variables, 
       parameters and in equations as long as it is no dynamic set.
 
@@ -209,7 +209,9 @@ associated with a nearby mining region: ::
 
 Here ``i`` is the set of mining regions, ``n`` is the set of ports and ``in`` is a two 
 dimensional set that associates each port with a mining region. The pairs are created 
-using tuples in a pandas MultiIndex object. The set in has four elements, and each 
+using tuples in a 
+`pandas MultiIndex object <https://pandas.pydata.org/docs/user_guide/advanced.html>`_. 
+The set in has four elements, and each 
 element consists of a region-port pair. The ``domain = [i,n]`` indicates that the 
 first member of each pair must be a member of the set ``i`` of mining regions, and 
 that the second must be in the set ``n`` of ports. GAMS will domain check the set 
@@ -267,12 +269,11 @@ of the set ``i`` map to many elements of the set ``j``:
 Projection and Aggregation of Sets 
 -----------------------------------
 
- In GAMSPy aggregation operations on sets may be performed with an assignment and 
- the :meth:`gamspy.Sum` operator. Assignments and the sum operator are introduced 
- and discussed in detail in chapter :ref:`indexed-operations`.
- discussion, see section Aggregation of Sets and Parameters. Here we only show how 
- they may be used in the context of sets to perform projections and aggregations. 
- The following example serves as illustration. ::
+In GAMSPy aggregation operations on sets may be performed with an assignment and 
+the :meth:`gamspy.Sum` operator. Assignments and the sum operator are introduced 
+and discussed in detail in chapter :ref:`indexed-operations`. Here we only show how 
+they may be used in the context of sets to perform projections and aggregations. 
+The following example serves as illustration. ::
 
     m = Container()
 
@@ -429,13 +430,13 @@ disadvantages of using the universal set later. First example:  ::
                                 ['res-value', "scrap", 15],
                                 ['res-value', "new", 25]])
 
-In our example, the first index of parameter ``misc``` is the universal set `'*'` and the 
+In our example, the first index of parameter ``misc``` is the universal set ``'*'`` and the 
 second index is the previously defined set ``r``. Since the first index is the universal set 
 any entry whatsoever is allowed in this position. In the second position elements of the set 
 ``r`` must appear, they are domain checked, as usual.
 
 The second example illustrates how the universal set is introduced in a model with an 
-:meth:`gamspy.Alias` statement: ::
+:meth:`gamspy.UniverseAlias` statement: ::
 
     m = Container()
     r = UniverseAlias(m, name = "new_universe")
@@ -480,8 +481,9 @@ in the universe node ``'*'``. This particular domain tree may be represented as 
 Note that with the construct ``Set(m, "i",  domain = jjj)`` we may access ``ii`` iterating through 
 the members of ``jjj``.
 
-Observe that the universal set is assumed to be ordered and operators for ordered sets such ord, 
-lag and lead may be applied to any sets aliased with the universal set.
+Observe that the universal set is assumed to be ordered and operators for ordered sets such 
+:ref:`ord <card_ord>`, :ref:`lag and lead <lag_lead>` may be applied to any sets aliased with 
+the universal set.
 
 
 .. _set-and-set-element-referencing:
@@ -1162,6 +1164,8 @@ Recall that ``maxd`` is a scalar, ``i`` and ``j`` are sets, ``can_do`` is a dyna
 Here the indexed operation is filtered through the dynamic set ``can_do``, a ``where[]`` 
 condition is not necessary.
 
+
+.. _ordered-sets:
 
 Sets as Sequences: Ordered Sets
 ================================
