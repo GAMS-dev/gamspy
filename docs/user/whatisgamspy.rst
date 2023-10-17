@@ -113,6 +113,8 @@ need to run a server. We make sure you have access to the right resources, any t
 How is GAMSPy different from GAMS?
 --------------------------------
 
+.. attention::
+    Discuss and maybe move to FAQs?
 
 Summarizing the Benefits
 ------------------------
