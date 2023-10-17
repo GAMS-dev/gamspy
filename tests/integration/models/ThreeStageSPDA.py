@@ -1,4 +1,6 @@
 """
+A three stage stochastic programming model for SPDA
+
 * ThreeStageSPDA.gms: A three stage stochastic programming model for SPDA
 * Consiglio, Nielsen, Vladimirou and Zenios: A Library of Financial Optimization Models, Section 5.4
 * See also Zenios: Practical Financial Optimization, Section 6.4.

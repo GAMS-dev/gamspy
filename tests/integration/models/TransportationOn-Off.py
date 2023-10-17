@@ -1,5 +1,5 @@
 """
-*** Transportation model with On/off state modeling of production side
+Transportation model with On/off state modeling of production side
 
 For more details please refer to Chapter 2 (Gcode2.12), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

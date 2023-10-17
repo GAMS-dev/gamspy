@@ -1,6 +1,5 @@
 """
-Maximizing the network observability using a limited number of PMU for IEEE 14
-network without considering zero injection nodes
+Maximizing the network observability using a limited number of PMU for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.4), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

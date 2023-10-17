@@ -1,4 +1,6 @@
 """
+Control3 : Optimal Control Problem with a Nonlinear Dynamic Constraint and Boundary Conditions Solved as a General Nonlinear Programming Problem
+
 Optimal control problem with a nonlinear dynamic constraint and boundary
 conditions solved as a General Nonlinear Programming Problem.
 

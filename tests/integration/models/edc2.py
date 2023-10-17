@@ -1,4 +1,6 @@
 """
+Economic Dispatch Calculation of a Total Power of 1,980 MW Using 15 Power Generating Units
+
 Economic load dispatch for 15 generator systems with transmission losses
 modeled using B-matrix formulation (Kron).
 EDC of a total power of 1980 MW using 15 power generating units.

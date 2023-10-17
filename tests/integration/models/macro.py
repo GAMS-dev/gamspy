@@ -1,4 +1,6 @@
 """
+Macro - A Small Linear Dynamic Macroeconomic Model of the U.S. Economy in Which Both Monetary and Fiscal Policy Variables Are Used
+
 A small linear dynamic macroeconomic model of U.S. economy in which
 both monetary and fiscal policy variables are used.
 

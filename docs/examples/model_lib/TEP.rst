@@ -2,8 +2,8 @@
 
 .. _TEP:
 
-*** Transmission Expansion Planning
-===================================
+Transmission Expansion Planning
+===============================
 
 :download:`TEP.py <../../../tests/integration/models/TEP.py>` 
 
