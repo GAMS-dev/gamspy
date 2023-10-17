@@ -1,4 +1,5 @@
 """
+   Hanging Chain COPS 2.0 #3
    Find the chain (of uniform density) of length L suspended between two
    points with minimal potential energy.
 
