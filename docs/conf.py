@@ -65,6 +65,13 @@ html_theme_options = {
             "url": "https://twitter.com/GamsSoftware",
             "icon": "fa-brands fa-square-twitter",
         },
+        {
+            "name": "GAMS",
+            "url": "https://www.gams.com",
+            "icon": "_static/gams.svg",
+            "type": "local",
+            "attributes": {"target": "_blank"},
+        },
     ],
     "logo": {
         "image_light": "_static/gamspy_logo.png",
