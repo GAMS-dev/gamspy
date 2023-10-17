@@ -153,7 +153,10 @@ Example with a pandas MultiIndex object: ::
     m = Container()
     i = Parameter(m, "i", ["*", "*"], records = s, uels_on_axes=True)
      
-    Note that for indexed assignments a copy of the symbols on the right hand side is installed before the assignment is carried out. That means it does not work "in-place" or recursively. 
+Note that for indexed assignments a copy of the symbols on the right hand side is 
+installed before the assignment is carried out. That means it does not work 
+"in-place" or recursively. ::
+    
     Out[1]:
       uni_0 uni_1  value
     0     a     z    1.0
@@ -537,5 +540,10 @@ capacity: ::
     TODO: add references in note block
 
 .. note::
-    - In the context of assignment statements, the attributes of variables and equations (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars and parameters are used. For more on variable and equations attributes, see sections Variable Attributes and Equation Attributes respectively.
-    - In the context of equation definitions, scalars, parameters and variables may appear freely in indexed operations. For more on equation definitions, see section Defining Equations.
+    - In the context of assignment statements, the attributes of variables and equations 
+      (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars 
+      and parameters are used. For more on variable and equations attributes, see sections 
+      :ref:`variable-attributes` and Equation Attributes respectively.
+    - In the context of equation definitions, scalars, parameters and variables may appear 
+      freely in indexed operations. For more on equation definitions, see section Defining 
+      Equations.
