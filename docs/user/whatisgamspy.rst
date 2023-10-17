@@ -37,7 +37,8 @@ Model Instance
 
 .. math::
 
-    5 \cdot x_{i1,j1} + 3 \cdot x_{i2,j1} + 2 \cdot x_{i3,j1} \le 7
+    5 \cdot x_{i1,j1} + 3 \cdot x_{i2,j1} + 2 \cdot x_{i3,j1} \le 7 
+    
     2 \cdot x_{i1,j2} + 6 \cdot x_{i2,j2} + 4 \cdot x_{i3,j2} \le 10
 
 Especially for large models with many variables and equations, a model instance becomes large, machine
