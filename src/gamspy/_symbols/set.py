@@ -72,6 +72,25 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(Set)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(Set)
+        else:
+            if isinstance(symobj, Set):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not a Set object)"
+                )
+
     def __init__(
         self,
         container: "Container",
@@ -156,9 +175,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         else:
             self.container._run()
 
-    def _singleton_check(
-        self, is_singleton: bool, records: Union[Any, None], domain
-    ):
+    def _singleton_check(self, is_singleton: bool, records: Union[Any, None], domain):
         if is_singleton:
             if records is not None and len(records) > 1:
                 raise GamspyException(

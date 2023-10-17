@@ -90,15 +90,32 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(Equation)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(Equation)
+        else:
+            if isinstance(symobj, Equation):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not an Equation object)"
+                )
+
     def __init__(
         self,
         container: "Container",
         name: str,
         type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        definition: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
+        definition: Optional[Union["Variable", "Operation", "Expression"]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -372,9 +389,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     @definition.setter
     def definition(
         self,
-        assignment: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
+        assignment: Optional[Union["Variable", "Operation", "Expression"]] = None,
     ) -> None:
         """
         Needed for scalar equations

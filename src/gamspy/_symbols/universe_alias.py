@@ -10,6 +10,25 @@ if TYPE_CHECKING:
 
 
 class UniverseAlias(gt.UniverseAlias):
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(UniverseAlias)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(UniverseAlias)
+        else:
+            if isinstance(symobj, UniverseAlias):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not a UniverseAlias object)"
+                )
+
     def __init__(self, container: "Container", name: str = "universe"):
         """
         Represents a UniverseAlias symbol in GAMS.

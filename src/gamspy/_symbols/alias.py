@@ -61,6 +61,25 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     """
 
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            return object.__new__(Alias)
+
+        try:
+            symobj = args[0][args[1]]
+        except:
+            symobj = None
+
+        if symobj is None:
+            return object.__new__(Alias)
+        else:
+            if isinstance(symobj, Alias):
+                return symobj
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{symobj.name}` in container because it is not an Alias object)"
+                )
+
     def __init__(self, container: "Container", name: str, alias_with: "Set"):
         # enable load on demand
         self._is_dirty = False
