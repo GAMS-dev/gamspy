@@ -175,7 +175,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         else:
             self.container._run()
 
-    def _singleton_check(self, is_singleton: bool, records: Union[Any, None], domain):
+    def _singleton_check(
+        self, is_singleton: bool, records: Union[Any, None], domain
+    ):
         if is_singleton:
             if records is not None and len(records) > 1:
                 raise GamspyException(

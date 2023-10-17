@@ -153,7 +153,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def _cast_type(self, type: Union[str, VariableType]) -> str:
         if isinstance(type, str) and type.lower() not in VariableType.values():
             raise ValueError(
-                f"Allowed variable types: {VariableType.values()} but" f" found {type}."
+                f"Allowed variable types: {VariableType.values()} but"
+                f" found {type}."
             )
 
         if isinstance(type, VariableType):
@@ -161,7 +162,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         return type.lower()
 
-    def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitVariable:
+    def __getitem__(
+        self, indices: Union[tuple, str]
+    ) -> implicits.ImplicitVariable:
         domain = utils._toList(indices)
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 

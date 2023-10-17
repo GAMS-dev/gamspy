@@ -115,7 +115,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         name: str,
         type: Union[str, EquationType] = "regular",
         domain: Optional[List[Union["Set", str]]] = None,
-        definition: Optional[Union["Variable", "Operation", "Expression"]] = None,
+        definition: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -389,7 +391,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     @definition.setter
     def definition(
         self,
-        assignment: Optional[Union["Variable", "Operation", "Expression"]] = None,
+        assignment: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
     ) -> None:
         """
         Needed for scalar equations

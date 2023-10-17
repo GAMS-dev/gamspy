@@ -121,7 +121,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # add statement
         self.container._addStatement(self)
 
-    def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitParameter:
+    def __getitem__(
+        self, indices: Union[tuple, str]
+    ) -> implicits.ImplicitParameter:
         domain = utils._toList(indices)
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
