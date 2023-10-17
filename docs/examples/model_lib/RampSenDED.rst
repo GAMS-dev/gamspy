@@ -2,8 +2,8 @@
 
 .. _RampSenDED:
 
-*** Ramp rate sensitivity analysis for Dynamic Economic Load Dispatch
-=====================================================================
+Ramp rate sensitivity analysis for Dynamic Economic Load Dispatch
+=================================================================
 
 :download:`RampSenDED.py <../../../tests/integration/models/RampSenDED.py>` 
 

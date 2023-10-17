@@ -1,7 +1,8 @@
 """
-October 6, 2005
 Optimal management of a river system which includes water resources,
 reservoirs, consumers and an estuary.
+
+October 6, 2005
 
 Adapted from:
 McKinney, D.C. and Savitsky, A.G., "Basic optimization models

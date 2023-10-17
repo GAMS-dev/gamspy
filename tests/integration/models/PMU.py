@@ -1,5 +1,5 @@
 """
-*** PMU allocation for IEEE 14 network without considering zero injection nodes
+PMU allocation for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.1), of the following book:
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.

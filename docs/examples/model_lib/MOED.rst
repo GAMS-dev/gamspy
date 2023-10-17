@@ -2,8 +2,8 @@
 
 .. _MOED:
 
-*** Multi-objective Economic-Environmental Load Dispatch
-========================================================
+Multi-objective Economic-Environmental Load Dispatch
+====================================================
 
 :download:`MOED.py <../../../tests/integration/models/MOED.py>` 
 
