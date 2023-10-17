@@ -591,8 +591,7 @@ Implicit Set Definition
 
 Sets can be defined through data statements in the declaration. Alternatively, sets can be 
 defined implicitly through data statements of other symbols which use these sets as domains. 
-This is illustrated in the following example, which is derived from the 
-[:ref:`trnsport <trnsport>`] model: ::
+This is illustrated in the following example: ::
 
     m = Container()
 
@@ -655,8 +654,12 @@ execution time the membership is never changed. Therefore they are called
 _`static` *static sets*. In contrast, the elements of dynamic sets are not 
 fixed, but may be added 
 and removed during execution of the program. Dynamic sets are most often used as 
-controlling indices in assignments or equation definitions and as the conditional 
-set in an indexed operation. We will first show how assignments 
+:ref:`controlling indices in assignments <dynamic-sets-in-conditional-assignments>` 
+or 
+:ref:`equation definitions <conditional-equations-with-dynamic-sets>` 
+and as the conditional set in an 
+:ref:`indexed operation <conditional-indexed-operations-with-dynamic-sets>`. 
+We will first show how assignments 
 are used to change set membership in dynamic sets. Then we will introduce set 
 operations and the last part of this chapter covers dynamic sets in the context 
 of conditions.
@@ -668,7 +671,8 @@ The Syntax
 ^^^^^^^^^^
 Like any other set, a dynamic set has to be declared before it may be used in the 
 model. Often, a dynamic set is declared as subset of a static set. Dynamic sets in 
-GAMSPy may also be multi-dimensional like static sets. The maximum number of permitted 
+GAMSPy may also be multi-dimensional like static sets. The 
+:ref:`maximum number <multi-dimensional-sets>` of permitted 
 dimensions follows the rules of the basic Data Types and Definitions. For 
 multi-dimensional dynamic sets the index sets can also be specified explicitly at 
 declaration. That way dynamic sets are domain checked. Of course it is also possible 
@@ -749,11 +753,13 @@ illustrate assignments for multi-dimensional sets. ::
     3	pencil	     bic	
 
 
+.. _equations-defined-over-the-domain-of-dynamic-sets:
 Equations Defined over the Domain of Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Generally, dynamic sets are not permitted as domains in *declarations* of sets, variables, 
-parameters and equations. However, they may be *referenced* and sometimes it is necessary 
+Generally, dynamic sets are not permitted as domains in *declarations* of :ref:`sets <set>`, 
+:ref:`variables <variable>`, :ref:`parameters <parameter>` and :ref:`equations <equation>`. 
+However, they may be *referenced* and sometimes it is necessary 
 to define an equation over a dynamic set.
 
 .. note::
@@ -828,10 +834,10 @@ and the sets ``j`` and ``k`` are dynamic sets.
 =====================================  ===============  =====================================================================================================
 Set Operation                          Operator         Description
 =====================================  ===============  =====================================================================================================
-Set Union                              j(i) + k(i)      Returns a subset of i that contains all the elements of the sets j and k.
-Set Intersection                       j(i) * k(i)      Returns a subset of i that contains the elements of the set j that are also elements of the set k.
-Set Complement                         not j(i)         Returns a subset of i that contains all the elements of the set i that are not elements of the set j.
-Set Difference                         j(i) - k(i)      Returns a subset of i that contains all the elements of the set j that are not elements of the set k.
+Set Union                              j[i] + k[i]      Returns a subset of i that contains all the elements of the sets j and k.
+Set Intersection                       j[i] & k[i]      Returns a subset of i that contains the elements of the set j that are also elements of the set k.
+Set Complement                         ~ j[i]           Returns a subset of i that contains all the elements of the set i that are not elements of the set j.
+Set Difference                         j[i] - k[i]      Returns a subset of i that contains all the elements of the set j that are not elements of the set k.
 =====================================  ===============  =====================================================================================================
 
 Example: The set ``item`` is the superset of the dynamic sets ``subitem1`` and ``subitem2``. 
@@ -886,7 +892,7 @@ discussed in depth in the next section.
 .. note::
     The indexed operation :meth:`gamspy.Sum` may be used for set unions. Similarly, 
     the indexed operation :meth:`gamspy.Product` may be used for set intersections. 
-    For examples see section "Conditional Indexed Operations with Dynamic Sets" below.
+    For examples see section :ref:`conditional-indexed-operations-with-dynamic-sets` below.
 
 
 Controlling Dynamic Sets
@@ -904,7 +910,7 @@ each of these in the following subsections.
 Apart from being part of logical conditions, dynamic sets may be assigned members 
 with conditional assignments. Examples are given in the next subsection.
 
-
+.. _dynamic-sets-in-conditional-assignments:
 Dynamic Sets in Conditional Assignments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -944,7 +950,7 @@ for all members of the set ``subitem1``. Hence the statement assigns all element
 of the domain ``item`` that are members of the set ``subitem1`` to the dynamic set 
 ``subitem2``. Note that in this assignment the ``where[]`` is on the right. 
 Conditional assignments with ``where[]`` on the right-hand side imply an 
-``if-then-else `` structure where the ``else`` case is automatically zero. Unlike 
+``if-then-else`` structure where the ``else`` case is automatically zero. Unlike 
 parameters, dynamic sets cannot be assigned the value of zero, they are assigned 
 ``False`` instead. Therefore a more explicit formulation of the conditional 
 assignment above would be: ::
@@ -953,6 +959,7 @@ assignment above would be: ::
     subitem2[item] = Number(1).where[subitem1[item]] + Number(0).where[subitem1[item]]
 
 
+.. _conditional-indexed-operations-with-dynamic-sets:
 Conditional Indexed Operations with Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1014,7 +1021,7 @@ are members of the set ``can_do`` and chooses the largest value. ::
     0	3306.0
 
 There is a shorter alternative formulation for this assignment; see subsection 
-"Filtering through Dynamic Sets" below for details.
+:ref:`Filtering through Dynamic Sets <filtering-through-dynamic-sets>` below for details.
 
 Finally, we also wish to know which flight connection is linked to the longest possible 
 distance. Consider the following two lines: ::
@@ -1095,7 +1102,7 @@ The indexed operation is controlled by the two-dimensional set ``supply`` with t
 ``'parker'`` in the second index position. This logical condition is True for all members 
 of the set ``supply`` where the second index is ``'parker'``. Hence the summation is over 
 all items sold, provided that the supplier is ``'parker'``. Given the declaration of the 
-set ``supply``, this means `'ink'`, `'pen'` and `'pencil'`. The associated departments are 
+set ``supply``, this means ``'ink'``, ``'pen'`` and ``'pencil'``. The associated departments are 
 thus all departments except for ``'cosmetics'``: ::
 
     In [1]: print(*g03.records["dep"], sep=", ")
@@ -1120,6 +1127,7 @@ excluded. Hence, only ``'hardware'`` and ``'toy'`` are added to ``g11``. ::
     Out[1]: hardware, toy
 
 
+.. _conditional-equations-with-dynamic-sets:
 Conditional Equations with Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1127,9 +1135,9 @@ Conditional Equations with Dynamic Sets
 and they may also feature in the algebraic formulation of the equation. In both instances 
 dynamic sets may be used as part of the logical condition. ``where[]`` conditions with 
 dynamic sets in the algebra of equations are similar to conditional assignments with dynamic 
-sets; see section "Dynamic Sets in Conditional Assignments" above. The example that follows 
+sets; see section :ref:`dynamic-sets-in-conditional-assignments` above. The example that follows 
 illustrates the use of a dynamic set to restrict the domain of definition of an equation. In 
-section "Equations Defined over the Domain of Dynamic Sets" above we had the following 
+section :ref:`equations-defined-over-the-domain-of-dynamic-sets` above we had the following 
 equation definition: ::
 
     prodbal1[r] =   activity2[r]*price == revenue[r]
@@ -1144,6 +1152,7 @@ those elements that belong to the dynamic set ``r``. While in the second formula
 condition is specified explicitly, in the first formulation the domain is filtered through 
 the dynamic set ``r``. This is the topic of the next subsection.
 
+.. _filtering-through-dynamic-sets:
 Filtering through Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1151,7 +1160,7 @@ In certain circumstances the filtering process is an alternative to the ``where[
 to restrict the domain of equations, sets, variables, parameters and indexed operations. We 
 already saw an example for restricting the domain of definition of an equation in the previous 
 subsection. The next example refers to restricting the domain in an indexed operation. In 
-section "Conditional Indexed Operations with Dynamic Sets" we had the following assignment: ::
+section :ref:`conditional-indexed-operations-with-dynamic-sets` we had the following assignment: ::
 
     maxd.assignment = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
 
