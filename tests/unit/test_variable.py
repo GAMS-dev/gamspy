@@ -259,15 +259,6 @@ class VariableSuite(unittest.TestCase):
         expression = -a[i] * 5
         self.assertEqual(expression.gamsRepr(), "(-a(i) * 5)")
 
-        a.l[i].assignment = 5
-        self.assertTrue(a._is_dirty)
-
-        # load the records of a
-        self.assertEqual(
-            a.records["level"].to_list(),
-            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
-        )
-
         self.assertTrue(
             hasattr(a[i], "l")
             and isinstance(a[i].l, implicits.ImplicitParameter)

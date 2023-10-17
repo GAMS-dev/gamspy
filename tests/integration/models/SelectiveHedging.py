@@ -60,8 +60,8 @@ def main(output=None):
         m, name="pr", domain=[l], description="Scenario probability"
     )
 
-    USDDEMForwardRate.assignment = -0.005
-    USDCHFForwardRate.assignment = 0.001
+    USDDEMForwardRate[...] = -0.005
+    USDCHFForwardRate[...] = 0.001
 
     BondReturns = Parameter(
         m, name="BondReturns", domain=[SS, BB], description="Bond returns"
@@ -123,7 +123,7 @@ def main(output=None):
     yPosDef = Equation(m, name="yPosDef", domain=[l])
     yNegDef = Equation(m, name="yNegDef", domain=[l])
 
-    ObjDef.definition = z == Sum(l, pr[l] * y[l])
+    ObjDef[...] = z == Sum(l, pr[l] * y[l])
 
     yPosDef[l] = y[l] >= Sum(
         i, UnhedgedBondReturns[l, i] * u[i] + HedgedBondReturns[l, i] * h[i]
@@ -136,7 +136,7 @@ def main(output=None):
         ),
     )
 
-    ReturnCon.definition = (
+    ReturnCon[...] = (
         Sum(
             l,
             pr[l]
@@ -160,7 +160,7 @@ def main(output=None):
         i, UnhedgedBondReturns[l, i] * u[i] + HedgedBondReturns[l, i] * h[i]
     )
 
-    NormalCon.definition = Sum(i, h[i] + u[i]) == 1.0
+    NormalCon[...] = Sum(i, h[i] + u[i]) == 1.0
 
     IndexFund = Model(
         m,
@@ -199,7 +199,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assignment = Frontiers[pp, "mu"]
+        mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
@@ -221,7 +221,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assignment = Frontiers[pp, "mu"]
+        mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))
@@ -245,7 +245,7 @@ def main(output=None):
         ]:
             continue
 
-        mu.assignment = Frontiers[pp, "mu"]
+        mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
         print("Objective: ", round(z.records.level[0], 3))

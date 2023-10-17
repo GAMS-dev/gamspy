@@ -383,7 +383,7 @@ def main():
     )
 
     # Objective function:
-    cost.definition = obj == Sum(
+    cost[...] = obj == Sum(
         i,
         data[i, "a"] * gams_math.power(P[i], 2)
         + data[i, "b"] * P[i]
@@ -391,7 +391,7 @@ def main():
     )
 
     # Constraints:
-    bal.definition = (
+    bal[...] = (
         Sum(i, P[i]) - Sum([i, j], P[i] * Losscoef[i, j] * P[j] / 10000)
         == Load
     )

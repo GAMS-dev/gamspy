@@ -38,6 +38,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Variable, Container
@@ -91,12 +92,23 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     """
 
     def __new__(cls, *args, **kwargs):
-        if len(args) == 0:
-            return object.__new__(Equation)
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
-            symobj = args[0][args[1]]
-        except:
+            container = (
+                kwargs["container"]
+                if "container" in kwargs.keys()
+                else args[0]
+            )
+        except IndexError:
+            raise GamspyException("Container of the symbol must be provided!")
+
+        try:
+            symobj = container[name]
+        except KeyError:
             symobj = None
 
         if symobj is None:
@@ -155,7 +167,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # add defition if exists
         self._definition_domain = definition_domain
-        self.definition = definition
+        self.add_definition(definition)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -188,7 +200,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return id(self)
 
     def __getitem__(self, indices: Union[tuple, str]):
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
@@ -198,7 +210,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: "Expression",
     ):
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
 
         non_regular_map = {
             "nonbinding": "=n=",
@@ -212,6 +224,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             "=g=": "geq",
             "=l=": "leq",
         }
+
+        eq_types = ["=e=", "=l=", "=g="]
+
+        # In case of an MCP equation without any equality, add the equality
+        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
+            assignment = assignment == 0
 
         if self.type in non_regular_map.keys():  # type: ignore
             assignment._op_type = non_regular_map[self.type]  # type: ignore
@@ -379,21 +397,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._infeas
 
-    @property
-    def definition(
-        self,
-    ) -> Optional[Union["Variable", "Operation", "Expression"]]:
-        """
-        Definition of the Equation
-
-        Returns
-        -------
-        Expression
-        """
-        return self._definition
-
-    @definition.setter
-    def definition(
+    def add_definition(
         self,
         assignment: Optional[
             Union["Variable", "Operation", "Expression"]
@@ -406,7 +410,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
         >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
         >>> eq = gp.Equation(m, "eq")
-        >>> eq.definition = gp.Sum(wh, build[wh]) <= 1
+        >>> eq[...] = gp.Sum(wh, build[wh]) <= 1
 
         """
         if assignment is None:

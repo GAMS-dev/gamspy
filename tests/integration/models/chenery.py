@@ -85,16 +85,16 @@ def main():
         ["lc", "kc", "sup", "fpr", "dvv", "dl", "dk", "dv"]
     )
 
-    dty.definition = td == Sum(i, y[i])
+    dty[...] = td == Sum(i, y[i])
     mb[i] = x[i] >= y[i] + Sum(j, aio[i, j] * x[j]) + (e[i] - m[i]).where[t[i]]
-    tb.definition = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
+    tb[...] = Sum(t, g[t] * m[t] - h[t] * e[t]) <= dbar
     dg[t] = g[t] == mew[t] + xsi[t] * m[t]
     dh[t] = h[t] == gam[t] - alp[t] * e[t]
     dem[i] = y[i] == ynot[i] * (pd * p[i]) ** thet[i]
-    lc.definition = Sum(i, l[i] * x[i]) <= lbar
-    kc.definition = Sum(i, k[i] * x[i]) == kbar
+    lc[...] = Sum(i, l[i] * x[i]) <= lbar
+    kc[...] = Sum(i, k[i] * x[i]) == kbar
     sup[i] = p[i] == Sum(j, aio[j, i] * p[j]) + v[i]
-    fpr.definition = pi == pk / plab
+    fpr[...] = pi == pk / plab
     dvv[i].where[sig[i] != 0] = vv[i] == (pi * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
     )
@@ -134,10 +134,10 @@ def main():
     p.lo[i] = 0.1
     l.up[i] = 1
     k.up[i] = 1
-    pk.lo.assignment = 0.25
-    pk.up.assignment = 4
-    pi.lo.assignment = 0.25
-    pi.up.assignment = 4
+    pk.lo[...] = 0.25
+    pk.up[...] = 4
+    pi.lo[...] = 0.25
+    pi.up[...] = 4
     v.up[i] = 100
     vv.lo[i] = 0.001
 
@@ -160,10 +160,10 @@ def main():
     m.l[t] = 0
     g.l[t] = mew[t] + xsi[t] * m.l[t]
     h.l[t] = gam[t] - alp[t] * e.l[t]
-    pd.l.assignment = 0.3
+    pd.l[...] = 0.3
     p.l[i] = 3
-    pk.l.assignment = 3.5
-    pi.l.assignment = pk.l / plab
+    pk.l[...] = 3.5
+    pi.l[...] = pk.l / plab
 
     vv.l[i].where[sig[i]] = (pi.l * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
@@ -181,7 +181,7 @@ def main():
         + deli[i].where[sig[i] == 0]
     ) / efy[i]
     v.l[i] = pk.l * k.l[i] + plab * l.l[i]
-    pd.lo.assignment = 0.01
+    pd.lo[...] = 0.01
     p.lo[i] = 0.1
 
     chenrad.solve()

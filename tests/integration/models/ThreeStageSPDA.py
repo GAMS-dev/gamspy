@@ -241,7 +241,7 @@ def main():
 
     WealthRatioDef[l] = wealth[l] == cash["t2", l] / FinalLiability[l]
 
-    ExpWealthObjDef.definition = z == Sum(l, wealth[l]) / Card(l)
+    ExpWealthObjDef[...] = z == Sum(l, wealth[l]) / Card(l)
 
     ThreeStageExpWealth = Model(
         m,
@@ -261,7 +261,7 @@ def main():
 
     # Model 1: Maximize the expected wealth, without transaction cost
 
-    PropCost.assignment = 0.0
+    PropCost[...] = 0.0
 
     ThreeStageExpWealth.solve()
 
@@ -275,7 +275,7 @@ def main():
 
     # Model 2: Maximize the expected wealth, with transaction cost
 
-    PropCost.assignment = 0.01
+    PropCost[...] = 0.01
 
     ThreeStageExpWealth.solve()
 
@@ -335,7 +335,7 @@ def main():
         description="Utility objective function definition",
     )
 
-    UtilityObjDef.definition = z == Sum(l, gams_math.log(wealth[l])) / Card(l)
+    UtilityObjDef[...] = z == Sum(l, gams_math.log(wealth[l])) / Card(l)
 
     ThreeStageUtility = Model(
         m,
@@ -395,7 +395,7 @@ def main():
         objective=z,
     )
 
-    EpsTolerance.assignment = 0.09
+    EpsTolerance[...] = 0.09
 
     ThreeStageMAD.solve()
 

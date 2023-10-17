@@ -68,7 +68,7 @@ def main():
     )
 
     # the assignment problem is a relaxation of the TSP
-    objective.definition = z == Sum([i, j], c[i, j] * x[i, j])
+    objective[...] = z == Sum([i, j], c[i, j] * x[i, j])
     rowsum[i] = Sum(j, x[i, j]) == 1
     colsum[j] = Sum(i, x[i, j]) == 1
 
@@ -205,7 +205,7 @@ def main():
                         continue
                     fromi[ix_loop] = True
 
-        nosubtours.assignment = Sum(
+        nosubtours[...] = Sum(
             t, gams_math.Max(Number(0), Smax(tour[i, j, t], Number(1)))
         )
 

@@ -73,7 +73,7 @@ def main():
         == Sum(d[s2, s1], f[s, d]) + s.sameAs(s1) * Card(s) - 1
     )
 
-    defspobj.definition = spobj == Sum(
+    defspobj[...] = spobj == Sum(
         (s, d[s1, s2]), f[s, d] * gams_math.Max(rt[s1, s2], rt[s2, s1])
     )
 
@@ -195,9 +195,7 @@ def main():
         od[s1, s2], maxtcap
     ) * Sum(ll.where[rp[ll, s1] & rp[ll, s2]], phi[ll])
 
-    defobjdtlop.definition = obj == Sum(
-        Domain(s1, s2).where[od[s1, s2]], dt[s1, s2]
-    )
+    defobjdtlop[...] = obj == Sum(Domain(s1, s2).where[od[s1, s2]], dt[s1, s2])
 
     lopdt = Model(
         m,
@@ -263,7 +261,7 @@ def main():
 
     couplexy[ll, lf] = y[ll, lf] <= y.up[ll, lf] * x[ll, lf]
 
-    defobjilp.definition = obj == Sum(
+    defobjilp[...] = obj == Sum(
         (ll, lf), xcost[ll, lf] * x[ll, lf] + ycost[ll, lf] * y[ll, lf]
     )
 

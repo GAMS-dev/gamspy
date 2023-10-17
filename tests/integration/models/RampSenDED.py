@@ -132,7 +132,7 @@ def main():
     balance = Equation(m, name="balance", type="regular", domain=[t])
     EMcalc = Equation(m, name="EMcalc", type="regular")
 
-    costThermalcalc.definition = costThermal == Sum(
+    costThermalcalc[...] = costThermal == Sum(
         [t, i],
         gendata[i, "a"] * sqr(p[i, t])
         + gendata[i, "b"] * p[i, t]
@@ -141,7 +141,7 @@ def main():
     Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU"]
     Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD"]
     balance[t] = Sum(i, p[i, t]) >= demand[t]
-    EMcalc.definition = EM == Sum(
+    EMcalc[...] = EM == Sum(
         [t, i],
         gendata[i, "d"] * sqr(p[i, t])
         + gendata[i, "e"] * p[i, t]
@@ -167,7 +167,7 @@ def main():
     report1 = Parameter(m, name="report1", domain=[counter, "*"])
 
     for idx, c in enumerate(counter.toList()):
-        Rscale.assignment = 1 - (idx) * 0.02
+        Rscale[...] = 1 - (idx) * 0.02
         gendata[i, "RU"] = gendata[i, "RU0"] * Rscale
         gendata[i, "RD"] = gendata[i, "RD0"] * Rscale
         DEDcostbased.solve()

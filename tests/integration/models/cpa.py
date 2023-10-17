@@ -58,12 +58,12 @@ def main():
     eobj = Equation(m, name="eobj", type="regular")
 
     # CONSTRAINTS
-    e1.definition = x1 + x4 - 3 == 0
-    e2.definition = 2 * x1 + x2 + x4 + x7 + x8 + x9 + 2 * x10 - R == 0
-    e3.definition = 2 * x2 + 2 * x5 + x6 + x7 - 8 == 0
-    e4.definition = 2 * x3 + x5 - 4 * R == 0
-    e5.definition = x1 * x5 - 0.193 * x2 * x4 == 0
-    e6.definition = (
+    e1[...] = x1 + x4 - 3 == 0
+    e2[...] = 2 * x1 + x2 + x4 + x7 + x8 + x9 + 2 * x10 - R == 0
+    e3[...] = 2 * x2 + 2 * x5 + x6 + x7 - 8 == 0
+    e4[...] = 2 * x3 + x5 - 4 * R == 0
+    e5[...] = x1 * x5 - 0.193 * x2 * x4 == 0
+    e6[...] = (
         x6 * gams_math.sqrt(x2)
         - 0.002597
         * gams_math.sqrt(
@@ -71,7 +71,7 @@ def main():
         )
         == 0
     )
-    e7.definition = (
+    e7[...] = (
         x7 * gams_math.sqrt(x4)
         - 0.003448
         * gams_math.sqrt(
@@ -79,7 +79,7 @@ def main():
         )
         == 0
     )
-    e8.definition = (
+    e8[...] = (
         x4 * x8
         - 1.799
         * x2
@@ -87,7 +87,7 @@ def main():
         / 100000
         == 0
     )
-    e9.definition = (
+    e9[...] = (
         x4 * x9
         - 0.0002155
         * x1
@@ -96,7 +96,7 @@ def main():
         )
         == 0
     )
-    e10.definition = (
+    e10[...] = (
         x10 * sqr(x4)
         - 3.84
         * sqr(x4)
@@ -106,41 +106,41 @@ def main():
     )
 
     # OBJECTIVE
-    eobj.definition = obj == 1
+    eobj[...] = obj == 1
 
     # Bound on variables:
-    x1.lo.assignment = 0.000001
-    x1.up.assignment = 100
-    x2.lo.assignment = 0.000001
-    x2.up.assignment = 100
-    x3.lo.assignment = 0.000001
-    x3.up.assignment = 100
-    x4.lo.assignment = 0.000001
-    x4.up.assignment = 100
-    x5.lo.assignment = 0.000001
-    x5.up.assignment = 100
-    x6.lo.assignment = 0.000001
-    x6.up.assignment = 100
-    x7.lo.assignment = 0.000001
-    x7.up.assignment = 100
-    x8.lo.assignment = 0.000001
-    x8.up.assignment = 100
-    x9.lo.assignment = 0.000001
-    x9.up.assignment = 100
-    x10.lo.assignment = 0.000001
-    x10.up.assignment = 100
+    x1.lo[...] = 0.000001
+    x1.up[...] = 100
+    x2.lo[...] = 0.000001
+    x2.up[...] = 100
+    x3.lo[...] = 0.000001
+    x3.up[...] = 100
+    x4.lo[...] = 0.000001
+    x4.up[...] = 100
+    x5.lo[...] = 0.000001
+    x5.up[...] = 100
+    x6.lo[...] = 0.000001
+    x6.up[...] = 100
+    x7.lo[...] = 0.000001
+    x7.up[...] = 100
+    x8.lo[...] = 0.000001
+    x8.up[...] = 100
+    x9.lo[...] = 0.000001
+    x9.up[...] = 100
+    x10.lo[...] = 0.000001
+    x10.up[...] = 100
 
     # Initial point:
-    x1.l.assignment = 2
-    x2.l.assignment = 5
-    x3.l.assignment = 40
-    x4.l.assignment = 1
-    x5.l.assignment = 0
-    x6.l.assignment = 0
-    x7.l.assignment = 0
-    x8.l.assignment = 0
-    x9.l.assignment = 0
-    x10.l.assignment = 5
+    x1.l[...] = 2
+    x2.l[...] = 5
+    x3.l[...] = 40
+    x4.l[...] = 1
+    x5.l[...] = 0
+    x6.l[...] = 0
+    x7.l[...] = 0
+    x8.l[...] = 0
+    x9.l[...] = 0
+    x10.l[...] = 5
 
     cpa = Model(
         m,

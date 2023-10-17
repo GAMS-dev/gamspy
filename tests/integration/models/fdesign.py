@@ -90,9 +90,9 @@ def main():
         <= t
     )
 
-    cone_rhs.definition = v2 == u - t
-    cone_lhs.definition = v3 == u + t
-    so.definition = v3**2 >= v**2 + v2**2
+    cone_rhs[...] = v2 == u - t
+    cone_lhs[...] = v3 == u + t
+    so[...] = v3**2 >= v**2 + v2**2
 
     passband_lo_bnds[i].where[omega_pass[i]] = u <= 2 * Sum(
         k.where[Ord(k) < Card(k)],
@@ -113,8 +113,8 @@ def main():
         <= beta
     )
 
-    t.lo.assignment = 1
-    v.fx.assignment = 2
+    t.lo[...] = 1
+    v.fx[...] = 2
 
     fir_socp = Model(
         m,

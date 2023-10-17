@@ -111,7 +111,7 @@ def flow_shop(process_time_df, last_machine, last_item):
         i, proctime[m, i] * rank[i, k]
     )
 
-    defObj.definition = totwait >= comp[last_machine, last_item]
+    defObj[...] = totwait >= comp[last_machine, last_item]
 
     flowshop = gap.Model(
         container=c,

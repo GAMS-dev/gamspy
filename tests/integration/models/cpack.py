@@ -84,8 +84,8 @@ y.up[i] = 1
 x.l[i] = -0.2 + Ord(i) * 0.1
 y.l[i] = -0.2 + Ord(i) * 0.1
 
-r.lo.assignment = 0.05
-r.up.assignment = 0.4
+r.lo[...] = 0.05
+r.up[...] = 0.4
 
 # solve with a good global solver
 print("Starting solve, be patient (log only shown afterwards)...")

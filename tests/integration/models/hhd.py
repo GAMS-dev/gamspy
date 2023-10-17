@@ -80,11 +80,11 @@ def main():
     e8 = Equation(m, name="e8", type="regular")
     e = Equation(m, name="e", type="regular")
 
-    e1.definition = x1 + x2 - summx == 0
-    e2.definition = x3 + x4 - summy == 0
-    e3.definition = x5 * x1 + x6 * x2 - x7 * x3 - x8 * x4 - suma == 0
-    e4.definition = x7 * x1 + x8 * x2 + x5 * x3 + x6 * x4 - sumb == 0
-    e5.definition = (
+    e1[...] = x1 + x2 - summx == 0
+    e2[...] = x3 + x4 - summy == 0
+    e3[...] = x5 * x1 + x6 * x2 - x7 * x3 - x8 * x4 - suma == 0
+    e4[...] = x7 * x1 + x8 * x2 + x5 * x3 + x6 * x4 - sumb == 0
+    e5[...] = (
         x1 * (gams_math.power(x5, 2) - gams_math.power(x7, 2))
         - 2 * x3 * x5 * x7
         + x2 * (gams_math.power(x6, 2) - gams_math.power(x8, 2))
@@ -92,7 +92,7 @@ def main():
         - sumc
         == 0
     )
-    e6.definition = (
+    e6[...] = (
         x3 * (gams_math.power(x5, 2) - gams_math.power(x7, 2))
         - 2 * x1 * x5 * x7
         + x4 * (gams_math.power(x6, 2) - gams_math.power(x8, 2))
@@ -100,7 +100,7 @@ def main():
         - sumd
         == 0
     )
-    e7.definition = (
+    e7[...] = (
         x1 * x5 * (gams_math.power(x5, 2) - 3 * gams_math.power(x7, 2))
         + x3 * x7 * (gams_math.power(x7, 2) - 3 * gams_math.power(x5, 2))
         + x2 * x6 * (gams_math.power(x6, 2) - 3 * gams_math.power(x8, 2))
@@ -108,7 +108,7 @@ def main():
         - sume
         == 0
     )
-    e8.definition = (
+    e8[...] = (
         x3 * x5 * (gams_math.power(x5, 2) - 3 * gams_math.power(x7, 2))
         + x1 * x7 * (gams_math.power(x7, 2) - 3 * gams_math.power(x5, 2))
         + x4 * x6 * (gams_math.power(x6, 2) - 3 * gams_math.power(x8, 2))
@@ -117,37 +117,37 @@ def main():
         == 0
     )
 
-    e.definition = obj == 1
+    e[...] = obj == 1
 
     # Initial point (Variant 1)
-    # x1.l.assignment = 0.299
-    # x2.l.assignment = 0.186
-    # x3.l.assignment = -0.0273
-    # x4.l.assignment = 0.0254
-    # x5.l.assignment = -0.474
-    # x6.l.assignment = 0.474
-    # x7.l.assignment = -0.0892
-    # x8.l.assignment = 0.0892
+    # x1.l[...] = 0.299
+    # x2.l[...] = 0.186
+    # x3.l[...] = -0.0273
+    # x4.l[...] = 0.0254
+    # x5.l[...] = -0.474
+    # x6.l[...] = 0.474
+    # x7.l[...] = -0.0892
+    # x8.l[...] = 0.0892
 
     # Initial point (Variant 2)
-    # x1.l.assignment = -0.3
-    # x2.l.assignment = -0.39
-    # x3.l.assignment =  0.3
-    # x4.l.assignment = -0.344
-    # x5.l.assignment = -1.2
-    # x6.l.assignment =  2.69
-    # x7.l.assignment =  1.59
-    # x8.l.assignment = -1.5
+    # x1.l[...] = -0.3
+    # x2.l[...] = -0.39
+    # x3.l[...] =  0.3
+    # x4.l[...] = -0.344
+    # x5.l[...] = -1.2
+    # x6.l[...] =  2.69
+    # x7.l[...] =  1.59
+    # x8.l[...] = -1.5
 
     # Initial point (Variant 3)
-    x1.l.assignment = -0.041
-    x2.l.assignment = -0.775
-    x3.l.assignment = 0.03
-    x4.l.assignment = -0.047
-    x5.l.assignment = -2.565
-    x6.l.assignment = 2.565
-    x7.l.assignment = -0.754
-    x8.l.assignment = 0.754
+    x1.l[...] = -0.041
+    x2.l[...] = -0.775
+    x3.l[...] = 0.03
+    x4.l[...] = -0.047
+    x5.l[...] = -2.565
+    x6.l[...] = 2.565
+    x7.l[...] = -0.754
+    x8.l[...] = 0.754
 
     hhd = Model(
         m,

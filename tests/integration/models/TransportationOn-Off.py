@@ -90,7 +90,7 @@ def main():
     eq4 = Equation(m, name="eq4", type="regular", domain=[j])
     eq5 = Equation(m, name="eq5", type="regular", domain=[i])
 
-    eq1.definition = of == Sum([i, j], c[i, j] * sqr(x[i, j]))
+    eq1[...] = of == Sum([i, j], c[i, j] * sqr(x[i, j]))
     eq2[i] = P[i] <= data[i, "Pmax"] * U[i]
     eq3[i] = P[i] >= data[i, "Pmin"] * U[i]
     eq4[j] = Sum(i, x[i, j]) >= demand[j]

@@ -1118,8 +1118,8 @@ class Container(gt.Container):
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
-            if equation.definition is not None:
-                m._addStatement(equation.definition)
+            if equation._definition is not None:
+                m._addStatement(equation._definition)
 
         return m
 

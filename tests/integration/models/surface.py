@@ -52,7 +52,7 @@ def main():
     # EQUATION #
     objfun = Equation(m, name="objfun", type="regular")
 
-    objfun.definition = obj == (
+    objfun[...] = obj == (
         (1 / sqr(K))
         * Sum(
             Domain(X, Y).where[inside[X, Y]],

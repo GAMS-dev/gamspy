@@ -178,8 +178,8 @@ def main():
     probe[t] = prob[t] == 1 - Product(
         w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
     )
-    etdp.definition = tetd == Sum(t, mv[t] * prob[t])
-    etd.definition = tetd == Sum(
+    etdp[...] = tetd == Sum(t, mv[t] * prob[t])
+    etd[...] = tetd == Sum(
         t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))
     )
 

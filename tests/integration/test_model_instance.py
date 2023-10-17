@@ -51,7 +51,7 @@ class ModelInstanceSuite(unittest.TestCase):
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
-        cost.definition = z == Sum((i, j), c[i, j] * x[i, j])
+        cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 
@@ -123,7 +123,7 @@ class ModelInstanceSuite(unittest.TestCase):
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
-        cost.definition = z == Sum((i, j), c[i, j] * x[i, j])
+        cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 

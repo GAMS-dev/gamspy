@@ -127,7 +127,7 @@ def main():
         ]
     )
 
-    TIMECAP.definition = Sum(n, d[n] + Sum(p, TS[p] * omega[p, n])) == T
+    TIMECAP[...] = Sum(n, d[n] + Sum(p, TS[p] * omega[p, n])) == T
     UNIQUE[n] = Sum(p, omega[p, n]) <= 1
     NONIDLE[n] = Sum(p, DUB[p] * omega[p, n]) >= d[n]
     MATBAL[p, n] = s[p, n.lead(1)] == s[p, n] + pC[p, n] - DPD[p] * (
@@ -138,10 +138,10 @@ def main():
     PPN2[p, n] = pC[p, n] >= PRMIN[p] * d[n] * omega[p, n]
     SCCam2[n] = d[n] >= Sum(p, DLB[p] * omega[p, n])
     SCCam1[n] = d[n] <= Sum(p, DUB[p] * omega[p, n])
-    DEFcPT.definition = (cPT * L - cI) * T == cC + cS
-    DEFcC.definition = cC == Sum([p, n], CSTC[p] * omega[p, n])
-    DEFcI.definition = cI == B * Sum(p, gams_math.sqrt(sM[p]))
-    DEFcS.definition = cS == Sum(
+    DEFcPT[...] = (cPT * L - cI) * T == cC + cS
+    DEFcC[...] = cC == Sum([p, n], CSTC[p] * omega[p, n])
+    DEFcI[...] = cI == B * Sum(p, gams_math.sqrt(sM[p]))
+    DEFcS[...] = cS == Sum(
         [p, n], CSTI[p] * sH[p, n] * (d[n] + Sum(pp, TS[pp] * omega[pp, n]))
     )
     DefsH[p, n] = sH[p, n] == 0.5 * (s[p, n.lead(1)] + s[p, n]) - SLB[p]

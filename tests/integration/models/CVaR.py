@@ -212,8 +212,8 @@ def main():
         m, name="LossFlag", description="Flag selecting the type of loss"
     )
 
-    Budget.assignment = 100.0
-    alpha.assignment = 0.99
+    Budget[...] = 100.0
+    alpha[...] = 0.99
 
     # PARAMETERS #
     pr = Parameter(
@@ -231,12 +231,12 @@ def main():
 
     EP[i] = Sum(l, pr[l] * P[i, l])
 
-    MIN_MU.assignment = Smin(i, EP[i])
-    MAX_MU.assignment = Smax(i, EP[i])
+    MIN_MU[...] = Smin(i, EP[i])
+    MAX_MU[...] = Smax(i, EP[i])
 
     # Assume we want 20 portfolios in the frontier
 
-    MU_STEP.assignment = (MAX_MU - MIN_MU) / 20
+    MU_STEP[...] = (MAX_MU - MIN_MU) / 20
 
     TargetIndex = Parameter(
         m, name="TargetIndex", domain=[l], description="Target index returns"
@@ -314,13 +314,11 @@ def main():
         description="Equations defining the VaR deviation constraints",
     )
 
-    BudgetCon.definition = Sum(i, x[i]) == Budget
+    BudgetCon[...] = Sum(i, x[i]) == Budget
 
-    ReturnCon.definition = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
+    ReturnCon[...] = Sum(i, EP[i] * x[i]) >= MU_TARGET * Budget
 
-    CVaRCon.definition = (
-        VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha) <= RISK_TARGET
-    )
+    CVaRCon[...] = VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha) <= RISK_TARGET
 
     VaRDevCon[l] = VaRDev[l] >= Losses[l] - VaR
 
@@ -335,9 +333,9 @@ def main():
         ]
     )
 
-    ObjDefCVaR.definition = z == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
+    ObjDefCVaR[...] = z == VaR + Sum(l, pr[l] * VaRDev[l]) / (1 - alpha)
 
-    ObjDefReturn.definition = z == Sum(i, EP[i] * x[i])
+    ObjDefReturn[...] = z == Sum(i, EP[i] * x[i])
 
     MinCVaR = Model(
         m,
@@ -352,14 +350,14 @@ def main():
     i_recs = [f'"{i_rec}"' for i_rec in i.records.uni.tolist()]
     output_csv += ",".join(i_recs) + "\n"
 
-    LossFlag.assignment = 2
+    LossFlag[...] = 2
 
     # Comment the following line if you want to track the market index.
     TargetIndex[l] = 1.01
 
     mu_target = MIN_MU.records.value[0]
     while mu_target <= MAX_MU.records.value[0]:
-        MU_TARGET.assignment = mu_target
+        MU_TARGET[...] = mu_target
 
         MinCVaR.solve()
 

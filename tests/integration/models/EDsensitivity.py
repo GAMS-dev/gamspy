@@ -70,14 +70,14 @@ def main():
     eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
 
-    eq1.definition = OF == Sum(
+    eq1[...] = OF == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
 
-    eq2.definition = Sum(gen, P[gen]) >= load
+    eq2[...] = Sum(gen, P[gen]) >= load
 
     P.lo[gen] = data[gen, "Pmin"]
     P.up[gen] = data[gen, "Pmax"]
@@ -92,7 +92,7 @@ def main():
     )
 
     for idx, cc in enumerate(counter.toList()):
-        load.assignment = Sum(gen, data[gen, "Pmin"]) + (
+        load[...] = Sum(gen, data[gen, "Pmin"]) + (
             (idx) / (Card(counter) - 1)
         ) * Sum(gen, data[gen, "Pmax"] - data[gen, "Pmin"])
         ECD.solve()

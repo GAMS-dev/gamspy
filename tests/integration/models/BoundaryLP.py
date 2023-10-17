@@ -36,10 +36,10 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.definition = x1 + 2 * x2 <= 3
-    eq2.definition = x2 + x3 <= 2
-    eq3.definition = x1 + x2 + x3 == 4
-    eq4.definition = x1 + 2 * x2 - 3 * x3 == of
+    eq1[...] = x1 + 2 * x2 <= 3
+    eq2[...] = x2 + x3 <= 2
+    eq3[...] = x1 + x2 + x3 == 4
+    eq4[...] = x1 + 2 * x2 - 3 * x3 == of
 
     LP1 = Model(
         m,
@@ -50,12 +50,12 @@ def main():
         objective=of,
     )
 
-    x1.lo.assignment = 0
-    x1.up.assignment = 5
-    x2.lo.assignment = 0
-    x2.up.assignment = 3
-    x3.lo.assignment = 0
-    x3.up.assignment = 2
+    x1.lo[...] = 0
+    x1.up[...] = 5
+    x2.lo[...] = 0
+    x2.up[...] = 3
+    x3.lo[...] = 0
+    x3.up[...] = 2
 
     LP1.solve()
 

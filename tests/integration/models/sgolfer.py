@@ -97,7 +97,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
 
     defnumm[mgf] = numm[mgf] == Sum((w, gr), m[w, gr, mgf])
 
-    defobj.definition = obj == Sum(mgf, redm[mgf])
+    defobj[...] = obj == Sum(mgf, redm[mgf])
 
     x.l[w, gr, gf].where[
         ((Ord(gr) - 1) * gg_c + 1 <= Ord(gf)) & (Ord(gf) <= (Ord(gr)) * gg_c)

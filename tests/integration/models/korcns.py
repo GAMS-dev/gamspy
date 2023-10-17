@@ -305,24 +305,24 @@ def main():
     # welfare indicator for objective function
     omega = Variable(cont, name="omega", type="free")
 
-    er.l.assignment = 1.0000
-    pr.l.assignment = 0.0000
-    pindex.l.assignment = 1.0000
-    gr.l.assignment = 194.0449
-    tariff.l.assignment = 28.6572
-    indtax.l.assignment = 65.2754
-    netsub.l.assignment = 0.0000
-    gdtot.l.assignment = 141.1519
-    hhsav.l.assignment = 61.4089
-    govsav.l.assignment = 52.8930
-    deprecia.l.assignment = 0.0000
-    savings.l.assignment = 159.1419
-    invest.l.assignment = 159.1419
-    fsav.l.assignment = 39.1744
-    fbor.l.assignment = 58.7590
-    remit.l.assignment = 0.0000
-    tothhtax.l.assignment = 100.1122
-    y.l.assignment = 1123.5941
+    er.l[...] = 1.0000
+    pr.l[...] = 0.0000
+    pindex.l[...] = 1.0000
+    gr.l[...] = 194.0449
+    tariff.l[...] = 28.6572
+    indtax.l[...] = 65.2754
+    netsub.l[...] = 0.0000
+    gdtot.l[...] = 141.1519
+    hhsav.l[...] = 61.4089
+    govsav.l[...] = 52.8930
+    deprecia.l[...] = 0.0000
+    savings.l[...] = 159.1419
+    invest.l[...] = 159.1419
+    fsav.l[...] = 39.1744
+    fbor.l[...] = 58.7590
+    remit.l[...] = 0.0000
+    tothhtax.l[...] = 100.1122
+    y.l[...] = 1123.5941
 
     labres1 = Parameter(
         cont,
@@ -414,7 +414,7 @@ def main():
     xxd.lo[it] = 0.01
     wa.lo[lc] = 0.01
     intr.lo[i] = 0.01
-    y.lo.assignment = 0.01
+    y.lo[...] = 0.01
     e.lo[it] = 0.01
     l.lo[i, lc].where[l.l[i, lc] != 0] = 0.01
 
@@ -486,7 +486,7 @@ def main():
 
     pkdef[i] = pk[i] == Sum(j, p[j] * imat[j, i])
 
-    pindexdef.definition = pindex == Sum(i, pwts[i] * p[i])
+    pindexdef[...] = pindex == Sum(i, pwts[i] * p[i])
 
     # output and factors of production block
     activity[i] = xd[i] == ad[i] * Product(
@@ -529,11 +529,11 @@ def main():
         hh, cles[i, hh] * (1 - mps[hh]) * yh[hh] * (1 - htax[hh])
     )
 
-    gdp.definition = y == Sum(hh, yh[hh])
+    gdp[...] = y == Sum(hh, yh[hh])
 
-    labory.definition = yh["lab_hh"] == Sum(lc, wa[lc] * ls[lc]) + remit * er
+    labory[...] = yh["lab_hh"] == Sum(lc, wa[lc] * ls[lc]) + remit * er
 
-    capitaly.definition = (
+    capitaly[...] = (
         yh["cap_hh"]
         == Sum(i, pva[i] * xd[i])
         - deprecia
@@ -542,27 +542,27 @@ def main():
         + ypr
     )
 
-    hhsaveq.definition = hhsav == Sum(hh, mps[hh] * yh[hh] * (1 - htax[hh]))
+    hhsaveq[...] = hhsav == Sum(hh, mps[hh] * yh[hh] * (1 - htax[hh]))
 
-    greq.definition = gr == tariff - netsub + indtax + tothhtax
+    greq[...] = gr == tariff - netsub + indtax + tothhtax
 
-    gruse.definition = gr == Sum(i, p[i] * gd[i]) + govsav
+    gruse[...] = gr == Sum(i, p[i] * gd[i]) + govsav
 
     gdeq[i] = gd[i] == gles[i] * gdtot
 
-    tariffdef.definition = tariff == Sum(it, tm[it] * m[it] * pwm[it]) * er
+    tariffdef[...] = tariff == Sum(it, tm[it] * m[it] * pwm[it]) * er
 
-    indtaxdef.definition = indtax == Sum(i, itax[i] * px[i] * xd[i])
+    indtaxdef[...] = indtax == Sum(i, itax[i] * px[i] * xd[i])
 
-    netsubdef.definition = netsub == Sum(it, te[it] * e[it] * pwe[it]) * er
+    netsubdef[...] = netsub == Sum(it, te[it] * e[it] * pwe[it]) * er
 
-    premium.definition = ypr == Sum(it, pwm[it] * m[it]) * er * pr
+    premium[...] = ypr == Sum(it, pwm[it] * m[it]) * er * pr
 
-    hhtaxdef.definition = tothhtax == Sum(hh, htax[hh] * yh[hh])
+    hhtaxdef[...] = tothhtax == Sum(hh, htax[hh] * yh[hh])
 
-    depreq.definition = deprecia == Sum(i, depr[i] * pk[i] * k[i])
+    depreq[...] = deprecia == Sum(i, depr[i] * pk[i] * k[i])
 
-    totsav.definition = savings == hhsav + govsav + deprecia + fsav * er
+    totsav[...] = savings == hhsav + govsav + deprecia + fsav * er
 
     prodinv[i] = pk[i] * dk[i] == kio[i] * invest - kio[i] * Sum(
         j, dst[j] * p[j]
@@ -571,7 +571,7 @@ def main():
     ieq[i] = id[i] == Sum(j, imat[i, j] * dk[j])
 
     # balance of payments
-    caeq.definition = (
+    caeq[...] = (
         Sum(it, pwm[it] * m[it])
         == Sum(it, pwe[it] * e[it]) + fsav + remit + fbor
     )
@@ -579,17 +579,17 @@ def main():
     equil[i] = x[i] == intr[i] + cd[i] + gd[i] + id[i] + dst[i]
 
     # objective function
-    obj.definition = omega == Product(
+    obj[...] = omega == Product(
         i.where[cles[i, "lab_hh"]], cd[i] ** cles[i, "lab_hh"]
     )
 
-    er.fx.assignment = er.l
-    fsav.fx.assignment = fsav.l
-    remit.fx.assignment = remit.l
-    fbor.fx.assignment = fbor.l
-    pindex.fx.assignment = pindex.l
+    er.fx[...] = er.l
+    fsav.fx[...] = fsav.l
+    remit.fx[...] = remit.l
+    fbor.fx[...] = fbor.l
+    pindex.fx[...] = pindex.l
     mps.fx[hh] = mps.l[hh]
-    gdtot.fx.assignment = gdtot.l
+    gdtot.fx[...] = gdtot.l
     ls.fx[lc] = ls.l[lc]
 
     model1 = Model(

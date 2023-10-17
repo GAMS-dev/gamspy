@@ -56,7 +56,7 @@ def main():
     eobj = Equation(m, name="eobj", type="regular")
 
     # Objective function to be minimized:
-    eobj.definition = obj == (
+    eobj[...] = obj == (
         63098.88 * x2 * x4 * x12
         + 5441.5 * x12 * x2**2
         + 115055.5 * x6 * (x2**1.664)
@@ -81,56 +81,56 @@ def main():
     )
 
     # Constaints:
-    e1.definition = 1.524 / x7 <= 1
-    e2.definition = 1.524 / x8 <= 1
-    e3.definition = 0.07789 * x1 - 2 * x9 / x7 <= 1
-    e4.definition = 7.05305 * (x1**2) * x10 / (x2 * x8 * x9 * x14) <= 1
-    e5.definition = 0.0833 * x14 / x13 <= 1
-    e6.definition = (
+    e1[...] = 1.524 / x7 <= 1
+    e2[...] = 1.524 / x8 <= 1
+    e3[...] = 0.07789 * x1 - 2 * x9 / x7 <= 1
+    e4[...] = 7.05305 * (x1**2) * x10 / (x2 * x8 * x9 * x14) <= 1
+    e5[...] = 0.0833 * x14 / x13 <= 1
+    e6[...] = (
         47.136 * x12 * (x2**0.333) / x10
         - 1.333 * x8 * (x13**2.1195)
         + 62.08 * (x13**2.1195) * (x8**0.2) / (x10 * x12)
         <= 1
     )
-    e7.definition = 0.04771 * x10 * (x8**1.8812) * (x12**0.3424) <= 1
-    e8.definition = 0.0488 * x9 * (x7**1.893) * (x11**0.316) <= 1
-    e9.definition = 0.0099 * x1 / x3 <= 1
-    e10.definition = 0.0193 * x2 / x4 <= 1
-    e11.definition = 0.0298 * x1 / x5 <= 1
-    e12.definition = 0.056 * x2 / x6 <= 1
-    e13.definition = 2 / x9 <= 1
-    e14.definition = 2 / x10 <= 1
-    e15.definition = x12 / x11 <= 1
+    e7[...] = 0.04771 * x10 * (x8**1.8812) * (x12**0.3424) <= 1
+    e8[...] = 0.0488 * x9 * (x7**1.893) * (x11**0.316) <= 1
+    e9[...] = 0.0099 * x1 / x3 <= 1
+    e10[...] = 0.0193 * x2 / x4 <= 1
+    e11[...] = 0.0298 * x1 / x5 <= 1
+    e12[...] = 0.056 * x2 / x6 <= 1
+    e13[...] = 2 / x9 <= 1
+    e14[...] = 2 / x10 <= 1
+    e15[...] = x12 / x11 <= 1
 
     # Bounds on variables:
-    x1.lo.assignment = 0.001
-    x1.up.assignment = 5
-    x2.lo.assignment = 0.001
-    x2.up.assignment = 5
-    x3.lo.assignment = 0.001
-    x3.up.assignment = 5
-    x4.lo.assignment = 0.001
-    x4.up.assignment = 5
-    x5.lo.assignment = 0.001
-    x5.up.assignment = 5
-    x6.lo.assignment = 0.001
-    x6.up.assignment = 5
-    x7.lo.assignment = 0.001
-    x7.up.assignment = 5
-    x8.lo.assignment = 0.001
-    x8.up.assignment = 5
-    x9.lo.assignment = 0.001
-    x9.up.assignment = 5
-    x10.lo.assignment = 0.001
-    x10.up.assignment = 5
-    x11.lo.assignment = 0.001
-    x11.up.assignment = 5
-    x12.lo.assignment = 0.001
-    x12.up.assignment = 5
-    x13.lo.assignment = 0.001
-    x13.up.assignment = 5
-    x14.lo.assignment = 0.001
-    x14.up.assignment = 5
+    x1.lo[...] = 0.001
+    x1.up[...] = 5
+    x2.lo[...] = 0.001
+    x2.up[...] = 5
+    x3.lo[...] = 0.001
+    x3.up[...] = 5
+    x4.lo[...] = 0.001
+    x4.up[...] = 5
+    x5.lo[...] = 0.001
+    x5.up[...] = 5
+    x6.lo[...] = 0.001
+    x6.up[...] = 5
+    x7.lo[...] = 0.001
+    x7.up[...] = 5
+    x8.lo[...] = 0.001
+    x8.up[...] = 5
+    x9.lo[...] = 0.001
+    x9.up[...] = 5
+    x10.lo[...] = 0.001
+    x10.up[...] = 5
+    x11.lo[...] = 0.001
+    x11.up[...] = 5
+    x12.lo[...] = 0.001
+    x12.up[...] = 5
+    x13.lo[...] = 0.001
+    x13.up[...] = 5
+    x14.lo[...] = 0.001
+    x14.up[...] = 5
 
     refrigeration = Model(
         m,

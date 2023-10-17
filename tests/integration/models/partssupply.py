@@ -81,7 +81,7 @@ def main():
     licu = Equation(cont, name="licu", domain=[i])
     mn = Equation(cont, name="mn", domain=[i])
 
-    obj.definition = util == Sum(i, p[i] * (b[i] - w[i]))
+    obj[...] = util == Sum(i, p[i] * (b[i] - w[i]))
     rev[i] = b[i] == gams_math.sqrt(x[i])
     pc[i] = w[i] - theta[i] * x[i] >= ru
     ic[i, j] = w[i] - icweight[i] * x[i] >= w[j] - icweight[i] * x[j]

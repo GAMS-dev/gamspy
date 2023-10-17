@@ -73,12 +73,22 @@ class Set(gt.Set, operable.Operable, Symbol):
     """
 
     def __new__(cls, *args, **kwargs):
-        if len(args) == 0:
-            return object.__new__(Set)
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
-            symobj = args[0][args[1]]
-        except:
+            container = (
+                kwargs["container"]
+                if "container" in kwargs.keys()
+                else args[0]
+            )
+        except IndexError:
+            raise GamspyException("Container of the symbol must be provided!")
+        try:
+            symobj = container[name]
+        except KeyError:
             symobj = None
 
         if symobj is None:
@@ -150,7 +160,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         return self
 
     def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitSet:
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -158,7 +168,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         indices: Union[tuple, str],
         assignment,
     ):
-        domain = utils._toList(indices)
+        domain = self.domain if indices == ... else utils._toList(indices)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

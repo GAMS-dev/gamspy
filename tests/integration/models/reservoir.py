@@ -116,7 +116,7 @@ def main():
     dec[n, t].where[~tt[t]] = (s["res2", t] - s["res1", t]) - (
         s["res2", t] - s["res1", t]
     ) * (1.0 - q2[t] / (q2[t] + 0.000001)) == 0.0
-    objf.definition = obj == Sum(t.where[~tt[t]], r2[t])
+    objf[...] = obj == Sum(t.where[~tt[t]], r2[t])
 
     s.lo["res1", t] = 1150
     s.up["res1", t] = 4590

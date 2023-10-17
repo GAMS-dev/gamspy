@@ -429,8 +429,8 @@ def main(is_centropy=False):
     # could have been used instead, depending on knowledge of data quality
     # and any other prior information.
     ColSum0[ii] = (SAM[ii, "total"] + SAM["total", ii]) / 2
-    gdpfc0.assignment = SAM["fac", "act"]
-    gdp0.assignment = (
+    gdpfc0[...] = SAM["fac", "act"]
+    gdp0[...] = (
         SAM["fac", "act"]
         + SAM["gov", "act"]
         - SAM["act", "gov"]
@@ -659,9 +659,9 @@ def main(is_centropy=False):
     )
 
     # Macro aggregates measured with error
-    GDPFCDEF.definition = MACROV["gdpfc2"] == TSAM["fac", "act"]
+    GDPFCDEF[...] = MACROV["gdpfc2"] == TSAM["fac", "act"]
 
-    GDPDEF.definition = (
+    GDPDEF[...] = (
         MACROV["gdp2"]
         == TSAM["fac", "act"]
         + TSAM["gov", "act"]
@@ -691,7 +691,7 @@ def main(is_centropy=False):
 
     if not is_centropy:
         # Cross-entropy objective function, explicit version
-        ENTROPY.definition = DENTROPY == (
+        ENTROPY[...] = DENTROPY == (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 W3[ii, jj, jwt3]
@@ -715,7 +715,7 @@ def main(is_centropy=False):
             )
         )
     else:
-        ENTROPY.definition = DENTROPY == (
+        ENTROPY[...] = DENTROPY == (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 centropy(W3[ii, jj, jwt3], wbar3[ii, jj, jwt3]),
@@ -791,13 +791,13 @@ def main(is_centropy=False):
     Diffrnce[i, j] = Macsam1[i, j] - SAM0[i, j]
     SAMBALCHK[jj] = TSAM.l["TOTAL", jj] - TSAM.l[jj, "TOTAL"]
 
-    gdp00.assignment = (
+    gdp00[...] = (
         Macsam1["fac", "act"]
         + Macsam1["gov", "act"]
         - Macsam1["act", "gov"]
         + Macsam1["gov", "com"]
     )
-    gdpfc00.assignment = Macsam1["fac", "act"]
+    gdpfc00[...] = Macsam1["fac", "act"]
 
     # print some stuff
     ANEW[ii, jj] = A.l[ii, jj]
@@ -808,8 +808,8 @@ def main(is_centropy=False):
 
     meanerr1 = Parameter(m, name="meanerr1")
     meanerr2 = Parameter(m, name="meanerr2")
-    meanerr1.assignment = Sum(ii, abs(ERR1.l[ii])) / Card(ii)
-    meanerr2.assignment = Sum(macro, abs(ERR2.l[macro])) / Card(macro)
+    meanerr1[...] = Sum(ii, abs(ERR1.l[ii])) / Card(ii)
+    meanerr2[...] = Sum(macro, abs(ERR2.l[macro])) / Card(macro)
 
     print("Objective Function Value: ", SAMENTROP.objective_value)
     print("meanerr1: ", round(meanerr1.records.value[0], 3))

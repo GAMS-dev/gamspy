@@ -76,18 +76,16 @@ def main():
         description="Objective function definition",
     )
 
-    ReturnDef.definition = d_bar == Sum(ii, ExExpectedReturns[ii] * x[ii])
+    ReturnDef[...] = d_bar == Sum(ii, ExExpectedReturns[ii] * x[ii])
 
-    VarDef.definition = PortVariance == Sum(
-        [ii, j], x[ii] * ExVarCov[ii, j] * x[j]
-    )
+    VarDef[...] = PortVariance == Sum([ii, j], x[ii] * ExVarCov[ii, j] * x[j])
 
-    NormalCon.definition = Sum(ii, x[ii]) == 1
+    NormalCon[...] = Sum(ii, x[ii]) == 1
 
-    ObjDef.definition = z == d_bar / gams_math.sqrt(PortVariance)
+    ObjDef[...] = z == d_bar / gams_math.sqrt(PortVariance)
 
     # Put strictly positive bound on Variance to keep the model out of trouble:
-    PortVariance.lo.assignment = 0.001
+    PortVariance.lo[...] = 0.001
 
     Sharpe = Model(
         m,

@@ -72,20 +72,20 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.definition = OF == Sum(
+    eq1[...] = OF == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
-    eq2.definition = P["G1"] == P12
-    eq3.definition = P["G2"] + P12 == L2 / Sbase
-    eq4.definition = P12 == (delta["1"] - delta["2"]) / X12
+    eq2[...] = P["G1"] == P12
+    eq3[...] = P["G2"] + P12 == L2 / Sbase
+    eq4[...] = P12 == (delta["1"] - delta["2"]) / X12
 
     P.lo[gen] = data[gen, "Pmin"] / Sbase
     P.up[gen] = data[gen, "Pmax"] / Sbase
-    P12.lo.assignment = -P12_max
-    P12.up.assignment = P12_max
+    P12.lo[...] = -P12_max
+    P12.up[...] = P12_max
     delta.fx["1"] = 0
 
     OPF = Model(

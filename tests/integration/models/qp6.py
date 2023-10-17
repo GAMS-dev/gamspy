@@ -54,7 +54,7 @@ def main():
 
     mean[s] = Sum(d, returns[s, d]) / Card(d)
     dev[s, d] = returns[s, d] - mean[s]
-    totmean.assignment = Sum(s, mean[s]) / (Card(s))
+    totmean[...] = Sum(s, mean[s]) / (Card(s))
 
     # Variable
     x = Variable(
@@ -79,9 +79,9 @@ def main():
 
     wdef[d] = w[d] == Sum(s, x[s] * dev[s, d])
 
-    budget.definition = Sum(s, x[s]) == 1.0
+    budget[...] = Sum(s, x[s]) == 1.0
 
-    retcon.definition = Sum(s, mean[s] * x[s]) >= totmean * 1.25
+    retcon[...] = Sum(s, mean[s] * x[s]) >= totmean * 1.25
 
     # Equation
     d_x = Equation(cont, name="d_x", domain=[stocks])
@@ -117,7 +117,7 @@ def main():
     qp6.solve()
 
     z = Parameter(cont, name="z")
-    z.assignment = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
+    z[...] = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
     print("\ninvestments: ", x.records.set_index("stocks").level.round(3))
     print("\nObjective Function Value: ", z.records.value.round(3).tolist()[0])
 

@@ -63,7 +63,7 @@ def main():
         description="state equation",
     )
 
-    cost.definition = j == 0.5 * Sum(
+    cost[...] = j == 0.5 * Sum(
         [k, n], (x[n, k]) + 0.5 * Sum(ku, (u[ku]) * rk * (u[ku]))
     )
 

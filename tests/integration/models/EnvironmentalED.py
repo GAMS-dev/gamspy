@@ -74,20 +74,20 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1.definition = TC == Sum(
+    eq1[...] = TC == Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
-    eq2.definition = Sum(gen, P[gen]) >= load
-    eq3.definition = TE == Sum(
+    eq2[...] = Sum(gen, P[gen]) >= load
+    eq3[...] = TE == Sum(
         gen,
         data[gen, "d"] * P[gen] * P[gen]
         + data[gen, "e"] * P[gen]
         + data[gen, "f"],
     )
-    eq4.definition = OF == TC + TE * Eprice
+    eq4[...] = OF == TC + TE * Eprice
 
     P.lo[gen] = data[gen, "Pmin"]
     P.up[gen] = data[gen, "Pmax"]
@@ -125,7 +125,7 @@ def main():
     END3.solve()
     report[gen, "penalty"] = P.l[gen]
 
-    TE.up.assignment = 90000
+    TE.up[...] = 90000
     END1.solve()
 
     import math

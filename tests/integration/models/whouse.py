@@ -54,7 +54,7 @@ def main():
     sb[t] = (
         stock[t] == stock[t.lag(1, "linear")] + buy[t] - sell[t] + istock[t]
     )
-    at.definition = cost == Sum(
+    at[...] = cost == Sum(
         t, price[t] * (buy[t] - sell[t]) + storecost * stock[t]
     )
 

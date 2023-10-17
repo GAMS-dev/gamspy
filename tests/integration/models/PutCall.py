@@ -203,7 +203,7 @@ def main():
         m, name="Omega", description="Bound on the expected shortfalls"
     )
 
-    Budget.assignment = 100.0
+    Budget[...] = 100.0
 
     # PARAMETERS #
     pr = Parameter(
@@ -290,15 +290,15 @@ def main():
         ),
     )
 
-    BudgetCon.definition = Sum(i, x[i]) == Budget
+    BudgetCon[...] = Sum(i, x[i]) == Budget
 
-    PutCon.definition = Sum(l, pr[l] * yNeg[l]) <= Omega
+    PutCon[...] = Sum(l, pr[l] * yNeg[l]) <= Omega
 
     TargetDevDef[l] = (
         Sum(i, (P[i, l] - TargetIndex[l]) * x[i]) == yPos[l] - yNeg[l]
     )
 
-    ObjDef.definition = z == Sum(l, pr[l] * yPos[l])
+    ObjDef[...] = z == Sum(l, pr[l] * yPos[l])
 
     UnConPutCallModel = Model(
         m,
@@ -311,7 +311,7 @@ def main():
 
     # Set the average level of downside (risk) allowed
 
-    Omega.assignment = 0.1
+    Omega[...] = 0.1
     UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
 
     # Dual of the UnConstrained Put/Call model
@@ -327,7 +327,7 @@ def main():
     )
     MeasureDef = Equation(m, name="MeasureDef", type="regular", domain=[l])
 
-    DualObjDef.definition = z == Omega * PiOmega
+    DualObjDef[...] = z == Omega * PiOmega
 
     DualTrackingDef[i] = Sum(l, (P[i, l] - TargetIndex[l]) * Pi[l]) == 0.0
 
@@ -422,7 +422,7 @@ def main():
     x.up[i] = 100.0
 
     for jj in j.toList():
-        Omega.assignment = OmegaLevels[jj]
+        Omega[...] = OmegaLevels[jj]
         UnConPutCallModel.solve(
             options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
         )
@@ -441,7 +441,7 @@ def main():
     x.up[i] = 20.0
 
     for jj in j.toList():
-        Omega.assignment = OmegaLevels[jj]
+        Omega[...] = OmegaLevels[jj]
         UnConPutCallModel.solve(
             options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
         )
@@ -457,7 +457,7 @@ def main():
     # Determine the liquidity and discount premium
     # for one put/call efficient portfolio.
 
-    Omega.assignment = 0.475
+    Omega[...] = 0.475
 
     UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
 
@@ -480,7 +480,7 @@ def main():
 
     Premium[i] = 0.0
 
-    Df.assignment = Sum(l, -TargetDevDef.m[l])
+    Df[...] = Sum(l, -TargetDevDef.m[l])
 
     Psi[l] = -TargetDevDef.m[l] / Df
 
@@ -515,7 +515,7 @@ def main():
     )
 
     for jj in j.toList():
-        Omega.assignment = OmegaLevels[jj]
+        Omega[...] = OmegaLevels[jj]
         PutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
         FrontierPortfolios[jj, i] = x.l[i]
         PutCall[jj, "Put side"] = PutCon.l
