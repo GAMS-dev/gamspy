@@ -97,8 +97,7 @@ need to run a server. We make sure you have access to the right resources, any t
 How is GAMSPy different from GAMS?
 --------------------------------
 
-.. attention::
-    Discuss and maybe move to FAQs?
+GAMS is a domain-specific declarative language that incorporates procedural elements from a general-purpose programming language, such as loops and conditional statements. In contrast, Python is a general-purpose programming language where these elements are already inherent. With the integration of the GAMSPy library, domain-specific features like parallel assignment statements of a declarative language are now made available in Python. This facilitates a seamless connection between the specialized modeling capabilities of GAMS and the flexibility and versatility of Python.
 
 Summarizing the Benefits
 ------------------------
