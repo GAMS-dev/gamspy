@@ -612,6 +612,6 @@ class Model:
             )
             equations_str += "," + limited_variables_str
 
-        model_str = f"Model {self.name} / {equations_str} /;"
+        model_str = f"$onMultiR\nModel {self.name} / {equations_str} /;"
 
         return model_str

@@ -209,6 +209,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
         self._definition = statement
 
@@ -426,6 +429,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment,
         )
 
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
         self.container._addStatement(statement)
         self._definition = statement
 
