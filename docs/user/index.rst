@@ -9,26 +9,21 @@ details are found in :ref:`reference`.
 
 .. toctree::
    :caption: Getting started
-   :maxdepth: 1
 
-   whatisgamspy
    installation
    notebooks/trnsport
    examples
 
 .. toctree::
    :caption: Fundamentals and usage
-   :maxdepth: 1
 
-   basics
-   advanced
+   basics/basics
+   advanced/advanced
 
 .. toctree::
-   :hidden:
    :caption: Extras
 
    faq
    model_library
    migration_guide
-   ../release/index
-   ../license
+   license
