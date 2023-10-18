@@ -108,7 +108,7 @@ def getAvailableSolvers() -> List[str]:
     Examples
     --------
     >>> import gamspy.utils as utils
-    >>> utils.getAvailableSolvers()
+    >>> available_solvers = utils.getAvailableSolvers()
 
     """
     try:
