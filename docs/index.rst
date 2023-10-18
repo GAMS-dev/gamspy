@@ -31,7 +31,7 @@ notation and is machine-processable is paramount.
 
 With this goal in mind we developed GAMSPy to be able to generate mathematical models instead
 of model instances. Think of a mathematical model as a pure representation of mathematical symbols, 
-devoid of specific data. In contrast, a model instance is a model instance is the unrolled and 
+devoid of specific data. In contrast, a model instance is the unrolled and 
 constant folded representation of a model with its actual data.
 In a model instance sum expressions are resolved into its individual components and equation 
 domains are resolved to individual scalar equations.
