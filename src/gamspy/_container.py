@@ -99,7 +99,7 @@ class Container(gt.Container):
         )
 
         self.name = name
-        self._delayed_execution = delayed_execution
+        self.delayed_execution = delayed_execution
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
 
@@ -117,6 +117,20 @@ class Container(gt.Container):
 
         # allows interrupt
         self._job: Optional[GamsJob] = None
+
+    def _addGamsCode(self, gams_code: str) -> None:
+        """
+        Adds an arbitrary GAMS code to the generate .gms file
+
+        Parameters
+        ----------
+        gams_code : str
+        """
+        unique_name = utils._getUniqueName()
+        self._unsaved_statements[unique_name] = gams_code
+
+    def _addStatement(self, statement) -> None:
+        self._unsaved_statements[statement.name] = statement
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
@@ -188,6 +202,56 @@ class Container(gt.Container):
                     description=symbol.description,
                 )
 
+    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
+        gdx_handle = utils._openGdxFile(self.system_directory, load_from)
+        _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
+
+        existing_names = []
+        new_names = []
+        for i in range(1, symbol_count + 1):
+            _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
+            if symbol_name in self.data.keys():
+                existing_names.append(symbol_name)
+            else:
+                new_names.append(symbol_name)
+
+        utils._closeGdxHandle(gdx_handle)
+
+        return existing_names, new_names
+
+    def _get_symbol_names_to_load(
+        self,
+        load_from: str,
+        symbol_names: Optional[List[str]] = None,
+    ) -> List[str]:
+        if not symbol_names:
+            existing_names, new_names = self._get_symbol_names_from_gdx(
+                load_from
+            )
+
+            symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+
+            symbol_names = new_names
+            for name in existing_names:
+                if isinstance(self[name], symbol_types):
+                    symbol_names.append(name)
+
+        return symbol_names
+
+    def _interrupt(self) -> None:
+        """
+        Sends interrupt signal to the running job.
+
+        Raises
+        ------
+        GamspyException
+            If the job is not initialized
+        """
+        if self._job:
+            self._job.interrupt()
+        else:
+            raise GamspyException("There is no job initialized.")
+
     def _setup_paths(
         self,
     ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str]:
@@ -217,25 +281,103 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_path
 
-    def _addStatement(self, statement) -> None:
-        self._unsaved_statements[statement.name] = statement
+    def _run(
+        self,
+        options: Optional["GamsOptions"] = None,
+        output: Optional[io.TextIOWrapper] = None,
+        backend: Literal["local", "engine"] = "local",
+        engine_config: Optional["EngineConfig"] = None,
+    ):
+        # Set default options if not provided
+        if options is None:
+            options = GamsOptions(self.workspace)
+            options.gdx = self._gdx_path
+            options.forcework = 1
 
-    @property
-    def delayed_execution(self):
+        # Reset dirty flags for symbols
+        for name in self.data.keys():
+            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
+                self[name]._is_dirty = False
+
+        # Create gdx file to read records from
+        super().write(self._gdx_path)
+
+        # Generate GAMS code as a string
+        if backend == "engine":
+            # Engine expects gdx file to be next to the gms file
+            old_path = self._gdx_path
+            self._gdx_path = "default.gdx"
+            gams_string = self.generateGamsString()
+            self._gdx_path = old_path
+        else:
+            gams_string = self.generateGamsString()
+
+        # If there is no restart checkpoint, set it to None
+        checkpoint = self._restart_from if self._use_restart_from else None
+
+        self._job = GamsJob(
+            self.workspace,
+            source=gams_string,
+            checkpoint=checkpoint,
+        )
+
+        # Run the job based on the selected backend
+        if backend == "local":
+            try:
+                self._job.run(
+                    gams_options=options,
+                    checkpoint=self._save_to,
+                    create_out_db=False,
+                    output=output,
+                )
+            except GamsExceptionExecution as e:
+                message = parse_message(self.workspace, options, self._job)
+                e.value = message + e.value if message else e.value
+                raise e
+        elif backend == "engine":
+            options.gdx = "default.gdx"
+
+            if engine_config is None:
+                raise GamspyException(
+                    "Engine configuration must be defined to run the job with"
+                    " GAMS Engine"
+                )
+
+            extra_model_files = preprocess_extra_model_files(
+                self.workspace, self._gdx_path, engine_config
+            )
+
+            self._job.run_engine(
+                engine_configuration=engine_config.get_engine_config(),
+                extra_model_files=extra_model_files,
+                gams_options=options,
+                checkpoint=self._save_to,
+                output=output,
+                create_out_db=False,
+                engine_options=engine_config.engine_options,
+                remove_results=engine_config.remove_results,
+            )
+        else:
+            raise GamspyException(
+                f"`{backend}` is not a valid backend. Possible backends:"
+                " local, engine"
+            )
+
+        self._use_restart_from = True
+
+        self._restart_from, self._save_to = self._save_to, self._restart_from
+
+        self.loadRecordsFromGdx(self._gdx_path)
+        self._unsaved_statements = {}
+
+    def gamsJobName(self) -> Union[str, None]:
         """
-        Delayed execution status
+        Returns the name of the latest GAMS job that was executed
 
         Returns
         -------
-        bool
+        str | None
         """
-        return self._delayed_execution
-
-    @delayed_execution.setter
-    def delayed_execution(self, status: bool):
-        self._delayed_execution = status
-
-    def gams_job_name(self):
         return self._job.name if self._job is not None else None
 
     def addAlias(
@@ -255,6 +397,14 @@ class Container(gt.Container):
         ValueError
             If there is symbol with same name but different type in the
             Container
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = m.addSet("i")
+        >>> a = m.addAlias("a", i)
+
         """
         if name not in self:
             obj = gp.Alias(self, name, alias_with)
@@ -740,16 +890,77 @@ class Container(gt.Container):
         )
         return model
 
-    def _addGamsCode(self, gams_code: str) -> None:
+    def copy(self, working_directory: Optional[str] = None) -> "Container":
         """
-        Adds an arbitrary GAMS code to the generate .gms file
+        Creates a copy of the Container
 
         Parameters
         ----------
-        gams_code : str
+        working_directory : str, optional
+            Working directory of the new Container, by default None
+
+        Returns
+        -------
+        Container
+
+        Raises
+        ------
+        GamspyException
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> new_cont = m.copy()
+        >>> new_cont.data.keys() == m.data.keys()
+        True
+
         """
-        unique_name = utils._getUniqueName()
-        self._unsaved_statements[unique_name] = gams_code
+        self._run()
+
+        m = Container(working_directory=working_directory)
+        m.read(self._gdx_path)
+
+        try:
+            shutil.copy(
+                self._save_to._checkpoint_file_name,
+                m._save_to._checkpoint_file_name,
+            )
+        except FileNotFoundError:
+            # save_to might not exist and it's fine
+            pass
+        except shutil.SameFileError:
+            # They can be the same file if their working directories are the same.
+            pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
+
+        try:
+            shutil.copy(
+                self._restart_from._checkpoint_file_name,
+                m._restart_from._checkpoint_file_name,
+            )
+        except shutil.SameFileError:
+            # They can be the same files if their working directories are the same.
+            pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
+
+        try:
+            shutil.copy(self._gdx_path, m._gdx_path)
+        except shutil.SameFileError:
+            # They can be the same files if their working directories are the same.
+            pass
+        except Exception as e:
+            raise GamspyException(f"Copy failed because {str(e)}")
+
+        # if already defined equations exist, add them to .gms file
+        for equation in self.getEquations():
+            if equation._definition is not None:
+                m._addStatement(equation._definition)
+
+        return m
 
     def getSets(self) -> List["Set"]:
         """
@@ -841,288 +1052,6 @@ class Container(gt.Container):
 
         return string
 
-    def interrupt(self):
-        """
-        Sends interrupt signal to the running job.
-
-        Raises
-        ------
-        GamspyException
-            If the job is not initialized
-        """
-        if self._job:
-            self._job.interrupt()
-        else:
-            raise GamspyException("There is no job initialized.")
-
-    def _preprocess_extra_model_files(
-        self, engine_config: "EngineConfig"
-    ) -> List[str]:
-        """
-        Conforms model files to the path requirements of GAMS Engine
-
-        Parameters
-        ----------
-        engine_config : EngineConfig
-
-        Returns
-        -------
-        List[str]
-        """
-        for extra_file in engine_config.extra_model_files:
-            shutil.copy(extra_file, self.workspace.working_directory)
-
-        extra_model_files = [
-            os.path.abspath(extra_file).split(os.sep)[-1]
-            for extra_file in engine_config.extra_model_files
-        ]
-
-        extra_model_files.append(
-            os.path.abspath(self._gdx_path).split(os.sep)[-1]
-        )
-
-        return extra_model_files
-
-    def _run(
-        self,
-        options: Optional["GamsOptions"] = None,
-        output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine"] = "local",
-        engine_config: Optional["EngineConfig"] = None,
-    ):
-        # Set default options if not provided
-        if options is None:
-            options = GamsOptions(self.workspace)
-            options.gdx = self._gdx_path
-            options.forcework = 1
-
-        # Reset dirty flags for symbols
-        for name in self.data.keys():
-            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                self[name]._is_dirty = False
-
-        # Create gdx file to read records from
-        super().write(self._gdx_path)
-
-        # Generate GAMS code as a string
-        if backend == "engine":
-            # Engine expects gdx file to be next to the gms file
-            old_path = self._gdx_path
-            self._gdx_path = "default.gdx"
-            gams_string = self.generateGamsString()
-            self._gdx_path = old_path
-        else:
-            gams_string = self.generateGamsString()
-
-        # If there is no restart checkpoint, set it to None
-        checkpoint = self._restart_from if self._use_restart_from else None
-
-        self._job = GamsJob(
-            self.workspace,
-            source=gams_string,
-            checkpoint=checkpoint,
-        )
-
-        # Run the job based on the selected backend
-        if backend == "local":
-            try:
-                self._job.run(
-                    gams_options=options,
-                    checkpoint=self._save_to,
-                    create_out_db=False,
-                    output=output,
-                )
-            except GamsExceptionExecution as e:
-                message = self._parse_message(options, self._job)
-                e.value = message + e.value if message else e.value
-                raise e
-        elif backend == "engine":
-            options.gdx = "default.gdx"
-
-            if engine_config is None:
-                raise GamspyException(
-                    "Engine configuration must be defined to run the job with"
-                    " GAMS Engine"
-                )
-
-            extra_model_files = self._preprocess_extra_model_files(
-                engine_config
-            )
-
-            self._job.run_engine(
-                engine_configuration=engine_config.get_engine_config(),
-                extra_model_files=extra_model_files,
-                gams_options=options,
-                checkpoint=self._save_to,
-                output=output,
-                create_out_db=False,
-                engine_options=engine_config.engine_options,
-                remove_results=engine_config.remove_results,
-            )
-        else:
-            raise GamspyException(
-                "Specified backend is not supported. Possible backends: local,"
-                " engine"
-            )
-
-        self._use_restart_from = True
-
-        self._restart_from, self._save_to = self._save_to, self._restart_from
-
-        self.loadRecordsFromGdx(self._gdx_path)
-
-    def _parse_message(self, options: "GamsOptions", job: "GamsJob"):
-        error_message = ""
-        header = "=" * 80
-        footer = "=" * 80
-        message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
-
-        lst_filename = (
-            options.output if options.output else job._job_name + ".lst"
-        )
-
-        lst_path = (
-            self.workspace._working_directory + os.path.sep + lst_filename
-        )
-
-        with open(lst_path) as lst_file:
-            all_lines = lst_file.readlines()
-            num_lines = len(all_lines)
-
-            index = 0
-            while index < num_lines:
-                line = all_lines[index]
-
-                if line.startswith("****"):
-                    error_lines = [all_lines[index - 1]]
-                    temp_index = index
-
-                    while (
-                        all_lines[temp_index].startswith("****")
-                        and temp_index < len(all_lines) - 1
-                    ):
-                        error_lines.append(all_lines[temp_index])
-                        temp_index += 1
-
-                    error_message = message_format.format(
-                        message="".join(error_lines),
-                        header=header,
-                        footer=footer,
-                    )
-                    break
-
-                index += 1
-
-        return error_message
-
-    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
-        gdx_handle = utils._openGdxFile(self.system_directory, load_from)
-        _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
-
-        existing_names = []
-        new_names = []
-        for i in range(1, symbol_count + 1):
-            _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-            if symbol_name in self.data.keys():
-                existing_names.append(symbol_name)
-            else:
-                new_names.append(symbol_name)
-
-        utils._closeGdxHandle(gdx_handle)
-
-        return existing_names, new_names
-
-    def _get_symbol_names_to_load(
-        self,
-        load_from: str,
-        symbol_names: Optional[List[str]] = None,
-    ) -> List[str]:
-        if not symbol_names:
-            existing_names, new_names = self._get_symbol_names_from_gdx(
-                load_from
-            )
-
-            symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-
-            symbol_names = new_names
-            for name in existing_names:
-                if isinstance(self[name], symbol_types):
-                    symbol_names.append(name)
-
-        return symbol_names
-
-    def copy(self, working_directory: Optional[str] = None) -> "Container":
-        """
-        Creates a copy of the Container
-
-        Parameters
-        ----------
-        working_directory : str, optional
-            Working directory of the new Container, by default None
-
-        Returns
-        -------
-        Container
-
-        Raises
-        ------
-        GamspyException
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m, "i")
-        >>> new_cont = m.copy()
-        >>> new_cont.data.keys() == m.data.keys()
-        True
-
-        """
-        self._run()
-
-        m = Container(working_directory=working_directory)
-        m.read(self._gdx_path)
-
-        try:
-            shutil.copy(
-                self._save_to._checkpoint_file_name,
-                m._save_to._checkpoint_file_name,
-            )
-        except FileNotFoundError:
-            # save_to might not exist and it's fine
-            pass
-        except shutil.SameFileError:
-            # They can be the same file if their working directories are the same.
-            pass
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
-
-        try:
-            shutil.copy(
-                self._restart_from._checkpoint_file_name,
-                m._restart_from._checkpoint_file_name,
-            )
-        except shutil.SameFileError:
-            # They can be the same files if their working directories are the same.
-            pass
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
-
-        try:
-            shutil.copy(self._gdx_path, m._gdx_path)
-        except shutil.SameFileError:
-            # They can be the same files if their working directories are the same.
-            pass
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
-
-        # if already defined equations exist, add them to .gms file
-        for equation in self.getEquations():
-            if equation._definition is not None:
-                m._addStatement(equation._definition)
-
-        return m
-
     def loadRecordsFromGdx(
         self,
         load_from: str,
@@ -1155,8 +1084,6 @@ class Container(gt.Container):
                     statement.domain_labels = statement.domain_names
             else:
                 self.read(self._gdx_path, [name])
-
-        self._unsaved_statements = {}
 
     def read(
         self, load_from: str, symbol_names: Optional[List[str]] = None
@@ -1216,3 +1143,76 @@ class Container(gt.Container):
             self._run()
 
         super().write(write_to, symbols)
+
+
+def parse_message(
+    workspace: "GamsWorkspace", options: "GamsOptions", job: "GamsJob"
+) -> str:
+    error_message = ""
+    header = "=" * 80
+    footer = "=" * 80
+    message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
+
+    lst_filename = options.output if options.output else job._job_name + ".lst"
+
+    lst_path = workspace._working_directory + os.path.sep + lst_filename
+
+    with open(lst_path) as lst_file:
+        all_lines = lst_file.readlines()
+        num_lines = len(all_lines)
+
+        index = 0
+        while index < num_lines:
+            line = all_lines[index]
+
+            if line.startswith("****"):
+                error_lines = [all_lines[index - 1]]
+                temp_index = index
+
+                while (
+                    all_lines[temp_index].startswith("****")
+                    and temp_index < len(all_lines) - 1
+                ):
+                    error_lines.append(all_lines[temp_index])
+                    temp_index += 1
+
+                error_message = message_format.format(
+                    message="".join(error_lines),
+                    header=header,
+                    footer=footer,
+                )
+                break
+
+            index += 1
+
+    return error_message
+
+
+def preprocess_extra_model_files(
+    workspace: "GamsWorkspace", gdx_path: "str", engine_config: "EngineConfig"
+) -> List[str]:
+    """
+    Conforms model files to the path requirements of GAMS Engine
+
+    Parameters
+    ----------
+    engine_config : EngineConfig
+
+    Returns
+    -------
+    List[str]
+    """
+    # copy provided extra model files to working directory
+    for extra_file in engine_config.extra_model_files:
+        shutil.copy(extra_file, workspace.working_directory)
+
+    # trim path and keep only the names of the files
+    extra_model_files = [
+        os.path.abspath(extra_file).split(os.sep)[-1]
+        for extra_file in engine_config.extra_model_files
+    ]
+
+    # add name of the gdx file
+    extra_model_files.append(os.path.abspath(gdx_path).split(os.sep)[-1])
+
+    return extra_model_files

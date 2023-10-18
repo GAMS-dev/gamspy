@@ -59,6 +59,13 @@ def getInstalledSolvers() -> List[str]:
     ------
     GamspyException
         In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy.utils as utils
+    >>> utils.getInstalledSolvers()
+    ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB', 'SCENSOLVER']
+
     """
     try:
         import gamspy_base
@@ -97,6 +104,13 @@ def getAvailableSolvers() -> List[str]:
     ------
     GamspyException
         In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy.utils as utils
+    >>> utils.getAvailableSolvers()
+    ['NLPEC', 'SBB', 'CONOPT', 'CONVERT', 'CPLEX', 'PATH', 'BARON', 'CONOPT4', 'COPT', 'DICOPT', 'GUROBI', 'HIGHS', 'IPOPT', 'IPOPTH', 'KNITRO', 'MINOS', 'MOSEK', 'SCIP', 'SHOT', 'SNOPT', 'XPRESS']
+
     """
     try:
         import gamspy_base

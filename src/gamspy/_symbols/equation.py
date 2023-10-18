@@ -137,7 +137,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         definition_domain: Optional[list] = None,
     ):
-        type = self._cast_type(type)
+        type = cast_type(type)
 
         # enable load on demand
         self._is_dirty = False
@@ -167,7 +167,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # add defition if exists
         self._definition_domain = definition_domain
-        self.add_definition(definition)
+        self._add_definition(definition)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -177,24 +177,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self._slackup = self._create_attr("slackup")
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
-
-    def _cast_type(self, type: Union[str, EquationType]) -> str:
-        if isinstance(type, str):
-            if type.upper() not in EquationType.values():
-                raise ValueError(
-                    "Allowed equation types:"
-                    f" {EquationType.values()} but found {type}."
-                )
-
-            # assign eq by default
-            if type.upper() == "REGULAR":
-                type = "EQ"
-
-        elif isinstance(type, EquationType):
-            # assign eq by default
-            type = "EQ" if EquationType.REGULAR else str(type)
-
-        return type
 
     def __hash__(self):
         return id(self)
@@ -275,6 +257,71 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             name=f"{self.name}.{attr_name}",
             records=self.records,
         )
+
+    def _add_definition(
+        self,
+        assignment: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
+    ) -> None:
+        """
+        Needed for scalar equations
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
+        >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
+        >>> eq = gp.Equation(m, "eq")
+        >>> eq[...] = gp.Sum(wh, build[wh]) <= 1
+
+        """
+        if assignment is None:
+            self._definition = assignment
+            return
+
+        eq_types = ["=e=", "=l=", "=g="]
+
+        # In case of an MCP equation without any equality, add the equality
+        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
+            assignment = assignment == 0
+
+        non_regular_map = {
+            "nonbinding": "=n=",
+            "external": "=x=",
+            "cone": "=c=",
+            "boolean": "=b=",
+        }
+
+        regular_map = {
+            "=e=": "eq",
+            "=g=": "geq",
+            "=l=": "leq",
+        }
+
+        if self.type in non_regular_map.keys():
+            assignment._op_type = non_regular_map[self.type]  # type: ignore
+        else:
+            self.type = regular_map[assignment._op_type]  # type: ignore
+
+        domain = self._definition_domain if self._definition_domain else []
+        statement = expression.Expression(
+            implicits.ImplicitEquation(
+                self,
+                name=self.name,
+                type=self.type,
+                domain=domain,
+            ),
+            "..",
+            assignment,
+        )
+
+        self.container._unsaved_statements[utils._getUniqueName()] = (
+            "$onMultiR"
+        )
+        self.container._addStatement(statement)
+        self._definition = statement
+
+        if not self.container.delayed_execution:
+            self.container._run()
 
     @property
     def l(self):  # noqa: E741, E743
@@ -397,71 +444,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._infeas
 
-    def add_definition(
-        self,
-        assignment: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
-    ) -> None:
-        """
-        Needed for scalar equations
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
-        >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
-        >>> eq = gp.Equation(m, "eq")
-        >>> eq[...] = gp.Sum(wh, build[wh]) <= 1
-
-        """
-        if assignment is None:
-            self._definition = assignment
-            return
-
-        eq_types = ["=e=", "=l=", "=g="]
-
-        # In case of an MCP equation without any equality, add the equality
-        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
-
-        non_regular_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        regular_map = {
-            "=e=": "eq",
-            "=g=": "geq",
-            "=l=": "leq",
-        }
-
-        if self.type in non_regular_map.keys():
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
-        else:
-            self.type = regular_map[assignment._op_type]  # type: ignore
-
-        domain = self._definition_domain if self._definition_domain else []
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
-        self.container._addStatement(statement)
-        self._definition = statement
-
-        if not self.container.delayed_execution:
-            self.container._run()
-
     @property
     def records(self):
         """
@@ -531,3 +513,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         output += ";"
         return output
+
+
+def cast_type(type: Union[str, EquationType]) -> str:
+    if isinstance(type, str):
+        if type.upper() not in EquationType.values():
+            raise ValueError(
+                "Allowed equation types:"
+                f" {EquationType.values()} but found {type}."
+            )
+
+        # assign eq by default
+        if type.upper() == "REGULAR":
+            type = "EQ"
+
+    elif isinstance(type, EquationType):
+        # assign eq by default
+        type = "EQ" if EquationType.REGULAR else str(type)
+
+    return type
