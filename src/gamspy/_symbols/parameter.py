@@ -171,6 +171,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self, name=f"-{self.name}", domain=self._domain
         )
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     @property
     def records(self):
         """

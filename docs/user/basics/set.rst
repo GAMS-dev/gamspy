@@ -16,7 +16,7 @@ consists of a set name and the elements of the set. Example: ::
 
     m = Container()
     i = Set(m, name = "i", records = ["seattle", "san-diego"], description = "plants")
-    j = Set(m, name = "j", records = ['new-york', 'chicago', 'topeka'], description = "markets")
+    j = Set(m, name = "j", records = ["new-york", "chicago", "topeka"], description = "markets")
 
 The effect of these statements is probably self-evident. We declared two sets using 
 the :meth:`gamspy.Set` class and gave them the names ``i`` and ``j``. We also 
@@ -129,12 +129,12 @@ An alternative way to define elements of a subset is with assignments: ::
              domain = i, 
              description = "traded sectors",
              records = ["light-ind","heavy-ind"])
-    t['food+agr'] = True
+    t["food+agr"] = True
 
 In the last line the element ``food+agr`` of the set ``i`` is assigned to the subset 
 ``t``. Assignments may also be used to remove an element from a subset: ::
 
-    t['light-ind'] = False
+    t["light-ind"] = False
 
 
 .. note::
@@ -175,7 +175,7 @@ associated with a nearby mining region: ::
             records = ["accra","freetown","leningrad","shanghai"])
     
     s = pd.Series(
-       index=pd.MultiIndex.from_tuples([("china", "shanghai"), 
+        index=pd.MultiIndex.from_tuples([("china", "shanghai"), 
                                         ("ghana", "accra"), 
                                         ("russia", "leningrad"), 
                                         ("s-leone", "freetown")])
@@ -306,8 +306,8 @@ The following example serves as illustration. ::
     ij1a[i,j] = Sum(k,ijk[i,j,k])
     
     # Method 2: Using an assignment and the sum operator for aggregations
-    Count_2a.assignment  = Sum(ijk[i,j,k],1)
-    Count_1a.assignment  = Sum(ij1a[i,j],1)
+    Count_2a.assignment = Sum(ijk[i,j,k],1)
+    Count_1a.assignment = Sum(ij1a[i,j],1)
 
 Note that the set ``ijk`` is a three-dimensional set, its elements are 3-tuples and all 
 permutations of the elements of the three sets ``i``, ``j`` and ``k`` are in its domain. 
@@ -384,7 +384,7 @@ is automatically cleared of the previous element first. For example, adding the 
 line to the code above will result in set ``k`` containing only element ``a`` after 
 execution: ::
 
-    k['a'] = True
+    k["a"] = True
 
 Singleton sets can be especially useful in assignment statements since they do not need to 
 be controlled by a controlling index or an indexed operator like other sets. Consider the 
@@ -395,7 +395,7 @@ following example: ::
     i = Set(m, name = "i", records = ["a","b","c"])
     k = Set(m, name = "k", is_singleton = True, domain = i, records = ["b"])
     h = Set(m, name = "h", is_singleton = True, domain = i, records = ["a"])
-    n = Parameter(m, name = "n", domain = i, records = [['a', 2],['b', 3],['c', 5]])
+    n = Parameter(m, name = "n", domain = i, records = [["a", 2],["b", 3],["c", 5]])
     
     z1 = Parameter(m, name = "z1")
     z2 = Parameter(m, name = "z2")
@@ -415,8 +415,9 @@ controlling index or an indexed operation.
 
 
 .. _the-universal-set:
-The Universal Set: * as Set Identifier
-=======================================
+
+The Universal Set: ``*`` as Set Identifier
+==========================================
 
 GAMSPy provides the universal set denoted by ``*`` for cases where the user wishes not to 
 specify an index but have only a placeholder for it. The following examples show two ways 
@@ -425,15 +426,15 @@ disadvantages of using the universal set later. First example:  ::
 
     m = Container()
     r = Set(m, name = "r", description = "raw materials", records = ["scrap","new"])
-    misc = Parameter(m, name = "misc", domain = ['*',r], 
-                     records = [['max-stock', "scrap", 400],
-                                ['max-stock', "new", 275],
-                                ['storage-c', "scrap", 0.5],
-                                ['storage-c', "new", 2],
-                                ['res-value', "scrap", 15],
-                                ['res-value', "new", 25]])
+    misc = Parameter(m, name = "misc", domain = ["*",r], 
+                     records = [["max-stock", "scrap", 400],
+                                ["max-stock", "new", 275],
+                                ["storage-c", "scrap", 0.5],
+                                ["storage-c", "new", 2],
+                                ["res-value", "scrap", 15],
+                                ["res-value", "new", 25]])
 
-In our example, the first index of parameter ``misc``` is the universal set ``'*'`` and the 
+In our example, the first index of parameter ``misc``` is the universal set ``"*"`` and the 
 second index is the previously defined set ``r``. Since the first index is the universal set 
 any entry whatsoever is allowed in this position. In the second position elements of the set 
 ``r`` must appear, they are domain checked, as usual.
@@ -461,7 +462,7 @@ set definition ::
 
 is the same as ::
 
-    i = Set(m, "i", domain = '*', records = range(1,10))
+    i = Set(m, "i", domain = "*", records = range(1,10))
 
 GAMS follows the concept of a domain tree for domains in GAMS. It is assumed that a set and its 
 subset are connected by an arc where the two sets are nodes. Now consider the following one 
@@ -475,7 +476,7 @@ dimensional subsets: ::
     jjj = Set(m, "jjj", domain = jj)
 
 These subsets are connected with arcs to the set ``i`` and thus form a domain tree that is rooted 
-in the universe node ``'*'``. This particular domain tree may be represented as follows: ::
+in the universe node ``"*"``. This particular domain tree may be represented as follows: ::
 
     * - i - ii
           |
@@ -525,7 +526,7 @@ Referencing a Single Element
 Sometimes it is necessary to refer to specific set elements. This is done by using quotes around 
 the label(s). We may add the following line to the example above: ::
 
-    k['i77'] = 15
+    k["i77"] = 15
 
 Referencing a Part of a Set
 ----------------------------
@@ -564,15 +565,15 @@ the attributes listed in :meth:`gamspy.Set`. The following example serves as ill
                                  ("-7",""), 
                                  ("13.14","")])
     
-    attr = Parameter(m, "attr", domain = [id, '*'], description = "Set attribute values")
+    attr = Parameter(m, "attr", domain = [id, "*"], description = "Set attribute values")
     
-    attr[id,'position']    = id.pos 
-    attr[id,'reverse']     = id.rev 
-    attr[id,'offset']      = id.off 
-    attr[id,'length']      = id.len 
-    attr[id,'textLength']  = id.tlen 
-    attr[id,'first']       = id.first
-    attr[id,'last']        = id.last 
+    attr[id,"position"]    = id.pos 
+    attr[id,"reverse"]     = id.rev 
+    attr[id,"offset"]      = id.off 
+    attr[id,"length"]      = id.len 
+    attr[id,"textLength"]  = id.tlen 
+    attr[id,"first"]       = id.first
+    attr[id,"last"]        = id.last 
 
 The parameter ``attr`` is declared to have two dimensions with the set ``id`` in the first 
 position and the universal set in the second position. In the following seven statements the 
@@ -758,6 +759,7 @@ illustrate assignments for multi-dimensional sets. ::
 
 
 .. _equations-defined-over-the-domain-of-dynamic-sets:
+
 Equations Defined over the Domain of Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -915,6 +917,7 @@ Apart from being part of logical conditions, dynamic sets may be assigned member
 with conditional assignments. Examples are given in the next subsection.
 
 .. _dynamic-sets-in-conditional-assignments:
+
 Dynamic Sets in Conditional Assignments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -964,6 +967,7 @@ assignment above would be: ::
 
 
 .. _conditional-indexed-operations-with-dynamic-sets:
+
 Conditional Indexed Operations with Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1132,6 +1136,7 @@ excluded. Hence, only ``'hardware'`` and ``'toy'`` are added to ``g11``. ::
 
 
 .. _conditional-equations-with-dynamic-sets:
+
 Conditional Equations with Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1157,6 +1162,7 @@ condition is specified explicitly, in the first formulation the domain is filter
 the dynamic set ``r``. This is the topic of the next subsection.
 
 .. _filtering-through-dynamic-sets:
+
 Filtering through Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1228,10 +1234,10 @@ ordered and the labels in the set have not been used already, then they will be 
 In the example below we show ordered and unordered sets and the map showing the order. The 
 input is: ::
 
-    m = Container()
-    t1= Set(m, name = "t1", records = ["1987","1988","1989","1990","1991"])
-    t2= Set(m, name = "t2", records = ["1983","1984","1985","1986","1987"])
-    t3= Set(m, name = "t3", records = ["1987","1989","1991","1983","1985"])
+    m  = Container()
+    t1 = Set(m, name = "t1", records = ["1987","1988","1989","1990","1991"])
+    t2 = Set(m, name = "t2", records = ["1983","1984","1985","1986","1987"])
+    t3 = Set(m, name = "t3", records = ["1987","1989","1991","1983","1985"])
 
 Note that the label ``"1987"`` is the first label seen by GAMS. It appears again as the 
 last label in the initialization list for the set ``t2``. This means that the set ``t2`` 

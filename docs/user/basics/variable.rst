@@ -71,6 +71,7 @@ in the GAMS documentation.
 
 
 .. _variable-types:
+
 Variable Types
 ---------------
 
@@ -112,6 +113,7 @@ bounds may be changed using variable attributes and assignment statements, see s
 
 
 .. _variable-attributes:
+
 Variable Attributes
 =====================
 
@@ -236,15 +238,15 @@ For more examples see the `GAMS Transfer documentation <https://www.gams.com/lat
 In addition to the variable attributes introduced above, there are a number of variable 
 attributes that cannot be assigned but may be used in computations.
 
-===========================  =========  ====================================================================================================================================================================================================================================================================================================================================
+===========================  =========  =========================================================================================================================================================================================================================================================================================================================================
 Variable Attribute           Symbol     Description
-===========================  =========  ====================================================================================================================================================================================================================================================================================================================================
-Range                        range     The difference between the lower and upper bounds for a variable. It becomes zero if the lower equals the upper bound, e.g. if the ``fx`` attribute is set.
-Slack upper bound            slackup   Slack from variable upper bound. This is defined as the greater of two values: zero or the difference between the upper bound and the level value of a variable.
-Slack lower bound            slacklo   Slack from variable lower bound. This is defined as the greater of two values: zero or the difference between the level value and the lower bound of a variable.
-Slack                        slack     Minimum slack from variable bound. This is defined as the minimum of two values: the slack from the variable lower bound and the slack from the variable upper bound.
-Infeasibility                infeas    Amount by which a variable is infeasible falling below its lower bound or above its upper bound. This is defined as the smallest of three values: zero, the difference between the lower bound and the level value, the difference between the level value and the upper bound of a variable, i.e. ``max[0, lower-level, level-upper]``.
-===========================  =========  ====================================================================================================================================================================================================================================================================================================================================
+===========================  =========  =========================================================================================================================================================================================================================================================================================================================================
+Range                        range      The difference between the lower and upper bounds for a variable. It becomes zero if the lower equals the upper bound, e.g. if the ``fx`` attribute is set.
+Slack upper bound            slackup    Slack from variable upper bound. This is defined as the greater of two values: zero or the difference between the upper bound and the level value of a variable.
+Slack lower bound            slacklo    Slack from variable lower bound. This is defined as the greater of two values: zero or the difference between the level value and the lower bound of a variable.
+Slack                        slack      Minimum slack from variable bound. This is defined as the minimum of two values: the slack from the variable lower bound and the slack from the variable upper bound.
+Infeasibility                infeas     Amount by which a variable is infeasible falling below its lower bound or above its upper bound. This is defined as the smallest of three values: zero, the difference between the lower bound and the level value, the difference between the level value and the upper bound of a variable, i.e. ``max[0, lower-level, level-upper]``.
+===========================  =========  =========================================================================================================================================================================================================================================================================================================================================
 
 Bounds on Variables
 --------------------
