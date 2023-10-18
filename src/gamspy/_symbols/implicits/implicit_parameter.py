@@ -102,6 +102,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.
 

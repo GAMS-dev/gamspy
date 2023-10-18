@@ -189,6 +189,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     def _init_attributes(self):
         level = self._create_attr("l")
         marginal = self._create_attr("m")

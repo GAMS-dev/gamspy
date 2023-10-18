@@ -93,9 +93,6 @@ class Operable:
     def __ge__(self, other):
         return expression.Expression(self, "=g=", other)
 
-    def __ne__(self, other):  # type: ignore
-        return expression.Expression(self, "ne", other)
-
     # ~ -> not
     def __invert__(self):
         return expression.Expression("", "not", self)
