@@ -109,7 +109,6 @@ def getAvailableSolvers() -> List[str]:
     --------
     >>> import gamspy.utils as utils
     >>> utils.getAvailableSolvers()
-    ['NLPEC', 'SBB', 'CONOPT', 'CONVERT', 'CPLEX', 'PATH', 'BARON', 'CONOPT4', 'COPT', 'DICOPT', 'GUROBI', 'HIGHS', 'IPOPT', 'IPOPTH', 'KNITRO', 'MINOS', 'MOSEK', 'SCIP', 'SHOT', 'SNOPT', 'XPRESS']
 
     """
     try:
