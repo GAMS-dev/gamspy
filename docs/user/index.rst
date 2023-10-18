@@ -9,6 +9,7 @@ details are found in :ref:`reference`.
 
 .. toctree::
    :caption: Getting started
+   :maxdepth: 1
 
    installation
    notebooks/trnsport
@@ -16,12 +17,14 @@ details are found in :ref:`reference`.
 
 .. toctree::
    :caption: Fundamentals and usage
+   :maxdepth: 2
 
    basics/basics
    advanced/advanced
 
 .. toctree::
    :caption: Extras
+   :maxdepth: 1
 
    faq
    model_library
