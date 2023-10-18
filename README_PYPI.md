@@ -1,4 +1,4 @@
-![plot](./docs/_static/gamspy_logo.png)
+![plot](https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/gamspy_logo.png?raw=true)
 
 -----------------
 

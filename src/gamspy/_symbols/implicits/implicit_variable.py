@@ -114,6 +114,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     def gamsRepr(self) -> str:
         representation = self.name
         if self.domain:
