@@ -5,3 +5,7 @@
 #module-gamspy .class {
     border-top: 2px solid black;
 }
+
+.navbar-icon-links img.icon-link-image {
+    height: 1.25em;
+}
