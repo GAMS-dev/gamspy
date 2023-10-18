@@ -56,7 +56,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/GAMS-dev",
+            "url": "https://github.com/GAMS-dev/gamspy",
             "icon": "fa-brands fa-square-github",
             "type": "fontawesome",
         },
