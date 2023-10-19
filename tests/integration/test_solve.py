@@ -329,7 +329,7 @@ class SolveSuite(unittest.TestCase):
 
         self.assertEqual(
             transport.getStatement(),
-            "$onMultiR\nModel transport / cost,supply,demand,x(i) /;",
+            "Model transport / cost,supply,demand,x(i) /;",
         )
 
     def test_interrupt(self):

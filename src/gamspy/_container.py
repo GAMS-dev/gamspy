@@ -1030,7 +1030,7 @@ class Container(gt.Container):
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
 
-        string = f"$gdxIn {self._gdx_path}\n"
+        string = f"$onMultiR\n$gdxIn {self._gdx_path}\n"
         for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
