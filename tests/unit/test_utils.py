@@ -59,7 +59,6 @@ class UtilsSuite(unittest.TestCase):
                 "NLPEC",
                 "PATH",
                 "SBB",
-                "SCENSOLVER",
             ],
         )
 
