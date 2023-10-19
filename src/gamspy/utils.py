@@ -89,6 +89,8 @@ def getInstalledSolvers() -> List[str]:
             if line.isupper():
                 solver_names.append(line.split(" ")[0])
 
+    solver_names.remove("SCENSOLVER")
+
     return solver_names
 
 
@@ -117,7 +119,6 @@ def getAvailableSolvers() -> List[str]:
         raise GamspyException("gamspy_base must be installed!")
 
     available_solvers = gamspy_base.available_solvers
-    available_solvers.remove("SCENSOLVER")
 
     return available_solvers
 
