@@ -64,7 +64,7 @@ def getInstalledSolvers() -> List[str]:
     --------
     >>> import gamspy.utils as utils
     >>> utils.getInstalledSolvers()
-    ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB', 'SCENSOLVER']
+    ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB']
 
     """
     try:
