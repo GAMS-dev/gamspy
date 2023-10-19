@@ -255,6 +255,16 @@ class SolveSuite(unittest.TestCase):
             objective=z,
         )
 
+        # Test output redirection
+        with open("test.gms", "w") as file:
+            _ = transport.solve(
+                options={"resLim": 100},
+                output=file,
+            )
+
+        self.assertTrue(os.path.exists("test.gms"))
+        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+
         self.assertRaises(
             GamspyException,
             transport.solve,
@@ -265,16 +275,6 @@ class SolveSuite(unittest.TestCase):
             None,
             "bla",
         )
-
-        # Test output redirection
-        with open("test.gms", "w") as file:
-            _ = transport.solve(
-                options={"resLim": 100},
-                output=file,
-            )
-
-        self.assertTrue(os.path.exists("test.gms"))
-        self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
 
         from gamspy._model import attribute_map
 

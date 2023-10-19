@@ -333,6 +333,7 @@ class Container(gt.Container):
                     output=output,
                 )
             except GamsExceptionExecution as e:
+                self._unsaved_statements = {}
                 message = parse_message(self.workspace, options, self._job)
                 e.value = message + e.value if message else e.value
                 raise e
@@ -349,17 +350,22 @@ class Container(gt.Container):
                 self.workspace, self._gdx_path, engine_config
             )
 
-            self._job.run_engine(
-                engine_configuration=engine_config.get_engine_config(),
-                extra_model_files=extra_model_files,
-                gams_options=options,
-                checkpoint=self._save_to,
-                output=output,
-                create_out_db=False,
-                engine_options=engine_config.engine_options,
-                remove_results=engine_config.remove_results,
-            )
+            try:
+                self._job.run_engine(
+                    engine_configuration=engine_config.get_engine_config(),
+                    extra_model_files=extra_model_files,
+                    gams_options=options,
+                    checkpoint=self._save_to,
+                    output=output,
+                    create_out_db=False,
+                    engine_options=engine_config.engine_options,
+                    remove_results=engine_config.remove_results,
+                )
+            except Exception as e:
+                self._unsaved_statements = {}
+                raise e
         else:
+            self._unsaved_statements = {}
             raise GamspyException(
                 f"`{backend}` is not a valid backend. Possible backends:"
                 " local, engine"
