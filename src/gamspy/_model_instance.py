@@ -96,7 +96,6 @@ class ModelInstance:
         self.modifiables = self._init_modifiables(modifiables)
         self.main_container = container
         self.instance_container = gp.Container(
-            name="instance_container",
             system_directory=container.system_directory,
             working_directory=container.workspace.working_directory,
         )

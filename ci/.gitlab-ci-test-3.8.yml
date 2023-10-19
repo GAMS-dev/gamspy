@@ -46,6 +46,10 @@ test-deg-3.8:
     name: macos_x86_64_3.8
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-dac-3.8:
   stage: test

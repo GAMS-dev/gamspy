@@ -88,7 +88,6 @@ class Container(gt.Container):
         self,
         load_from: Optional[str] = None,
         system_directory: Optional[str] = None,
-        name: str = "default",
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
     ):
@@ -98,7 +97,6 @@ class Container(gt.Container):
             else utils._getGAMSPyBaseDirectory()
         )
 
-        self.name = name
         self.delayed_execution = delayed_execution
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
@@ -114,7 +112,8 @@ class Container(gt.Container):
         (
             self._save_to,
             self._restart_from,
-            self._gdx_path,
+            self._gdx_in,
+            self._gdx_out,
         ) = self._setup_paths()
 
         # allows interrupt
@@ -256,7 +255,7 @@ class Container(gt.Container):
 
     def _setup_paths(
         self,
-    ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str]:
+    ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
         """
         Sets up the paths for .g00, and .gdx files.
 
@@ -266,22 +265,15 @@ class Container(gt.Container):
 
         Returns
         -------
-        Tuple[GamsCheckpoint, GamsCheckpoint, str]
-            save_to, restart_from, gdx_path
+        Tuple[GamsCheckpoint, GamsCheckpoint, str, str]
+            save_to, restart_from, gdx_in, gdx_out
         """
-        temporary_file_prefix = os.path.join(
-            self.workspace.working_directory, self.name
-        )
+        save_to = GamsCheckpoint(self.workspace)
+        restart_from = GamsCheckpoint(self.workspace)
+        gdx_in = self.working_directory + os.sep + f"{save_to._name}.gdx"
+        gdx_out = self.working_directory + os.sep + f"{restart_from._name}.gdx"
 
-        save_to = GamsCheckpoint(
-            self.workspace, temporary_file_prefix + "_save.g00"
-        )
-        restart_from = GamsCheckpoint(
-            self.workspace, temporary_file_prefix + "_restart.g00"
-        )
-        gdx_path = temporary_file_prefix + ".gdx"
-
-        return save_to, restart_from, gdx_path
+        return save_to, restart_from, gdx_in, gdx_out
 
     def _run(
         self,
@@ -293,7 +285,7 @@ class Container(gt.Container):
         # Set default options if not provided
         if options is None:
             options = GamsOptions(self.workspace)
-            options.gdx = self._gdx_path
+            options.gdx = self._gdx_out
 
         # Reset dirty flags for symbols
         for name in self.data.keys():
@@ -301,15 +293,14 @@ class Container(gt.Container):
                 self[name]._is_dirty = False
 
         # Create gdx file to read records from
-        super().write(self._gdx_path)
+        super().write(self._gdx_in)
 
         # Generate GAMS code as a string
         if backend == "engine":
             # Engine expects gdx file to be next to the gms file
-            old_path = self._gdx_path
-            self._gdx_path = "default.gdx"
-            gams_string = self.generateGamsString()
-            self._gdx_path = old_path
+            gams_string = self.generateGamsString(
+                self._gdx_in.split(os.sep)[-1]
+            )
         else:
             gams_string = self.generateGamsString()
 
@@ -337,8 +328,7 @@ class Container(gt.Container):
                 e.value = message + e.value if message else e.value
                 raise e
         elif backend == "engine":
-            options.gdx = "default.gdx"
-
+            options.gdx = self._gdx_out.split(os.sep)[-1]
             if engine_config is None:
                 raise GamspyException(
                     "Engine configuration must be defined to run the job with"
@@ -346,7 +336,7 @@ class Container(gt.Container):
                 )
 
             extra_model_files = preprocess_extra_model_files(
-                self.workspace, self._gdx_path, engine_config
+                self.workspace, self._gdx_in.split(os.sep)[-1], engine_config
             )
 
             try:
@@ -373,8 +363,9 @@ class Container(gt.Container):
         self._use_restart_from = True
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
+        self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
 
-        self.loadRecordsFromGdx(self._gdx_path)
+        self.loadRecordsFromGdx(self._gdx_in)
         self._unsaved_statements = {}
 
     def gamsJobName(self) -> Union[str, None]:
@@ -927,7 +918,7 @@ class Container(gt.Container):
         self._run()
 
         m = Container(working_directory=working_directory)
-        m.read(self._gdx_path)
+        m.read(self._gdx_in)
 
         try:
             shutil.copy(
@@ -955,7 +946,8 @@ class Container(gt.Container):
             raise GamspyException(f"Copy failed because {str(e)}")
 
         try:
-            shutil.copy(self._gdx_path, m._gdx_path)
+            shutil.copy(self._gdx_in, m._gdx_in)
+            shutil.copy(self._gdx_out, m._gdx_out)
         except shutil.SameFileError:
             # They can be the same files if their working directories are the same.
             pass
@@ -1019,7 +1011,7 @@ class Container(gt.Container):
         """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
-    def generateGamsString(self) -> str:
+    def generateGamsString(self, gdx_path: Optional[str] = None) -> str:
         """
         Generates the GAMS code
 
@@ -1029,8 +1021,9 @@ class Container(gt.Container):
         """
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
+        gdx_path = gdx_path if gdx_path else self._gdx_in
 
-        string = f"$onMultiR\n$gdxIn {self._gdx_path}\n"
+        string = f"$onMultiR\n$gdxIn {gdx_path}\n"
         for statement in self._unsaved_statements.values():
             if isinstance(statement, str):
                 string += statement + "\n"
@@ -1090,7 +1083,7 @@ class Container(gt.Container):
                 if updated_records is not None:
                     statement.domain_labels = statement.domain_names
             else:
-                self.read(self._gdx_path, [name])
+                self.read(load_from, [name])
 
     def read(
         self, load_from: str, symbol_names: Optional[List[str]] = None
