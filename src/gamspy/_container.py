@@ -294,7 +294,6 @@ class Container(gt.Container):
         if options is None:
             options = GamsOptions(self.workspace)
             options.gdx = self._gdx_path
-            options.forcework = 1
 
         # Reset dirty flags for symbols
         for name in self.data.keys():
