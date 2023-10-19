@@ -1049,7 +1049,9 @@ class Container(gt.Container):
                 string += statement_str + "\n"
 
         for symbol_name, symbol in self:
-            if symbol.modified:
+            if isinstance(symbol, gp.Alias):
+                string += f"$load {symbol.alias_with.name}\n"
+            else:
                 string += f"$load {symbol_name}\n"
 
         string += "$gdxIn\n"
