@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "0.10.0rc1"
+version = "0.10.0"
 authors = [
   { name = "GAMS Development Corporation", email="support@gams.com" },
 ]
@@ -54,6 +54,8 @@ test = [
     "mypy == 1.4.1",
     "coverage[toml] == 7.2.7",
     "openpyxl == 3.1.2",
+    "urllib3 == 2.0.7",
+    "certifi == 2023.7.22",
 ]
 
 [project.scripts]
