@@ -116,7 +116,10 @@ def getAvailableSolvers() -> List[str]:
     except Exception:
         raise GamspyException("gamspy_base must be installed!")
 
-    return gamspy_base.available_solvers
+    available_solvers = gamspy_base.available_solvers
+    available_solvers.remove("SCENSOLVER")
+
+    return available_solvers
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
