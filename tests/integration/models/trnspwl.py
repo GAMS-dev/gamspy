@@ -71,7 +71,6 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Parameter
 from gamspy import Problem
 from gamspy import Sense
@@ -288,7 +287,7 @@ def main():
 
     # We can just use model trnsdiscA but need to include the first and
     # last segment into the set ss that builds the convex combinations.
-    ss[s] = Number(1)
+    ss[s] = True
 
     trnsdiscA.solve()
 

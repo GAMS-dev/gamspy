@@ -324,7 +324,7 @@ def main():
 
     LossDef[l] = (
         Losses[l]
-        == (Budget - Sum(i, P[i, l] * x[i])).where[LossFlag == Number(1)]
+        == (Budget - Sum(i, P[i, l] * x[i])).where[LossFlag == 1]
         + (TargetIndex[l] * Budget - Sum(i, P[i, l] * x[i])).where[
             LossFlag == Number(2)
         ]

@@ -21,7 +21,6 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Sense
 from gamspy import Set
@@ -89,7 +88,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
             m[w, gr, mgf] == x[w, gr, gf1] & x[w, gr, gf2]
         )
 
-        defredm[mgf] = redm[mgf] == gams_max(Number(0), numm[mgf] - 1)
+        defredm[mgf] = redm[mgf] == gams_max(0, numm[mgf] - 1)
 
     defx[w, gf] = Sum(gr, x[w, gr, gf]) == 1
 

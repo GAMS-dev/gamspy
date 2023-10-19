@@ -246,15 +246,9 @@ def main():
         m, name="p_Util_gap", description="no util-equality case [%]"
     )
 
-    p_noMHRC[...] = (
-        Sum(t.where[noMHRC[t] > Number(0)], Number(1)) / Card(t) * 100
-    )
-    p_noMN_lic[...] = (
-        Sum(t.where[MN_lic[t] > Number(0)], Number(1)) / Card(t) * 100
-    )
-    p_Util_gap[...] = (
-        Sum(t.where[Util_gap[t] > Number(0)], Number(1)) / Card(t) * 100
-    )
+    p_noMHRC[...] = Sum(t.where[noMHRC[t] > 0], 1) / Card(t) * 100
+    p_noMN_lic[...] = Sum(t.where[MN_lic[t] > 0], 1) / Card(t) * 100
+    p_Util_gap[...] = Sum(t.where[Util_gap[t] > 0], 1) / Card(t) * 100
 
     print(f"no MHRC case: {p_noMHRC.records.value[0]}%")
     print(f"no MN case: {p_noMN_lic.records.value[0]}%")

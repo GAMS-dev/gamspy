@@ -191,7 +191,7 @@ def Min(*values) -> "Expression":
     if all(isinstance(value, (int, float)) for value in values):
         return min(values)
 
-    values_str = ",".join([value.gamsRepr() for value in values])
+    values_str = ",".join([_stringify(value) for value in values])
     return expression.Expression("min(", values_str, ")")
 
 
@@ -206,7 +206,7 @@ def Max(*values) -> "Expression":
     if all(isinstance(value, (int, float)) for value in values):
         return max(values)
 
-    values_str = ",".join([value.gamsRepr() for value in values])
+    values_str = ",".join([_stringify(value) for value in values])
     return expression.Expression("max(", values_str, ")")
 
 

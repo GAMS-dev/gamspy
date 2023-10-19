@@ -29,7 +29,6 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -100,7 +99,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     )
     sMinDownFast[g, t1, t.lead((Ord(t1) - pMinDown[g, t1]))].where[
         (tt[t]) & (Ord(t) <= pMinDown[g, t1])
-    ] = Number(1)
+    ] = True
 
     diff = Set(m, name="diff", domain=[g, t1, t2])
     diff[g, t1, t2] = sMinDown[g, t1, t2] ^ sMinDownFast[g, t1, t2]

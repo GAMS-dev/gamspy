@@ -80,7 +80,7 @@ def main():
     cn[c] = Number(1).where[demdat[c, "ref-p"]]
     ce[c] = Number(1).where[demdat[c, "exp-p"]]
     cm[c] = Number(1).where[(demdat[c, "imp-p"] < np.inf)]
-    cm["clover"] = Number(0)
+    cm["clover"] = False
     price[c] = demdat[c, "ref-p"]
     pe[ce] = demdat[ce, "exp-p"]
     pm[cm] = demdat[cm, "imp-p"]
