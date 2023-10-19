@@ -229,8 +229,8 @@ def main(is_centropy=False):
 
     j = Alias(m, name="j", alias_with=i)
     jj = Alias(m, name="jj", alias_with=ii)
-    ii[i] = Number(1)
-    ii["Total"] = Number(0)
+    ii[i] = True
+    ii["Total"] = False
 
     # Parameters
     stderr1 = Parameter(
@@ -402,7 +402,7 @@ def main(is_centropy=False):
 
     # Define set of elements of SAM that can be nonzero. In this case, only
     # elements which are nonzero in initial SAM.
-    NONZERO[ii, jj].where[Abar0[ii, jj]] = Number(1)
+    NONZERO[ii, jj].where[Abar0[ii, jj]] = True
 
     # SAM cells with priors on coefficients. We will also assume they have
     # multiplicative errors.
@@ -414,8 +414,8 @@ def main(is_centropy=False):
         description="accounts with prior on column coefficients",
     )
 
-    icoeff[ii, acoeff].where[NONZERO[ii, acoeff]] = Number(1)
-    ival[ii, jj].where[(SAM0[ii, jj]) & (~icoeff[ii, jj])] = Number(1)
+    icoeff[ii, acoeff].where[NONZERO[ii, acoeff]] = True
+    ival[ii, jj].where[(SAM0[ii, jj]) & (~icoeff[ii, jj])] = True
     chkset[ii, jj] = (
         Number(1).where[ival[ii, jj]]
         + Number(1).where[icoeff[ii, jj]]

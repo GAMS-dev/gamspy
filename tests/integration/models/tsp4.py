@@ -20,7 +20,6 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -205,9 +204,7 @@ def main():
                         continue
                     fromi[ix_loop] = True
 
-        nosubtours[...] = Sum(
-            t, gams_math.Max(Number(0), Smax(tour[i, j, t], Number(1)))
-        )
+        nosubtours[...] = Sum(t, gams_math.Max(0, Smax(tour[i, j, t], 1)))
 
         if nosubtours.toValue() == 1:  # done: no subtours
             break

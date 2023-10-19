@@ -96,7 +96,7 @@ class ConditionSuite(unittest.TestCase):
 
         # Equation
         defopLS = Equation(m, name="defopLS", domain=[o, p])
-        defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == Number(1)
+        defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
         self.assertEqual(
             list(m._unsaved_statements.values())[-1].getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",

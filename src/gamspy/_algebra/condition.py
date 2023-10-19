@@ -84,9 +84,6 @@ class Condition:
             right_hand_expression,
         )
 
-        self._symbol.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
         self._symbol.container._addStatement(statement)
 
         if not self._symbol.container.delayed_execution:

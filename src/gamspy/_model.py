@@ -204,7 +204,7 @@ class Model:
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
-        self._equations = equations
+        self.equations = equations
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -299,7 +299,7 @@ class Model:
             )
 
             equation[...] = variable == 0
-            self._equations.append(equation)
+            self.equations.append(equation)
 
             return variable
 
@@ -323,7 +323,7 @@ class Model:
 
             # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
             equation[...] = assignment
-            self._equations.append(equation)
+            self.equations.append(equation)
 
             return variable
 
@@ -343,14 +343,16 @@ class Model:
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
         gams_options = GamsOptions(self.container.workspace)
-        gams_options.gdx = self.container._gdx_path
+        gams_options.gdx = self.container._gdx_out
 
         if solver:
             gams_options.all_model_types = solver
 
         if options:
             if not isinstance(options, dict):
-                raise GamspyException("options must be a dict")
+                raise GamspyException(
+                    f"options must be a dict but found {type(options)}"
+                )
 
             for option, value in options.items():
                 if option.lower() not in utils.VALID_GAMS_OPTIONS:
@@ -441,7 +443,7 @@ class Model:
             system_directory=self.container.system_directory
         )
         temp_container.read(
-            self.container._gdx_path,
+            self.container._gdx_in,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
                 for gams_attr in attribute_map.keys()
@@ -486,29 +488,22 @@ class Model:
             if name in self.container.data.keys():
                 del self.container.data[name]
 
-    @property
-    def equations(self) -> List["Equation"]:
+    def interrupt(self) -> None:
         """
-        Equations in which the model consists of
+        Sends interrupt signal to the running job.
 
-        Returns
-        -------
-        List[Equation]
+        Raises
+        ------
+        GamspyException
+            If the job is not initialized
         """
-        return self._equations
-
-    @equations.setter
-    def equations(self, new_equations) -> None:
-        self._equations = new_equations
-
-    def interrupt(self):
-        self.container.interrupt()
+        self.container._interrupt()
 
     def freeze(
         self,
         modifiables: List[Union["Parameter", "ImplicitParameter"]],
         freeze_options: Optional[dict] = None,
-    ):
+    ) -> None:
         """
         Freezes all symbols except modifiable symbols.
 
@@ -525,7 +520,7 @@ class Model:
         )
         self._is_frozen = True
 
-    def unfreeze(self):
+    def unfreeze(self) -> None:
         """Unfreezes all symbols"""
         for symbol in self.container.data.values():
             if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
@@ -583,7 +578,7 @@ class Model:
         str
         """
         equations = []
-        for equation in self._equations:
+        for equation in self.equations:
             if self._matches:
                 if equation not in self._matches.keys():
                     equations.append(equation.gamsRepr())
@@ -612,6 +607,6 @@ class Model:
             )
             equations_str += "," + limited_variables_str
 
-        model_str = f"$onMultiR\nModel {self.name} / {equations_str} /;"
+        model_str = f"Model {self.name} / {equations_str} /;"
 
         return model_str

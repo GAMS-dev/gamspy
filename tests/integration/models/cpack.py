@@ -21,7 +21,6 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Problem
 from gamspy import Sense
@@ -40,7 +39,7 @@ c = Container(delayed_execution=True)
 i = Set(c, name="i", description="circles")
 j = Alias(c, name="j", alias_with=i)
 ij = Set(c, name="ij", domain=[i, j])
-ij[i, j].where[Ord(i) < Ord(j)] = Number(1)
+ij[i, j].where[Ord(i) < Ord(j)] = True
 
 # Variables
 r = Variable(c, name="r", description="radius of circles")

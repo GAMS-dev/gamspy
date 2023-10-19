@@ -20,7 +20,6 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -106,7 +105,7 @@ def main():
             break
 
         aip[i, pi] = gams_math.Round(y.l[i])
-        pp[pi] = Number(1)
+        pp[pi] = True
         pi[p] = pi[p.lag(1)]
 
     master.problem = "mip"

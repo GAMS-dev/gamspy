@@ -36,7 +36,6 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -93,10 +92,10 @@ def main(mip=False):
     blk = Set(m, name="blk", domain=[o, p])
     blkc = Set(m, name="blkc", domain=[o, p, pp])
 
-    blkc[o, p, pp].where[Ord(p) <= Card(p) - bs[o] + Number(1)] = (
+    blkc[o, p, pp].where[Ord(p) <= Card(p) - bs[o] + 1] = (
         Ord(pp) >= Ord(p)
     ) & (Ord(pp) < Ord(p) + bs[o])
-    blk[o, p] = Sum(pp.where[blkc[o, p, pp]], Number(1))
+    blk[o, p] = Sum(pp.where[blkc[o, p, pp]], 1)
 
     # Variables
     sumc = Variable(m, name="sumc", type="free", domain=[o, p])
@@ -120,13 +119,13 @@ def main(mip=False):
     defsumc = Equation(m, name="defsumc", domain=[o, p])
 
     defnumCars[c] = Sum(p, cp[c, p]) == classData[c, "numCars"]
-    defoneCar[p] = Sum(c, cp[c, p]) == Number(1)
+    defoneCar[p] = Sum(c, cp[c, p]) == 1
     defop[o, p] = Sum(c.where[classData[c, o]], cp[c, p]) <= op[o, p]
     defsumc[o, p] = sumc[o, p] == Sum(c.where[classData[c, o]], cp[c, p])
     defopLS[o, p] = op[o, p] == ifthen(sumc[o, p] >= 0.5, 1, 0)
     defviol[blk[o, p]] = Sum(blkc[blk, pp], op[o, pp]) <= maxc[o] + v[o, p]
     defviolLS[blk[o, p]] = v[o, p] == gams_math.Max(
-        Sum(blkc[blk, pp], op[o, pp]) - maxc[o], Number(0)
+        Sum(blkc[blk, pp], op[o, pp]) - maxc[o], 0
     )
 
     defobj[...] = obj == Sum(blk[o, p], v[o, p])

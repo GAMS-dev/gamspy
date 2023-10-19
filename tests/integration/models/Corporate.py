@@ -13,7 +13,6 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
-from gamspy import Number
 from gamspy import Parameter
 from gamspy import Sense
 from gamspy import Sum
@@ -278,7 +277,7 @@ def main():
 
     EpsTolerance[...] = 0.02
 
-    ACTIVE[i] = Number(1)
+    ACTIVE[i] = True
 
     TacticalModel.solve()
     print("\n## Model Integrated ##")

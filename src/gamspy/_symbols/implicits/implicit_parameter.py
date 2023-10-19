@@ -89,9 +89,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             assignment,
         )
 
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
         self.container._addStatement(statement)
 
         if self.container.delayed_execution:

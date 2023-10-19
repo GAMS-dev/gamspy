@@ -90,6 +90,7 @@ def install_gamspy():
         "--force-reinstall",
         "--no-deps",
         "--no-cache",
+        "--no-index",
     ]
 
     subprocess.run(command, check=True)

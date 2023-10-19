@@ -43,6 +43,7 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
+    from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
     from gamspy._algebra.operable import Operable
     from gamspy._algebra.expression import Expression
@@ -122,7 +123,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         # check if the name is a reserved word
         name = utils._reservedCheck(name)
 
-        self._singleton_check(is_singleton, records, domain)
+        singleton_check(is_singleton, records)
 
         super().__init__(
             container,
@@ -179,24 +180,12 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._unsaved_statements[utils._getUniqueName()] = (
-            "$onMultiR"
-        )
         self.container._addStatement(statement)
 
         if self.container.delayed_execution:
             self._is_dirty = True
         else:
             self.container._run()
-
-    def _singleton_check(
-        self, is_singleton: bool, records: Union[Any, None], domain
-    ):
-        if is_singleton:
-            if records is not None and len(records) > 1:
-                raise GamspyException(
-                    "Singleton set records size cannot be more than one."
-                )
 
     # Set Attributes
     @property
@@ -331,7 +320,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self,
         n: Union[int, "Operable"],
         type: Literal["linear", "circular"] = "linear",
-    ):
+    ) -> "ImplicitSet":
         """
         Lag operation shifts the values of a Set or Alias by one to the left
 
@@ -376,7 +365,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self,
         n: Union[int, "Operable"],
         type: Literal["linear", "circular"] = "linear",
-    ):
+    ) -> "ImplicitSet":
         """
         Lead shifts the values of a Set or Alias by one to the right
 
@@ -495,3 +484,11 @@ class Set(gt.Set, operable.Operable, Symbol):
         output += ";"
 
         return output
+
+
+def singleton_check(is_singleton: bool, records: Union[Any, None]):
+    if is_singleton:
+        if records is not None and len(records) > 1:
+            raise GamspyException(
+                "Singleton set records size cannot be more than one."
+            )

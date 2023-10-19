@@ -59,6 +59,13 @@ def getInstalledSolvers() -> List[str]:
     ------
     GamspyException
         In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy.utils as utils
+    >>> utils.getInstalledSolvers()
+    ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB']
+
     """
     try:
         import gamspy_base
@@ -82,6 +89,8 @@ def getInstalledSolvers() -> List[str]:
             if line.isupper():
                 solver_names.append(line.split(" ")[0])
 
+    solver_names.remove("SCENSOLVER")
+
     return solver_names
 
 
@@ -97,13 +106,21 @@ def getAvailableSolvers() -> List[str]:
     ------
     GamspyException
         In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy.utils as utils
+    >>> available_solvers = utils.getAvailableSolvers()
+
     """
     try:
         import gamspy_base
     except Exception:
         raise GamspyException("gamspy_base must be installed!")
 
-    return gamspy_base.available_solvers
+    available_solvers = gamspy_base.available_solvers
+
+    return available_solvers
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:

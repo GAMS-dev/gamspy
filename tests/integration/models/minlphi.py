@@ -845,7 +845,7 @@ def main():
     # ======================================================================
     # assign the initial configuration to the binary proposal parameter
     # ======================================================================
-    kiter["k-1"] = Number(1)
+    kiter["k-1"] = True
 
     yhxk[i, j, kiter] = yhxp[i, j]
     yhuk[hu, j, kiter] = yhup[hu, j]
@@ -898,9 +898,9 @@ def main():
     # ======================================================================
     # initialize the dynamic sets for algorithm control
     # ======================================================================
-    k[km] = Number(0)
-    kiter[km] = Number(0)
-    kdynmax[km] = Number(1)
+    k[km] = False
+    kiter[km] = False
+    kdynmax[km] = True
 
     # ======================================================================
     # major driving loop of algorithm
@@ -911,7 +911,7 @@ def main():
         # -set kiter to contain only the current iteration element
         # -add to k the current iteration element
         kiter[km] = Number(1).where[Ord(km) == idx + 1]
-        k[kiter] = Number(1)
+        k[kiter] = True
 
         #  store the current binary combination
         yhxk[i, j, kiter] = yhx.l[i, j]
@@ -1001,7 +1001,7 @@ def main():
         # master problem integer infeasible
         # ======================================================================
         if master.status in [4.0, 10.0, 19.0]:
-            kdynmax[km] = Number(0)
+            kdynmax[km] = False
             print(
                 "stopping criterion met: \n\n",
                 f"zoaup: {round(zoaup.toValue(),3)}\n\n",

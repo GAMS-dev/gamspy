@@ -129,7 +129,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
-        type = self._cast_type(type)
+        type = cast_type(type)
 
         # enable load on demand
         self._is_dirty = False
@@ -162,18 +162,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._fx = self._create_attr("fx")
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
-
-    def _cast_type(self, type: Union[str, VariableType]) -> str:
-        if isinstance(type, str) and type.lower() not in VariableType.values():
-            raise ValueError(
-                f"Allowed variable types: {VariableType.values()} but"
-                f" found {type}."
-            )
-
-        if isinstance(type, VariableType):
-            type = type.value
-
-        return type.lower()
 
     def __getitem__(
         self, indices: Union[tuple, str]
@@ -366,3 +354,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         output += ";"
 
         return output
+
+
+def cast_type(type: Union[str, VariableType]) -> str:
+    if isinstance(type, str) and type.lower() not in VariableType.values():
+        raise ValueError(
+            f"Allowed variable types: {VariableType.values()} but"
+            f" found {type}."
+        )
+
+    if isinstance(type, VariableType):
+        type = type.value
+
+    return type.lower()

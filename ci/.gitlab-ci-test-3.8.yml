@@ -33,8 +33,9 @@ test-deg-3.8:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.8 python=3.8
-    - conda activate gamspy-env-3.8
+    - conda create -y -n "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
+    - conda activate "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc
@@ -45,6 +46,10 @@ test-deg-3.8:
     name: macos_x86_64_3.8
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-dac-3.8:
   stage: test
@@ -52,8 +57,9 @@ test-dac-3.8:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.8 python=3.8
-    - conda activate gamspy-env-3.8
+    - conda create -y -n "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
+    - conda activate "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc
