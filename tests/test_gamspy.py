@@ -90,9 +90,9 @@ def run_integration_tests(runner: unittest.TextTestRunner):
     integration_suites = [
         solve_suite,
         model_instance_suite,
-        gams_models_suite,
         cmd_suite,
         engine_suite,
+        gams_models_suite,
     ]
 
     print(f"Running integration tests\n{'='*80}")

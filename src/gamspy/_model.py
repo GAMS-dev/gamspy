@@ -343,7 +343,7 @@ class Model:
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
         gams_options = GamsOptions(self.container.workspace)
-        gams_options.gdx = self.container._gdx_path
+        gams_options.gdx = self.container._gdx_out
 
         if solver:
             gams_options.all_model_types = solver
@@ -443,7 +443,7 @@ class Model:
             system_directory=self.container.system_directory
         )
         temp_container.read(
-            self.container._gdx_path,
+            self.container._gdx_in,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
                 for gams_attr in attribute_map.keys()

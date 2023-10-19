@@ -1,4 +1,3 @@
-import os
 import unittest
 
 import numpy as np
@@ -151,7 +150,7 @@ class ParameterSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            f"$gdxIn {m.workspace.working_directory}{os.sep}default.gdx\n"
+            f"$gdxIn {m._gdx_in}\n"
             "$onUNDF\nParameter rho;\n$load"
             " rho\n$offUNDF\n"
             "$gdxIn\n",
