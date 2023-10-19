@@ -109,6 +109,8 @@ class Container(gt.Container):
             working_directory, self.system_directory, DebugLevel.KeepFiles
         )
 
+        self.working_directory = self.workspace.working_directory
+
         (
             self._save_to,
             self._restart_from,
