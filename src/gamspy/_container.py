@@ -1048,6 +1048,10 @@ class Container(gt.Container):
 
                 string += statement_str + "\n"
 
+        for symbol_name, symbol in self:
+            if symbol.modified:
+                string += f"$load {symbol_name}\n"
+
         string += "$gdxIn\n"
 
         return string
