@@ -1,6 +1,5 @@
 test-leg-3.10:
   stage: test
-  when: on_success
   tags: [linux]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
@@ -26,10 +25,13 @@ test-leg-3.10:
     expire_in: 2 hours
     paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-deg-3.10:
   stage: test
-  when: on_success
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -46,10 +48,13 @@ test-deg-3.10:
     name: macos_x86_64_3.10
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-dac-3.10:
   stage: test
-  when: on_success
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -66,10 +71,13 @@ test-dac-3.10:
     name: macos_arm64_3.10
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-wei-3.10:
   stage: test
-  when: on_success
   tags: [windows]
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
@@ -89,3 +97,7 @@ test-wei-3.10:
     name: windows_3.10
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success

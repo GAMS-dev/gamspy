@@ -1,6 +1,5 @@
 test-leg-3.9:
   stage: test
-  when: on_success
   tags: [linux]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
@@ -26,15 +25,19 @@ test-leg-3.9:
     expire_in: 2 hours
     paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-deg-3.9:
   stage: test
-  when: on_success
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda activate gamspy-env-3.9
+    - conda create -y -n "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
+    - conda activate "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc
@@ -45,15 +48,19 @@ test-deg-3.9:
     name: macos_x86_64
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-dac-3.9:
   stage: test
-  when: on_success
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda activate gamspy-env-3.9
+    - conda create -y -n "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
+    - conda activate "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc
@@ -64,10 +71,13 @@ test-dac-3.9:
     name: macos_arm64
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-wei-3.9:
   stage: test
-  when: on_success
   tags: [windows]
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
@@ -87,3 +97,7 @@ test-wei-3.9:
     name: windows
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
