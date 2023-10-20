@@ -103,6 +103,8 @@ solver_version         Solver version
 Solving a Model
 ===============
 
+Model has a function named ``solve`` that allows user to solve the specified model. ::
+
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
 
     m = Container()
@@ -303,5 +305,54 @@ Models are solved locally (on your machine) by default.
 Solve Using GAMS Engine
 -----------------------
 
+In order to send your model to be solved to GAMS Engine, you need to define the configuration of GAMS Engine.
+This can be done by importing ``EngineConfig`` and creating an instance. Then, the user can pass it to the 
+``solve`` method and specify the backend as ``engine``. ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+
+    m = Container()
+    
+    z = Variable(m, "z") # objective variable
+    e1 = Equation(m, "e1")
+    e1[...] = <definition_of_the_equation>
+    e2 = Equation(m, "e2")
+    e2[...] = <definition_of_the_equation>
+    
+    model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+
+    config = EngineConfig(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+    model.solve(solver="CONOPT", backend="engine", engine_config=config)
+
 Redirecting Output
 ------------------
+
+The output of GAMS after solving the model can be redirected to a file or to standard input by
+specifying the output parameter of the ``solve``.::
+    
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import sys
+
+    m = Container()
+    
+    z = Variable(m, "z") # objective variable
+    e1 = Equation(m, "e1")
+    e1[...] = <definition_of_the_equation>
+    e2 = Equation(m, "e2")
+    e2[...] = <definition_of_the_equation>
+    
+    model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+    
+    # redirect output to stdout
+    model.solve(output=sys.stdout)
+
+    # redirect output to a file
+    with open("my_out_file", "w") as file:
+        model.solve(output=file)
+
+
