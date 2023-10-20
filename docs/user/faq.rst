@@ -4,6 +4,8 @@
 Frequently Asked Questions
 ****************************
 
+.. todo:: I guess we should include the import statemenst required to run the examples in this section
+
 Why can't I redefine a GAMSPy symbol?
 --------------------------------------
 
@@ -33,7 +35,11 @@ Consider the following example code::
 
     p[i, j] = 1
 
-You would probably expect that the value for :math:`p_{i,j}` is equal to one for each combination of :math:`(i,j)`::
+You would probably expect that the value for :math:`p_{i,j}` is equal to one for each combination of :math:`(i,j)`
+
+.. todo:: I would expect 0,1,2 instead of all zeroes in the j column of the following examples.
+
+::
 
     >>> p.records.set_index(['i', 'j'])
                 value
