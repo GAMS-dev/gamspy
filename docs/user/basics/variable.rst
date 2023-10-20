@@ -30,8 +30,11 @@ The Syntax
 
 The declaration of a variable is similar to a set or parameter declaration, in 
 that domain lists and descriptions are allowed and recommended ::
+    
+    from gamspy import Container, Set, Variable
 
     m = Container()
+
     t = Set(m, name = "t", records = range(1990,2000), description = "time periods")
     
     k = Variable(m, name = "k", domain = t, description = "capital stock (trillion rupees)")
@@ -152,7 +155,11 @@ record values (see :ref:`variable-types`).
 
 Example #1: Create a GAMS scalar variable ::
 
+    from gamspy import Container, Variable
+    import pandas as pd
+
     m = Container()
+
     pi = Variable(m, "pi", records=pd.DataFrame(data=[3.14159], columns=["level"]))
      
     # NOTE: the above syntax is equivalent to -
@@ -161,7 +168,9 @@ Example #1: Create a GAMS scalar variable ::
      
     # NOTE: the above syntax is also equivalent to -
     # m.addVariable("pi", "free", records=pd.DataFrame(data=[3.14159], columns=["level"]))
-     
+
+::
+
     In [1]: pi.records
     Out[1]:
          level  marginal  lower  upper  scale
@@ -169,14 +178,20 @@ Example #1: Create a GAMS scalar variable ::
 
 Example #2 - Create a 1D variable (defined over `'*'`) from a list of tuples ::
 
+    from gamspy import Container, Variable
+    import pandas as pd
+
     m = Container()
+
     v = Variable(
         m, "v", "free", domain=["*"],
         records=pd.DataFrame(
             data=[("i" + str(i), i) for i in range(5)], columns=["domain", "marginal"]
         ),
     )
-     
+
+::
+
     In [1]: v.records
     Out[1]:
         uni    level  marginal  lower  upper  scale
@@ -188,7 +203,11 @@ Example #2 - Create a 1D variable (defined over `'*'`) from a list of tuples ::
 
 Example #3 - Create a 1D variable (defined over a set) from a list of tuples ::
 
+    from gamspy import Container, Set, Variable
+    import pandas as pd
+
     m = Container()
+
     i = Set(m, "i", ["*"], records=["i" + str(i) for i in range(5)])
     v = Variable(
         m,
@@ -199,7 +218,9 @@ Example #3 - Create a 1D variable (defined over a set) from a list of tuples ::
             data=[("i" + str(i), i) for i in range(5)], columns=["domain", "marginal"]
         ),
     )
-     
+
+::
+    
     In [1]: v.records
     Out[1]:
         i    level  marginal  lower  upper  scale
@@ -408,6 +429,8 @@ Binary Variables
 
 Binary variables can take values of 0 (zero) and 1 (one) only. ::
 
+    from gamspy import Container, Set, Alias, Variable, Equation, Sum, Domain
+
     m = Container()
     k = Set(m, "k", description = "rows",    records = ["row1","row2","row3","row4"])
     l = Set(m, "l", description = "columns", records = ["col1","col2","col3","col4"])
@@ -454,6 +477,8 @@ and the default upper bound inside GAMS is ``float('inf')``, and the same upper 
 to the solver.
 
 Note that in relaxed model types the integrality requirement is relaxed. ::
+
+    from gamspy import Container, Set, Variable
 
     m = Container()
 

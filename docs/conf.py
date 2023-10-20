@@ -81,3 +81,6 @@ html_theme_options = {
 }
 
 autodoc_member_order = "bysource"
+
+# Display todos by setting to True
+todo_include_todos = False

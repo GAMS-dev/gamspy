@@ -5,12 +5,14 @@ Alias: Multiple Names for a Set
 ***********************************
 
 
-Sometimes it is necessary to have more than one name for the same set, e.g. in models that 
+Sometimes it is necessary to have more than one name for the same set, e.g., in models that 
 deal with the interactions of elements within the same set.
 In input-output models for example, each commodity may be used in the production of all 
 other commodities and it is necessary to have two names for the set of commodities to specify 
 the problem without ambiguity. Example: ::
     
+    from gamspy import Container, Set, Alias
+
     m = Container()
     
     i = Set(m, name = "i", records=["i" + str(i) for i in range(5)])
@@ -32,6 +34,8 @@ of the ``Container`` class (which internally calls ``Alias()``): ::
 It is possible to create an alias from another alias object. In this case a recursive search 
 will be performed to find the root parent set – this is the set that will ultimately be stored 
 as the ``alias_with`` property. We can see this behavior in the following example: ::
+    
+    from gamspy import Container, Set, Alias
     
     m = Container()
     
@@ -104,7 +108,7 @@ The following alias statement introduces ``ip`` as another name for the set ``i`
 ``ip`` is used in the second position. The parameter ``mui`` is defined to contain the transport 
 costs from one plant location to the other, in both directions. ::
 
-    ip = Alias(m, name = "ip", , alias_with = i)
+    ip = Alias(m, name = "ip", alias_with = i)
 
     mui = Parameter(m, name = "mui",
                           description = "transport cost: interplant shipments (us$ per ton)",

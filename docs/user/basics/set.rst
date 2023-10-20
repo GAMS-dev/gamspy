@@ -14,9 +14,12 @@ Sets are the basic building blocks of a GAMSPy model, corresponding exactly
 to the indices in the algebraic representations of models. A simple set 
 consists of a set name and the elements of the set. Example: ::
 
+    from gamspy import Container, Set
     m = Container()
+
     i = Set(m, name = "i", records = ["seattle", "san-diego"], description = "plants")
-    j = Set(m, name = "j", records = ["new-york", "chicago", "topeka"], description = "markets")
+    j = Set(m, name = "j", records = ["new-york", "chicago", "topeka"], 
+            description = "markets")
 
 The effect of these statements is probably self-evident. We declared two sets using 
 the :meth:`gamspy.Set` class and gave them the names ``i`` and ``j``. We also 
@@ -31,25 +34,34 @@ may be used to describe the set for future reference and to ease readability.
 Besides using the ``Set()`` class directly, one can also facilitate the ``addSet()`` method 
 of the :meth:`gamspy.Container` class: ::
 
+    from gamspy import Container
+    m = Container()
+
     i = m.addSet(name="i", records = ["seattle", "san-diego"], description="plants")
 
 Set declaration and data assignment can also be done separately: ::
-     
+    
+    from gamspy import Container, Set
     m = Container()
+
     i = Set(m, "i", description="plants")
     i.setRecords(["seattle", "san-diego"])
 
 Not only sets themselves, but also the individual elements can have a description, 
 which is called *element text*: ::
      
+    from gamspy import Container, Set
     m = Container()
+
     i = Set(m, "i", records=[
                            ("seattle", "home of sub pop records"),
                            ("san-diego",),
                            ("washington_dc", "former gams hq"),
                        ],
     )
-    
+
+::
+
     In [1]: i.records
     Out[1]:
                  uni             element_text
@@ -74,6 +86,9 @@ Subsets
 It is often necessary to define sets whose members must all be members of 
 some larger set. For instance, we may wish to define the sectors in an 
 economic model: ::
+
+    from gamspy import Container, Set
+    m = Container()
 
     i =  Set(m, 
              name = "i",
@@ -120,6 +135,9 @@ conceptually cleaner because logical relationships are made explicit.
 
 An alternative way to define elements of a subset is with assignments: ::
 
+    from gamspy import Container, Set
+    m = Container()
+
     i =  Set(m, 
              name = "i",
              description = "all sectors",  
@@ -162,6 +180,9 @@ Consider a set whose elements are pairs: :math:`A = \{(b,d),(a,c),(c,e)\}`. In t
 set there are three elements and each element consists of a pair of letters. This kind 
 of set is useful in many types of modeling. In the following example a port has to be 
 associated with a nearby mining region: ::
+
+    from gamspy import Container, Set
+    import pandas as pd
 
     m = Container()
 
@@ -209,11 +230,11 @@ associated with a nearby mining region: ::
     3	s-leone	 freetown	
 
 
-Here ``i`` is the set of mining regions, ``n`` is the set of ports and ``in`` is a two 
+Here ``i`` is the set of mining regions, ``n`` is the set of ports and ``multi_in`` is a two 
 dimensional set that associates each port with a mining region. The pairs are created 
 using tuples in a 
 `pandas MultiIndex object <https://pandas.pydata.org/docs/user_guide/advanced.html>`_. 
-The set in has four elements, and each 
+The set ``multi_in`` has four elements, and each 
 element consists of a region-port pair. The ``domain = [i,n]`` indicates that the 
 first member of each pair must be a member of the set ``i`` of mining regions, and 
 that the second must be in the set ``n`` of ports. GAMS will domain check the set 
@@ -225,6 +246,9 @@ Many-to-Many Mapping
 
 A many-to-many mapping is needed in certain cases. Consider the following sets: ::
 
+    from gamspy import Container, Set
+    import pandas as pd
+    
     m = Container()
     
     i = Set(m, name = "i", records = ["a","b"])
@@ -277,6 +301,9 @@ and discussed in detail in chapter :ref:`indexed-operations`. Here we only show 
 they may be used in the context of sets to perform projections and aggregations. 
 The following example serves as illustration. ::
 
+    from gamspy import Container, Set, Parameter, Sum
+    import pandas as pd
+    
     m = Container()
 
     i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,4)])
@@ -294,8 +321,7 @@ The following example serves as illustration. ::
                                         ("i3","j2","k2"),("i3","j2","k3"),("i3","j2","k4"),])
     )
     ijk = Set(m, name = "ijk", domain = [i,j,k], uels_on_axes=True, records=s)
-    ij1a = Set(m, name = "ij1a", domain = [i,j])
-    ij1b = Set(m, name = "ij1b", domain = [i,j])
+    ij1a = Set(m, name = "ij1a", domain = [i,j])    
     
     Count_1a = Parameter(m, "Count_1a")
     Count_1b = Parameter(m, "Count_1b")
@@ -306,13 +332,13 @@ The following example serves as illustration. ::
     ij1a[i,j] = Sum(k,ijk[i,j,k])
     
     # Method 2: Using an assignment and the sum operator for aggregations
-    Count_2a.assignment = Sum(ijk[i,j,k],1)
-    Count_1a.assignment = Sum(ij1a[i,j],1)
+    Count_2a[...] = Sum(ijk[i,j,k],1)
+    Count_1a[...] = Sum(ij1a[i,j],1)
 
 Note that the set ``ijk`` is a three-dimensional set, its elements are 3-tuples and all 
 permutations of the elements of the three sets ``i``, ``j`` and ``k`` are in its domain. 
-Thus the number of elements of the set ``ijk`` is 3 x 2 x 4 = 24. The sets ``ij1a`` and 
-``ij1b`` are two-dimensional sets that are declared in the set statement, but not defined. 
+Thus the number of elements of the set ``ijk`` is 3 x 2 x 4 = 24. The set ``ij1a`` is a two-dimensional
+set that is declared in the set statement but not defined. 
 The first assignment statement defines the members of the set ``ij1a``. This is a projection 
 from the set ``ijk`` to the set ``ij1a`` where the three-tuples of the first set are mapped 
 onto the pairs of the second set, such that the dimension ``k`` is eliminated. This means 
@@ -333,6 +359,8 @@ are allowed as well). Like other sets, singleton sets may have a domain with sev
 dimensions. Singleton sets are declared with the boolean ``is_singleton`` in the 
 :meth:`gamspy.Set` class (or the :meth:`gamspy.Container` class). ::
 
+    from gamspy import Container, Set
+    
     m = Container()
 
     i = Set(m, name = "i", records = ["a","b","c"])
@@ -342,6 +370,8 @@ dimensions. Singleton sets are declared with the boolean ``is_singleton`` in the
             records = pd.Series(
                index=pd.MultiIndex.from_tuples([("b", "c")])
             ))
+
+::
 
     In [1]: i.records
     Out[1]:
@@ -372,7 +402,10 @@ two-dimensional set.
 Note that a data statement for a singleton set with more than one element will create 
 a compilation error: ::
 
+    from gamspy import Container, Set
+    
     m = Container()
+    
     j = Set(m, name = "j", is_singleton = True, records = range(1,5))
 
 ::
@@ -390,6 +423,8 @@ Singleton sets can be especially useful in assignment statements since they do n
 be controlled by a controlling index or an indexed operator like other sets. Consider the 
 following example: ::
 
+    from gamspy import Container, Set, Parameter
+    
     m = Container()
 
     i = Set(m, name = "i", records = ["a","b","c"])
@@ -400,8 +435,8 @@ following example: ::
     z1 = Parameter(m, name = "z1")
     z2 = Parameter(m, name = "z2")
     
-    z1.assignment = n[k]
-    z2.assignment = n[k] + 100*n[h]
+    z1[...] = n[k]
+    z2[...] = n[k] + 100*n[h]
 
 The singleton sets ``k`` and ``h`` are both subsets of the set ``i``. The parameter ``n`` 
 is defined over the set ``i``. The scalar ``z1`` is assigned a value of the parameter ``n`` 
@@ -424,7 +459,10 @@ specify an index but have only a placeholder for it. The following examples show
 how the universal set is introduced in a model. We will discuss the advantages and 
 disadvantages of using the universal set later. First example:  ::
 
+    from gamspy import Container, Set, Parameter
+    
     m = Container()
+
     r = Set(m, name = "r", description = "raw materials", records = ["scrap","new"])
     misc = Parameter(m, name = "misc", domain = ["*",r], 
                      records = [["max-stock", "scrap", 400],
@@ -434,17 +472,20 @@ disadvantages of using the universal set later. First example:  ::
                                 ["res-value", "scrap", 15],
                                 ["res-value", "new", 25]])
 
-In our example, the first index of parameter ``misc``` is the universal set ``"*"`` and the 
+In our example, the first index of parameter ``misc`` is the universal set ``"*"`` and the 
 second index is the previously defined set ``r``. Since the first index is the universal set 
 any entry whatsoever is allowed in this position. In the second position elements of the set 
 ``r`` must appear, they are domain checked, as usual.
 
 The second example illustrates how the universal set is introduced in a model with an 
 :meth:`gamspy.UniverseAlias` statement: ::
-
+    
+    from gamspy import Container, Set, UniverseAlias
+    
     m = Container()
+    
     r = UniverseAlias(m, name = "new_universe")
-    k = Set(m, name = "k", domain = new_universe, records = "Chicago")
+    k = Set(m, name = "k", domain = r, records = "Chicago")
 
 The :meth:`gamspy.UniverseAlias` statement links the universal set with the set name 
 ``new_universe``. Set ``k`` is a subset of the universal set and ``Chicago`` is declared to 
@@ -468,7 +509,10 @@ GAMS follows the concept of a domain tree for domains in GAMS. It is assumed tha
 subset are connected by an arc where the two sets are nodes. Now consider the following one 
 dimensional subsets: ::
 
+    from gamspy import Container, Set
+    
     m = Container()
+
     i   = Set(m, "i")
     ii  = Set(m, "ii",  domain = i)
     j   = Set(m, "j",   domain = i)
@@ -481,9 +525,6 @@ in the universe node ``"*"``. This particular domain tree may be represented as 
     * - i - ii
           |
           - j - jj - jjj 
-
-Note that with the construct ``Set(m, "i",  domain = jjj)`` we may access ``ii`` iterating through 
-the members of ``jjj``.
 
 Observe that the universal set is assumed to be ordered and operators for ordered sets such 
 :ref:`ord <card_ord>`, :ref:`lag and lead <lag_lead>` may be applied to any sets aliased with 
@@ -506,6 +547,8 @@ Referencing the Whole Set
 
 Most commonly whole sets are referenced as in the following examples: ::
 
+    from gamspy import Container, Set, Parameter, Sum
+    
     m = Container()
 
     i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,101)])
@@ -514,7 +557,7 @@ Most commonly whole sets are referenced as in the following examples: ::
     k[i] = 4
     
     z = Parameter(m, "z")
-    z.assignment = Sum(i, k[i]) 
+    z[...] = Sum(i, k[i]) 
 
 The parameter ``k`` is declared over the set ``i``, in the assignment statement in the next line 
 all elements of the set ``i`` are assigned the value 4. The scalar ``z`` is defined to be the 
@@ -557,6 +600,8 @@ The attributes may be accessed like in the following example: ::
 Here ``data`` is a parameter, ``set_name`` is the name of the set and ``.attribute`` is one of 
 the attributes listed in :meth:`gamspy.Set`. The following example serves as illustration: ::
 
+    from gamspy import Container, Set, Parameter
+
     m = Container()
 
     id = Set(m, "id", records = [("Madison","Wisconsin"),
@@ -593,9 +638,12 @@ tea-time           2          3         1         8             1
 Implicit Set Definition
 =======================
 
-Sets can be defined through data statements in the declaration. Alternatively, sets can be 
+As seen above, sets can be defined through data statements in the declaration. Alternatively, sets can be 
 defined implicitly through data statements of other symbols which use these sets as domains. 
 This is illustrated in the following example: ::
+
+    from gamspy import Container, Set, Parameter
+    import pandas as pd
 
     m = Container()
 
@@ -653,11 +701,10 @@ Introduction
 -------------
 
 In this section we introduce a special type of sets: *dynamic sets*. The sets that 
-we discuss in detail above have their elements stated at compile time and during 
-execution time the membership is never changed. Therefore they are called 
+we discuss in detail above have their elements stated and the membership is never 
+changed. Therefore they are called 
 _`static` *static sets*. In contrast, the elements of dynamic sets are not 
-fixed, but may be added 
-and removed during execution of the program. Dynamic sets are most often used as 
+fixed, but may be added and removed. Dynamic sets are most often used as 
 :ref:`controlling indices in assignments <dynamic-sets-in-conditional-assignments>` 
 or 
 :ref:`equation definitions <conditional-equations-with-dynamic-sets>` 
@@ -700,6 +747,8 @@ Illustrative Example
 
 We start with assignments of membership to dynamic sets ::
 
+    from gamspy import Container, Set
+
     m = Container()
 
     item     = Set(m, name="item", records = ["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
@@ -720,17 +769,17 @@ that its superset ``item`` becomes a static set and from then on its membership 
 frozen. The first two assignments each add one new element to ``subitem1``. Note that both 
 are also elements of ``item``, as required. The third assignment is an example of the 
 familiar indexed assignment: ``subitem2`` is assigned all the members of ``item``. The last 
-assignment removes the label ``'perfume'`` from the dynamic set ``subitem2``. ::
+assignment removes the label ``"perfume"`` from the dynamic set ``subitem2``. ::
 
-    In [1]: print(*subitem1.records["items"], sep=", ")
+    In [1]: print(*subitem1.records["item"], sep=", ")
     Out[1]: ink, lipstick, pen, pencil
 
-    In [2]: print(*subitem2.records["items"], sep=", ")
+    In [2]: print(*subitem2.records["item"], sep=", ")
     Out[2]: dish, ink, lipstick, pen, pencil
 
-Note that even though the labels ``'pen'`` and ``'pencil'`` were declared to be members of 
-the set ``subitem1`` before the assignment statements that added the labels ``'ink'`` and 
-``'lipstick'`` to the set, they appear in the listing above at the end. The reason is that 
+Note that even though the labels ``"pen"`` and ``"pencil"`` were declared to be members of 
+the set ``subitem1`` before the assignment statements that added the labels ``"ink"`` and 
+``"lipstick"`` to the set, they appear in the listing above at the end. The reason is that 
 elements are displayed in the internal order, which in this case is the order specified in 
 the declaration of the set item.
 
@@ -775,7 +824,13 @@ to define an equation over a dynamic set.
 For example, defining an equation over a dynamic set can be necessary in models that will be 
 solved for arbitrary groupings of regions simultaneously. We assume there are no explicit links 
 between regions, but that we have a number of independent models with a common data definition 
-and common logic. We illustrate with an artificial example, leaving out lots of details. ::
+and common logic. We illustrate with an artificial example, leaving out lots of details.
+
+.. todo:: the following example throws a compilation error.
+
+ ::
+
+    from gamspy import Container, Set, Parameter, Variable, Equation
 
     m = Container()
 
@@ -793,7 +848,7 @@ and common logic. We illustrate with an artificial example, leaving out lots of 
     resource1 = Equation(m, "resource1", domain = allr, description = "first resource constraint ...")
     prodbal1 = Equation(m, "prodbal1", domain = allr, description = "first production balance ...")
     
-    resource1[r] =  activity1[r]       <=  data[r,'resource-1']
+    resource1[r] =  activity1[r]       <=  data[r,"resource-1"]
     prodbal1[r] =   activity2[r]*price == revenue[r]
 
 To repeat the important point: the equation is *declared* over the set ``allr``, but 
@@ -809,6 +864,7 @@ Singleton sets have only one element. Hence any assignment to a singleton set fi
 clears or empties the set, no explicit action to clear the set is necessary. This is 
 illustrated with the following example: ::
 
+    from gamspy import Container, Set
     m = Container()
 
     i  = Set(m, "i", records = ["a", "b", "c"], description = "Static Set")
@@ -819,8 +875,8 @@ illustrated with the following example: ::
     si["c"] = True
 
 Note that both ``ii`` and ``si`` are subsets of the set ``i``, but only ``si`` is declared as a 
-*singleton set*. The assignment statements assign to both sets the element ``'c'``. While ``'c'`` 
-is *added* to the set ``ii``, ``it`` *replaces* the original element in the singleton set ``si``: ::
+*singleton set*. The assignment statements assign to both sets the element ``"c"``. While ``"c"`` 
+is *added* to the set ``ii``, it *replaces* the original element in the singleton set ``si``: ::
 
     In [1]: print(*ii.records["i"], sep=", ")
     Out[1]: b, c
@@ -847,8 +903,11 @@ Set Difference                         j[i] - k[i]      Returns a subset of i th
 =====================================  ===============  =====================================================================================================
 
 Example: The set ``item`` is the superset of the dynamic sets ``subitem1`` and ``subitem2``. 
-We add new dynamic sets for the results of the respective set operations. ::
+We add new dynamic sets for the results of the respective set operations. 
 
+::
+
+    from gamspy import Container, Set, Number
     m = Container()
 
     item     = Set(m, name="item", records = ["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
@@ -925,10 +984,15 @@ Dynamic sets may be used in two ways in conditional assignments: they may be the
 on the left-hand side that is assigned to and they may be part of the logical 
 condition. Below we present examples for both. ::
 
+    from gamspy import Container, Set
+
     m = Container()
 
-    item     = Set(m, name="item", records = ["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
-    subitem1 = Set(m, name="subitem1", records = ["ink", "lipstick", "pen", "pencil"], domain = item)
+    item     = Set(m, name="item", 
+                   records = ["dish", "ink", "lipstick", "pen", "pencil", "perfume"])
+    subitem1 = Set(m, name="subitem1", 
+                   records = ["ink", "lipstick", "pen", "pencil"], 
+                   domain = item)
     subitem2 = Set(m, name="subitem2", domain = item)
     
     subitem2[item].where[subitem1[item]] = True
@@ -960,10 +1024,12 @@ Conditional assignments with ``where[]`` on the right-hand side imply an
 ``if-then-else`` structure where the ``else`` case is automatically zero. Unlike 
 parameters, dynamic sets cannot be assigned the value of zero, they are assigned 
 ``False`` instead. Therefore a more explicit formulation of the conditional 
-assignment above would be: ::
+assignment above would be:
+
+::
 
     subitem2[item] = False
-    subitem2[item] = Number(1).where[subitem1[item]] + Number(0).where[subitem1[item]]
+    subitem2[item] = Number(1).where[subitem1[item]] + Number(0).where[~ subitem1[item]]
 
 
 .. _conditional-indexed-operations-with-dynamic-sets:
@@ -980,6 +1046,9 @@ side. We will illustrate both cases with examples.
 Suppose we have a set of origins, a set of destinations and a parameter specifying the 
 flight distance between them: ::
 
+    from gamspy import Container, Set, Parameter, Smax, Domain
+    import pandas as pd
+    
     m = Container()
 
     distances = pd.DataFrame(
@@ -999,18 +1068,22 @@ flight distance between them: ::
     ).set_index(["from", "to"])    
 
     i = Set(m, name="i", records = ["Chicago", "Philadelphia"], description = "origins")
-    j = Set(m, name="j", records = ["Vancouver", "Bogota", "Dublin", "Rio", "Marrakech"], description = "destinations")    
+    j = Set(m, name="j", records = ["Vancouver", "Bogota", "Dublin", "Rio", "Marrakech"], 
+            description = "destinations")    
 
-    d = Parameter(m, "d", domain = [i, j], records = distances.reset_index(), description = "distance (miles)")
+    d = Parameter(m, "d", domain = [i, j], records = distances.reset_index(), 
+                  description = "distance (miles)")
 
 We wish to find the longest distance that we can travel given that we have a limit of 
 3500 miles. ::
 
-    can_do = Set(m, name="can_do", domain = [i, j], description = "connections with less than 3500 miles")
+    can_do = Set(m, name="can_do", domain = [i, j], 
+                 description = "connections with less than 3500 miles")
+
     can_do[i,j].where[d[i,j] < 3500] = True
     
     maxd = Parameter(m, "maxd", description = "longest distance possible")
-    maxd.assignment = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
+    maxd[...] = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
 
 The dynamic set ``can_do`` contains all connections that are less than 3500 miles. 
 The scalar ``maxd`` is defined by a conditional assignment where the indexed operation 
@@ -1048,6 +1121,8 @@ The dynamic singleton set is assigned the member of the dynamic set ``can_do`` w
 distance equals the maximum distance.
 
 The full power of indexed operators becomes apparent with multi-dimensional dynamic sets ::
+
+    from gamspy import Container, Set, Sum, Product
 
     m = Container()
     
@@ -1097,27 +1172,27 @@ The full power of indexed operators becomes apparent with multi-dimensional dyna
     g03 = Set(m, name = "g03", domain = dep, 
                 description = "departments selling items supplied by Parker")
     
-    g03[dep] = Sum(item.where[supply[item,'parker']], sales[dep,item])
+    g03[dep] = Sum(item.where[supply[item,"parker"]], sales[dep,item])
 
     
 
 The assignment above is used to create the set of departments that sell items supplied 
-by ``'parker'``. Note that the set ``g03`` is a subset of the set ``dep``. Its members 
+by ``"parker"``. Note that the set ``g03`` is a subset of the set ``dep``. Its members 
 are specified by assignment, hence it is a dynamic set. Note that the assignment is made 
 to a set, therefore the indexed operator :meth:`gamspy.Sum` refers to a set union (and 
 not to an addition as would be the case if the assignment were made to a parameter). 
 The indexed operation is controlled by the two-dimensional set ``supply`` with the label 
-``'parker'`` in the second index position. This logical condition is True for all members 
-of the set ``supply`` where the second index is ``'parker'``. Hence the summation is over 
-all items sold, provided that the supplier is ``'parker'``. Given the declaration of the 
-set ``supply``, this means ``'ink'``, ``'pen'`` and ``'pencil'``. The associated departments are 
-thus all departments except for ``'cosmetics'``: ::
+``"parker"`` in the second index position. This logical condition is True for all members 
+of the set ``supply`` where the second index is ``"parker"``. Hence the summation is over 
+all items sold, provided that the supplier is ``"parker"``. Given the declaration of the 
+set ``supply``, this means ``"ink"``, ``"pen"`` and ``"pencil"``. The associated departments are 
+thus all departments except for ``"cosmetics"``: ::
 
     In [1]: print(*g03.records["dep"], sep=", ")
     Out[1]: hardware, household, stationary, toy
 
 Now suppose we are interested in the departments that are selling *only* items supplied by 
-``'parker'``. We introduce a new dynamic set ``g11`` and the following assignment adds the 
+``"parker"``. We introduce a new dynamic set ``g11`` and the following assignment adds the 
 desired departments: ::
 
     g11 = Set(m, name = "g11", domain = dep, 
@@ -1127,9 +1202,9 @@ desired departments: ::
 
 Note that the indexed operation :meth:`gamspy.Product` refers to set intersections in the 
 context of assignments to dynamic sets. From all departments linked with items only those 
-are included where *all* items sold are supplied by ``'parker'``. This means that 
-departments that additionally sell items that are not supplied by ``'parker'`` are 
-excluded. Hence, only ``'hardware'`` and ``'toy'`` are added to ``g11``. ::
+are included where *all* items sold are supplied by ``"parker"``. This means that 
+departments that additionally sell items that are not supplied by ``"parker"`` are 
+excluded. Hence, only ``"hardware"`` and ``"toy"`` are added to ``g11``. ::
 
     In [1]: print(*g11.records["dep"], sep=", ")
     Out[1]: hardware, toy
@@ -1172,13 +1247,13 @@ already saw an example for restricting the domain of definition of an equation i
 subsection. The next example refers to restricting the domain in an indexed operation. In 
 section :ref:`conditional-indexed-operations-with-dynamic-sets` we had the following assignment: ::
 
-    maxd.assignment = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
+    maxd[...] = Smax(Domain(i,j).where[can_do[i,j]], d[i,j])
 
 Recall that ``maxd`` is a scalar, ``i`` and ``j`` are sets, ``can_do`` is a dynamic set and 
 ``d`` is a two-dimensional parameter. Note that the conditional set is the dynamic set 
 ``can_do``. The assignment may be rewritten in the following way: ::
 
-    maxd.assignment = Smax(can_do[i,j], d[i,j])
+    maxd[...] = Smax(can_do[i,j], d[i,j])
 
 Here the indexed operation is filtered through the dynamic set ``can_do``, a ``where[]`` 
 condition is not necessary.
@@ -1234,7 +1309,10 @@ ordered and the labels in the set have not been used already, then they will be 
 In the example below we show ordered and unordered sets and the map showing the order. The 
 input is: ::
 
+    from gamspy import Container, Set
+    
     m  = Container()
+
     t1 = Set(m, name = "t1", records = ["1987","1988","1989","1990","1991"])
     t2 = Set(m, name = "t2", records = ["1983","1984","1985","1986","1987"])
     t3 = Set(m, name = "t3", records = ["1987","1989","1991","1983","1985"])
@@ -1257,10 +1335,12 @@ Sorting a Set
 --------------
 
 ``reorderUELs`` is a method of all GAMSPy symbol classes. This method allows the user to 
-reorder UELs of a specific symbol dimension – ``reorderUELs`` will not all any new UELs 
-to be create nor can they be removed. For example: ::
+reorder UELs of a specific symbol dimension. Example: ::
+
+    from gamspy import Container, Set, Parameter
 
     m = Container()
+
     i = Set(m, "i", records=["i1", "i2", "i3"])
     j = Set(m, "j", i, records=["j1", "j2", "j3"])
     a = Parameter(m, "a", [i, j], records=[(f"i{i}", f"j{i}", i) for i in range(1,4)])
