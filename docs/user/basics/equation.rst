@@ -15,7 +15,7 @@ relationships are defined by using constants, mathematical operators,
 functions, sets, parameters and variables. As with variables,
 an equation may be defined over a group of sets and in turn map into several
 individual constraints associated with the elements of those sets.
-Equations are specified in to steps. First they have to be :ref:`declared <equation_declaration>`, afterwards
+Equations are specified in two steps. First they have to be :ref:`declared <equation_declaration>`, afterwards
 they get a :ref:`definition <equation_definition>`. Finally, in order
 to be considered, they have to be added to an instance of :ref:`gamspy.Model <model>` through
 the ``equations`` argument of its constructor. A handy shortcut to retrieve all equations
@@ -37,20 +37,20 @@ the :meth:`Equation reference<gamspy.Equation>`.
 An example for equation declarations adapted from :ref:`trnsport.py <trnsport>`
 is shown below for illustration::
 
-    import gamspy as gp
-    m = gp.Container()
+    from gamspy import Container, Set, Equation
+    m = Container()
 
-    i = gp.Set(m, name="i", records=["seattle", "san-diego"])
-    j = gp.Set(m, name="j", records=["new-york", "chicago", "topeka"])
+    i = Set(m, name="i", records=["seattle", "san-diego"])
+    j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-    supply = gp.Equation(
+    supply = Equation(
         m,
         name="supply",
         domain=[i],
         description="observe supply limit at plant i",
     )
 
-    demand = gp.Equation(
+    demand = Equation(
         m,
         name="demand",
         domain=[j],
@@ -99,10 +99,10 @@ the default. See the :ref:`equation_types` section for more details about the av
 equation types.
 
 A zero dimensional or scalar equation which is not declared over one or multiple sets
-has to use the ``definition`` property instead
-of the indexing operator like follows::
+has to use the ellipsis literal ``[...]`` instead of the indexing operator like 
+follows::
 
-    equation.definition = expression [==|>=|<=] expression
+    equation[...] = expression [==|>=|<=] expression
 
 .. note::
     Note that each equation has to be declared before it can be defined.
@@ -114,7 +114,7 @@ A scalar equation will produce one equation in the associated optimization probl
 The following is an example of a scalar equation definition from the :ref:`ramsey.py <ramsey>`
 model::
 
-    utility.definition = W == Sum(t, beta[t] * gams_math.log(C[t]))
+    utility[...] = W == Sum(t, beta[t] * gams_math.log(C[t]))
 
 The equation ``utility`` defined above is an example of a scalar equation that uses the scalar
 variable ``W``. In addition, scalar equations may contain indexed variables like ``C``.
@@ -146,26 +146,28 @@ The following is an example of indexed equation definitions, again taken from th
 :ref:`trnsport.py <trnsport>` model. Besides the already introduced sets ``i``
 and ``j``, parameters ``a`` and ``b`` are used as well as the :meth:`Sum<gamspy.Sum>` operator::
 
+    from gamspy Parameter, Sum
+
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-    a = gp.Parameter(m, name="a", domain=[i], records=capacities)
-    b = gp.Parameter(m, name="b", domain=[j], records=demands)
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
 
-    supply[i] = gp.Sum(j, x[i, j]) <= a[i]
-    demand[j] = gp.Sum(i, x[i, j]) >= b[j]
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
 
 Given the set ``i`` containing the elements ``"seattle"`` and ``"san-diego"``, the
 following two individual equations are generated for ``supply``::
 
-    supply["seattle"] = gp.Sum(j, x["seattle", j]) <= a["seattle"]
-    supply["san-diego"] = gp.Sum(j, x["san-diego", j]) <= a["san-diego"]
+    supply["seattle"] = Sum(j, x["seattle", j]) <= a["seattle"]
+    supply["san-diego"] = Sum(j, x["san-diego", j]) <= a["san-diego"]
 
 For the equation ``demand``, the number of generated constraints in three::
 
-    demand["new-york"] = gp.Sum(i, x[i, "new-york"]) >= b["new-york"]
-    demand["chicago"] = gp.Sum(i, x[i, "chicago"]) >= b["chicago"]
-    demand["topeka"] = gp.Sum(i, x[i, "topeka"]) >= b["topeka"]
+    demand["new-york"] = Sum(i, x[i, "new-york"]) >= b["new-york"]
+    demand["chicago"] = Sum(i, x[i, "chicago"]) >= b["chicago"]
+    demand["topeka"] = Sum(i, x[i, "topeka"]) >= b["topeka"]
 
 Combining Equation Declaration and Definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,12 +177,14 @@ This is possible by using the optional ``definition`` argument of
 the ``Equation`` constructor. A combined declaration and definition of the
 preceding example would look like follows::
 
-    supply = gp.Equation(
+    from gamspy import Container, Equation, Sum
+
+    supply = Equation(
         m,
         name="supply",
         domain=[i],
         description="observe supply limit at plant i",
-        definition=gp.Sum(j, x[i, j]) <= a[i],
+        definition=Sum(j, x[i, j]) <= a[i],
     )
 
     demand = Equation(
@@ -188,7 +192,7 @@ preceding example would look like follows::
         name="demand",
         domain=[j],
         description="satisfy demand at market j",
-        definition=gp.Sum(i, x[i, j]) >= b[j],
+        definition=Sum(i, x[i, j]) >= b[j],
     )
 
 .. note::
@@ -336,7 +340,7 @@ respective variables. Consider the following example from the :ref:`ramsey.py <r
 model::
 
     C.lo[t] = 0.001
-    utility.definition = W == Sum(t, beta[t] * gams_math.log(C[t]))
+    utility[...] = W == Sum(t, beta[t] * gams_math.log(C[t]))
 
 Specifying a lower bound for ``C[t]`` that is slightly larger than ``0``
 prevents the ``log`` function from becoming undefined.
