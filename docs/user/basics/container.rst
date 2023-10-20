@@ -10,9 +10,9 @@ Container
     
     m = Container()
     i = Set(m, "i", records = ["seattle", "san-diego"])
-    j = Set(m, "j", records = ['new-york', 'chicago', 'topeka'])
+    j = Set(m, "j", records = ["new-york", "chicago", "topeka"])
 
-The ``Container`` class in GAMSPy serves as a central hub for managing essential data, sets, parameters, variables, 
+The ``Container`` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
 and constraints, providing a structured approach for optimization problems. Every symbol in your optimization problem 
 should belong to a ``Container``.
 
@@ -28,7 +28,7 @@ Symbols created within a specific ``Container`` can be saved to a GDX file using
 
 .. code-block:: python
     
-    from gamspy import Set, Container
+    from gamspy import Container, Set
     
     m = Container()
     i = Set(m, "i", records=["seattle", "san-diego"])
@@ -73,8 +73,8 @@ it may be slower than delayed execution.
 
     from gamspy import Container, Set, Parameter
     m = Container()
-    i = Set(m, "i", records=['i1', 'i2'])
-    a = Parameter(m, "a", domain=[i], records=[('i1', 1), ('i2', 2)])
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=[i], records=[("i1", 1), ("i2", 2)])
     a[i] = a[i] * 90
 
 In normal execution, the last line executes the actual computation in GAMS, as soon as it's specified.
@@ -89,8 +89,8 @@ A dirty symbol is a symbol that was assigned a new value in previous lines.
 
     from gamspy import Container, Set, Parameter
     m = Container(delayed_execution=True)
-    i = Set(m, "i", records=['i1', 'i2'])
-    a = Parameter(m, "a", domain=[i], records=[('i1', 1), ('i2', 2)])
+    i = Set(m, "i", records=["i1", "i2"])
+    a = Parameter(m, "a", domain=[i], records=[("i1", 1), ("i2", 2)])
     a[i] = a[i] * 90 # This line is not executed yet. a is dirty now.
     print(a.records) # An attempt to read a dirty symbol cause a GAMS run. a is not dirty anymore.
 
