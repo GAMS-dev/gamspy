@@ -535,7 +535,7 @@ class Model:
         solver_options: Optional[dict] = None,
         model_instance_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine-one", "engine-sass"] = "local",
+        backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ) -> None:
         """

@@ -13,5 +13,3 @@ fundamental GAMSPy ideas and philosophy.
    ./lag_lead
    ./number
    ./domain
-   ./model_options
-   ./solve_options
