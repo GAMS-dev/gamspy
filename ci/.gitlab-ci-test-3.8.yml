@@ -33,6 +33,7 @@ test-deg-3.8:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
+    - conda env list | cut -d " " -f1 | grep ^gamspy-env* | xargs -L1 conda remove --all -y -n
     - conda create -y -n "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
     - conda activate "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
@@ -57,6 +58,7 @@ test-dac-3.8:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
+    - conda env list | cut -d " " -f1 | grep ^gamspy-env* | xargs -L1 conda remove --all -y -n
     - conda create -y -n "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
     - conda activate "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
