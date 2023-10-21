@@ -35,8 +35,8 @@ test-deg-3.11:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
-    - conda activate "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
+    - conda create -y -p "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
+    - conda activate "$(pwd)/gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
@@ -58,8 +58,8 @@ test-dac-3.11:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
-    - conda create -y -n "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
-    - conda activate "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
+    - conda create -y -p "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
+    - conda activate "$(pwd)/gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
     - pip install wheel build
     - python reinstall.py
