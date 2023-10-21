@@ -1,5 +1,5 @@
 ![plot](https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/gamspy_logo.png?raw=true)
-<video src='https://raw.githubusercontent.com/GAMS-dev/gamspy/develop/docs/_static/video.mp4'></video>
+https://raw.githubusercontent.com/GAMS-dev/gamspy/develop/docs/_static/video.mp4
 
 -----------------
 
