@@ -918,8 +918,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_delayed_execution(self):
-        m = Container()
-        m.delayed_execution = False
+        m = Container(delayed_execution=False)
 
         # Prepare data
         distances = [

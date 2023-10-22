@@ -97,7 +97,7 @@ class Container(gt.Container):
             else utils._getGAMSPyBaseDirectory()
         )
 
-        self.delayed_execution = delayed_execution
+        self._delayed_execution = delayed_execution
         self._unsaved_statements: dict = {}
         self._use_restart_from = False
 
@@ -367,6 +367,10 @@ class Container(gt.Container):
 
         self.loadRecordsFromGdx(self._gdx_in)
         self._unsaved_statements = {}
+
+    @property
+    def delayed_execution(self):
+        return self._delayed_execution
 
     def gamsJobName(self) -> Union[str, None]:
         """
@@ -1145,6 +1149,7 @@ class Container(gt.Container):
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 dirty_symbols.append(name)
+
         if len(dirty_symbols) > 0:
             self._run()
 
