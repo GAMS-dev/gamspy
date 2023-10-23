@@ -34,7 +34,7 @@ Installation
 You can install GAMSPy from source with the following command::
 
     python setup.py sdist 
-    pip install gamspy --find-links dist/
+    pip install gamspy --find-links dist/ --no-index
 
 Licensing
 ---------
