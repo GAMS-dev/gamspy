@@ -2,6 +2,9 @@
 
 -----------------
 
+
+https://github.com/GAMS-dev/gamspy/assets/25618191/9f6a8c19-9a3c-4672-84c2-5d3161de8774
+
 # GAMSPy: Algebraic Modeling Interface to GAMS
 
 ## Installation
