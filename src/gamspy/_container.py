@@ -287,22 +287,11 @@ class Container(gt.Container):
             options = GamsOptions(self.workspace)
             options.gdx = self._gdx_out
 
-        # Reset dirty flags for symbols
-        for name in self.data.keys():
-            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                self[name]._is_dirty = False
-
         # Create gdx file to read records from
-        super().write(self._gdx_in)
+        self.write(self._gdx_in)
 
         # Generate GAMS code as a string
-        if backend == "engine":
-            # Engine expects gdx file to be next to the gms file
-            gams_string = self.generateGamsString(
-                self._gdx_in.split(os.sep)[-1]
-            )
-        else:
-            gams_string = self.generateGamsString()
+        gams_string = self.generateGamsString(backend=backend)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if self._use_restart_from else None
@@ -329,6 +318,8 @@ class Container(gt.Container):
                 raise e
         elif backend == "engine":
             options.gdx = self._gdx_out.split(os.sep)[-1]
+            options.forcework = 1  # In case GAMS version differs on Engine
+
             if engine_config is None:
                 raise GamspyException(
                     "Engine configuration must be defined to run the job with"
@@ -1015,7 +1006,7 @@ class Container(gt.Container):
         """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
-    def generateGamsString(self, gdx_path: Optional[str] = None) -> str:
+    def generateGamsString(self, backend: Optional[str] = "local") -> str:
         """
         Generates the GAMS code
 
@@ -1025,7 +1016,12 @@ class Container(gt.Container):
         """
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
-        gdx_path = gdx_path if gdx_path else self._gdx_in
+
+        gdx_path = (
+            self._gdx_in.split(os.sep)[-1]
+            if backend == "engine"
+            else self._gdx_in
+        )
 
         string = f"$onMultiR\n$gdxIn {gdx_path}\n"
         for statement in self._unsaved_statements.values():
@@ -1145,10 +1141,12 @@ class Container(gt.Container):
 
         """
         sequence = symbols if symbols else self.data.keys()
+
         dirty_symbols = []
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 dirty_symbols.append(name)
+                self[name]._is_dirty = False
 
         if len(dirty_symbols) > 0:
             self._run()
