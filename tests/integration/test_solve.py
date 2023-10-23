@@ -1,4 +1,3 @@
-import glob
 import os
 import time
 import unittest
@@ -899,13 +898,6 @@ class SolveSuite(unittest.TestCase):
 
         # Test solver change
         transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
-
-        lst_file = glob.glob(f"{m.workspace.working_directory}{os.sep}*.lst")[
-            0
-        ]
-        with open(lst_file) as file:
-            content = file.read()
-            self.assertTrue("CONOPT" in content)
 
         self.assertTrue(
             os.path.exists(

@@ -282,27 +282,13 @@ class Container(gt.Container):
         backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
-        # Set default options if not provided
         if options is None:
             options = GamsOptions(self.workspace)
-            options.gdx = self._gdx_out
-
-        # Reset dirty flags for symbols
-        for name in self.data.keys():
-            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                self[name]._is_dirty = False
 
         # Create gdx file to read records from
-        super().write(self._gdx_in)
+        self.write(self._gdx_in)
 
-        # Generate GAMS code as a string
-        if backend == "engine":
-            # Engine expects gdx file to be next to the gms file
-            gams_string = self.generateGamsString(
-                self._gdx_in.split(os.sep)[-1]
-            )
-        else:
-            gams_string = self.generateGamsString()
+        gams_string = self.generateGamsString(backend=backend)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if self._use_restart_from else None
@@ -313,46 +299,10 @@ class Container(gt.Container):
             checkpoint=checkpoint,
         )
 
-        # Run the job based on the selected backend
         if backend == "local":
-            try:
-                self._job.run(
-                    gams_options=options,
-                    checkpoint=self._save_to,
-                    create_out_db=False,
-                    output=output,
-                )
-            except GamsExceptionExecution as e:
-                self._unsaved_statements = {}
-                message = parse_message(self.workspace, options, self._job)
-                e.value = message + e.value if message else e.value
-                raise e
+            self._run_local(options, output)
         elif backend == "engine":
-            options.gdx = self._gdx_out.split(os.sep)[-1]
-            if engine_config is None:
-                raise GamspyException(
-                    "Engine configuration must be defined to run the job with"
-                    " GAMS Engine"
-                )
-
-            extra_model_files = preprocess_extra_model_files(
-                self.workspace, self._gdx_in.split(os.sep)[-1], engine_config
-            )
-
-            try:
-                self._job.run_engine(
-                    engine_configuration=engine_config.get_engine_config(),
-                    extra_model_files=extra_model_files,
-                    gams_options=options,
-                    checkpoint=self._save_to,
-                    output=output,
-                    create_out_db=False,
-                    engine_options=engine_config.engine_options,
-                    remove_results=engine_config.remove_results,
-                )
-            except Exception as e:
-                self._unsaved_statements = {}
-                raise e
+            self._run_engine(options, output, engine_config)
         else:
             self._unsaved_statements = {}
             raise GamspyException(
@@ -367,6 +317,59 @@ class Container(gt.Container):
 
         self.loadRecordsFromGdx(self._gdx_in)
         self._unsaved_statements = {}
+
+    def _run_local(
+        self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
+    ):
+        options.gdx = self._gdx_out
+        try:
+            self._job.run(  # type: ignore
+                gams_options=options,
+                checkpoint=self._save_to,
+                create_out_db=False,
+                output=output,
+            )
+        except GamsExceptionExecution as e:
+            message = parse_message(self.workspace, options, self._job)
+            e.value = message + e.value if message else e.value
+            raise e
+        finally:
+            self._unsaved_statements = {}
+
+    def _run_engine(
+        self,
+        options: "GamsOptions",
+        output: Union[io.TextIOWrapper, None],
+        engine_config: Union["EngineConfig", None],
+    ):
+        options.gdx = self._gdx_out.split(os.sep)[-1]
+        options.forcework = 1  # In case GAMS version differs on Engine
+
+        if engine_config is None:
+            raise GamspyException(
+                "Engine configuration must be defined to run the job with"
+                " GAMS Engine"
+            )
+
+        extra_model_files = preprocess_extra_model_files(
+            self.workspace, self._gdx_in.split(os.sep)[-1], engine_config
+        )
+
+        try:
+            self._job.run_engine(  # type: ignore
+                engine_configuration=engine_config.get_engine_config(),
+                extra_model_files=extra_model_files,
+                gams_options=options,
+                checkpoint=self._save_to,
+                output=output,
+                create_out_db=False,
+                engine_options=engine_config.engine_options,
+                remove_results=engine_config.remove_results,
+            )
+        except Exception as e:
+            raise e
+        finally:
+            self._unsaved_statements = {}
 
     @property
     def delayed_execution(self):
@@ -1015,7 +1018,7 @@ class Container(gt.Container):
         """
         return [self[symbol_name] for symbol_name in self.listEquations()]
 
-    def generateGamsString(self, gdx_path: Optional[str] = None) -> str:
+    def generateGamsString(self, backend: Optional[str] = "local") -> str:
         """
         Generates the GAMS code
 
@@ -1025,7 +1028,12 @@ class Container(gt.Container):
         """
         symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
-        gdx_path = gdx_path if gdx_path else self._gdx_in
+
+        gdx_path = (
+            self._gdx_in.split(os.sep)[-1]
+            if backend == "engine"
+            else self._gdx_in
+        )
 
         string = f"$onMultiR\n$gdxIn {gdx_path}\n"
         for statement in self._unsaved_statements.values():
@@ -1085,13 +1093,11 @@ class Container(gt.Container):
 
         for name in symbol_names:
             if name in self.data.keys():
-                statement = self[name]
                 updated_records = temp_container[name].records
 
-                statement.records = updated_records
-
+                self[name].records = updated_records
                 if updated_records is not None:
-                    statement.domain_labels = statement.domain_names
+                    self[name].domain_labels = self[name].domain_names
             else:
                 self.read(load_from, [name])
 
@@ -1145,10 +1151,12 @@ class Container(gt.Container):
 
         """
         sequence = symbols if symbols else self.data.keys()
+
         dirty_symbols = []
         for name in sequence:
             if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
                 dirty_symbols.append(name)
+                self[name]._is_dirty = False
 
         if len(dirty_symbols) > 0:
             self._run()
