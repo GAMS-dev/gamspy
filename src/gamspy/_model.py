@@ -343,7 +343,6 @@ class Model:
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
         gams_options = GamsOptions(self.container.workspace)
-        gams_options.gdx = self.container._gdx_out
 
         if solver:
             gams_options.all_model_types = solver
@@ -543,8 +542,20 @@ class Model:
 
         Parameters
         ----------
+        solver : str, optional
+            Solver name
         options : dict, optional
+            GAMS options
+        solver_options : dict, optional
+            Solver options
+        model_instance_options : optional
+            Model instance options
         output : TextIOWrapper, optional
+            Output redirection target
+        backend : str, optional
+            Backend to run on
+        engine_config : EngineConfig, optional
+            GAMS Engine configuration
 
         Raises
         ------
