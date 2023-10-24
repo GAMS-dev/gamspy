@@ -17,6 +17,19 @@ class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_parameter_creation(self):
+        # no name
+        self.assertRaises(GamspyException, Parameter, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Parameter, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Parameter, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, Parameter, 5, "j")
+
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 
+import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
@@ -14,6 +15,10 @@ class UniverseAlias(gt.UniverseAlias):
     def __new__(cls, *args, **kwargs):
         try:
             name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+            if not isinstance(name, str):
+                raise TypeError(
+                    f"Name must of type `str` but found {type(name)}"
+                )
         except IndexError:
             raise GamspyException("Name of the symbol must be provided!")
 
@@ -23,6 +28,10 @@ class UniverseAlias(gt.UniverseAlias):
                 if "container" in kwargs.keys()
                 else args[0]
             )
+            if not isinstance(container, gp.Container):
+                raise TypeError(
+                    f"Name must of type `str` but found {type(name)}"
+                )
         except IndexError:
             raise GamspyException("Container of the symbol must be provided!")
 

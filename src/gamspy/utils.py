@@ -67,11 +67,6 @@ def getInstalledSolvers() -> List[str]:
     ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB']
 
     """
-    try:
-        import gamspy_base
-    except Exception:
-        raise GamspyException("gamspy_base must be installed!")
-
     solver_names = []
     capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
     user_platform = "Windows" if platform.system() == "Windows" else "rest"
@@ -113,14 +108,7 @@ def getAvailableSolvers() -> List[str]:
     >>> available_solvers = utils.getAvailableSolvers()
 
     """
-    try:
-        import gamspy_base
-    except Exception:
-        raise GamspyException("gamspy_base must be installed!")
-
-    available_solvers = gamspy_base.available_solvers
-
-    return available_solvers
+    return gamspy_base.available_solvers
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:

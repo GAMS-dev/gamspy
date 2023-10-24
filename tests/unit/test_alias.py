@@ -12,6 +12,19 @@ class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_alias_creation(self):
+        # no name
+        self.assertRaises(GamspyException, Alias, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Alias, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Alias, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, Alias, 5, "j")
+
     def test_alias_string(self):
         # Set and Alias without domain
         i = Set(self.m, name="i", records=["a", "b", "c"])
@@ -37,6 +50,19 @@ class AliasSuite(unittest.TestCase):
 
         # Try to add the same alias
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
+
+    def test_universe_alias_creation(self):
+        # no name
+        self.assertRaises(GamspyException, UniverseAlias, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, UniverseAlias, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, UniverseAlias, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, UniverseAlias, 5, "j")
 
     def test_universe_alias(self):
         h = UniverseAlias(self.m, "h")

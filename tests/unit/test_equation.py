@@ -20,6 +20,19 @@ class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_equation_creation(self):
+        # no name
+        self.assertRaises(GamspyException, Equation, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Equation, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Equation, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, Equation, 5, "j")
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]

@@ -13,6 +13,19 @@ class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_set_creation(self):
+        # no name
+        self.assertRaises(GamspyException, Set, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Set, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Set, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, Set, 5, "j")
+
     def test_set_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Set, self.m, "set")

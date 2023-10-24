@@ -14,6 +14,19 @@ class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_variable_creation(self):
+        # no name
+        self.assertRaises(GamspyException, Variable, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Variable, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Variable, None, "j")
+
+        # non-container type container
+        self.assertRaises(TypeError, Variable, 5, "j")
+
     def test_variable_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Variable, self.m, "set")
