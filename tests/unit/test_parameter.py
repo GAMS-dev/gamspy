@@ -31,8 +31,8 @@ class ParameterSuite(unittest.TestCase):
         self.assertRaises(TypeError, Parameter, 5, "j")
 
         # try to create a symbol with same name but different type
-        _ = Parameter(self.m, "i")
-        self.assertRaises(TypeError, Set, self.m, "i")
+        _ = Set(self.m, "i")
+        self.assertRaises(TypeError, Parameter, self.m, "i")
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
