@@ -1,7 +1,7 @@
-math
-====
+Container
+=========
 
-.. automodule:: gamspy.math
+.. autoclass:: gamspy.Container
    :members:
    :undoc-members:
    :show-inheritance:

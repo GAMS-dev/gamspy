@@ -45,29 +45,6 @@ if TYPE_CHECKING:
 
 
 class Parameter(gt.Parameter, operable.Operable, Symbol):
-    """
-    Represents a parameter symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
-
-    Parameters
-    ----------
-    container : Container
-    name : str
-    domain : list, optional
-    records : Any, optional
-    domain_forwarding : bool, optional
-    description : str, optional
-    uels_on_axes : bool
-
-    Examples
-    --------
-    >>> import gamspy as gp
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i", records=['i1','i2'])
-    >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
-
-    """
-
     def __new__(cls, *args, **kwargs):
         try:
             name = kwargs["name"] if "name" in kwargs.keys() else args[1]
@@ -109,6 +86,28 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
+        """
+        Represents a parameter symbol in GAMS.
+        https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
+
+        Parameters
+        ----------
+        container : Container
+        name : str
+        domain : list, optional
+        records : Any, optional
+        domain_forwarding : bool, optional
+        description : str, optional
+        uels_on_axes : bool
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+
+        """
         # enable load on demand
         self._is_dirty = False
 
