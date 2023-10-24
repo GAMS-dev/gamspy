@@ -286,7 +286,10 @@ class Container(gt.Container):
             options = GamsOptions(self.workspace)
 
         # Create gdx file to read records from
-        self.write(self._gdx_in)
+        for symbol in self.data.values():
+            if hasattr(symbol, "_is_dirty"):
+                symbol._is_dirty = False
+        super().write(self._gdx_in)
 
         gams_string = self.generateGamsString(backend=backend)
 
@@ -1158,6 +1161,7 @@ class Container(gt.Container):
                 dirty_symbols.append(name)
                 self[name]._is_dirty = False
 
+        # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_symbols) > 0:
             self._run()
 
