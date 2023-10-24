@@ -25,7 +25,7 @@ class ParameterSuite(unittest.TestCase):
         self.assertRaises(TypeError, Parameter, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Parameter, None, "j")
+        self.assertRaises(GamspyException, Parameter)
 
         # non-container type container
         self.assertRaises(TypeError, Parameter, 5, "j")

@@ -21,7 +21,7 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(TypeError, Set, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Set, None, "j")
+        self.assertRaises(GamspyException, Set)
 
         # non-container type container
         self.assertRaises(TypeError, Set, 5, "j")

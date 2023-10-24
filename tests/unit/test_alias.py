@@ -20,7 +20,7 @@ class AliasSuite(unittest.TestCase):
         self.assertRaises(TypeError, Alias, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Alias, None, "j")
+        self.assertRaises(GamspyException, Alias)
 
         # non-container type container
         self.assertRaises(TypeError, Alias, 5, "j")
@@ -64,7 +64,7 @@ class AliasSuite(unittest.TestCase):
         self.assertRaises(TypeError, UniverseAlias, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, UniverseAlias, None, "j")
+        self.assertRaises(GamspyException, UniverseAlias)
 
         # non-container type container
         self.assertRaises(TypeError, UniverseAlias, 5, "j")

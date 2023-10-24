@@ -14,15 +14,6 @@ if TYPE_CHECKING:
 class UniverseAlias(gt.UniverseAlias):
     def __new__(cls, *args, **kwargs):
         try:
-            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
-        except IndexError:
-            raise GamspyException("Name of the symbol must be provided!")
-
-        try:
             container = (
                 kwargs["container"]
                 if "container" in kwargs.keys()
@@ -30,10 +21,20 @@ class UniverseAlias(gt.UniverseAlias):
             )
             if not isinstance(container, gp.Container):
                 raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
+                    "Container must of type `Container` but found"
+                    f" {type(container)}"
                 )
         except IndexError:
             raise GamspyException("Container of the symbol must be provided!")
+
+        try:
+            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
+            if not isinstance(name, str):
+                raise TypeError(
+                    f"Name must of type `str` but found {type(name)}"
+                )
+        except IndexError:
+            raise GamspyException("Name of the symbol must be provided!")
 
         try:
             symobj = container[name]

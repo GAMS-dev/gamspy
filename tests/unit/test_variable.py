@@ -22,7 +22,7 @@ class VariableSuite(unittest.TestCase):
         self.assertRaises(TypeError, Variable, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Variable, None, "j")
+        self.assertRaises(GamspyException, Variable)
 
         # non-container type container
         self.assertRaises(TypeError, Variable, 5, "j")

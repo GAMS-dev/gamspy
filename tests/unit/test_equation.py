@@ -28,7 +28,7 @@ class EquationSuite(unittest.TestCase):
         self.assertRaises(TypeError, Equation, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Equation, None, "j")
+        self.assertRaises(GamspyException, Equation)
 
         # non-container type container
         self.assertRaises(TypeError, Equation, 5, "j")
