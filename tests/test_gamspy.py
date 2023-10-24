@@ -5,6 +5,7 @@ import os
 import unittest
 
 from integration.test_cmd_script import cmd_suite
+from integration.test_engine import engine_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
@@ -23,8 +24,6 @@ from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
 
 import gamspy
-
-# from integration.test_engine import engine_suite
 
 
 class GamspySuite(unittest.TestCase):
@@ -92,7 +91,7 @@ def run_integration_tests(runner: unittest.TextTestRunner):
         solve_suite,
         model_instance_suite,
         cmd_suite,
-        # engine_suite,
+        engine_suite,
         gams_models_suite,
     ]
 
