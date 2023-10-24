@@ -211,7 +211,10 @@ class Container(gt.Container):
         new_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-            if symbol_name in self.data.keys():
+
+            if symbol_name.startswith(gp.Model._generate_prefix):
+                continue
+            elif symbol_name in self.data.keys():
                 existing_names.append(symbol_name)
             else:
                 new_names.append(symbol_name)
@@ -319,7 +322,6 @@ class Container(gt.Container):
         self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
 
         self.loadRecordsFromGdx(self._gdx_in)
-        self._unsaved_statements = {}
 
     def _run_local(
         self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
