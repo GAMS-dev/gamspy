@@ -84,3 +84,7 @@ autodoc_member_order = "bysource"
 
 # Display todos by setting to True
 todo_include_todos = False
+autodoc_class_signature = "separated"
+autodoc_default_options = {
+    'exclude-members': '__new__, __init__'
+}

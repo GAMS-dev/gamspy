@@ -1,7 +1,7 @@
-math
-====
+Domain
+======
 
-.. automodule:: gamspy.math
+.. autoclass:: gamspy.Domain
    :members:
    :undoc-members:
    :show-inheritance:

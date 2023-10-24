@@ -1,7 +1,7 @@
-math
-====
+Number
+======
 
-.. automodule:: gamspy.math
+.. autoclass:: gamspy.Number
    :members:
    :undoc-members:
    :show-inheritance:

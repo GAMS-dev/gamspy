@@ -1,7 +1,7 @@
-math
-====
+Alias
+=====
 
-.. automodule:: gamspy.math
+.. autoclass:: gamspy.Alias
    :members:
    :undoc-members:
    :show-inheritance:
