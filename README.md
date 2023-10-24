@@ -3,7 +3,7 @@
 -----------------
 
 
-https://github.com/GAMS-dev/gamspy/assets/25618191/80dc1c4a-3b22-4d9d-9b8a-66a51afbb439
+[preview.webm](https://github.com/GAMS-dev/gamspy/assets/25618191/c5a944d0-dd4c-4a84-9d7e-68cc59d9145a)
 
 # GAMSPy: Algebraic Modeling Interface to GAMS
 
