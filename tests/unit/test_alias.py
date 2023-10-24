@@ -25,6 +25,11 @@ class AliasSuite(unittest.TestCase):
         # non-container type container
         self.assertRaises(TypeError, Alias, 5, "j")
 
+        # try to create a symbol with same name but different type
+        i = Set(self.m, "i")
+        _ = Alias(self.m, "j", i)
+        self.assertRaises(TypeError, Set, self.m, "j")
+
     def test_alias_string(self):
         # Set and Alias without domain
         i = Set(self.m, name="i", records=["a", "b", "c"])
@@ -63,6 +68,10 @@ class AliasSuite(unittest.TestCase):
 
         # non-container type container
         self.assertRaises(TypeError, UniverseAlias, 5, "j")
+
+        # try to create a symbol with same name but different type
+        _ = UniverseAlias(self.m, "i")
+        self.assertRaises(TypeError, Set, self.m, "i")
 
     def test_universe_alias(self):
         h = UniverseAlias(self.m, "h")

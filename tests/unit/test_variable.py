@@ -27,6 +27,10 @@ class VariableSuite(unittest.TestCase):
         # non-container type container
         self.assertRaises(TypeError, Variable, 5, "j")
 
+        # try to create a symbol with same name but different type
+        _ = Variable(self.m, "i")
+        self.assertRaises(TypeError, Set, self.m, "i")
+
     def test_variable_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Variable, self.m, "set")

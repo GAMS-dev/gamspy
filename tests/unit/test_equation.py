@@ -33,6 +33,10 @@ class EquationSuite(unittest.TestCase):
         # non-container type container
         self.assertRaises(TypeError, Equation, 5, "j")
 
+        # try to create a symbol with same name but different type
+        _ = Equation(self.m, "i")
+        self.assertRaises(TypeError, Set, self.m, "i")
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]

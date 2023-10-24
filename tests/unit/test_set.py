@@ -26,6 +26,10 @@ class SetSuite(unittest.TestCase):
         # non-container type container
         self.assertRaises(TypeError, Set, 5, "j")
 
+        # try to create a symbol with same name but different type
+        _ = Set(self.m, "i")
+        self.assertRaises(TypeError, Alias, self.m, "i")
+
     def test_set_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Set, self.m, "set")
