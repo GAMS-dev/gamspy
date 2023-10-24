@@ -31,6 +31,11 @@ class VariableSuite(unittest.TestCase):
         _ = Set(self.m, "i")
         self.assertRaises(TypeError, Variable, self.m, "i")
 
+        # get already created symbol
+        j1 = Variable(self.m, "j")
+        j2 = Variable(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_variable_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Variable, self.m, "set")

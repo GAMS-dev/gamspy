@@ -37,6 +37,11 @@ class EquationSuite(unittest.TestCase):
         _ = Set(self.m, "i")
         self.assertRaises(TypeError, Equation, self.m, "i")
 
+        # get already created symbol
+        j1 = Equation(self.m, "j")
+        j2 = Equation(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]

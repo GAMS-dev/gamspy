@@ -34,6 +34,11 @@ class ParameterSuite(unittest.TestCase):
         _ = Set(self.m, "i")
         self.assertRaises(TypeError, Parameter, self.m, "i")
 
+        # get already created symbol
+        j1 = Parameter(self.m, "j")
+        j2 = Parameter(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 

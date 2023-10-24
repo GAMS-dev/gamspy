@@ -31,6 +31,11 @@ class SetSuite(unittest.TestCase):
         _ = Parameter(self.m, "i")
         self.assertRaises(TypeError, Set, self.m, "i")
 
+        # get already created symbol
+        j1 = Set(self.m, "j")
+        j2 = Set(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_set_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Set, self.m, "set")
