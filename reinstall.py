@@ -9,12 +9,13 @@ if os.path.exists(os.getcwd() + os.sep + ".env"):
 
 
 def install_gamspy():
-    subprocess.run(["python", "setup.py", "bdist_wheel"])
+    subprocess.run(["python", "-m", "build"])
 
     command = [
         "pip",
         "install",
         "dist/gamspy-0.10.0-py3-none-any.whl[dev,test]",
+        "--force-reinstall",
     ]
 
     subprocess.run(command, check=True)
