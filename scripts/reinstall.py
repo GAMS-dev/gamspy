@@ -1,3 +1,4 @@
+import argparse
 import os
 import subprocess
 import tempfile
@@ -8,7 +9,19 @@ if os.path.exists(os.getcwd() + os.sep + ".env"):
     load_dotenv(os.getcwd() + os.sep + ".env")
 
 
-def install_gamspy():
+def get_args():
+    argument_parser = argparse.ArgumentParser()
+    argument_parser.add_argument("--from-pypi", action="store_true")
+    return argument_parser.parse_args()
+
+
+def install_gamspy(args):
+    if args.from_pypi:
+        subprocess.run(
+            ["pip", "install", "gamspy[dev,test]", "--force-reinstall"]
+        )
+        return
+
     subprocess.run(["python", "-m", "build"])
 
     command = [
@@ -36,5 +49,6 @@ def install_gams_license():
 
 
 if __name__ == "__main__":
-    install_gamspy()
+    args = get_args()
+    install_gamspy(args)
     install_gams_license()
