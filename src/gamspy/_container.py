@@ -922,7 +922,7 @@ class Container(gt.Container):
         >>> import gamspy as gp
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i")
-        >>> new_cont = m.copy()
+        >>> new_cont = m.copy(working_directory="test")
         >>> new_cont.data.keys() == m.data.keys()
         True
 
