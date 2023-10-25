@@ -261,6 +261,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self,
             name=f"{self.name}.{attr_name}",
             records=self.records,
+            domain=self.domain,
         )
 
     def _add_definition(

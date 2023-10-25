@@ -999,6 +999,9 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         self.assertEqual(transport.objective_value, 153.675)
 
+        supply.l[...] = 5
+        self.assertEqual(supply.records.level.to_list(), [5.0, 5.0])
+
 
 def solve_suite():
     suite = unittest.TestSuite()

@@ -476,6 +476,12 @@ class EquationSuite(unittest.TestCase):
             "f .. (x - c) =n= 0;",
         )
 
+        _ = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
+        self.assertEqual(
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            "f2 .. (x - c) =n= 0;",
+        )
+
         model = Model(self.m, "mcp_model", "MCP", matches={f: x})
         model.solve()
 

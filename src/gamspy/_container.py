@@ -900,7 +900,7 @@ class Container(gt.Container):
         )
         return model
 
-    def copy(self, working_directory: Optional[str] = None) -> "Container":
+    def copy(self, working_directory: str) -> "Container":
         """
         Creates a copy of the Container
 
@@ -927,9 +927,14 @@ class Container(gt.Container):
         True
 
         """
-        self._run()
-
         m = Container(working_directory=working_directory)
+        if m.working_directory == self.working_directory:
+            raise GamspyException(
+                "Copy of a container cannot have the same working directory"
+                " with the original container."
+            )
+
+        self._run()
         m.read(self._gdx_in)
 
         try:
@@ -940,9 +945,6 @@ class Container(gt.Container):
         except FileNotFoundError:
             # save_to might not exist and it's fine
             pass
-        except shutil.SameFileError:
-            # They can be the same file if their working directories are the same.
-            pass
         except Exception as e:
             raise GamspyException(f"Copy failed because {str(e)}")
 
@@ -951,18 +953,12 @@ class Container(gt.Container):
                 self._restart_from._checkpoint_file_name,
                 m._restart_from._checkpoint_file_name,
             )
-        except shutil.SameFileError:
-            # They can be the same files if their working directories are the same.
-            pass
         except Exception as e:
             raise GamspyException(f"Copy failed because {str(e)}")
 
         try:
             shutil.copy(self._gdx_in, m._gdx_in)
             shutil.copy(self._gdx_out, m._gdx_out)
-        except shutil.SameFileError:
-            # They can be the same files if their working directories are the same.
-            pass
         except Exception as e:
             raise GamspyException(f"Copy failed because {str(e)}")
 
