@@ -1,3 +1,4 @@
+import platform
 import unittest
 
 import gamspy.utils as utils
@@ -48,10 +49,10 @@ class UtilsSuite(unittest.TestCase):
         self.assertFalse(utils.isin(k, symbols))
 
     def test_available_solvers(self):
-        solvers = utils.getInstalledSolvers()
+        installed_solvers = utils.getInstalledSolvers()
 
         self.assertEqual(
-            solvers,
+            installed_solvers,
             [
                 "CONOPT",
                 "CONVERT",
@@ -61,6 +62,48 @@ class UtilsSuite(unittest.TestCase):
                 "SBB",
             ],
         )
+
+        def get_platform() -> str:
+            operating_system = platform.system().lower()
+            architecture = platform.machine()
+
+            if operating_system == "darwin":
+                return f"mac_{architecture}"
+
+            return operating_system
+
+        system = get_platform()
+
+        available_solvers = utils.getAvailableSolvers()
+
+        expected = [
+            "NLPEC",
+            "SBB",
+            "CONOPT",
+            "CONVERT",
+            "CPLEX",
+            "PATH",
+            "BARON",
+            "CONOPT4",
+            "COPT",
+            "DICOPT",
+            "GUROBI",
+            "HIGHS",
+            "IPOPT",
+            "IPOPTH",
+            "KNITRO",
+            "MINOS",
+            "MOSEK",
+            "SCIP",
+            "SHOT",
+            "SNOPT",
+            "XPRESS",
+        ]
+
+        if system == "mac_arm64":
+            expected.remove("XPRESS")
+
+        self.assertEqual(available_solvers, expected)
 
 
 def utils_suite():
