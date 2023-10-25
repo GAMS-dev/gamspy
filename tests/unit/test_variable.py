@@ -322,6 +322,13 @@ class VariableSuite(unittest.TestCase):
         )
         self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
 
+        a.l[...] = 5
+
+        self.assertEqual(
+            a.records.level.to_list(),
+            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+        )
+
 
 def variable_suite():
     suite = unittest.TestSuite()
