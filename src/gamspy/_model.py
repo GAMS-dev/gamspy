@@ -36,9 +36,7 @@ from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
-from gams import (
-    GamsOptions,
-)
+from gams import GamsOptions
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -46,6 +44,7 @@ import gamspy._algebra.operation as operation
 import gamspy.utils as utils
 from gamspy._engine import EngineConfig
 from gamspy._model_instance import ModelInstance
+from gamspy._options import option_map
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -347,20 +346,27 @@ class Model:
         if solver:
             gams_options.all_model_types = solver
 
-        if options:
-            if not isinstance(options, dict):
+        if options is not None:
+            if not isinstance(options, (dict, gp.Options)):
                 raise GamspyException(
                     f"options must be a dict but found {type(options)}"
                 )
 
+            if isinstance(options, gp.Options):
+                options = options.model_dump()
+                options = {
+                    option_map[key]: value for key, value in options.items()  # type: ignore
+                }
+
             for option, value in options.items():
-                if option.lower() not in utils.VALID_GAMS_OPTIONS:
+                if option.lower() not in option_map.values():
                     raise GamspyException(
                         f"Invalid option `{option}`. Possible options:"
-                        f" {utils.VALID_GAMS_OPTIONS}"
+                        f" {option_map.values()}"
                     )
 
-                setattr(gams_options, option.lower(), value)
+                if value:
+                    setattr(gams_options, option.lower(), value)
 
         if solver_options:
             if solver is None:

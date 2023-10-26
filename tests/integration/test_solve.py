@@ -10,6 +10,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import ModelStatus
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -257,7 +258,7 @@ class SolveSuite(unittest.TestCase):
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
-                options={"resLim": 100},
+                options=Options(solver_time_limit=100),
                 output=file,
             )
 
@@ -846,7 +847,7 @@ class SolveSuite(unittest.TestCase):
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
 
-        energy.solve(options={"optCr": 0.000001})
+        energy.solve(options=Options(relative_termination_tolerance=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
 
