@@ -22,22 +22,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from dataclasses import dataclass
-from dataclasses import field
 from typing import List
 from typing import Optional
 
 from gams import GamsEngineConfiguration
+from pydantic import BaseModel
 
 
-@dataclass
-class EngineConfig:
+class EngineConfig(BaseModel):
     host: str
     username: Optional[str] = None
     password: Optional[str] = None
     jwt: Optional[str] = None
     namespace: str = "global"
-    extra_model_files: List[str] = field(default_factory=list)
+    extra_model_files: List[str] = []
     engine_options: Optional[dict] = None
     remove_results: bool = True
 
