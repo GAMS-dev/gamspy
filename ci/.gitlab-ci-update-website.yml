@@ -1,6 +1,7 @@
 update-website:
   stage: website
   when: manual
+  needs: []
   tags: [linux]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
