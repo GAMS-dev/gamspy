@@ -245,6 +245,3 @@ class Options(BaseModel):
     @classmethod
     def validate_report_underflow(cls, is_reporting: bool) -> int:
         return 1 if is_reporting else 0
-
-    def items(self):
-        return self.model_dump()
