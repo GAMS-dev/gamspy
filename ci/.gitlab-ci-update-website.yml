@@ -6,6 +6,9 @@ update-website:
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
     entrypoint: [""]
+  before_script:
+    - git config --global user.email "puma@noreply.gams.com"
+    - git config --global user.name "Gitlab Runner (puma)"
   script:
     - git clone https://engine_ci:${PF_GITLAB_WEBSITE_TOKEN}@git.gams.com/smann/new.gams.com.git --branch master --single-branch website
     - export GAMSPY_VERSION=$(grep "version" pyproject.toml | cut -d "=" -f2)
