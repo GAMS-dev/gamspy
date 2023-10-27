@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "http://www.gams.com"
+homepage = "https://gams.com/sales/gamspy_facts/"
 documentation = "https://gamspy.readthedocs.io/en/latest/user/index.html"
 repository = "https://github.com/GAMS-dev/gamspy"
 changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
