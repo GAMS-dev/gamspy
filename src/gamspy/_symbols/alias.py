@@ -35,7 +35,6 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
@@ -64,45 +63,27 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        try:
-            container = (
-                kwargs["container"]
-                if "container" in kwargs.keys()
-                else args[0]
+    def __new__(cls, container: "Container", name: str, alias_with: "Set"):
+        if not isinstance(container, gp.Container):
+            raise TypeError(
+                "Container must of type `Container` but found"
+                f" {type(container)}"
             )
-            if not isinstance(container, gp.Container):
-                raise TypeError(
-                    "Container must of type `Container` but found"
-                    f" {type(container)}"
-                )
-        except IndexError:
-            raise GamspyException("Container of the symbol must be provided!")
 
-        try:
-            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
-        except IndexError:
-            raise GamspyException("Name of the symbol must be provided!")
+        if not isinstance(name, str):
+            raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
             symobj = container[name]
-        except KeyError:
-            symobj = None
-
-        if symobj is None:
-            return object.__new__(Alias)
-        else:
-            if isinstance(symobj, Alias):
+            if isinstance(symobj, cls):
                 return symobj
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    f"Cannot overwrite symbol `{name}` in container"
                     " because it is not an Alias object)"
                 )
+        except KeyError:
+            return object.__new__(Alias)
 
     def __init__(self, container: "Container", name: str, alias_with: "Set"):
         # enable load on demand

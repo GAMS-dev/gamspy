@@ -16,13 +16,13 @@ class SetSuite(unittest.TestCase):
 
     def test_set_creation(self):
         # no name
-        self.assertRaises(GamspyException, Set, self.m)
+        self.assertRaises(TypeError, Set, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, Set)
+        self.assertRaises(TypeError, Set)
 
         # non-container type container
         self.assertRaises(TypeError, Set, 5, "j")

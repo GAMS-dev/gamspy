@@ -39,7 +39,6 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Variable, Container
@@ -92,45 +91,40 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        try:
-            container = (
-                kwargs["container"]
-                if "container" in kwargs.keys()
-                else args[0]
+    def __new__(
+        cls,
+        container: "Container",
+        name: str,
+        type: Union[str, EquationType] = "regular",
+        domain: Optional[List[Union["Set", str]]] = None,
+        definition: Optional[
+            Union["Variable", "Operation", "Expression"]
+        ] = None,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+        definition_domain: Optional[list] = None,
+    ):
+        if not isinstance(container, gp.Container):
+            raise TypeError(
+                f"Container must of type `Container` but found {container}"
             )
-            if not isinstance(container, gp.Container):
-                raise TypeError(
-                    "Container must of type `Container` but found"
-                    f" {type(container)}"
-                )
-        except IndexError:
-            raise GamspyException("Container of the symbol must be provided!")
+
+        if not isinstance(name, str):
+            raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
-            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Name must of type `str` but found {type(name)}"
-                )
-        except IndexError:
-            raise GamspyException("Name of the symbol must be provided!")
-
-        try:
-            symobj = container[name]
-        except KeyError:
-            symobj = None
-
-        if symobj is None:
-            return object.__new__(Equation)
-        else:
-            if isinstance(symobj, Equation):
-                return symobj
+            symbol = container[name]
+            if isinstance(symbol, cls):
+                return symbol
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    f"Cannot overwrite symbol `{name}` in container"
                     " because it is not an Equation object)"
                 )
+        except KeyError:
+            return object.__new__(cls)
 
     def __init__(
         self,
@@ -480,8 +474,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 self._domainForwarding()
 
                 # reset state check flags for all symbols in the container
-                for symnam, symobj in self.container.data.items():
-                    symobj._requires_state_check = True
+                for symbol in self.container.data.values():
+                    symbol._requires_state_check = True
 
     def gamsRepr(self) -> str:
         """

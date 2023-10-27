@@ -19,13 +19,13 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_creation(self):
         # no name
-        self.assertRaises(GamspyException, Parameter, self.m)
+        self.assertRaises(TypeError, Parameter, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Parameter, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, Parameter)
+        self.assertRaises(TypeError, Parameter)
 
         # non-container type container
         self.assertRaises(TypeError, Parameter, 5, "j")

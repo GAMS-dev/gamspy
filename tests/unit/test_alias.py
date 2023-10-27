@@ -14,13 +14,13 @@ class AliasSuite(unittest.TestCase):
 
     def test_alias_creation(self):
         # no name
-        self.assertRaises(GamspyException, Alias, self.m)
+        self.assertRaises(TypeError, Alias, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Alias, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, Alias)
+        self.assertRaises(TypeError, Alias)
 
         # non-container type container
         self.assertRaises(TypeError, Alias, 5, "j")
@@ -61,14 +61,11 @@ class AliasSuite(unittest.TestCase):
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
 
     def test_universe_alias_creation(self):
-        # no name
-        self.assertRaises(GamspyException, UniverseAlias, self.m)
-
         # non-str type name
         self.assertRaises(TypeError, UniverseAlias, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, UniverseAlias)
+        self.assertRaises(TypeError, UniverseAlias)
 
         # non-container type container
         self.assertRaises(TypeError, UniverseAlias, 5, "j")

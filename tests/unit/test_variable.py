@@ -16,13 +16,13 @@ class VariableSuite(unittest.TestCase):
 
     def test_variable_creation(self):
         # no name
-        self.assertRaises(GamspyException, Variable, self.m)
+        self.assertRaises(TypeError, Variable, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Variable, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, Variable)
+        self.assertRaises(TypeError, Variable)
 
         # non-container type container
         self.assertRaises(TypeError, Variable, 5, "j")

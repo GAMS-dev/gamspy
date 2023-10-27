@@ -22,13 +22,13 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_creation(self):
         # no name
-        self.assertRaises(GamspyException, Equation, self.m)
+        self.assertRaises(TypeError, Equation, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Equation, self.m, 5)
 
         # no container
-        self.assertRaises(GamspyException, Equation)
+        self.assertRaises(TypeError, Equation)
 
         # non-container type container
         self.assertRaises(TypeError, Equation, 5, "j")
