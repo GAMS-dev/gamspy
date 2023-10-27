@@ -13,6 +13,7 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 
 
 class ContainerSuite(unittest.TestCase):
@@ -282,7 +283,8 @@ class ContainerSuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        new_cont = m.copy(working_directory=".")
+        self.assertRaises(GamspyException, m.copy, ".")
+        new_cont = m.copy(working_directory="test")
         transport = Model(
             new_cont,
             name="transport",
@@ -294,9 +296,35 @@ class ContainerSuite(unittest.TestCase):
 
         transport.solve()
 
-        self.assertIsNotNone(m.gamsJobName)
+        self.assertIsNotNone(m.gamsJobName())
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
         self.assertEqual(m.data.keys(), new_cont.data.keys())
+
+    def test_generate_gams_string(self):
+        m = Container(delayed_execution=True)
+
+        i = Set(m, "i")
+        _ = Alias(m, "a", i)
+        _ = Parameter(m, "p")
+        _ = Variable(m, "v")
+        _ = Equation(m, "e")
+
+        self.assertEqual(
+            m.generateGamsString(),
+            "$onMultiR\n$gdxIn"
+            f" {m._gdx_in}\n"
+            "Set i(*);\n$load i\n\n"
+            "Alias(i,a);\n\n"
+            "Parameter p;\n$load p\n\n"
+            "free Variable v;\n$load v\n\n"
+            "Equation e;\n$load e\n\n"
+            "$load i\n"
+            "$load i\n"
+            "$load p\n"
+            "$load v\n"
+            "$load e\n"
+            "$gdxIn\n",
+        )
 
 
 def container_suite():

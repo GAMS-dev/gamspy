@@ -20,6 +20,28 @@ class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_equation_creation(self):
+        # no name
+        self.assertRaises(TypeError, Equation, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Equation, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Equation)
+
+        # non-container type container
+        self.assertRaises(TypeError, Equation, 5, "j")
+
+        # try to create a symbol with same name but different type
+        _ = Set(self.m, "i")
+        self.assertRaises(TypeError, Equation, self.m, "i")
+
+        # get already created symbol
+        j1 = Equation(self.m, "j")
+        j2 = Equation(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -452,6 +474,12 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(
             list(self.m._unsaved_statements.values())[-1].gamsRepr(),
             "f .. (x - c) =n= 0;",
+        )
+
+        _ = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
+        self.assertEqual(
+            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            "f2 .. (x - c) =n= 0;",
         )
 
         model = Model(self.m, "mcp_model", "MCP", matches={f: x})

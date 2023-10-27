@@ -8,3 +8,4 @@ Release Notes
    :maxdepth: 1
 
    release_0.10.0
+   release_0.10.1

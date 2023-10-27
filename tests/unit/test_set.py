@@ -4,6 +4,7 @@ from gamspy import Alias
 from gamspy import Card
 from gamspy import Container
 from gamspy import Ord
+from gamspy import Parameter
 from gamspy import Set
 from gamspy import UniverseAlias
 from gamspy.exceptions import GamspyException
@@ -12,6 +13,28 @@ from gamspy.exceptions import GamspyException
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
+
+    def test_set_creation(self):
+        # no name
+        self.assertRaises(TypeError, Set, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Set, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Set)
+
+        # non-container type container
+        self.assertRaises(TypeError, Set, 5, "j")
+
+        # try to create a symbol with same name but different type
+        _ = Parameter(self.m, "i")
+        self.assertRaises(TypeError, Set, self.m, "i")
+
+        # get already created symbol
+        j1 = Set(self.m, "j")
+        j2 = Set(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
 
     def test_set_string(self):
         # Check if the name is reserved

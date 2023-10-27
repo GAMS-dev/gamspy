@@ -1,5 +1,5 @@
 math
-===================
+====
 
 .. automodule:: gamspy.math
    :members:

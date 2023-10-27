@@ -419,8 +419,8 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.sigmoid(2.3)
         self.assertEqual(op1.gamsRepr(), "(sigmoid( 2.3 ))")
 
-        op1 = gams_math.sigmoid(a[i])
-        self.assertEqual(op1.gamsRepr(), "(sigmoid( a(i) ))")
+        op2 = gams_math.sigmoid(a[i])
+        self.assertEqual(op2.gamsRepr(), "(sigmoid( a(i) ))")
 
     def test_logical(self):
         m = Container(delayed_execution=True)
@@ -435,6 +435,90 @@ class MathSuite(unittest.TestCase):
             list(m._unsaved_statements.values())[-1].gamsRepr(),
             "defopLS(o,p) .. op(o,p) =e= (ifthen(sumc(o,p) >= 0.5, 1, 0)  );",
         )
+
+        # bool_and
+        op1 = gams_math.bool_and(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(bool_and( 2,3 ))")
+
+        op2 = gams_math.bool_and(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_and( sumc(o,p),op(o,p) ))")
+
+        # bool_eqv
+        op1 = gams_math.bool_eqv(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(bool_eqv( 2,3 ))")
+
+        op2 = gams_math.bool_eqv(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_eqv( sumc(o,p),op(o,p) ))")
+
+        # bool_imp
+        op1 = gams_math.bool_imp(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(bool_imp( 2,3 ))")
+
+        op2 = gams_math.bool_imp(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_imp( sumc(o,p),op(o,p) ))")
+
+        # bool_not
+        op1 = gams_math.bool_not(2)
+        self.assertEqual(op1.gamsRepr(), "(bool_not( 2 ))")
+
+        op2 = gams_math.bool_not(sumc[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_not( sumc(o,p) ))")
+
+        # bool_or
+        op1 = gams_math.bool_or(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(bool_or( 2,3 ))")
+
+        op2 = gams_math.bool_or(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_or( sumc(o,p),op(o,p) ))")
+
+        # bool_xor
+        op1 = gams_math.bool_xor(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(bool_xor( 2,3 ))")
+
+        op2 = gams_math.bool_xor(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(bool_xor( sumc(o,p),op(o,p) ))")
+
+        # rel_eq
+        op1 = gams_math.rel_eq(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_eq( 2,3 ))")
+
+        op2 = gams_math.rel_eq(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_eq( sumc(o,p),op(o,p) ))")
+
+        # rel_ge
+        op1 = gams_math.rel_ge(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_ge( 2,3 ))")
+
+        op2 = gams_math.rel_ge(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_ge( sumc(o,p),op(o,p) ))")
+
+        # rel_gt
+        op1 = gams_math.rel_gt(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_gt( 2,3 ))")
+
+        op2 = gams_math.rel_gt(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_gt( sumc(o,p),op(o,p) ))")
+
+        # rel_le
+        op1 = gams_math.rel_le(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_le( 2,3 ))")
+
+        op2 = gams_math.rel_le(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_le( sumc(o,p),op(o,p) ))")
+
+        # rel_lt
+        op1 = gams_math.rel_lt(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_lt( 2,3 ))")
+
+        op2 = gams_math.rel_lt(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_lt( sumc(o,p),op(o,p) ))")
+
+        # rel_ne
+        op1 = gams_math.rel_ne(2, 3)
+        self.assertEqual(op1.gamsRepr(), "(rel_ne( 2,3 ))")
+
+        op2 = gams_math.rel_ne(sumc[o, p], op[o, p])
+        self.assertEqual(op2.gamsRepr(), "(rel_ne( sumc(o,p),op(o,p) ))")
 
 
 def math_suite():

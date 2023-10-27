@@ -2,45 +2,36 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 
+import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Container
 
 
 class UniverseAlias(gt.UniverseAlias):
-    def __new__(cls, *args, **kwargs):
-        try:
-            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
-        except IndexError:
-            raise GamspyException("Name of the symbol must be provided!")
-
-        try:
-            container = (
-                kwargs["container"]
-                if "container" in kwargs.keys()
-                else args[0]
+    def __new__(cls, container: "Container", name: str = "universe"):
+        if not isinstance(container, gp.Container):
+            raise TypeError(
+                "Container must of type `Container` but found"
+                f" {type(container)}"
             )
-        except IndexError:
-            raise GamspyException("Container of the symbol must be provided!")
+
+        if not isinstance(name, str):
+            raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
-            symobj = container[name]
-        except KeyError:
-            symobj = None
-
-        if symobj is None:
-            return object.__new__(UniverseAlias)
-        else:
-            if isinstance(symobj, UniverseAlias):
-                return symobj
+            symbol = container[name]
+            if isinstance(symbol, cls):
+                return symbol
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    f"Cannot overwrite symbol `{name}` in container"
                     " because it is not a UniverseAlias object)"
                 )
+        except KeyError:
+            return object.__new__(cls)
 
     def __init__(self, container: "Container", name: str = "universe"):
         """

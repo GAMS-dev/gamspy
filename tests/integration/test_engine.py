@@ -98,6 +98,25 @@ class EngineSuite(unittest.TestCase):
 
         self.assertEqual(transport.objective_value, 153.675)
 
+        # invalid configuration
+        engine_config = EngineConfig(
+            host="localhost",
+            username="bla",
+            password="bla",
+            namespace="bla",
+        )
+        self.assertRaises(
+            Exception,
+            transport.solve,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "engine",
+            engine_config,
+        )
+
 
 def engine_suite():
     suite = unittest.TestSuite()

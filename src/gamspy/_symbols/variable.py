@@ -32,13 +32,13 @@ from typing import Union
 import gams.transfer as gt
 import pandas as pd
 
+import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -87,36 +87,36 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     """
 
-    def __new__(cls, *args, **kwargs):
-        try:
-            name = kwargs["name"] if "name" in kwargs.keys() else args[1]
-        except IndexError:
-            raise GamspyException("Name of the symbol must be provided!")
-
-        try:
-            container = (
-                kwargs["container"]
-                if "container" in kwargs.keys()
-                else args[0]
+    def __new__(
+        cls,
+        container: "Container",
+        name: str,
+        type: str = "free",
+        domain: Optional[List[Union[str, "Set"]]] = None,
+        records: Optional[Any] = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ):
+        if not isinstance(container, gp.Container):
+            raise TypeError(
+                f"Container must of type `Container` but found {container}"
             )
-        except IndexError:
-            raise GamspyException("Container of the symbol must be provided!")
+
+        if not isinstance(name, str):
+            raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
-            symobj = container[name]
-        except KeyError:
-            symobj = None
-
-        if symobj is None:
-            return object.__new__(Variable)
-        else:
-            if isinstance(symobj, Variable):
-                return symobj
+            symbol = container[name]
+            if isinstance(symbol, cls):
+                return symbol
             else:
                 raise TypeError(
-                    f"Cannot overwrite symbol `{symobj.name}` in container"
+                    f"Cannot overwrite symbol `{symbol.name}` in container"
                     " because it is not a Variable object)"
                 )
+        except KeyError:
+            return object.__new__(cls)
 
     def __init__(
         self,
@@ -177,9 +177,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):  # type: ignore
-        return expression.Expression(self, "ne", other)
-
     def _init_attributes(self):
         level = self._create_attr("l")
         marginal = self._create_attr("m")
@@ -189,10 +186,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return level, marginal, lower, upper, scale
 
     def _create_attr(self, attr_name):
+        domain = self.domain
         return implicits.ImplicitParameter(
             self,
             name=f"{self.name}.{attr_name}",
             records=self.records,
+            domain=domain,
         )
 
     @property

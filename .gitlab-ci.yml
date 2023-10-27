@@ -6,11 +6,15 @@ stages:
   - formatter
   - docs
   - test
+  - website
 
 variables:
   MACHINES_CONTAINER_REG:
     value: registry.gams.com/devel/machines
     description: "URL to the container registry of the machines repository"
+  PF_GITLAB_WEBSITE_TOKEN:
+    value: $GITLAB_WEBSITE_TOKEN
+    description: "Token for updating gams.com"
   PF_CUSTOM_BRANCH:
     value: $CUSTOM_BRANCH
     description: "Name of custom branch or 0 if published distribution with version as specified should be taken"
@@ -35,4 +39,5 @@ include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test-3.8.yml',
           'ci/.gitlab-ci-test-3.9.yml',
           'ci/.gitlab-ci-test-3.10.yml',
-          'ci/.gitlab-ci-test-3.11.yml']
+          'ci/.gitlab-ci-test-3.11.yml',
+          'ci/.gitlab-ci-update-website.yml']

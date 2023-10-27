@@ -4,18 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "0.10.0"
+version = "0.10.1"
 authors = [
-  { name = "GAMS Development Corporation", email="support@gams.com" },
+  { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
 readme = "README_PYPI.md"
 description = "Python-based algebraic modeling interface to GAMS"
 requires-python = ">=3.8"
 license.file = "LICENSE"
-keywords = [
-  "Optimization",
-  "GAMS",
-]
+keywords = ["Optimization", "GAMS"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Environment :: Console",
@@ -37,7 +34,11 @@ classifiers = [
   "Operating System :: MacOS",
   "Operating System :: Microsoft :: Windows",
 ]
-dynamic = ["dependencies"]
+dependencies = [
+  "gamsapi[transfer,control] >= 45.1.0",
+  "gamspy_base >= 45.1.0",
+  "pydantic >= 2.4.2",
+]
 
 [project.urls]
 homepage = "http://www.gams.com"
@@ -46,16 +47,19 @@ documentation = "https://gamspy.readthedocs.io/en/latest/user/index.html"
 
 [project.optional-dependencies]
 dev = [
-    "black == 23.7.0",
-    "pre-commit == 3.3.3",
-    "flake8 == 5.0.0",
+  "black >= 23.7.0",
+  "pre-commit >= 3.3.3",
+  "flake8 >= 5.0.0",
+  "mypy >= 1.4.1",
 ]
 test = [
-    "mypy == 1.4.1",
-    "coverage[toml] == 7.2.7",
-    "openpyxl == 3.1.2",
-    "urllib3 == 2.0.7",
-    "certifi == 2023.7.22",
+  "coverage[toml] >= 7.2.7",
+  "openpyxl >= 3.1.2",
+  "urllib3 >= 2.0.7",
+  "certifi >= 2023.7.22",
+  "cerberus >= 1.3.5",
+  "SQLAlchemy >= 1.4.49",
+  "pyodbc >= 5.0.1",
 ]
 
 [project.scripts]
@@ -64,24 +68,17 @@ gamspy = "gamspy._cli.cmdline:main"
 [tool.mypy]
 warn_unused_configs = true
 follow_imports = "skip"
-follow_imports_for_stubs = false
+follow_imports_for_stubs = true
 ignore_missing_imports = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.coverage.run]
-omit = [
-    "*/_cli/*.py",
-    "__main__.py",
-    "*__init__.py"
-]
+omit = ["*/_cli/*.py", "__main__.py", "*__init__.py"]
 
 [tool.coverage.report]
-exclude_also = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:"
-]
+exclude_also = ["pragma: no cover", "if TYPE_CHECKING:"]
 
 [tool.bandit]
 exclude_dirs = ["tests", "docs"]

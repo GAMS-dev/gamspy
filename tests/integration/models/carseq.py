@@ -36,6 +36,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -164,9 +165,9 @@ def main(mip=False):
     if mip:
         v.type = "positive"
         op.type = "binary"
-        carseqMIP.solve(options={"optCr": 0})
+        carseqMIP.solve(options=Options(relative_termination_tolerance=0))
     else:
-        carseqLS.solve(options={"optCr": 0})
+        carseqLS.solve(options=Options(relative_termination_tolerance=0))
 
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]

@@ -36,7 +36,7 @@ print("Number of circles =", k)
 c = Container(delayed_execution=True)
 
 # Set
-i = Set(c, name="i", description="circles")
+i = Set(c, name="i", description="circles", records=[str(i) for i in range(k)])
 j = Alias(c, name="j", alias_with=i)
 ij = Set(c, name="ij", domain=[i, j])
 ij[i, j].where[Ord(i) < Ord(j)] = True
@@ -63,18 +63,6 @@ nonoverlap = Equation(
 )
 nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)
 
-m = Model(
-    c,
-    name="cpack",
-    equations=c.getEquations(),
-    problem=Problem.QCP,
-    sense=Sense.MAX,
-    objective=r,
-)
-
-# Data
-i.setRecords([str(i) for i in range(k)])
-
 x.lo[i] = -1
 x.up[i] = 1
 y.lo[i] = -1
@@ -85,6 +73,15 @@ y.l[i] = -0.2 + Ord(i) * 0.1
 
 r.lo[...] = 0.05
 r.up[...] = 0.4
+
+m = Model(
+    c,
+    name="cpack",
+    equations=c.getEquations(),
+    problem=Problem.QCP,
+    sense=Sense.MAX,
+    objective=r,
+)
 
 # solve with a good global solver
 print("Starting solve, be patient (log only shown afterwards)...")

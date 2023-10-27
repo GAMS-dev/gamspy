@@ -1,5 +1,5 @@
 exceptions
-===================
+==========
 
 .. automodule:: gamspy.exceptions
    :members:

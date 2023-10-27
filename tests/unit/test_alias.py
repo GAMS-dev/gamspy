@@ -12,6 +12,29 @@ class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_alias_creation(self):
+        i = Set(self.m, "i")
+
+        # no name
+        self.assertRaises(TypeError, Alias, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Alias, self.m, 5, i)
+
+        # no container
+        self.assertRaises(TypeError, Alias)
+
+        # non-container type container
+        self.assertRaises(TypeError, Alias, 5, "j", i)
+
+        # try to create a symbol with same name but different type
+        self.assertRaises(TypeError, Alias, self.m, "i", i)
+
+        # get already created symbol
+        j1 = Alias(self.m, "j", i)
+        j2 = Alias(self.m, "j", i)
+        self.assertEqual(id(j1), id(j2))
+
     def test_alias_string(self):
         # Set and Alias without domain
         i = Set(self.m, name="i", records=["a", "b", "c"])
@@ -37,6 +60,25 @@ class AliasSuite(unittest.TestCase):
 
         # Try to add the same alias
         self.assertRaises(ValueError, self.m.addAlias, "u", u)
+
+    def test_universe_alias_creation(self):
+        # non-str type name
+        self.assertRaises(TypeError, UniverseAlias, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, UniverseAlias)
+
+        # non-container type container
+        self.assertRaises(TypeError, UniverseAlias, 5, "j")
+
+        # try to create a symbol with same name but different type
+        _ = Set(self.m, "i")
+        self.assertRaises(TypeError, UniverseAlias, self.m, "i")
+
+        # get already created symbol
+        j1 = UniverseAlias(self.m, "j")
+        j2 = UniverseAlias(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
 
     def test_universe_alias(self):
         h = UniverseAlias(self.m, "h")

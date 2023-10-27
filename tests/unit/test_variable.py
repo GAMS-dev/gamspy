@@ -14,6 +14,28 @@ class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(delayed_execution=True)
 
+    def test_variable_creation(self):
+        # no name
+        self.assertRaises(TypeError, Variable, self.m)
+
+        # non-str type name
+        self.assertRaises(TypeError, Variable, self.m, 5)
+
+        # no container
+        self.assertRaises(TypeError, Variable)
+
+        # non-container type container
+        self.assertRaises(TypeError, Variable, 5, "j")
+
+        # try to create a symbol with same name but different type
+        _ = Set(self.m, "i")
+        self.assertRaises(TypeError, Variable, self.m, "i")
+
+        # get already created symbol
+        j1 = Variable(self.m, "j")
+        j2 = Variable(self.m, "j")
+        self.assertEqual(id(j1), id(j2))
+
     def test_variable_string(self):
         # Check if the name is reserved
         self.assertRaises(GamspyException, Variable, self.m, "set")
@@ -299,6 +321,13 @@ class VariableSuite(unittest.TestCase):
             and isinstance(a[i].stage, implicits.ImplicitParameter)
         )
         self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
+
+        a.l[...] = 5
+
+        self.assertEqual(
+            a.records.level.to_list(),
+            [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+        )
 
 
 def variable_suite():

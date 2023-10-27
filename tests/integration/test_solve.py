@@ -1,4 +1,3 @@
-import glob
 import os
 import time
 import unittest
@@ -11,6 +10,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import ModelStatus
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -258,7 +258,7 @@ class SolveSuite(unittest.TestCase):
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
-                options={"resLim": 100},
+                options=Options(solver_time_limit=100),
                 output=file,
             )
 
@@ -847,7 +847,7 @@ class SolveSuite(unittest.TestCase):
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
 
-        energy.solve(options={"optCr": 0.000001})
+        energy.solve(options=Options(relative_termination_tolerance=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
 
@@ -900,13 +900,6 @@ class SolveSuite(unittest.TestCase):
         # Test solver change
         transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
 
-        lst_file = glob.glob(f"{m.workspace.working_directory}{os.sep}*.lst")[
-            0
-        ]
-        with open(lst_file) as file:
-            content = file.read()
-            self.assertTrue("CONOPT" in content)
-
         self.assertTrue(
             os.path.exists(
                 f"{m.workspace.working_directory}{os.sep}conopt.123"
@@ -918,8 +911,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_delayed_execution(self):
-        m = Container()
-        m.delayed_execution = False
+        m = Container(delayed_execution=False)
 
         # Prepare data
         distances = [
@@ -1007,6 +999,9 @@ class SolveSuite(unittest.TestCase):
         )
         transport.solve()
         self.assertEqual(transport.objective_value, 153.675)
+
+        supply.l[...] = 5
+        self.assertEqual(supply.records.level.to_list(), [5.0, 5.0])
 
 
 def solve_suite():

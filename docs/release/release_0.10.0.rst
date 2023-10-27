@@ -1,4 +1,4 @@
-Version 0.10.0
-===============
+GAMSPy 0.10.0
+=============
 
 Initial release.
