@@ -13,20 +13,21 @@ class AliasSuite(unittest.TestCase):
         self.m = Container(delayed_execution=True)
 
     def test_alias_creation(self):
+        i = Set(self.m, "i")
+
         # no name
         self.assertRaises(TypeError, Alias, self.m)
 
         # non-str type name
-        self.assertRaises(TypeError, Alias, self.m, 5)
+        self.assertRaises(TypeError, Alias, self.m, 5, i)
 
         # no container
         self.assertRaises(TypeError, Alias)
 
         # non-container type container
-        self.assertRaises(TypeError, Alias, 5, "j")
+        self.assertRaises(TypeError, Alias, 5, "j", i)
 
         # try to create a symbol with same name but different type
-        i = Set(self.m, "i")
         self.assertRaises(TypeError, Alias, self.m, "i", i)
 
         # get already created symbol
