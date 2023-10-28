@@ -1,6 +1,5 @@
 update-website:
   stage: website
-  when: manual
   needs: []
   tags: [linux]
   image:
@@ -14,3 +13,7 @@ update-website:
     - export GAMSPY_VERSION=$(grep "version" pyproject.toml | cut -d "=" -f2)
     - export GAMSPY_RELEASE_DATE=\"$(date --rfc-3339=date)\"
     - cd website && sed -i -e 's/^\( *gamspy_release *= *\).*/\1'"${GAMSPY_VERSION}"'/' ./config.toml && sed -i -e 's/^\( *gamspy_release_date *= *\).*/\1'"${GAMSPY_RELEASE_DATE}"'/' ./config.toml && git add config.toml && git commit -m "Update gamspy version" && git push origin master
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: manual
