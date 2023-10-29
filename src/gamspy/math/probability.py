@@ -58,8 +58,8 @@ def binomial(
 
 
 def centropy(
-    x: "Symbol",
-    y: "Symbol",
+    x: Union[int, float, "Symbol"],
+    y: Union[int, float, "Symbol"],
     z: float = 1e-20,
 ) -> "Expression":
     """
@@ -67,8 +67,8 @@ def centropy(
 
     Parameters
     ----------
-    x : float | Operable
-    y : float | Operable
+    x : float | Symbol
+    y : float | Symbol
     z : float, optional
 
     Returns
@@ -83,8 +83,11 @@ def centropy(
     if z < 0:
         raise ValueError("z must be greater than or equal to 0")
 
+    x_str = _stringify(x)
+    y_str = _stringify(y)
+
     return expression.Expression(
-        "centropy(", ",".join([x.gamsRepr(), y.gamsRepr(), str(z)]), ")"
+        "centropy(", ",".join([x_str, y_str, str(z)]), ")"
     )
 
 

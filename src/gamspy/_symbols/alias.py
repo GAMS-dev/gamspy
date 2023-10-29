@@ -39,7 +39,6 @@ from gamspy._symbols.symbol import Symbol
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Set, Container
-    from gamspy._algebra.operable import Operable
     from gamspy._algebra.expression import Expression
 
 
@@ -123,14 +122,14 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -153,7 +152,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -161,7 +160,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns

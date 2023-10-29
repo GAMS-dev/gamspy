@@ -70,11 +70,11 @@ class Container(gt.Container):
         Path to the GDX file to be loaded from, by default None
     system_directory : str, optional
         Path to the directory that holds the GAMS installation, by default None
-    name : str, optional
-        Name of the Container, by default "default"
     working_directory : str, optional
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
+    delayed_execution : bool, optional
+        Delayed execution mode, by default False
 
     Examples
     --------
@@ -377,7 +377,14 @@ class Container(gt.Container):
             self._unsaved_statements = {}
 
     @property
-    def delayed_execution(self):
+    def delayed_execution(self) -> bool:
+        """
+        Delayed execution mode.
+
+        Returns
+        -------
+        bool
+        """
         return self._delayed_execution
 
     def gamsJobName(self) -> Union[str, None]:
@@ -395,6 +402,11 @@ class Container(gt.Container):
     ) -> "Alias":
         """
         Creates a new Alias and adds it to the container
+
+        Parameters
+        ----------
+        name : str
+        alias_with : Set | Alias
 
         Returns
         -------

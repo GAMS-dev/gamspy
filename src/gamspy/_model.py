@@ -166,8 +166,8 @@ class Model:
         Problem type (e.g. LP, NLP etc.)
     sense : "MIN", "MAX", or "FEASIBILITY", optional
         Minimize or maximize
-    objective_variable : Variable, optional
-        Objective variable to minimize or maximize
+    objective : Variable | Expression, optional
+        Objective variable to minimize or maximize or objective itself
     limited_variables : Iterable, optional
         Allows limiting the domain of variables used in a model.
 
@@ -550,7 +550,7 @@ class Model:
         ----------
         solver : str, optional
             Solver name
-        options : dict, optional
+        options : Options | dict, optional
             GAMS options
         solver_options : dict, optional
             Solver options

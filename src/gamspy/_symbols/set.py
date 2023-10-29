@@ -46,7 +46,6 @@ from gamspy.exceptions import GamspyException
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
-    from gamspy._algebra.operable import Operable
     from gamspy._algebra.expression import Expression
 
 
@@ -321,7 +320,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -329,7 +328,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -366,7 +365,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -374,7 +373,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
