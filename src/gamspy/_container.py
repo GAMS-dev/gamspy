@@ -99,7 +99,7 @@ class Container(gt.Container):
 
         self._delayed_execution = delayed_execution
         self._unsaved_statements: dict = {}
-        self._use_restart_from = False
+        self._is_first_run = True
 
         super().__init__(load_from, system_directory)
 
@@ -297,7 +297,7 @@ class Container(gt.Container):
         gams_string = self.generateGamsString(backend=backend)
 
         # If there is no restart checkpoint, set it to None
-        checkpoint = self._restart_from if self._use_restart_from else None
+        checkpoint = self._restart_from if not self._is_first_run else None
 
         self._job = GamsJob(
             self.workspace,
@@ -316,7 +316,7 @@ class Container(gt.Container):
                 " local, engine"
             )
 
-        self._use_restart_from = True
+        self._is_first_run = False
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
