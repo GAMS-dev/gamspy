@@ -175,6 +175,7 @@ class EngineSuite(unittest.TestCase):
         )
 
         transport.solve(backend="engine", engine_config=engine_config)
+        file.close()
         os.unlink(file.name)
 
 
