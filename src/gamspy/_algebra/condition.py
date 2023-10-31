@@ -58,8 +58,6 @@ class Condition:
 
         if isinstance(self._symbol, ImplicitSymbol):
             self._symbol.container[self._symbol.parent.name]._is_dirty = True
-        else:
-            self._symbol.container[self._symbol.name]._is_dirty = True
 
         if isinstance(right_hand_expression, bool):
             right_hand_expression = (

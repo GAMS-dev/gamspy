@@ -957,22 +957,14 @@ class Container(gt.Container):
         except FileNotFoundError:
             # save_to might not exist and it's fine
             pass
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
 
-        try:
-            shutil.copy(
-                self._restart_from._checkpoint_file_name,
-                m._restart_from._checkpoint_file_name,
-            )
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
+        shutil.copy(
+            self._restart_from._checkpoint_file_name,
+            m._restart_from._checkpoint_file_name,
+        )
 
-        try:
-            shutil.copy(self._gdx_in, m._gdx_in)
-            shutil.copy(self._gdx_out, m._gdx_out)
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
+        shutil.copy(self._gdx_in, m._gdx_in)
+        shutil.copy(self._gdx_out, m._gdx_out)
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
