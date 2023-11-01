@@ -203,25 +203,26 @@ class Container(gt.Container):
                     description=symbol.description,
                 )
 
-    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
+    def _get_symbol_names_from_gdx(self, load_from: str) -> List[str]:
         gdx_handle = utils._openGdxFile(self.system_directory, load_from)
         _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
-        existing_names = []
-        new_names = []
+        symbol_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
 
             if symbol_name.startswith(gp.Model._generate_prefix):
                 continue
-            elif symbol_name in self.data.keys():
-                existing_names.append(symbol_name)
+            elif symbol_name in self.data.keys() and isinstance(
+                self[symbol_name], (gp.Alias, gp.UniverseAlias)
+            ):
+                continue
             else:
-                new_names.append(symbol_name)
+                symbol_names.append(symbol_name)
 
         utils._closeGdxHandle(gdx_handle)
 
-        return existing_names, new_names
+        return symbol_names
 
     def _get_symbol_names_to_load(
         self,
@@ -229,16 +230,7 @@ class Container(gt.Container):
         symbol_names: Optional[List[str]] = None,
     ) -> List[str]:
         if not symbol_names:
-            existing_names, new_names = self._get_symbol_names_from_gdx(
-                load_from
-            )
-
-            symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-
-            symbol_names = new_names
-            for name in existing_names:
-                if isinstance(self[name], symbol_types):
-                    symbol_names.append(name)
+            symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names
 
@@ -278,6 +270,20 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
+    def _get_dirty_symbol_names(self) -> List[str]:
+        names = []
+
+        for name, symbol in self:
+            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
+                names.append(name)
+
+        return names
+
+    def _clean_dirty_symbols(self):
+        for symbol in self.data.values():
+            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
+                symbol._is_dirty = False
+
     def _run(
         self,
         options: Optional["GamsOptions"] = None,
@@ -289,9 +295,7 @@ class Container(gt.Container):
             options = GamsOptions(self.workspace)
 
         # Create gdx file to read records from
-        for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty"):
-                symbol._is_dirty = False
+        self._clean_dirty_symbols()
         super().write(self._gdx_in)
 
         gams_string = self.generateGamsString(backend=backend)
@@ -1155,13 +1159,7 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        sequence = symbols if symbols else self.data.keys()
-
-        dirty_symbols = []
-        for name in sequence:
-            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                dirty_symbols.append(name)
-                self[name]._is_dirty = False
+        dirty_symbols = self._get_dirty_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_symbols) > 0:
