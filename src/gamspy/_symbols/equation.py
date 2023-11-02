@@ -482,6 +482,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
+    def setRecords(self, records, uels_on_axes=False):
+        self._is_assigned = True
+        super().setRecords(records, uels_on_axes)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Equation in GAMS language.

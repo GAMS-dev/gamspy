@@ -452,6 +452,10 @@ class Set(gt.Set, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
+    def setRecords(self, records: Any, uels_on_axes: bool = False):
+        self._is_assigned = True
+        super().setRecords(records, uels_on_axes)
+
     def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
         return expression.Expression(
             "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"

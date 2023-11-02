@@ -212,6 +212,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
+    def setRecords(self, records: Any, uels_on_axes=False):
+        self._is_assigned = True
+        return super().setRecords(records, uels_on_axes)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Parameter in GAMS language.

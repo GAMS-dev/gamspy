@@ -327,6 +327,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
 
+    def setRecords(self, records, uels_on_axes=False):
+        self._is_assigned = True
+        super().setRecords(records, uels_on_axes)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Variable in GAMS language.
