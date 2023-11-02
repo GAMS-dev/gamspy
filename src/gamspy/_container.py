@@ -298,6 +298,8 @@ class Container(gt.Container):
     ) -> Tuple[List[str], List[str], List[str]]:
         dirty_names = []
         assigned_names = []
+
+        # we can't simply do dirty + assigned because order matters.
         all_symbols = []
 
         for name, symbol in self:
@@ -1213,8 +1215,7 @@ class Container(gt.Container):
 
         super().write(write_to, symbols)
 
-        for name in assigned_names:
-            self[name]._is_assigned = False
+        self._update_assigned_state(assigned_names)
 
 
 def parse_message(
