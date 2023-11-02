@@ -287,10 +287,12 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertRaises(GamspyException, m.copy, ".")
         new_cont = m.copy(working_directory="test")
+        self.assertEqual(m.data.keys(), new_cont.data.keys())
+
         transport = Model(
-            new_cont,
+            m,
             name="transport",
-            equations=new_cont.getEquations(),
+            equations=m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -300,7 +302,6 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertIsNotNone(m.gamsJobName())
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
-        self.assertEqual(m.data.keys(), new_cont.data.keys())
 
     def test_generate_gams_string(self):
         m = Container(delayed_execution=True)

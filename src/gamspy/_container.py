@@ -39,6 +39,7 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsOptions
 from gams import GamsWorkspace
+from gams.control.workspace import GamsException
 from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
@@ -397,8 +398,8 @@ class Container(gt.Container):
                 engine_options=engine_config.engine_options,
                 remove_results=engine_config.remove_results,
             )
-        except Exception as e:
-            raise e
+        except GamsException as e:
+            raise GamspyException(str(e))
         finally:
             self._unsaved_statements = {}
 
@@ -940,7 +941,8 @@ class Container(gt.Container):
 
     def copy(self, working_directory: str) -> "Container":
         """
-        Creates a copy of the Container
+        Creates a copy of the Container. Should not be invoked after
+        creating the model.
 
         Parameters
         ----------
