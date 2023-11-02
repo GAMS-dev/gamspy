@@ -145,7 +145,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._current_index = 0
 
         # for records and setRecords
-        self._is_assigned = False
+        self._is_assigned = True
 
     def __len__(self):
         if self.records is not None:
@@ -187,9 +187,8 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
 
-        if self.container.delayed_execution:
-            self._is_dirty = True
-        else:
+        self._is_dirty = True
+        if not self.container.delayed_execution:
             self.container._run()
 
     # Set Attributes

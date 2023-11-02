@@ -164,7 +164,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._stage = self._create_attr("stage")
 
         # for records and setRecords
-        self._is_assigned = False
+        self._is_assigned = True
 
     def __getitem__(
         self, indices: Union[tuple, str]

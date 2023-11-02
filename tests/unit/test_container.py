@@ -185,7 +185,9 @@ class ContainerSuite(unittest.TestCase):
         )
 
         m = Container(delayed_execution=True)
-        m._addGamsCode("scalar piHalf / [pi/2] /;")
+        i = Set(m, "i", records=["i1", "i2"])
+        i["i1"] = False
+        m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
         m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
@@ -285,10 +287,12 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertRaises(GamspyException, m.copy, ".")
         new_cont = m.copy(working_directory="test")
+        self.assertEqual(m.data.keys(), new_cont.data.keys())
+
         transport = Model(
-            new_cont,
+            m,
             name="transport",
-            equations=new_cont.getEquations(),
+            equations=m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -298,7 +302,6 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertIsNotNone(m.gamsJobName())
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
-        self.assertEqual(m.data.keys(), new_cont.data.keys())
 
     def test_generate_gams_string(self):
         m = Container(delayed_execution=True)
@@ -318,6 +321,7 @@ class ContainerSuite(unittest.TestCase):
             "Parameter p;\n$load p\n\n"
             "free Variable v;\n$load v\n\n"
             "Equation e;\n$load e\n\n"
+            "$load i\n$load p\n$load v\n$load e\n"
             "$gdxIn\n",
         )
 

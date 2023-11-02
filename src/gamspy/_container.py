@@ -40,6 +40,7 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsOptions
 from gams import GamsWorkspace
+from gams.control.workspace import GamsException
 from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
@@ -102,6 +103,9 @@ class Container(gt.Container):
         self._unsaved_statements: dict = {}
         self._is_first_run = True
 
+        # import symbols from arbitrary gams code
+        self._import_symbols: List[str] = []
+
         super().__init__(load_from, system_directory)
 
         self.workspace = GamsWorkspace(
@@ -120,14 +124,24 @@ class Container(gt.Container):
         # allows interrupt
         self._job: Optional[GamsJob] = None
 
-    def _addGamsCode(self, gams_code: str) -> None:
+    def _addGamsCode(
+        self, gams_code: str, import_symbols: List[str] = []
+    ) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
         Parameters
         ----------
         gams_code : str
+        import_symbols : List[str], optional
         """
+        if import_symbols is not None and (
+            not isinstance(import_symbols, list)
+            or any(not isinstance(symbol, str) for symbol in import_symbols)
+        ):
+            raise GamspyException("import_symbols must be a list of strings")
+
+        self._import_symbols = import_symbols
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
 
@@ -167,7 +181,7 @@ class Container(gt.Container):
                     symbol.name,
                     new_domain,
                     symbol.is_singleton,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -176,7 +190,7 @@ class Container(gt.Container):
                     self,
                     symbol.name,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -186,7 +200,7 @@ class Container(gt.Container):
                     symbol.name,
                     symbol.type,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -199,7 +213,7 @@ class Container(gt.Container):
                     name=symbol.name,
                     type=symbol_type,
                     domain=new_domain,
-                    records=symbol.records,
+                    records=symbol._records,
                     domain_forwarding=symbol.domain_forwarding,
                     description=symbol.description,
                 )
@@ -215,7 +229,7 @@ class Container(gt.Container):
             if symbol_name.startswith(gp.Model._generate_prefix):
                 continue
             elif symbol_name in self.data.keys() and isinstance(
-                self[symbol_name], (gp.Alias, gp.UniverseAlias)
+                self[symbol_name], gp.UniverseAlias
             ):
                 continue
             else:
@@ -230,7 +244,7 @@ class Container(gt.Container):
         load_from: str,
         symbol_names: Optional[List[str]] = None,
     ) -> List[str]:
-        if not symbol_names:
+        if symbol_names is None or symbol_names == []:
             symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names
@@ -279,26 +293,38 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
-    def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
+    def _get_touched_symbol_names(
+        self,
+    ) -> Tuple[List[str], List[str], List[str]]:
         dirty_names = []
         assigned_names = []
+
+        # we can't simply do dirty + assigned because order matters.
+        all_symbols = []
 
         for name, symbol in self:
             if isinstance(symbol, gp.UniverseAlias):
                 continue
             elif symbol._is_dirty:
                 dirty_names.append(name)
+
+                if name not in all_symbols:
+                    all_symbols.append(name)
             elif symbol._is_assigned:
                 assigned_names.append(name)
 
-        return dirty_names, assigned_names
+                if name not in all_symbols:
+                    all_symbols.append(name)
 
-    def _clean_dirty_symbols(self):
-        for symbol in self.data.values():
-            if isinstance(symbol, gp.UniverseAlias):
-                continue
-            elif symbol._is_dirty:
-                symbol._is_dirty = False
+        return dirty_names, assigned_names, all_symbols
+
+    def _clean_dirty_symbols(self, dirty_names: List[str]):
+        for name in dirty_names:
+            self[name]._is_dirty = False
+
+    def _update_assigned_state(self, assigned_names: List[str]):
+        for name in assigned_names:
+            self[name]._is_assigned = False
 
     def _run(
         self,
@@ -313,9 +339,13 @@ class Container(gt.Container):
         gams_string = self.generateGamsString(backend=backend)
 
         # Create gdx file to read records from
-        dirty_names, assigned_names = self._get_touched_symbol_names()
-        self._clean_dirty_symbols()
-        super().write(self._gdx_in)
+        dirty_names, assigned_names, all_touched_names = (
+            self._get_touched_symbol_names()
+        )
+        self._clean_dirty_symbols(dirty_names)
+        self._update_assigned_state(assigned_names)
+
+        super().write(self._gdx_in, all_touched_names)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if not self._is_first_run else None
@@ -337,12 +367,13 @@ class Container(gt.Container):
                 " local, engine"
             )
 
-        self._is_first_run = False
+        self.loadRecordsFromGdx(
+            self._gdx_out, dirty_names + self._import_symbols
+        )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
-
-        self.loadRecordsFromGdx(self._gdx_in)
+        self._is_first_run = False
 
     def _run_local(
         self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
@@ -392,8 +423,8 @@ class Container(gt.Container):
                 engine_options=engine_config.engine_options,
                 remove_results=engine_config.remove_results,
             )
-        except Exception as e:
-            raise e
+        except GamsException as e:
+            raise GamspyException(str(e))
         finally:
             self._unsaved_statements = {}
 
@@ -935,7 +966,8 @@ class Container(gt.Container):
 
     def copy(self, working_directory: str) -> "Container":
         """
-        Creates a copy of the Container
+        Creates a copy of the Container. Should not be invoked after
+        creating the model.
 
         Parameters
         ----------
@@ -1086,11 +1118,9 @@ class Container(gt.Container):
 
                 string += statement_str + "\n"
 
-        _, assigned_names = self._get_touched_symbol_names()
+        _, assigned_names, _ = self._get_touched_symbol_names()
         for symbol_name in assigned_names:
-            if isinstance(self[symbol_name], gp.Alias):
-                string += f"$load {self[symbol_name].alias_with.name}\n"
-            else:
+            if not isinstance(self[symbol_name], gp.Alias):
                 string += f"$load {symbol_name}\n"
 
         string += "$gdxIn\n"
@@ -1177,13 +1207,15 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, _ = self._get_touched_symbol_names()
+        dirty_names, assigned_names, _ = self._get_touched_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_names) > 0:
             self._run()
 
         super().write(write_to, symbols)
+
+        self._update_assigned_state(assigned_names)
 
 
 def parse_message(
