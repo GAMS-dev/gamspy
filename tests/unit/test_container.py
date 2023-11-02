@@ -246,7 +246,7 @@ class ContainerSuite(unittest.TestCase):
         m = Container(delayed_execution=True, load_from="data.gdx")
         self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
 
-    def _test_copy(self):
+    def test_copy(self):
         m = Container(delayed_execution=True, working_directory=".")
 
         # Prepare data
@@ -318,11 +318,6 @@ class ContainerSuite(unittest.TestCase):
             "Parameter p;\n$load p\n\n"
             "free Variable v;\n$load v\n\n"
             "Equation e;\n$load e\n\n"
-            "$load i\n"
-            "$load i\n"
-            "$load p\n"
-            "$load v\n"
-            "$load e\n"
             "$gdxIn\n",
         )
 

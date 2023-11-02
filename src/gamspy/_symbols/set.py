@@ -144,6 +144,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         # iterator index
         self._current_index = 0
 
+        # for records and setRecords
+        self._is_assigned = False
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -426,6 +429,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if hasattr(self, "_is_assigned"):
+            self._is_assigned = True
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")

@@ -165,18 +165,23 @@ class EngineSuite(unittest.TestCase):
         )
 
         file = tempfile.NamedTemporaryFile(delete=False)
+        same_directory_file = open(
+            m.working_directory + os.sep + "test.txt", "w"
+        )
 
         engine_config = EngineConfig(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
-            extra_model_files=[file.name],
+            extra_model_files=[file.name, same_directory_file.name],
         )
 
         transport.solve(backend="engine", engine_config=engine_config)
         file.close()
+        same_directory_file.close()
         os.unlink(file.name)
+        os.unlink(same_directory_file.name)
 
 
 def engine_suite():

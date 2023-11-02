@@ -102,6 +102,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         # iterator index
         self._current_index = 0
 
+        # for records and setRecords
+        self._is_assigned = False
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -205,3 +208,12 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
+
+    @property
+    def records(self):
+        return super().records
+
+    @records.setter
+    def records(self, records):
+        self.alias_with._is_assigned = True
+        super().records = records

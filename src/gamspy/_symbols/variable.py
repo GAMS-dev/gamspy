@@ -163,6 +163,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
+        # for records and setRecords
+        self._is_assigned = False
+
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
@@ -300,6 +303,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if hasattr(self, "_is_assigned"):
+            self._is_assigned = True
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")

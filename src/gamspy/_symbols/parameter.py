@@ -134,6 +134,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # add statement
         self.container._addStatement(self)
 
+        # for records and setRecords
+        self._is_assigned = False
+
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
@@ -186,6 +189,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if hasattr(self, "_is_assigned"):
+            self._is_assigned = True
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")

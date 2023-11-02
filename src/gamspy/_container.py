@@ -270,18 +270,25 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
-    def _get_dirty_symbol_names(self) -> List[str]:
-        names = []
+    def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
+        dirty_names = []
+        assigned_names = []
 
         for name, symbol in self:
-            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
-                names.append(name)
+            if isinstance(symbol, gp.UniverseAlias):
+                continue
+            elif symbol._is_dirty:
+                dirty_names.append(name)
+            elif symbol._is_assigned:
+                assigned_names.append(name)
 
-        return names
+        return dirty_names, assigned_names
 
     def _clean_dirty_symbols(self):
         for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty") and symbol._is_dirty:
+            if isinstance(symbol, gp.UniverseAlias):
+                continue
+            elif symbol._is_dirty:
                 symbol._is_dirty = False
 
     def _run(
@@ -294,11 +301,12 @@ class Container(gt.Container):
         if options is None:
             options = GamsOptions(self.workspace)
 
+        gams_string = self.generateGamsString(backend=backend)
+
         # Create gdx file to read records from
+        dirty_names, assigned_names = self._get_touched_symbol_names()
         self._clean_dirty_symbols()
         super().write(self._gdx_in)
-
-        gams_string = self.generateGamsString(backend=backend)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if not self._is_first_run else None
@@ -1069,9 +1077,10 @@ class Container(gt.Container):
 
                 string += statement_str + "\n"
 
-        for symbol_name, symbol in self:
-            if isinstance(symbol, gp.Alias):
-                string += f"$load {symbol.alias_with.name}\n"
+        _, assigned_names = self._get_touched_symbol_names()
+        for symbol_name in assigned_names:
+            if isinstance(self[symbol_name], gp.Alias):
+                string += f"$load {self[symbol_name].alias_with.name}\n"
             else:
                 string += f"$load {symbol_name}\n"
 
@@ -1159,10 +1168,10 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_symbols = self._get_dirty_symbol_names()
+        dirty_names, _ = self._get_touched_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
-        if len(dirty_symbols) > 0:
+        if len(dirty_names) > 0:
             self._run()
 
         super().write(write_to, symbols)
@@ -1227,7 +1236,11 @@ def preprocess_extra_model_files(
     """
     # copy provided extra model files to working directory
     for extra_file in engine_config.extra_model_files:
-        shutil.copy(extra_file, workspace.working_directory)
+        try:
+            shutil.copy(extra_file, workspace.working_directory)
+        except shutil.SameFileError:
+            # extra file might already be in the working directory
+            pass
 
     # trim path and keep only the names of the files
     extra_model_files = [
