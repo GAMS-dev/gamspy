@@ -183,7 +183,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self._infeas = self._create_attr("infeas")
 
         # for records and setRecords
-        self._is_assigned = False
+        self._is_assigned = True
 
     def __hash__(self):
         return id(self)

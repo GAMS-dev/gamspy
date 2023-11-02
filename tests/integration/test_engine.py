@@ -84,17 +84,6 @@ class EngineSuite(unittest.TestCase):
             )
         )
 
-        self.assertRaises(
-            GamspyException,
-            transport.solve,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "engine",
-        )
-
         transport.solve(backend="engine", engine_config=engine_config)
 
         self.assertEqual(transport.objective_value, 153.675)
@@ -125,6 +114,25 @@ class EngineSuite(unittest.TestCase):
             None,
             "engine",
             engine_config,
+        )
+
+        transport3 = Model(
+            m,
+            name="transport3",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        self.assertRaises(
+            GamspyException,
+            transport3.solve,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "engine",
         )
 
     def test_extra_files(self):

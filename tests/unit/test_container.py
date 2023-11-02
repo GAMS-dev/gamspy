@@ -321,6 +321,7 @@ class ContainerSuite(unittest.TestCase):
             "Parameter p;\n$load p\n\n"
             "free Variable v;\n$load v\n\n"
             "Equation e;\n$load e\n\n"
+            "$load i\n$load p\n$load v\n$load e\n"
             "$gdxIn\n",
         )
 

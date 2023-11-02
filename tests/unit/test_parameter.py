@@ -174,7 +174,7 @@ class ParameterSuite(unittest.TestCase):
             m.generateGamsString(),
             "$onMultiR\n$gdxIn"
             f" {m._gdx_in}\n$onUNDF\nParameter"
-            " rho;\n$load rho\n$offUNDF\n$gdxIn\n",
+            " rho;\n$load rho\n$offUNDF\n$load rho\n$gdxIn\n",
         )
 
 

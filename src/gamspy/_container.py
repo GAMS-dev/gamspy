@@ -181,7 +181,7 @@ class Container(gt.Container):
                     symbol.name,
                     new_domain,
                     symbol.is_singleton,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -190,7 +190,7 @@ class Container(gt.Container):
                     self,
                     symbol.name,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -200,7 +200,7 @@ class Container(gt.Container):
                     symbol.name,
                     symbol.type,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -213,7 +213,7 @@ class Container(gt.Container):
                     name=symbol.name,
                     type=symbol_type,
                     domain=new_domain,
-                    records=symbol.records,
+                    records=symbol._records,
                     domain_forwarding=symbol.domain_forwarding,
                     description=symbol.description,
                 )
@@ -229,7 +229,7 @@ class Container(gt.Container):
             if symbol_name.startswith(gp.Model._generate_prefix):
                 continue
             elif symbol_name in self.data.keys() and isinstance(
-                self[symbol_name], (gp.Alias, gp.UniverseAlias)
+                self[symbol_name], gp.UniverseAlias
             ):
                 continue
             else:
@@ -293,26 +293,36 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
-    def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
+    def _get_touched_symbol_names(
+        self,
+    ) -> Tuple[List[str], List[str], List[str]]:
         dirty_names = []
         assigned_names = []
+        all_symbols = []
 
         for name, symbol in self:
             if isinstance(symbol, gp.UniverseAlias):
                 continue
             elif symbol._is_dirty:
                 dirty_names.append(name)
+
+                if name not in all_symbols:
+                    all_symbols.append(name)
             elif symbol._is_assigned:
                 assigned_names.append(name)
 
-        return dirty_names, assigned_names
+                if name not in all_symbols:
+                    all_symbols.append(name)
 
-    def _clean_dirty_symbols(self):
-        for symbol in self.data.values():
-            if isinstance(symbol, gp.UniverseAlias):
-                continue
-            elif symbol._is_dirty:
-                symbol._is_dirty = False
+        return dirty_names, assigned_names, all_symbols
+
+    def _clean_dirty_symbols(self, dirty_names: List[str]):
+        for name in dirty_names:
+            self[name]._is_dirty = False
+
+    def _update_assigned_state(self, assigned_names: List[str]):
+        for name in assigned_names:
+            self[name]._is_assigned = False
 
     def _run(
         self,
@@ -327,9 +337,13 @@ class Container(gt.Container):
         gams_string = self.generateGamsString(backend=backend)
 
         # Create gdx file to read records from
-        dirty_names, _ = self._get_touched_symbol_names()
-        self._clean_dirty_symbols()
-        super().write(self._gdx_in)
+        dirty_names, assigned_names, all_touched_names = (
+            self._get_touched_symbol_names()
+        )
+        self._clean_dirty_symbols(dirty_names)
+        self._update_assigned_state(assigned_names)
+
+        super().write(self._gdx_in, all_touched_names)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if not self._is_first_run else None
@@ -1102,11 +1116,9 @@ class Container(gt.Container):
 
                 string += statement_str + "\n"
 
-        _, assigned_names = self._get_touched_symbol_names()
+        _, assigned_names, _ = self._get_touched_symbol_names()
         for symbol_name in assigned_names:
-            if isinstance(self[symbol_name], gp.Alias):
-                string += f"$load {self[symbol_name].alias_with.name}\n"
-            else:
+            if not isinstance(self[symbol_name], gp.Alias):
                 string += f"$load {symbol_name}\n"
 
         string += "$gdxIn\n"
@@ -1193,13 +1205,16 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, _ = self._get_touched_symbol_names()
+        dirty_names, assigned_names, _ = self._get_touched_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_names) > 0:
             self._run()
 
         super().write(write_to, symbols)
+
+        for name in assigned_names:
+            self[name]._is_assigned = False
 
 
 def parse_message(

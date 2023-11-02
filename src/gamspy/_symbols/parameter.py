@@ -135,7 +135,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._addStatement(self)
 
         # for records and setRecords
-        self._is_assigned = False
+        self._is_assigned = True
 
     def __getitem__(
         self, indices: Union[tuple, str]
