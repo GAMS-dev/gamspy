@@ -24,14 +24,21 @@
 #
 from __future__ import annotations
 
+from typing import List
 from typing import Tuple
+from typing import TYPE_CHECKING
 
+import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
+import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+
+if TYPE_CHECKING:
+    from gamspy import Variable
 
 
 class Expression(operable.Operable):
@@ -184,3 +191,25 @@ class Expression(operable.Operable):
         str
         """
         return self.gamsRepr()
+
+    def traverse(self) -> List["Variable"]:
+        variables: List["Variable"] = []
+        self._inorder_traversal(self, variables)
+
+        return list(set(variables))
+
+    def _inorder_traversal(self, root, variables):
+        if root is None:
+            return
+
+        if isinstance(root, Expression):
+            self._inorder_traversal(root._left, variables)
+            self._inorder_traversal(root._right, variables)
+        elif isinstance(root, operation.Operation):
+            self._inorder_traversal(root.expression, variables)
+        else:
+            if isinstance(root, gp.Variable):
+                variables.append(root.name)
+            elif isinstance(root, implicits.ImplicitVariable):
+                variables.append(root.parent.name)
+        return

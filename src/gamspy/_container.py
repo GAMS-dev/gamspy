@@ -328,12 +328,11 @@ class Container(gt.Container):
                 " local, engine"
             )
 
-        self._is_first_run = False
+        self.loadRecordsFromGdx(self._gdx_out, dirty_names)
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
-
-        self.loadRecordsFromGdx(self._gdx_in)
+        self._is_first_run = False
 
     def _run_local(
         self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
