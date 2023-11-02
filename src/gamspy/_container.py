@@ -25,6 +25,7 @@
 import io
 import os
 import shutil
+import uuid
 from typing import Any
 from typing import List
 from typing import Literal
@@ -279,8 +280,16 @@ class Container(gt.Container):
         """
         save_to = GamsCheckpoint(self.workspace)
         restart_from = GamsCheckpoint(self.workspace)
-        gdx_in = self.working_directory + os.sep + f"{save_to._name}.gdx"
-        gdx_out = self.working_directory + os.sep + f"{restart_from._name}.gdx"
+        gdx_in = (
+            self.working_directory
+            + os.sep
+            + f"{save_to._name}{uuid.uuid1()}.gdx"
+        )
+        gdx_out = (
+            self.working_directory
+            + os.sep
+            + f"{restart_from._name}{uuid.uuid1()}.gdx"
+        )
 
         return save_to, restart_from, gdx_in, gdx_out
 
