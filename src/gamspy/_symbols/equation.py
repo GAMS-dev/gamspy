@@ -239,8 +239,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._addStatement(statement)
         self._definition = statement
 
-        if self.container.delayed_execution:
-            self._is_dirty = True
+        self._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)

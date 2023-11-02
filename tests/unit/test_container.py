@@ -185,7 +185,9 @@ class ContainerSuite(unittest.TestCase):
         )
 
         m = Container(delayed_execution=True)
-        m._addGamsCode("scalar piHalf / [pi/2] /;")
+        i = Set(m, "i", records=["i1", "i2"])
+        i["i1"] = False
+        m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
         m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)

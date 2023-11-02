@@ -101,6 +101,9 @@ class Container(gt.Container):
         self._unsaved_statements: dict = {}
         self._is_first_run = True
 
+        # import symbols from arbitrary gams code
+        self._import_symbols: List[str] = []
+
         super().__init__(load_from, system_directory)
 
         self.workspace = GamsWorkspace(
@@ -119,14 +122,24 @@ class Container(gt.Container):
         # allows interrupt
         self._job: Optional[GamsJob] = None
 
-    def _addGamsCode(self, gams_code: str) -> None:
+    def _addGamsCode(
+        self, gams_code: str, import_symbols: List[str] = []
+    ) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
         Parameters
         ----------
         gams_code : str
+        import_symbols : List[str], optional
         """
+        if import_symbols is not None and (
+            not isinstance(import_symbols, list)
+            or any(not isinstance(symbol, str) for symbol in import_symbols)
+        ):
+            raise GamspyException("import_symbols must be a list of strings")
+
+        self._import_symbols = import_symbols
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
 
@@ -229,7 +242,7 @@ class Container(gt.Container):
         load_from: str,
         symbol_names: Optional[List[str]] = None,
     ) -> List[str]:
-        if not symbol_names:
+        if symbol_names is None or symbol_names == []:
             symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names
@@ -304,7 +317,7 @@ class Container(gt.Container):
         gams_string = self.generateGamsString(backend=backend)
 
         # Create gdx file to read records from
-        dirty_names, assigned_names = self._get_touched_symbol_names()
+        dirty_names, _ = self._get_touched_symbol_names()
         self._clean_dirty_symbols()
         super().write(self._gdx_in)
 
@@ -328,7 +341,9 @@ class Container(gt.Container):
                 " local, engine"
             )
 
-        self.loadRecordsFromGdx(self._gdx_out, dirty_names)
+        self.loadRecordsFromGdx(
+            self._gdx_out, dirty_names + self._import_symbols
+        )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
