@@ -322,6 +322,7 @@ class ContainerSuite(unittest.TestCase):
             "free Variable v;\n$load v\n\n"
             "Equation e;\n$load e\n\n"
             "$load i\n$load p\n$load v\n$load e\n"
+            f"execute_unload '{m._gdx_out}' \n"
             "$gdxIn\n",
         )
 

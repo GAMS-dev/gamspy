@@ -37,7 +37,7 @@ class EngineConfig(BaseModel):
     namespace: str = "global"
     extra_model_files: List[str] = []
     engine_options: Optional[dict] = None
-    remove_results: bool = True
+    remove_results: bool = False
 
     def get_engine_config(self):
         return GamsEngineConfiguration(

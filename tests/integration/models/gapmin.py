@@ -383,9 +383,6 @@ def main():
         )
     )
 
-    # then keep the smaller of the two values as zfeas
-    pknap.optCr = 0  # ask for global solution
-
     # ============================================================================ #
     #                                                                              #
     #   beginning of subgradient loop                                              #
@@ -406,7 +403,7 @@ def main():
         zlr[...] = 0
         for ii_loop in ii.toList():
             id[ii_loop] = True  # assume id was empty
-            pknap.solve()
+            pknap.solve(options={"optCr": 0})
             zlr[...] = zlr + zlrx.l
             id[ii_loop] = False  # make set empty again
 

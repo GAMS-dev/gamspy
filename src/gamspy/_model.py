@@ -208,7 +208,6 @@ class Model:
         self._matches = matches
         self._limited_variables = limited_variables
         self.container._addStatement(self)
-        self._generate_attribute_symbols()
 
         # allow freezing
         self._is_frozen = False
@@ -331,9 +330,7 @@ class Model:
     def _generate_attribute_symbols(self) -> None:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
-            self.container._unsaved_statements[symbol_name] = (
-                f"Scalar {symbol_name};"
-            )
+            _ = gp.Parameter(self.container, symbol_name)
 
     def _prepare_gams_options(
         self,
@@ -582,6 +579,7 @@ class Model:
             )
 
             self._append_solve_string()
+            self._generate_attribute_symbols()
             self._assign_model_attributes()
             self._make_variable_and_equations_dirty()
 
