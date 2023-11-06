@@ -14,3 +14,4 @@ fundamental GAMSPy ideas and philosophy.
    ./number
    ./assignments
    ./special_features
+   ./debugging
