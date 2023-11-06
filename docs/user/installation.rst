@@ -81,8 +81,6 @@ Then, you can run the gamspy command as usual::
 Solvers
 -------
 
-.. todo:: I get seven solvers. teh SCENSOLVER seems to be missing in this list. Not sure if that is on purpose because its not a real solver (CONVERT isn't a real solver as well).
-
 GAMSPy comes with 6 default solvers (CPLEX, CONOPT, PATH, NLPEC, SBB, and CONVERT) and
 more solvers can be installed on demand.
 
@@ -127,11 +125,10 @@ To update all solvers to a version that is compatible with GAMSPy.
 Testing
 -------
 
-.. todo:: I guess this needs some explanation. E.g. where to find the tests folder.
-
-Tests can be run with::
+Tests are classified into three: unit tests, integration tests and doc tests. The tests can be run with::
 
     python tests/test_gamspy.py
 
 .. note::
     By default, only unit tests are running. To enable integration tests, --integration argument should be provided.
+    Doctests can be enable with --doc argument.

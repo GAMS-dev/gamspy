@@ -345,7 +345,7 @@ model::
 Specifying a lower bound for ``C[t]`` that is slightly larger than ``0``
 prevents the ``log`` function from becoming undefined.
 
-.. _equation_attributes:
+.. _equation-attributes:
 
 Equation Attributes
 -------------------
