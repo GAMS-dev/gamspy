@@ -12,4 +12,5 @@ fundamental GAMSPy ideas and philosophy.
    ./card_ord
    ./lag_lead
    ./number
-   ./domain
+   ./assignments
+   ./special_features

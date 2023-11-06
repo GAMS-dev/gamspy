@@ -4,8 +4,6 @@
 Frequently Asked Questions
 ****************************
 
-.. todo:: I guess we should include the import statemenst required to run the examples in this section
-
 Why can't I redefine a GAMSPy symbol?
 --------------------------------------
 
@@ -13,6 +11,7 @@ Trying to run the following lines of code will raise an error.
 
 .. code-block:: 
 
+    from gamspy import Container, Set, Parameter
     m = Container()
     p = Set(container=m, name="p", description="products")
     price = Parameter(container=m, name="p", domain=p, description="price for product p")
@@ -29,6 +28,7 @@ Why do I need a GAMSPy ``Alias``?
 
 Consider the following example code::
 
+    from gamspy import Container, Set, Parameter
     m = Container()
     i = j = Set(container=m, name="i", records=range(3))
     p = Parameter(container=m, name="p", domain=[i, j])
@@ -37,34 +37,33 @@ Consider the following example code::
 
 You would probably expect that the value for :math:`p_{i,j}` is equal to one for each combination of :math:`(i,j)`
 
-.. todo:: I would expect 0,1,2 instead of all zeroes in the j column of the following examples.
-
 ::
 
-    >>> p.records.set_index(['i', 'j'])
+    >>> p.records
                 value
         i  j
         0  0   1
-        1      1
-        2      1
+        0  1   1
+        0  2   1
         1  0   1
-        1      1
-        2      1
+        1  1   1
+        1  2   1
         2  0   1
-        1      1
-        2      1
+        2  1   1
+        2  2   1
 
 However, the above lines of code give you::
 
-    >>> p.records.set_index(['i', 'j'])
-                value
-        i  j
-        0  0   1
-        1  1   1
-        2  2   1
+    >>> p.records
+                  value
+        i_0  i_1
+        0    0    1
+        1    1    1
+        2    2    1
 
 Only by declaring ``j`` an ``Alias`` of ``i`` you will get the desired outcome::
 
+    from gamspy import Alias, Container, Set, Parameter
     m = Container()
     i = Set(container=m, name="i", records=range(3))
     j = Alias(container=m, name='j', alias_with=i)
@@ -74,7 +73,7 @@ Only by declaring ``j`` an ``Alias`` of ``i`` you will get the desired outcome::
 
 ::
 
-    >>> p.records.set_index(['i', 'j'])
+    >>> p.records
             value
     i  j
     0  0   1
@@ -93,13 +92,15 @@ Do I use a ``Parameter`` or a Python variable to represent scalar parameters?
 
 .. code-block::
 
+    from gamspy import Container, Parameter
+    m = Container()
     p_python = 40
     p_parameter = Parameter(container=m, name="p", records=40)
 
 
 Technically it does not matter whether a scalar ``Parameter`` or a Python variable is used. 
 It is more a matter of taste and convenience as::
-
+    
     eq = Equation(container=m, name="eq", domain=i)
     eq[i] = Sum(j, x[i, j]) <= p_python
 

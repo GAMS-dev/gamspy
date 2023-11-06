@@ -91,7 +91,10 @@ def centropy(
     )
 
 
-def uniform(lower_bound: float, upper_bound: float) -> "Expression":
+def uniform(
+    lower_bound: Union[float, "Expression"],
+    upper_bound: Union[float, "Expression"],
+) -> "Expression":
     """
     Generates a random number from the uniform distribution between
     lower_bound and higher_bound
@@ -105,9 +108,9 @@ def uniform(lower_bound: float, upper_bound: float) -> "Expression":
     -------
     Expression
     """
-    return expression.Expression(
-        "uniform(", f"{lower_bound},{upper_bound}", ")"
-    )
+    lower_str = _stringify(lower_bound)
+    upper_str = _stringify(upper_bound)
+    return expression.Expression("uniform(", f"{lower_str},{upper_str}", ")")
 
 
 def uniformInt(
