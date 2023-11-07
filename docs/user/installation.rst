@@ -14,8 +14,9 @@ You can run the following command to install GAMSPy from PyPI::
 Building from source
 --------------------
 
-If you are a MacOS or Linux user familiar with using the command line, 
-you can continue with building GAMSPy locally by following the instructions below.
+If you are a MacOS or Linux user (or using a subsystem like WSL in Windows) who is 
+familiar with using the command line, you can continue with building GAMSPy locally 
+by following the instructions below.
 
 Prerequisites
 =============
@@ -33,8 +34,7 @@ Installation
 
 You can install GAMSPy from source with the following command::
 
-    python setup.py sdist 
-    pip install gamspy --find-links dist/ --no-index
+    pip install .
 
 Licensing
 ---------
