@@ -2,6 +2,7 @@ Variable
 ========
 
 .. autoclass:: gamspy.Variable
+   :inherited-members:
    :members:
    :undoc-members:
    :show-inheritance:
