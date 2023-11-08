@@ -55,6 +55,8 @@ if TYPE_CHECKING:
 
 
 class Problem(Enum):
+    """An enumeration for problem all problem types"""
+
     LP = "LP"
     NLP = "NLP"
     QCP = "QCP"
@@ -81,6 +83,8 @@ class Problem(Enum):
 
 
 class Sense(Enum):
+    """An enumeration for sense types"""
+
     MIN = "MIN"
     MAX = "MAX"
     FEASIBILITY = "FEASIBILITY"

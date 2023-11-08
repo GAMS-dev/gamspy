@@ -1215,6 +1215,18 @@ class Container(gt.Container):
             Path to the gdx file
         symbols : List[str], optional
             Symbols whose data will be load from gdx, by default None
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set
+        >>> m = Container()
+        >>> i = Set(m, "i", records=["i1", "i2"])
+        >>> m.write("test.gdx")
+        >>> m2 = Container()
+        >>> m2.loadRecordsFromGdx("test.gdx")
+        >>> print(i.records.equals(m2["i"].records))
+        True
+
         """
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 

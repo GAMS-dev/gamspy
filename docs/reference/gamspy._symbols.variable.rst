@@ -7,6 +7,6 @@ Variable
    :show-inheritance:
 
 .. autoclass:: gamspy.VariableType
-   :members:
+   :members: BINARY,INTEGER,POSITIVE,NEGATIVE,FREE,SOS1,SOS2,SEMICONT,SEMIINT
    :undoc-members:
    :show-inheritance:
