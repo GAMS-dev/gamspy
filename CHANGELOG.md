@@ -5,7 +5,7 @@ GAMSPy CHANGELOG
 GAMSPy 0.10.2
 -------------------------------------------------------------------------------
 - General
-  - Write and read only dirty symbols instead of all symbols to improve performance.
+  - Write and read only dirty symbols instead of all symbols to improve performance (~30% improvement on running all model library models).
   - Make gdx file names thread safe by using uuid.
 - Documentation
   - Fix api reference for inherited members.
