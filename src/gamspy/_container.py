@@ -129,7 +129,7 @@ class Container(gt.Container):
         # allows interrupt
         self._job: Optional[GamsJob] = None
 
-        self._options = self._map_options(options)
+        self._options = options
 
     def _addGamsCode(
         self, gams_code: str, import_symbols: List[str] = []
@@ -300,7 +300,30 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
-    def _map_options(self, options: Union["Options", None]) -> "GamsOptions":
+    def _map_options(
+        self, options: Union["Options", None], is_seedable: bool = True
+    ) -> "GamsOptions":
+        """
+        Maps given GAMSPy options to GamsOptions
+
+        Parameters
+        ----------
+        options : Options | None
+            GAMSPy options
+        is_seedable : bool, optional
+            only seedable at first run or in model.solve function, by default True
+
+        Returns
+        -------
+        GamsOptions
+
+        Raises
+        ------
+        GamspyException
+            when options is not type Options
+        GamspyException
+            when one of the option names is invalid
+        """
         gams_options = GamsOptions(self.workspace)
 
         if options is not None:
@@ -322,6 +345,8 @@ class Container(gt.Container):
                     )
 
                 if value:
+                    if option == "seed" and not is_seedable:
+                        continue
                     setattr(gams_options, option.lower(), value)
 
         return gams_options
@@ -367,8 +392,10 @@ class Container(gt.Container):
         backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
     ):
-        if options is None and self._is_first_run:
-            options = self._options
+        if options is None:
+            options = self._map_options(
+                self._options, is_seedable=self._is_first_run
+            )
 
         gams_string = self.generateGamsString(backend=backend)
 
