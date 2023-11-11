@@ -851,7 +851,7 @@ class SolveSuite(unittest.TestCase):
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
 
-        energy.solve(options=Options(relative_termination_tolerance=0.000001))
+        energy.solve(options=Options(relative_optimality_gap=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
 

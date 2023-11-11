@@ -19,6 +19,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Sense
 from gamspy import Set
@@ -95,7 +96,7 @@ def main():
 
     for idx, iter, _ in counter.records.itertuples():
         NPMU[...] = idx + 1
-        placement3.solve(options={"optCr": 0, "profile": 1})
+        placement3.solve(options=Options(relative_optimality_gap=0))
         report[bus, iter] = PMU.l[bus]
         OBIrep[iter] = OF.l
 

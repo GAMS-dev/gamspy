@@ -19,6 +19,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
@@ -87,7 +88,7 @@ def main():
         sense="min",
         objective=OFc,
     )
-    placement0.solve(options={"optCr": 0})
+    placement0.solve(options=Options(relative_optimality_gap=0))
     print("PMU:  \n", PMU.toDict())
 
     import math

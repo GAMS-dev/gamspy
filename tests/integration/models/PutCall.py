@@ -18,6 +18,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
@@ -312,7 +313,13 @@ def main():
     # Set the average level of downside (risk) allowed
 
     Omega[...] = 0.1
-    UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
+    UnConPutCallModel.solve(
+        options=Options(
+            variable_listing_limit=0,
+            equation_listing_limit=0,
+            solver_link_type=2,
+        )
+    )
 
     # Dual of the UnConstrained Put/Call model
 
@@ -345,7 +352,11 @@ def main():
     )
 
     UnConDualPutCallModel.solve(
-        options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+        options=Options(
+            variable_listing_limit=0,
+            equation_listing_limit=0,
+            solver_link_type=2,
+        )
     )
 
     # Display PiOmega.l and Pi.l and check that they are, respectively, equal
@@ -424,7 +435,11 @@ def main():
     for jj in j.toList():
         Omega[...] = OmegaLevels[jj]
         UnConPutCallModel.solve(
-            options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+            options=Options(
+                variable_listing_limit=0,
+                equation_listing_limit=0,
+                solver_link_type=2,
+            )
         )
 
         FrontierPortfolios[jj, i] = x.l[i]
@@ -443,7 +458,11 @@ def main():
     for jj in j.toList():
         Omega[...] = OmegaLevels[jj]
         UnConPutCallModel.solve(
-            options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2}
+            options=Options(
+                variable_listing_limit=0,
+                equation_listing_limit=0,
+                solver_link_type=2,
+            )
         )
 
         FrontierPortfolios[jj, i] = x.l[i]
@@ -459,7 +478,13 @@ def main():
 
     Omega[...] = 0.475
 
-    UnConPutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
+    UnConPutCallModel.solve(
+        options=Options(
+            variable_listing_limit=0,
+            equation_listing_limit=0,
+            solver_link_type=2,
+        )
+    )
 
     # SCALAR
     Df = Parameter(m, name="Df")
@@ -516,7 +541,13 @@ def main():
 
     for jj in j.toList():
         Omega[...] = OmegaLevels[jj]
-        PutCallModel.solve(options={"LIMROW": 0, "LIMCOL": 0, "SOLVELINK": 2})
+        PutCallModel.solve(
+            options=Options(
+                variable_listing_limit=0,
+                equation_listing_limit=0,
+                solver_link_type=2,
+            )
+        )
         FrontierPortfolios[jj, i] = x.l[i]
         PutCall[jj, "Put side"] = PutCon.l
         PutCall[jj, "Call side"] = z.l

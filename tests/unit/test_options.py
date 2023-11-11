@@ -2,29 +2,14 @@ import unittest
 
 from pydantic import ValidationError
 
+import gamspy.math as math
+from gamspy import Container
 from gamspy import Options
+from gamspy import Parameter
 
 
 class OptionsSuite(unittest.TestCase):
     def test_options(self):
-        with self.assertRaises(ValidationError):
-            _ = Options(action=5)
-
-        options = Options(action="restart_after_solve")
-        self.assertEqual(options.action, "R")
-
-        with self.assertRaises(ValidationError):
-            _ = Options(append_output=5)
-
-        options = Options(append_output=True)
-        self.assertEqual(options.append_output, 1)
-
-        with self.assertRaises(ValidationError):
-            _ = Options(report_async_solve=5)
-
-        options = Options(report_async_solve=True)
-        self.assertEqual(options.report_async_solve, 1)
-
         with self.assertRaises(ValidationError):
             _ = Options(hold_fixed_variables=5)
 
@@ -32,15 +17,9 @@ class OptionsSuite(unittest.TestCase):
         self.assertEqual(options.hold_fixed_variables, 1)
 
         with self.assertRaises(ValidationError):
-            _ = Options(hold_fixed_variables_async=5)
-
-        options = Options(hold_fixed_variables_async=True)
-        self.assertEqual(options.hold_fixed_variables_async, 1)
-
-        with self.assertRaises(ValidationError):
             _ = Options(report_solution=5)
 
-        options = Options(report_solution=True)
+        options = Options(report_solution=1)
         self.assertEqual(options.report_solution, 1)
 
         with self.assertRaises(ValidationError):
@@ -58,7 +37,7 @@ class OptionsSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             _ = Options(suppress_compiler_listing=5)
 
-        options = Options(suppress_compiler_listing=True)
+        options = Options(suppress_compiler_listing=1)
         self.assertEqual(options.suppress_compiler_listing, 1)
 
         with self.assertRaises(ValidationError):
@@ -72,6 +51,26 @@ class OptionsSuite(unittest.TestCase):
 
         options = Options(report_underflow=True)
         self.assertEqual(options.report_underflow, 1)
+
+    def test_seed(self):
+        m = Container(options=Options(seed=1))
+        p1 = Parameter(m, "p1")
+        p1[...] = math.normal(0, 1)
+        self.assertEqual(p1.records.value.item(), 0.45286287828275534)
+
+        p2 = Parameter(m, "p2")
+        p2[...] = math.normal(0, 1)
+        self.assertEqual(p2.records.value.item(), -0.4841775276628964)
+
+        # change seed
+        m = Container(options=Options(seed=5))
+        p1 = Parameter(m, "p1")
+        p1[...] = math.normal(0, 1)
+        self.assertEqual(p1.records.value.item(), 0.14657004110784333)
+
+        p2 = Parameter(m, "p2")
+        p2[...] = math.normal(0, 1)
+        self.assertEqual(p2.records.value.item(), 0.11165956511164217)
 
 
 def options_suite():

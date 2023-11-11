@@ -21,6 +21,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Problem
 from gamspy import Sense
@@ -85,7 +86,7 @@ m = Model(
 
 # solve with a good global solver
 print("Starting solve, be patient (log only shown afterwards)...")
-m.solve(options={"optcr": 0.01})
+m.solve(options=Options(relative_optimality_gap=0.01))
 
 assert math.isclose(m.objective_value, 0.3702, rel_tol=0.001)
 
