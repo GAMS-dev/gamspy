@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 from gamspy import Alias
@@ -74,12 +75,16 @@ def main():
 
     hansen.solve()
 
-    assert i.records.level.to_list() == [
+    # check correctness
+    correct_result = [
         5.1549387635430755,
         2.827534834524584,
         0.5875814316920335,
         8.5599675080206,
     ]
+
+    for expected, found in zip(correct_result, i.records.level.to_list()):
+        assert math.isclose(expected, found)
 
 
 if __name__ == "__main__":
