@@ -449,7 +449,7 @@ class Model:
             system_directory=self.container.system_directory
         )
         temp_container.read(
-            self.container._gdx_in,
+            self.container._gdx_out,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
                 for gams_attr in attribute_map.keys()
