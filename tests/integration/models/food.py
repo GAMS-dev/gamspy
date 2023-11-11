@@ -276,7 +276,7 @@ def main():
         objective=profit,
     )
 
-    food.solve(options={"optcr": 0})
+    food.solve(options=gp.Options(relative_optimality_gap=0))
 
     import math
 

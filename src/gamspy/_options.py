@@ -28,22 +28,6 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import field_validator
 
-ACTIONS = Literal[
-    "restart_after_solve",
-    "compile_only",
-    "execute_only",
-    "compile_and_execute",
-    "trace_report",
-]
-
-action_map = {
-    "restart_after_solve": "R",
-    "compile_only": "C",
-    "execute_only": "E",
-    "compile_and_execute": "CE",
-    "trace_report": "GT",
-}
-
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
 
 # GAMSPy to GAMS Control mapping
@@ -63,57 +47,42 @@ option_map = {
     "rmip": "rmip",
     "rmiqcp": "rmiqcp",
     "rmpec": "rmpec",
-    "action": "action",
-    "append_output": "appendout",
-    "report_async_solve": "asyncsollst",
+    "allow_suffix_in_equation": "suffixalgebravars",
+    "allow_suffix_in_limited_variables": "suffixdlvars",
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
-    "decrypt_key": "decryptkey",
     "domain_violation_limit": "domlim",
-    "encrypt_key": "encryptkey",
-    "time_limit": "etlim",
-    "finite_diff_step_size": "fddelta",
-    "finite_diff_option": "fdopt",
-    "heap_limit": "heaplimit",
+    "job_time_limit": "etlim",
+    "job_heap_limit": "heaplimit",
     "hold_fixed_variables": "holdfixed",
     "hold_fixed_variables_async": "holdfixedasync",
-    "int_variable_upper_bound": "intvarup",
+    "integer_variable_upper_bound": "intvarup",
     "iteration_limit": "iterlim",
-    "job_trace": "jobtrace",
+    "keep_temporary_files": "keep",
     "license": "license",
-    "variable_column_limit": "limcol",
-    "equation_row_limit": "limrow",
-    "line_tracing_level": "logline",
-    "max_execution_errors": "maxexecerror",
+    "gams_log_redirection": "_logoption",
+    "variable_listing_limit": "limcol",
+    "equation_listing_limit": "limrow",
     "node_limit": "nodlim",
-    "absolute_termination_tolerance": "optca",
-    "relative_termination_tolerance": "optcr",
-    "solver_options_directory": "optdir",
-    "option_file": "optfile",
-    "output_file_name": "output",
-    "privacy_license": "plicense",
+    "absolute_optimality_gap": "optca",
+    "relative_optimality_gap": "optcr",
     "profile": "profile",
-    "profile_file": "profilefile",
     "profile_tolerance": "profiletol",
-    "reference_file": "reference",
-    "reference_line_number": "referencelineno",
-    "solver_time_limit": "reslim",
+    "time_limit": "reslim",
     "savepoint": "savepoint",
     "seed": "seed",
     "report_solution": "solprint",
-    "solver_link_option": "solvelink",
+    "show_os_memory": "showosmemory",
+    "solver_link_type": "solvelink",
     "multi_solve_strategy": "solveopt",
     "step_summary": "stepsum",
     "suppress_compiler_listing": "suppress",
-    "symbol_table_file": "symbol",
     "report_solver_status": "sysout",
     "threads": "threads",
-    "threads_async": "threadsasync",
-    "instruction_time_threshold": "timer",
     "trace_file": "trace",
     "trace_level": "tracelevel",
     "trace_file_format": "traceopt",
-    "num_warnings_limit": "warnings",
+    "write_listing_file": "_writeoutput",
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }
@@ -135,91 +104,63 @@ class Options(BaseModel):
     rmip: Optional[str] = None
     rmiqcp: Optional[str] = None
     rmpec: Optional[str] = None
-    action: Optional[ACTIONS] = None
-    append_output: Optional[bool] = None
-    report_async_solve: Optional[bool] = None
+    allow_suffix_in_equation: Optional[bool] = None
+    allow_suffix_in_limited_variables: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
-    compile_error_limit: Optional[int] = None
-    decrypt_key: Optional[str] = None
+    compile_error_limit: int = 1
     domain_violation_limit: Optional[int] = None
-    encrypt_key: Optional[str] = None
-    time_limit: Optional[float] = None
-    finite_diff_step_size: Optional[float] = None
-    finite_diff_option: Optional[
-        Literal[0, 1, 2, 3, 4, 10, 11, 12, 13, 14]
-    ] = None
-    heap_limit: Optional[float] = None
+    gams_log_redirection: Literal[0, 2, 3, 4] = 3
+    job_time_limit: Optional[float] = None
+    job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
-    hold_fixed_variables_async: Optional[bool] = None
-    int_variable_upper_bound: Optional[int] = None
+    integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
-    job_trace: Optional[str] = None
+    keep_temporary_files: bool = False
     license: Optional[str] = None
-    variable_column_limit: Optional[int] = None
-    equation_row_limit: Optional[int] = None
-    line_tracing_level: Optional[Literal[0, 1, 2]] = None
-    max_execution_errors: Optional[int] = None
+    variable_listing_limit: Optional[int] = None
+    equation_listing_limit: Optional[int] = None
     node_limit: Optional[int] = None
-    absolute_termination_tolerance: Optional[float] = None
-    relative_termination_tolerance: Optional[float] = None
-    solver_options_directory: Optional[str] = None
-    option_file: Optional[int] = None
-    output_file_name: Optional[str] = None
-    privacy_license: Optional[str] = None
+    absolute_optimality_gap: Optional[float] = None
+    relative_optimality_gap: Optional[float] = None
     profile: Optional[int] = None
-    profile_file: Optional[str] = None
     profile_tolerance: Optional[float] = None
-    reference_file: Optional[str] = None
-    reference_line_number: Optional[Literal["actual", "start"]] = None
-    solver_time_limit: Optional[float] = None
+    time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Optional[bool] = None
-    solver_link_option: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
+    report_solution: Literal[0, 1, 2] = 2
+    show_os_memory: Literal[0, 1, 2] = 0
+    solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     multi_solve_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
-    suppress_compiler_listing: Optional[bool] = None
-    symbol_table_file: Optional[str] = None
+    suppress_compiler_listing: bool = True
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
-    threads_async: Optional[int] = None
-    instruction_time_threshold: Optional[int] = None
     trace_file: Optional[str] = None
     trace_level: Optional[int] = None
     trace_file_format: Optional[Literal[0, 1, 2, 3, 4, 5]] = None
-    num_warnings_limit: Optional[int] = None
+    write_listing_file: bool = True
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    @field_validator("action")
+    @field_validator("allow_suffix_in_equation")
     @classmethod
-    def validate_action(cls, action: str) -> str:
-        return action_map[action]
+    def validate_allow_suffix_in_equation(cls, is_allowing):
+        return "on" if is_allowing else "off"
 
-    @field_validator("append_output")
+    @field_validator("allow_suffix_in_limited_variables")
     @classmethod
-    def validate_append_output(cls, is_appending: bool) -> int:
-        return 1 if is_appending else 0
-
-    @field_validator("report_async_solve")
-    @classmethod
-    def validate_report_async_solve(cls, is_reporting: bool) -> int:
-        return 1 if is_reporting else 0
+    def validate_allow_suffix_in_limited_variables(cls, is_allowing):
+        return "on" if is_allowing else "off"
 
     @field_validator("hold_fixed_variables")
     @classmethod
     def validate_hold_fixed_variables(cls, is_holding: bool) -> int:
         return 1 if is_holding else 0
 
-    @field_validator("hold_fixed_variables_async")
+    @field_validator("keep_temporary_files")
     @classmethod
-    def validate_hold_fixed_variables_async(cls, is_holding: bool) -> int:
-        return 1 if is_holding else 0
-
-    @field_validator("report_solution")
-    @classmethod
-    def validate_report_solution(cls, is_reporting: bool) -> int:
-        return 1 if is_reporting else 0
+    def validate_keep_temporary_files(cls, is_keeping: bool) -> int:
+        return 1 if is_keeping else 0
 
     @field_validator("multi_solve_strategy")
     @classmethod
@@ -231,11 +172,6 @@ class Options(BaseModel):
     def validate_step_summary(cls, is_summarizing: bool) -> int:
         return 1 if is_summarizing else 0
 
-    @field_validator("suppress_compiler_listing")
-    @classmethod
-    def validate_suppress_compiler_listing(cls, is_surpressing: bool) -> int:
-        return 1 if is_surpressing else 0
-
     @field_validator("report_solver_status")
     @classmethod
     def validate_report_solver_status(cls, is_reporting: bool) -> int:
@@ -245,3 +181,13 @@ class Options(BaseModel):
     @classmethod
     def validate_report_underflow(cls, is_reporting: bool) -> int:
         return 1 if is_reporting else 0
+
+    @field_validator("suppress_compiler_listing")
+    @classmethod
+    def validate_suppress_compiler_listing(cls, is_suppressing: bool) -> int:
+        return 1 if is_suppressing else 0
+
+    @field_validator("write_listing_file")
+    @classmethod
+    def validate_write_listing_file(cls, is_writing: bool) -> int:
+        return 1 if is_writing else 0

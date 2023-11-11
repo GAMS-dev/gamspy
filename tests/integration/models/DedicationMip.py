@@ -18,6 +18,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -221,7 +222,11 @@ def main():
         objective=v0,
     )
 
-    Dedication.solve(options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100})
+    Dedication.solve(
+        options=Options(
+            relative_optimality_gap=0, iteration_limit=999999, time_limit=100
+        )
+    )
 
     print("* First Model Results\n")
     print("v0: ", v0.records.level.round(3).tolist(), "\n")
@@ -295,7 +300,9 @@ def main():
     )
 
     DedicationMIPEvenLot.solve(
-        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+        options=Options(
+            relative_optimality_gap=0, iteration_limit=999999, time_limit=100
+        )
     )
     print("* Second Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
@@ -385,7 +392,9 @@ def main():
     x.up[i] = LotSize * Y.up[i]
 
     DedicationMIPTrnCosts.solve(
-        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+        options=Options(
+            relative_optimality_gap=0, iteration_limit=999999, time_limit=100
+        )
     )
     print("* Third Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
@@ -425,7 +434,9 @@ def main():
     )
 
     DedicationMIPAll.solve(
-        options={"OPTCR": 0, "ITERLIM": 999999, "RESLIM": 100}
+        options=Options(
+            relative_optimality_gap=0, iteration_limit=999999, time_limit=100
+        )
     )
     print("* Fourth Model Results\n")
     print("x: ", x.records.level.round(3).tolist(), "\n")
