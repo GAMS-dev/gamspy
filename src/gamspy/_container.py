@@ -281,14 +281,10 @@ class Container(gt.Container):
         save_to = GamsCheckpoint(self.workspace)
         restart_from = GamsCheckpoint(self.workspace)
         gdx_in = (
-            self.working_directory
-            + os.sep
-            + f"{save_to._name}{uuid.uuid1()}.gdx"
+            self.working_directory + os.sep + f"_gdx_in_{uuid.uuid4()}.gdx"
         )
         gdx_out = (
-            self.working_directory
-            + os.sep
-            + f"{restart_from._name}{uuid.uuid1()}.gdx"
+            self.working_directory + os.sep + f"_gdx_out_{uuid.uuid4()}.gdx"
         )
 
         return save_to, restart_from, gdx_in, gdx_out
@@ -371,7 +367,6 @@ class Container(gt.Container):
         )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
-        self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
         self._is_first_run = False
 
     def _run_local(
@@ -445,6 +440,26 @@ class Container(gt.Container):
         str | None
         """
         return self._job.name if self._job is not None else None
+
+    def gdxInputName(self) -> str:
+        """
+        Name of the input gdx file
+
+        Returns
+        -------
+        str
+        """
+        return self._gdx_in.split(os.sep)[-1]
+
+    def gdxOutputName(self) -> str:
+        """
+        Name of the output gdx file
+
+        Returns
+        -------
+        str
+        """
+        return self._gdx_out.split(os.sep)[-1]
 
     def addAlias(
         self, name: str, alias_with: Union["Set", "Alias"]
