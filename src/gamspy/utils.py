@@ -32,7 +32,6 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gams.transfer as gt
-import gamspy_base
 from gams.core import gdx
 from gams.transfer._internals.specialvalues import SpecialValues
 
@@ -67,6 +66,13 @@ def getInstalledSolvers() -> List[str]:
     ['CONOPT', 'CONVERT', 'CPLEX', 'NLPEC', 'PATH', 'SBB']
 
     """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError:
+        raise GamspyException(
+            "You must first install gamspy_base to use this functionality"
+        )
+
     solver_names = []
     capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
     user_platform = "Windows" if platform.system() == "Windows" else "rest"
@@ -108,6 +114,12 @@ def getAvailableSolvers() -> List[str]:
     >>> available_solvers = utils.getAvailableSolvers()
 
     """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError:
+        raise GamspyException(
+            "You must first install gamspy_base to use this functionality"
+        )
     return gamspy_base.available_solvers
 
 
@@ -214,6 +226,13 @@ def _getGAMSPyBaseDirectory() -> str:
     str
         System directory
     """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError:
+        raise GamspyException(
+            "You must first install gamspy_base to use this functionality"
+        )
+
     gamspy_base_directory = gamspy_base.__path__[0]
     return gamspy_base_directory
 
