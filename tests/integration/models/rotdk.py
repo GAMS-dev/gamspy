@@ -17,6 +17,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -137,7 +138,11 @@ def main():
         objective=obj,
     )
 
-    rotdk.solve(options={"limCol": 0, "limRow": 0, "resLim": 3})
+    rotdk.solve(
+        options=Options(
+            variable_listing_limit=0, equation_listing_limit=0, time_limit=3
+        )
+    )
 
     print("Objective Function Value: ", round(obj.records.level[0], 2))
 

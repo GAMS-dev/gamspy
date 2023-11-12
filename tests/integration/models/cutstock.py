@@ -20,6 +20,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -98,8 +99,8 @@ def main():
     pi[p] = Ord(p) == Card(pp) + 1
 
     while len(pp) < len(p):
-        master.solve(options={"optCr": 0})
-        pricing.solve(options={"optCr": 0})
+        master.solve(options=Options(relative_optimality_gap=0))
+        pricing.solve(options=Options(relative_optimality_gap=0))
 
         if z.records["level"].values[0] >= -0.001:
             break
@@ -109,7 +110,7 @@ def main():
         pi[p] = pi[p.lag(1)]
 
     master.problem = "mip"
-    master.solve(options={"optCr": 0})
+    master.solve(options=Options(relative_optimality_gap=0))
 
     import math
 

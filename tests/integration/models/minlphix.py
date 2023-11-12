@@ -84,6 +84,7 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -417,7 +418,7 @@ def main():
         objective=zoau,
     )
 
-    skip.solve(options={"domLim": 100})
+    skip.solve(options=Options(domain_violation_limit=100))
 
     import math
 

@@ -44,7 +44,6 @@ import gamspy._algebra.operation as operation
 import gamspy.utils as utils
 from gamspy._engine import EngineConfig
 from gamspy._model_instance import ModelInstance
-from gamspy._options import option_map
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -342,32 +341,10 @@ class Model:
         options: Optional[dict] = None,
         solver_options: Optional[dict] = None,
     ) -> GamsOptions:
-        gams_options = GamsOptions(self.container.workspace)
+        gams_options = self.container._map_options(options)
 
         if solver:
             gams_options.all_model_types = solver
-
-        if options is not None:
-            if not isinstance(options, (dict, gp.Options)):
-                raise GamspyException(
-                    f"options must be a dict but found {type(options)}"
-                )
-
-            if isinstance(options, gp.Options):
-                options = options.model_dump()
-                options = {
-                    option_map[key]: value for key, value in options.items()  # type: ignore
-                }
-
-            for option, value in options.items():
-                if option.lower() not in option_map.values():
-                    raise GamspyException(
-                        f"Invalid option `{option}`. Possible options:"
-                        f" {option_map.values()}"
-                    )
-
-                if value:
-                    setattr(gams_options, option.lower(), value)
 
         if solver_options:
             if solver is None:
@@ -449,7 +426,7 @@ class Model:
             system_directory=self.container.system_directory
         )
         temp_container.read(
-            self.container._gdx_in,
+            self.container._gdx_out,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
                 for gams_attr in attribute_map.keys()

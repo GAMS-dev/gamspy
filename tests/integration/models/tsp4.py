@@ -20,6 +20,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -87,7 +88,7 @@ def main():
         sense="min",
         objective=z,
     )
-    assign.solve(options={"optCr": 0})
+    assign.solve(options=Options(relative_optimality_gap=0))
 
     # find and display tours
     t = Set(

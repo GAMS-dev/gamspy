@@ -17,6 +17,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Problem
@@ -214,7 +215,7 @@ def main():
         p[i] = pt[i, tt]
 
         #  Solving the model w/o MN
-        SB_lic.solve(options={"solveLink": 5})
+        SB_lic.solve(options=Options(solver_link_type=5))
 
         Util_lic[tt] = Util.l
         x_lic[i, tt] = x.l[i]
@@ -223,7 +224,7 @@ def main():
         )
 
         #  Solving the model w/ MN
-        SB_lic2.solve(options={"solveLink": 5})
+        SB_lic2.solve(options=Options(solver_link_type=5))
 
         Util_lic2[tt] = Util.l
         x_lic2[i, tt] = x.l[i]

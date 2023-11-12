@@ -9,6 +9,7 @@ from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Variable
@@ -186,7 +187,7 @@ def main():
         objective=obj,
     )
 
-    protein.solve(options={"reslim": 60000, "iterlim": 80000})
+    protein.solve(options=Options(time_limit=60000, iteration_limit=80000))
 
     print("Objective Function Value:  ", round(obj.toValue(), 4), "\n")
 

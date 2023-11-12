@@ -32,6 +32,7 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Sense
@@ -277,7 +278,7 @@ def main():
     y.up[ll, lf] = Card(ac) - 1
     freq.up[s1, s2].where[rt[s1, s2]] = 100
 
-    ilp.solve(options={"optCr": 0})
+    ilp.solve(options=Options(relative_optimality_gap=0))
 
     solrep["ILP", ll, "freq"] = Sum(lf.where[x.l[ll, lf]], Ord(lf))
     solrep["ILP", ll, "cars"] = Sum(

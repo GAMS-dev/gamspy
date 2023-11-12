@@ -544,7 +544,7 @@ def main():
 
     # relative termination criterion for MIP (relative gap)
     # termination criterion is decreased to 0.1 from 0.000001
-    energy.solve(options=Options(relative_termination_tolerance=0.1))
+    energy.solve(options=Options(relative_optimality_gap=0.1))
 
     print("Objective Function Value: ", energy.objective_value)
 
