@@ -142,6 +142,9 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
+    class Config:
+        extra = "forbid"
+
     @field_validator("allow_suffix_in_equation")
     @classmethod
     def validate_allow_suffix_in_equation(cls, is_allowing):

@@ -39,6 +39,9 @@ class EngineConfig(BaseModel):
     engine_options: Optional[dict] = None
     remove_results: bool = False
 
+    class Config:
+        extra = "forbid"
+
     def get_engine_config(self):
         return GamsEngineConfiguration(
             self.host,
