@@ -9,10 +9,10 @@ fundamental GAMSPy ideas and philosophy.
 .. toctree::
    :maxdepth: 1
 
+   ./container
    ./set
    ./alias
    ./parameter
    ./variable
    ./equation
    ./model
-   ./container
