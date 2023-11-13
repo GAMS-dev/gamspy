@@ -30,5 +30,5 @@ details are found in :ref:`reference`.
 
    faq
    model_library
-   migration_guide
+   gamspy_for_gams_users
    license
