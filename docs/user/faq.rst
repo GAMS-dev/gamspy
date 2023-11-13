@@ -92,14 +92,14 @@ Do I use a ``Parameter`` or a Python variable to represent scalar parameters?
 
 .. code-block::
 
-    from gamspy import Container, Parameter
+    from gamspy import Container, Parameter, Equation, Sum
     m = Container()
     p_python = 40
     p_parameter = Parameter(container=m, name="p", records=40)
 
 
-Technically it does not matter whether a scalar ``Parameter`` or a Python variable is used. 
-It is more a matter of taste and convenience as::
+In most of the cases it does not matter whether a scalar ``Parameter`` or a 
+Python variable is used. It is more a matter of taste and convenience as::
     
     eq = Equation(container=m, name="eq", domain=i)
     eq[i] = Sum(j, x[i, j]) <= p_python
@@ -167,3 +167,21 @@ The options for solvers used by GAMSPy are described in the `Solver Manuals <htt
 the GAMS Documentation. It's important to note that examples in the solver manual are based on 
 GAMS syntax, not GAMSPy syntax. When configuring solvers in GAMSPy, users can refer to the 
 relevant sections in the `GAMS Documentation <https://www.gams.com/latest/docs/S_MAIN.html>`_ for detailed information.
+as both equation definitions generate :math:`\sum_{j \in \mathcal{J}} x_{i,j} \le 40`.
+
+However, if you want to change the value of your scalar parameter in between two solve 
+statements like::
+
+    from gamspy import Container, Parameter, Equation, Sum
+    m = Container()
+    p_python = 40
+    p_parameter = Parameter(container=m, name="p", records=40)
+    ...
+    model.solve()
+    p_python = 50
+    p_parameter.setRecords(50)
+    model.solve()
+    
+you want to use the GAMSPy ``Parameter``, as changes to a Python variable are not 
+reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, will
+be evaluated by the second solve statement.
