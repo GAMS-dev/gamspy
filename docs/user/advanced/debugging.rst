@@ -44,7 +44,7 @@ A dirty symbol is a symbol that was assigned a new value in previous lines.
 This behaviour allows ``GAMSPy`` to minimize the number of actual runs in the backend.
 
 If you are familiar with ``GAMS`` language, and want to see the generated .gms file or .lst file,
-you can specify the working directory of the ``Container``
+you can specify the working directory of the ``Container``.
 
 =========
 Debugging

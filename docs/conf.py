@@ -4,7 +4,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+
+sys.path.insert(0, os.path.abspath("../src"))
 
 
 # -- Project information -----------------------------------------------------
@@ -50,7 +51,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-html_css_files = ['custom.css']
+html_css_files = ["custom.css"]
 html_show_sourcelink = False
 html_theme_options = {
     "icon_links": [
@@ -84,3 +85,6 @@ autodoc_member_order = "bysource"
 
 # Display todos by setting to True
 todo_include_todos = False
+
+# temporary flag until the next release
+nbsphinx_allow_errors = True
