@@ -165,9 +165,9 @@ def main(mip=False):
     if mip:
         v.type = "positive"
         op.type = "binary"
-        carseqMIP.solve(options=Options(relative_termination_tolerance=0))
+        carseqMIP.solve(options=Options(relative_optimality_gap=0))
     else:
-        carseqLS.solve(options=Options(relative_termination_tolerance=0))
+        carseqLS.solve(options=Options(relative_optimality_gap=0))
 
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]
