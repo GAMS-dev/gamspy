@@ -262,7 +262,7 @@ class SolveSuite(unittest.TestCase):
         # Test output redirection
         with open("test.gms", "w") as file:
             _ = transport.solve(
-                options=Options(solver_time_limit=100),
+                options=Options(time_limit=100),
                 output=file,
             )
 
