@@ -132,3 +132,7 @@ Some of the features that have not been fully implemented in GAMSPy include:
 4. Extrinsic functions:
     Some `extrinsic functions <https://www.gams.com/45/docs/UG_ExtrinsicFunctions.html?search=extrinsic>`_ 
     that are part of the GAMS language may not be fully accessible in GAMSPy. 
+
+It's important to emphasize that the GAMSPy team is actively working on expanding the feature 
+set to bridge the gap between GAMS and GAMSPy. If you have specific features or functionalities 
+you would like to see in GAMSPy, feel free to share your feedback with us.
