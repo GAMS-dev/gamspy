@@ -136,3 +136,34 @@ Some of the features that have not been fully implemented in GAMSPy include:
 It's important to emphasize that the GAMSPy team is actively working on expanding the feature 
 set to bridge the gap between GAMS and GAMSPy. If you have specific features or functionalities 
 you would like to see in GAMSPy, feel free to share your feedback with us.
+
+How are GAMS and GAMSPy related?
+---------------------------------
+
+**Dependency**
+
+GAMSPy relies on the gamspy_base package, which essentially represents a modularized GAMS 
+installation. When creating a GAMSPy ``Container``, you have the option to specify a GAMS 
+installation independently via the ``system_directory`` argument. This enables flexibility 
+in choosing the GAMS version that best suits your needs.
+
+**Execution**
+
+GAMSPy utilizes the GAMS machinery for critical operations, including the execution of 
+indexed assignment statements, equation definitions, and the solve method. While the typical 
+GAMSPy user does not need to delve into the intricacies of this connection, it's worth noting 
+that these details may evolve for performance reasons.
+
+**Debugging and GAMS Listing File**
+
+Although regular Python debugging facilities are usually sufficient, there may be scenarios 
+where additional insights from GAMS prove valuable. If needed, GAMS can provide useful information 
+via the GAMS listing file. For more details on debugging with GAMS, refer to the :ref:`GAMSPy debugging 
+documentation<debugging>` or the `GAMS debugging documentation <https://www.gams.com/latest/docs/UG_ExecErrPerformance.html#INDEX_error_22_debugging>`_.
+
+**Solver Options**
+
+The options for solvers used by GAMSPy are described in the `Solver Manuals <https://www.gams.com/latest/docs/S_MAIN.html>`_, which is part of 
+the GAMS Documentation. It's important to note that examples in the solver manual are based on 
+GAMS syntax, not GAMSPy syntax. When configuring solvers in GAMSPy, users can refer to the 
+relevant sections in the `GAMS Documentation <https://www.gams.com/latest/docs/S_MAIN.html>`_ for detailed information.
