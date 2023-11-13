@@ -17,4 +17,4 @@ _gams_py_*
 tests/integration/*.txt
 tests/integration/models/results.xlsx
 **/ipynb_checkpoints
-_gdx*
+_*

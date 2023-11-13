@@ -409,6 +409,7 @@ class Container(gt.Container):
 
         self._job = GamsJob(
             self.workspace,
+            job_name=f"_job_{uuid.uuid4()}",
             source=gams_string,
             checkpoint=checkpoint,
         )

@@ -180,7 +180,7 @@ def main():
     for workfile_path in workfile_paths:
         os.remove(workfile_path)
 
-    gams_paths = glob.glob("_gams*")
+    gams_paths = glob.glob("_*")
     for gams_path in gams_paths:
         os.remove(gams_path)
 
