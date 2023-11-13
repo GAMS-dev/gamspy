@@ -340,8 +340,12 @@ class Model:
         solver: Optional[str] = None,
         options: Optional[dict] = None,
         solver_options: Optional[dict] = None,
+        output: Optional[io.TextIOWrapper] = None,
+        create_log_file: Optional[bool] = False,
     ) -> GamsOptions:
-        gams_options = self.container._map_options(options)
+        gams_options = self.container._map_options(
+            options, output=output, create_log_file=create_log_file
+        )
 
         if solver:
             gams_options.all_model_types = solver
@@ -526,6 +530,7 @@ class Model:
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
+        create_log_file: Optional[bool] = False,
     ) -> None:
         """
         Generates the gams string, writes it to a file and runs it
@@ -556,7 +561,11 @@ class Model:
         """
         if not self._is_frozen:
             gams_options = self._prepare_gams_options(
-                solver, options, solver_options
+                solver,
+                options,
+                solver_options,
+                output=output,
+                create_log_file=create_log_file,
             )
 
             self._append_solve_string()

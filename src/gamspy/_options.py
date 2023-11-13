@@ -60,7 +60,6 @@ option_map = {
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
     "license": "license",
-    "gams_log_redirection": "_logoption",
     "variable_listing_limit": "limcol",
     "equation_listing_limit": "limrow",
     "node_limit": "nodlim",
@@ -109,7 +108,6 @@ class Options(BaseModel):
     basis_detection_threshold: Optional[float] = None
     compile_error_limit: int = 1
     domain_violation_limit: Optional[int] = None
-    gams_log_redirection: Literal[0, 2, 3, 4] = 3
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
