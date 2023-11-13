@@ -1,14 +1,14 @@
-.. _migrationguide:
+.. _gamspyforgamsusers:
 
 *********************
-Model Migration Guide
+GAMSPy for GAMS Users
 *********************
 
-This document is for users who are interested in migrating their
-existing GAMS model to GAMSPy. 
+This document is for users who are already GAMS users and interested in translating their
+existing GAMS models to GAMSPy. 
 
-Migrating Symbols
------------------
+Translating Symbols
+-------------------
 
 You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. 
 You don't need to change anything. Now, these symbols can be used in creating expressions.
@@ -44,10 +44,10 @@ GAMS:
     solve my_model using LP min z;
 
 
-Migrating Operations: Sum/Product/Smin/Smax
--------------------------------------------
+Translating Operations: Sum/Product/Smin/Smax
+---------------------------------------------
 
-Frequently used GAMS operations which accept an index list and an expression can be migrated as follows.
+Frequently used GAMS operations which accept an index list and an expression can be translated as follows.
 
 GAMSPy:
 
@@ -76,7 +76,7 @@ GAMS:
 Card/Ord
 --------
 
-Card and Ord operations can be migrated as follow:
+Card and Ord operations can be translated as follow:
 
 GAMSPy:
 
