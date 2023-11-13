@@ -8,7 +8,7 @@ All example notebooks and input data files are available on https://github.com/G
 * |colab_blend| :doc:`notebooks/blend` 
 * |colab_millco| :doc:`notebooks/millco` 
 * |colab_pickstock| :doc:`notebooks/pickstock` 
-* |colab_trnsport| :doc:`notebooks/trnsport` 
+* |colab_trnsport| :doc:`Transportation Problem <notebooks/trnsport>`
 
 .. |colab_blend| image:: https://colab.research.google.com/assets/colab-badge.svg
         :target: https://colab.research.google.com/github/GAMS-dev/gamspy/blob/develop/docs/user/notebooks/blend_colab.ipynb
@@ -32,5 +32,5 @@ All example notebooks and input data files are available on https://github.com/G
     notebooks/blend
     notebooks/millco
     notebooks/pickstock
-    notebooks/trnsport
+    Transportation Problem <notebooks/trnsport>
     
