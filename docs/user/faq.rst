@@ -109,3 +109,30 @@ is equivalent to::
     eq = Equation(container=m, name="eq", domain=i)
     eq[i] = Sum(j, x[i, j]) <= p_parameter
 
+
+Which functionalities available in GAMS are not (yet) accessible in GAMSPy?
+----------------------------------------------------------------------------
+
+While GAMSPy provides a powerful interface for utilizing GAMS within Python, there are some 
+features from the original GAMS language that are not yet fully accessible in GAMSPy. 
+
+Some of the features that have not been fully implemented in GAMSPy include:
+
+1. MPSGE, EMP, EMP-SP:
+    Certain specialized GAMS features corresponding to MPSGE, EMP, and EMP-SP are currently 
+    not available in GAMSPy. However, efforts are underway to incorporate these features in 
+    future updates.
+2. Solver-specific features communicated via option files:
+    Certain solver-specific features, like indicator constraints, are available in GAMSPy. 
+    However, due to the absence of the put facility, generating these constructs may be more 
+    challenging. Efforts are being made to provide better ways to communicate such constructs 
+    to the solver for enhanced compatibility.
+3. External equations:
+    GAMSPy does not yet fully support `external equations <https://www.gams.com/45/docs/UG_ExternalEquations.html?search=external%20equations>`_.
+4. Extrinsic functions:
+    Some `extrinsic functions <https://www.gams.com/45/docs/UG_ExtrinsicFunctions.html?search=extrinsic>`_ 
+    that are part of the GAMS language may not be fully accessible in GAMSPy. 
+
+It's important to emphasize that the GAMSPy team is actively working on expanding the feature 
+set to bridge the gap between GAMS and GAMSPy. If you have specific features or functionalities 
+you would like to see in GAMSPy, feel free to share your feedback with us.
