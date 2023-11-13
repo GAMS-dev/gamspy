@@ -285,8 +285,10 @@ class Container(gt.Container):
         Tuple[GamsCheckpoint, GamsCheckpoint, str, str]
             save_to, restart_from, gdx_in, gdx_out
         """
-        save_to = GamsCheckpoint(self.workspace)
-        restart_from = GamsCheckpoint(self.workspace)
+        save_to = GamsCheckpoint(self.workspace, f"_save_{uuid.uuid4()}.g00")
+        restart_from = GamsCheckpoint(
+            self.workspace, f"_restart_{uuid.uuid4()}.g00"
+        )
         gdx_in = (
             self.working_directory + os.sep + f"_gdx_in_{uuid.uuid4()}.gdx"
         )
