@@ -106,7 +106,7 @@ class SetSuite(unittest.TestCase):
 
         k[j] = ~k[j]
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            self.m._unsaved_statements[-1].gamsRepr(),
             "k(j) = ( not k(j));",
         )
 
@@ -131,7 +131,7 @@ class SetSuite(unittest.TestCase):
         i["i1"] = False
 
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             'i("i1") = no;',
         )
 
@@ -183,7 +183,7 @@ class SetSuite(unittest.TestCase):
         sMinDown = Set(m, name="sMinDown", domain=[s, t])
         sMinDown[s, t.lead((Ord(t) - Ord(s)))] = 1
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].gamsRepr(),
+            m._unsaved_statements[-1].gamsRepr(),
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 

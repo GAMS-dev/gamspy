@@ -78,7 +78,7 @@ class ConditionSuite(unittest.TestCase):
         # Condition
         muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
 
-        last_statement = list(self.m._unsaved_statements.values())[-1]
+        last_statement = self.m._unsaved_statements[-1]
         self.assertEqual(
             last_statement.getStatement(),
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
@@ -98,7 +98,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
@@ -110,19 +110,19 @@ class ConditionSuite(unittest.TestCase):
         random_eq = Equation(m, "random", domain=[i, j])
         random_eq[i, j] = Sum(i, muf[i, j]).where[muf[i, j] > 0] >= 0
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "random(i,j) .. (sum(i,muf(i,j)) $ (muf(i,j) > 0)) =g= 0;",
         )
 
         i["ahmsa"] = True
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = yes;',
         )
 
         i["ahmsa"] = False
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = no;',
         )
 
@@ -159,7 +159,7 @@ class ConditionSuite(unittest.TestCase):
         ]
 
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             "Util_gap(t) = (1 $ ((round( Util_lic(t), 10 )) ne (round("
             " Util_lic2(t), 10 ))));",
         )
@@ -281,7 +281,7 @@ class ConditionSuite(unittest.TestCase):
         minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
 
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
@@ -298,14 +298,14 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].gamsRepr(),
+            m._unsaved_statements[-1].gamsRepr(),
             "k(p) $ (k(p)) = yes;",
         )
 
@@ -320,7 +320,7 @@ class ConditionSuite(unittest.TestCase):
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1
         self.assertEqual(
-            list(m._unsaved_statements.values())[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 

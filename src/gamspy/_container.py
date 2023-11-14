@@ -105,7 +105,7 @@ class Container(gt.Container):
         )
 
         self._delayed_execution = delayed_execution
-        self._unsaved_statements: dict = {}
+        self._unsaved_statements: list = []
         self._is_first_run = True
 
         # import symbols from arbitrary gams code
@@ -149,11 +149,10 @@ class Container(gt.Container):
             raise GamspyException("import_symbols must be a list of strings")
 
         self._import_symbols = import_symbols
-        unique_name = utils._getUniqueName()
-        self._unsaved_statements[unique_name] = gams_code
+        self._unsaved_statements.append(gams_code)
 
     def _addStatement(self, statement) -> None:
-        self._unsaved_statements[statement.name] = statement
+        self._unsaved_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
         """
@@ -285,16 +284,11 @@ class Container(gt.Container):
         Tuple[GamsCheckpoint, GamsCheckpoint, str, str]
             save_to, restart_from, gdx_in, gdx_out
         """
-        save_to = GamsCheckpoint(self.workspace, f"_save_{uuid.uuid4()}.g00")
-        restart_from = GamsCheckpoint(
-            self.workspace, f"_restart_{uuid.uuid4()}.g00"
-        )
-        gdx_in = (
-            self.working_directory + os.sep + f"_gdx_in_{uuid.uuid4()}.gdx"
-        )
-        gdx_out = (
-            self.working_directory + os.sep + f"_gdx_out_{uuid.uuid4()}.gdx"
-        )
+        suffix = uuid.uuid4()
+        save_to = GamsCheckpoint(self.workspace, f"_save_{suffix}.g00")
+        restart_from = GamsCheckpoint(self.workspace, f"_restart_{suffix}.g00")
+        gdx_in = self.working_directory + os.sep + f"_gdx_in_{suffix}.gdx"
+        gdx_out = self.working_directory + os.sep + f"_gdx_out_{suffix}.gdx"
 
         return save_to, restart_from, gdx_in, gdx_out
 
@@ -365,9 +359,7 @@ class Container(gt.Container):
 
         return names
 
-    def _get_touched_symbol_names(
-        self,
-    ) -> Tuple[List[str], List[str]]:
+    def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
         dirty_names = []
         assigned_names = []
 
@@ -452,7 +444,7 @@ class Container(gt.Container):
         elif backend == "engine":
             self._run_engine(options, output, engine_config)
         else:
-            self._unsaved_statements = {}
+            self._unsaved_statements = []
             raise GamspyException(
                 f"`{backend}` is not a valid backend. Possible backends:"
                 " local, engine"
@@ -480,7 +472,7 @@ class Container(gt.Container):
             e.value = message + e.value if message else e.value
             raise e
         finally:
-            self._unsaved_statements = {}
+            self._unsaved_statements = []
 
     def _run_engine(
         self,
@@ -514,7 +506,7 @@ class Container(gt.Container):
         except GamsException as e:
             raise GamspyException(str(e))
         finally:
-            self._unsaved_statements = {}
+            self._unsaved_statements = []
             options.forcework = 0
 
     @property
@@ -1208,8 +1200,13 @@ class Container(gt.Container):
         -------
         str
         """
-        symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-        possible_undef_types = (gp.Parameter, gp.Variable, gp.Equation)
+        LOADABLE_SYMBOL_TYPES = (
+            gp.Set,
+            gp.Parameter,
+            gp.Variable,
+            gp.Equation,
+        )
+        POSSIBLE_UNDEF_TYPES = (gp.Parameter, gp.Variable, gp.Equation)
 
         gdx_path = (
             self._gdx_in.split(os.sep)[-1]
@@ -1218,16 +1215,16 @@ class Container(gt.Container):
         )
 
         string = f"$onMultiR\n$gdxIn {gdx_path}\n"
-        for statement in self._unsaved_statements.values():
+        for statement in self._unsaved_statements:
             if isinstance(statement, str):
                 string += statement + "\n"
             else:
                 statement_str = statement.getStatement() + "\n"
 
-                if isinstance(statement, symbol_types):
+                if isinstance(statement, LOADABLE_SYMBOL_TYPES):
                     statement_str += f"$load {statement.name}\n"
 
-                if isinstance(statement, possible_undef_types):
+                if isinstance(statement, POSSIBLE_UNDEF_TYPES):
                     # save old dirty state to avoid self.records recursion
                     old_dirty_state = statement._is_dirty
                     statement._is_dirty = False
@@ -1297,7 +1294,7 @@ class Container(gt.Container):
 
         for name in symbol_names:
             if name in self.data.keys():
-                updated_records = temp_container[name].records
+                updated_records = temp_container[name]._records
 
                 self[name].records = updated_records
                 if updated_records is not None:

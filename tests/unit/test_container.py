@@ -180,9 +180,7 @@ class ContainerSuite(unittest.TestCase):
 
     def test_arbitrary_gams_code(self):
         self.m._addGamsCode("Set i / i1*i3 /;")
-        self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1], "Set i / i1*i3 /;"
-        )
+        self.assertEqual(self.m._unsaved_statements[-1], "Set i / i1*i3 /;")
 
         m = Container(delayed_execution=True)
         i = Set(m, "i", records=["i1", "i2"])
