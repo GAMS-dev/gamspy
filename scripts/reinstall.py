@@ -27,7 +27,7 @@ def install_gamspy(args):
     command = [
         "pip",
         "install",
-        "dist/gamspy-0.10.2-py3-none-any.whl[dev,test]",
+        "dist/gamspy-0.10.3-py3-none-any.whl[dev,test]",
         "--force-reinstall",
     ]
 
