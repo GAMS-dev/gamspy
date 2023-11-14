@@ -394,7 +394,7 @@ The GAMSPy formulation using conic equations is: ::
 
 The complete model is listed below::
     
-    from gamspy import Container, Set, Parameter, Variable, Equation, Model, Sum, Problem, Sense
+    from gamspy import Container, Set, Parameter, Variable, Equation, Model, Sum, Problem, Sense, Options
     import gamspy.math as math
     m = Container()
 
@@ -444,9 +444,9 @@ The complete model is listed below::
     x.lo[n] = l[n]
     x.up[n] = u[n]
 
-    cqcp.solve(options={"qcp": "cplex"})
-    cperfect.solve(options={"qcp": "mosek"})
-    orig.solve(options={"qcp": "cplex"})
+    cqcp.solve(options=Options(qcp="cplex"))
+    cperfect.solve(options=Options(qcp="mosek"))
+    orig.solve(options=Options(qcp="cplex"))
 
 
 

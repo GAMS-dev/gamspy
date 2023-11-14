@@ -105,7 +105,7 @@ Solving a Model
 
 Model has a function named ``solve`` that allows user to solve the specified model. ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
 
     m = Container()
     
@@ -116,7 +116,7 @@ Model has a function named ``solve`` that allows user to solve the specified mod
     e2[...] = <definition_of_the_equation>
     
     model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
-    model.solve(solver="CONOPT", options={"iterlim": 2}, solver_options={"rtmaxv": "1.e12"})
+    model.solve(solver="CONOPT", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
 
 In most cases, calling the ``solve`` function of your model without any parameters is sufficient. 
 In this scenario, the default solver depending on the problem type, default options will be used. But for users
@@ -133,7 +133,24 @@ the list of solvers that are available.::
 Solve Options
 -------------
 
-Solve options can be specified as an ``Option`` class or as a dictionary. Here is the list of options and their descriptions:
+Solve options can be specified as an ``gamspy.Options`` class. For example: ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
+
+    m = Container()
+    
+    ...
+    ...
+    Definition of your model
+    ...
+    ...
+
+    model = Model(m, "my_model", equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model.solve(options=Options(iteration_limit=2))
+
+
+
+Here is the list of options and their descriptions:
 
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | Option                            | Description                                                                       | Possible Values                                          |
@@ -279,7 +296,7 @@ Solve options can be specified as an ``Option`` class or as a dictionary. Here i
 Solver Options
 --------------
 
-In addition to solve options, user can specify solver options to be used by the solver. For all possible
+In addition to solve options, user can specify solver options to be used by the solver as a dictionary. For all possible
 solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
 Solve Locally
