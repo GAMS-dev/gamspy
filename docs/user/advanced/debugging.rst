@@ -51,7 +51,7 @@ you can specify the working directory of the ``Container``.
 Debugging
 =========
 
---------------------------------
+
 Specifying the Working Directory
 --------------------------------
 .. code-block:: python
@@ -70,7 +70,7 @@ Specifying the Working Directory
 In this example, specifying the working directory as the current directory causes temporary GAMS files 
 (.gms, .lst, .g00. ,gdx files etc.) to be saved in the current directory.
 
----------------------
+
 Generating a Log File
 ---------------------
 
@@ -147,7 +147,7 @@ redirecting the output to standard output and generating the log file at the sam
 
 This code snippet would redirect the output to your console as well as saving the log file in your working directory.
 
---------------------------------
+
 Inspecting Generated GAMS String
 --------------------------------
 

@@ -10,12 +10,12 @@ existing GAMS models to GAMSPy.
 Translating Symbols
 -------------------
 
-You can create a Set, Alias, Parameter, Variable, and Equation in the same way you create a Gams Transfer symbol. 
-You don't need to change anything. Now, these symbols can be used in creating expressions.
+The way to create symbols such as Set, Alias, Parameter, Variable, and Equation is explained 
+in their respective documentation pages and you can see an example for the creation of each
+symbol below: 
 
-GAMSPy:
 
-.. code-block:: python
+GAMSPy: ::
 
     import gamspy as gp
 
@@ -30,10 +30,10 @@ GAMSPy:
     model = gp.Model(m, "my_model", equations=[e], problem="lp", sense="min", objective=z)
     model.solve()
 
-GAMS:
+This GAMSPy code snippet above is equivalent to the following GAMS code:
 
-.. code-block:: gams
-    
+GAMS: ::
+
     Set i / i1, i2 /;
     Alias (i, a);
     Parameter p / i1 1, i2 2 /;
@@ -47,7 +47,7 @@ GAMS:
 Translating Operations: Sum/Product/Smin/Smax
 ---------------------------------------------
 
-Frequently used GAMS operations which accept an index list and an expression can be translated as follows.
+Frequently used GAMS operations which accept an index list and an expression can be translated as follows:
 
 GAMSPy:
 
@@ -76,7 +76,7 @@ GAMS:
 Card/Ord
 --------
 
-Card and Ord operations can be translated as follow:
+Card and Ord operations can be translated as follows:
 
 GAMSPy:
 
