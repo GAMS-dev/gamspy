@@ -39,7 +39,6 @@ from gamspy._symbols.symbol import Symbol
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Set, Container
-    from gamspy._algebra.operable import Operable
     from gamspy._algebra.expression import Expression
 
 
@@ -103,6 +102,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         # iterator index
         self._current_index = 0
 
+        # for records and setRecords
+        self._is_assigned = True
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -123,14 +125,14 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -153,7 +155,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -161,7 +163,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -206,3 +208,16 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
+
+    @property
+    def records(self):
+        return super().records
+
+    @records.setter
+    def records(self, records):
+        self.alias_with._is_assigned = True
+        self.alias_with.records = records
+
+    def setRecords(self, records, uels_on_axes=False):
+        self.alias_with._is_assigned = True
+        super().setRecords(records, uels_on_axes)

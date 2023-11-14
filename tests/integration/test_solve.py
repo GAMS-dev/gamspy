@@ -190,8 +190,12 @@ class SolveSuite(unittest.TestCase):
         )
         transport.solve()
 
-        first_z2_value = z2.records["level"].values[0]
-        self.assertEqual(first_z2_value, 0.0)
+        self.assertIsNotNone(z.records)
+        self.assertIsNotNone(x.records)
+        self.assertIsNotNone(cost.records)
+        self.assertIsNotNone(supply.records)
+        self.assertIsNotNone(demand.records)
+        self.assertIsNone(z2.records)
 
         transport2 = Model(
             self.m,
@@ -847,7 +851,7 @@ class SolveSuite(unittest.TestCase):
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
 
-        energy.solve(options=Options(relative_termination_tolerance=0.000001))
+        energy.solve(options=Options(relative_optimality_gap=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
 

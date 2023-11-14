@@ -85,6 +85,7 @@ from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Problem
 from gamspy import Sense
@@ -747,12 +748,7 @@ def main(is_centropy=False):
         objective=DENTROPY,
     )
 
-    SAMENTROP.solve(
-        options={
-            "domLim": 100,
-            "holdfixedasync": 1,
-        }
-    )
+    SAMENTROP.solve(options=Options(domain_violation_limit=100))
 
     # Parameters for reporting results
     Macsam1 = Parameter(

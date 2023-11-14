@@ -2,6 +2,6 @@ Sense
 =====
 
 .. autoclass:: gamspy.Sense
-   :members:
+   :members: MIN,MAX,FEASIBILITY
    :undoc-members:
    :show-inheritance:

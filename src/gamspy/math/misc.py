@@ -228,20 +228,20 @@ def mod(
     return expression.Expression("mod(" + x_str, ",", y_str + ")")
 
 
-def Round(x: "Symbol", num_decimals: int = 0) -> "Expression":
+def Round(x: Union[float, "Symbol"], num_decimals: int = 0) -> "Expression":
     """
     Round x to num_decimals decimal places.
 
     Parameters
     ----------
-    x : Operable
+    x : float | Symbol
     decimal : int, optional
 
     Returns
     -------
     Expression
     """
-    if isinstance(x, (int, float)):
+    if isinstance(x, float):
         return round(x, num_decimals)
 
     return expression.Expression(
@@ -255,7 +255,7 @@ def sign(x: "Symbol") -> "Expression":
 
     Parameters
     ----------
-    x : Operable
+    x : Symbol
 
     Returns
     -------

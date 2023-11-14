@@ -25,6 +25,7 @@
 import io
 import os
 import shutil
+import uuid
 from typing import Any
 from typing import List
 from typing import Literal
@@ -39,11 +40,13 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsOptions
 from gams import GamsWorkspace
+from gams.control.workspace import GamsException
 from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
 import gamspy as gp
 import gamspy.utils as utils
+from gamspy._options import option_map
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -58,6 +61,7 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._engine import EngineConfig
+    from gamspy._options import Options
 
 
 class Container(gt.Container):
@@ -70,11 +74,13 @@ class Container(gt.Container):
         Path to the GDX file to be loaded from, by default None
     system_directory : str, optional
         Path to the directory that holds the GAMS installation, by default None
-    name : str, optional
-        Name of the Container, by default "default"
     working_directory : str, optional
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
+    delayed_execution : bool, optional
+        Delayed execution mode, by default False
+    options : Options
+        Global options for the overall execution
 
     Examples
     --------
@@ -90,6 +96,7 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
+        options: Optional["Options"] = None,
     ):
         system_directory = (
             system_directory
@@ -99,7 +106,10 @@ class Container(gt.Container):
 
         self._delayed_execution = delayed_execution
         self._unsaved_statements: dict = {}
-        self._use_restart_from = False
+        self._is_first_run = True
+
+        # import symbols from arbitrary gams code
+        self._import_symbols: List[str] = []
 
         super().__init__(load_from, system_directory)
 
@@ -119,14 +129,26 @@ class Container(gt.Container):
         # allows interrupt
         self._job: Optional[GamsJob] = None
 
-    def _addGamsCode(self, gams_code: str) -> None:
+        self._options = options
+
+    def _addGamsCode(
+        self, gams_code: str, import_symbols: List[str] = []
+    ) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
         Parameters
         ----------
         gams_code : str
+        import_symbols : List[str], optional
         """
+        if import_symbols is not None and (
+            not isinstance(import_symbols, list)
+            or any(not isinstance(symbol, str) for symbol in import_symbols)
+        ):
+            raise GamspyException("import_symbols must be a list of strings")
+
+        self._import_symbols = import_symbols
         unique_name = utils._getUniqueName()
         self._unsaved_statements[unique_name] = gams_code
 
@@ -166,7 +188,7 @@ class Container(gt.Container):
                     symbol.name,
                     new_domain,
                     symbol.is_singleton,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -175,7 +197,7 @@ class Container(gt.Container):
                     self,
                     symbol.name,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -185,7 +207,7 @@ class Container(gt.Container):
                     symbol.name,
                     symbol.type,
                     new_domain,
-                    symbol.records,
+                    symbol._records,
                     symbol.domain_forwarding,
                     symbol.description,
                 )
@@ -198,47 +220,39 @@ class Container(gt.Container):
                     name=symbol.name,
                     type=symbol_type,
                     domain=new_domain,
-                    records=symbol.records,
+                    records=symbol._records,
                     domain_forwarding=symbol.domain_forwarding,
                     description=symbol.description,
                 )
 
-    def _get_symbol_names_from_gdx(self, load_from: str) -> Tuple[list, list]:
+    def _get_symbol_names_from_gdx(self, load_from: str) -> List[str]:
         gdx_handle = utils._openGdxFile(self.system_directory, load_from)
         _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
-        existing_names = []
-        new_names = []
+        symbol_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
 
             if symbol_name.startswith(gp.Model._generate_prefix):
                 continue
-            elif symbol_name in self.data.keys():
-                existing_names.append(symbol_name)
+            elif symbol_name in self.data.keys() and isinstance(
+                self[symbol_name], gp.UniverseAlias
+            ):
+                continue
             else:
-                new_names.append(symbol_name)
+                symbol_names.append(symbol_name)
 
         utils._closeGdxHandle(gdx_handle)
 
-        return existing_names, new_names
+        return symbol_names
 
     def _get_symbol_names_to_load(
         self,
         load_from: str,
         symbol_names: Optional[List[str]] = None,
     ) -> List[str]:
-        if not symbol_names:
-            existing_names, new_names = self._get_symbol_names_from_gdx(
-                load_from
-            )
-
-            symbol_types = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-
-            symbol_names = new_names
-            for name in existing_names:
-                if isinstance(self[name], symbol_types):
-                    symbol_names.append(name)
+        if symbol_names is None or symbol_names == []:
+            symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names
 
@@ -273,10 +287,99 @@ class Container(gt.Container):
         """
         save_to = GamsCheckpoint(self.workspace)
         restart_from = GamsCheckpoint(self.workspace)
-        gdx_in = self.working_directory + os.sep + f"{save_to._name}.gdx"
-        gdx_out = self.working_directory + os.sep + f"{restart_from._name}.gdx"
+        gdx_in = (
+            self.working_directory + os.sep + f"_gdx_in_{uuid.uuid4()}.gdx"
+        )
+        gdx_out = (
+            self.working_directory + os.sep + f"_gdx_out_{uuid.uuid4()}.gdx"
+        )
 
         return save_to, restart_from, gdx_in, gdx_out
+
+    def _map_options(
+        self, options: Union["Options", None], is_seedable: bool = True
+    ) -> "GamsOptions":
+        """
+        Maps given GAMSPy options to GamsOptions
+
+        Parameters
+        ----------
+        options : Options | None
+            GAMSPy options
+        is_seedable : bool, optional
+            only seedable at first run or in model.solve function, by default True
+
+        Returns
+        -------
+        GamsOptions
+
+        Raises
+        ------
+        GamspyException
+            when options is not type Options
+        GamspyException
+            when one of the option names is invalid
+        """
+        gams_options = GamsOptions(self.workspace)
+
+        if options is not None:
+            if not isinstance(options, gp.Options):
+                raise GamspyException(
+                    f"options must be of type Option but found {type(options)}"
+                )
+
+            options_dict = options.model_dump()
+            options_dict = {
+                option_map[key]: value for key, value in options_dict.items()  # type: ignore
+            }
+
+            for option, value in options_dict.items():
+                if option not in option_map.values():
+                    raise GamspyException(
+                        f"Invalid option `{option}`. Possible options:"
+                        f" {option_map.keys()}"
+                    )
+
+                if value:
+                    if option == "seed" and not is_seedable:
+                        continue
+                    setattr(gams_options, option.lower(), value)
+
+        return gams_options
+
+    def _get_autogenerated_symbol_names(self) -> List[str]:
+        names = []
+        for name in self.data.keys():
+            if name.startswith(gp.Model._generate_prefix):
+                names.append(name)
+
+        return names
+
+    def _get_touched_symbol_names(
+        self,
+    ) -> Tuple[List[str], List[str]]:
+        dirty_names = []
+        assigned_names = []
+
+        for name, symbol in self:
+            if isinstance(symbol, gp.UniverseAlias):
+                continue
+
+            if symbol._is_dirty:
+                dirty_names.append(name)
+
+            if symbol._is_assigned:
+                assigned_names.append(name)
+
+        return dirty_names, assigned_names
+
+    def _clean_dirty_symbols(self, dirty_names: List[str]):
+        for name in dirty_names:
+            self[name]._is_dirty = False
+
+    def _update_assigned_state(self, assigned_names: List[str]):
+        for name in assigned_names:
+            self[name]._is_assigned = False
 
     def _run(
         self,
@@ -286,18 +389,21 @@ class Container(gt.Container):
         engine_config: Optional["EngineConfig"] = None,
     ):
         if options is None:
-            options = GamsOptions(self.workspace)
-
-        # Create gdx file to read records from
-        for symbol in self.data.values():
-            if hasattr(symbol, "_is_dirty"):
-                symbol._is_dirty = False
-        super().write(self._gdx_in)
+            options = self._map_options(
+                self._options, is_seedable=self._is_first_run
+            )
 
         gams_string = self.generateGamsString(backend=backend)
 
+        # Create gdx file to read records from
+        dirty_names, assigned_names = self._get_touched_symbol_names()
+        self._clean_dirty_symbols(dirty_names)
+        self._update_assigned_state(assigned_names)
+
+        super().write(self._gdx_in, assigned_names)
+
         # If there is no restart checkpoint, set it to None
-        checkpoint = self._restart_from if self._use_restart_from else None
+        checkpoint = self._restart_from if not self._is_first_run else None
 
         self._job = GamsJob(
             self.workspace,
@@ -316,17 +422,16 @@ class Container(gt.Container):
                 " local, engine"
             )
 
-        self._use_restart_from = True
+        self.loadRecordsFromGdx(
+            self._gdx_out, dirty_names + self._import_symbols
+        )
 
         self._restart_from, self._save_to = self._save_to, self._restart_from
-        self._gdx_in, self._gdx_out = self._gdx_out, self._gdx_in
-
-        self.loadRecordsFromGdx(self._gdx_in)
+        self._is_first_run = False
 
     def _run_local(
         self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
     ):
-        options.gdx = self._gdx_out
         try:
             self._job.run(  # type: ignore
                 gams_options=options,
@@ -347,7 +452,6 @@ class Container(gt.Container):
         output: Union[io.TextIOWrapper, None],
         engine_config: Union["EngineConfig", None],
     ):
-        options.gdx = self._gdx_out.split(os.sep)[-1]
         options.forcework = 1  # In case GAMS version differs on Engine
 
         if engine_config is None:
@@ -371,13 +475,21 @@ class Container(gt.Container):
                 engine_options=engine_config.engine_options,
                 remove_results=engine_config.remove_results,
             )
-        except Exception as e:
-            raise e
+        except GamsException as e:
+            raise GamspyException(str(e))
         finally:
             self._unsaved_statements = {}
+            options.forcework = 0
 
     @property
-    def delayed_execution(self):
+    def delayed_execution(self) -> bool:
+        """
+        Delayed execution mode.
+
+        Returns
+        -------
+        bool
+        """
         return self._delayed_execution
 
     def gamsJobName(self) -> Union[str, None]:
@@ -390,11 +502,36 @@ class Container(gt.Container):
         """
         return self._job.name if self._job is not None else None
 
+    def gdxInputName(self) -> str:
+        """
+        Name of the input gdx file
+
+        Returns
+        -------
+        str
+        """
+        return self._gdx_in.split(os.sep)[-1]
+
+    def gdxOutputName(self) -> str:
+        """
+        Name of the output gdx file
+
+        Returns
+        -------
+        str
+        """
+        return self._gdx_out.split(os.sep)[-1]
+
     def addAlias(
         self, name: str, alias_with: Union["Set", "Alias"]
     ) -> "Alias":
         """
         Creates a new Alias and adds it to the container
+
+        Parameters
+        ----------
+        name : str
+        alias_with : Set | Alias
 
         Returns
         -------
@@ -902,7 +1039,8 @@ class Container(gt.Container):
 
     def copy(self, working_directory: str) -> "Container":
         """
-        Creates a copy of the Container
+        Creates a copy of the Container. Should not be invoked after
+        creating the model.
 
         Parameters
         ----------
@@ -935,7 +1073,72 @@ class Container(gt.Container):
             )
 
         self._run()
-        m.read(self._gdx_in)
+
+        for name, symbol in self:
+            new_domain = []
+            for set in symbol.domain:
+                if not isinstance(set, str):
+                    new_set = self.data[set.name]
+                    new_set.container = m
+                    new_domain.append(new_set)
+                else:
+                    new_domain.append(set)
+
+            if isinstance(symbol, gt.Alias):
+                alias_with = self[symbol.alias_with.name]
+                alias_with.container = m
+                _ = gp.Alias(
+                    m,
+                    name,
+                    alias_with,
+                )
+            elif isinstance(symbol, gt.UniverseAlias):
+                _ = gp.UniverseAlias(
+                    m,
+                    name,
+                )
+            elif isinstance(symbol, gt.Set):
+                _ = gp.Set(
+                    m,
+                    name,
+                    new_domain,
+                    symbol.is_singleton,
+                    symbol._records,
+                    symbol.domain_forwarding,
+                    symbol.description,
+                )
+            elif isinstance(symbol, gt.Parameter):
+                _ = gp.Parameter(
+                    m,
+                    name,
+                    new_domain,
+                    symbol._records,
+                    symbol.domain_forwarding,
+                    symbol.description,
+                )
+            elif isinstance(symbol, gt.Variable):
+                _ = gp.Variable(
+                    m,
+                    name,
+                    symbol.type,
+                    new_domain,
+                    symbol._records,
+                    symbol.domain_forwarding,
+                    symbol.description,
+                )
+            elif isinstance(symbol, gt.Equation):
+                symbol_type = symbol.type
+                if symbol.type in ["eq", "leq", "geq"]:
+                    symbol_type = "regular"
+                _ = gp.Equation(
+                    container=m,
+                    name=name,
+                    type=symbol_type,
+                    domain=new_domain,
+                    records=symbol._records,
+                    domain_forwarding=symbol.domain_forwarding,
+                    description=symbol.description,
+                )
 
         try:
             shutil.copy(
@@ -945,22 +1148,14 @@ class Container(gt.Container):
         except FileNotFoundError:
             # save_to might not exist and it's fine
             pass
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
 
-        try:
-            shutil.copy(
-                self._restart_from._checkpoint_file_name,
-                m._restart_from._checkpoint_file_name,
-            )
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
+        shutil.copy(
+            self._restart_from._checkpoint_file_name,
+            m._restart_from._checkpoint_file_name,
+        )
 
-        try:
-            shutil.copy(self._gdx_in, m._gdx_in)
-            shutil.copy(self._gdx_out, m._gdx_out)
-        except Exception as e:
-            raise GamspyException(f"Copy failed because {str(e)}")
+        shutil.copy(self._gdx_in, m._gdx_in)
+        shutil.copy(self._gdx_out, m._gdx_out)
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
@@ -1061,11 +1256,21 @@ class Container(gt.Container):
 
                 string += statement_str + "\n"
 
-        for symbol_name, symbol in self:
-            if isinstance(symbol, gp.Alias):
-                string += f"$load {symbol.alias_with.name}\n"
-            else:
+        dirty_names, assigned_names = self._get_touched_symbol_names()
+        for symbol_name in assigned_names:
+            if not isinstance(self[symbol_name], gp.Alias):
                 string += f"$load {symbol_name}\n"
+
+        autogenerated_names = self._get_autogenerated_symbol_names()
+        unload_names = dirty_names + autogenerated_names + self._import_symbols
+
+        unload_str = ",".join(unload_names)
+        gdx_name = (
+            self._gdx_out
+            if backend == "local"
+            else self._gdx_out.split(os.sep)[-1]
+        )
+        string += f"execute_unload '{gdx_name}' {unload_str}\n"
 
         string += "$gdxIn\n"
 
@@ -1086,6 +1291,18 @@ class Container(gt.Container):
             Path to the gdx file
         symbols : List[str], optional
             Symbols whose data will be load from gdx, by default None
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set
+        >>> m = Container()
+        >>> i = Set(m, "i", records=["i1", "i2"])
+        >>> m.write("test.gdx")
+        >>> m2 = Container()
+        >>> m2.loadRecordsFromGdx("test.gdx")
+        >>> print(i.records.equals(m2["i"].records))
+        True
+
         """
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
@@ -1151,25 +1368,24 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        sequence = symbols if symbols else self.data.keys()
-
-        dirty_symbols = []
-        for name in sequence:
-            if hasattr(self[name], "_is_dirty") and self[name]._is_dirty:
-                dirty_symbols.append(name)
-                self[name]._is_dirty = False
+        dirty_names, assigned_names = self._get_touched_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
-        if len(dirty_symbols) > 0:
+        if len(dirty_names) > 0:
             self._run()
 
         super().write(write_to, symbols)
+
+        self._update_assigned_state(assigned_names)
 
 
 def parse_message(
     workspace: "GamsWorkspace", options: "GamsOptions", job: "GamsJob"
 ) -> str:
     error_message = ""
+    if not options._writeoutput:
+        return error_message
+
     header = "=" * 80
     footer = "=" * 80
     message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
@@ -1225,7 +1441,11 @@ def preprocess_extra_model_files(
     """
     # copy provided extra model files to working directory
     for extra_file in engine_config.extra_model_files:
-        shutil.copy(extra_file, workspace.working_directory)
+        try:
+            shutil.copy(extra_file, workspace.working_directory)
+        except shutil.SameFileError:
+            # extra file might already be in the working directory
+            pass
 
     # trim path and keep only the names of the files
     extra_model_files = [

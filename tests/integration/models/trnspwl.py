@@ -71,6 +71,7 @@ from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Problem
 from gamspy import Sense
@@ -196,7 +197,7 @@ def main():
         description="objective of local optimum that is not globally optimal",
     )
 
-    transport.solve(options={"nlp": "conopt"})
+    transport.solve(options=Options(nlp="conopt"))
     print("Initial Objective Function Value: ", round(z.records.level[0], 3))
 
     localopt[...] = z.l
@@ -275,7 +276,7 @@ def main():
         objective=z,
     )
 
-    trnsdiscA.solve(options={"optCr": 0})
+    trnsdiscA.solve(options=Options(relative_optimality_gap=0))
 
     # The next model (formulation b) uses the convex combinations of
     # neighboring points but requires the discretization to be bounded

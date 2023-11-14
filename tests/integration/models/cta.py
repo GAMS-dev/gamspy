@@ -30,6 +30,7 @@ from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Sense
 from gamspy import Set
@@ -172,8 +173,11 @@ def main():
         objective=Sum([i, j, k], adjn[i, j, k] + adjp[i, j, k]),
     )
 
-    cmd_params = {"optCa": 0.99, "resLim": 10}
-    cox3.solve(options=cmd_params, output=sys.stdout)
+    cmd_params = Options(absolute_optimality_gap=0.99, time_limit=10)
+    cox3.solve(
+        options=cmd_params,
+        output=sys.stdout,
+    )
 
     rep = Parameter(
         m, name="rep", description="summary report", domain=[k, i, j]

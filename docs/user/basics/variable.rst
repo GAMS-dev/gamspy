@@ -81,10 +81,6 @@ Variable Types
 There are nine basic :meth:`variable types <gamspy.VariableType>` that may be used in 
 variable statements: 
 
-..
-    TODO: Check https://www.gams.com/latest/docs/UG_Variables.html#UG_Variables_VariableTypes
-    for references and include here if needed.
-
 =================================================  ==================================================================================================================================================================================================  ======================  ======================
 Keyword                                            Description                                                                                                       Default Lower Bound   Default Upper Bound
 =================================================  ==================================================================================================================================================================================================  ======================  ======================
@@ -125,10 +121,6 @@ Introduction
 
 While a GAMSPy :ref:`parameter <parameter>` has one number associated with each unique 
 label combination, a variable has several attributes. They represent:
-
-..
-    TODO: Check https://www.gams.com/latest/docs/UG_Variables.html#UG_Variables_VariableAttributes
-    for references and include here if needed.
 
 ========================== ======  ==================================================================================================================================================================================================================================================================================================================================================
 Variable Attribute         Symbol  Description
@@ -423,6 +415,8 @@ feature in a model, it has to be a mixed integer model or one of the related mod
 like ``MINLP`` or ``MIQCP``. See section 
 `Classification of Models [GAMS documentation] <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels>`_ 
 for a full listing of all GAMS model types.
+
+.. _binary-variables:
 
 Binary Variables
 -----------------

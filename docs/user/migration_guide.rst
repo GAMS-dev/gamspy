@@ -61,7 +61,7 @@ GAMSPy:
     z = gp.Variable(m, 'z')
 
     eq = gp.Equation(m, name="eq")
-    eq.definition = Sum(i, a[i]) <= z
+    eq[...] = Sum(i, a[i]) <= z
 
 GAMS:
 
@@ -125,7 +125,7 @@ GAMSPy:
     conex[bus, node].where[branch[bus, node, "x"]] = True
     conex[bus, node].where[conex[node, bus]] = True
 
-    p.assignment = Smax(
+    p[...] = Smax(
         Domain(bus, node).where[conex[bus, node]],
         branch[bus, node, "bij"] * 3.14 * 2,
     )

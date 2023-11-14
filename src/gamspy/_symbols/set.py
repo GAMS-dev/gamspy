@@ -46,7 +46,6 @@ from gamspy.exceptions import GamspyException
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
-    from gamspy._algebra.operable import Operable
     from gamspy._algebra.expression import Expression
 
 
@@ -145,6 +144,9 @@ class Set(gt.Set, operable.Operable, Symbol):
         # iterator index
         self._current_index = 0
 
+        # for records and setRecords
+        self._is_assigned = True
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -185,9 +187,8 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
 
-        if self.container.delayed_execution:
-            self._is_dirty = True
-        else:
+        self._is_dirty = True
+        if not self.container.delayed_execution:
             self.container._run()
 
     # Set Attributes
@@ -321,7 +322,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -329,7 +330,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -366,7 +367,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Operable"],
+        n: Union[int, "Symbol", "Expression"],
         type: Literal["linear", "circular"] = "linear",
     ) -> "ImplicitSet":
         """
@@ -374,7 +375,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Parameters
         ----------
-        n : int | Operable
+        n : int | Symbol | Expression
         type : 'linear' or 'circular', optional
 
         Returns
@@ -427,6 +428,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if hasattr(self, "_is_assigned"):
+            self._is_assigned = True
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -447,6 +451,10 @@ class Set(gt.Set, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False):
+        self._is_assigned = True
+        super().setRecords(records, uels_on_axes)
 
     def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
         return expression.Expression(

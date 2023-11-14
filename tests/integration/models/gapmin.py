@@ -33,6 +33,7 @@ from gamspy import Equation
 from gamspy import Model
 from gamspy import ModelStatus
 from gamspy import Number
+from gamspy import Options
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Smax
@@ -173,7 +174,7 @@ def main():
     # if one wants to check the data, one can
     # solve the MIP problem, this is just a check
 
-    # assign_mip.solve(options={"optCr": 0})
+    # assign_mip.solve(options=Options(relative_optimality_gap=0))
 
     # check = 0
     # for r_loop, i_loop in xopt.toList():
@@ -383,9 +384,6 @@ def main():
         )
     )
 
-    # then keep the smaller of the two values as zfeas
-    pknap.optCr = 0  # ask for global solution
-
     # ============================================================================ #
     #                                                                              #
     #   beginning of subgradient loop                                              #
@@ -406,7 +404,7 @@ def main():
         zlr[...] = 0
         for ii_loop in ii.toList():
             id[ii_loop] = True  # assume id was empty
-            pknap.solve()
+            pknap.solve(options=Options(relative_optimality_gap=0))
             zlr[...] = zlr + zlrx.l
             id[ii_loop] = False  # make set empty again
 

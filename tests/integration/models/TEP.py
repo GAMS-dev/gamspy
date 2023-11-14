@@ -23,6 +23,7 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -257,7 +258,7 @@ def main():
         -1 * branch[bus, node, "Limit"] / Sbase
     )
 
-    loadflow.solve(options={"optCr": 0, "mip": "CPLEX"})
+    loadflow.solve(options=Options(relative_optimality_gap=0, mip="CPLEX"))
 
     print("Objective Function Value:  ", round(OF.toValue(), 3))
 

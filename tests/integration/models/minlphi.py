@@ -112,6 +112,7 @@ from gamspy import Domain
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
+from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
@@ -934,12 +935,17 @@ def main():
 
         #  solve the nlp subproblem
         nlpsub.solve(
-            options={"bRatio": 1, "domLim": 1000, "optCr": 0, "resLim": 15}
+            options=Options(
+                basis_detection_threshold=1,
+                domain_violation_limit=1000,
+                relative_optimality_gap=0,
+                time_limit=15,
+            )
         )
 
         #  resolve with Conopt to get marginals for lmtdsn, if not provided by used NLP solver *****
         if nlpsub.marginals == 0:
-            nlpsub.solve(options={"nlp": "conopt"})
+            nlpsub.solve(options=(Options(nlp="conopt")))
 
         # ======================================================================
         # update the optimal solution storage parameters if new nlp

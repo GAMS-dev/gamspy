@@ -91,9 +91,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         self.container._addStatement(statement)
 
-        if self.container.delayed_execution:
-            self.parent._is_dirty = True
-        else:
+        self.parent._is_dirty = True
+        if not self.container.delayed_execution:
             self.container._run()
 
     def __eq__(self, other):  # type: ignore

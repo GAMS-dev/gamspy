@@ -82,6 +82,9 @@ class Operation(operable.Operable):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def __neg__(self):
+        return expression.Expression("", "-", self)
+
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
         output = output.replace("=g=", ">=")

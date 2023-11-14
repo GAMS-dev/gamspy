@@ -29,8 +29,6 @@ import shutil
 import subprocess
 from typing import Dict
 
-import gamspy_base
-
 import gamspy.utils as utils
 from .util import add_solver_entry
 from .util import remove_solver_entry
@@ -72,6 +70,13 @@ def uninstall_license():
 
 def install_solver(args: Dict[str, str]):
     solver_name = args["name"]
+
+    try:
+        import gamspy_base
+    except ModuleNotFoundError:
+        raise GamspyException(
+            "You must first install gamspy_base to use this functionality"
+        )
 
     if not args["skip_pip_install"]:
         # install specified solver

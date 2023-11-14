@@ -4,11 +4,8 @@
 Parameter
 *********
 
-Data Entry with Parameters
-===========================
-
 Introduction
--------------
+=============
 
 One very important principle will motivate all our discussions on data:
 
@@ -28,7 +25,7 @@ in scalar and in list oriented format.
 
 
 Scalars
---------
+=========
 
 A GAMSPy parameter of dimensionality zero is called *scalar*. This means that there are 
 no associated sets, so there is exactly one number associated with the parameter: ::
@@ -48,17 +45,17 @@ assignment statement could be used to provide the value: ::
 
 .. note::
     When assigning values to scalar parameters, one needs to provide the ellipsis 
-    literal ``[...]``. This is not necessary for non-scalar parameters. 
+    literal ``[...]``. 
 
 
 Parameters
------------
+==========
 
 The parameter format is used to enter list oriented data which can be indexed over one 
 or several sets.
 
 The Syntax
-^^^^^^^^^^^
+----------
 
 The following example illustrates the parameter statement ::
 
@@ -96,7 +93,7 @@ Besides using the :meth:`gamspy.Parameter` class directly, one can also facilita
 
 
 Parameter Data for Higher Dimensions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 A parameter may have several dimensions. For the current maximum number of permitted 
 dimensions, see 
@@ -186,14 +183,14 @@ installed before the assignment is carried out. That means it does not work
 
 
 The Assignment Statement
--------------------------
+========================
 
 The assignment statement is the fundamental data manipulation statement in GAMSPy. 
 It may be used to define or alter values associated with :ref:`sets <set>`, 
 :ref:`variables <variable>`, :ref:`parameters <parameter>` or :ref:`equations <equation>`.
 
 Scalar Assignments
-^^^^^^^^^^^^^^^^^^^
+------------------
 
 Consider the following artificial sequence: ::
 
@@ -216,7 +213,7 @@ expected result.
 
 
 Indexed Assignments
-^^^^^^^^^^^^^^^^^^^^
+-------------------
 
 Performing indexed assignments offers what may be thought of as simultaneous or 
 parallel assignments and provides a concise way of specifying large amounts of data.
@@ -310,9 +307,6 @@ parallel assignment statement for parameter ``g``. ::
     g[i].where[Ord(i)>=2] = g[i.records.iloc[idx - 2]["uni"]] + g[i.records.iloc[idx - 1]["uni"]]
 
 
-..
-    #TODO: Fix code and output
-    
 Resulting in the following output ::
 
     In [1]: f.records
@@ -337,7 +331,7 @@ Resulting in the following output ::
 
 
 Restricting the Domain in Assignments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes it is necessary to make assignments over selected elements of a set instead 
 of over the entire domain. There are several ways to accomplish this: using 
@@ -373,7 +367,7 @@ more about Set and Set Element Referencing here:
 
 
 Explicit Labels
-""""""""""""""""
+^^^^^^^^^^^^^^^
 
 The strongest restriction of the domain is assigning a value to just one element. 
 Labels may be used explicitly in the context of assignments to accomplish this. 
@@ -386,7 +380,7 @@ All other elements of ``a`` remain unchanged. Labels must be quoted when used in
 this way.
 
 Subsets
-""""""""
+^^^^^^^
 
 In general, wherever a set name may occur in an indexed assignment, a subset 
 may be used instead.
@@ -402,7 +396,7 @@ only for the elements of ``sro``.
 .. _restricting-the-domain-conditionals:
 
 Conditionals
-"""""""""""""
+^^^^^^^^^^^^
 
 ::
 
@@ -415,7 +409,7 @@ of ``a`` remain unchanged.
 .. _restricting-the-domain-tuples:
 
 Tuples
-"""""""
+^^^^^^
 
 Tuples or multi-dimensional sets are introduced in section 
 :ref:`multi-dimensional-sets`. In this simple example we show how they may be used 
@@ -465,7 +459,7 @@ The values of the elements of the parameter ``a`` that are not elements of the s
 remain unchanged.
 
 Issues with Controlling Indices
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. warning::
     The number of controlling indices on the left of the = sign should be at least as 
@@ -511,7 +505,7 @@ full Cartesian product. The following example illustrates this method: ::
 .. _indexed-operations:
 
 Indexed Operations
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 GAMSPy provides the following four indexed operations: :meth:`gamspy.Sum`, 
 :meth:`gamspy.Product`, :meth:`gamspy.Smax`, :meth:`gamspy.Smin`. These operations are 
@@ -569,14 +563,10 @@ capacity: ::
     max_cap[...] = Smax((i,m),capacity[i,m])
 
 
-..
-    TODO: add references in note block
-
 .. note::
     - In the context of assignment statements, the attributes of variables and equations 
       (e.g. :meth:`gamspy.Variable.up`) may be used in indexed operations just as scalars 
       and parameters are used. For more on variable and equations attributes, see sections 
-      :ref:`variable-attributes` and Equation Attributes respectively.
+      :ref:`variable-attributes` and :ref:`equation-attributes` respectively.
     - In the context of equation definitions, scalars, parameters and variables may appear 
-      freely in indexed operations. For more on equation definitions, see section Defining 
-      Equations.
+      freely in indexed operations. For more on equation definitions, see section :ref:`Defining Equations <equation_definition>`.

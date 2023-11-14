@@ -126,6 +126,44 @@ class ConditionSuite(unittest.TestCase):
             'i("ahmsa") = no;',
         )
 
+        t = Set(
+            self.m,
+            name="t",
+            records=[str(i) for i in range(1, 10)],
+            description="no. of Monte-Carlo draws",
+        )
+
+        Util_gap = Parameter(
+            self.m,
+            name="Util_gap",
+            domain=[t],
+            description="gap between these two util",
+        )
+
+        Util_lic = Parameter(
+            self.m,
+            name="Util_lic",
+            domain=[t],
+            description="util solved w/o MN",
+        )
+        Util_lic2 = Parameter(
+            self.m,
+            name="Util_lic2",
+            domain=[t],
+            description="util solved w/ MN",
+        )
+
+        Util_gap[t] = Number(1).where[
+            gamspy_math.Round(Util_lic[t], 10)
+            != gamspy_math.Round(Util_lic2[t], 10)
+        ]
+
+        self.assertEqual(
+            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            "Util_gap(t) = (1 $ ((round( Util_lic(t), 10 )) ne (round("
+            " Util_lic2(t), 10 ))));",
+        )
+
     def test_condition_on_equation(self):
         td_data = pd.DataFrame(
             [
@@ -270,6 +308,11 @@ class ConditionSuite(unittest.TestCase):
             list(m._unsaved_statements.values())[-1].gamsRepr(),
             "k(p) $ (k(p)) = yes;",
         )
+
+        m = Container()
+        p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
+        k = Set(m, "k", domain=[p])
+        k[p].where[k[p]] = True
 
     def test_operator_comparison_in_condition(self):
         m = Container(delayed_execution=True)

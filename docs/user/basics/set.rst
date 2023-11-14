@@ -826,8 +826,6 @@ solved for arbitrary groupings of regions simultaneously. We assume there are no
 between regions, but that we have a number of independent models with a common data definition 
 and common logic. We illustrate with an artificial example, leaving out lots of details.
 
-.. todo:: the following example throws a compilation error.
-
  ::
 
     from gamspy import Container, Set, Parameter, Variable, Equation
@@ -842,7 +840,7 @@ and common logic. We illustrate with an artificial example, leaving out lots of 
     data = Parameter(m, "data", domain = [allr, type], description = "all other data ...")
     
     activity1 = Variable(m, "activity1", domain = allr, description = "first activity")
-    activity1 = Variable(m, "activity2", domain = allr, description = "second activity")
+    activity2 = Variable(m, "activity2", domain = allr, description = "second activity")
     revenue = Variable(m, "revenue", domain = allr, description = "revenue")
     
     resource1 = Equation(m, "resource1", domain = allr, description = "first resource constraint ...")

@@ -2,6 +2,7 @@ Equation
 ========
 
 .. autoclass:: gamspy.Equation
+   :inherited-members:
    :members:
    :undoc-members:
    :show-inheritance:

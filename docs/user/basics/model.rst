@@ -133,74 +133,42 @@ the list of solvers that are available.::
 Solve Options
 -------------
 
-Here is the list of options and their descriptions:
+Solve options can be specified as an ``Option`` class or as a dictionary. Here is the list of options and their descriptions:
 
 ====================== ===========================
 Option                 Description
 ====================== ===========================
+cns                    Default cns solver
+dnlp                   Default dnlp solver
+emp                    Default emp solver
+lp                     Default lp solver
+mcp                    Default mcp solver
+minlp                  Default rminlp solver
+mip                    Default mip solver
+miqcp                  Default miqcp solver
+mpec                   Default mpec solver
+nlp                    Default nlp solver
+qcp                    Default qpc solver
+rminlp                 Default rminlp solver  
+rmip                   Default rmip solver
+rmiqcp                 Default rmiqcp solver
+rmpec                  Default rmpec solver
 action                 GAMS processing request
-all_model_types        Set solver for all model types
-appendexpand           Expand file append option
-appendout              Output file append option
 asyncsollst            Print solution listing when asynchronous solve (Grid or Threads) is used
 bratio                 Basis detection threshold
-capturemodelinstance   Switch to capture all model instances within a run
-case                   Output case option for LST file
 cerr                   Compile time error limit
-charset                Character set flag
-checkerrorlevel        Check errorLevel automatically after executing external program
-cns                    Default cns solver
 decryptkey             Key to decrypt a text file that was encrypted via encrypt
 defines                GAMS Dash Options
-dformat                Date format
-digit                  Switch default for "$on/offDigit"
-dnlp                   Default dnlp solver
 domlim                 Domain violation limit solver default
-dumpopt                Writes preprocessed input to the file input.dmp
-dumpoptgdx             Defines a GDX file name stem created when using DumpOpt
-dumpparms              GAMS parameter logging
-dumpparmslogprefix     Prefix of lines triggered by DumpParms>1
-ecimplicitload         Allow implicit loading of symbols from embedded code or not
-emp                    Default emp solver
-empty                  Switch default for "$on/offEmpty"
 encryptkey             Key to encrypt a text file using $encrypt
-eolcom                 Switch default for "$on/offEolCom" and "$eolCom"
-errmsg                 Placing of compilation error messages
-errorlog               Max error message lines written to the log for each error
 etlim                  Elapsed time limit in seconds
-execmode               Limits on external programs that are allowed to be executed
-expand                 Expanded (include) input file name
 fddelta                Step size for finite differences
 fdopt                  Options for finite differences
-ferr                   Alternative error message file
-filecase               Casing of file names and paths (put, gdx, ref, $include, etc.)
-filestem               Sets the file stem for output files which use the input file name as stem by default
-filestemapfromenv      Append a string read from an environment variable to the "FileStem"
-filtered               Switch between filtered and domain-checked read from GDX
-forceoptfile           Overwrites other option file section mechanism
-forcework              Force GAMS to process a save file created with a newer GAMS version or with execution errors
-forlim                 GAMS looping limit
-freeembeddedpython     Free external resources at the end of each embedded Python code blocks
-gdx                    Gdx output path
-gdxcompress            Compression of generated GDX file
-gdxconvert             Version of GDX files generated (for backward compatibility)
-gdxuels                Unload labels or UELs to GDX either squeezed or full
 griddir                Grid file directory
 gridscript             Grid submission script
 heaplimit              Maximum Heap size allowed in MB
 holdfixed              Treat fixed variables as constants
 holdfixedasync         Allow HoldFixed for models solved asynchronously as well
-idcgdxinput            GDX file name with data for implicit input
-idcgdxoutput           GDX file name for data for implicit output
-idir                   Search paths for include files
-implicitassign         Switch default for "$on/offImplicitAssign"
-inlinecom              Switch default for "$on/offInline" and "$inlineCom"
-integer1               Integer communication cell N               
-integer2               Integer communication cell N
-integer3               Integer communication cell N
-integer4               Integer communication cell N
-integer5               Integer communication cell N
-interactivesolver      Allow solver to interact via command line input
 intvarup               Set mode for default upper bounds on integer variables
 iterlim                Iteration limit of solver
 jobtrace               Job trace string to be written to the trace file at the end of a GAMS job
@@ -209,23 +177,9 @@ libincdir              LibInclude directory
 license                Use alternative license file
 limcol                 Maximum number of columns listed in one variable block
 limrow                 Maximum number of rows listed in one equation block
-listing                Switch default for "$on/offListing"
 logline                Amount of line tracing to the log file
-lp                     Default lp solver
-lsttitleleftaligned    Write title of LST file all left aligned
 maxexecerror           Execution time error limit
-maxprocdir             Maximum number of 225* process directories
-mcp                    Default mcp solver
-miimode                Model Instance Mode
-minlp                  Default rminlp solver
-mip                    Default mip solver
-miqcp                  Default miqcp solver
-mpec                   Default mpec solver
-multi                  Switch default for "$on/offMulti[R]"
-nlp                    Default nlp solver
 nodlim                 Node limit in branch and bound tree
-nonewvarequ            Triggers a compilation error when new equations or variable symbols are introduced
-on115                  Generate errors for unknown unique element in an equation
 optca                  Absolute Optimality criterion solver default
 optcr                  Relative Optimality criterion solver default
 optdir                 Option file directory
@@ -243,50 +197,30 @@ profile                Execution profiling
 profilefile            Write profile information to this file
 profiletol             Minimum time a statement must use to appear in profile generated output
 pymultinst             GAMS/Python Multiple Instance Interpreter
-qcp                    Default qpc solver
 reference              Symbol reference file
 referencelineno        Controls the line numbers written to a reference file
 replace                Switch between merge and replace when reading from GDX into non-empty symbol
 reslim                 Wall-clock time limit for solver
-rminlp                 Default rminlp solver  
-rmip                   Default rmip solver
-rmiqcp                 Default rmiqcp solver
-rmpec                  Default rmpec solver
 savepoint              Save solver point in GDX file
-scriptexit             Program or script to be executed at the end of a GAMS run
 seed                   Random number seed
-showosmemory           Show the memory usage reported by the Operating System instead of the internal counting
 solprint               Solution report print option
 solvelink              Solver link option
 solveopt               Multiple solve management
 stepsum                Summary of computing resources used by job steps
 stringchk              String substitution options
-suffixalgebravars      Switch default for "$on/offSuffixAlgebraVars"
-suffixdlvars           Switch default for "$on/offSuffixDLVars".
 suppress               Compiler listing option
 symbol                 Symbol table file
 symprefix              Prefix all symbols encountered during compilation by the specified string in work file
-sys10                  Changes rpower to ipower when the exponent is constant and within 1e-12 of an integer
-sys11                  Dynamic resorting if indices in assignment/data statements are not in natural order
-sys12                  Pass model with generation errors to solver
 sysincdir              SysInclude directory
 sysout                 Solver Status file reporting option
-tabin                  Tab spacing
-tformat                Time format
 threads                Number of threads to be used by a solver
 threadsasync           Limit on number of threads to be used for asynchronous solves (solveLink=6)
 timer                  Instruction timer threshold in milli seconds
 trace                  Trace file name
 tracelevel             Modelstat/Solvestat threshold used in conjunction with action=GT
 traceopt               Trace file format option
-user1                  User string N
-user2                  User string N
-user3                  User string N
-user4                  User string N
-user5                  User string N
 warnings               Number of warnings permitted before a run terminates
 workfactor             Memory Estimate multiplier for some solvers
-workspace              Work space for some solvers in MB
 zerores                The results of certain operations will be set to zero if abs(result) LE ZeroRes
 zeroresrep             Report underflow as a warning when abs(results) LE ZeroRes and result set to zero
 ====================== ===========================

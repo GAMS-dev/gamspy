@@ -58,6 +58,7 @@ to the original mathematical algebraic formulation.
 Sparsity
 ---------
 .. todo:: very hard break between the two sentences pf this paragraph
+
 One key aspect of any modeling language is how it handles sparse multidimensional data structures.
 Many optimization problems are subject to a particular structure in which the data cube 
 has a lot of zeros and only a few non-zeros, a characteristic referred to as sparse. In 
@@ -99,6 +100,7 @@ and visualization, in a single, intuitive Python environment. GAMSPy allows you 
 optimization results to many data formats. 
 
 .. todo:: not sure about the seamless integration with MIRO. Is this working already? Do we have examples?
+    
 On top, GAMSPy seamlessly works with `GAMS MIRO <https://www.gams.com/sales/miro_facts/>`_ and `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_ 
 which allows you to run your GAMSPy optimization either on your local machine or on your own server 
 hardware (GAMS Engine One) as well as on GAMS Engine SaaS, hosted on the AWS cloud infrastructure.
