@@ -7,6 +7,3 @@ ipykernel
 matplotlib==3.7.3
 sphinx_design
 pydata_sphinx_theme==0.14.1
-sphinxcontrib-osexample==0.1.1
-gamsapi[transfer] @ https://cloud.gams.com/s/mLf9WE552F5HcE4/download/gamsapi-45.4.0-cp310-cp310-manylinux_2_17_x86_64.whl
-gamspy-base
