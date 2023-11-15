@@ -93,7 +93,7 @@ class ParameterSuite(unittest.TestCase):
 
         a[i] = -a[i] * 5
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            self.m._unsaved_statements[-1].gamsRepr(),
             "a(i) = (-a(i) * 5);",
         )
 
@@ -126,14 +126,14 @@ class ParameterSuite(unittest.TestCase):
 
         a[i] = Sum(i, b[i])
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             "a(i) = sum(i,b(i));",
         )
 
         v = Variable(self.m, "v", domain=[i])
         v.l[i] = v.l[i] * 5
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].getStatement(),
+            self.m._unsaved_statements[-1].getStatement(),
             "v.l(i) = (v.l(i) * 5);",
         )
 
@@ -145,7 +145,7 @@ class ParameterSuite(unittest.TestCase):
         gamma = Parameter(self.m, "gamma", domain=[j, h])
         gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
         self.assertEqual(
-            list(self.m._unsaved_statements.values())[-1].gamsRepr(),
+            self.m._unsaved_statements[-1].gamsRepr(),
             "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
         )
 
