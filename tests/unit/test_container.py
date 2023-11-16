@@ -312,16 +312,15 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            "$onMultiR\n$gdxIn"
+            "$onMultiR\n$onUNDF\n$gdxIn"
             f" {m._gdx_in}\n"
-            "Set i(*);\n$load i\n\n"
-            "Alias(i,a);\n\n"
-            "Parameter p;\n$load p\n\n"
-            "free Variable v;\n$load v\n\n"
-            "Equation e;\n$load e\n\n"
-            "$load i\n$load p\n$load v\n$load e\n"
-            f"execute_unload '{m._gdx_out}' \n"
-            "$gdxIn\n",
+            "Set i(*);\n$load i\n"
+            "Alias(i,a);\n"
+            "Parameter p;\n$load p\n"
+            "free Variable v;\n$load v\n"
+            "Equation e;\n$load e\n"
+            "$offUNDF\n$gdxIn\n"
+            f"execute_unload '{m._gdx_out}' \n",
         )
 
 

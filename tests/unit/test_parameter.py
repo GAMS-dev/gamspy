@@ -172,10 +172,11 @@ class ParameterSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            "$onMultiR\n$gdxIn"
-            f" {m._gdx_in}\n$onUNDF\nParameter"
-            " rho;\n$load rho\n$offUNDF\n$load rho\n"
-            f"execute_unload '{m._gdx_out}' \n$gdxIn\n",
+            "$onMultiR\n$onUNDF\n$gdxIn"
+            f" {m._gdx_in}\nParameter"
+            " rho;\n$load rho\n"
+            "$offUNDF\n$gdxIn\n"
+            f"execute_unload '{m._gdx_out}' \n",
         )
 
 
