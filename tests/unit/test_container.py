@@ -77,7 +77,7 @@ class ContainerSuite(unittest.TestCase):
         i3 = m.addSet("i", records=["new_record"], description="new desc")
         self.assertTrue(id(i1) == id(i3))
         self.assertRaises(ValueError, m.addSet, "i", [j])
-        self.assertRaises(TypeError, m.addSet, "i", None, 5)
+        self.assertRaises(ValueError, m.addSet, "i", None, 5)
 
         j1 = m.addAlias("j", i1)
         self.assertTrue(isinstance(j1, Alias))
@@ -92,7 +92,7 @@ class ContainerSuite(unittest.TestCase):
         a2 = m.addParameter("a")
         self.assertTrue(id(a1) == id(a2))
         self.assertRaises(ValueError, m.addParameter, "a", ["*"])
-        self.assertRaises(TypeError, m.addParameter, "a", None, None, 5)
+        self.assertRaises(ValueError, m.addParameter, "a", None, None, 5)
 
         v1 = m.addVariable("v")
         self.assertRaises(ValueError, m.addVariable, "v", "free", domain=i1)

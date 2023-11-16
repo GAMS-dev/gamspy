@@ -581,37 +581,7 @@ class Container(gt.Container):
         >>> a = m.addAlias("a", i)
 
         """
-        if name not in self:
-            obj = gp.Alias(self, name, alias_with)
-
-            return obj
-
-        else:
-            if not isinstance(alias_with, (gp.Set, gp.Alias)):
-                raise TypeError(
-                    "Symbol 'alias_with' must be type Set or Alias"
-                )
-
-            if isinstance(alias_with, gp.Alias):
-                parent = alias_with
-                while not isinstance(parent, gp.Set):
-                    parent = parent.alias_with
-                alias_with = parent
-
-            # allow overwriting
-            if isinstance(self.data[name], gp.Alias):
-                self.data[name].alias_with = alias_with
-
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add an Alias symbol named `{name}`,"
-                    " however a symbol with this name but different type"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if this symbol is first removed from the"
-                    " Container with the removeSymbols() method. "
-                )
+        return gp.Alias(self, name, alias_with)
 
     def addSet(
         self,
@@ -655,65 +625,16 @@ class Container(gt.Container):
         >>> i = m.addSet("i")
 
         """
-        if name not in self:
-            obj = gp.Set(
-                self,
-                name,
-                domain,
-                is_singleton,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
-            )
-
-            return obj
-
-        else:
-            # try if argument formats are valid
-            m = Container(system_directory=self.system_directory)
-            obj = gp.Set(
-                m,
-                name,
-                domain,
-                is_singleton,
-                records=None,
-                domain_forwarding=domain_forwarding,
-                description=description,
-            )
-
-            # domain handling
-            if domain is None:
-                domain = ["*"]
-
-            if isinstance(domain, (gp.Set, str)):
-                domain = [domain]
-
-            # allow records overwriting
-            if (
-                isinstance(self[name], gp.Set)
-                and utils.checkAllSame(self.data[name].domain, domain)
-                and self[name].is_singleton == is_singleton
-                and self[name].domain_forwarding == domain_forwarding
-            ):
-                if records is not None:
-                    self[name].setRecords(records)
-
-                # only change the description if a new one is passed
-                if description != "":
-                    self[name].description = description
-
-                return self[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a symbol named `{name}` but one"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if the symbol is first removed from the"
-                    " Container with the removeSymbols() method. Overwriting"
-                    " symbol 'records' and 'description' are possible if all"
-                    " other properties have not changed."
-                )
+        return gp.Set(
+            self,
+            name,
+            domain,
+            is_singleton,
+            records,
+            domain_forwarding,
+            description,
+            uels_on_axes,
+        )
 
     def addParameter(
         self,
@@ -755,61 +676,15 @@ class Container(gt.Container):
         >>> a = m.addParameter("a")
 
         """
-        if name not in self:
-            obj = gp.Parameter(
-                self,
-                name,
-                domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
-            )
-            return obj
-
-        else:
-            # try if argument formats are valid
-            m = Container(system_directory=self.system_directory)
-            obj = gp.Parameter(
-                m,
-                name,
-                domain,
-                records=None,
-                domain_forwarding=domain_forwarding,
-                description=description,
-            )
-
-            # domain handling
-            if domain is None:
-                domain = []
-
-            if isinstance(domain, (gt._abcs.AnyContainerDomainSymbol, str)):
-                domain = [domain]
-
-            # allow records overwriting
-            if (
-                isinstance(self.data[name], gp.Parameter)
-                and utils.checkAllSame(self.data[name].domain, domain)
-                and self.data[name].domain_forwarding == domain_forwarding
-            ):
-                if records is not None:
-                    self.data[name].setRecords(records)
-
-                # only change the description if a new one is passed
-                if description != "":
-                    self.data[name].description = description
-
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a symbol named `{name}` but one"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if the symbol is first removed from the"
-                    " Container with the removeSymbols() method. Overwriting"
-                    " symbol 'records' and 'description' are possible if all"
-                    " other properties have not changed."
-                )
+        return gp.Parameter(
+            self,
+            name,
+            domain,
+            records,
+            domain_forwarding,
+            description,
+            uels_on_axes,
+        )
 
     def addVariable(
         self,
@@ -853,64 +728,16 @@ class Container(gt.Container):
         >>> v = m.addVariable("v")
 
         """
-        if name not in self:
-            obj = gp.Variable(
-                self,
-                name,
-                type,
-                domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
-            )
-            return obj
-
-        else:
-            # try if argument formats are valid
-            m = Container(system_directory=self.system_directory)
-            obj = gp.Variable(
-                m,
-                name,
-                type,
-                domain,
-                records=None,
-                domain_forwarding=domain_forwarding,
-                description=description,
-            )
-
-            # domain handling
-            if domain is None:
-                domain = []
-
-            if isinstance(domain, (gt._abcs.AnyContainerDomainSymbol, str)):
-                domain = [domain]
-
-            # allow records overwriting
-            if (
-                isinstance(self.data[name], gp.Variable)
-                and self.data[name].type == type
-                and utils.checkAllSame(self.data[name].domain, domain)
-                and self.data[name].domain_forwarding == domain_forwarding
-            ):
-                if records is not None:
-                    self.data[name].setRecords(records)
-
-                # only change the description if a new one is passed
-                if description != "":
-                    self.data[name].description = description
-
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a symbol named `{name}` but one"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if the symbol is first removed from the"
-                    " Container with the removeSymbols() method. Overwriting"
-                    " symbol 'records' and 'description' are possible if all"
-                    " other properties have not changed."
-                )
+        return gp.Variable(
+            self,
+            name,
+            type,
+            domain,
+            records,
+            domain_forwarding,
+            description,
+            uels_on_axes,
+        )
 
     def addEquation(
         self,
@@ -958,65 +785,18 @@ class Container(gt.Container):
         >>> i = m.addEquation("i")
 
         """
-        if name not in self:
-            obj = gp.Equation(
-                self,
-                name,
-                type,
-                domain,
-                definition,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
-                definition_domain,
-            )
-            return obj
-
-        else:
-            # try if argument formats are valid
-            m = Container(system_directory=self.system_directory)
-            obj = gp.Equation(
-                m,
-                name,
-                type,
-                domain,
-                records=None,
-                domain_forwarding=domain_forwarding,
-                description=description,
-            )
-
-            # domain handling
-            if domain is None:
-                domain = []
-
-            if isinstance(domain, (gt._abcs.AnyContainerDomainSymbol, str)):
-                domain = [domain]
-
-            # allow records overwriting
-            if (
-                isinstance(self.data[name], gp.Equation)
-                and utils.checkAllSame(self.data[name].domain, domain)
-                and self.data[name].domain_forwarding == domain_forwarding
-            ):
-                if records is not None:
-                    self.data[name].setRecords(records)
-
-                # only change the description if a new one is passed
-                if description != "":
-                    self.data[name].description = description
-
-                return self.data[name]
-
-            else:
-                raise ValueError(
-                    f"Attempting to add a symbol named `{name}` but one"
-                    " already exists in the Container. Symbol replacement is"
-                    " only possible if the symbol is first removed from the"
-                    " Container with the removeSymbols() method. Overwriting"
-                    " symbol 'records' and 'description' are possible if all"
-                    " other properties have not changed."
-                )
+        return gp.Equation(
+            self,
+            name,
+            type,
+            domain,
+            definition,
+            records,
+            domain_forwarding,
+            description,
+            uels_on_axes,
+            definition_domain,
+        )
 
     def addModel(
         self,
@@ -1053,17 +833,19 @@ class Container(gt.Container):
         >>> model = m.addModel("my_model", "LP", [e])
 
         """
-        model = gp.Model(
-            self,
-            name,
-            problem,
-            equations,
-            sense,
-            objective,
-            matches,
-            limited_variables,
-        )
-        return model
+        try:
+            return self[name]
+        except KeyError:
+            return gp.Model(
+                self,
+                name,
+                problem,
+                equations,
+                sense,
+                objective,
+                matches,
+                limited_variables,
+            )
 
     def copy(self, working_directory: str) -> "Container":
         """

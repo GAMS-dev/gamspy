@@ -59,7 +59,7 @@ class AliasSuite(unittest.TestCase):
         self.assertRaises(TypeError, self.m.addAlias, "v", eq)
 
         # Try to add the same alias
-        self.assertRaises(ValueError, self.m.addAlias, "u", u)
+        self.assertRaises(TypeError, self.m.addAlias, "u", u)
 
     def test_universe_alias_creation(self):
         # non-str type name
