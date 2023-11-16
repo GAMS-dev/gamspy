@@ -82,6 +82,9 @@ class Operation(operable.Operable):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def __ne__(self, other):  # type: ignore
+        return Expression(self, "ne", other)
+
     def __neg__(self):
         return expression.Expression("", "-", self)
 
@@ -279,6 +282,9 @@ class Ord(operable.Operable):
     def __le__(self, other):
         return expression.Expression(self, "<=", other)
 
+    def __ne__(self, other):  # type: ignore
+        return Expression(self, "ne", other)
+
     def gamsRepr(self) -> str:
         return f"ord({self._set.name})"
 
@@ -319,6 +325,9 @@ class Card(operable.Operable):
 
     def __eq__(self, other) -> "Expression":  # type: ignore
         return expression.Expression(self, "==", other)
+
+    def __ne__(self, other):  # type: ignore
+        return Expression(self, "ne", other)
 
     def gamsRepr(self) -> str:
         return f"card({self._symbol.name})"
