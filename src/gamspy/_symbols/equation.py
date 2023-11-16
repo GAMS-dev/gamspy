@@ -208,12 +208,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             "boolean": "=b=",
         }
 
-        regular_map = {
-            "=e=": "eq",
-            "=g=": "geq",
-            "=l=": "leq",
-        }
-
         eq_types = ["=e=", "=l=", "=g="]
 
         # In case of an MCP equation without any equality, add the equality
@@ -222,8 +216,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         if self.type in non_regular_map.keys():  # type: ignore
             assignment._op_type = non_regular_map[self.type]  # type: ignore
-        else:
-            self.type = regular_map[assignment._op_type]
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -293,16 +285,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             "boolean": "=b=",
         }
 
-        regular_map = {
-            "=e=": "eq",
-            "=g=": "geq",
-            "=l=": "leq",
-        }
-
         if self.type in non_regular_map.keys():
             assignment._op_type = non_regular_map[self.type]  # type: ignore
-        else:
-            self.type = regular_map[assignment._op_type]  # type: ignore
 
         domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(

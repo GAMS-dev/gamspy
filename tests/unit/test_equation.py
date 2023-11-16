@@ -92,12 +92,12 @@ class EquationSuite(unittest.TestCase):
         # geq
         eq4 = Equation(self.m, "eq4", domain=[i])
         eq4[i] = x >= c
-        self.assertEqual(eq4.type, "geq")
+        self.assertEqual(eq4.type, "eq")
 
         # leq
         eq5 = Equation(self.m, "eq5", domain=[i])
         eq5[i] = x <= c
-        self.assertEqual(eq5.type, "leq")
+        self.assertEqual(eq5.type, "eq")
 
         self.assertEqual(str(EquationType.REGULAR), "REGULAR")
         eq6 = Equation(self.m, "eq6", type=EquationType.REGULAR, domain=[i])
