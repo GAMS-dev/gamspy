@@ -833,19 +833,16 @@ class Container(gt.Container):
         >>> model = m.addModel("my_model", "LP", [e])
 
         """
-        try:
-            return self[name]
-        except KeyError:
-            return gp.Model(
-                self,
-                name,
-                problem,
-                equations,
-                sense,
-                objective,
-                matches,
-                limited_variables,
-            )
+        return gp.Model(
+            self,
+            name,
+            problem,
+            equations,
+            sense,
+            objective,
+            matches,
+            limited_variables,
+        )
 
     def copy(self, working_directory: str) -> "Container":
         """
