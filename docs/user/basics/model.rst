@@ -133,7 +133,7 @@ the list of solvers that are available.::
 Solve Options
 -------------
 
-Solve options can be specified as an ``gamspy.Options`` class. For example: ::
+Solve options can be specified as an :meth:`gamspy.Options` class. For example: ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
 
