@@ -10,6 +10,7 @@ test.gms
 test.gdx
 test.lst
 test.py
+test
 gams-transfer-python
 225*
 docs/_build
@@ -17,4 +18,4 @@ _gams_py_*
 tests/integration/*.txt
 tests/integration/models/results.xlsx
 **/ipynb_checkpoints
-_*
+/_*
