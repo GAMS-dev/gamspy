@@ -4,6 +4,79 @@
 Frequently Asked Questions
 ****************************
 
+Which solvers GAMSPy support?
+-----------------------------
+At the moment, GAMSPy supports 21 solvers:
+
+- NLPEC
+- SBB
+- CONOPT
+- CONVERT
+- CPLEX
+- PATH
+- BARON
+- CONOPT4
+- COPT
+- DICOPT
+- GUROBI
+- HIGHS
+- IPOPT
+- IPOPTH
+- KNITRO
+- MINOS
+- MOSEK
+- SCIP
+- SHOT
+- SNOPT
+- XPRESS
+
+The list can also be accessed from commandline by executing: ::
+
+    gamspy list solvers -a
+
+Or it can be accesed by using the utility function getAvailableSolvers: ::
+
+    import gamspy.utils as utils
+    print(utils.getAvailableSolvers())
+
+What is the default solver if I don't specify one?
+--------------------------------------------------
+
+The listing of default solver for each problem type is below:
+
++---------+----------------+
+| Problem | Default Solver |
++---------+----------------+
+| LP      | CPLEX          |
++---------+----------------+
+| MIP     | CPLEX          |
++---------+----------------+
+| RMIP    | CPLEX          |
++---------+----------------+
+| NLP     | CONOPT         |
++---------+----------------+
+| MCP     | PATH           |
++---------+----------------+
+| MPEC    | NLPEC          |
++---------+----------------+
+| CNS     | CONOPT         |
++---------+----------------+
+| DNLP    | CONOPT         |
++---------+----------------+
+| RMINLP  | CONOPT         |
++---------+----------------+
+| MINLP   | SBB            |
++---------+----------------+
+| QCP     | CONOPT         |
++---------+----------------+
+| MIQCP   | SBB            |
++---------+----------------+
+| RMIQCP  | CONOPT         |
++---------+----------------+
+| EMP     | CONVERT        |
++---------+----------------+
+
+
 Why can't I redefine a GAMSPy symbol?
 --------------------------------------
 
