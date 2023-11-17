@@ -25,6 +25,7 @@
 import io
 import os
 import shutil
+import sys
 import uuid
 from typing import Any
 from typing import List
@@ -46,6 +47,7 @@ from gams.core import gdx
 
 import gamspy as gp
 import gamspy.utils as utils
+from gamspy._miro import MiroJSONEncoder
 from gamspy._options import option_map
 from gamspy.exceptions import GamspyException
 
@@ -62,6 +64,11 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._engine import EngineConfig
     from gamspy._options import Options
+
+IS_MIRO_INIT = os.getenv("MIRO", False)
+
+MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
+MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
 class Container(gt.Container):
@@ -130,6 +137,42 @@ class Container(gt.Container):
         self._job: Optional[GamsJob] = None
 
         self._options = options
+
+        # needed for miro
+        self._miro_input_symbols: List[str] = []
+        self._miro_output_symbols: List[str] = []
+        self._first_destruct = True
+
+    def __del__(self):
+        if not IS_MIRO_INIT or not self._first_destruct:
+            return
+
+        self._first_destruct = False
+        # create conf_<model>/<model>_io.json
+        encoder = MiroJSONEncoder(
+            self,
+            self._miro_input_symbols,
+            self._miro_output_symbols,
+        )
+
+        encoder.writeJson()
+
+        # create data_<model>/default.gdx
+        symbols = list(
+            set(self._miro_input_symbols + self._miro_output_symbols)
+        )
+
+        filename = sys.argv[0].split(".")[0]
+        data_path = f"data_{filename}"
+        try:
+            os.mkdir(data_path)
+        except FileExistsError:
+            pass
+
+        super().write(
+            f"{data_path}{os.sep}/default.gdx",
+            symbols,
+        )
 
     def _addGamsCode(
         self, gams_code: str, import_symbols: List[str] = []
@@ -998,12 +1041,26 @@ class Container(gt.Container):
 
         return self._gdx_in.split(os.sep)[-1], self._gdx_out.split(os.sep)[-1]
 
+    def _get_load_miro_input_str(self, statement, gdx_in):
+        string = "$gdxIn\n"  # close the old one
+        string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
+        string += f"$load {statement.name}\n"
+        string += "$gdxIn\n"  # close the new one
+        string += f"$gdxIn {gdx_in}\n"
+        return string
+
+    def _get_unload_miro_symbols_str(self):
+        unload_str = ",".join(self._miro_output_symbols)
+        return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
+
     def _generate_gams_string(
         self,
         backend: str = "local",
         dirty_names: List[str] = [],
     ) -> str:
         LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
+        MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
         gdx_in, gdx_out = self._preprocess_gdx_paths(backend)
 
         # Generate the string
@@ -1015,10 +1072,33 @@ class Container(gt.Container):
                 string += statement.getStatement() + "\n"
 
                 if isinstance(statement, LOAD_SYMBOL_TYPES):
-                    string += f"$load {statement.name}\n"
+                    if (
+                        isinstance(statement, MIRO_INPUT_TYPES)
+                        and statement._is_miro_input
+                    ):
+                        if not IS_MIRO_INIT and MIRO_GDX_IN:
+                            string += self._get_load_miro_input_str(
+                                statement, gdx_in
+                            )
+                        else:
+                            string += f"$load {statement.name}\n"
+
+                        self._miro_input_symbols.append(statement.name)
+                    else:
+                        string += f"$load {statement.name}\n"
+
+                # add miro output symbol
+                if (
+                    isinstance(statement, MIRO_OUTPUT_TYPES)
+                    and statement._is_miro_output
+                ):
+                    self._miro_output_symbols.append(statement.name)
 
         string += "$offUNDF\n$gdxIn\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
+
+        if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
+            string += self._get_unload_miro_symbols_str()
 
         return string
 

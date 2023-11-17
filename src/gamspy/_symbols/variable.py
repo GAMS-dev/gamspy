@@ -97,6 +97,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -128,6 +129,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_output: bool = False,
     ):
         type = cast_type(type)
 
@@ -165,6 +167,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # for records and setRecords
         self._is_assigned = True
+
+        # miro support
+        self._is_miro_output = is_miro_output
 
     def __getitem__(
         self, indices: Union[tuple, str]

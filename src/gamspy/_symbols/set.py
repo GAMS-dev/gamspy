@@ -83,6 +83,8 @@ class Set(gt.Set, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -115,6 +117,8 @@ class Set(gt.Set, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
     ):
         # enable load on demand
         self._is_dirty = False
@@ -146,6 +150,10 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         # for records and setRecords
         self._is_assigned = True
+
+        # miro support
+        self._is_miro_input = is_miro_input
+        self._is_miro_output = is_miro_output
 
     def __len__(self):
         if self.records is not None:

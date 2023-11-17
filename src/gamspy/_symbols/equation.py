@@ -115,6 +115,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
         definition_domain: Optional[list] = None,
+        is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -150,6 +151,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
         definition_domain: Optional[list] = None,
+        is_miro_output: bool = False,
     ):
         type = cast_type(type)
 
@@ -194,6 +196,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # for records and setRecords
         self._is_assigned = True
+
+        # miro support
+        self._is_miro_output = is_miro_output
 
     def __hash__(self):
         return id(self)
