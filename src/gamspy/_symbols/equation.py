@@ -46,6 +46,16 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
+eq_types = ["=e=", "=l=", "=g="]
+
+non_regular_map = {
+    "nonbinding": "=n=",
+    "external": "=x=",
+    "cone": "=c=",
+    "boolean": "=b=",
+}
+
+
 class EquationType(Enum):
     REGULAR = "REGULAR"
     NONBINDING = "NONBINDING"
@@ -201,15 +211,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
 
-        non_regular_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
-
-        eq_types = ["=e=", "=l=", "=g="]
-
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
@@ -272,18 +273,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._definition = assignment
             return
 
-        eq_types = ["=e=", "=l=", "=g="]
-
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
-
-        non_regular_map = {
-            "nonbinding": "=n=",
-            "external": "=x=",
-            "cone": "=c=",
-            "boolean": "=b=",
-        }
 
         if self.type in non_regular_map.keys():
             assignment._op_type = non_regular_map[self.type]  # type: ignore
