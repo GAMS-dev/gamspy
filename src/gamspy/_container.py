@@ -144,7 +144,11 @@ class Container(gt.Container):
         self._first_destruct = True
 
     def __del__(self):
-        if not IS_MIRO_INIT or not self._first_destruct:
+        if (
+            not IS_MIRO_INIT
+            or not self._first_destruct
+            or len(self._miro_input_symbols + self._miro_output_symbols) == 0
+        ):
             return
 
         self._first_destruct = False

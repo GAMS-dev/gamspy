@@ -92,7 +92,11 @@ class MiroJSONEncoder:
 
             info.append(
                 {
-                    "alias": symbol.name,
+                    "alias": (
+                        symbol.description
+                        if symbol.description
+                        else symbol.name
+                    ),
                     "symtype": type_map[type(symbol)],
                     "headers": headers_dict,
                 }
@@ -141,7 +145,11 @@ class MiroJSONEncoder:
 
             info.append(
                 {
-                    "alias": symbol.name,
+                    "alias": (
+                        symbol.description
+                        if symbol.description
+                        else symbol.name
+                    ),
                     "symtype": type_map[type(symbol)],
                     "headers": headers_dict,
                 }

@@ -41,17 +41,69 @@ def get_args():
         description="A script for installing solvers and licenses",
     )
     parser.add_argument(
-        "command", choices=["install", "list", "update", "uninstall"], type=str
+        "command",
+        choices=["install", "list", "run", "update", "uninstall"],
+        type=str,
     )
     parser.add_argument(
         "component",
-        choices=["license", "engine_license", "solver", "solvers"],
+        choices=["license", "miro", "solver", "solvers"],
         type=str,
     )
-    parser.add_argument("name", type=str, nargs="?", default=None)
-    parser.add_argument("-a", "--all", action="store_true")
-    parser.add_argument("--skip-pip-install", action="store_true")
-    parser.add_argument("--skip-pip-uninstall", action="store_true")
+
+    install_group = parser.add_argument_group(
+        "install solver", description="`gamspy install solver` options"
+    )
+    install_group.add_argument(
+        "name", type=str, nargs="?", default=None, help="Solver name"
+    )
+    install_group.add_argument(
+        "--skip-pip-install",
+        action="store_true",
+        help=(
+            "If you already have the solver installed, skip pip install and"
+            " update gamspy installed solver list."
+        ),
+    )
+    install_group.add_argument(
+        "--skip-pip-uninstall",
+        action="store_true",
+        help=(
+            "If you don't want to uninstall the package of the solver, skip"
+            " uninstall and update gamspy installed solver list."
+        ),
+    )
+
+    list_group = parser.add_argument_group(
+        "list solvers", description="`gamspy list solvers` options"
+    )
+    list_group.add_argument("-a", "--all", action="store_true")
+
+    miro_group = parser.add_argument_group(
+        "run miro", description="`gamspy run miro` options"
+    )
+    miro_group.add_argument(
+        "-g",
+        "--model",
+        type=str,
+        help="Path to the gamspy model",
+        default=None,
+    )
+    miro_group.add_argument(
+        "-m",
+        "--mode",
+        type=str,
+        choices=["config", "base", "deploy"],
+        help="Execution mode of MIRO",
+        default="base",
+    )
+    miro_group.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        help="Path to the MIRO app image",
+        default=None,
+    )
 
     res = vars(parser.parse_args())
 
@@ -221,14 +273,35 @@ def update():
             )
 
 
-def list_solvers(args: Dict[str, str]):
+def list(args: Dict[str, str]):
     component = args["component"]
 
     if component == "solvers":
         if args["all"]:
             return utils.getAvailableSolvers()
 
-        return utils.getInstalledSolvers()
+        print(utils.getInstalledSolvers())
+
+
+def run(args: Dict[str, str]):
+    component = args["component"]
+
+    if component == "miro":
+        model = args["model"]
+        mode = args["mode"]
+        path = args["path"]
+
+        if model is None or path is None:
+            raise GamspyException(
+                "--model and --path must be provided to run MIRO"
+            )
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO_MODEL_PATH"] = model
+        subprocess_env["MIRO_MODE"] = mode
+        subprocess_env["MIRO_DEV_MODE"] = "true"
+
+        subprocess.run([path], env=subprocess_env)
 
 
 def uninstall(args: Dict[str, str]):
@@ -246,9 +319,11 @@ def main():
 
     if args["command"] == "install":
         install(args)
+    elif args["command"] == "list":
+        list(args)
+    elif args["command"] == "run":
+        run(args)
     elif args["command"] == "update":
         update()
-    elif args["command"] == "list":
-        print(list_solvers(args))
     elif args["command"] == "uninstall":
         uninstall(args)
