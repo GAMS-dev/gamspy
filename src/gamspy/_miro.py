@@ -230,9 +230,10 @@ class MiroJSONEncoder:
     def writeJson(self):
         content = self._prepare_json()
 
-        filename = sys.argv[0].split(".")[0]
+        filename = os.path.basename(sys.argv[0]).split(".")[0]
         conf_path = f"conf_{filename}"
         try:
+            print(conf_path)
             os.mkdir(conf_path)
         except FileExistsError:
             pass

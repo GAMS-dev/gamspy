@@ -2,10 +2,12 @@ import argparse
 import doctest
 import glob
 import os
+import shutil
 import unittest
 
 from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
+from integration.test_miro import miro_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
 from integration.test_solve import solve_suite
@@ -93,6 +95,7 @@ def run_integration_tests(runner: unittest.TextTestRunner):
         model_instance_suite,
         cmd_suite,
         engine_suite,
+        miro_suite,
         gams_models_suite,
     ]
 
@@ -183,6 +186,10 @@ def main():
     gams_paths = glob.glob("_*")
     for gams_path in gams_paths:
         os.remove(gams_path)
+
+    miro_paths = ["conf_miro", "data_miro"]
+    for path in miro_paths:
+        shutil.rmtree(path)
 
     return 0
 

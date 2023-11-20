@@ -1,0 +1,130 @@
+import json
+import os
+import pathlib
+import subprocess
+import sys
+import unittest
+
+from gamspy import Container
+
+
+class MiroSuite(unittest.TestCase):
+    def setUp(self):
+        self.m = Container(delayed_execution=True)
+
+    def test_miro(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        current_environment = os.environ.copy()
+        current_environment["MIRO"] = "1"
+
+        try:
+            subprocess.run(
+                [sys.executable, directory + os.sep + "miro.py"],
+                env=current_environment,
+                check=True,
+                capture_output=True,
+            )
+        except Exception as e:
+            print(e)
+
+        # Test default.gdx
+        new_container = Container()
+        new_container.read(f"data_miro{os.sep}default.gdx")
+
+        # Miro input d
+        self.assertTrue("d" in new_container.data.keys())
+        self.assertEqual(
+            new_container["d"].records.values.tolist(),
+            [
+                ["seattle", "new-york", 2.5],
+                ["seattle", "chicago", 1.7],
+                ["seattle", "topeka", 1.8],
+                ["san-diego", "new-york", 2.5],
+                ["san-diego", "chicago", 1.8],
+                ["san-diego", "topeka", 1.4],
+            ],
+        )
+
+        # Miro output x
+        self.assertTrue("x" in new_container.data.keys())
+        self.assertEqual(
+            new_container["x"].records.values.tolist(),
+            [
+                ["seattle", "new-york", 50.0, 0.0, 0.0, float("inf"), 1.0],
+                ["seattle", "chicago", 300.0, 0.0, 0.0, float("inf"), 1.0],
+                [
+                    "seattle",
+                    "topeka",
+                    0.0,
+                    0.036000000000000004,
+                    0.0,
+                    float("inf"),
+                    1.0,
+                ],
+                ["san-diego", "new-york", 275.0, 0.0, 0.0, float("inf"), 1.0],
+                [
+                    "san-diego",
+                    "chicago",
+                    0.0,
+                    0.009000000000000008,
+                    0.0,
+                    float("inf"),
+                    1.0,
+                ],
+                ["san-diego", "topeka", 275.0, 0.0, 0.0, float("inf"), 1.0],
+            ],
+        )
+
+        # Test generated json
+        with open(f"conf_miro{os.sep}miro_io.json") as file:
+            contract = json.load(file)
+            self.assertEqual(
+                contract,
+                {
+                    "modelTitle": "GAMSPy App",
+                    "inputSymbols": {
+                        "d": {
+                            "alias": "d",
+                            "symtype": "parameter",
+                            "headers": {
+                                "i": {"type": "string", "alias": "i"},
+                                "j": {"type": "string", "alias": "j"},
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        }
+                    },
+                    "outputSymbols": {
+                        "x": {
+                            "alias": "x",
+                            "symtype": "variable",
+                            "headers": {
+                                "i": {"type": "string", "alias": "i"},
+                                "j": {"type": "string", "alias": "j"},
+                                "level": {"type": "numeric", "alias": "level"},
+                                "marginal": {
+                                    "type": "numeric",
+                                    "alias": "marginal",
+                                },
+                                "lower": {"type": "numeric", "alias": "lower"},
+                                "upper": {"type": "numeric", "alias": "upper"},
+                                "scale": {"type": "numeric", "alias": "scale"},
+                            },
+                        }
+                    },
+                },
+            )
+
+
+def miro_suite():
+    suite = unittest.TestSuite()
+    tests = [
+        MiroSuite(name) for name in dir(MiroSuite) if name.startswith("test_")
+    ]
+    suite.addTests(tests)
+
+    return suite
+
+
+if __name__ == "__main__":
+    runner = unittest.TextTestRunner()
+    runner.run(miro_suite())

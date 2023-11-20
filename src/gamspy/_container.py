@@ -166,7 +166,7 @@ class Container(gt.Container):
             set(self._miro_input_symbols + self._miro_output_symbols)
         )
 
-        filename = sys.argv[0].split(".")[0]
+        filename = os.path.basename(sys.argv[0]).split(".")[0]
         data_path = f"data_{filename}"
         try:
             os.mkdir(data_path)
