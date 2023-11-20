@@ -165,6 +165,7 @@ class Container(gt.Container):
         symbols = list(
             set(self._miro_input_symbols + self._miro_output_symbols)
         )
+        print(f"Writing: {symbols}")
 
         filename = os.path.basename(sys.argv[0]).split(".")[0]
         data_path = f"data_{filename}"

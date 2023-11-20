@@ -3,6 +3,7 @@ import os
 import sys
 from typing import List
 from typing import TYPE_CHECKING
+from typing import Union
 
 import gamspy as gp
 
@@ -21,33 +22,50 @@ class MiroJSONEncoder:
         self.model_title = "GAMSPy App"
         self.input_symbols = input_symbols
         self.output_symbols = output_symbols
+        self.input_scalars = self._find_scalars(input_symbols)
+        self.output_scalars = self._find_scalars(output_symbols)
         self.miro_json = self._prepare_json()
 
-    def _prepare_input_scalars(self):
-        scalar_names = []
-        scalar_texts = []
-        scalar_types = []
-        for name in self.input_symbols:
+    def _find_scalars(self, symbols: List[str]) -> List[str]:
+        scalars = []
+        for name in symbols:
             symbol = self.container[name]
-            if (isinstance(symbol, gp.Parameter) and symbol.is_scalar) or (
-                isinstance(symbol, gp.Set) and symbol.is_singleton
-            ):
-                scalar_names.append(name)
-                scalar_texts.append(symbol.description)
 
-                if isinstance(symbol, gp.Parameter):
-                    scalar_types.append("parameter")
-                else:
-                    scalar_types.append("set")
+            if len(symbol.domain) == 0:
+                scalars.append(name)
 
-        if len(scalar_names) == 0:
+        return scalars
+
+    def _prepare_scalars(
+        self, alias: str, symbols: List[str]
+    ) -> Union[dict, None]:
+        names = []
+        texts = []
+        types = []
+        for name in symbols:
+            symbol = self.container[name]
+            names.append(name)
+            texts.append(
+                symbol.description if symbol.description else symbol.name
+            )
+
+            if isinstance(symbol, gp.Set):
+                types.append("set")
+            elif isinstance(symbol, gp.Parameter):
+                types.append("parameter")
+            elif isinstance(symbol, gp.Variable):
+                types.append("variable")
+            elif isinstance(symbol, gp.Equation):
+                types.append("equation")
+
+        if len(names) == 0:
             return None
 
         scalars_dict = {
-            "alias": "Input Scalars",
-            "symnames": scalar_names,
-            "symtext": scalar_texts,
-            "symtypes": scalar_types,
+            "alias": alias,
+            "symnames": names,
+            "symtext": texts,
+            "symtypes": types,
             "headers": {
                 "scalar": {
                     "type": "string",
@@ -66,60 +84,7 @@ class MiroJSONEncoder:
 
         return scalars_dict
 
-    def _prepare_input_symbols(self):
-        type_map = {
-            gp.Parameter: "parameter",
-            gp.Set: "set",
-            str: "string",
-            "float64": "numeric",
-            "category": "string",
-        }
-
-        info = []
-        for name in self.input_symbols:
-            symbol = self.container[name]
-            domain_keys = symbol.records.columns.to_list()
-            domain_values = []
-
-            for dtype, column in zip(
-                symbol.records.dtypes, symbol.records.columns.to_list()
-            ):
-                domain_values.append(
-                    {"type": type_map[dtype.name], "alias": column}
-                )
-
-            headers_dict = dict(zip(domain_keys, domain_values))
-
-            info.append(
-                {
-                    "alias": (
-                        symbol.description
-                        if symbol.description
-                        else symbol.name
-                    ),
-                    "symtype": type_map[type(symbol)],
-                    "headers": headers_dict,
-                }
-            )
-
-        return info
-
-    def _prepare_input_symbols_dict(self):
-        scalars_dict = self._prepare_input_scalars()
-        symbol_dicts = self._prepare_input_symbols()
-
-        keys = self.input_symbols
-        values = symbol_dicts
-
-        if scalars_dict is not None:
-            keys.append("_scalars")
-            values.append(scalars_dict)
-
-        input_symbols_dict = dict(zip(keys, values))
-
-        return input_symbols_dict
-
-    def _prepare_output_symbols(self):
+    def _prepare_symbols(self, symbols: List[str]) -> List[dict]:
         type_map = {
             gp.Parameter: "parameter",
             gp.Set: "set",
@@ -131,8 +96,9 @@ class MiroJSONEncoder:
         }
 
         info = []
-        for name in self.output_symbols:
+        for name in symbols:
             symbol = self.container[name]
+
             domain_keys = symbol.records.columns.to_list()
             domain_values = []
 
@@ -157,67 +123,39 @@ class MiroJSONEncoder:
 
         return info
 
-    def _prepare_output_scalars(self):
-        scalar_names = []
-        scalar_texts = []
-        scalar_types = []
-        for name in self.output_symbols:
-            symbol = self.container[name]
-            if (isinstance(symbol, gp.Parameter) and symbol.is_scalar) or (
-                isinstance(symbol, gp.Set) and symbol.is_singleton
-            ):
-                scalar_names.append(name)
-                scalar_texts.append(symbol.description)
+    def _prepare_symbols_dict(
+        self, is_input: bool, symbols: List[str]
+    ) -> dict:
+        alias = "Input Scalars" if is_input else "Output Scalars"
+        scalars_dict = self._prepare_scalars(
+            alias, self.input_scalars if is_input else self.output_scalars
+        )
 
-                if isinstance(symbol, gp.Parameter):
-                    scalar_types.append("parameter")
-                else:
-                    scalar_types.append("set")
+        non_scalars = (
+            list(set(symbols) - set(self.input_scalars))
+            if is_input
+            else list(set(symbols) - set(self.output_scalars))
+        )
+        symbol_dicts = self._prepare_symbols(non_scalars)
 
-        if len(scalar_names) == 0:
-            return None
-
-        scalars_dict = {
-            "alias": "Input Scalars",
-            "symnames": scalar_names,
-            "symtext": scalar_texts,
-            "symtypes": scalar_types,
-            "headers": {
-                "scalar": {
-                    "type": "string",
-                    "alias": "Scalar Name",
-                },
-                "description": {
-                    "type": "string",
-                    "alias": "Scalar Description",
-                },
-                "value": {
-                    "type": "string",
-                    "alias": "Scalar Value",
-                },
-            },
-        }
-
-        return scalars_dict
-
-    def _prepare_output_symbols_dict(self):
-        scalars_dict = self._prepare_output_scalars()
-        symbol_dicts = self._prepare_output_symbols()
-
-        keys = self.output_symbols
+        keys = non_scalars
         values = symbol_dicts
 
         if scalars_dict is not None:
-            keys.append("_scalars_out")
+            keys.append("_scalars" if is_input else "_scalars_out")
             values.append(scalars_dict)
 
-        output_symbols_dict = dict(zip(keys, values))
+        symbols_dict = dict(zip(keys, values))
 
-        return output_symbols_dict
+        return symbols_dict
 
     def _prepare_json(self) -> str:
-        input_symbols_dict = self._prepare_input_symbols_dict()
-        output_symbols_dict = self._prepare_output_symbols_dict()
+        input_symbols_dict = self._prepare_symbols_dict(
+            True, self.input_symbols
+        )
+        output_symbols_dict = self._prepare_symbols_dict(
+            False, self.output_symbols
+        )
 
         miro_dict = {
             "modelTitle": self.model_title,
@@ -233,7 +171,6 @@ class MiroJSONEncoder:
         filename = os.path.basename(sys.argv[0]).split(".")[0]
         conf_path = f"conf_{filename}"
         try:
-            print(conf_path)
             os.mkdir(conf_path)
         except FileExistsError:
             pass

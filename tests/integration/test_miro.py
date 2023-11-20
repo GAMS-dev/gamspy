@@ -45,6 +45,10 @@ class MiroSuite(unittest.TestCase):
             ],
         )
 
+        # Miro scalar input f
+        self.assertTrue("f" in new_container.data.keys())
+        self.assertEqual(new_container["f"].records.value.item(), 90.0)
+
         # Miro output x
         self.assertTrue("x" in new_container.data.keys())
         self.assertEqual(
@@ -75,6 +79,10 @@ class MiroSuite(unittest.TestCase):
             ],
         )
 
+        # Miro output z
+        self.assertTrue("z" in new_container.data.keys())
+        self.assertEqual(new_container["z"].records.level.item(), 153.675)
+
         # Test generated json
         with open(f"conf_miro{os.sep}miro_io.json") as file:
             contract = json.load(file)
@@ -91,7 +99,27 @@ class MiroSuite(unittest.TestCase):
                                 "j": {"type": "string", "alias": "j"},
                                 "value": {"type": "numeric", "alias": "value"},
                             },
-                        }
+                        },
+                        "_scalars": {
+                            "alias": "Input Scalars",
+                            "symnames": ["f"],
+                            "symtext": ["f"],
+                            "symtypes": ["parameter"],
+                            "headers": {
+                                "scalar": {
+                                    "type": "string",
+                                    "alias": "Scalar Name",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "alias": "Scalar Description",
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "alias": "Scalar Value",
+                                },
+                            },
+                        },
                     },
                     "outputSymbols": {
                         "x": {
@@ -109,7 +137,27 @@ class MiroSuite(unittest.TestCase):
                                 "upper": {"type": "numeric", "alias": "upper"},
                                 "scale": {"type": "numeric", "alias": "scale"},
                             },
-                        }
+                        },
+                        "_scalars_out": {
+                            "alias": "Output Scalars",
+                            "symnames": ["z"],
+                            "symtext": ["z"],
+                            "symtypes": ["variable"],
+                            "headers": {
+                                "scalar": {
+                                    "type": "string",
+                                    "alias": "Scalar Name",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "alias": "Scalar Description",
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "alias": "Scalar Value",
+                                },
+                            },
+                        },
                     },
                 },
             )
