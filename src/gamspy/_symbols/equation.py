@@ -88,6 +88,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     description : str, optional
     uels_on_axes: bool
     definition_domain: list, optional
+    is_miro_output : bool
 
     Examples
     --------

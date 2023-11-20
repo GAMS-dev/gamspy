@@ -77,6 +77,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     records : DataFrame, optional
     domain_forwarding : bool, optional
     description : str, optional
+    is_miro_output : bool
 
     Examples
     --------

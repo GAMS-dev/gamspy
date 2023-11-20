@@ -15,3 +15,4 @@ fundamental GAMSPy ideas and philosophy.
    ./assignments
    ./special_features
    ./debugging
+   ./miro

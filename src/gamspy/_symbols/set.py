@@ -64,6 +64,8 @@ class Set(gt.Set, operable.Operable, Symbol):
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes : bool
+    is_miro_input : bool
+    is_miro_output : bool
 
     Examples
     --------
