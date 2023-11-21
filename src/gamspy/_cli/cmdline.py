@@ -304,9 +304,10 @@ def run(args: Dict[str, str]):
             )
 
         # Initialize MIRO
-        subprocess_env = os.environ.copy()
-        subprocess_env["MIRO"] = "1"
-        subprocess.run([sys.executable, model])
+        if not args["skip_execution"]:
+            subprocess_env = os.environ.copy()
+            subprocess_env["MIRO"] = "1"
+            subprocess.run([sys.executable, model])
 
         # Run MIRO
         subprocess_env = os.environ.copy()
