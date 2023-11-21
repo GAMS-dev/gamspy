@@ -48,15 +48,7 @@ class MiroJSONEncoder:
             texts.append(
                 symbol.description if symbol.description else symbol.name
             )
-
-            if isinstance(symbol, gp.Set):
-                types.append("set")
-            elif isinstance(symbol, gp.Parameter):
-                types.append("parameter")
-            elif isinstance(symbol, gp.Variable):
-                types.append("variable")
-            elif isinstance(symbol, gp.Equation):
-                types.append("equation")
+            types.append(type(symbol).__name__.lower())
 
         if len(names) == 0:
             return None

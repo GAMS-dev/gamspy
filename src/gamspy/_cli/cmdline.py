@@ -307,7 +307,9 @@ def run(args: Dict[str, str]):
         if not args["skip_execution"]:
             subprocess_env = os.environ.copy()
             subprocess_env["MIRO"] = "1"
-            subprocess.run([sys.executable, model])
+            subprocess.run(
+                [sys.executable, model], env=subprocess_env, check=True
+            )
 
         # Run MIRO
         subprocess_env = os.environ.copy()
@@ -315,7 +317,7 @@ def run(args: Dict[str, str]):
         subprocess_env["MIRO_MODE"] = mode
         subprocess_env["MIRO_DEV_MODE"] = "true"
 
-        subprocess.run([path], env=subprocess_env)
+        subprocess.run([path], env=subprocess_env, check=True)
 
 
 def uninstall(args: Dict[str, str]):
