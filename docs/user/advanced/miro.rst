@@ -40,3 +40,10 @@ a GAMS MIRO app with base mode by default. If you want to run GAMS MIRO with ano
 can specify it with --mode argument: ::
 
     gamspy run miro --mode="config" --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
+
+Path to the MIRO APPIMAGE can also be set as an environment variable named "MIRO_PATH" (e.g. in .bashrc) to avoid specifying it at every
+run. ::
+
+    gamspy run miro --model <path_to_your_model>
+
+This command would try to get the path to the MIRO app image from environment variable "MIRO_PATH". 

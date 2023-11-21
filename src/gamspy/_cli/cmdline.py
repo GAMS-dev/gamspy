@@ -296,7 +296,10 @@ def run(args: Dict[str, str]):
     if component == "miro":
         model = args["model"]
         mode = args["mode"]
-        path = args["path"]
+        path = os.getenv("MIRO_PATH", None)
+
+        if args["path"]:
+            path = args["path"]
 
         if model is None or path is None:
             raise GamspyException(
