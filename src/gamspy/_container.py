@@ -340,7 +340,7 @@ class Container(gt.Container):
                         f" {option_map.keys()}"
                     )
 
-                if value:
+                if value is not None:
                     if option == "seed" and not is_seedable:
                         continue
                     setattr(gams_options, option.lower(), value)

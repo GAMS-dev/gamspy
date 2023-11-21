@@ -12,3 +12,4 @@ Release Notes
    release_0.10.2
    release_0.10.3
    release_0.10.4
+   release_0.10.5
