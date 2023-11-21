@@ -189,7 +189,8 @@ def main():
 
     miro_paths = ["conf_miro", "data_miro"]
     for path in miro_paths:
-        shutil.rmtree(path)
+        if os.path.exists(path):
+            shutil.rmtree(path)
 
     return 0
 

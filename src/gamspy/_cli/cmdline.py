@@ -27,6 +27,7 @@ import importlib
 import os
 import shutil
 import subprocess
+import sys
 from typing import Dict
 
 import gamspy.utils as utils
@@ -103,6 +104,12 @@ def get_args():
         type=str,
         help="Path to the MIRO app image",
         default=None,
+    )
+    miro_group.add_argument(
+        "-s",
+        "--skip-execution",
+        help="Whether to skip execution of the script",
+        action="store_true",
     )
 
     res = vars(parser.parse_args())
@@ -296,6 +303,12 @@ def run(args: Dict[str, str]):
                 "--model and --path must be provided to run MIRO"
             )
 
+        # Initialize MIRO
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO"] = "1"
+        subprocess.run([sys.executable, model])
+
+        # Run MIRO
         subprocess_env = os.environ.copy()
         subprocess_env["MIRO_MODEL_PATH"] = model
         subprocess_env["MIRO_MODE"] = mode

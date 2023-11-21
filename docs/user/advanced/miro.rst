@@ -12,9 +12,8 @@ retrieve visualizations as views.
 GAMSPy - GAMS MIRO Integration
 ==============================
 
-All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your miro input and miro output symbols, 
-and running your model script with MIRO=1 environment variable. For example, the following code snippet declares
-symbol `d` as a miro input and symbol `x` as a miro output: ::
+All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your miro input and miro output symbols. 
+For example, the following code snippet declares symbol `d` as a miro input and symbol `x` as a miro output: ::
 
     ...
     ...
@@ -31,17 +30,13 @@ symbol `d` as a miro input and symbol `x` as a miro output: ::
     ...
     model.solve()
 
-After you mark your miro symbols with is_miro_input and is_miro_output, you can run your script with MIRO=1 environment
-variable: ::
-
-    MIRO=1 python test.py
-
-This initializes the default values for your GAMS MIRO app and creates the necessary data contract. Once data contract, 
-and default values for the miro symbols are set, you can run GAMS MIRO by using GAMSPy commandline utility: ::
+After you mark your miro symbols with is_miro_input and is_miro_output, you can run MIRO with the following GAMSPy
+commandline utility: ::
 
     gamspy run miro --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
 
-This spawns a GAMS MIRO app with base mode by default. If you want to run GAMS MIRO with another mode (e.g. config), you
+This initializes the default values for your GAMS MIRO app and creates the necessary data contract. Then, it spawns 
+a GAMS MIRO app with base mode by default. If you want to run GAMS MIRO with another mode (e.g. config), you
 can specify it with --mode argument: ::
 
     gamspy run miro --mode="config" --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
