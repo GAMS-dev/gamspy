@@ -341,7 +341,6 @@ class Container(gt.Container):
                     )
 
                 if value is not None:
-                    print(f"Setting {option} to {value}")
                     if option == "seed" and not is_seedable:
                         continue
                     setattr(gams_options, option.lower(), value)
