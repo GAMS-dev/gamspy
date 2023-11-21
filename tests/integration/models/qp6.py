@@ -26,7 +26,8 @@ from gamspy.math import sqr
 
 def main():
     cont = Container(
-        load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx"
+        load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx",
+        delayed_execution=True,
     )
 
     # Sets
@@ -103,7 +104,6 @@ def main():
     qp6 = Model(
         cont,
         name="qp6",
-        equations=[d_x, d_w, retcon, budget, wdef],
         matches={
             d_x: x,
             d_w: w,
@@ -118,8 +118,8 @@ def main():
 
     z = Parameter(cont, name="z")
     z[...] = Sum(d, sqr(w.l[d])) / (Card(d) - 1)
+    print(z.records)
     print("\ninvestments: ", x.records.set_index("stocks").level.round(3))
-    print("\nObjective Function Value: ", z.records.value.round(3).tolist()[0])
 
 
 if __name__ == "__main__":

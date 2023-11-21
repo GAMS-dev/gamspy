@@ -517,6 +517,11 @@ class Model:
                 for name in variables:
                     self.container[name]._is_dirty = True
 
+        if self._matches:
+            for equation, variable in self._matches.items():
+                equation._is_dirty = True
+                variable._is_dirty = True
+
     def solve(
         self,
         solver: Optional[str] = None,
