@@ -138,8 +138,8 @@ class MiroSuite(unittest.TestCase):
                                 "scale": {"type": "numeric", "alias": "scale"},
                             },
                         },
-                        "_scalars_out": {
-                            "alias": "Output Scalars",
+                        "_scalarsve_out": {
+                            "alias": "Output Variable/Equation Scalars",
                             "symnames": ["z"],
                             "symtext": ["z"],
                             "symtypes": ["variable"],
@@ -152,10 +152,14 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "Scalar Description",
                                 },
-                                "value": {
-                                    "type": "string",
-                                    "alias": "Scalar Value",
+                                "level": {"type": "numeric", "alias": "Level"},
+                                "marginal": {
+                                    "type": "numeric",
+                                    "alias": "Marginal",
                                 },
+                                "lower": {"type": "numeric", "alias": "Lower"},
+                                "upper": {"type": "numeric", "alias": "Upper"},
+                                "scale": {"type": "numeric", "alias": "Scale"},
                             },
                         },
                     },

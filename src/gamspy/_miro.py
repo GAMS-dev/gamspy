@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from typing import List
+from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -38,43 +39,72 @@ class MiroJSONEncoder:
 
     def _prepare_scalars(
         self, alias: str, symbols: List[str]
-    ) -> Union[dict, None]:
-        names = []
-        texts = []
-        types = []
+    ) -> Tuple[Union[dict, None], Union[dict, None]]:
+        sp_names, sp_texts, sp_types = [], [], []
+        ve_names, ve_texts, ve_types = [], [], []
+
         for name in symbols:
             symbol = self.container[name]
-            names.append(name)
-            texts.append(
-                symbol.description if symbol.description else symbol.name
-            )
-            types.append(type(symbol).__name__.lower())
 
-        if len(names) == 0:
-            return None
+            if isinstance(symbol, (gp.Set, gp.Parameter)):
+                sp_names.append(name)
+                sp_texts.append(
+                    symbol.description if symbol.description else symbol.name
+                )
+                sp_types.append(type(symbol).__name__.lower())
+            elif isinstance(symbol, (gp.Variable, gp.Equation)):
+                ve_names.append(name)
+                ve_texts.append(
+                    symbol.description if symbol.description else symbol.name
+                )
+                ve_types.append(type(symbol).__name__.lower())
 
-        scalars_dict = {
-            "alias": alias,
-            "symnames": names,
-            "symtext": texts,
-            "symtypes": types,
-            "headers": {
-                "scalar": {
-                    "type": "string",
-                    "alias": "Scalar Name",
-                },
-                "description": {
-                    "type": "string",
-                    "alias": "Scalar Description",
-                },
-                "value": {
-                    "type": "string",
-                    "alias": "Scalar Value",
-                },
-            },
-        }
+        sp_scalars_dict = None
+        ve_scalars_dict = None
 
-        return scalars_dict
+        if len(sp_names) != 0:
+            sp_scalars_dict = {
+                "alias": alias,
+                "symnames": sp_names,
+                "symtext": sp_texts,
+                "symtypes": sp_types,
+                "headers": {
+                    "scalar": {
+                        "type": "string",
+                        "alias": "Scalar Name",
+                    },
+                    "description": {
+                        "type": "string",
+                        "alias": "Scalar Description",
+                    },
+                    "value": {
+                        "type": "string",
+                        "alias": "Scalar Value",
+                    },
+                },
+            }
+
+        if len(ve_names) != 0:
+            ve_scalars_dict = {
+                "alias": "Output Variable/Equation Scalars",
+                "symnames": ve_names,
+                "symtext": ve_texts,
+                "symtypes": ve_types,
+                "headers": {
+                    "scalar": {"type": "string", "alias": "Scalar Name"},
+                    "description": {
+                        "type": "string",
+                        "alias": "Scalar Description",
+                    },
+                    "level": {"type": "numeric", "alias": "Level"},
+                    "marginal": {"type": "numeric", "alias": "Marginal"},
+                    "lower": {"type": "numeric", "alias": "Lower"},
+                    "upper": {"type": "numeric", "alias": "Upper"},
+                    "scale": {"type": "numeric", "alias": "Scale"},
+                },
+            }
+
+        return sp_scalars_dict, ve_scalars_dict
 
     def _prepare_symbols(self, symbols: List[str]) -> List[dict]:
         type_map = {
@@ -119,7 +149,7 @@ class MiroJSONEncoder:
         self, is_input: bool, symbols: List[str]
     ) -> dict:
         alias = "Input Scalars" if is_input else "Output Scalars"
-        scalars_dict = self._prepare_scalars(
+        scalars_sp_dict, scalars_ve_dict = self._prepare_scalars(
             alias, self.input_scalars if is_input else self.output_scalars
         )
 
@@ -133,9 +163,13 @@ class MiroJSONEncoder:
         keys = non_scalars
         values = symbol_dicts
 
-        if scalars_dict is not None:
+        if scalars_sp_dict is not None:
             keys.append("_scalars" if is_input else "_scalars_out")
-            values.append(scalars_dict)
+            values.append(scalars_sp_dict)
+
+        if scalars_ve_dict is not None:
+            keys.append("_scalarsve_out")
+            values.append(scalars_ve_dict)
 
         symbols_dict = dict(zip(keys, values))
 
