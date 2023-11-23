@@ -147,7 +147,7 @@ class Container(gt.Container):
         if (
             not IS_MIRO_INIT
             or not self._first_destruct
-            or len(self._miro_input_symbols + self._miro_output_symbols) == 0
+            or len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0
         ):
             return
 
@@ -166,7 +166,7 @@ class Container(gt.Container):
             set(self._miro_input_symbols + self._miro_output_symbols)
         )
 
-        filename = os.path.basename(sys.argv[0]).split(".")[0]
+        filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         data_path = f"data_{filename}"
         try:
             os.mkdir(data_path)
@@ -174,7 +174,7 @@ class Container(gt.Container):
             pass
 
         super().write(
-            f"{data_path}{os.sep}/default.gdx",
+            os.path.join(data_path, "default.gdx"),
             symbols,
         )
 

@@ -108,7 +108,7 @@ def get_args():
     miro_group.add_argument(
         "-s",
         "--skip-execution",
-        help="Whether to skip execution of the script",
+        help="Whether to skip model execution",
         action="store_true",
     )
 

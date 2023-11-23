@@ -160,7 +160,7 @@ class MiroJSONEncoder:
     def writeJson(self):
         content = self._prepare_json()
 
-        filename = os.path.basename(sys.argv[0]).split(".")[0]
+        filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         conf_path = f"conf_{filename}"
         try:
             os.mkdir(conf_path)

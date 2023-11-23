@@ -30,20 +30,18 @@ For example, the following code snippet declares symbol `d` as a miro input and 
     ...
     model.solve()
 
-After you mark your miro symbols with is_miro_input and is_miro_output, you can run MIRO with the following GAMSPy
-commandline utility: ::
+After you mark your miro symbols with `is_miro_input` and `is_miro_output`, you can run MIRO with the following GAMSPy
+command-line utility: ::
 
     gamspy run miro --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
 
 This initializes the default values for your GAMS MIRO app and creates the necessary data contract. Then, it spawns 
-a GAMS MIRO app with base mode by default. If you want to run GAMS MIRO with another mode (e.g. config), you
-can specify it with --mode argument: ::
+a GAMS MIRO app with base mode by default. To run the MIRO configuration mode instead, add the `--mode=config` argument: ::
 
-    gamspy run miro --mode="config" --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
+    gamspy run miro --mode="config" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
-Path to the MIRO APPIMAGE can also be set as an environment variable named "MIRO_PATH" (e.g. in .bashrc) to avoid specifying it at every
-run. ::
+The MIRO installation path can also be set as an environment variable with the name "MIRO_PATH" (e.g. in .bashrc), so that it does not have to be specified for each run. ::
 
     gamspy run miro --model <path_to_your_model>
 
-This command would try to get the path to the MIRO app image from environment variable "MIRO_PATH". 
+This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. 
