@@ -316,6 +316,10 @@ def run(args: Dict[str, str]):
 
         # Run MIRO
         subprocess_env = os.environ.copy()
+        if mode == "deploy":
+            subprocess_env["MIRO_BUILD"] = "true"
+            mode = "base"
+
         subprocess_env["MIRO_MODEL_PATH"] = model
         subprocess_env["MIRO_MODE"] = mode
         subprocess_env["MIRO_DEV_MODE"] = "true"
