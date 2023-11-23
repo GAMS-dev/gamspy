@@ -147,7 +147,8 @@ class Container(gt.Container):
         if (
             not IS_MIRO_INIT
             or not self._first_destruct
-            or len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0
+            or len(self._miro_input_symbols) + len(self._miro_output_symbols)
+            == 0
         ):
             return
 
