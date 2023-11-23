@@ -40,6 +40,10 @@ a GAMS MIRO app with base mode by default. To run the MIRO configuration mode in
 
     gamspy run miro --mode="config" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
+To deploy a GAMSPy MIRO app (create a `.miroapp` file), run with `--mode=deploy`: ::
+
+    gamspy run miro --mode="deploy" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
+
 The MIRO installation path can also be set as an environment variable with the name "MIRO_PATH" (e.g. in .bashrc), so that it does not have to be specified for each run. ::
 
     gamspy run miro --model <path_to_your_model>
