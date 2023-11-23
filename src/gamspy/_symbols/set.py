@@ -184,6 +184,11 @@ class Set(gt.Set, operable.Operable, Symbol):
         indices: Union[tuple, str],
         assignment,
     ):
+        if self._is_miro_input and self.container.miro_protect:
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols."
+            )
+
         domain = self.domain if indices == ... else utils._toList(indices)
 
         if isinstance(assignment, bool):
@@ -438,6 +443,15 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if (
+            hasattr(self, "_is_miro_input")
+            and self._is_miro_input
+            and self.container.miro_protect
+        ):
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols."
+            )
+
         if hasattr(self, "_is_assigned"):
             self._is_assigned = True
 

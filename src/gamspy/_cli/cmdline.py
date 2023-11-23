@@ -25,6 +25,7 @@
 import argparse
 import importlib
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -298,13 +299,19 @@ def run(args: Dict[str, str]):
         mode = args["mode"]
         path = os.getenv("MIRO_PATH", None)
 
-        if args["path"]:
+        if args["path"] is not None:
             path = args["path"]
 
         if model is None or path is None:
             raise GamspyException(
                 "--model and --path must be provided to run MIRO"
             )
+
+        if (
+            platform.system() == "Darwin"
+            and os.path.splitext(path)[1] == ".app"
+        ):
+            path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
 
         # Initialize MIRO
         if not args["skip_execution"]:

@@ -104,6 +104,7 @@ class Container(gt.Container):
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
         options: Optional["Options"] = None,
+        miro_protect: bool = True,
     ):
         system_directory = (
             system_directory
@@ -114,6 +115,7 @@ class Container(gt.Container):
         self._delayed_execution = delayed_execution
         self._unsaved_statements: list = []
         self._is_first_run = True
+        self.miro_protect = miro_protect
 
         # import symbols from arbitrary gams code
         self._import_symbols: List[str] = []

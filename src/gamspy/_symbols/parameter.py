@@ -38,6 +38,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -158,6 +159,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: "Expression",
     ) -> None:
+        if self._is_miro_input and self.container.miro_protect:
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols."
+            )
+
         domain = self.domain if indices == ... else utils._toList(indices)
 
         statement = expression.Expression(
@@ -198,6 +204,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if (
+            hasattr(self, "_is_miro_input")
+            and self._is_miro_input
+            and self.container.miro_protect
+        ):
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols."
+            )
+
         if hasattr(self, "_is_assigned"):
             self._is_assigned = True
 
