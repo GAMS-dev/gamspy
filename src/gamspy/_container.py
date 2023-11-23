@@ -88,6 +88,8 @@ class Container(gt.Container):
         Delayed execution mode, by default False
     options : Options
         Global options for the overall execution
+    miro_protect : bool
+        Protects MIRO input symbol records from being re-assigned
 
     Examples
     --------
