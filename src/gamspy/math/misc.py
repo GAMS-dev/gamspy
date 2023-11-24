@@ -22,7 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import math
 from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
@@ -41,35 +40,33 @@ def _stringify(x: Union[int, float, "Symbol", "ImplicitSymbol"]):
     return str(x) if isinstance(x, (int, float)) else x.gamsRepr()
 
 
-def abs(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def abs(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     Absolute value of x (i.e. ``|x|``)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.fabs(x)
-    return expression.Expression("abs(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("abs(", x_str, ")")
 
 
-def ceil(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def ceil(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     The smallest integer greater than or equal to x
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.ceil(x)
-    return expression.Expression("ceil(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("ceil(", x_str, ")")
 
 
 def div(
     dividend: Union[int, float, "Symbol"], divisor: Union[int, float, "Symbol"]
-) -> Union["Expression", float]:
+) -> "Expression":
     """
     Dividing operation
 
@@ -80,13 +77,8 @@ def div(
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(dividend, (int, float)) and isinstance(
-        divisor, (int, float)
-    ):
-        return dividend / divisor
-
     dividend_str = _stringify(dividend)
     divisor_str = _stringify(divisor)
 
@@ -95,7 +87,7 @@ def div(
 
 def div0(
     dividend: Union[int, float, "Symbol"], divisor: Union[int, float, "Symbol"]
-) -> Union["Expression", float]:
+) -> "Expression":
     """
     Dividing operation
 
@@ -106,16 +98,8 @@ def div0(
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(dividend, (int, float)) and isinstance(
-        divisor, (int, float)
-    ):
-        if divisor == 0:
-            return 1e299
-
-        return dividend / divisor
-
     dividend_str = _stringify(dividend)
     divisor_str = _stringify(divisor)
 
@@ -127,10 +111,19 @@ def div0(
 def dist(
     x1: Union[Tuple[int, float], "Symbol"],
     x2: Union[Tuple[int, float], "Symbol"],
-) -> Union["Expression", float]:
-    if isinstance(x1, tuple) and isinstance(x2, tuple):
-        return math.dist(x1, x2)
+) -> "Expression":
+    """
+    L2 norm
 
+    Returns
+    -------
+    Expression
+
+    Raises
+    ------
+    Exception
+        In case both x1 and x2 are not a tuple or none.
+    """
     if isinstance(x1, tuple) or isinstance(x2, tuple):
         raise Exception("Both should be a tuple or none")
 
@@ -140,44 +133,40 @@ def dist(
     return expression.Expression("eDist(", f"{x1_str}, {x2_str}", ")")
 
 
-def factorial(x: Union[int, "Symbol"]) -> Union["Expression", int]:
+def factorial(x: Union[int, "Symbol"]) -> "Expression":
     """
     Factorial of x
 
     Returns
     -------
-    Expression | int
+    Expression
     """
-    if isinstance(x, int):
-        return math.factorial(x)
-    return expression.Expression("fact(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("fact(", x_str, ")")
 
 
-def floor(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def floor(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     The greatest integer less than or equal to x
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.floor(x)
-    return expression.Expression("floor(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("floor(", x_str, ")")
 
 
-def fractional(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def fractional(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     Returns the fractional part of x
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        fraction, _ = math.modf(x)
-        return fraction
-    return expression.Expression("frac(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("frac(", x_str, ")")
 
 
 def Min(*values) -> "Expression":
@@ -188,9 +177,6 @@ def Min(*values) -> "Expression":
     -------
     Expression
     """
-    if all(isinstance(value, (int, float)) for value in values):
-        return min(values)
-
     values_str = ",".join([_stringify(value) for value in values])
     return expression.Expression("min(", values_str, ")")
 
@@ -203,26 +189,18 @@ def Max(*values) -> "Expression":
     -------
     Expression
     """
-    if all(isinstance(value, (int, float)) for value in values):
-        return max(values)
-
     values_str = ",".join([_stringify(value) for value in values])
     return expression.Expression("max(", values_str, ")")
 
 
-def mod(
-    x: Union[float, "Symbol"], y: Union[float, "Symbol"]
-) -> Union["Expression", int, float]:
+def mod(x: Union[float, "Symbol"], y: Union[float, "Symbol"]) -> "Expression":
     """
     Remainder of x divided by y.
 
     Returns
     -------
-    Expression | int | float
+    Expression
     """
-    if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-        return x % y
-
     x_str = _stringify(x)
     y_str = _stringify(y)
     return expression.Expression("mod(" + x_str, ",", y_str + ")")
@@ -241,12 +219,8 @@ def Round(x: Union[float, "Symbol"], num_decimals: int = 0) -> "Expression":
     -------
     Expression
     """
-    if isinstance(x, float):
-        return round(x, num_decimals)
-
-    return expression.Expression(
-        "round(", x.gamsRepr() + f", {num_decimals}", ")"
-    )
+    x_str = _stringify(x)
+    return expression.Expression("round(", x_str + f", {num_decimals}", ")")
 
 
 def sign(x: "Symbol") -> "Expression":
@@ -261,7 +235,8 @@ def sign(x: "Symbol") -> "Expression":
     -------
     Expression
     """
-    return expression.Expression("sign(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("sign(", x_str, ")")
 
 
 def slexp(
@@ -302,32 +277,28 @@ def sqexp(
     return expression.Expression("sqexp(", f"{x_str},{S}", ")")
 
 
-def sqrt(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def sqrt(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     Square root of x
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.sqrt(x)
-
-    return expression.Expression("sqrt(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("sqrt(", x_str, ")")
 
 
-def truncate(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def truncate(x: Union[int, float, "Symbol"]) -> "Expression":
     """
     Returns the integer part of x
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        _, integer = math.modf(x)
-        return integer
-    return expression.Expression("trunc(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression("trunc(", x_str, ")")
 
 
 def beta(

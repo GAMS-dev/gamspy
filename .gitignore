@@ -10,6 +10,7 @@ test.gms
 test.gdx
 test.lst
 test.py
+/test
 gams-transfer-python
 225*
 docs/_build
