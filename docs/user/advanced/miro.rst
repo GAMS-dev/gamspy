@@ -1,7 +1,7 @@
 .. _miro:
 
 *****************
-GAMS MIRO Support
+GAMS MIRO
 *****************
 
 `GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration) is a solution that 
@@ -12,8 +12,8 @@ retrieve visualizations as views.
 GAMSPy - GAMS MIRO Integration
 ==============================
 
-All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your miro input and miro output symbols. 
-For example, the following code snippet declares symbol `d` as a miro input and symbol `x` as a miro output: ::
+All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your MIRO input and output symbols. 
+For example, the following code snippet declares symbol `d` as a MIRO input and symbol `x` as a MIRO output: ::
 
     ...
     ...
