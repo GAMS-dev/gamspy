@@ -1,13 +1,12 @@
 .. _miro:
 
-*****************
+*********
 GAMS MIRO
-*****************
+*********
 
-`GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration) is a solution that 
-makes it easy to turn your GAMS models into interactive end user applications. With GAMS MIRO, you can render 
-GAMSPy Symbols with configurable standard graph types (Bar Charts, Scatter Plots, Pie Charts, etc), and save and 
-retrieve visualizations as views.
+With `GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration), you can interact 
+with the underlying GAMSPy model, quickly create scenarios, compare results and visualize your data with a variety 
+of graphical output options.
 
 GAMSPy - GAMS MIRO Integration
 ==============================
