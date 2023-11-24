@@ -186,7 +186,9 @@ class Set(gt.Set, operable.Operable, Symbol):
     ):
         if self._is_miro_input and self.container.miro_protect:
             raise GamspyException(
-                "Cannot assign to protected miro input symbols."
+                 "Cannot assign to protected miro input symbols. `miro_protect`"
+                 " attribute of the container can be set to False to allow"
+                 " assigning to MIRO input symbols"
             )
 
         domain = self.domain if indices == ... else utils._toList(indices)
