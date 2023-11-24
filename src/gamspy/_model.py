@@ -27,7 +27,6 @@ from __future__ import annotations
 import io
 import os
 from enum import Enum
-from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Literal
@@ -44,6 +43,7 @@ import gamspy._algebra.operation as operation
 import gamspy.utils as utils
 from gamspy._engine import EngineConfig
 from gamspy._model_instance import ModelInstance
+from gamspy._options import _mapOptions
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._options import Options
 
 
 class Problem(Enum):
@@ -342,13 +343,17 @@ class Model:
     def _prepare_gams_options(
         self,
         solver: Optional[str] = None,
-        options: Optional[dict] = None,
+        options: Optional["Options"] = None,
         solver_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
-        create_log_file: Optional[bool] = False,
+        create_log_file: bool = False,
     ) -> GamsOptions:
-        gams_options = self.container._map_options(
-            options, output=output, create_log_file=create_log_file
+        gams_options = _mapOptions(
+            self.container.workspace,
+            options,
+            is_seedable=False,
+            output=output,
+            create_log_file=create_log_file,
         )
 
         if solver:
@@ -525,13 +530,13 @@ class Model:
     def solve(
         self,
         solver: Optional[str] = None,
-        options: Optional[Dict[str, str]] = None,
+        options: Optional["Options"] = None,
         solver_options: Optional[dict] = None,
         model_instance_options: Optional[dict] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine"] = "local",
         engine_config: Optional["EngineConfig"] = None,
-        create_log_file: Optional[bool] = False,
+        create_log_file: bool = False,
     ) -> None:
         """
         Generates the gams string, writes it to a file and runs it
@@ -540,7 +545,7 @@ class Model:
         ----------
         solver : str, optional
             Solver name
-        options : Options | dict, optional
+        options : Options, optional
             GAMS options
         solver_options : dict, optional
             Solver options
