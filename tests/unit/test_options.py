@@ -26,31 +26,31 @@ class OptionsSuite(unittest.TestCase):
             _ = Options(multi_solve_strategy=5)
 
         options = Options(multi_solve_strategy="replace")
-        self.assertEqual(options.multi_solve_strategy, 0)
+        self.assertEqual(options.multi_solve_strategy, "replace")
 
         with self.assertRaises(ValidationError):
             _ = Options(step_summary=5)
 
         options = Options(step_summary=True)
-        self.assertEqual(options.step_summary, 1)
+        self.assertEqual(options.step_summary, True)
 
         with self.assertRaises(ValidationError):
             _ = Options(suppress_compiler_listing=5)
 
-        options = Options(suppress_compiler_listing=1)
-        self.assertEqual(options.suppress_compiler_listing, 1)
+        options = Options(suppress_compiler_listing=True)
+        self.assertEqual(options.suppress_compiler_listing, True)
 
         with self.assertRaises(ValidationError):
             _ = Options(report_solver_status=5)
 
         options = Options(report_solver_status=True)
-        self.assertEqual(options.report_solver_status, 1)
+        self.assertEqual(options.report_solver_status, True)
 
         with self.assertRaises(ValidationError):
             _ = Options(report_underflow=5)
 
         options = Options(report_underflow=True)
-        self.assertEqual(options.report_underflow, 1)
+        self.assertEqual(options.report_underflow, True)
 
     def test_seed(self):
         m = Container(options=Options(seed=1))
