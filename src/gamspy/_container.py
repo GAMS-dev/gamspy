@@ -106,7 +106,7 @@ class Container(gt.Container):
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
         options: Optional["Options"] = None,
-        miro_protect: bool = False,
+        miro_protect: bool = True,
     ):
         system_directory = (
             system_directory
@@ -1159,7 +1159,7 @@ class Container(gt.Container):
             if name in self.data.keys():
                 updated_records = temp_container[name]._records
 
-                self[name].records = updated_records
+                self[name]._records = updated_records
                 if updated_records is not None:
                     self[name].domain_labels = self[name].domain_names
             else:
