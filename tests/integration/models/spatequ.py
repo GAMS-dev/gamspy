@@ -173,7 +173,7 @@ def main():
     P2R3_MCP = Model(
         m,
         name="P2R3_MCP",
-        equations=[DEM, SUP, IN_OUT, DOM_TRAD],
+        equations=[DEM, SUP],
         matches={IN_OUT: P, DOM_TRAD: X},
         problem="MCP",
     )

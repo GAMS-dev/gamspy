@@ -24,9 +24,17 @@
 #
 from typing import Literal
 from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
 
+from gams import GamsOptions
+from gams import GamsWorkspace
 from pydantic import BaseModel
-from pydantic import field_validator
+
+from gamspy.exceptions import GamspyException
+
+if TYPE_CHECKING:
+    import io
 
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
 
@@ -143,52 +151,102 @@ class Options(BaseModel):
     class Config:
         extra = "forbid"
 
-    @field_validator("allow_suffix_in_equation")
-    @classmethod
-    def validate_allow_suffix_in_equation(cls, is_allowing):
-        return "on" if is_allowing else "off"
+    def _getGamsCompatibleOptions(self):
+        options_dict = self.model_dump()
+        if options_dict["allow_suffix_in_equation"] is not None:
+            allows_suffix = options_dict["allow_suffix_in_equation"]
+            options_dict["allow_suffix_in_equation"] = (
+                "on" if allows_suffix else "off"
+            )
 
-    @field_validator("allow_suffix_in_limited_variables")
-    @classmethod
-    def validate_allow_suffix_in_limited_variables(cls, is_allowing):
-        return "on" if is_allowing else "off"
+        if options_dict["allow_suffix_in_limited_variables"] is not None:
+            allows_suffix = options_dict["allow_suffix_in_limited_variables"]
+            options_dict["allow_suffix_in_limited_variables"] = (
+                "on" if allows_suffix else "off"
+            )
 
-    @field_validator("hold_fixed_variables")
-    @classmethod
-    def validate_hold_fixed_variables(cls, is_holding: bool) -> int:
-        return 1 if is_holding else 0
+        if options_dict["multi_solve_strategy"] is not None:
+            strategy = options_dict["multi_solve_strategy"]
+            options_dict["multi_solve_strategy"] = multi_solve_map[strategy]
 
-    @field_validator("keep_temporary_files")
-    @classmethod
-    def validate_keep_temporary_files(cls, is_keeping: bool) -> int:
-        return 1 if is_keeping else 0
+        options_dict = {
+            option_map[key]: value for key, value in options_dict.items()  # type: ignore
+        }
 
-    @field_validator("multi_solve_strategy")
-    @classmethod
-    def validate_multi_solve_strategy(cls, strategy: str) -> int:
-        return multi_solve_map[strategy]
+        return options_dict
 
-    @field_validator("step_summary")
-    @classmethod
-    def validate_step_summary(cls, is_summarizing: bool) -> int:
-        return 1 if is_summarizing else 0
 
-    @field_validator("report_solver_status")
-    @classmethod
-    def validate_report_solver_status(cls, is_reporting: bool) -> int:
-        return 1 if is_reporting else 0
+def _fix_log_option(
+    output: Union["io.TextIOWrapper", None],
+    create_log_file: bool,
+    options: "GamsOptions",
+) -> "GamsOptions":
+    if output is None:
+        if create_log_file:
+            # Output = None & debug_logfile = True -> logOption = 2
+            options._logoption = 2
+        else:
+            # Output = None & debug_logfile = False -> logOption = 0
+            options._logoption = 0
 
-    @field_validator("report_underflow")
-    @classmethod
-    def validate_report_underflow(cls, is_reporting: bool) -> int:
-        return 1 if is_reporting else 0
+    # Output = writer & debug_logfile = True -> logOption = 4
+    # will be implemented once GAMS Control allows it
+    if output is not None and create_log_file:
+        ...
 
-    @field_validator("suppress_compiler_listing")
-    @classmethod
-    def validate_suppress_compiler_listing(cls, is_suppressing: bool) -> int:
-        return 1 if is_suppressing else 0
+    return options
 
-    @field_validator("write_listing_file")
-    @classmethod
-    def validate_write_listing_file(cls, is_writing: bool) -> int:
-        return 1 if is_writing else 0
+
+def _mapOptions(
+    workspace: "GamsWorkspace",
+    options: Union["Options", None],
+    is_seedable: bool = True,
+    output: Optional["io.TextIOWrapper"] = None,
+    create_log_file: bool = False,
+) -> "GamsOptions":
+    """
+    Maps given GAMSPy options to GamsOptions
+
+    Parameters
+    ----------
+    options : Options | None
+        GAMSPy options
+    is_seedable : bool, optional
+        only seedable at first run or in model.solve function, by default True
+
+    Returns
+    -------
+    GamsOptions
+
+    Raises
+    ------
+    GamspyException
+        when options is not type Options
+    GamspyException
+        when one of the option names is invalid
+    """
+    gams_options = GamsOptions(workspace)
+
+    if options is not None:
+        if not isinstance(options, Options):
+            raise GamspyException(
+                f"options must be of type Option but found {type(options)}"
+            )
+
+        options_dict = options._getGamsCompatibleOptions()
+
+        for option, value in options_dict.items():
+            if option not in option_map.values():
+                raise GamspyException(
+                    f"Invalid option `{option}`. Possible options:"
+                    f" {option_map.keys()}"
+                )
+
+            if value is not None:
+                if option == "seed" and not is_seedable:
+                    continue
+                setattr(gams_options, option.lower(), value)
+
+    gams_options = _fix_log_option(output, create_log_file, gams_options)
+
+    return gams_options
