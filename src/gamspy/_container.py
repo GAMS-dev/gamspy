@@ -106,7 +106,7 @@ class Container(gt.Container):
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
         options: Optional["Options"] = None,
-        miro_protect: bool = True,
+        miro_protect: bool = False,
     ):
         system_directory = (
             system_directory
@@ -423,6 +423,14 @@ class Container(gt.Container):
                 dirty_names.append(name)
 
             if symbol._is_assigned:
+                assigned_names.append(name)
+
+            # miro input symbols should always be assigned to catch domain violations
+            if (
+                isinstance(symbol, (gp.Set, gp.Parameter))
+                and symbol._is_miro_input
+                and name not in assigned_names
+            ):
                 assigned_names.append(name)
 
         return dirty_names, assigned_names
@@ -1086,6 +1094,9 @@ class Container(gt.Container):
                         and statement._is_miro_input
                     ):
                         if not IS_MIRO_INIT and MIRO_GDX_IN:
+                            self.loadRecordsFromGdx(
+                                MIRO_GDX_IN, [statement.name]
+                            )
                             string += self._get_load_miro_input_str(
                                 statement, gdx_in
                             )
