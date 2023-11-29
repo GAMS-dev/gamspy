@@ -37,6 +37,8 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
+GMS_MAX_LINE_LENGTH = 80000
+
 if TYPE_CHECKING:
     from gamspy import Variable
 
@@ -138,7 +140,12 @@ class Expression(operable.Operable):
         """
         left_str, right_str = self._get_operand_representations()
 
-        out_str = f"{left_str} {self._op_type} {right_str}"
+        length = len(left_str) + len(self._op_type) + len(right_str)
+        offset = 1024  # safety offset from max line length
+        if length >= GMS_MAX_LINE_LENGTH - offset:
+            out_str = f"{left_str} {self._op_type}\n {right_str}"
+        else:
+            out_str = f"{left_str} {self._op_type} {right_str}"
 
         if self._op_type not in ["..", "="]:
             # add paranthesis for right ordering
