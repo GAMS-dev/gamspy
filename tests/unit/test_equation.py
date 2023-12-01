@@ -63,26 +63,26 @@ class EquationSuite(unittest.TestCase):
         )
 
         # Equations
-        # eq1 = Equation(self.m, "eq1", type="nonbinding")
-        # eq1[...] = x == c
-        # self.assertEqual(
-        #     self.m._unsaved_statements[-1].gamsRepr(),
-        #     "eq1 .. x =n= c;",
-        # )
-        # self.assertEqual(eq1.type, "nonbinding")
+        eq1 = Equation(self.m, "eq1", type="nonbinding")
+        eq1[...] = x - c
+        self.assertEqual(
+            self.m._unsaved_statements[-1].gamsRepr(),
+            "eq1 .. (x - c) =n= 0;",
+        )
+        self.assertEqual(eq1.type, "nonbinding")
 
-        # eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
-        # eq2[i] = x[i] == c[i]
-        # self.assertEqual(
-        #     self.m._unsaved_statements[-1].gamsRepr(),
-        #     "eq2(i) .. x(i) =n= c(i);",
-        # )
+        eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
+        eq2[i] = x[i] - c[i]
+        self.assertEqual(
+            self.m._unsaved_statements[-1].gamsRepr(),
+            "eq2(i) .. (x(i) - c(i)) =n= 0;",
+        )
 
-        # eq2[i] = x[i] == c[i]
-        # self.assertEqual(
-        #     self.m._unsaved_statements[-1].gamsRepr(),
-        #     "eq2(i) .. x(i) =n= c(i);",
-        # )
+        eq2[i] = x[i] - c[i]
+        self.assertEqual(
+            self.m._unsaved_statements[-1].gamsRepr(),
+            "eq2(i) .. (x(i) - c(i)) =n= 0;",
+        )
 
         # eq
         eq3 = Equation(self.m, "eq3", domain=[i])
