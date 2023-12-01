@@ -216,7 +216,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment = assignment == 0
 
         if self.type in non_regular_map.keys():  # type: ignore
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
+            assignment.data = non_regular_map[self.type]  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -270,7 +270,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         """
         if assignment is None:
-            self._definition = assignment
+            self._definition = assignment  # type: ignore
             return
 
         # In case of an MCP equation without any equality, add the equality
@@ -278,7 +278,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment = assignment == 0
 
         if self.type in non_regular_map.keys():
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
+            assignment.data = non_regular_map[self.type]  # type: ignore
 
         domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(
