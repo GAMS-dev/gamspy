@@ -24,6 +24,9 @@
 #
 from __future__ import annotations
 
+from typing import List
+from typing import TYPE_CHECKING
+
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -33,7 +36,11 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
+if TYPE_CHECKING:
+    from gamspy import Variable
+
 GMS_MAX_LINE_LENGTH = 80000
+LINE_LENGTH_OFFSET = 1024
 
 
 class Expression(operable.Operable):
@@ -95,7 +102,7 @@ class Expression(operable.Operable):
         if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
-        if self.data == "=" and isinstance(
+        if data == "=" and isinstance(
             self.left,
             (
                 syms.Set,
@@ -106,49 +113,41 @@ class Expression(operable.Operable):
                 implicits.ImplicitVariable,
             ),
         ):
+            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
+            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
             right_str = right_str.replace("=e=", "=")
             right_str = right_str.replace("=l=", "<=")
             right_str = right_str.replace("=g=", ">=")
 
-        length = len(left_str) + len(self.data) + len(right_str)
-        offset = 1024  # safety offset from max line length
-        if length >= GMS_MAX_LINE_LENGTH - offset:
-            out_str = f"{left_str} {self.data}\n {right_str}"
+        # get around 80000 line length limitation in GAMS
+        length = len(left_str) + len(data) + len(right_str)
+        if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
+            out_str = f"{left_str} {data}\n {right_str}"
         else:
-            out_str = f"{left_str} {self.data} {right_str}"
+            out_str = f"{left_str} {data} {right_str}"
 
-        if self.data not in ["..", "="]:
-            # add paranthesis for right ordering
-            out_str = f"({out_str})"
+        # if it's an assignment add semicolon, otherwise add paranthesis to ensure
+        # the order of execution
+        out_str = f"{out_str};" if data in ["..", "="] else f"({out_str})"
 
         if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
             return out_str[1:-1]
 
-        if self.data in [
-            "=g=",
-            "=l=",
-            "=e=",
-            "=n=",
-            "=x=",
-            "=c=",
-            "=b=",
-            ".",
-        ]:
-            # (test.. a =g= b) -> test.. a =g= b
+        if data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
+            # (test.. a =g= b) -> not valid
+            # test.. a =g= b   -> valid
             out_str = out_str[1:-1]  # remove the paranthesis
 
         out_str = self._fix_condition_paranthesis(out_str)
 
-        if self.data in ["..", "="]:
-            # add ; to equation expressions and assignments
-            out_str += ";"
-
-        if self.data == "==":
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;
+        if data == "==":
+            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
+            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
             out_str = out_str.replace("==", "=")
 
-        if self.data in ["=", ".."] and out_str[0] == "(":
-            # (voycap(j,k)$vc(j,k)).. sum(.) -> voycap(j,k)$vc(j,k).. sum(.)
+        if data in ["=", ".."] and out_str[0] == "(":
+            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
+            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
             indices = utils._getMatchingParanthesisIndices(out_str)
             match_index = indices[0]
             out_str = out_str[1:match_index] + out_str[match_index + 1 :]
@@ -196,11 +195,12 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def find_variables(self):
+    def find_variables(self) -> List["Variable"]:
+        """Find variables in an expression"""
         current = self
 
         stack = []
-        variables = []
+        variables: List["Variable"] = []
 
         while True:
             if current is not None:
