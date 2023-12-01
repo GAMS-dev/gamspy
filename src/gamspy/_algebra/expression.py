@@ -140,10 +140,6 @@ class Expression(operable.Operable):
 
         out_str = self._fix_condition_paranthesis(out_str)
 
-        if self.data == ".":
-            # name . pos -> name.pos
-            out_str = out_str.replace(" ", "")  # remove spaces
-
         if self.data in ["..", "="]:
             # add ; to equation expressions and assignments
             out_str += ";"
