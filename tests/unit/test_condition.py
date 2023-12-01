@@ -160,8 +160,8 @@ class ConditionSuite(unittest.TestCase):
 
         self.assertEqual(
             self.m._unsaved_statements[-1].getStatement(),
-            "Util_gap(t) = (1 $ ((round( Util_lic(t), 10 )) ne (round("
-            " Util_lic2(t), 10 ))));",
+            "Util_gap(t) = (1 $ (( round(Util_lic(t), 10) ) ne ( round("
+            "Util_lic2(t), 10) )));",
         )
 
     def test_condition_on_equation(self):

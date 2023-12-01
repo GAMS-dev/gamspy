@@ -201,7 +201,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "pos")
+        return expression.Expression(None, f"{self.name}.pos", None)
 
     @property
     def ord(self):
@@ -212,7 +212,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "ord")
+        return expression.Expression(None, f"{self.name}.ord", None)
 
     @property
     def off(self):
@@ -223,7 +223,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "off")
+        return expression.Expression(None, f"{self.name}.off", None)
 
     @property
     def rev(self):
@@ -235,7 +235,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "rev")
+        return expression.Expression(None, f"{self.name}.rev", None)
 
     @property
     def uel(self):
@@ -246,7 +246,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "uel")
+        return expression.Expression(None, f"{self.name}.uel", None)
 
     @property
     def len(self):
@@ -257,7 +257,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "len")
+        return expression.Expression(None, f"{self.name}.len", None)
 
     @property
     def tlen(self):
@@ -268,7 +268,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "tlen")
+        return expression.Expression(None, f"{self.name}.tlen", None)
 
     @property
     def val(self):
@@ -282,7 +282,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "val")
+        return expression.Expression(None, f"{self.name}.val", None)
 
     @property
     def tval(self):
@@ -296,7 +296,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "tval")
+        return expression.Expression(None, f"{self.name}.tval", None)
 
     @property
     def first(self):
@@ -307,7 +307,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "first")
+        return expression.Expression(None, f"{self.name}.first", None)
 
     @property
     def last(self):
@@ -318,7 +318,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(f"{self.name}", ".", "last")
+        return expression.Expression(None, f"{self.name}.last", None)
 
     def lag(
         self,

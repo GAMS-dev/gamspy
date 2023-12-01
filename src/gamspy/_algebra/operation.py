@@ -30,12 +30,15 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
     from gams.transfer import Set, Alias, Parameter
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import ImplicitVariable
+    from gamspy._symbols.implicits import ImplicitParameter
 
 
 class Operation(operable.Operable):
@@ -48,7 +51,9 @@ class Operation(operable.Operable):
             "Domain",
             "Expression",
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[
+            "Expression", "ImplicitVariable", "ImplicitParameter", int, bool
+        ],
         op_name: str,
     ):
         self.domain = utils._toList(domain)
@@ -59,6 +64,13 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
+    def _extract_variables(self):
+        if isinstance(self.expression, expression.Expression):
+            return self.expression.find_variables()
+        elif isinstance(self.expression, implicits.ImplicitVariable):
+            return [self.expression.parent.name]
+        return []
+
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
             index_str = self.domain[0].gamsRepr()
@@ -66,7 +78,7 @@ class Operation(operable.Operable):
             if isinstance(self.domain[0], expression.Expression):
                 if (
                     "$" in index_str
-                    and not isinstance(self.domain[0]._left, domain.Domain)
+                    and not isinstance(self.domain[0].left, domain.Domain)
                     and index_str[0] == "("
                 ):
                     # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
@@ -86,7 +98,7 @@ class Operation(operable.Operable):
         return expression.Expression(self, "ne", other)
 
     def __neg__(self):
-        return expression.Expression("", "-", self)
+        return expression.Expression(None, "-", self)
 
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
