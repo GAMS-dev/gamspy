@@ -42,7 +42,7 @@ def cos(x: Union[int, float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("cos(", x_str, ")")
+    return expression.Expression(None, f"cos({x_str})", None)
 
 
 def cosh(x: Union[int, float, "Symbol"]) -> "Expression":
@@ -54,7 +54,7 @@ def cosh(x: Union[int, float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("cosh(", x_str, ")")
+    return expression.Expression(None, f"cosh({x_str})", None)
 
 
 def sin(x: Union[float, "Symbol"]) -> "Expression":
@@ -66,7 +66,7 @@ def sin(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("sin(", x_str, ")")
+    return expression.Expression(None, f"sin({x_str})", None)
 
 
 def sinh(x: Union[float, "Symbol"]) -> "Expression":
@@ -78,7 +78,7 @@ def sinh(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("sinh(", x_str, ")")
+    return expression.Expression(None, f"sinh({x_str})", None)
 
 
 def tan(x: Union[float, "Symbol"]) -> "Expression":
@@ -90,7 +90,7 @@ def tan(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("tan(", x_str, ")")
+    return expression.Expression(None, f"tan({x_str})", None)
 
 
 def tanh(x: Union[float, "Symbol"]) -> "Expression":
@@ -102,7 +102,7 @@ def tanh(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("tanh(", x_str, ")")
+    return expression.Expression(None, f"tanh({x_str})", None)
 
 
 def acos(x: Union[float, "Symbol"]) -> "Expression":
@@ -114,7 +114,7 @@ def acos(x: Union[float, "Symbol"]) -> "Expression":
     Expresion | float
     """
     x_str = _stringify(x)
-    return expression.Expression("arccos(", x_str, ")")
+    return expression.Expression(None, f"arccos({x_str})", None)
 
 
 def asin(x: Union[float, "Symbol"]) -> "Expression":
@@ -126,7 +126,7 @@ def asin(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("arcsin(", x_str, ")")
+    return expression.Expression(None, f"arcsin({x_str})", None)
 
 
 def atan(x: Union[float, "Symbol"]) -> "Expression":
@@ -138,7 +138,7 @@ def atan(x: Union[float, "Symbol"]) -> "Expression":
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("arctan(", x_str, ")")
+    return expression.Expression(None, f"arctan({x_str})", None)
 
 
 def atan2(
@@ -154,4 +154,4 @@ def atan2(
     x_str = _stringify(x)
     y_str = _stringify(y)
 
-    return expression.Expression("arctan2(", f"{y_str}, {x_str}", ")")
+    return expression.Expression(None, f"arctan2({y_str},{x_str})", None)

@@ -214,9 +214,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
-
-        if self.type in non_regular_map.keys():  # type: ignore
-            assignment.data = non_regular_map[self.type]  # type: ignore
+            assignment_type = non_regular_map[self.type]
+            assignment.replace(assignment.data, assignment_type)
+            assignment.data = assignment_type
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -276,9 +276,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
-
-        if self.type in non_regular_map.keys():
-            assignment.data = non_regular_map[self.type]  # type: ignore
+            assignment_type = non_regular_map[self.type]
+            assignment.replace(assignment.data, assignment_type)
+            assignment.data = assignment_type
 
         domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(

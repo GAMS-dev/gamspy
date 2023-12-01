@@ -24,9 +24,6 @@
 #
 from __future__ import annotations
 
-from typing import List
-from typing import TYPE_CHECKING
-
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -37,9 +34,6 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 GMS_MAX_LINE_LENGTH = 80000
-
-if TYPE_CHECKING:
-    from gamspy import Variable
 
 
 class Expression(operable.Operable):
@@ -116,7 +110,12 @@ class Expression(operable.Operable):
             right_str = right_str.replace("=l=", "<=")
             right_str = right_str.replace("=g=", ">=")
 
-        out_str = f"{left_str} {data} {right_str}"
+        length = len(left_str) + len(self.data) + len(right_str)
+        offset = 1024  # safety offset from max line length
+        if length >= GMS_MAX_LINE_LENGTH - offset:
+            out_str = f"{left_str} {self.data}\n {right_str}"
+        else:
+            out_str = f"{left_str} {self.data} {right_str}"
 
         if self.data not in ["..", "="]:
             # add paranthesis for right ordering
@@ -174,6 +173,9 @@ class Expression(operable.Operable):
 
         return string
 
+    def replace(self, a: str, b: str):
+        self.representation = b.join(self.representation.rsplit(a, 1))
+
     def gamsRepr(self) -> str:
         """
         Representation of this Expression in GAMS language.
@@ -194,11 +196,7 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def traverse(self) -> List["Variable"]:
-        variables: List["Variable"] = self._extract_variable_names()
-        return list(set(variables))
-
-    def _extract_variable_names(self):
+    def find_variables(self):
         current = self
 
         stack = []
@@ -226,4 +224,4 @@ class Expression(operable.Operable):
             else:
                 break
 
-        return variables
+        return list(set(variables))

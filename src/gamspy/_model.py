@@ -518,7 +518,7 @@ class Model:
             equation._is_dirty = True
 
             if equation._definition is not None:
-                variables = equation._definition.traverse()
+                variables = equation._definition.find_variables()
                 for name in variables:
                     self.container[name]._is_dirty = True
 

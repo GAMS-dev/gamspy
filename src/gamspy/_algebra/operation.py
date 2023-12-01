@@ -66,7 +66,7 @@ class Operation(operable.Operable):
 
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):
-            return self.expression._extract_variable_names()
+            return self.expression.find_variables()
         elif isinstance(self.expression, implicits.ImplicitVariable):
             return [self.expression.parent.name]
         return []
