@@ -24,7 +24,6 @@
 #
 from __future__ import annotations
 
-from typing import List
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -195,12 +194,12 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def find_variables(self) -> List["Variable"]:
+    def find_variables(self) -> list[Variable]:
         """Find variables in an expression"""
         current = self
 
         stack = []
-        variables: List["Variable"] = []
+        variables: list[Variable] = []
 
         while True:
             if current is not None:

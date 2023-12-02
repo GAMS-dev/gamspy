@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import List
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._symbols.alias as alias
 import gamspy._symbols.implicits as implicits
@@ -41,10 +39,10 @@ if TYPE_CHECKING:
 class ImplicitEquation(ImplicitSymbol):
     def __init__(
         self,
-        parent: "Equation",
+        parent: Equation,
         name: str,
         type: str,
-        domain: List[Union["Set", str]],
+        domain: list[Set | str],
     ) -> None:
         """Implicit Equation
 

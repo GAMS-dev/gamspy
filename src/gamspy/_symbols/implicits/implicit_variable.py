@@ -25,7 +25,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -51,9 +50,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def __init__(
         self,
-        parent: "Variable",
+        parent: Variable,
         name: str,
-        domain: list[Union["Set", str]],
+        domain: list[Set | str],
     ):
         super().__init__(parent, name, domain)
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()

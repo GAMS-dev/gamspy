@@ -25,11 +25,8 @@
 from __future__ import annotations
 
 from typing import Any
-from typing import List
 from typing import Literal
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -75,11 +72,11 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: "Container",
+        container: Container,
         name: str,
-        domain: Optional[List[Union[Set, str]]] = None,
+        domain: list[Set | str] | None = None,
         is_singleton: bool = False,
-        records: Optional[Any] = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -107,11 +104,11 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
-        domain: Optional[List[Union[Set, str]]] = None,
+        domain: list[Set | str] | None = None,
         is_singleton: bool = False,
-        records: Optional[Any] = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -165,13 +162,13 @@ class Set(gt.Set, operable.Operable, Symbol):
     def __iter__(self):
         return self
 
-    def __getitem__(self, indices: Union[tuple, str]) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = self.domain if indices == ... else utils._toList(indices)
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
-        indices: Union[tuple, str],
+        indices: tuple | str,
         assignment,
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
@@ -322,9 +319,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Symbol", "Expression"],
+        n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
-    ) -> "ImplicitSet":
+    ) -> ImplicitSet:
         """
         Lag operation shifts the values of a Set or Alias by one to the left
 
@@ -367,9 +364,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Symbol", "Expression"],
+        n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
-    ) -> "ImplicitSet":
+    ) -> ImplicitSet:
         """
         Lead shifts the values of a Set or Alias by one to the right
 
@@ -456,7 +453,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._is_assigned = True
         super().setRecords(records, uels_on_axes)
 
-    def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
+    def sameAs(self, other: Set | Alias) -> Expression:
         return expression.Expression(
             "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
         )
@@ -497,7 +494,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         return output
 
 
-def singleton_check(is_singleton: bool, records: Union[Any, None]):
+def singleton_check(is_singleton: bool, records: Any | None):
     if is_singleton:
         if records is not None and len(records) > 1:
             raise GamspyException(
