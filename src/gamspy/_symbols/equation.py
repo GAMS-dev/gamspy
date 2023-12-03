@@ -184,7 +184,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # add defition if exists
         self._definition_domain = definition_domain
-        self._add_definition(definition)
+        self._init_definition(definition)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -216,28 +216,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         assignment: "Expression",
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
-
-        # In case of an MCP equation without any equality, add the equality
-        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
-
-        if self.type in non_regular_map.keys():  # type: ignore
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
-
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.container._addStatement(statement)
-        self._definition = statement
-
+        self._set_definition(assignment, domain)
         self._is_dirty = True
 
     def __eq__(self, other):  # type: ignore
@@ -259,34 +238,24 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             domain=self.domain,
         )
 
-    def _add_definition(
+    def _init_definition(
         self,
         assignment: Optional[
             Union["Variable", "Operation", "Expression"]
         ] = None,
     ) -> None:
-        """
-        Needed for scalar equations
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
-        >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
-        >>> eq = gp.Equation(m, "eq")
-        >>> eq[...] = gp.Sum(wh, build[wh]) <= 1
-
-        """
         if assignment is None:
-            self._definition = assignment
+            self._definition = assignment  # type: ignore
             return
 
+        domain = self._definition_domain if self._definition_domain else []
+        self._set_definition(assignment, domain)
+
+    def _set_definition(self, assignment, domain):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
+            assignment = self._adapt_mcp_equation(assignment)
 
-        if self.type in non_regular_map.keys():
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
-
-        domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,
@@ -300,6 +269,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
         self._definition = statement
+
+    def _adapt_mcp_equation(self, assignment):
+        assignment = assignment == 0
+        assignment.replace(assignment.data, non_regular_map[self.type])
+        assignment.data = non_regular_map[self.type]
+
+        return assignment
 
     @property
     def l(self):  # noqa: E741, E743

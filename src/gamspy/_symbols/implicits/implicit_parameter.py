@@ -25,9 +25,7 @@
 from __future__ import annotations
 
 from typing import Any
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -42,10 +40,10 @@ if TYPE_CHECKING:
 class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __init__(
         self,
-        parent: Union["Parameter", "Variable", "Equation"],
+        parent: Parameter | Variable | Equation,
         name: str,
-        domain: list[Union["Set", str]] = [],
-        records: Optional[Any] = None,
+        domain: list[Set | str] = [],
+        records: Any | None = None,
     ) -> None:
         """Implicit Parameter
 
@@ -70,15 +68,13 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __invert__(self):
         return expression.Expression("", "not", self)
 
-    def __getitem__(self, indices: Union[list, str]) -> ImplicitParameter:
+    def __getitem__(self, indices: list | str) -> ImplicitParameter:
         domain = self.domain if indices == ... else utils._toList(indices)
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain
         )
 
-    def __setitem__(
-        self, indices: Union[list, str], assignment: "Expression"
-    ) -> None:
+    def __setitem__(self, indices: list | str, assignment: Expression) -> None:
         domain = self.domain if indices == ... else utils._toList(indices)
 
         statement = expression.Expression(

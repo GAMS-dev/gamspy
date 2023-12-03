@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import Tuple
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
@@ -59,15 +57,13 @@ class Domain:
 
     """
 
-    def __init__(self, *sets: Union["Set", "Alias", "ImplicitSet"]) -> None:
+    def __init__(self, *sets: Set | Alias | ImplicitSet) -> None:
         self._sanity_check(sets)
         self.sets = sets
         self.container = self._find_container()  # type: ignore
         self.where = condition.Condition(self)
 
-    def _sanity_check(
-        self, sets: Tuple[Union["Set", "Alias", "ImplicitSet"], ...]
-    ):
+    def _sanity_check(self, sets: tuple[Set | Alias | ImplicitSet, ...]):
         if len(sets) < 2:
             raise DomainException("Domain requires at least 2 sets")
 

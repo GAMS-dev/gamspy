@@ -117,7 +117,7 @@ def add_solver_entry(
             print("Solver already exists in the capabilities file, skipping")
             return
 
-    with open(capabilities_file, "r") as f:
+    with open(capabilities_file) as f:
         string = f.read()
 
     for verbatim in verbatims:
@@ -138,7 +138,7 @@ def remove_solver_entry(gamspy_base_location: str, solver_name: str):
         return
 
     line_num, line_count = solver_tuple
-    with open(capabilities_file, "r") as f:
+    with open(capabilities_file) as f:
         lines = f.readlines()
 
     for _ in range(line_count + 1):
