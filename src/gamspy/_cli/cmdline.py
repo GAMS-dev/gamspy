@@ -22,12 +22,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import argparse
 import importlib
 import os
 import shutil
 import subprocess
-from typing import Dict
 
 import gamspy.utils as utils
 from .util import add_solver_entry
@@ -58,7 +59,7 @@ def get_args():
     return res
 
 
-def install_license(args: Dict[str, str]):
+def install_license(args: dict[str, str]):
     gamspy_base_dir = utils._getGAMSPyBaseDirectory()
     shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
 
@@ -68,7 +69,7 @@ def uninstall_license():
     os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
 
 
-def install_solver(args: Dict[str, str]):
+def install_solver(args: dict[str, str]):
     solver_name = args["name"]
 
     try:
@@ -152,7 +153,7 @@ def append_dist_info(files, gamspy_base_dir: str):
         record.write("\n".join(lines))
 
 
-def uninstall_solver(args: Dict[str, str]):
+def uninstall_solver(args: dict[str, str]):
     solver_name = args["name"]
 
     if not args["skip_pip_uninstall"]:
@@ -171,7 +172,7 @@ def uninstall_solver(args: Dict[str, str]):
     remove_solver_entry(gamspy_base_dir, solver_name)
 
 
-def install(args: Dict[str, str]):
+def install(args: dict[str, str]):
     if args["component"] == "license":
         install_license(args)
     elif args["component"] == "solver":
@@ -221,7 +222,7 @@ def update():
             )
 
 
-def list_solvers(args: Dict[str, str]):
+def list_solvers(args: dict[str, str]):
     component = args["component"]
 
     if component == "solvers":
@@ -231,7 +232,7 @@ def list_solvers(args: Dict[str, str]):
         return utils.getInstalledSolvers()
 
 
-def uninstall(args: Dict[str, str]):
+def uninstall(args: dict[str, str]):
     if args["component"] == "license":
         uninstall_license()
     elif args["component"] == "solver":

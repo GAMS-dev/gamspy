@@ -23,6 +23,8 @@
 # SOFTWARE.
 #
 # flake8: noqa
+from __future__ import annotations
+
 from gamspy._symbols.alias import Alias
 from gamspy._symbols.equation import Equation
 from gamspy._symbols.equation import EquationType

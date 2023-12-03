@@ -22,13 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import os
 import platform
 from dataclasses import dataclass
 from dataclasses import field
-from typing import List
-from typing import Tuple
-from typing import Union
 
 __all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
 
@@ -71,7 +70,7 @@ class SolverInfo:
 
 def check_solver_exists(
     capabilities_file: str, solver_name: str
-) -> Union[Tuple[int, int], None]:
+) -> tuple[int, int] | None:
     with open(capabilities_file) as capabilities:
         lines = capabilities.readlines()
         lines = [line for line in lines if line != "\n" and line[0] != "*"]
@@ -100,7 +99,7 @@ def get_capabilities_filename() -> str:
 def add_solver_entry(
     gamspy_base_location: str,
     solver_name: str,
-    verbatims: List[str],
+    verbatims: list[str],
 ):
     capabilities_file = (
         gamspy_base_location + os.sep + get_capabilities_filename()

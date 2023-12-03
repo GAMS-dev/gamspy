@@ -22,9 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import Literal
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 
@@ -62,7 +63,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     """
 
-    def __new__(cls, container: "Container", name: str, alias_with: "Set"):
+    def __new__(cls, container: Container, name: str, alias_with: Set):
         if not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
@@ -84,7 +85,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         except KeyError:
             return object.__new__(Alias)
 
-    def __init__(self, container: "Container", name: str, alias_with: "Set"):
+    def __init__(self, container: Container, name: str, alias_with: Set):
         # enable load on demand
         self._is_dirty = False
 
@@ -125,9 +126,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lag(
         self,
-        n: Union[int, "Symbol", "Expression"],
+        n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
-    ) -> "ImplicitSet":
+    ) -> ImplicitSet:
         """Lag operation shifts the values of a Set or Alias by one to the left
 
         Parameters
@@ -155,9 +156,9 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def lead(
         self,
-        n: Union[int, "Symbol", "Expression"],
+        n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
-    ) -> "ImplicitSet":
+    ) -> ImplicitSet:
         """
         Lead shifts the values of a Set or Alias by one to the right
 
@@ -184,7 +185,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self, other: Union["Set", "Alias"]) -> "Expression":
+    def sameAs(self, other: Set | Alias) -> Expression:
         return expression.Expression(
             "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
         )
