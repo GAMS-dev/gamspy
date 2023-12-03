@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import io
 from typing import List
 from typing import Optional
@@ -88,9 +90,9 @@ update_type_map = {
 class ModelInstance:
     def __init__(
         self,
-        container: "Container",
-        model: "Model",
-        modifiables: List[Union["Parameter", "ImplicitParameter"]],
+        container: Container,
+        model: Model,
+        modifiables: List[Union[Parameter, ImplicitParameter]],
         freeze_options: Optional[dict] = None,
     ) -> None:
         self.modifiables = self._init_modifiables(modifiables)
@@ -105,9 +107,7 @@ class ModelInstance:
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
 
-    def instantiate(
-        self, model: "Model", freeze_options: Optional[dict] = None
-    ):
+    def instantiate(self, model: Model, freeze_options: Optional[dict] = None):
         options = self._prepare_freeze_options(freeze_options)
 
         solve_string = f"{model.name} using {model.problem}"
@@ -161,9 +161,9 @@ class ModelInstance:
         self.model.status = gp.ModelStatus(self.instance.model_status)
 
     def _init_modifiables(
-        self, modifiables: List[Union["Parameter", "ImplicitParameter"]]
-    ) -> List[Union["Parameter", "ImplicitParameter"]]:
-        will_be_modified: List[Union["Parameter", "ImplicitParameter"]] = []
+        self, modifiables: List[Union[Parameter, ImplicitParameter]]
+    ) -> List[Union[Parameter, ImplicitParameter]]:
+        will_be_modified: List[Union[Parameter, ImplicitParameter]] = []
         for modifiable in modifiables:
             if isinstance(modifiable, implicits.ImplicitParameter):
                 attr_name = modifiable.name.split(".")[-1]

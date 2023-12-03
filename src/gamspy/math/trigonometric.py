@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-def cos(x: Union[int, float, "Symbol"]) -> "Expression":
+def cos(x: Union[int, float, Symbol]) -> Expression:
     """
     Cosine of x.
 
@@ -45,7 +47,7 @@ def cos(x: Union[int, float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"cos({x_str})", None)
 
 
-def cosh(x: Union[int, float, "Symbol"]) -> "Expression":
+def cosh(x: Union[int, float, Symbol]) -> Expression:
     """
     Hyperbolic cosine of x.
 
@@ -57,7 +59,7 @@ def cosh(x: Union[int, float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"cosh({x_str})", None)
 
 
-def sin(x: Union[float, "Symbol"]) -> "Expression":
+def sin(x: Union[float, Symbol]) -> Expression:
     """
     Sine of x.
 
@@ -69,7 +71,7 @@ def sin(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"sin({x_str})", None)
 
 
-def sinh(x: Union[float, "Symbol"]) -> "Expression":
+def sinh(x: Union[float, Symbol]) -> Expression:
     """
     Hyperbolic sine of x.
 
@@ -81,7 +83,7 @@ def sinh(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"sinh({x_str})", None)
 
 
-def tan(x: Union[float, "Symbol"]) -> "Expression":
+def tan(x: Union[float, Symbol]) -> Expression:
     """
     Tangent of x.
 
@@ -93,7 +95,7 @@ def tan(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"tan({x_str})", None)
 
 
-def tanh(x: Union[float, "Symbol"]) -> "Expression":
+def tanh(x: Union[float, Symbol]) -> Expression:
     """
     Hyperbolic tangent of x.
 
@@ -105,7 +107,7 @@ def tanh(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"tanh({x_str})", None)
 
 
-def acos(x: Union[float, "Symbol"]) -> "Expression":
+def acos(x: Union[float, Symbol]) -> Expression:
     """
     Inverse cosine of x.
 
@@ -117,7 +119,7 @@ def acos(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"arccos({x_str})", None)
 
 
-def asin(x: Union[float, "Symbol"]) -> "Expression":
+def asin(x: Union[float, Symbol]) -> Expression:
     """
     Inver sinus of x.
 
@@ -129,7 +131,7 @@ def asin(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"arcsin({x_str})", None)
 
 
-def atan(x: Union[float, "Symbol"]) -> "Expression":
+def atan(x: Union[float, Symbol]) -> Expression:
     """
     Inverse tangent of x.
 
@@ -142,8 +144,8 @@ def atan(x: Union[float, "Symbol"]) -> "Expression":
 
 
 def atan2(
-    y: Union[int, float, "Symbol"], x: Union[int, float, "Symbol"]
-) -> "Expression":
+    y: Union[int, float, Symbol], x: Union[int, float, Symbol]
+) -> Expression:
     """
     Four-quadrant arctan function
 

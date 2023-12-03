@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from enum import Enum
 from typing import Any
 from typing import List
@@ -89,10 +91,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: "Container",
+        container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -120,10 +122,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",

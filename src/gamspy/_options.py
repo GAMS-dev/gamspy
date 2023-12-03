@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -177,10 +179,10 @@ class Options(BaseModel):
 
 
 def _fix_log_option(
-    output: Union["io.TextIOWrapper", None],
+    output: Union[io.TextIOWrapper, None],
     create_log_file: bool,
-    options: "GamsOptions",
-) -> "GamsOptions":
+    options: GamsOptions,
+) -> GamsOptions:
     if output is None:
         if create_log_file:
             # Output = None & debug_logfile = True -> logOption = 2
@@ -198,12 +200,12 @@ def _fix_log_option(
 
 
 def _mapOptions(
-    workspace: "GamsWorkspace",
-    options: Union["Options", None],
+    workspace: GamsWorkspace,
+    options: Union[Options, None],
     is_seedable: bool = True,
-    output: Optional["io.TextIOWrapper"] = None,
+    output: Optional[io.TextIOWrapper] = None,
     create_log_file: bool = False,
-) -> "GamsOptions":
+) -> GamsOptions:
     """
     Maps given GAMSPy options to GamsOptions
 

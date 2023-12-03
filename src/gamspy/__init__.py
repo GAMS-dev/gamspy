@@ -23,6 +23,8 @@
 # SOFTWARE.
 #
 # flake8: noqa
+from __future__ import annotations
+
 import gamspy.math as math
 from .version import __version__
 from gamspy._algebra import Card
