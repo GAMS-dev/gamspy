@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import annotations
+from typing import Union
 
 import gamspy._algebra.condition as condition
 
@@ -45,7 +45,7 @@ class Number:
 
     """
 
-    def __init__(self, value: int | float):
+    def __init__(self, value: Union[int, float]):
         self._value = value
         self.where = condition.Condition(self)
 

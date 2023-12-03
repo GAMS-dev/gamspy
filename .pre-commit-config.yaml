@@ -34,9 +34,6 @@ repos:
         args: [
             --application-directories, '.:src',
             --py38-plus,
-            --add-import,
-            'from __future__ import annotations'
-
         ]
 -   repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0

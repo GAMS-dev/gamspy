@@ -23,8 +23,6 @@
 # SOFTWARE.
 #
 # flake8: noqa
-from __future__ import annotations
-
 from gamspy._symbols.implicits.implicit_equation import ImplicitEquation
 from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 from gamspy._symbols.implicits.implicit_set import ImplicitSet

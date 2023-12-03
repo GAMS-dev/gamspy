@@ -22,10 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import annotations
-
 import io
+from typing import List
+from typing import Optional
+from typing import Tuple
 from typing import TYPE_CHECKING
+from typing import Union
 
 from gams import EquType
 from gams import GamsModelInstanceOpt
@@ -86,10 +88,10 @@ update_type_map = {
 class ModelInstance:
     def __init__(
         self,
-        container: Container,
-        model: Model,
-        modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: dict | None = None,
+        container: "Container",
+        model: "Model",
+        modifiables: List[Union["Parameter", "ImplicitParameter"]],
+        freeze_options: Optional[dict] = None,
     ) -> None:
         self.modifiables = self._init_modifiables(modifiables)
         self.main_container = container
@@ -103,7 +105,9 @@ class ModelInstance:
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
 
-    def instantiate(self, model: Model, freeze_options: dict | None = None):
+    def instantiate(
+        self, model: "Model", freeze_options: Optional[dict] = None
+    ):
         options = self._prepare_freeze_options(freeze_options)
 
         solve_string = f"{model.name} using {model.problem}"
@@ -120,8 +124,8 @@ class ModelInstance:
 
     def solve(
         self,
-        options_dict: dict | None = None,
-        output: io.TextIOWrapper | None = None,
+        options_dict: Optional[dict] = None,
+        output: Optional[io.TextIOWrapper] = None,
     ):
         # get options from dict
         options, update_type = self._prepare_options(options_dict)
@@ -157,9 +161,9 @@ class ModelInstance:
         self.model.status = gp.ModelStatus(self.instance.model_status)
 
     def _init_modifiables(
-        self, modifiables: list[Parameter | ImplicitParameter]
-    ) -> list[Parameter | ImplicitParameter]:
-        will_be_modified: list[Parameter | ImplicitParameter] = []
+        self, modifiables: List[Union["Parameter", "ImplicitParameter"]]
+    ) -> List[Union["Parameter", "ImplicitParameter"]]:
+        will_be_modified: List[Union["Parameter", "ImplicitParameter"]] = []
         for modifiable in modifiables:
             if isinstance(modifiable, implicits.ImplicitParameter):
                 attr_name = modifiable.name.split(".")[-1]
@@ -184,7 +188,7 @@ class ModelInstance:
         return will_be_modified
 
     def _prepare_freeze_options(
-        self, options_dict: dict | None
+        self, options_dict: Optional[dict]
     ) -> GamsOptions:
         if options_dict is None:
             return
@@ -195,8 +199,8 @@ class ModelInstance:
             setattr(options, key, value)
 
     def _prepare_options(
-        self, options_dict: dict | None
-    ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
+        self, options_dict: Optional[dict]
+    ) -> Tuple[Optional[GamsModelInstanceOpt], SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
 
         if options_dict is None:
