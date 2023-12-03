@@ -22,10 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import annotations
-
 from typing import Literal
+from typing import Optional
 from typing import TYPE_CHECKING
+from typing import Union
 
 from gams import GamsOptions
 from gams import GamsWorkspace
@@ -96,57 +96,57 @@ option_map = {
 
 
 class Options(BaseModel):
-    cns: str | None = None
-    dnlp: str | None = None
-    emp: str | None = None
-    lp: str | None = None
-    mcp: str | None = None
-    minlp: str | None = None
-    mip: str | None = None
-    miqcp: str | None = None
-    mpec: str | None = None
-    nlp: str | None = None
-    qcp: str | None = None
-    rminlp: str | None = None
-    rmip: str | None = None
-    rmiqcp: str | None = None
-    rmpec: str | None = None
-    allow_suffix_in_equation: bool | None = None
-    allow_suffix_in_limited_variables: bool | None = None
-    basis_detection_threshold: float | None = None
+    cns: Optional[str] = None
+    dnlp: Optional[str] = None
+    emp: Optional[str] = None
+    lp: Optional[str] = None
+    mcp: Optional[str] = None
+    minlp: Optional[str] = None
+    mip: Optional[str] = None
+    miqcp: Optional[str] = None
+    mpec: Optional[str] = None
+    nlp: Optional[str] = None
+    qcp: Optional[str] = None
+    rminlp: Optional[str] = None
+    rmip: Optional[str] = None
+    rmiqcp: Optional[str] = None
+    rmpec: Optional[str] = None
+    allow_suffix_in_equation: Optional[bool] = None
+    allow_suffix_in_limited_variables: Optional[bool] = None
+    basis_detection_threshold: Optional[float] = None
     compile_error_limit: int = 1
-    domain_violation_limit: int | None = None
-    job_time_limit: float | None = None
-    job_heap_limit: float | None = None
-    hold_fixed_variables: bool | None = None
-    integer_variable_upper_bound: int | None = None
-    iteration_limit: int | None = None
+    domain_violation_limit: Optional[int] = None
+    job_time_limit: Optional[float] = None
+    job_heap_limit: Optional[float] = None
+    hold_fixed_variables: Optional[bool] = None
+    integer_variable_upper_bound: Optional[int] = None
+    iteration_limit: Optional[int] = None
     keep_temporary_files: bool = False
-    license: str | None = None
-    variable_listing_limit: int | None = None
-    equation_listing_limit: int | None = None
-    node_limit: int | None = None
-    absolute_optimality_gap: float | None = None
-    relative_optimality_gap: float | None = None
-    profile: int | None = None
-    profile_tolerance: float | None = None
-    time_limit: float | None = None
-    savepoint: Literal[0, 1, 2, 3, 4] | None = None
-    seed: int | None = None
+    license: Optional[str] = None
+    variable_listing_limit: Optional[int] = None
+    equation_listing_limit: Optional[int] = None
+    node_limit: Optional[int] = None
+    absolute_optimality_gap: Optional[float] = None
+    relative_optimality_gap: Optional[float] = None
+    profile: Optional[int] = None
+    profile_tolerance: Optional[float] = None
+    time_limit: Optional[float] = None
+    savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
+    seed: Optional[int] = None
     report_solution: Literal[0, 1, 2] = 2
     show_os_memory: Literal[0, 1, 2] = 0
-    solver_link_type: Literal[0, 1, 2, 3, 4, 5, 6, 7] | None = None
-    multi_solve_strategy: Literal["replace", "merge", "clear"] | None = None
-    step_summary: bool | None = None
+    solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
+    multi_solve_strategy: Optional[Literal["replace", "merge", "clear"]] = None
+    step_summary: Optional[bool] = None
     suppress_compiler_listing: bool = True
-    report_solver_status: bool | None = None
-    threads: int | None = None
-    trace_file: str | None = None
-    trace_level: int | None = None
-    trace_file_format: Literal[0, 1, 2, 3, 4, 5] | None = None
+    report_solver_status: Optional[bool] = None
+    threads: Optional[int] = None
+    trace_file: Optional[str] = None
+    trace_level: Optional[int] = None
+    trace_file_format: Optional[Literal[0, 1, 2, 3, 4, 5]] = None
     write_listing_file: bool = True
-    zero_rounding_threshold: float | None = None
-    report_underflow: bool | None = None
+    zero_rounding_threshold: Optional[float] = None
+    report_underflow: Optional[bool] = None
 
     class Config:
         extra = "forbid"
@@ -177,10 +177,10 @@ class Options(BaseModel):
 
 
 def _fix_log_option(
-    output: io.TextIOWrapper | None,
+    output: Union["io.TextIOWrapper", None],
     create_log_file: bool,
-    options: GamsOptions,
-) -> GamsOptions:
+    options: "GamsOptions",
+) -> "GamsOptions":
     if output is None:
         if create_log_file:
             # Output = None & debug_logfile = True -> logOption = 2
@@ -198,12 +198,12 @@ def _fix_log_option(
 
 
 def _mapOptions(
-    workspace: GamsWorkspace,
-    options: Options | None,
+    workspace: "GamsWorkspace",
+    options: Union["Options", None],
     is_seedable: bool = True,
-    output: io.TextIOWrapper | None = None,
+    output: Optional["io.TextIOWrapper"] = None,
     create_log_file: bool = False,
-) -> GamsOptions:
+) -> "GamsOptions":
     """
     Maps given GAMSPy options to GamsOptions
 

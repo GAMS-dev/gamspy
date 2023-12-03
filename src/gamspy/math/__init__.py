@@ -22,8 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from __future__ import annotations
-
 from gamspy.math.log_power import cv_power
 from gamspy.math.log_power import exp
 from gamspy.math.log_power import log
