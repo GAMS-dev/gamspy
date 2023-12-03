@@ -22,8 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import List
-from typing import Optional
+from __future__ import annotations
 
 from gams import GamsEngineConfiguration
 from pydantic import BaseModel
@@ -31,12 +30,12 @@ from pydantic import BaseModel
 
 class EngineConfig(BaseModel):
     host: str
-    username: Optional[str] = None
-    password: Optional[str] = None
-    jwt: Optional[str] = None
+    username: str | None = None
+    password: str | None = None
+    jwt: str | None = None
     namespace: str = "global"
-    extra_model_files: List[str] = []
-    engine_options: Optional[dict] = None
+    extra_model_files: list[str] = []
+    engine_options: dict | None = None
     remove_results: bool = False
 
     class Config:

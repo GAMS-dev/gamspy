@@ -22,11 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import Any
-from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -70,10 +69,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: "Container",
+        container: Container,
         name: str,
-        domain: Optional[List[Union[str, "Set"]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -101,10 +100,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
-        domain: Optional[List[Union[str, "Set"]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -137,16 +136,14 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # for records and setRecords
         self._is_assigned = True
 
-    def __getitem__(
-        self, indices: Union[tuple, str]
-    ) -> implicits.ImplicitParameter:
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitParameter:
         domain = self.domain if indices == ... else utils._toList(indices)
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
-        indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: "Expression",
+        indices: tuple | str | implicits.ImplicitSet,
+        assignment: Expression,
     ) -> None:
         domain = self.domain if indices == ... else utils._toList(indices)
 

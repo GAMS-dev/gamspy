@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 """Exception classes for Gamspy"""
+from __future__ import annotations
 
 
 class GamspyException(Exception):

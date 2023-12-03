@@ -22,8 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.expression as expression
 from gamspy.math.misc import _stringify
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-def exp(x: Union[float, "Symbol"]) -> "Expression":
+def exp(x: float | Symbol) -> Expression:
     """
     Exponential of x (i.e. e^x)
 
@@ -45,7 +46,7 @@ def exp(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"exp({x_str})", None)
 
 
-def log(x: Union[int, float, "Symbol"]) -> "Expression":
+def log(x: int | float | Symbol) -> Expression:
     """
     Natural logarithm of x (i.e. logarithm base e of x)
 
@@ -57,9 +58,7 @@ def log(x: Union[int, float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"log({x_str})", None)
 
 
-def log_beta(
-    x: Union[int, float, "Symbol"], y: Union[int, float, "Symbol"]
-) -> "Expression":
+def log_beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     """
     Log beta function
 
@@ -72,9 +71,7 @@ def log_beta(
     return expression.Expression(None, f"logBeta({x_str},{y_str})", None)
 
 
-def log_gamma(
-    x: Union[int, float, "Symbol"], y: Union[int, float, "Symbol"]
-) -> "Expression":
+def log_gamma(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     """
     Log gamma function
 
@@ -87,7 +84,7 @@ def log_gamma(
     return expression.Expression(None, f"logGamma({x_str},{y_str})", None)
 
 
-def logit(x: Union[int, float, "Symbol"]) -> "Expression":
+def logit(x: int | float | Symbol) -> Expression:
     """
     Natural logarithm of x (i.e. logarithm base e of x)
 
@@ -99,7 +96,7 @@ def logit(x: Union[int, float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"logit({x_str})", None)
 
 
-def log2(x: Union[float, "Symbol"]) -> "Expression":
+def log2(x: float | Symbol) -> Expression:
     """
     Binary logarithm (i.e. logarithm base 2 of x)
 
@@ -111,7 +108,7 @@ def log2(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"log2({x_str})", None)
 
 
-def log10(x: Union[float, "Symbol"]) -> "Expression":
+def log10(x: float | Symbol) -> Expression:
     """
     Common logarithm (i.e. logarithm base 10 of x)
 
@@ -123,9 +120,7 @@ def log10(x: Union[float, "Symbol"]) -> "Expression":
     return expression.Expression(None, f"log10({x_str})", None)
 
 
-def power(
-    base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]
-) -> "Expression":
+def power(base: float | Symbol, exponent: float | Symbol) -> Expression:
     """
     Base to the exponent power (i.e. base ^ exponent)
 
@@ -151,9 +146,7 @@ def power(
     )
 
 
-def cv_power(
-    base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]
-) -> "Expression":
+def cv_power(base: float | Symbol, exponent: float | Symbol) -> Expression:
     """
     Real power (i.e. base ^ exponent where X >= 0)
 
@@ -179,7 +172,7 @@ def cv_power(
     )
 
 
-def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def rpower(base: float | Symbol, exponent: float | Symbol):
     """
     Returns x^y for x > 0 and also for x = 0 and restricted values of y
 
@@ -205,7 +198,7 @@ def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
     )
 
 
-def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def sign_power(base: float | Symbol, exponent: float | Symbol):
     """
     Signed power for y > 0.
 
@@ -231,9 +224,7 @@ def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
     )
 
 
-def sllog10(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
-) -> "Expression":
+def sllog10(x: int | float | Symbol, S: int | float = 1.0e-150) -> Expression:
     """
     Smooth (linear) logarithm base 10
 
@@ -250,9 +241,7 @@ def sllog10(
     return expression.Expression(None, f"sllog10({x_str},{S})", None)
 
 
-def sqlog10(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
-) -> "Expression":
+def sqlog10(x: int | float | Symbol, S: int | float = 1.0e-150) -> Expression:
     """
     Smooth (quadratic) logarithm base 10
 
@@ -269,7 +258,7 @@ def sqlog10(
     return expression.Expression(None, f"sqlog10({x_str},{S})", None)
 
 
-def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def vc_power(base: float | Symbol, exponent: float | Symbol):
     """
     Returns x^y for x >= 0
 
@@ -295,7 +284,7 @@ def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
     )
 
 
-def sqr(x: Union[float, "Symbol"]) -> "Expression":
+def sqr(x: float | Symbol) -> Expression:
     """
     Square of x
 
