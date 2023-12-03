@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class UniverseAlias(gt.UniverseAlias):
-    def __new__(cls, container: "Container", name: str = "universe"):
+    def __new__(cls, container: Container, name: str = "universe"):
         if not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
@@ -33,7 +35,7 @@ class UniverseAlias(gt.UniverseAlias):
         except KeyError:
             return object.__new__(cls)
 
-    def __init__(self, container: "Container", name: str = "universe"):
+    def __init__(self, container: Container, name: str = "universe"):
         """
         Represents a UniverseAlias symbol in GAMS.
 

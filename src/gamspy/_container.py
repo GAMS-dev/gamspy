@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import io
 import os
 import shutil
@@ -105,7 +107,7 @@ class Container(gt.Container):
         system_directory: Optional[str] = None,
         working_directory: Optional[str] = None,
         delayed_execution: bool = False,
-        options: Optional["Options"] = None,
+        options: Optional[Options] = None,
         miro_protect: bool = True,
     ):
         system_directory = (
@@ -386,10 +388,10 @@ class Container(gt.Container):
 
     def _run(
         self,
-        options: Optional["GamsOptions"] = None,
+        options: Optional[GamsOptions] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine"] = "local",
-        engine_config: Optional["EngineConfig"] = None,
+        engine_config: Optional[EngineConfig] = None,
         create_log_file: bool = False,
     ):
         if options is None:
@@ -439,7 +441,7 @@ class Container(gt.Container):
         self._is_first_run = False
 
     def _run_local(
-        self, options: "GamsOptions", output: Union[io.TextIOWrapper, None]
+        self, options: GamsOptions, output: Union[io.TextIOWrapper, None]
     ):
         try:
             self._job.run(  # type: ignore
@@ -457,9 +459,9 @@ class Container(gt.Container):
 
     def _run_engine(
         self,
-        options: "GamsOptions",
+        options: GamsOptions,
         output: Union[io.TextIOWrapper, None],
-        engine_config: Union["EngineConfig", None],
+        engine_config: Union[EngineConfig, None],
     ):
         options.forcework = 1  # In case GAMS version differs on Engine
 
@@ -531,9 +533,7 @@ class Container(gt.Container):
         """
         return self._gdx_out.split(os.sep)[-1]
 
-    def addAlias(
-        self, name: str, alias_with: Union["Set", "Alias"]
-    ) -> "Alias":
+    def addAlias(self, name: str, alias_with: Union[Set, Alias]) -> Alias:
         """
         Creates a new Alias and adds it to the container
 
@@ -567,13 +567,13 @@ class Container(gt.Container):
     def addSet(
         self,
         name: str,
-        domain: Optional[List[Union["Set", str]]] = None,
+        domain: Optional[List[Union[Set, str]]] = None,
         is_singleton: bool = False,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-    ) -> "Set":
+    ) -> Set:
         """
         Creates a Set and adds it to the container
 
@@ -620,12 +620,12 @@ class Container(gt.Container):
     def addParameter(
         self,
         name: str,
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-    ) -> "Parameter":
+    ) -> Parameter:
         """
         Creates a Parameter and adds it to the Container
 
@@ -671,12 +671,12 @@ class Container(gt.Container):
         self,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-    ) -> "Variable":
+    ) -> Variable:
         """
         Creates a Variable and adds it to the Container
 
@@ -723,15 +723,15 @@ class Container(gt.Container):
     def addEquation(
         self,
         name: str,
-        type: Union[str, "EquationType"] = "regular",
-        domain: Optional[List[Union["Set", str]]] = None,
-        definition: Optional["Expression"] = None,
+        type: Union[str, EquationType] = "regular",
+        domain: Optional[List[Union[Set, str]]] = None,
+        definition: Optional[Expression] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition_domain: Optional[List[Union["Set", str]]] = None,
-    ) -> "Equation":
+        definition_domain: Optional[List[Union[Set, str]]] = None,
+    ) -> Equation:
         """
         Creates an Equation and adds it to the Container
 
@@ -783,12 +783,12 @@ class Container(gt.Container):
         self,
         name: str,
         problem: str,
-        equations: List["Equation"],
+        equations: List[Equation],
         sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective: Optional[Union["Variable", "Expression"]] = None,
+        objective: Optional[Union[Variable, Expression]] = None,
         matches: Optional[dict] = None,
         limited_variables: Optional[list] = None,
-    ) -> "Model":
+    ) -> Model:
         """
         Creates a Model and adds it to the Container
 
@@ -825,7 +825,7 @@ class Container(gt.Container):
             limited_variables,
         )
 
-    def copy(self, working_directory: str) -> "Container":
+    def copy(self, working_directory: str) -> Container:
         """
         Creates a copy of the Container. Should not be invoked after
         creating the model.
@@ -1147,7 +1147,7 @@ class Container(gt.Container):
 
 
 def parse_message(
-    workspace: "GamsWorkspace", options: "GamsOptions", job: "GamsJob"
+    workspace: GamsWorkspace, options: GamsOptions, job: GamsJob
 ) -> str:
     error_message = ""
     if not options._writeoutput:
@@ -1193,7 +1193,7 @@ def parse_message(
 
 
 def preprocess_extra_model_files(
-    workspace: "GamsWorkspace", gdx_path: "str", engine_config: "EngineConfig"
+    workspace: GamsWorkspace, gdx_path: str, engine_config: EngineConfig
 ) -> List[str]:
     """
     Conforms model files to the path requirements of GAMS Engine

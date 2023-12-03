@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC
 
 import gamspy._algebra.condition as condition
