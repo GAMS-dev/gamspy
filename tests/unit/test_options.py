@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 from pydantic import ValidationError
@@ -23,10 +25,10 @@ class OptionsSuite(unittest.TestCase):
         self.assertEqual(options.report_solution, 1)
 
         with self.assertRaises(ValidationError):
-            _ = Options(multi_solve_strategy=5)
+            _ = Options(merge_strategy=5)
 
-        options = Options(multi_solve_strategy="replace")
-        self.assertEqual(options.multi_solve_strategy, "replace")
+        options = Options(merge_strategy="replace")
+        self.assertEqual(options.merge_strategy, "replace")
 
         with self.assertRaises(ValidationError):
             _ = Options(step_summary=5)

@@ -83,7 +83,7 @@ option_map = {
     "report_solution": "solprint",
     "show_os_memory": "showosmemory",
     "solver_link_type": "solvelink",
-    "multi_solve_strategy": "solveopt",
+    "merge_strategy": "solveopt",
     "step_summary": "stepsum",
     "suppress_compiler_listing": "suppress",
     "report_solver_status": "sysout",
@@ -138,7 +138,7 @@ class Options(BaseModel):
     report_solution: Literal[0, 1, 2] = 2
     show_os_memory: Literal[0, 1, 2] = 0
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
-    multi_solve_strategy: Optional[Literal["replace", "merge", "clear"]] = None
+    merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
     suppress_compiler_listing: bool = True
     report_solver_status: Optional[bool] = None
@@ -167,9 +167,9 @@ class Options(BaseModel):
                 "on" if allows_suffix else "off"
             )
 
-        if options_dict["multi_solve_strategy"] is not None:
-            strategy = options_dict["multi_solve_strategy"]
-            options_dict["multi_solve_strategy"] = multi_solve_map[strategy]
+        if options_dict["merge_strategy"] is not None:
+            strategy = options_dict["merge_strategy"]
+            options_dict["merge_strategy"] = multi_solve_map[strategy]
 
         options_dict = {
             option_map[key]: value for key, value in options_dict.items()  # type: ignore

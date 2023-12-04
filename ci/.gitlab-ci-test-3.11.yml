@@ -12,7 +12,7 @@ test-leg-3.11:
     - conda activate gamspy-env-3.11
     - pip install wheel build
     - python scripts/reinstall.py
-    - coverage run --source=gamspy tests/test_gamspy.py --integration --doc
+    - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
