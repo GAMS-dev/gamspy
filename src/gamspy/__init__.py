@@ -41,6 +41,7 @@ from gamspy._model import Model
 from gamspy._model import ModelStatus
 from gamspy._model import Problem
 from gamspy._model import Sense
+from gamspy._neos import NeosClient
 from gamspy._options import Options
 from gamspy._symbols import Alias
 from gamspy._symbols import Equation
@@ -77,4 +78,5 @@ __all__ = [
     "Card",
     "Options",
     "EngineConfig",
+    "NeosClient",
 ]

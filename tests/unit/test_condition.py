@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 import pandas as pd
@@ -5,9 +7,11 @@ import pandas as pd
 import gamspy.math as gamspy_math
 from gamspy import Container
 from gamspy import Equation
+from gamspy import Model
 from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
+from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
@@ -313,6 +317,119 @@ class ConditionSuite(unittest.TestCase):
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
+
+    def test_variable_discovery_in_implicit_equation(self):
+        # Instance Data
+        products = ["Product_A", "Product_B", "Product_C"]
+        time_periods = [1, 2, 3, 4]
+
+        # Example data for parameters
+        demand_data = pd.DataFrame(
+            {
+                "Product_A": {1: 100, 2: 150, 3: 120, 4: 180},
+                "Product_B": {1: 80, 2: 100, 3: 90, 4: 120},
+                "Product_C": {1: 50, 2: 60, 3: 70, 4: 80},
+            }
+        ).unstack()
+
+        setup_cost_data = pd.DataFrame(
+            [("Product_A", 500), ("Product_B", 400), ("Product_C", 300)]
+        )
+        holding_cost_data = pd.DataFrame(
+            [("Product_A", 10), ("Product_B", 8), ("Product_C", 6)]
+        )
+
+        capacity_data = pd.DataFrame([(1, 200), (2, 250), (3, 300), (4, 220)])
+        production_speed_data = pd.DataFrame(
+            [("Product_A", 20), ("Product_B", 25), ("Product_C", 30)]
+        )
+
+        m = Container(delayed_execution=True)
+        i = Set(m, name="i", description="products", records=products)
+        t = Set(m, name="t", description="time periods", records=time_periods)
+
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, t],
+            description="demand of product i in period t",
+            records=demand_data,
+        )
+        s = Parameter(
+            m,
+            name="s",
+            domain=i,
+            description="fixed setup cost for product i",
+            records=setup_cost_data,
+        )
+        h = Parameter(
+            m,
+            name="h",
+            domain=i,
+            description="holding cost for product i",
+            records=holding_cost_data,
+        )
+        _ = Parameter(
+            m,
+            name="c",
+            domain=t,
+            description="production capacity in period t",
+            records=capacity_data,
+        )
+        _ = Parameter(
+            m,
+            name="p",
+            domain=i,
+            description="production speed of product i",
+            records=production_speed_data,
+        )
+
+        X = Variable(
+            m,
+            name="X",
+            domain=[i, t],
+            type="positive",
+            description="lot size of product i in period t",
+        )
+        Y = Variable(
+            m,
+            name="Y",
+            domain=[i, t],
+            type="binary",
+            description="indicates if product i is manufactures in period t",
+        )
+        Z = Variable(
+            m,
+            name="Z",
+            domain=[i, t],
+            type="positive",
+            description="stock of product i in period t",
+        )
+
+        objective = Sum((i, t), s[i] * Y[i, t] + h[i] * Z[i, t])
+
+        stock = Equation(
+            m,
+            name="stock",
+            domain=[i, t],
+            description="Stock balance equation",
+        )
+        stock[i, t].where[Ord(t) > 1] = (
+            Z[i, t.lag(1)] + X[i, t] - Z[i, t] == d[i, t]
+        )
+
+        clsp = Model(
+            m,
+            name="CLSP",
+            problem="MIP",
+            equations=m.getEquations(),
+            sense=Sense.MIN,
+            objective=objective,
+        )
+
+        clsp.solve()
+
+        self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
         m = Container(delayed_execution=True)
