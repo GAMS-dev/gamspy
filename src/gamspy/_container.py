@@ -50,6 +50,7 @@ import gamspy as gp
 import gamspy.utils as utils
 from gamspy._neos import NeosClient
 from gamspy._options import _mapOptions
+from gamspy.exceptions import customize_exception
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -396,10 +397,11 @@ class Container(gt.Container):
                 create_out_db=False,
                 output=output,
             )
-        except GamsExceptionExecution as e:
-            message = parse_message(self.workspace, options, self._job)
-            e.value = message + e.value if message else e.value
-            raise e
+        except GamsExceptionExecution as exception:
+            exception = customize_exception(
+                self.workspace, options, self._job, exception
+            )
+            raise exception
         finally:
             self._unsaved_statements = []
 
@@ -417,13 +419,13 @@ class Container(gt.Container):
                 " GAMS Engine"
             )
 
-        extra_model_files = preprocess_extra_model_files(
-            self.workspace, self._gdx_in.split(os.sep)[-1], engine_config
+        extra_model_files = engine_config._preprocess_extra_model_files(
+            self.workspace, self._gdx_in
         )
 
         try:
             self._job.run_engine(  # type: ignore
-                engine_configuration=engine_config.get_engine_config(),
+                engine_configuration=engine_config._get_engine_config(),
                 extra_model_files=extra_model_files,
                 gams_options=options,
                 checkpoint=self._save_to,
@@ -505,7 +507,7 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._gdx_in.split(os.sep)[-1]
+        return os.path.basename(self._gdx_in)
 
     def gdxOutputName(self) -> str:
         """
@@ -515,7 +517,7 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._gdx_out.split(os.sep)[-1]
+        return os.path.basename(self._gdx_out)
 
     def addAlias(self, name: str, alias_with: Union[Set, Alias]) -> Alias:
         """
@@ -960,8 +962,8 @@ class Container(gt.Container):
         # setup gdx input name according to backend
         if backend == "engine":
             return (
-                self._gdx_in.split(os.sep)[-1],
-                self._gdx_out.split(os.sep)[-1],
+                os.path.basename(self._gdx_in),
+                os.path.basename(self._gdx_out),
             )
         elif backend == "neos":
             return "in.gdx", "output.gdx"
@@ -1093,83 +1095,3 @@ class Container(gt.Container):
         super().write(write_to, symbols)
 
         self._update_assigned_state(assigned_names)
-
-
-def parse_message(
-    workspace: GamsWorkspace, options: GamsOptions, job: GamsJob
-) -> str:
-    error_message = ""
-    if not options._writeoutput:
-        return error_message
-
-    header = "=" * 80
-    footer = "=" * 80
-    message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
-
-    lst_filename = options.output if options.output else job._job_name + ".lst"
-
-    lst_path = workspace._working_directory + os.path.sep + lst_filename
-
-    with open(lst_path) as lst_file:
-        all_lines = lst_file.readlines()
-        num_lines = len(all_lines)
-
-        index = 0
-        while index < num_lines:
-            line = all_lines[index]
-
-            if line.startswith("****"):
-                error_lines = [all_lines[index - 1]]
-                temp_index = index
-
-                while (
-                    all_lines[temp_index].startswith("****")
-                    and temp_index < len(all_lines) - 1
-                ):
-                    error_lines.append(all_lines[temp_index])
-                    temp_index += 1
-
-                error_message = message_format.format(
-                    message="".join(error_lines),
-                    header=header,
-                    footer=footer,
-                )
-                break
-
-            index += 1
-
-    return error_message
-
-
-def preprocess_extra_model_files(
-    workspace: GamsWorkspace, gdx_path: str, engine_config: EngineConfig
-) -> List[str]:
-    """
-    Conforms model files to the path requirements of GAMS Engine
-
-    Parameters
-    ----------
-    engine_config : EngineConfig
-
-    Returns
-    -------
-    List[str]
-    """
-    # copy provided extra model files to working directory
-    for extra_file in engine_config.extra_model_files:
-        try:
-            shutil.copy(extra_file, workspace.working_directory)
-        except shutil.SameFileError:
-            # extra file might already be in the working directory
-            pass
-
-    # trim path and keep only the names of the files
-    extra_model_files = [
-        os.path.abspath(extra_file).split(os.sep)[-1]
-        for extra_file in engine_config.extra_model_files
-    ]
-
-    # add name of the gdx file
-    extra_model_files.append(os.path.abspath(gdx_path).split(os.sep)[-1])
-
-    return extra_model_files

@@ -97,7 +97,6 @@ def run_integration_tests(
         solve_suite,
         model_instance_suite,
         cmd_suite,
-        gams_models_suite,
     ]
 
     if args.engine:
@@ -105,6 +104,8 @@ def run_integration_tests(
 
     if args.neos:
         integration_suites.append(neos_suite)
+
+    integration_suites.append(gams_models_suite)
 
     print(f"Running integration tests\n{'='*80}")
     for suite in integration_suites:

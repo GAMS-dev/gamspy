@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import tempfile
 import unittest
@@ -80,7 +82,7 @@ class EngineSuite(unittest.TestCase):
 
         self.assertTrue(
             isinstance(
-                engine_config.get_engine_config(), GamsEngineConfiguration
+                engine_config._get_engine_config(), GamsEngineConfiguration
             )
         )
 
