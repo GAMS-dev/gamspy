@@ -311,7 +311,7 @@ In order to send your model to be solved to GAMS Engine, you need to define the 
 This can be done by importing ``EngineConfig`` and creating an instance. Then, the user can pass it to the 
 ``solve`` method and specify the backend as ``engine``. ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineConfig
 
     m = Container()
     
@@ -330,6 +330,76 @@ This can be done by importing ``EngineConfig`` and creating an instance. Then, t
         namespace=os.environ["ENGINE_NAMESPACE"],
     )
     model.solve(solver="CONOPT", backend="engine", engine_config=config)
+
+Solve Using NEOS Server
+-----------------------
+
+In order to send your model to be solved to NEOS Server, you need to create a NeosClient.
+This can be done by importing ``NeosClient`` and creating an instance. Then, the user can pass it to the 
+``solve`` method and specify the backend as ``neos``. ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, NeosClient
+
+    m = Container()
+    
+    z = Variable(m, "z") # objective variable
+    e1 = Equation(m, "e1")
+    e1[...] = <definition_of_the_equation>
+    e2 = Equation(m, "e2")
+    e2[...] = <definition_of_the_equation>
+    
+    model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+
+    client = NeosClient(
+        email=os.environ["NEOS_EMAIL"],
+        username=os.environ["NEOS_USER"],
+        password=os.environ["NEOS_PASSWORD"],
+    )
+    model.solve(backend="neos", neos_client=client)
+
+Defining your username and password is optional for NEOS Server backend but it is recommended since
+it allows you to investigate your models on `NEOS web client <https://neos-server.org/neos/>`_. The
+environment variables can be set in a .env file or with export statements in command line. Example to
+run your model on NEOS Server without authentication: ::
+
+    NEOS_EMAIL=<your_email> python <your_script>
+
+If one wants to investigate the results later on NEOS Server web client, they can provide the username
+and password in the same way: ::
+
+    NEOS_EMAIL=<your_email> NEOS_USER=<your_username> NEOS_PASSWORD=<your_password> python <your_script>
+
+If you just want to send your jobs to NEOS server without blocking until the results are received,
+`is_blocking` parameter can be set to `False` in `NeosClient`.
+
+All submitted jobs are stored in `client.jobs` in case you want to reach to the job numbers and job passwords
+you already sent to the server. ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, NeosClient
+    m = Container()
+    ...
+    ...
+    <define_your_model>
+    ...
+    ...
+    client = NeosClient(
+        email=os.environ["NEOS_EMAIL"],
+        username=os.environ["NEOS_USER"],
+        password=os.environ["NEOS_PASSWORD"],
+    )
+
+    for _ in range(3):
+        ...
+        ...
+        <changes_in_your_model>
+        ...
+        ...
+        model.solve(backend="neos", neos_client=client)
+
+    print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
+
+
+Terms of use for NEOS can be found here: `Terms of Use <https://neos-server.org/neos/termofuse.html> _`.
 
 Redirecting Output
 ------------------

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import doctest
 import glob
@@ -8,6 +10,7 @@ from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
+from integration.test_neos import neos_suite
 from integration.test_solve import solve_suite
 from unit.test_alias import alias_suite
 from unit.test_condition import condition_suite
@@ -87,14 +90,21 @@ def docs_suite():
     return suite
 
 
-def run_integration_tests(runner: unittest.TextTestRunner):
+def run_integration_tests(
+    args: argparse.Namespace, runner: unittest.TextTestRunner
+):
     integration_suites = [
         solve_suite,
         model_instance_suite,
         cmd_suite,
-        engine_suite,
         gams_models_suite,
     ]
+
+    if args.engine:
+        integration_suites.append(engine_suite)
+
+    if args.neos:
+        integration_suites.append(neos_suite)
 
     print(f"Running integration tests\n{'='*80}")
     for suite in integration_suites:
@@ -110,6 +120,8 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--integration", action="store_true")
     parser.add_argument("--doc", action="store_true")
+    parser.add_argument("--neos", action="store_true")
+    parser.add_argument("--engine", action="store_true")
 
     return parser.parse_args()
 
@@ -155,7 +167,7 @@ def main():
         print("=" * 80)
 
     if args.integration:
-        run_integration_tests(runner)
+        run_integration_tests(args, runner)
 
     # clean up
     csv_paths = glob.glob("*.csv")

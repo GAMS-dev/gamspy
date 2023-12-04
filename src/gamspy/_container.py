@@ -48,6 +48,7 @@ from gams.core import gdx
 
 import gamspy as gp
 import gamspy.utils as utils
+from gamspy._neos import NeosClient
 from gamspy._options import _mapOptions
 from gamspy.exceptions import GamspyException
 
@@ -330,8 +331,9 @@ class Container(gt.Container):
         self,
         options: Optional[GamsOptions] = None,
         output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine"] = "local",
+        backend: Literal["local", "engine", "neos"] = "local",
         engine_config: Optional[EngineConfig] = None,
+        neos_client: Optional[NeosClient] = None,
         create_log_file: bool = False,
     ):
         if options is None:
@@ -366,17 +368,21 @@ class Container(gt.Container):
             self._run_local(options, output)
         elif backend == "engine":
             self._run_engine(options, output, engine_config)
+        elif backend == "neos":
+            self._run_neos(gams_string, options, neos_client)  # type: ignore
         else:
             self._unsaved_statements = []
             raise GamspyException(
                 f"`{backend}` is not a valid backend. Possible backends:"
-                " local, engine"
+                " local, engine, and neos"
             )
+
+        if backend == "neos" and not neos_client.is_blocking:  # type: ignore
+            return
 
         self.loadRecordsFromGdx(
             self._gdx_out, dirty_names + self._import_symbols
         )
-
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._is_first_run = False
 
@@ -431,6 +437,44 @@ class Container(gt.Container):
         finally:
             self._unsaved_statements = []
             options.forcework = 0
+
+    def _run_neos(
+        self,
+        gams_string: str,
+        options: GamsOptions,
+        client: NeosClient,
+    ):
+        client._prepare_xml(
+            gams_string,
+            self._gdx_in,
+            self._restart_from._checkpoint_file_name,
+            self._save_to.name,
+            options=options,
+            working_directory=self.working_directory,
+        )
+        job_number, job_password = client.submit_job(
+            is_blocking=client.is_blocking,
+            working_directory=self.working_directory,
+        )
+
+        if client.is_blocking:
+            client.download_output(
+                job_number,
+                job_password,
+                working_directory=self.working_directory,
+            )
+
+            shutil.move(
+                os.path.join(self.working_directory, "output.gdx"),
+                self._gdx_out,
+            )
+
+            if not os.path.exists(self._gdx_out):
+                raise GamspyException(
+                    "The job was not completed successfully. Check"
+                    f" {os.path.join(self.working_directory, 'solve.log')} for"
+                    " details."
+                )
 
     @property
     def delayed_execution(self) -> bool:
@@ -914,10 +958,15 @@ class Container(gt.Container):
 
     def _preprocess_gdx_paths(self, backend: str) -> Tuple[str, str]:
         # setup gdx input name according to backend
-        if backend == "local":
-            return self._gdx_in, self._gdx_out
+        if backend == "engine":
+            return (
+                self._gdx_in.split(os.sep)[-1],
+                self._gdx_out.split(os.sep)[-1],
+            )
+        elif backend == "neos":
+            return "in.gdx", "output.gdx"
 
-        return self._gdx_in.split(os.sep)[-1], self._gdx_out.split(os.sep)[-1]
+        return self._gdx_in, self._gdx_out
 
     def _generate_gams_string(
         self,
