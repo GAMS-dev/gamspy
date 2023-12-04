@@ -84,6 +84,9 @@ class Condition:
             right_hand_expression,
         )
 
+        if isinstance(self._symbol, implicits.ImplicitEquation):
+            self._symbol.parent._definition = statement
+
         self._symbol.container._addStatement(statement)
 
         if not self._symbol.container.delayed_execution:
