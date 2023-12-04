@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 import numpy as np
@@ -96,6 +98,15 @@ class ParameterSuite(unittest.TestCase):
             self.m._unsaved_statements[-1].gamsRepr(),
             "a(i) = (-a(i) * 5);",
         )
+
+        cont = Container(delayed_execution=False, working_directory=".")
+
+        s = Set(cont, "s")
+        m = Set(cont, "m")
+        A = Parameter(cont, "A", domain=[s, m])
+
+        A.domain = ["s", "m"]
+        self.assertEqual(A.getStatement(), "Parameter A(*,*);")
 
     def test_implicit_parameter_assignment(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
