@@ -269,12 +269,11 @@ tensorflow-probability==0.22.0 which depends on typing-extensions below version 
 Since GAMSPy depends on pydantic which requires typing-extensions above 4.6.0, pip does not
 know how to resolve the issue. This issue has already been resolved by tensorflow-probability in
 version 0.22.1
-(check `this <https://github.com/tensorflow/probability/releases/tag/v0.22.1>`_). But since
-Google Colab still did not update the version of pre-installed tensorflow-probability, pip
-will not be able to resolve the issue. This issue will be fixed as soon as Google Colab updates
-tensorflow-probability version. This is a harmless error and does not affect the installation of
-GAMSPy. There are also some packages in Google Colab which doesn't have the necessary dependencies
-in the environment (lida, llmx). To solve all Google Colab related issues: ::
+(check `this <https://github.com/tensorflow/probability/releases/tag/v0.22.1>`_). Unfortunately,
+Google Colab has not update to this version of tensorflow-probability, hence pip
+complains. This will be fixed as soon as Google Colab updates
+tensorflow-probability. There are also some packages in Google Colab which don't have the necessary dependencies
+in the environment resolved (lida, llmx). To solve all Google Colab related issues run the following: ::
 
     pip install tensorflow-probability==0.22.1 lida llmx
     
