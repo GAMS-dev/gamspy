@@ -264,10 +264,10 @@ Why `pip install gamspy` on Google Colab cannot resolve all dependencies?
 
 Google Colab is a service that allows you to write and execute Python in your browser.
 It is developed mainly for ML/AI researchers and data scientists. Hence, it comes with many
-pre-installed packages such as TensorFlow, PyTorch etc.. One of these packages is 
+pre-installed packages such as TensorFlow, PyTorch etc. One of these packages is 
 tensorflow-probability package that was depending on typing-extensions below version 4.6.0.
 Since GAMSPy depends on pydantic which requires typing-extensions above 4.6.0, pip does not
-know how to resolve the issue. This issue is already resolved by tensorflow-probability in
+know how to resolve the issue. This issue has already been resolved by tensorflow-probability in
 version 0.22.1
 (check `this <https://github.com/tensorflow/probability/releases/tag/v0.22.1>`_). But since
 Google Colab still did not update the version of pre-installed tensorflow-probability, pip
