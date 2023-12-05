@@ -265,7 +265,7 @@ Why `pip install gamspy` on Google Colab cannot resolve all dependencies?
 Google Colab is a service that allows you to write and execute Python in your browser.
 It is developed mainly for ML/AI researchers and data scientists. Hence, it comes with many
 pre-installed packages such as TensorFlow, PyTorch etc.. One of these packages is 
-tensorflow-probability package that was depending on typing-extensions below version 4.6.0.
+tensorflow-probability==0.22.0 which depends on typing-extensions below version 4.6.0.
 Since GAMSPy depends on pydantic which requires typing-extensions above 4.6.0, pip does not
 know how to resolve the issue. This issue is already resolved by tensorflow-probability in
 version 0.22.1
@@ -273,4 +273,11 @@ version 0.22.1
 Google Colab still did not update the version of pre-installed tensorflow-probability, pip
 will not be able to resolve the issue. This issue will be fixed as soon as Google Colab updates
 tensorflow-probability version. This is a harmless error and does not affect the installation of
-GAMSPy.
+GAMSPy. There are also some packages in Google Colab which doesn't have the necessary dependencies
+in the environment (lida, llmx). To solve all Google Colab related issues: ::
+
+    pip install tensorflow-probability==0.22.1 lida llmx
+    
+Now, you can install GAMSPy without any errors: ::
+    
+    pip install gamspy
