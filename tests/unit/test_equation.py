@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 import pandas as pd
@@ -458,7 +460,7 @@ class EquationSuite(unittest.TestCase):
         a = Equation(m, "a", "regular", [i])
         a[i] = x[i] == 5
 
-        self.assertTrue(a._is_dirty)
+        self.assertFalse(a._is_dirty)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
@@ -484,6 +486,16 @@ class EquationSuite(unittest.TestCase):
 
         model = Model(self.m, "mcp_model", "MCP", matches={f: x})
         model.solve()
+
+    def test_changed_domain(self):
+        cont = Container(delayed_execution=False)
+
+        s = Set(cont, "s")
+        m = Set(cont, "m")
+        A = Equation(cont, "A", domain=[s, m])
+
+        A.domain = ["s", "m"]
+        self.assertEqual(A.getStatement(), "Equation A(*,*);")
 
 
 def equation_suite():

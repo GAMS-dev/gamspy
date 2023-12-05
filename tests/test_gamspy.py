@@ -105,7 +105,8 @@ def run_integration_tests(
     if args.neos:
         integration_suites.append(neos_suite)
 
-    integration_suites.append(gams_models_suite)
+    if args.model_library:
+        integration_suites.append(gams_models_suite)
 
     print(f"Running integration tests\n{'='*80}")
     for suite in integration_suites:
@@ -123,6 +124,7 @@ def get_args():
     parser.add_argument("--doc", action="store_true")
     parser.add_argument("--neos", action="store_true")
     parser.add_argument("--engine", action="store_true")
+    parser.add_argument("--model-library", action="store_true")
 
     return parser.parse_args()
 

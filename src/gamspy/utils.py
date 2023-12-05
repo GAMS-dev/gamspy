@@ -83,9 +83,6 @@ def getInstalledSolvers() -> List[str]:
         gamspy_base.directory + os.sep + capabilities_file[user_platform]
     ) as capabilities:
         for line in capabilities:
-            if line == "\n" or line.startswith("*"):
-                continue
-
             if line == "DEFAULTS\n":
                 break
 

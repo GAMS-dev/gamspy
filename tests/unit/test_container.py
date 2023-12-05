@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -12,6 +15,7 @@ from gamspy import Problem
 from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
+from gamspy import UniverseAlias
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 
@@ -112,6 +116,11 @@ class ContainerSuite(unittest.TestCase):
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
+    def test_working_directory_helpers(self):
+        m = Container()
+        self.assertEqual(m.gdxInputName(), os.path.basename(m._gdx_in))
+        self.assertEqual(m.gdxOutputName(), os.path.basename(m._gdx_out))
+
     def test_read_write(self):
         m = Container(delayed_execution=True)
         _ = Set(m, "i", records=["i1", "i2"])
@@ -190,6 +199,10 @@ class ContainerSuite(unittest.TestCase):
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
+        pi = Parameter(m, "pi")
+        with self.assertRaises(GamspyException):
+            m._addGamsCode("scalar pi / pi /;", import_symbols=[pi])
+
     def test_system_directory(self):
         import gamspy_base
 
@@ -265,6 +278,8 @@ class ContainerSuite(unittest.TestCase):
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        _ = Alias(m, "k", alias_with=j)
+        _ = UniverseAlias(m)
 
         # Data
         a = Parameter(m, name="a", domain=[i], records=capacities)
