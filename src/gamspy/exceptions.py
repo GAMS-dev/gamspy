@@ -110,7 +110,8 @@ def customize_exception(
 ) -> GamsExceptionExecution:
     error_message = ""
     if not options._writeoutput:
-        return error_message
+        exception.value = error_message
+        return exception
 
     header = "=" * 80
     footer = "=" * 80

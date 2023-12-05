@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import unittest
+
+import pandas as pd
 
 from gamspy import Alias
 from gamspy import Container
@@ -99,6 +103,17 @@ class AliasSuite(unittest.TestCase):
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
         )
+
+    def test_alias_state(self):
+        i = Set(self.m, name="i", records=["a", "b", "c"])
+        j = Alias(self.m, name="j", alias_with=i)
+        i._is_assigned = False
+        j.setRecords(["a", "b"])
+        self.assertTrue(i._is_assigned)
+
+        i._is_assigned = False
+        j.records = pd.DataFrame([["a", "b"]])
+        self.assertTrue(i._is_assigned)
 
 
 def alias_suite():

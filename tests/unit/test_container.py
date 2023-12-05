@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -14,6 +15,7 @@ from gamspy import Problem
 from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
+from gamspy import UniverseAlias
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 
@@ -113,6 +115,11 @@ class ContainerSuite(unittest.TestCase):
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
+
+    def test_working_directory_helpers(self):
+        m = Container()
+        self.assertEqual(m.gdxInputName(), os.path.basename(m._gdx_in))
+        self.assertEqual(m.gdxOutputName(), os.path.basename(m._gdx_out))
 
     def test_read_write(self):
         m = Container(delayed_execution=True)
@@ -271,6 +278,8 @@ class ContainerSuite(unittest.TestCase):
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        _ = Alias(m, "k", alias_with=j)
+        _ = UniverseAlias(m)
 
         # Data
         a = Parameter(m, name="a", domain=[i], records=capacities)

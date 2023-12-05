@@ -405,11 +405,7 @@ class Container(gt.Container):
     ):
         options.forcework = 1  # In case GAMS version differs on Engine
 
-        if engine_config is None:
-            raise GamspyException(
-                "Engine configuration must be defined to run the job with"
-                " GAMS Engine"
-            )
+        assert engine_config
 
         extra_model_files = engine_config._preprocess_extra_model_files(
             self.workspace, self._gdx_in
@@ -462,13 +458,6 @@ class Container(gt.Container):
                 os.path.join(self.working_directory, "output.gdx"),
                 self._gdx_out,
             )
-
-            if not os.path.exists(self._gdx_out):
-                raise GamspyException(
-                    "The job was not completed successfully. Check"
-                    f" {os.path.join(self.working_directory, 'solve.log')} for"
-                    " details."
-                )
 
     @property
     def delayed_execution(self) -> bool:
@@ -975,6 +964,8 @@ class Container(gt.Container):
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
                 string += statement + "\n"
+            elif isinstance(statement, gp.UniverseAlias):
+                continue
             else:
                 string += statement.getStatement() + "\n"
 

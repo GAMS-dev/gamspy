@@ -238,12 +238,6 @@ def _mapOptions(
         options_dict = options._getGamsCompatibleOptions()
 
         for option, value in options_dict.items():
-            if option not in option_map.values():
-                raise GamspyException(
-                    f"Invalid option `{option}`. Possible options:"
-                    f" {option_map.keys()}"
-                )
-
             if value is not None:
                 if option == "seed" and not is_seedable:
                     continue
