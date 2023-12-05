@@ -259,7 +259,7 @@ you want to use the GAMSPy ``Parameter``, as changes to a Python variable are no
 reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, will
 be evaluated by the second solve statement.
 
-Why `pip install gamspy` on Google Colab cannot resolve all dependencies?
+Why does `pip install gamspy` on Google Colab not resolve all dependencies?
 --------------------------------------------------------------------------
 
 Google Colab is a service that allows you to write and execute Python in your browser.
