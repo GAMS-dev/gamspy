@@ -235,15 +235,7 @@ class Container(gt.Container):
         symbol_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-
-            if symbol_name.startswith(gp.Model._generate_prefix):
-                continue
-            elif symbol_name in self.data.keys() and isinstance(
-                self[symbol_name], gp.UniverseAlias
-            ):
-                continue
-            else:
-                symbol_names.append(symbol_name)
+            symbol_names.append(symbol_name)
 
         utils._closeGdxHandle(gdx_handle)
 

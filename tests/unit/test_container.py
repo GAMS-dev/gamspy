@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 import pandas as pd
@@ -189,6 +191,10 @@ class ContainerSuite(unittest.TestCase):
         m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
+
+        pi = Parameter(m, "pi")
+        with self.assertRaises(GamspyException):
+            m._addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
     def test_system_directory(self):
         import gamspy_base
