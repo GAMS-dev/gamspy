@@ -240,7 +240,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._definition = assignment  # type: ignore
             return
 
-        domain = self._definition_domain if self._definition_domain else []
+        domain = (
+            self._definition_domain if self._definition_domain else self.domain
+        )
         self._set_definition(assignment, domain)
 
     def _set_definition(self, assignment, domain):

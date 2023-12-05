@@ -220,13 +220,13 @@ class EquationSuite(unittest.TestCase):
         )
 
         # Equation definition with an index
-        supply = Equation(
+        _ = Equation(
             self.m,
             name="supply",
             domain=[i],
             description="observe supply limit at plant i",
+            definition=Sum(j, x[i, j]) <= a[i],
         )
-        supply[i] = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(
             self.m._unsaved_statements[-1].getStatement(),
             "supply(i) .. sum(j,x(i,j)) =l= a(i);",
