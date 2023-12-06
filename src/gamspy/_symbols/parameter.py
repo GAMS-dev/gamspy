@@ -130,6 +130,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
@@ -151,6 +153,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         assignment: Expression,
     ) -> None:
         domain = self.domain if indices == ... else utils._toList(indices)
+        self._container_check(domain)
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),

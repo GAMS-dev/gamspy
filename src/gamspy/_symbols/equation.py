@@ -171,6 +171,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
@@ -208,6 +210,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         assignment: Expression,
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
+        self._container_check(domain)
+
         self._set_definition(assignment, domain)
         self._is_dirty = True
         if not self.container.delayed_execution:

@@ -40,6 +40,7 @@ import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException
 
+
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
@@ -135,6 +136,8 @@ class Set(gt.Set, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # add statement
         self.container._addStatement(self)
 
@@ -172,6 +175,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         assignment,
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
+        self._container_check(domain)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

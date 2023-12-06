@@ -41,6 +41,12 @@ class ParameterSuite(unittest.TestCase):
         j2 = Parameter(self.m, "j")
         self.assertEqual(id(j1), id(j2))
 
+        # Parameter and domain containers are different
+        m = Container()
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Parameter(m, "param1", domain=[set1])
+
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
@@ -107,6 +113,16 @@ class ParameterSuite(unittest.TestCase):
 
         A.domain = ["s", "m"]
         self.assertEqual(A.getStatement(), "Parameter A(*,*);")
+
+    def test_parameter_assignment(self):
+        m = Container()
+
+        i = Set(self.m, "i")
+        j = Set(m, "j")
+        a = Parameter(self.m, "a", domain=[i])
+
+        with self.assertRaises(GamspyException):
+            a[j] = 5
 
     def test_implicit_parameter_assignment(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])

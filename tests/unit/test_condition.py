@@ -89,6 +89,18 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(delayed_execution=True)
+        i = Set(
+            m,
+            name="i",
+            records=pd.DataFrame(steel_plants),
+            description="steel plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=pd.DataFrame(markets),
+            description="markets",
+        )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -120,38 +132,38 @@ class ConditionSuite(unittest.TestCase):
 
         i["ahmsa"] = True
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = yes;',
         )
 
         i["ahmsa"] = False
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = no;',
         )
 
         t = Set(
-            self.m,
+            m,
             name="t",
             records=[str(i) for i in range(1, 10)],
             description="no. of Monte-Carlo draws",
         )
 
         Util_gap = Parameter(
-            self.m,
+            m,
             name="Util_gap",
             domain=[t],
             description="gap between these two util",
         )
 
         Util_lic = Parameter(
-            self.m,
+            m,
             name="Util_lic",
             domain=[t],
             description="util solved w/o MN",
         )
         Util_lic2 = Parameter(
-            self.m,
+            m,
             name="Util_lic2",
             domain=[t],
             description="util solved w/ MN",
@@ -163,7 +175,7 @@ class ConditionSuite(unittest.TestCase):
         ]
 
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "Util_gap(t) = (1 $ (( round(Util_lic(t), 10) ) ne ( round("
             "Util_lic2(t), 10) )));",
         )
