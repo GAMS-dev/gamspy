@@ -34,9 +34,16 @@ repos:
         args: [
             --application-directories, '.:src',
             --py38-plus,
+            --add-import,
+            'from __future__ import annotations'
         ]
 -   repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py38-plus, --keep-runtime-typing]

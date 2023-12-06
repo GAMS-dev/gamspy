@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from enum import Enum
 from typing import Any
 from typing import List
@@ -89,10 +91,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: "Container",
+        container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -120,10 +122,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, "Set"]]] = None,
+        domain: Optional[List[Union[str, Set]]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -150,6 +152,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             description,
             uels_on_axes,
         )
+
+        self._container_check(self.domain)
 
         # allow conditions
         self.where = condition.Condition(self)
@@ -341,6 +345,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self.name
 
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
+
     def getStatement(self) -> str:
         """
         Statement of the Variable definition
@@ -353,7 +367,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         statement_name = self.name
         if self.domain:
-            statement_name += utils._getDomainStr(self.domain)
+            statement_name += self._get_domain_str()
 
         output += f"Variable {statement_name}"
 

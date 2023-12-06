@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -34,8 +36,8 @@ if TYPE_CHECKING:
 
 
 def binomial(
-    n: Union[int, float, "Symbol"], k: Union[int, float, "Symbol"]
-) -> "Expression":
+    n: Union[int, float, Symbol], k: Union[int, float, Symbol]
+) -> Expression:
     """
     (Generalized) Binomial coefficient for n > -1, -1 < k < n + 1
 
@@ -49,19 +51,21 @@ def binomial(
     Expression
     """
     if isinstance(n, (int, float)) and isinstance(k, (int, float)):
-        return expression.Expression("binomial(", f"{n},{k}", ")")
+        return expression.Expression(None, f"binomial({n},{k})", None)
 
     n_string = _stringify(n)
     k_string = _stringify(k)
 
-    return expression.Expression("binomial(", f"{n_string},{k_string}", ")")
+    return expression.Expression(
+        None, f"binomial({n_string},{k_string})", None
+    )
 
 
 def centropy(
-    x: Union[int, float, "Symbol"],
-    y: Union[int, float, "Symbol"],
+    x: Union[int, float, Symbol],
+    y: Union[int, float, Symbol],
     z: float = 1e-20,
-) -> "Expression":
+) -> Expression:
     """
     Cross-entropy. x . ln((x + z) / (y + z)
 
@@ -86,15 +90,13 @@ def centropy(
     x_str = _stringify(x)
     y_str = _stringify(y)
 
-    return expression.Expression(
-        "centropy(", ",".join([x_str, y_str, str(z)]), ")"
-    )
+    return expression.Expression(None, f"centropy({x_str},{y_str},{z})", None)
 
 
 def uniform(
-    lower_bound: Union[float, "Expression"],
-    upper_bound: Union[float, "Expression"],
-) -> "Expression":
+    lower_bound: Union[float, Expression],
+    upper_bound: Union[float, Expression],
+) -> Expression:
     """
     Generates a random number from the uniform distribution between
     lower_bound and higher_bound
@@ -110,12 +112,14 @@ def uniform(
     """
     lower_str = _stringify(lower_bound)
     upper_str = _stringify(upper_bound)
-    return expression.Expression("uniform(", f"{lower_str},{upper_str}", ")")
+    return expression.Expression(
+        None, f"uniform({lower_str},{upper_str})", None
+    )
 
 
 def uniformInt(
     lower_bound: Union[int, float], upper_bound: Union[int, float]
-) -> "Expression":
+) -> Expression:
     """
     Generates an integer random number from the discrete uniform distribution
     whose outcomes are the integers between lower_bound and higher_bound.
@@ -129,11 +133,13 @@ def uniformInt(
     Expression
     """
     return expression.Expression(
-        "uniformInt(", f"{lower_bound},{upper_bound}", ")"
+        None,
+        f"uniformInt({lower_bound},{upper_bound})",
+        None,
     )
 
 
-def normal(mean: Union[int, float], dev: Union[int, float]) -> "Expression":
+def normal(mean: Union[int, float], dev: Union[int, float]) -> Expression:
     """
     Generate a random number from the normal distribution with mean `mean`
     and `standard deviation` dev.
@@ -147,4 +153,4 @@ def normal(mean: Union[int, float], dev: Union[int, float]) -> "Expression":
     -------
     Expression
     """
-    return expression.Expression("normal(", f"{mean},{dev}", ")")
+    return expression.Expression(None, f"normal({mean},{dev})", None)

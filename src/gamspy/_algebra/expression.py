@@ -24,8 +24,6 @@
 #
 from __future__ import annotations
 
-from typing import List
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -40,6 +38,9 @@ import gamspy.utils as utils
 if TYPE_CHECKING:
     from gamspy import Variable
 
+GMS_MAX_LINE_LENGTH = 80000
+LINE_LENGTH_OFFSET = 1024
+
 
 class Expression(operable.Operable):
     """
@@ -47,11 +48,11 @@ class Expression(operable.Operable):
 
     Parameters
     ----------
-    left: str | int | float | Parameter | Variable
+    left: str | int | float | Parameter | Variable | None
         Left operand
-    op_type: str
+    data: str
         Operation
-    right: str | int | float | Parameter | Variable
+    right: str | int | float | Parameter | Variable | None
         Right operand
 
     Examples
@@ -64,12 +65,93 @@ class Expression(operable.Operable):
     (a * b)
     """
 
-    def __init__(self, left, op_type, right) -> None:
+    def __init__(self, left, data, right) -> None:
         self.name = utils._getUniqueName()
-        self._left = left
-        self._op_type = op_type
-        self._right = right
+        self.left = left
+        self.data = data
+        self.right = right
+        self.representation = self._create_representation(left, data, right)
         self.where = condition.Condition(self)
+
+    def _create_representation(self, left, data, right):
+        if left is None:
+            left_str = ""
+        else:
+            left_str = (
+                str(left)
+                if isinstance(left, (int, float, str))
+                else left.gamsRepr()
+            )
+
+        if right is None:
+            right_str = ""
+        else:
+            right_str = (
+                str(right)
+                if isinstance(right, (int, float, str))
+                else right.gamsRepr()
+            )
+
+        # negative sign causes an extra operation if not in paranthesis
+        # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0)); -> not valid
+        # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
+        if isinstance(self.left, (int, float)) and self.left < 0:
+            left_str = f"({left_str})"
+
+        if isinstance(self.right, (int, float)) and self.right < 0:
+            right_str = f"({right_str})"
+
+        if data == "=" and isinstance(
+            self.left,
+            (
+                syms.Set,
+                syms.Parameter,
+                syms.Variable,
+                implicits.ImplicitSet,
+                implicits.ImplicitParameter,
+                implicits.ImplicitVariable,
+            ),
+        ):
+            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
+            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
+            right_str = right_str.replace("=e=", "=")
+            right_str = right_str.replace("=l=", "<=")
+            right_str = right_str.replace("=g=", ">=")
+
+        # get around 80000 line length limitation in GAMS
+        length = len(left_str) + len(data) + len(right_str)
+        if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
+            out_str = f"{left_str} {data}\n {right_str}"
+        else:
+            out_str = f"{left_str} {data} {right_str}"
+
+        # if it's an assignment add semicolon, otherwise add paranthesis to ensure
+        # the order of execution
+        out_str = f"{out_str};" if data in ["..", "="] else f"({out_str})"
+
+        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
+            return out_str[1:-1]
+
+        if data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
+            # (test.. a =g= b) -> not valid
+            # test.. a =g= b   -> valid
+            out_str = out_str[1:-1]  # remove the paranthesis
+
+        out_str = self._fix_condition_paranthesis(out_str)
+
+        if data == "==":
+            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
+            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
+            out_str = out_str.replace("==", "=")
+
+        if data in ["=", ".."] and out_str[0] == "(":
+            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
+            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
+            indices = utils._getMatchingParanthesisIndices(out_str)
+            match_index = indices[0]
+            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
+
+        return out_str
 
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
@@ -78,7 +160,7 @@ class Expression(operable.Operable):
         return Expression(self, "ne", other)
 
     def _fix_condition_paranthesis(self, string: str) -> str:
-        if self._op_type == "$":
+        if self.data == "$":
             left, right = string.split("$", 1)
             right = right.strip()
 
@@ -89,44 +171,8 @@ class Expression(operable.Operable):
 
         return string
 
-    def _get_operand_representations(self) -> Tuple[str, str]:
-        # Builtin Python types do not have gams representation
-        left_str = (
-            str(self._left)
-            if isinstance(self._left, (str, int, float))
-            else self._left.gamsRepr()
-        )
-        right_str = (
-            str(self._right)
-            if isinstance(self._right, (str, int, float))
-            else self._right.gamsRepr()
-        )
-
-        # negative sign causes an extra operation if not in paranthesis
-        # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0)); -> not valid
-        # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
-        if isinstance(self._left, (int, float)) and self._left < 0:
-            left_str = f"({left_str})"
-
-        if isinstance(self._right, (int, float)) and self._right < 0:
-            right_str = f"({right_str})"
-
-        if self._op_type == "=" and isinstance(
-            self._left,
-            (
-                syms.Set,
-                syms.Parameter,
-                syms.Variable,
-                implicits.ImplicitSet,
-                implicits.ImplicitParameter,
-                implicits.ImplicitVariable,
-            ),
-        ):
-            right_str = right_str.replace("=e=", "=")
-            right_str = right_str.replace("=l=", "<=")
-            right_str = right_str.replace("=g=", ">=")
-
-        return left_str, right_str
+    def replace(self, a: str, b: str):
+        self.representation = b.join(self.representation.rsplit(a, 1))
 
     def gamsRepr(self) -> str:
         """
@@ -136,51 +182,7 @@ class Expression(operable.Operable):
         -------
         str
         """
-        left_str, right_str = self._get_operand_representations()
-
-        out_str = f"{left_str} {self._op_type} {right_str}"
-
-        if self._op_type not in ["..", "="]:
-            # add paranthesis for right ordering
-            out_str = f"({out_str})"
-
-        if isinstance(self._left, (domain.Domain, syms.Set, syms.Alias)):
-            return out_str[1:-1]
-
-        if self._op_type in [
-            "=g=",
-            "=l=",
-            "=e=",
-            "=n=",
-            "=x=",
-            "=c=",
-            "=b=",
-            ".",
-        ]:
-            # (test.. a =g= b) -> test.. a =g= b
-            out_str = out_str[1:-1]  # remove the paranthesis
-
-        out_str = self._fix_condition_paranthesis(out_str)
-
-        if self._op_type == ".":
-            # name . pos -> name.pos
-            out_str = out_str.replace(" ", "")  # remove spaces
-
-        if self._op_type in ["..", "="]:
-            # add ; to equation expressions and assignments
-            out_str += ";"
-
-        if self._op_type == "==":
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;
-            out_str = out_str.replace("==", "=")
-
-        if self._op_type in ["=", ".."] and out_str[0] == "(":
-            # (voycap(j,k)$vc(j,k)).. sum(.) -> voycap(j,k)$vc(j,k).. sum(.)
-            indices = utils._getMatchingParanthesisIndices(out_str)
-            match_index = indices[0]
-            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
-
-        return out_str
+        return self.representation
 
     def getStatement(self) -> str:
         """
@@ -192,24 +194,33 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def traverse(self) -> List["Variable"]:
-        variables: List["Variable"] = []
-        self._inorder_traversal(self, variables)
+    def find_variables(self) -> list[Variable]:
+        """Find variables in an expression"""
+        current = self
+
+        stack = []
+        variables: list[Variable] = []
+
+        while True:
+            if current is not None:
+                stack.append(current)
+
+                current = current.left if hasattr(current, "left") else None
+            elif stack:
+                current = stack.pop()
+
+                if current is not None:
+                    if isinstance(current, gp.Variable):
+                        variables.append(current.name)
+                    elif isinstance(current, implicits.ImplicitVariable):
+                        variables.append(current.parent.name)
+                    elif isinstance(current, (operation.Operation)):
+                        operation_variables = current._extract_variables()
+                        variables += operation_variables
+                    current = (
+                        current.right if hasattr(current, "right") else None
+                    )
+            else:
+                break
 
         return list(set(variables))
-
-    def _inorder_traversal(self, root, variables):
-        if root is None:
-            return
-
-        if isinstance(root, Expression):
-            self._inorder_traversal(root._left, variables)
-            self._inorder_traversal(root._right, variables)
-        elif isinstance(root, operation.Operation):
-            self._inorder_traversal(root.expression, variables)
-        else:
-            if isinstance(root, gp.Variable):
-                variables.append(root.name)
-            elif isinstance(root, implicits.ImplicitVariable):
-                variables.append(root.parent.name)
-        return

@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import List
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -51,19 +49,19 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
     def __init__(
         self,
-        parent: Union["Set", "Alias"],
+        parent: Set | Alias,
         name: str,
-        domain: List[Union["Set", str]] = [],
+        domain: list[Set | str] = [],
     ) -> None:
         super().__init__(parent, name, domain)
 
-    def __invert__(self) -> "Expression":
+    def __invert__(self) -> Expression:
         return expression.Expression("", "not", self)
 
-    def __ge__(self, other) -> "Expression":
+    def __ge__(self, other) -> Expression:
         return expression.Expression(self, ">=", other)
 
-    def __le__(self, other) -> "Expression":
+    def __le__(self, other) -> Expression:
         return expression.Expression(self, "<=", other)
 
     def gamsRepr(self) -> str:

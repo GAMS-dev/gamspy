@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from enum import Enum
 from typing import Any
 from typing import List
@@ -103,13 +105,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: "Container",
+        container: Container,
         name: str,
         type: Union[str, EquationType] = "regular",
-        domain: Optional[List[Union["Set", str]]] = None,
-        definition: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
+        domain: Optional[List[Union[Set, str]]] = None,
+        definition: Optional[Union[Variable, Operation, Expression]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -138,13 +138,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
         type: Union[str, EquationType] = "regular",
-        domain: Optional[List[Union["Set", str]]] = None,
-        definition: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
+        domain: Optional[List[Union[Set, str]]] = None,
+        definition: Optional[Union[Variable, Operation, Expression]] = None,
         records: Optional[Any] = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -173,6 +171,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
@@ -181,7 +181,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # add defition if exists
         self._definition_domain = definition_domain
-        self._add_definition(definition)
+        self._init_definition(definition)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -207,32 +207,15 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: "Expression",
+        assignment: Expression,
     ):
         domain = self.domain if indices == ... else utils._toList(indices)
+        self._container_check(domain)
 
-        # In case of an MCP equation without any equality, add the equality
-        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
-
-        if self.type in non_regular_map.keys():  # type: ignore
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
-
-        statement = expression.Expression(
-            implicits.ImplicitEquation(
-                self,
-                name=self.name,
-                type=self.type,
-                domain=domain,
-            ),
-            "..",
-            assignment,
-        )
-
-        self.container._addStatement(statement)
-        self._definition = statement
-
+        self._set_definition(assignment, domain)
         self._is_dirty = True
+        if not self.container.delayed_execution:
+            self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -253,34 +236,24 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             domain=self.domain,
         )
 
-    def _add_definition(
+    def _init_definition(
         self,
-        assignment: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
+        assignment: Optional[Union[Variable, Operation, Expression]] = None,
     ) -> None:
-        """
-        Needed for scalar equations
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> wh = gp.Set(m, "wh", records=['i1', 'i2'])
-        >>> build = gp.Parameter(m, "build", domain=[wh], records=[('i1',5), ('i2', 5)])
-        >>> eq = gp.Equation(m, "eq")
-        >>> eq[...] = gp.Sum(wh, build[wh]) <= 1
-
-        """
         if assignment is None:
-            self._definition = assignment
+            self._definition = assignment  # type: ignore
             return
 
+        domain = (
+            self._definition_domain if self._definition_domain else self.domain
+        )
+        self._set_definition(assignment, domain)
+
+    def _set_definition(self, assignment, domain):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
+            assignment = self._adapt_mcp_equation(assignment)
 
-        if self.type in non_regular_map.keys():
-            assignment._op_type = non_regular_map[self.type]  # type: ignore
-
-        domain = self._definition_domain if self._definition_domain else []
         statement = expression.Expression(
             implicits.ImplicitEquation(
                 self,
@@ -294,6 +267,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         self.container._addStatement(statement)
         self._definition = statement
+
+    def _adapt_mcp_equation(self, assignment):
+        assignment = assignment == 0
+        assignment.replace(assignment.data, non_regular_map[self.type])
+        assignment.data = non_regular_map[self.type]
+
+        return assignment
 
     @property
     def l(self):  # noqa: E741, E743
@@ -472,6 +452,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self.name
 
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
+
     def getStatement(self) -> str:
         """
         Statement of the Equation declaration
@@ -483,9 +473,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         output = f"Equation {self.name}"
 
         if self.domain:
-            domain_names = [set.name for set in self.domain]  # type: ignore
-            domain_str = "(" + ",".join(domain_names) + ")"
-            output += domain_str
+            output += self._get_domain_str()
 
         if self.description:
             output += ' "' + self.description + '"'

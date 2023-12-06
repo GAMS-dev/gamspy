@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
@@ -30,25 +32,30 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
     from gams.transfer import Set, Alias, Parameter
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import ImplicitVariable
+    from gamspy._symbols.implicits import ImplicitParameter
 
 
 class Operation(operable.Operable):
     def __init__(
         self,
         domain: Union[
-            "Set",
-            "Alias",
-            Tuple[Union["Set", "Alias"]],
-            "Domain",
-            "Expression",
+            Set,
+            Alias,
+            Tuple[Union[Set, Alias]],
+            Domain,
+            Expression,
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[
+            Expression, ImplicitVariable, ImplicitParameter, int, bool
+        ],
         op_name: str,
     ):
         self.domain = utils._toList(domain)
@@ -59,6 +66,13 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
+    def _extract_variables(self):
+        if isinstance(self.expression, expression.Expression):
+            return self.expression.find_variables()
+        elif isinstance(self.expression, implicits.ImplicitVariable):
+            return [self.expression.parent.name]
+        return []
+
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
             index_str = self.domain[0].gamsRepr()
@@ -66,7 +80,7 @@ class Operation(operable.Operable):
             if isinstance(self.domain[0], expression.Expression):
                 if (
                     "$" in index_str
-                    and not isinstance(self.domain[0]._left, domain.Domain)
+                    and not isinstance(self.domain[0].left, domain.Domain)
                     and index_str[0] == "("
                 ):
                     # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
@@ -86,7 +100,7 @@ class Operation(operable.Operable):
         return expression.Expression(self, "ne", other)
 
     def __neg__(self):
-        return expression.Expression("", "-", self)
+        return expression.Expression(None, "-", self)
 
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
@@ -143,13 +157,13 @@ class Sum(Operation):
     def __init__(
         self,
         domain: Union[
-            "Set",
-            "Alias",
-            Tuple[Union["Set", "Alias"]],
-            "Domain",
-            "Expression",
+            Set,
+            Alias,
+            Tuple[Union[Set, Alias]],
+            Domain,
+            Expression,
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[Expression, int, bool],
     ):
         super().__init__(domain, expression, "sum")
 
@@ -174,13 +188,13 @@ class Product(Operation):
     def __init__(
         self,
         domain: Union[
-            "Set",
-            "Alias",
-            Tuple[Union["Set", "Alias"]],
-            "Domain",
-            "Expression",
+            Set,
+            Alias,
+            Tuple[Union[Set, Alias]],
+            Domain,
+            Expression,
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[Expression, int, bool],
     ):
         super().__init__(domain, expression, "prod")
 
@@ -205,13 +219,13 @@ class Smin(Operation):
     def __init__(
         self,
         domain: Union[
-            "Set",
-            "Alias",
-            Tuple[Union["Set", "Alias"]],
-            "Domain",
-            "Expression",
+            Set,
+            Alias,
+            Tuple[Union[Set, Alias]],
+            Domain,
+            Expression,
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[Expression, int, bool],
     ):
         super().__init__(domain, expression, "smin")
 
@@ -236,13 +250,13 @@ class Smax(Operation):
     def __init__(
         self,
         domain: Union[
-            "Set",
-            "Alias",
-            Tuple[Union["Set", "Alias"]],
-            "Domain",
-            "Expression",
+            Set,
+            Alias,
+            Tuple[Union[Set, Alias]],
+            Domain,
+            Expression,
         ],
-        expression: Union["Expression", int, bool],
+        expression: Union[Expression, int, bool],
     ):
         super().__init__(domain, expression, "smax")
 
@@ -270,10 +284,10 @@ class Ord(operable.Operable):
     >>> val[t] = gp.Ord(t)
     """
 
-    def __init__(self, set: Union["Set", "Alias"]):
+    def __init__(self, set: Union[Set, Alias]):
         self._set = set
 
-    def __eq__(self, other) -> "Expression":  # type: ignore
+    def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "==", other)
 
     def __ge__(self, other):
@@ -316,14 +330,14 @@ class Card(operable.Operable):
     def __init__(
         self,
         symbol: Union[
-            "Set",
-            "Alias",
-            "Parameter",
+            Set,
+            Alias,
+            Parameter,
         ],
     ) -> None:
         self._symbol = symbol
 
-    def __eq__(self, other) -> "Expression":  # type: ignore
+    def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "==", other)
 
     def __ne__(self, other):  # type: ignore

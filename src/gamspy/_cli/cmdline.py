@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import argparse
 import importlib
 import os
@@ -41,17 +43,24 @@ def get_args():
         description="A script for installing solvers and licenses",
     )
     parser.add_argument(
-        "command", choices=["install", "list", "update", "uninstall"], type=str
+        "command",
+        choices=["install", "list", "update", "uninstall"],
+        type=str,
+        nargs="?",
+        default=None,
     )
     parser.add_argument(
         "component",
         choices=["license", "engine_license", "solver", "solvers"],
         type=str,
+        nargs="?",
+        default=None,
     )
     parser.add_argument("name", type=str, nargs="?", default=None)
     parser.add_argument("-a", "--all", action="store_true")
     parser.add_argument("--skip-pip-install", action="store_true")
     parser.add_argument("--skip-pip-uninstall", action="store_true")
+    parser.add_argument("--version", action="store_true")
 
     res = vars(parser.parse_args())
 
@@ -243,6 +252,11 @@ def main():
     Entry point for gamspy command line application.
     """
     args = get_args()
+    if args["version"]:
+        import gamspy
+
+        print(f"GAMSPy version: {gamspy.__version__}")
+        return
 
     if args["command"] == "install":
         install(args)

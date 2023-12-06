@@ -1,13 +1,9 @@
 from __future__ import annotations
 
 import os
-import tempfile
 import unittest
 
-from gams import GamsEngineConfiguration
-
 from gamspy import Container
-from gamspy import EngineConfig
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Parameter
@@ -15,6 +11,7 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy._neos import NeosClient
 from gamspy.exceptions import GamspyException
 
 if os.path.exists(os.getcwd() + os.sep + ".env"):
@@ -23,12 +20,9 @@ if os.path.exists(os.getcwd() + os.sep + ".env"):
     load_dotenv(os.getcwd() + os.sep + ".env")
 
 
-class EngineSuite(unittest.TestCase):
-    def setUp(self):
-        self.m = Container(delayed_execution=True)
-
-    def test_engine(self):
-        m = Container(delayed_execution=True)
+class NeosSuite(unittest.TestCase):
+    def test_neos_blocking(self):
+        m = Container(delayed_execution=True, working_directory=".")
 
         # Prepare data
         distances = [
@@ -72,73 +66,21 @@ class EngineSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-
-        engine_config = EngineConfig(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
+        client = NeosClient(
+            email=os.environ["NEOS_EMAIL"],
+            username=os.environ["NEOS_USERNAME"],
+            password=os.environ["NEOS_PASSWORD"],
         )
+        transport.solve(backend="neos", neos_client=client)
+
+        import math
 
         self.assertTrue(
-            isinstance(
-                engine_config._get_engine_config(), GamsEngineConfiguration
-            )
+            math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
         )
 
-        transport.solve(backend="engine", engine_config=engine_config)
-
-        self.assertEqual(transport.objective_value, 153.675)
-
-        # invalid configuration
-        engine_config = EngineConfig(
-            host="localhost",
-            username="bla",
-            password="bla",
-            namespace="bla",
-        )
-
-        transport2 = Model(
-            m,
-            name="transport2",
-            equations=m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
-        self.assertRaises(
-            GamspyException,
-            transport2.solve,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "engine",
-            engine_config,
-        )
-
-        transport3 = Model(
-            m,
-            name="transport3",
-            equations=m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
-        self.assertRaises(
-            GamspyException,
-            transport3.solve,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "engine",
-        )
-
-    def test_no_config(self):
-        m = Container(delayed_execution=True)
+    def test_no_client(self):
+        m = Container(delayed_execution=True, working_directory=".")
 
         # Prepare data
         distances = [
@@ -182,11 +124,10 @@ class EngineSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-
         with self.assertRaises(GamspyException):
-            transport.solve(backend="engine")
+            transport.solve(backend="neos")
 
-    def test_extra_files(self):
+    def test_different_solver(self):
         m = Container(delayed_execution=True)
 
         # Prepare data
@@ -231,28 +172,21 @@ class EngineSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
+        client = NeosClient(
+            email=os.environ["NEOS_EMAIL"],
+            username=os.environ["NEOS_USERNAME"],
+            password=os.environ["NEOS_PASSWORD"],
+        )
+        transport.solve(backend="neos", neos_client=client, solver="CONOPT")
 
-        file = tempfile.NamedTemporaryFile(delete=False)
-        same_directory_file = open(
-            m.working_directory + os.sep + "test.txt", "w"
+        import math
+
+        self.assertTrue(
+            math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
         )
 
-        engine_config = EngineConfig(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
-            extra_model_files=[file.name, same_directory_file.name],
-        )
-
-        transport.solve(backend="engine", engine_config=engine_config)
-        file.close()
-        same_directory_file.close()
-        os.unlink(file.name)
-        os.unlink(same_directory_file.name)
-
-    def test_solve_twice(self):
-        m = Container(delayed_execution=True)
+    def test_neos_non_blocking(self):
+        m = Container(delayed_execution=True, working_directory=".")
 
         # Prepare data
         distances = [
@@ -296,24 +230,28 @@ class EngineSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
+        client = NeosClient(
+            email=os.environ["NEOS_EMAIL"],
+            is_blocking=False,
+        )
+        transport.solve(backend="neos", neos_client=client)
 
-        engine_config = EngineConfig(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
+        job_number, job_password = client.jobs[-1]
+        client.get_final_results(job_number, job_password)
+        client.download_output(
+            job_number, job_password, working_directory="my_out_directory"
         )
 
-        transport.solve(backend="engine", engine_config=engine_config)
-        transport.solve(backend="engine", engine_config=engine_config)
+        container = Container(load_from="my_out_directory/output.gdx")
+        self.assertTrue("x" in container.data.keys())
+        x.setRecords(container["x"].records)
+        self.assertTrue(x.records.equals(container["x"].records))
 
 
-def engine_suite():
+def neos_suite():
     suite = unittest.TestSuite()
     tests = [
-        EngineSuite(name)
-        for name in dir(EngineSuite)
-        if name.startswith("test_")
+        NeosSuite(name) for name in dir(NeosSuite) if name.startswith("test_")
     ]
     suite.addTests(tests)
 
@@ -322,4 +260,4 @@ def engine_suite():
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
-    runner.run(engine_suite())
+    runner.run(neos_suite())

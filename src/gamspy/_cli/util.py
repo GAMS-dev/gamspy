@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import os
 import platform
 from dataclasses import dataclass
@@ -117,7 +119,7 @@ def add_solver_entry(
             print("Solver already exists in the capabilities file, skipping")
             return
 
-    with open(capabilities_file, "r") as f:
+    with open(capabilities_file) as f:
         string = f.read()
 
     for verbatim in verbatims:
@@ -138,7 +140,7 @@ def remove_solver_entry(gamspy_base_location: str, solver_name: str):
         return
 
     line_num, line_count = solver_tuple
-    with open(capabilities_file, "r") as f:
+    with open(capabilities_file) as f:
         lines = f.readlines()
 
     for _ in range(line_count + 1):

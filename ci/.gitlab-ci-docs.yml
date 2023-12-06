@@ -10,12 +10,12 @@ build-docs:
     - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
     - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
     - source anaconda3/bin/activate
-    - conda create -y -n gamspy-env-3.11 python=3.11
-    - conda activate gamspy-env-3.11
+    - conda create -y -n gamspy-env-3.10 python=3.10
+    - conda activate gamspy-env-3.10
     - pip install --upgrade pip
     - pip install wheel build
     - python scripts/reinstall.py
-    - pip install -r docs/requirements.txt
+    - pip install .[doc]
     - ipython kernel install --name "python3" --user
     - wget https://github.com/jgm/pandoc/releases/download/3.1.8/pandoc-3.1.8-linux-amd64.tar.gz && tar xvzf pandoc-3.1.8-linux-amd64.tar.gz --strip-components 1
     - PATH=$(pwd)/bin/:$PATH

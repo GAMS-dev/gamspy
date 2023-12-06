@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import gamspy._algebra.expression as expression
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
@@ -81,6 +83,9 @@ class Condition:
             op_type,
             right_hand_expression,
         )
+
+        if isinstance(self._symbol, implicits.ImplicitEquation):
+            self._symbol.parent._definition = statement
 
         self._symbol.container._addStatement(statement)
 

@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 import os
 import platform
 from collections.abc import Sequence
@@ -80,10 +82,7 @@ def getInstalledSolvers() -> List[str]:
     with open(
         gamspy_base.directory + os.sep + capabilities_file[user_platform]
     ) as capabilities:
-        lines = capabilities.readlines()
-        lines = [line for line in lines if line != "\n" and line[0] != "*"]
-
-        for line in lines:
+        for line in capabilities:
             if line == "DEFAULTS\n":
                 break
 
@@ -427,14 +426,14 @@ def _openGdxFile(system_directory: str, load_from: str):
 
 def _toList(
     obj: Union[
-        "Set",
-        "Alias",
+        Set,
+        Alias,
         str,
         Tuple,
-        "Domain",
-        "Expression",
+        Domain,
+        Expression,
         list,
-        "ImplicitSet",
+        ImplicitSet,
     ]
 ) -> list:
     """
@@ -458,7 +457,7 @@ def _toList(
 
 
 def _getDomainStr(
-    domain: Iterable[Union["Set", "Alias", "ImplicitSet", str]]
+    domain: Iterable[Union[Set, Alias, ImplicitSet, str]]
 ) -> str:
     """
     Creates the string format of a given domain

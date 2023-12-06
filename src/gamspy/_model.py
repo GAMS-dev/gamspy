@@ -27,12 +27,9 @@ from __future__ import annotations
 import io
 import os
 from enum import Enum
-from typing import Dict
 from typing import Iterable
-from typing import List
 from typing import Literal
 from typing import Optional
-from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -42,8 +39,8 @@ import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
 import gamspy.utils as utils
-from gamspy._engine import EngineConfig
 from gamspy._model_instance import ModelInstance
+from gamspy._options import _mapOptions
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -51,6 +48,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._engine import EngineConfig
+    from gamspy._neos import NeosClient
+    from gamspy._options import Options
 
 
 class Problem(Enum):
@@ -189,14 +189,14 @@ class Model:
 
     def __init__(
         self,
-        container: "Container",
+        container: Container,
         name: str,
         problem: str,
-        equations: List["Equation"] = [],
-        sense: Optional[Literal["MIN", "MAX", "FEASIBILITY"]] = None,
-        objective: Optional[Union["Variable", "Expression"]] = None,
-        matches: Optional[dict] = None,
-        limited_variables: Optional[Iterable["Variable"]] = None,
+        equations: list[Equation] = [],
+        sense: Literal["MIN", "MAX", "FEASIBILITY"] | None = None,
+        objective: Variable | Expression | None = None,
+        matches: dict | None = None,
+        limited_variables: Iterable[Variable] | None = None,
     ):
         # check if the name is a reserved word
         name = utils._reservedCheck(name)
@@ -224,7 +224,7 @@ class Model:
         self.marginals = None
         self.max_infeasibility = None
         self.mean_infeasibility = None
-        self.status: Optional[ModelStatus] = None
+        self.status: ModelStatus | None = None
         self.num_nodes_used = None
         self.num_dependencies = None
         self.num_discrete_variables = None
@@ -252,10 +252,8 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: Optional[
-            Union["Variable", "Operation", "Expression"]
-        ] = None,
-    ) -> Optional["Variable"]:
+        assignment: None | (Variable | Operation | Expression) = None,
+    ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
         or an Operation (Sum, Product etc.), it automatically generates
@@ -341,14 +339,18 @@ class Model:
 
     def _prepare_gams_options(
         self,
-        solver: Optional[str] = None,
-        options: Optional[dict] = None,
-        solver_options: Optional[dict] = None,
-        output: Optional[io.TextIOWrapper] = None,
-        create_log_file: Optional[bool] = False,
+        solver: str | None = None,
+        options: Options | None = None,
+        solver_options: dict | None = None,
+        output: io.TextIOWrapper | None = None,
+        create_log_file: bool = False,
     ) -> GamsOptions:
-        gams_options = self.container._map_options(
-            options, output=output, create_log_file=create_log_file
+        gams_options = _mapOptions(
+            self.container.workspace,
+            options,
+            is_seedable=False,
+            output=output,
+            create_log_file=create_log_file,
         )
 
         if solver:
@@ -374,7 +376,7 @@ class Model:
 
         return gams_options
 
-    def _validate_model(self, equations, problem, sense=None) -> Tuple:
+    def _validate_model(self, equations, problem, sense=None) -> tuple:
         if isinstance(problem, str):
             if problem.upper() not in gp.Problem.values():
                 raise ValueError(
@@ -479,8 +481,8 @@ class Model:
 
     def freeze(
         self,
-        modifiables: List[Union["Parameter", "ImplicitParameter"]],
-        freeze_options: Optional[dict] = None,
+        modifiables: list[Parameter | ImplicitParameter],
+        freeze_options: dict | None = None,
     ) -> None:
         """
         Freezes all symbols except modifiable symbols.
@@ -513,7 +515,7 @@ class Model:
             equation._is_dirty = True
 
             if equation._definition is not None:
-                variables = equation._definition.traverse()
+                variables = equation._definition.find_variables()
                 for name in variables:
                     self.container[name]._is_dirty = True
 
@@ -522,16 +524,33 @@ class Model:
                 equation._is_dirty = True
                 variable._is_dirty = True
 
+    def _verify_backend_args(
+        self,
+        backend: str,
+        engine_config: Union[EngineConfig, None],
+        neos_client: Union[NeosClient, None],
+    ):
+        if backend == "neos" and neos_client is None:
+            raise GamspyException(
+                "`neos_client` must be provided to solve on NEOS Server"
+            )
+
+        if backend == "engine" and engine_config is None:
+            raise GamspyException(
+                "`engine_config` must be provided to solve on GAMS Engine"
+            )
+
     def solve(
         self,
-        solver: Optional[str] = None,
-        options: Optional[Dict[str, str]] = None,
-        solver_options: Optional[dict] = None,
-        model_instance_options: Optional[dict] = None,
-        output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine"] = "local",
-        engine_config: Optional["EngineConfig"] = None,
-        create_log_file: Optional[bool] = False,
+        solver: str | None = None,
+        options: Options | None = None,
+        solver_options: dict | None = None,
+        model_instance_options: dict | None = None,
+        output: io.TextIOWrapper | None = None,
+        backend: Literal["local", "engine", "neos"] = "local",
+        engine_config: EngineConfig | None = None,
+        neos_client: Optional[NeosClient] = None,
+        create_log_file: bool = False,
     ) -> None:
         """
         Generates the gams string, writes it to a file and runs it
@@ -540,7 +559,7 @@ class Model:
         ----------
         solver : str, optional
             Solver name
-        options : Options | dict, optional
+        options : Options, optional
             GAMS options
         solver_options : dict, optional
             Solver options
@@ -555,31 +574,41 @@ class Model:
 
         Raises
         ------
+        GamspyException
+            In case engine_config is not provided for `engine` backend or
+            neos_client is not provided for `neos` backend.
         ValueError
             In case problem is not in possible problem types
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
-        if not self._is_frozen:
-            gams_options = self._prepare_gams_options(
-                solver,
-                options,
-                solver_options,
-                output=output,
-                create_log_file=create_log_file,
-            )
+        self._verify_backend_args(backend, engine_config, neos_client)
 
-            self._append_solve_string()
-            self._generate_attribute_symbols()
-            self._assign_model_attributes()
-            self._make_variable_and_equations_dirty()
-
-            self.container._run(gams_options, output, backend, engine_config)
-
-            self._update_model_attributes()
-        else:
+        if self._is_frozen:
             self.instance.solve(model_instance_options, output)
+            return
 
+        gams_options = self._prepare_gams_options(
+            solver,
+            options,
+            solver_options,
+            output=output,
+            create_log_file=create_log_file,
+        )
+
+        self._append_solve_string()
+        self._generate_attribute_symbols()
+        self._assign_model_attributes()
+        self._make_variable_and_equations_dirty()
+
+        self.container._run(
+            gams_options, output, backend, engine_config, neos_client
+        )
+
+        if backend == "neos" and not neos_client.is_blocking:  # type: ignore
+            return
+
+        self._update_model_attributes()
         self._remove_autogenerated_symbols()
 
     def getStatement(self) -> str:

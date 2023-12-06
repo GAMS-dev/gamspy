@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import unittest
 
 import pandas as pd
@@ -42,6 +44,12 @@ class EquationSuite(unittest.TestCase):
         j2 = Equation(self.m, "j")
         self.assertEqual(id(j1), id(j2))
 
+        # Equation and domain containers are different
+        m = Container()
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Equation(m, "eq1", domain=[set1])
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -64,24 +72,24 @@ class EquationSuite(unittest.TestCase):
 
         # Equations
         eq1 = Equation(self.m, "eq1", type="nonbinding")
-        eq1[...] = x == c
+        eq1[...] = x - c
         self.assertEqual(
             self.m._unsaved_statements[-1].gamsRepr(),
-            "eq1 .. x =n= c;",
+            "eq1 .. (x - c) =n= 0;",
         )
         self.assertEqual(eq1.type, "nonbinding")
 
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
-        eq2[i] = x[i] == c[i]
+        eq2[i] = x[i] - c[i]
         self.assertEqual(
             self.m._unsaved_statements[-1].gamsRepr(),
-            "eq2(i) .. x(i) =n= c(i);",
+            "eq2(i) .. (x(i) - c(i)) =n= 0;",
         )
 
-        eq2[i] = x[i] == c[i]
+        eq2[i] = x[i] - c[i]
         self.assertEqual(
             self.m._unsaved_statements[-1].gamsRepr(),
-            "eq2(i) .. x(i) =n= c(i);",
+            "eq2(i) .. (x(i) - c(i)) =n= 0;",
         )
 
         # eq
@@ -218,13 +226,13 @@ class EquationSuite(unittest.TestCase):
         )
 
         # Equation definition with an index
-        supply = Equation(
+        _ = Equation(
             self.m,
             name="supply",
             domain=[i],
             description="observe supply limit at plant i",
+            definition=Sum(j, x[i, j]) <= a[i],
         )
-        supply[i] = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(
             self.m._unsaved_statements[-1].getStatement(),
             "supply(i) .. sum(j,x(i,j)) =l= a(i);",
@@ -458,7 +466,7 @@ class EquationSuite(unittest.TestCase):
         a = Equation(m, "a", "regular", [i])
         a[i] = x[i] == 5
 
-        self.assertTrue(a._is_dirty)
+        self.assertFalse(a._is_dirty)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
@@ -484,6 +492,26 @@ class EquationSuite(unittest.TestCase):
 
         model = Model(self.m, "mcp_model", "MCP", matches={f: x})
         model.solve()
+
+    def test_changed_domain(self):
+        cont = Container(delayed_execution=False)
+
+        s = Set(cont, "s")
+        m = Set(cont, "m")
+        A = Equation(cont, "A", domain=[s, m])
+
+        A.domain = ["s", "m"]
+        self.assertEqual(A.getStatement(), "Equation A(*,*);")
+
+    def test_equation_assignment(self):
+        m = Container()
+
+        i = Set(self.m, "i")
+        j = Set(m, "j")
+        a = Equation(self.m, "a", domain=[i])
+
+        with self.assertRaises(GamspyException):
+            a[j] = 5
 
 
 def equation_suite():

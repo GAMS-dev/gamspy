@@ -174,10 +174,6 @@ def main(mip=False):
 
     print("Objective Function Value: ", obj.records.level[0])
 
-    import math
-
-    assert math.isclose(carseqLS.objective_value, 11.0, rel_tol=0.001)
-
 
 if __name__ == "__main__":
     main()

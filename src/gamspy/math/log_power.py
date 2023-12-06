@@ -22,7 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import math
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -34,35 +35,33 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-def exp(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def exp(x: Union[float, Symbol]) -> Expression:
     """
     Exponential of x (i.e. e^x)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.exp(x)
-    return expression.Expression("exp(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"exp({x_str})", None)
 
 
-def log(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def log(x: Union[int, float, Symbol]) -> Expression:
     """
     Natural logarithm of x (i.e. logarithm base e of x)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.log(x)
-    return expression.Expression("log(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"log({x_str})", None)
 
 
 def log_beta(
-    x: Union[int, float, "Symbol"], y: Union[int, float, "Symbol"]
-) -> "Expression":
+    x: Union[int, float, Symbol], y: Union[int, float, Symbol]
+) -> Expression:
     """
     Log beta function
 
@@ -72,12 +71,12 @@ def log_beta(
     """
     x_str = _stringify(x)
     y_str = _stringify(y)
-    return expression.Expression("logBeta(", f"{x_str},{y_str}", ")")
+    return expression.Expression(None, f"logBeta({x_str},{y_str})", None)
 
 
 def log_gamma(
-    x: Union[int, float, "Symbol"], y: Union[int, float, "Symbol"]
-) -> "Expression":
+    x: Union[int, float, Symbol], y: Union[int, float, Symbol]
+) -> Expression:
     """
     Log gamma function
 
@@ -87,50 +86,48 @@ def log_gamma(
     """
     x_str = _stringify(x)
     y_str = _stringify(y)
-    return expression.Expression("logGamma(", f"{x_str},{y_str}", ")")
+    return expression.Expression(None, f"logGamma({x_str},{y_str})", None)
 
 
-def logit(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def logit(x: Union[int, float, Symbol]) -> Expression:
     """
     Natural logarithm of x (i.e. logarithm base e of x)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("logit(", x_str, ")")
+    return expression.Expression(None, f"logit({x_str})", None)
 
 
-def log2(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def log2(x: Union[float, Symbol]) -> Expression:
     """
     Binary logarithm (i.e. logarithm base 2 of x)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.log2(x)
-    return expression.Expression("log2(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"log2({x_str})", None)
 
 
-def log10(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def log10(x: Union[float, Symbol]) -> Expression:
     """
     Common logarithm (i.e. logarithm base 10 of x)
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.log10(x)
-    return expression.Expression("log10(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"log10({x_str})", None)
 
 
 def power(
-    base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]
-) -> Union["Expression", float]:
+    base: Union[float, Symbol], exponent: Union[float, Symbol]
+) -> Expression:
     """
     Base to the exponent power (i.e. base ^ exponent)
 
@@ -141,11 +138,8 @@ def power(
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return math.pow(base, exponent)
-
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
     )
@@ -154,12 +148,14 @@ def power(
         if isinstance(exponent, (int, float, str))
         else exponent.gamsRepr()
     )
-    return expression.Expression("power(", f"{base_str},{exponent_str}", ")")
+    return expression.Expression(
+        None, f"power({base_str},{exponent_str})", None
+    )
 
 
 def cv_power(
-    base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]
-) -> Union["Expression", float]:
+    base: Union[float, Symbol], exponent: Union[float, Symbol]
+) -> Expression:
     """
     Real power (i.e. base ^ exponent where X >= 0)
 
@@ -170,11 +166,8 @@ def cv_power(
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return math.pow(base, exponent)
-
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
     )
@@ -183,10 +176,12 @@ def cv_power(
         if isinstance(exponent, (int, float, str))
         else exponent.gamsRepr()
     )
-    return expression.Expression("cvPower(", f"{base_str},{exponent_str}", ")")
+    return expression.Expression(
+        None, f"cvPower({base_str},{exponent_str})", None
+    )
 
 
-def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def rpower(base: Union[float, Symbol], exponent: Union[float, Symbol]):
     """
     Returns x^y for x > 0 and also for x = 0 and restricted values of y
 
@@ -197,11 +192,8 @@ def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return math.pow(base, exponent)
-
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
     )
@@ -210,10 +202,12 @@ def rpower(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
         if isinstance(exponent, (int, float, str))
         else exponent.gamsRepr()
     )
-    return expression.Expression("rPower(", f"{base_str},{exponent_str}", ")")
+    return expression.Expression(
+        None, f"rPower({base_str},{exponent_str})", None
+    )
 
 
-def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def sign_power(base: Union[float, Symbol], exponent: Union[float, Symbol]):
     """
     Signed power for y > 0.
 
@@ -224,11 +218,8 @@ def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return math.pow(base, exponent)
-
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
     )
@@ -238,13 +229,13 @@ def sign_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
         else exponent.gamsRepr()
     )
     return expression.Expression(
-        "signPower(", f"{base_str},{exponent_str}", ")"
+        None, f"signPower({base_str},{exponent_str})", None
     )
 
 
 def sllog10(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
-) -> "Expression":
+    x: Union[int, float, Symbol], S: Union[int, float] = 1.0e-150
+) -> Expression:
     """
     Smooth (linear) logarithm base 10
 
@@ -258,12 +249,12 @@ def sllog10(
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("sllog10(", f"{x_str},{S}", ")")
+    return expression.Expression(None, f"sllog10({x_str},{S})", None)
 
 
 def sqlog10(
-    x: Union[int, float, "Symbol"], S: Union[int, float] = 1.0e-150
-) -> "Expression":
+    x: Union[int, float, Symbol], S: Union[int, float] = 1.0e-150
+) -> Expression:
     """
     Smooth (quadratic) logarithm base 10
 
@@ -277,10 +268,10 @@ def sqlog10(
     Expression
     """
     x_str = _stringify(x)
-    return expression.Expression("sqlog10(", f"{x_str},{S}", ")")
+    return expression.Expression(None, f"sqlog10({x_str},{S})", None)
 
 
-def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
+def vc_power(base: Union[float, Symbol], exponent: Union[float, Symbol]):
     """
     Returns x^y for x >= 0
 
@@ -291,11 +282,8 @@ def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(base, (int, float)) and isinstance(exponent, (int, float)):
-        return math.pow(base, exponent)
-
     base_str = (
         str(base) if isinstance(base, (int, float, str)) else base.gamsRepr()
     )
@@ -304,10 +292,12 @@ def vc_power(base: Union[float, "Symbol"], exponent: Union[float, "Symbol"]):
         if isinstance(exponent, (int, float, str))
         else exponent.gamsRepr()
     )
-    return expression.Expression("vcPower(", f"{base_str},{exponent_str}", ")")
+    return expression.Expression(
+        None, f"vcPower({base_str},{exponent_str})", None
+    )
 
 
-def sqr(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def sqr(x: Union[float, Symbol]) -> Expression:
     """
     Square of x
 
@@ -317,6 +307,6 @@ def sqr(x: Union[float, "Symbol"]) -> Union["Expression", float]:
 
     Returns
     -------
-    Expression | float
+    Expression
     """
     return power(x, 2)

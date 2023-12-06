@@ -22,7 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import math
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -34,85 +35,79 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-def cos(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def cos(x: Union[int, float, Symbol]) -> Expression:
     """
     Cosine of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.cos(x)
-    return expression.Expression("cos(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"cos({x_str})", None)
 
 
-def cosh(x: Union[int, float, "Symbol"]) -> Union["Expression", float]:
+def cosh(x: Union[int, float, Symbol]) -> Expression:
     """
     Hyperbolic cosine of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.cosh(x)
-    return expression.Expression("cosh(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"cosh({x_str})", None)
 
 
-def sin(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def sin(x: Union[float, Symbol]) -> Expression:
     """
     Sine of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.sin(x)
-    return expression.Expression("sin(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"sin({x_str})", None)
 
 
-def sinh(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def sinh(x: Union[float, Symbol]) -> Expression:
     """
     Hyperbolic sine of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.sinh(x)
-    return expression.Expression("sinh(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"sinh({x_str})", None)
 
 
-def tan(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def tan(x: Union[float, Symbol]) -> Expression:
     """
     Tangent of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.tan(x)
-    return expression.Expression("tan(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"tan({x_str})", None)
 
 
-def tanh(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def tanh(x: Union[float, Symbol]) -> Expression:
     """
     Hyperbolic tangent of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.tanh(x)
-    return expression.Expression("tanh(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"tanh({x_str})", None)
 
 
-def acos(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def acos(x: Union[float, Symbol]) -> Expression:
     """
     Inverse cosine of x.
 
@@ -120,51 +115,45 @@ def acos(x: Union[float, "Symbol"]) -> Union["Expression", float]:
     -------
     Expresion | float
     """
-    if isinstance(x, (int, float)):
-        return math.acos(x)
-    return expression.Expression("arccos(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"arccos({x_str})", None)
 
 
-def asin(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def asin(x: Union[float, Symbol]) -> Expression:
     """
     Inver sinus of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.asin(x)
-    return expression.Expression("arcsin(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"arcsin({x_str})", None)
 
 
-def atan(x: Union[float, "Symbol"]) -> Union["Expression", float]:
+def atan(x: Union[float, Symbol]) -> Expression:
     """
     Inverse tangent of x.
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)):
-        return math.atan(x)
-    return expression.Expression("arctan(", x.gamsRepr(), ")")
+    x_str = _stringify(x)
+    return expression.Expression(None, f"arctan({x_str})", None)
 
 
 def atan2(
-    y: Union[int, float, "Symbol"], x: Union[int, float, "Symbol"]
-) -> Union["Expression", float]:
+    y: Union[int, float, Symbol], x: Union[int, float, Symbol]
+) -> Expression:
     """
     Four-quadrant arctan function
 
     Returns
     -------
-    Expression | float
+    Expression
     """
-    if isinstance(x, (int, float)) and isinstance(y, (int, float)):
-        return math.atan2(y, x)
-
     x_str = _stringify(x)
     y_str = _stringify(y)
 
-    return expression.Expression("arctan2(", f"{y_str}, {x_str}", ")")
+    return expression.Expression(None, f"arctan2({y_str},{x_str})", None)

@@ -22,10 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
+import os
+import shutil
 from typing import List
 from typing import Optional
 
 from gams import GamsEngineConfiguration
+from gams import GamsWorkspace
 from pydantic import BaseModel
 
 
@@ -42,7 +47,7 @@ class EngineConfig(BaseModel):
     class Config:
         extra = "forbid"
 
-    def get_engine_config(self):
+    def _get_engine_config(self):
         return GamsEngineConfiguration(
             self.host,
             self.username,
@@ -50,3 +55,25 @@ class EngineConfig(BaseModel):
             self.jwt,
             self.namespace,
         )
+
+    def _preprocess_extra_model_files(
+        self, workspace: GamsWorkspace, gdx_path: str
+    ) -> List[str]:
+        # copy provided extra model files to working directory
+        for extra_file in self.extra_model_files:
+            try:
+                shutil.copy(extra_file, workspace.working_directory)
+            except shutil.SameFileError:
+                # extra file might already be in the working directory
+                pass
+
+        # trim path and keep only the names of the files
+        extra_model_files = [
+            os.path.basename(extra_file)
+            for extra_file in self.extra_model_files
+        ]
+
+        # add name of the gdx file
+        extra_model_files.append(os.path.basename(gdx_path))
+
+        return extra_model_files
