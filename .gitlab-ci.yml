@@ -40,4 +40,5 @@ include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test-3.9.yml',
           'ci/.gitlab-ci-test-3.10.yml',
           'ci/.gitlab-ci-test-3.11.yml',
+          'ci/.gitlab-ci-test-3.12.yml',
           'ci/.gitlab-ci-update-website.yml']
