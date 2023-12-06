@@ -95,6 +95,8 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         super().__init__(container, name, alias_with)
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 

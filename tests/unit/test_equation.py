@@ -44,6 +44,12 @@ class EquationSuite(unittest.TestCase):
         j2 = Equation(self.m, "j")
         self.assertEqual(id(j1), id(j2))
 
+        # Equation and domain containers are different
+        m = Container()
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Equation(m, "eq1", domain=[set1])
+
     def test_equation_types(self):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -496,6 +502,16 @@ class EquationSuite(unittest.TestCase):
 
         A.domain = ["s", "m"]
         self.assertEqual(A.getStatement(), "Equation A(*,*);")
+
+    def test_equation_assignment(self):
+        m = Container()
+
+        i = Set(self.m, "i")
+        j = Set(m, "j")
+        a = Equation(self.m, "a", domain=[i])
+
+        with self.assertRaises(GamspyException):
+            a[j] = 5
 
 
 def equation_suite():

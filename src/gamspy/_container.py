@@ -345,6 +345,7 @@ class Container(gt.Container):
         self._clean_dirty_symbols(dirty_names)
         self._update_assigned_state(assigned_names)
 
+        self.isValid(verbose=True, force=True)
         super().write(self._gdx_in, assigned_names)
 
         # If there is no restart checkpoint, set it to None
@@ -833,15 +834,27 @@ class Container(gt.Container):
             new_domain = []
             for set in symbol.domain:
                 if not isinstance(set, str):
-                    new_set = self.data[set.name]
-                    new_set.container = m
+                    new_set = gp.Set(
+                        m,
+                        set.name,
+                        set.domain,
+                        set.is_singleton,
+                        set.records,
+                        set.domain_forwarding,
+                        set.description,
+                    )
                     new_domain.append(new_set)
                 else:
                     new_domain.append(set)
 
             if isinstance(symbol, gt.Alias):
-                alias_with = self[symbol.alias_with.name]
-                alias_with.container = m
+                alias_with = gp.Set(
+                    m,
+                    symbol.alias_with.name,
+                    symbol.alias_with.domain,
+                    symbol.alias_with.is_singleton,
+                    symbol.alias_with.records,
+                )
                 _ = gp.Alias(
                     m,
                     name,

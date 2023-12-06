@@ -153,6 +153,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
