@@ -1,4 +1,4 @@
-GAMSPy 0.11.0
+GAMSPy 0.11.1
 =============
 
 - General
