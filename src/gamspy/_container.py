@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gams.transfer as gt
+import pandas as pd
 from gams import DebugLevel
 from gams import GamsCheckpoint
 from gams import GamsJob
@@ -48,6 +49,7 @@ from gams.core import gdx
 
 import gamspy as gp
 import gamspy.utils as utils
+from gamspy._model import ModelStatus
 from gamspy._neos import NeosClient
 from gamspy._options import _mapOptions
 from gamspy.exceptions import customize_exception
@@ -398,6 +400,84 @@ class Container(gt.Container):
             raise exception
         finally:
             self._unsaved_statements = []
+
+        if utils._in_notebook():
+            from IPython.display import display, HTML
+
+            solve_stat = [
+                "",
+                "Normal",
+                "Iteration",
+                "Resource",
+                "Solver",
+                "EvalError",
+                "Capability",
+                "License",
+                "User",
+                "SetupErr",
+                "SolverErr",
+                "InternalErr",
+                "Skipped",
+                "SystemErr",
+            ]
+            HEADER = [
+                "Solver Status",
+                "Model Status",
+                "Objective",
+                "#equ",
+                "#var",
+                "Model Type",
+                "Solver",
+                "Solver Time",
+            ]
+            with open(
+                os.path.join(self.working_directory, "trace.txt")
+            ) as file:
+                lines = file.readlines()[-2:]
+                (
+                    _,
+                    _,
+                    _,
+                    model_type,
+                    solver_name,
+                    solver_status,
+                    model_status,
+                    _,
+                    _,
+                    _,
+                    _,
+                    num_equations,
+                    num_variables,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    _,
+                    objective_value,
+                    _,
+                ) = lines[0].split(" ")
+
+                solver_time = lines[1].split(" ")[-2]
+
+            dataframe = pd.DataFrame(
+                [
+                    [
+                        solve_stat[int(solver_status)],
+                        ModelStatus(int(model_status)),
+                        objective_value,
+                        num_equations,
+                        num_variables,
+                        model_type,
+                        solver_name,
+                        solver_time,
+                    ]
+                ],
+                columns=HEADER,
+            )
+            display(HTML(dataframe.to_html()))
 
     def _run_engine(
         self,
