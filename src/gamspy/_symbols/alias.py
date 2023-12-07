@@ -127,6 +127,135 @@ class Alias(gt.Alias, operable.Operable, Symbol):
     def __iter__(self):
         return self
 
+    # Set Attributes
+    @property
+    def pos(self):
+        """
+        Element position in the current set, starting with 1.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.pos", None)
+
+    @property
+    def ord(self):
+        """
+        Same as .pos but for ordered sets only.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.ord", None)
+
+    @property
+    def off(self):
+        """
+        Element position in the current set minus 1. So .off = .pos - 1
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.off", None)
+
+    @property
+    def rev(self):
+        """
+        Reverse element position in the current set, so the value for
+        the last element is 0, the value for the penultimate is 1, etc.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.rev", None)
+
+    @property
+    def uel(self):
+        """
+        Element position in the unique element list.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.uel", None)
+
+    @property
+    def len(self):
+        """
+        Length of the set element name (a count of the number of characters).
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.len", None)
+
+    @property
+    def tlen(self):
+        """
+        Length of the set element text (a count of the number of characters).
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.tlen", None)
+
+    @property
+    def val(self):
+        """
+        If a set element is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.val", None)
+
+    @property
+    def tval(self):
+        """
+        If a set element text is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element text is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.tval", None)
+
+    @property
+    def first(self):
+        """
+        Returns 1 for the first set element, otherwise 0.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.first", None)
+
+    @property
+    def last(self):
+        """
+        Returns 1 for the last set element, otherwise 0.
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(None, f"{self.name}.last", None)
+
     def lag(
         self,
         n: Union[int, Symbol, Expression],
