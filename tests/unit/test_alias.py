@@ -39,6 +39,21 @@ class AliasSuite(unittest.TestCase):
         j2 = Alias(self.m, "j", i)
         self.assertEqual(id(j1), id(j2))
 
+    def test_alias_attributes(self):
+        i = Set(self.m, "i")
+        j = Alias(self.m, "j", alias_with=i)
+        self.assertEqual(j.pos.gamsRepr(), "( j.pos )")
+        self.assertEqual(j.ord.gamsRepr(), "( j.ord )")
+        self.assertEqual(j.off.gamsRepr(), "( j.off )")
+        self.assertEqual(j.rev.gamsRepr(), "( j.rev )")
+        self.assertEqual(j.uel.gamsRepr(), "( j.uel )")
+        self.assertEqual(j.len.gamsRepr(), "( j.len )")
+        self.assertEqual(j.tlen.gamsRepr(), "( j.tlen )")
+        self.assertEqual(j.val.gamsRepr(), "( j.val )")
+        self.assertEqual(j.tval.gamsRepr(), "( j.tval )")
+        self.assertEqual(j.first.gamsRepr(), "( j.first )")
+        self.assertEqual(j.last.gamsRepr(), "( j.last )")
+
     def test_alias_string(self):
         # Set and Alias without domain
         i = Set(self.m, name="i", records=["a", "b", "c"])

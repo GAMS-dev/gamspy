@@ -347,7 +347,8 @@ class Model:
     ) -> GamsOptions:
         gams_options = _mapOptions(
             self.container.workspace,
-            options,
+            options=options,
+            global_options=self.container._options,
             is_seedable=False,
             output=output,
             create_log_file=create_log_file,
