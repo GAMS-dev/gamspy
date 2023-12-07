@@ -332,7 +332,8 @@ class Container(gt.Container):
         if options is None:
             options = _mapOptions(
                 self.workspace,
-                self._options,
+                options=None,
+                global_options=self._options,
                 is_seedable=self._is_first_run,
                 output=output,
                 create_log_file=create_log_file,

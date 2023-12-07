@@ -6,6 +6,7 @@ GAMSPy 0.11.1
 -------------------------------------------------------------------------------
 - General
   - Fix missing atttributes of Alias such as .first, .last etc.
+  - Fix global option bug
 - Testing
   - Add tests for Alias attributes.
 
