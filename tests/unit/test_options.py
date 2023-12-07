@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import os
 import unittest
 
-from gams import GamsExceptionExecution
 from pydantic import ValidationError
 
 import gamspy.math as math
 from gamspy import Container
 from gamspy import Equation
+from gamspy import Model
 from gamspy import Options
 from gamspy import Parameter
+from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
@@ -80,9 +82,8 @@ class OptionsSuite(unittest.TestCase):
         self.assertEqual(p2.records.value.item(), 0.11165956511164217)
 
     def test_global_options(self):
-        m = Container(
-            delayed_execution=False, options=Options(write_listing_file=False)
-        )
+        options = Options(lp="conopt")
+        m = Container(delayed_execution=True, options=options)
 
         # Prepare data
         distances = [
@@ -116,8 +117,22 @@ class OptionsSuite(unittest.TestCase):
         demand = Equation(m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
-        with self.assertRaises(GamsExceptionExecution):
-            demand[i] = Sum(i, x[i, j]) >= b[j]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+        with open(
+            os.path.join(m.working_directory, m.gamsJobName() + ".pf")
+        ) as file:
+            self.assertTrue("LP=conopt\n" == file.readline())
 
     def test_gamspy_to_gams_options(self):
         options = Options(
