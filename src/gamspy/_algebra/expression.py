@@ -70,26 +70,26 @@ class Expression(operable.Operable):
         self.left = left
         self.data = data
         self.right = right
-        self.representation = self._create_representation(left, data, right)
+        self.representation = self._create_representation()
         self.where = condition.Condition(self)
 
-    def _create_representation(self, left, data, right):
-        if left is None:
+    def _create_representation(self):
+        if self.left is None:
             left_str = ""
         else:
             left_str = (
-                str(left)
-                if isinstance(left, (int, float, str))
-                else left.gamsRepr()
+                str(self.left)
+                if isinstance(self.left, (int, float, str))
+                else self.left.gamsRepr()
             )
 
-        if right is None:
+        if self.right is None:
             right_str = ""
         else:
             right_str = (
-                str(right)
-                if isinstance(right, (int, float, str))
-                else right.gamsRepr()
+                str(self.right)
+                if isinstance(self.right, (int, float, str))
+                else self.right.gamsRepr()
             )
 
         # negative sign causes an extra operation if not in paranthesis
@@ -101,7 +101,7 @@ class Expression(operable.Operable):
         if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
-        if data == "=" and isinstance(
+        if self.data == "=" and isinstance(
             self.left,
             (
                 syms.Set,
@@ -119,32 +119,32 @@ class Expression(operable.Operable):
             right_str = right_str.replace("=g=", ">=")
 
         # get around 80000 line length limitation in GAMS
-        length = len(left_str) + len(data) + len(right_str)
+        length = len(left_str) + len(self.data) + len(right_str)
         if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
-            out_str = f"{left_str} {data}\n {right_str}"
+            out_str = f"{left_str} {self.data}\n {right_str}"
         else:
-            out_str = f"{left_str} {data} {right_str}"
+            out_str = f"{left_str} {self.data} {right_str}"
 
         # if it's an assignment add semicolon, otherwise add paranthesis to ensure
         # the order of execution
-        out_str = f"{out_str};" if data in ["..", "="] else f"({out_str})"
+        out_str = f"{out_str};" if self.data in ["..", "="] else f"({out_str})"
 
         if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
             return out_str[1:-1]
 
-        if data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
+        if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
             # (test.. a =g= b) -> not valid
             # test.. a =g= b   -> valid
             out_str = out_str[1:-1]  # remove the paranthesis
 
         out_str = self._fix_condition_paranthesis(out_str)
 
-        if data == "==":
+        if self.data == "==":
             # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
             # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
             out_str = out_str.replace("==", "=")
 
-        if data in ["=", ".."] and out_str[0] == "(":
+        if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
             indices = utils._getMatchingParanthesisIndices(out_str)

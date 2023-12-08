@@ -493,7 +493,7 @@ class Model:
         modifiables : List[Union[Parameter, ImplicitParameter]]
         freeze_options : Optional[dict], optional
         """
-        self.container._run()
+        self.container._run(implicit=True)
 
         self.instance = ModelInstance(
             self.container, self, modifiables, freeze_options

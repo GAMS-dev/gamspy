@@ -330,6 +330,7 @@ class Container(gt.Container):
         engine_config: Optional[EngineConfig] = None,
         neos_client: Optional[NeosClient] = None,
         create_log_file: bool = False,
+        implicit: bool = False,
     ):
         if options is None:
             options = _mapOptions(
@@ -339,6 +340,7 @@ class Container(gt.Container):
                 is_seedable=self._is_first_run,
                 output=output,
                 create_log_file=create_log_file,
+                implicit=implicit,
             )
 
         dirty_names, modified_names = self._get_touched_symbol_names()
@@ -362,7 +364,7 @@ class Container(gt.Container):
         )
 
         if backend == "local":
-            self._run_local(options, output)
+            self._run_local(options, output, implicit=implicit)
         elif backend == "engine":
             self._run_engine(options, output, engine_config)
         elif backend == "neos":
@@ -384,7 +386,10 @@ class Container(gt.Container):
         self._is_first_run = False
 
     def _run_local(
-        self, options: GamsOptions, output: Union[io.TextIOWrapper, None]
+        self,
+        options: GamsOptions,
+        output: Union[io.TextIOWrapper, None],
+        implicit: bool = False,
     ):
         try:
             self._job.run(  # type: ignore
@@ -401,7 +406,7 @@ class Container(gt.Container):
         finally:
             self._unsaved_statements = []
 
-        if utils._in_notebook():
+        if utils._in_notebook() and not implicit:
             from IPython.display import display, HTML
 
             solve_stat = [
@@ -909,7 +914,7 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._run()
+        self._run(implicit=True)
 
         for name, symbol in self:
             new_domain = []
@@ -1167,7 +1172,7 @@ class Container(gt.Container):
 
         # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_names) > 0:
-            self._run()
+            self._run(implicit=True)
 
         super().write(write_to, symbols)
 
