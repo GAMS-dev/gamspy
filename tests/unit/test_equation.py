@@ -16,6 +16,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
+from gamspy.math import sqr
 
 
 class EquationSuite(unittest.TestCase):
@@ -512,6 +513,21 @@ class EquationSuite(unittest.TestCase):
 
         with self.assertRaises(GamspyException):
             a[j] = 5
+
+        m = Container()
+        N = Parameter(m, "N", records=20)
+        L = Parameter(m, "L", records=int(N.toValue()) / 2)
+        v = Set(m, "v", records=range(0, 1001))
+        i = Set(m, "i", domain=[v])
+        x = Variable(m, "x", "free", [v])
+        y = Variable(m, "y", "free", [v])
+        e = Equation(m, "e")
+        e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
+        self.assertEqual(
+            e._definition.getStatement(),
+            "e .. sum(i $ (( i.val ) = (L - 1)),(( power(x(i),2) ) + ("
+            " power(y(i),2) ))) =e= 1;",
+        )
 
 
 def equation_suite():
