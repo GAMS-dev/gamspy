@@ -202,15 +202,10 @@ def _fix_log_option(
 
 
 def _set_options(
-    working_directory: str,
     gams_options: GamsOptions,
     options: Options,
     is_seedable: bool = True,
 ):
-    if utils._in_notebook():
-        options.trace_file = os.path.join(working_directory, "trace.txt")
-        options.trace_level = 3
-
     options_dict = options._getGamsCompatibleOptions()
     for option, value in options_dict.items():
         if value is not None:
@@ -228,6 +223,7 @@ def _mapOptions(
     is_seedable: bool = True,
     output: Optional[io.TextIOWrapper] = None,
     create_log_file: bool = False,
+    implicit: bool = False,
 ) -> GamsOptions:
     """
     Maps given GAMSPy options to GamsOptions
@@ -256,7 +252,6 @@ def _mapOptions(
 
     if global_options is not None:
         gams_options = _set_options(
-            workspace.working_directory,
             gams_options,
             global_options,
             is_seedable,
@@ -268,9 +263,13 @@ def _mapOptions(
                 f"options must be of type Option but found {type(options)}"
             )
 
-        gams_options = _set_options(
-            workspace.working_directory, gams_options, options, is_seedable
+        gams_options = _set_options(gams_options, options, is_seedable)
+
+    if utils._in_notebook() and not implicit:
+        gams_options.trace = os.path.join(
+            workspace.working_directory, "trace.txt"
         )
+        gams_options.tracelevel = 3
 
     gams_options = _fix_log_option(output, create_log_file, gams_options)
 

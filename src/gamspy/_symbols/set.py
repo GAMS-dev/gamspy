@@ -187,7 +187,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run()
+            self.container._run(implicit=True)
 
     # Set Attributes
     @property
@@ -420,7 +420,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(implicit=True)
 
         return self._records
 

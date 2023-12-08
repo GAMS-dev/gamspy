@@ -298,7 +298,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(implicit=True)
 
         return self._records
 

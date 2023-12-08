@@ -96,4 +96,4 @@ class Condition:
         self._symbol.container._addStatement(statement)
 
         if not self._symbol.container.delayed_execution:
-            self._symbol.container._run()
+            self._symbol.container._run(implicit=True)
