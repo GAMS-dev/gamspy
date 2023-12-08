@@ -167,9 +167,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-        # for records and setRecords
-        self._is_assigned = True
-
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
@@ -307,9 +304,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -330,10 +324,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records, uels_on_axes=False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

@@ -144,9 +144,6 @@ class Set(gt.Set, operable.Operable, Symbol):
         # iterator index
         self._current_index = 0
 
-        # for records and setRecords
-        self._is_assigned = True
-
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -429,9 +426,6 @@ class Set(gt.Set, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -452,10 +446,6 @@ class Set(gt.Set, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records: Any, uels_on_axes: bool = False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
 
     def sameAs(self, other: Set | Alias) -> Expression:
         return expression.Expression(

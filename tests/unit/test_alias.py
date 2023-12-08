@@ -122,13 +122,13 @@ class AliasSuite(unittest.TestCase):
     def test_alias_state(self):
         i = Set(self.m, name="i", records=["a", "b", "c"])
         j = Alias(self.m, name="j", alias_with=i)
-        i._is_assigned = False
+        i.modified = False
         j.setRecords(["a", "b"])
-        self.assertTrue(i._is_assigned)
+        self.assertTrue(i.modified)
 
-        i._is_assigned = False
+        i.modified = False
         j.records = pd.DataFrame([["a", "b"]])
-        self.assertTrue(i._is_assigned)
+        self.assertTrue(i.modified)
 
 
 def alias_suite():
