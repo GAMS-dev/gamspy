@@ -349,7 +349,6 @@ class Container(gt.Container):
         self._update_modified_state(modified_names)
 
         self.isValid(verbose=True, force=True)
-        print(f"Second: {modified_names}")
         super().write(self._gdx_in, modified_names)
 
         # If there is no restart checkpoint, set it to None
