@@ -300,7 +300,7 @@ class Container(gt.Container):
 
     def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
         dirty_names = []
-        assigned_names = []
+        modified_names = []
 
         for name, symbol in self:
             if isinstance(symbol, gp.UniverseAlias):
@@ -309,18 +309,18 @@ class Container(gt.Container):
             if symbol._is_dirty:
                 dirty_names.append(name)
 
-            if symbol._is_assigned:
-                assigned_names.append(name)
+            if symbol.modified:
+                modified_names.append(name)
 
-        return dirty_names, assigned_names
+        return dirty_names, modified_names
 
     def _clean_dirty_symbols(self, dirty_names: List[str]):
         for name in dirty_names:
             self[name]._is_dirty = False
 
-    def _update_assigned_state(self, assigned_names: List[str]):
-        for name in assigned_names:
-            self[name]._is_assigned = False
+    def _update_modified_state(self, modified_names: List[str]):
+        for name in modified_names:
+            self[name].modified = False
 
     def _run(
         self,
@@ -341,15 +341,16 @@ class Container(gt.Container):
                 create_log_file=create_log_file,
             )
 
-        dirty_names, assigned_names = self._get_touched_symbol_names()
+        dirty_names, modified_names = self._get_touched_symbol_names()
         gams_string = self._generate_gams_string(backend, dirty_names)
 
         # Create gdx file to read records from
         self._clean_dirty_symbols(dirty_names)
-        self._update_assigned_state(assigned_names)
+        self._update_modified_state(modified_names)
 
         self.isValid(verbose=True, force=True)
-        super().write(self._gdx_in, assigned_names)
+        print(f"Second: {modified_names}")
+        super().write(self._gdx_in, modified_names)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if not self._is_first_run else None
@@ -1108,9 +1109,9 @@ class Container(gt.Container):
             if name in self.data.keys():
                 updated_records = temp_container[name]._records
 
-                self[name].records = updated_records
+                self[name]._records = updated_records
                 if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
+                    self[name]._domain_labels = self[name].domain_names
             else:
                 self.read(load_from, [name])
 
@@ -1163,7 +1164,7 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, assigned_names = self._get_touched_symbol_names()
+        dirty_names, modified_names = self._get_touched_symbol_names()
 
         # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_names) > 0:
@@ -1171,4 +1172,4 @@ class Container(gt.Container):
 
         super().write(write_to, symbols)
 
-        self._update_assigned_state(assigned_names)
+        self._update_modified_state(modified_names)

@@ -192,9 +192,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-        # for records and setRecords
-        self._is_assigned = True
-
     def __hash__(self):
         return id(self)
 
@@ -414,9 +411,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -437,10 +431,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records, uels_on_axes=False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """
