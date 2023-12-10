@@ -68,12 +68,12 @@ def get_args():
 
 
 def install_license(args: Dict[str, str]):
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    gamspy_base_dir = utils._get_gamspy_base_directory()
     shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
 
 
 def uninstall_license():
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    gamspy_base_dir = utils._get_gamspy_base_directory()
     os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
 
 
@@ -119,7 +119,7 @@ def install_solver(args: Dict[str, str]):
             )
 
     # copy solver files to gamspy_base
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    gamspy_base_dir = utils._get_gamspy_base_directory()
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
 
     file_paths = solver_lib.file_paths
@@ -176,7 +176,7 @@ def uninstall_solver(args: Dict[str, str]):
             )
 
     # do not delete files from gamspy_base as other solvers might depend on it
-    gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+    gamspy_base_dir = utils._get_gamspy_base_directory()
     remove_solver_entry(gamspy_base_dir, solver_name)
 
 

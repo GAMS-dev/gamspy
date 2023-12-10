@@ -85,4 +85,4 @@ class Domain:
         -------
         str
         """
-        return utils._getDomainStr(self.sets)
+        return utils._get_domain_str(self.sets)

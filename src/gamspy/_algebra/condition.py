@@ -80,7 +80,7 @@ class Condition:
             else "="
         )
 
-        condition = utils._replaceEqualitySigns(
+        condition = utils._replace_equality_signs(
             condition_expression.gamsRepr()
         )
 
@@ -93,7 +93,7 @@ class Condition:
         if isinstance(self._symbol, implicits.ImplicitEquation):
             self._symbol.parent._definition = statement
 
-        self._symbol.container._addStatement(statement)
+        self._symbol.container._add_statement(statement)
 
         if not self._symbol.container.delayed_execution:
-            self._symbol.container._run(implicit=True)
+            self._symbol.container._run(is_implicit=True)

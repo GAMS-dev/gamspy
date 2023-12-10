@@ -35,9 +35,7 @@ from typing import Union
 
 import gams.transfer as gt
 from gams.core import gdx
-from gams.transfer._internals.specialvalues import SpecialValues
 
-import gamspy
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
 
@@ -199,37 +197,7 @@ def isin(symbol, sequence: Sequence) -> bool:
     return False
 
 
-def _in_notebook():
-    try:
-        from IPython import get_ipython
-
-        if "IPKernelApp" not in get_ipython().config:
-            return False
-    except ImportError:
-        return False
-    except AttributeError:
-        return False
-    return True
-
-
-def _loadPackageGlobals() -> None:  # pragma: no cover
-    gamspy._order = 0  # type: ignore
-
-
-def _getUniqueName() -> str:
-    """
-    Generates a unique name for elements with no name (e.g. Expressions).
-
-    Returns
-    -------
-    str
-        Unique name in string format
-    """
-    gamspy._order += 1  # type: ignore
-    return str(gamspy._order)  # type: ignore
-
-
-def _getGAMSPyBaseDirectory() -> str:
+def _get_gamspy_base_directory() -> str:
     """
     Returns the gamspy_base directory.
 
@@ -249,7 +217,7 @@ def _getGAMSPyBaseDirectory() -> str:
     return gamspy_base_directory
 
 
-def _reservedCheck(word: str) -> str:
+def _reserved_check(word: str) -> str:
     reserved_words = [
         "abort",
         "acronym",
@@ -357,7 +325,7 @@ def _reservedCheck(word: str) -> str:
     return word
 
 
-def _closeGdxHandle(handle):
+def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.
 
@@ -370,37 +338,14 @@ def _closeGdxHandle(handle):
     gdx.gdxLibraryUnload()
 
 
-def _replaceEqualitySigns(condition: str) -> str:
-    condition = condition.replace("=l=", "<=")
-    condition = condition.replace("=e=", "=")
-    condition = condition.replace("=g=", ">=")
-    return condition
+def _replace_equality_signs(string: str) -> str:
+    string = string.replace("=l=", "<=")
+    string = string.replace("=e=", "=")
+    string = string.replace("=g=", ">=")
+    return string
 
 
-def _set_special_values(gdxHandle):
-    """
-    Sets the special values
-
-    Parameters
-    ----------
-    gdxHandle : gdxHandle
-
-    Returns
-    -------
-    int
-    """
-    specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
-    specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
-    specVals[gdx.GMS_SVIDX_NA] = SpecialValues.NA
-    specVals[gdx.GMS_SVIDX_EPS] = SpecialValues.EPS
-    specVals[gdx.GMS_SVIDX_PINF] = SpecialValues.POSINF
-    specVals[gdx.GMS_SVIDX_MINF] = SpecialValues.NEGINF
-
-    rc = gdx.gdxSetSpecialValues(gdxHandle, specVals)
-    return rc
-
-
-def _openGdxFile(system_directory: str, load_from: str):
+def _open_gdx_file(system_directory: str, load_from: str):
     """
     Opens the gdx file with given path
 
@@ -428,16 +373,13 @@ def _openGdxFile(system_directory: str, load_from: str):
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
         assert rc[0]
-
-        rc = _set_special_values(gdxHandle)
-        assert rc
     except AssertionError:
         raise GamspyException("GAMSPy could not open gdx file to read from.")
 
     return gdxHandle
 
 
-def _toList(
+def _to_list(
     obj: Union[
         Set,
         Alias,
@@ -469,7 +411,7 @@ def _toList(
     return obj
 
 
-def _getDomainStr(
+def _get_domain_str(
     domain: Iterable[Union[Set, Alias, ImplicitSet, str]]
 ) -> str:
     """
@@ -507,7 +449,7 @@ def _getDomainStr(
     return "(" + ",".join(set_strs) + ")"
 
 
-def _getMatchingParanthesisIndices(string: str) -> dict:
+def _get_matching_paranthesis_indices(string: str) -> dict:
     """
     Stack based paranthesis matcher.
 

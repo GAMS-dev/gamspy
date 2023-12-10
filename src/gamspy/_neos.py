@@ -27,6 +27,7 @@ from __future__ import annotations
 import base64
 import logging
 import os
+import shutil
 import time
 import xmlrpc.client
 import zipfile
@@ -37,16 +38,17 @@ from typing import TYPE_CHECKING
 
 from gamspy.exceptions import GamspyException
 
-logger = logging.getLogger("neos")
+logger = logging.getLogger("NEOS")
 logger.setLevel(logging.INFO)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[NEOS INFO %(asctime)s]:\n%(message)s")
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
     from gams import GamsOptions
+    from gamspy import Container
 
 
 class NeosClient:
@@ -393,3 +395,35 @@ class NeosClient:
             logger.info(msg.data.decode())
 
         return job_number, job_password
+
+
+def run(
+    container: Container,
+    gams_string: str,
+    options: GamsOptions,
+    client: NeosClient,
+):
+    client._prepare_xml(
+        gams_string,
+        container._gdx_in,
+        container._restart_from._checkpoint_file_name,
+        container._save_to.name,
+        options=options,
+        working_directory=container.working_directory,
+    )
+    job_number, job_password = client.submit_job(
+        is_blocking=client.is_blocking,
+        working_directory=container.working_directory,
+    )
+
+    if client.is_blocking:
+        client.download_output(
+            job_number,
+            job_password,
+            working_directory=container.working_directory,
+        )
+
+        shutil.move(
+            os.path.join(container.working_directory, "output.gdx"),
+            container._gdx_out,
+        )

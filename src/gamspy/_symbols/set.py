@@ -121,7 +121,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         singleton_check(is_singleton, records)
 
@@ -139,7 +139,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._container_check(self.domain)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0
@@ -163,7 +163,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -171,7 +171,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         indices: tuple | str,
         assignment,
     ):
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
 
         if isinstance(assignment, bool):
@@ -183,11 +183,11 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run(implicit=True)
+            self.container._run(is_implicit=True)
 
     # Set Attributes
     @property
@@ -420,7 +420,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(implicit=True)
+        self.container._run(is_implicit=True)
 
         return self._records
 

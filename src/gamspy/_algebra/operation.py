@@ -58,7 +58,7 @@ class Operation(operable.Operable):
         ],
         op_name: str,
     ):
-        self.domain = utils._toList(domain)
+        self.domain = utils._to_list(domain)
         assert len(self.domain) > 0, "Operation requires at least one index"
         self.expression = expression
         self._op_name = op_name
