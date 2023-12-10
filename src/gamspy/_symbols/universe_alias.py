@@ -61,7 +61,7 @@ class UniverseAlias(gt.UniverseAlias):
 
         """
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(container, name)
 
@@ -69,7 +69,7 @@ class UniverseAlias(gt.UniverseAlias):
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0

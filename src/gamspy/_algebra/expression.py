@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from gamspy import Variable
 
 GMS_MAX_LINE_LENGTH = 80000
-LINE_LENGTH_OFFSET = 1024
+LINE_LENGTH_OFFSET = 79000
 
 
 class Expression(operable.Operable):
@@ -66,7 +66,6 @@ class Expression(operable.Operable):
     """
 
     def __init__(self, left, data, right) -> None:
-        self.name = utils._getUniqueName()
         self.left = left
         self.data = data
         self.right = right
@@ -92,7 +91,6 @@ class Expression(operable.Operable):
                 else self.right.gamsRepr()
             )
 
-        # negative sign causes an extra operation if not in paranthesis
         # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0)); -> not valid
         # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
         if isinstance(self.left, (int, float)) and self.left < 0:
@@ -114,9 +112,7 @@ class Expression(operable.Operable):
         ):
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
-            right_str = right_str.replace("=e=", "=")
-            right_str = right_str.replace("=l=", "<=")
-            right_str = right_str.replace("=g=", ">=")
+            right_str = utils._replace_equality_signs(right_str)
 
         # get around 80000 line length limitation in GAMS
         length = len(left_str) + len(self.data) + len(right_str)
@@ -137,7 +133,8 @@ class Expression(operable.Operable):
             # test.. a =g= b   -> valid
             out_str = out_str[1:-1]  # remove the paranthesis
 
-        out_str = self._fix_condition_paranthesis(out_str)
+        if self.data == "$":
+            out_str = self._fix_condition_paranthesis(out_str)
 
         if self.data == "==":
             # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
@@ -147,7 +144,7 @@ class Expression(operable.Operable):
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            indices = utils._getMatchingParanthesisIndices(out_str)
+            indices = utils._get_matching_paranthesis_indices(out_str)
             match_index = indices[0]
             out_str = out_str[1:match_index] + out_str[match_index + 1 :]
 
@@ -160,14 +157,15 @@ class Expression(operable.Operable):
         return Expression(self, "ne", other)
 
     def _fix_condition_paranthesis(self, string: str) -> str:
-        if self.data == "$":
-            left, right = string.split("$", 1)
-            right = right.strip()
+        # defopLS(o,p) $ sumc(o,p) <= 0.5 .. op(o,p) =e= 1;   -> not valid
+        # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
+        left, right = string.split("$", 1)
+        right = right.strip()
 
-            if right[0] != "(":
-                right = f"({right})"
+        if right[0] != "(":
+            right = f"({right})"
 
-            string = f"{left}$ {right}"
+        string = f"{left}$ {right}"
 
         return string
 
@@ -195,7 +193,6 @@ class Expression(operable.Operable):
         return self.gamsRepr()
 
     def find_variables(self) -> list[Variable]:
-        """Find variables in an expression"""
         current = self
 
         stack = []

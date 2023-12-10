@@ -734,7 +734,7 @@ def ifthen(
 
     """
     condition_str = condition.gamsRepr()
-    condition_str = utils._replaceEqualitySigns(condition_str)
+    condition_str = utils._replace_equality_signs(condition_str)
 
     ifthen_str = f"ifthen({condition_str}, {yes_return}, {no_return})"
     return expression.Expression(None, ifthen_str, None)

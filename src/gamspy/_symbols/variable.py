@@ -140,7 +140,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._is_frozen = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(
             container,
@@ -159,7 +159,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -170,7 +170,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
@@ -298,7 +298,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(implicit=True)
+        self.container._run(is_implicit=True)
 
         return self._records
 

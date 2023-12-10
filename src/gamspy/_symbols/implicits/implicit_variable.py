@@ -119,6 +119,6 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def gamsRepr(self) -> str:
         representation = self.name
         if self.domain:
-            representation += utils._getDomainStr(self.domain)
+            representation += utils._get_domain_str(self.domain)
 
         return representation

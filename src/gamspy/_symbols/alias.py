@@ -91,7 +91,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         self._is_dirty = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(container, name, alias_with)
 
@@ -101,7 +101,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0
