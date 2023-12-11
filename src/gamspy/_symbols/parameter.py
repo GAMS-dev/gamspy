@@ -118,7 +118,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_frozen = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(
             container,
@@ -136,15 +136,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
-
-        # for records and setRecords
-        self._is_assigned = True
+        self.container._add_statement(self)
 
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -152,7 +149,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Expression,
     ) -> None:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
 
         statement = expression.Expression(
@@ -161,11 +158,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run()
+            self.container._run(is_implicit=True)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
@@ -187,15 +184,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -216,10 +210,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records: Any, uels_on_axes=False):
-        self._is_assigned = True
-        return super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

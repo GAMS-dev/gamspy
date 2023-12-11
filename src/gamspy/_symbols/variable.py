@@ -140,7 +140,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._is_frozen = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(
             container,
@@ -159,7 +159,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # create attributes
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
@@ -167,13 +167,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-        # for records and setRecords
-        self._is_assigned = True
-
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitVariable:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
@@ -301,15 +298,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -330,10 +324,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records, uels_on_axes=False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

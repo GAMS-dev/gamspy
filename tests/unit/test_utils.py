@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import platform
 import unittest
 
@@ -15,20 +17,20 @@ class UtilsSuite(unittest.TestCase):
     def test_utils(self):
         string = "(bla))"
         self.assertRaises(
-            AssertionError, utils._getMatchingParanthesisIndices, string
+            AssertionError, utils._get_matching_paranthesis_indices, string
         )
 
         string2 = "((bla)"
         self.assertRaises(
-            AssertionError, utils._getMatchingParanthesisIndices, string2
+            AssertionError, utils._get_matching_paranthesis_indices, string2
         )
 
         i = Set(self.m, "i", records=["i1", "i2"])
-        self.assertEqual(utils._getDomainStr([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(DomainException, utils._getDomainStr, [5])
+        self.assertEqual(utils._get_domain_str([i, "b", "*"]), '(i,"b",*)')
+        self.assertRaises(DomainException, utils._get_domain_str, [5])
 
         # invalid system directory
-        self.assertRaises(GamspyException, utils._openGdxFile, "bla", "bla")
+        self.assertRaises(GamspyException, utils._open_gdx_file, "bla", "bla")
 
         self.assertFalse(utils.checkAllSame([1, 2], [2]))
         self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))
@@ -36,7 +38,7 @@ class UtilsSuite(unittest.TestCase):
 
         # invalid load from path
         self.assertRaises(
-            Exception, utils._openGdxFile, self.m.system_directory, "bla.gdx"
+            Exception, utils._open_gdx_file, self.m.system_directory, "bla.gdx"
         )
 
     def test_isin(self):

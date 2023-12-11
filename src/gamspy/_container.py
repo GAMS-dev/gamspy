@@ -48,10 +48,11 @@ from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
 import gamspy as gp
+import gamspy._engine as engine
+import gamspy._neos as neos
 import gamspy.utils as utils
 from gamspy._model import ModelStatus
-from gamspy._neos import NeosClient
-from gamspy._options import _mapOptions
+from gamspy._options import _map_options
 from gamspy.exceptions import customize_exception
 from gamspy.exceptions import GamspyException
 
@@ -107,7 +108,7 @@ class Container(gt.Container):
         system_directory = (
             system_directory
             if system_directory
-            else utils._getGAMSPyBaseDirectory()
+            else utils._get_gamspy_base_directory()
         )
 
         self._delayed_execution = delayed_execution
@@ -132,22 +133,10 @@ class Container(gt.Container):
             self._gdx_out,
         ) = self._setup_paths()
 
-        # allows interrupt
         self._job: Optional[GamsJob] = None
-
         self._options = options
 
-    def _addGamsCode(
-        self, gams_code: str, import_symbols: List[str] = []
-    ) -> None:
-        """
-        Adds an arbitrary GAMS code to the generate .gms file
-
-        Parameters
-        ----------
-        gams_code : str
-        import_symbols : List[str], optional
-        """
+    def _addGamsCode(self, gams_code: str, import_symbols: List[str] = []):
         if import_symbols is not None and (
             not isinstance(import_symbols, list)
             or any(not isinstance(symbol, str) for symbol in import_symbols)
@@ -157,7 +146,7 @@ class Container(gt.Container):
         self._import_symbols = import_symbols
         self._unsaved_statements.append(gams_code)
 
-    def _addStatement(self, statement) -> None:
+    def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
@@ -231,7 +220,7 @@ class Container(gt.Container):
                 )
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> List[str]:
-        gdx_handle = utils._openGdxFile(self.system_directory, load_from)
+        gdx_handle = utils._open_gdx_file(self.system_directory, load_from)
         _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
         symbol_names = []
@@ -239,7 +228,7 @@ class Container(gt.Container):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
             symbol_names.append(symbol_name)
 
-        utils._closeGdxHandle(gdx_handle)
+        utils._close_gdx_handle(gdx_handle)
 
         return symbol_names
 
@@ -253,15 +242,7 @@ class Container(gt.Container):
 
         return symbol_names
 
-    def _interrupt(self) -> None:
-        """
-        Sends interrupt signal to the running job.
-
-        Raises
-        ------
-        GamspyException
-            If the job is not initialized
-        """
+    def _interrupt(self):
         if self._job:
             self._job.interrupt()
         else:
@@ -270,18 +251,6 @@ class Container(gt.Container):
     def _setup_paths(
         self,
     ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
-        """
-        Sets up the paths for .g00, and .gdx files.
-
-        Parameters
-        ----------
-        working_directory : str, optional
-
-        Returns
-        -------
-        Tuple[GamsCheckpoint, GamsCheckpoint, str, str]
-            save_to, restart_from, gdx_in, gdx_out
-        """
         suffix = uuid.uuid4()
         save_to = GamsCheckpoint(self.workspace, f"_save_{suffix}.g00")
         restart_from = GamsCheckpoint(self.workspace, f"_restart_{suffix}.g00")
@@ -300,7 +269,7 @@ class Container(gt.Container):
 
     def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
         dirty_names = []
-        assigned_names = []
+        modified_names = []
 
         for name, symbol in self:
             if isinstance(symbol, gp.UniverseAlias):
@@ -309,18 +278,18 @@ class Container(gt.Container):
             if symbol._is_dirty:
                 dirty_names.append(name)
 
-            if symbol._is_assigned:
-                assigned_names.append(name)
+            if symbol.modified:
+                modified_names.append(name)
 
-        return dirty_names, assigned_names
+        return dirty_names, modified_names
 
     def _clean_dirty_symbols(self, dirty_names: List[str]):
         for name in dirty_names:
             self[name]._is_dirty = False
 
-    def _update_assigned_state(self, assigned_names: List[str]):
-        for name in assigned_names:
-            self[name]._is_assigned = False
+    def _update_modified_state(self, modified_names: List[str]):
+        for name in modified_names:
+            self[name].modified = False
 
     def _run(
         self,
@@ -328,12 +297,14 @@ class Container(gt.Container):
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine", "neos"] = "local",
         engine_config: Optional[EngineConfig] = None,
-        neos_client: Optional[NeosClient] = None,
+        neos_client: Optional[neos.NeosClient] = None,
         create_log_file: bool = False,
+        is_implicit: bool = False,
     ):
         if options is None:
-            options = _mapOptions(
+            options = _map_options(
                 self.workspace,
+                backend=backend,
                 options=None,
                 global_options=self._options,
                 is_seedable=self._is_first_run,
@@ -341,15 +312,14 @@ class Container(gt.Container):
                 create_log_file=create_log_file,
             )
 
-        dirty_names, assigned_names = self._get_touched_symbol_names()
+        dirty_names, modified_names = self._get_touched_symbol_names()
         gams_string = self._generate_gams_string(backend, dirty_names)
 
         # Create gdx file to read records from
         self._clean_dirty_symbols(dirty_names)
-        self._update_assigned_state(assigned_names)
-
+        self._update_modified_state(modified_names)
         self.isValid(verbose=True, force=True)
-        super().write(self._gdx_in, assigned_names)
+        super().write(self._gdx_in, modified_names)
 
         # If there is no restart checkpoint, set it to None
         checkpoint = self._restart_from if not self._is_first_run else None
@@ -364,18 +334,13 @@ class Container(gt.Container):
         if backend == "local":
             self._run_local(options, output)
         elif backend == "engine":
-            self._run_engine(options, output, engine_config)
+            assert engine_config
+            engine.run(self, options, output, engine_config)
         elif backend == "neos":
-            self._run_neos(gams_string, options, neos_client)  # type: ignore
-        else:
-            self._unsaved_statements = []
-            raise GamspyException(
-                f"`{backend}` is not a valid backend. Possible backends:"
-                " local, engine, and neos"
-            )
-
-        if backend == "neos" and not neos_client.is_blocking:  # type: ignore
-            return
+            assert neos_client
+            neos.run(self, gams_string, options, neos_client)
+            if not neos_client.is_blocking:
+                return
 
         self.loadRecordsFromGdx(
             self._gdx_out, dirty_names + self._import_symbols
@@ -383,8 +348,101 @@ class Container(gt.Container):
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._is_first_run = False
 
+        return self._prepare_summary(
+            is_implicit, options, backend, engine_config
+        )
+
+    def _prepare_summary(
+        self,
+        is_implicit: bool,
+        options: GamsOptions,
+        backend: str,
+        engine_config: EngineConfig | None,
+    ) -> Union[pd.DataFrame, None]:
+        if is_implicit or options.traceopt != 3:
+            return None
+
+        if backend == "engine":
+            if engine_config is None:
+                return None
+            else:
+                if engine_config.remove_results:
+                    return None
+
+        solve_stat = [
+            "",
+            "Normal",
+            "Iteration",
+            "Resource",
+            "Solver",
+            "EvalError",
+            "Capability",
+            "License",
+            "User",
+            "SetupErr",
+            "SolverErr",
+            "InternalErr",
+            "Skipped",
+            "SystemErr",
+        ]
+        HEADER = [
+            "Solver Status",
+            "Model Status",
+            "Objective",
+            "Num of Equations",
+            "Num of Variables",
+            "Model Type",
+            "Solver",
+            "Solver Time",
+        ]
+        with open(options.trace) as file:
+            line = file.readlines()[-1]
+            (
+                _,
+                model_type,
+                solver_name,
+                _,
+                _,
+                _,
+                _,
+                num_equations,
+                num_variables,
+                _,
+                _,
+                _,
+                _,
+                model_status,
+                solver_status,
+                objective_value,
+                _,
+                solver_time,
+                _,
+                _,
+                _,
+                _,
+            ) = line.split(",")
+
+        dataframe = pd.DataFrame(
+            [
+                [
+                    solve_stat[int(solver_status)],
+                    ModelStatus(int(model_status)).name,
+                    objective_value,
+                    num_equations,
+                    num_variables,
+                    model_type,
+                    solver_name,
+                    solver_time,
+                ]
+            ],
+            columns=HEADER,
+        )
+        return dataframe
+
     def _run_local(
-        self, options: GamsOptions, output: Union[io.TextIOWrapper, None]
+        self,
+        options: GamsOptions,
+        output: Union[io.TextIOWrapper, None],
     ):
         try:
             self._job.run(  # type: ignore
@@ -401,91 +459,13 @@ class Container(gt.Container):
         finally:
             self._unsaved_statements = []
 
-        if utils._in_notebook():
-            from IPython.display import display, HTML
-
-            solve_stat = [
-                "",
-                "Normal",
-                "Iteration",
-                "Resource",
-                "Solver",
-                "EvalError",
-                "Capability",
-                "License",
-                "User",
-                "SetupErr",
-                "SolverErr",
-                "InternalErr",
-                "Skipped",
-                "SystemErr",
-            ]
-            HEADER = [
-                "Solver Status",
-                "Model Status",
-                "Objective",
-                "#equ",
-                "#var",
-                "Model Type",
-                "Solver",
-                "Solver Time",
-            ]
-            with open(
-                os.path.join(self.working_directory, "trace.txt")
-            ) as file:
-                lines = file.readlines()[-2:]
-                (
-                    _,
-                    _,
-                    _,
-                    model_type,
-                    solver_name,
-                    solver_status,
-                    model_status,
-                    _,
-                    _,
-                    _,
-                    _,
-                    num_equations,
-                    num_variables,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    _,
-                    objective_value,
-                    _,
-                ) = lines[0].split(" ")
-
-                solver_time = lines[1].split(" ")[-2]
-
-            dataframe = pd.DataFrame(
-                [
-                    [
-                        solve_stat[int(solver_status)],
-                        ModelStatus(int(model_status)),
-                        objective_value,
-                        num_equations,
-                        num_variables,
-                        model_type,
-                        solver_name,
-                        solver_time,
-                    ]
-                ],
-                columns=HEADER,
-            )
-            display(HTML(dataframe.to_html()))
-
     def _run_engine(
         self,
         options: GamsOptions,
         output: Union[io.TextIOWrapper, None],
         engine_config: Union[EngineConfig, None],
     ):
-        options.forcework = 1  # In case GAMS version differs on Engine
+        options.previouswork = 1  # In case GAMS version differs on Engine
 
         assert engine_config
 
@@ -509,37 +489,6 @@ class Container(gt.Container):
         finally:
             self._unsaved_statements = []
             options.forcework = 0
-
-    def _run_neos(
-        self,
-        gams_string: str,
-        options: GamsOptions,
-        client: NeosClient,
-    ):
-        client._prepare_xml(
-            gams_string,
-            self._gdx_in,
-            self._restart_from._checkpoint_file_name,
-            self._save_to.name,
-            options=options,
-            working_directory=self.working_directory,
-        )
-        job_number, job_password = client.submit_job(
-            is_blocking=client.is_blocking,
-            working_directory=self.working_directory,
-        )
-
-        if client.is_blocking:
-            client.download_output(
-                job_number,
-                job_password,
-                working_directory=self.working_directory,
-            )
-
-            shutil.move(
-                os.path.join(self.working_directory, "output.gdx"),
-                self._gdx_out,
-            )
 
     @property
     def delayed_execution(self) -> bool:
@@ -909,7 +858,7 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._run()
+        self._run(is_implicit=True)
 
         for name, symbol in self:
             new_domain = []
@@ -1009,7 +958,7 @@ class Container(gt.Container):
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
             if equation._definition is not None:
-                m._addStatement(equation._definition)
+                m._add_statement(equation._definition)
 
         return m
 
@@ -1034,7 +983,6 @@ class Container(gt.Container):
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
     def _preprocess_gdx_paths(self, backend: str) -> Tuple[str, str]:
-        # setup gdx input name according to backend
         if backend == "engine":
             return (
                 os.path.basename(self._gdx_in),
@@ -1053,7 +1001,6 @@ class Container(gt.Container):
         LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         gdx_in, gdx_out = self._preprocess_gdx_paths(backend)
 
-        # Generate the string
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
@@ -1102,20 +1049,23 @@ class Container(gt.Container):
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
         temp_container = Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names)
+        temp_container.read(load_from, symbol_names, cast_to_gamspy=False)
 
         for name in symbol_names:
             if name in self.data.keys():
                 updated_records = temp_container[name]._records
 
-                self[name].records = updated_records
+                self[name]._records = updated_records
                 if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
+                    self[name]._domain_labels = self[name].domain_names
             else:
                 self.read(load_from, [name])
 
     def read(
-        self, load_from: str, symbol_names: Optional[List[str]] = None
+        self,
+        load_from: str,
+        symbol_names: Optional[List[str]] = None,
+        cast_to_gamspy: bool = True,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -1139,7 +1089,9 @@ class Container(gt.Container):
 
         """
         super().read(load_from, symbol_names)
-        self._cast_symbols(symbol_names)
+
+        if cast_to_gamspy:
+            self._cast_symbols(symbol_names)
 
     def write(
         self,
@@ -1163,12 +1115,11 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, assigned_names = self._get_touched_symbol_names()
+        dirty_names, modified_names = self._get_touched_symbol_names()
 
-        # If there are dirty symbols, make 'em clean by calculating their records
         if len(dirty_names) > 0:
-            self._run()
+            self._run(is_implicit=True)
 
         super().write(write_to, symbols)
 
-        self._update_assigned_state(assigned_names)
+        self._update_modified_state(modified_names)

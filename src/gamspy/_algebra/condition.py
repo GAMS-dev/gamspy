@@ -48,10 +48,16 @@ class Condition:
         self._symbol = symbol
 
     def __getitem__(self, condition_expression):
-        condition = utils._replaceEqualitySigns(
-            condition_expression.gamsRepr()
-        )
-        return expression.Expression(self._symbol, "$", condition)
+        sign_map = {"=g=": ">=", "=e=": "==", "=l=": "<="}
+        if (
+            hasattr(condition_expression, "data")
+            and condition_expression.data in sign_map.keys()
+        ):
+            condition_expression.data = sign_map[condition_expression.data]
+            condition_expression.representation = (
+                condition_expression._create_representation()
+            )
+        return expression.Expression(self._symbol, "$", condition_expression)
 
     def __setitem__(self, condition_expression, right_hand_expression) -> None:
         assert hasattr(
@@ -74,7 +80,7 @@ class Condition:
             else "="
         )
 
-        condition = utils._replaceEqualitySigns(
+        condition = utils._replace_equality_signs(
             condition_expression.gamsRepr()
         )
 
@@ -87,7 +93,7 @@ class Condition:
         if isinstance(self._symbol, implicits.ImplicitEquation):
             self._symbol.parent._definition = statement
 
-        self._symbol.container._addStatement(statement)
+        self._symbol.container._add_statement(statement)
 
         if not self._symbol.container.delayed_execution:
-            self._symbol.container._run()
+            self._symbol.container._run(is_implicit=True)

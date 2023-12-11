@@ -121,7 +121,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         singleton_check(is_singleton, records)
 
@@ -139,13 +139,10 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._container_check(self.domain)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0
-
-        # for records and setRecords
-        self._is_assigned = True
 
     def __len__(self):
         if self.records is not None:
@@ -166,7 +163,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -174,7 +171,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         indices: tuple | str,
         assignment,
     ):
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
 
         if isinstance(assignment, bool):
@@ -186,11 +183,11 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run()
+            self.container._run(is_implicit=True)
 
     # Set Attributes
     @property
@@ -423,15 +420,12 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -452,10 +446,6 @@ class Set(gt.Set, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
-
-    def setRecords(self, records: Any, uels_on_axes: bool = False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
 
     def sameAs(self, other: Set | Alias) -> Expression:
         return expression.Expression(

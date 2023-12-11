@@ -195,7 +195,7 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run()
+        m._run(is_implicit=True)
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
@@ -212,7 +212,7 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
         self.assertEqual(
-            utils._getGAMSPyBaseDirectory().lower(), expected_path.lower()
+            utils._get_gamspy_base_directory().lower(), expected_path.lower()
         )
 
     def test_non_empty_working_directory(self):
