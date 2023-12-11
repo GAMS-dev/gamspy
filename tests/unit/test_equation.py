@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -21,7 +22,9 @@ from gamspy.math import sqr
 
 class EquationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_equation_creation(self):
         # no name
@@ -46,7 +49,9 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Equation and domain containers are different
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         set1 = Set(self.m, "set1")
         with self.assertRaises(GamspyException):
             _ = Equation(m, "eq1", domain=[set1])
@@ -75,7 +80,7 @@ class EquationSuite(unittest.TestCase):
         eq1 = Equation(self.m, "eq1", type="nonbinding")
         eq1[...] = x - c
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            eq1._definition.gamsRepr(),
             "eq1 .. (x - c) =n= 0;",
         )
         self.assertEqual(eq1.type, "nonbinding")
@@ -83,13 +88,13 @@ class EquationSuite(unittest.TestCase):
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
         eq2[i] = x[i] - c[i]
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            eq2._definition.gamsRepr(),
             "eq2(i) .. (x(i) - c(i)) =n= 0;",
         )
 
         eq2[i] = x[i] - c[i]
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            eq2._definition.gamsRepr(),
             "eq2(i) .. (x(i) - c(i)) =n= 0;",
         )
 
@@ -222,12 +227,12 @@ class EquationSuite(unittest.TestCase):
 
         self.assertIsNotNone(cost[...])
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            cost._definition.getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
         # Equation definition with an index
-        _ = Equation(
+        supply = Equation(
             self.m,
             name="supply",
             domain=[i],
@@ -235,7 +240,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum(j, x[i, j]) <= a[i],
         )
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            supply._definition.getStatement(),
             "supply(i) .. sum(j,x(i,j)) =l= a(i);",
         )
 
@@ -248,37 +253,37 @@ class EquationSuite(unittest.TestCase):
         )
         bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            bla._definition.getStatement(),
             "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
         bla[i, "*"] = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            bla._definition.getStatement(),
             "bla(i,*) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
         # Equation definition in constructor
-        _ = Equation(
+        cost2 = Equation(
             self.m,
             name="cost2",
             description="define objective function",
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            cost2._definition.getStatement(),
             "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
         # Equation definition in addEquation
-        _ = self.m.addEquation(
-            name="cost2",
+        cost3 = self.m.addEquation(
+            name="cost3",
             description="define objective function",
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
-            "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
+            cost3._definition.getStatement(),
+            "cost3 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
         # eq[bla][...] test
@@ -290,12 +295,12 @@ class EquationSuite(unittest.TestCase):
         )
         bla2[i, j] = Sum((i, j), x[i, j]) <= a[i]
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            bla2._definition.getStatement(),
             "bla2(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
         )
 
         # eq[bla] with different domain
-        _ = Equation(
+        bla3 = Equation(
             self.m,
             name="bla3",
             domain=[i, j],
@@ -304,11 +309,13 @@ class EquationSuite(unittest.TestCase):
             definition_domain=[i, "bla"],
         )
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            bla3._definition.getStatement(),
             'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
         )
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
         t2 = Set(m, name="t2", records=[str(i) for i in range(1, 4)])
@@ -328,7 +335,7 @@ class EquationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
+            eStartNaive._definition.getStatement(),
             "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and"
             " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
         )
@@ -467,7 +474,7 @@ class EquationSuite(unittest.TestCase):
         a = Equation(m, "a", "regular", [i])
         a[i] = x[i] == 5
 
-        self.assertFalse(a._is_dirty)
+        self.assertTrue(a._is_dirty)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
@@ -481,13 +488,13 @@ class EquationSuite(unittest.TestCase):
         f[...] = x - c
 
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            f._definition.gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
 
-        _ = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
+        f2 = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            f2._definition.gamsRepr(),
             "f2 .. (x - c) =n= 0;",
         )
 
@@ -505,7 +512,9 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(A.getStatement(), "Equation A(*,*);")
 
     def test_equation_assignment(self):
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         i = Set(self.m, "i")
         j = Set(m, "j")
@@ -514,7 +523,9 @@ class EquationSuite(unittest.TestCase):
         with self.assertRaises(GamspyException):
             a[j] = 5
 
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)
         v = Set(m, "v", records=range(0, 1001))

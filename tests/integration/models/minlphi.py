@@ -101,6 +101,9 @@ _______________________
 Keywords: mixed integer linear programming, nonlinear programming, chemical engineering,
           distillation sequences, heat integrated distillation
 """
+from __future__ import annotations
+
+import os
 from sys import float_info
 
 import numpy as np
@@ -125,7 +128,9 @@ def sqr(x):
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # SETS #
     # the set of all columns and their condensers in the superstructure

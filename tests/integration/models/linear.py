@@ -13,6 +13,10 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 86-88.
 Keywords: linear programming, nonlinear programming, discontinuous derivatives,
           linear regression, econometrics
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 import gamspy.math as gams_math
@@ -28,7 +32,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Data
     dat_df = pd.DataFrame(

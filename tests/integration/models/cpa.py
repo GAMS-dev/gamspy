@@ -13,6 +13,10 @@ equations. Computers & Chemical Engineering, vol. 26, 2002, pp.547-554.
 Meintjes, K., Morgan, A.P., (1990) Chemical equilibrium systems as
 numerical test problems. ACM Trans. Math. Software, 16, 1990, pp. 143-151.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Container
 from gamspy import Equation
@@ -26,7 +30,7 @@ def sqr(x):
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SCALAR #
     R = Parameter(m, name="R", records=40)

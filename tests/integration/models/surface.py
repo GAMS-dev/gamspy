@@ -7,6 +7,10 @@ constraints on the boundary of the domain of f.
 Boyd, S., Vandenberghe, L., Convex Optimization, Cambridge University Press,
 Cambridge, 2004.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Card
 from gamspy import Container
@@ -25,7 +29,7 @@ def sqr(x):
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     X = Set(m, name="X", records=[f"I{i}" for i in range(1, 22)])

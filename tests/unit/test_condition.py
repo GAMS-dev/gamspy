@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -114,20 +115,13 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
         self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
+            defopLS._definition.getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
         expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]
         self.assertEqual(
             expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
-        )
-
-        random_eq = Equation(m, "random", domain=[i, j])
-        random_eq[i, j] = Sum(i, muf[i, j]).where[muf[i, j] > 0] >= 0
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            "random(i,j) .. (sum(i,muf(i,j)) $ (muf(i,j) > 0)) =g= 0;",
         )
 
         i["ahmsa"] = True
@@ -314,7 +308,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
+            defopLS._definition.getStatement(),
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
@@ -325,7 +319,9 @@ class ConditionSuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
@@ -356,7 +352,9 @@ class ConditionSuite(unittest.TestCase):
             [("Product_A", 20), ("Product_B", 25), ("Product_C", 30)]
         )
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
 

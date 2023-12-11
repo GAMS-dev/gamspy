@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -116,7 +117,9 @@ class OperationSuite(unittest.TestCase):
 
     def test_operation_indices(self):
         # Test operation index
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         mt = 2016
         mg = 17
         maxdt = 40
@@ -153,7 +156,7 @@ class OperationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            m._unsaved_statements[-1].gamsRepr(),
+            eStartFast._definition.gamsRepr(),
             "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
             " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
             " =l= 1;",

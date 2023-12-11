@@ -13,6 +13,10 @@ Aguirre, A.H., Munoz Zavala, A.E., Villa Diharce, E., Botello Rionada, S.,
 COPSO: Constrained optimization via PSO algorithm. Comunicacion Tecnica
 No I-07-04/22-02-2007. Center for Research in Mathematics (CIMAT), Mexico.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Container
 from gamspy import Equation
@@ -21,7 +25,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # VARIABLES #
     x1 = Variable(m, name="x1")

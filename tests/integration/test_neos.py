@@ -14,10 +14,12 @@ from gamspy import Variable
 from gamspy._neos import NeosClient
 from gamspy.exceptions import GamspyException
 
-if os.path.exists(os.getcwd() + os.sep + ".env"):
+try:
     from dotenv import load_dotenv
 
     load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
 
 
 class NeosSuite(unittest.TestCase):
@@ -128,7 +130,9 @@ class NeosSuite(unittest.TestCase):
             transport.solve(backend="neos")
 
     def test_different_solver(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Prepare data
         distances = [

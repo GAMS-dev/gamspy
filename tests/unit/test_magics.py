@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -10,7 +13,9 @@ from gamspy import Variable
 
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_magics(self):
         # Prepare data

@@ -22,7 +22,10 @@ Processing. 284 (November, 1998).
 Keywords: quadratic constraint programming, second order cone programming,
           engineering, finite impulse response filter designment
 """
+from __future__ import annotations
+
 import math
+import os
 
 import gamspy.math as gams_math
 from gamspy import Card
@@ -39,7 +42,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])

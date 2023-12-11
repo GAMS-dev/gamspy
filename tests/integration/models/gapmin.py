@@ -24,6 +24,10 @@ the Generalized Assignment Problem. Operations Research 37 (1989), 658-663.
 Keywords: mixed integer linear programming, relaxed mixed integer linear
           programming, general assignment problem, lagrangian relaxation, knapsack
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -71,7 +75,7 @@ def table_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Original Model Definition
 

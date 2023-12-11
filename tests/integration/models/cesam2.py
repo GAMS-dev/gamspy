@@ -76,6 +76,10 @@ Original version programmed by Sherman Robinson and Andrea Cattaneo.
 Keywords: nonlinear programming, micro economics, cross entropy, social
 accounting matrix
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 from gamspy import Alias
@@ -99,7 +103,7 @@ from gamspy.math import log
 
 
 def main(is_centropy=False):
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     SAM_recs = np.array(
         [

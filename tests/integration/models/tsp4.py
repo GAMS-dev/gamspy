@@ -13,6 +13,9 @@ de Wetering, A V, private communication.
 Keywords: mixed integer linear programming, traveling salesman problem, iterative
           subtour elimination
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -32,7 +35,7 @@ from gamspy.exceptions import GamspyException
 
 def main():
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/tsp4.gdx",
     )
 

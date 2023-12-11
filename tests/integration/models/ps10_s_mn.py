@@ -9,6 +9,9 @@ March 2012.
 Keywords: nonlinear programming, contract theory, principal-agent problem,
           adverse selection, parts supply problem
 """
+from __future__ import annotations
+
+import os
 import time
 
 from gamspy import Alias
@@ -36,7 +39,7 @@ def main():
     # Otherwise, it takes a lot of time
     NUM_DRAWS = 11
 
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Sets
     i = Set(

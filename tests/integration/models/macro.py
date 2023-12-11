@@ -11,6 +11,10 @@ Please see:
 Kendrick, D, Caution and Probing in a Macroeconomic Model.
 Journal of Economic Dynamics and Control 4, 2 (1982) pp.149-170.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -28,7 +32,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # SETS #
     n = Set(

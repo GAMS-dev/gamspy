@@ -10,6 +10,9 @@ de Wetering, A V, private communication.
 
 Keywords: mixed complementarity problem, quadratic programming, finance
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 from gamspy import Card
@@ -27,7 +30,7 @@ from gamspy.math import sqr
 def main():
     cont = Container(
         load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx",
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

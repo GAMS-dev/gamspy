@@ -6,6 +6,9 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 5.7
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 from sys import argv
 
@@ -189,7 +192,10 @@ def index_data():
 
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
-    m = Container(delayed_execution=True, load_from=gdx_file)
+    m = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        load_from=gdx_file,
+    )
 
     output = argv[1] if len(argv) > 1 else "PutCallModel"
 

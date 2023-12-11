@@ -30,6 +30,10 @@ the GAMS model library.
 Keywords: nonlinear programming, contract theory, principal-agent problem,
           adverse selection, parts supply problem
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Alias
 from gamspy import Card
@@ -46,7 +50,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # Set
     i = Set(cont, name="i", records=["1", "2"])
