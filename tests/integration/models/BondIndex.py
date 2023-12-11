@@ -6,6 +6,9 @@ Tracking international bond index - GDX input
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 8.2
 * Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import numpy as np
@@ -21,7 +24,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
     m.read(
         load_from=str(Path(__file__).parent.absolute()) + "/BondIndex.gdx",
         symbol_names=[

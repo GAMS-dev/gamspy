@@ -6,6 +6,9 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 3.4
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 from gamspy import Alias
@@ -20,7 +23,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Read from MeanVarMip.gdx the data needed to run the mean-variance model
     m.read(

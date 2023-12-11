@@ -12,6 +12,9 @@ University Press, New York and Oxford, 1979.
 
 Keywords: nonlinear programming, econometrics, economic development
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 from gamspy import Container
@@ -24,7 +27,7 @@ from gamspy import Sum
 
 def main():
     container = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/chenery.gdx",
     )
 

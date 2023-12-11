@@ -22,13 +22,19 @@ Optimization, 2002.
 Keywords: mixed integer linear programming, relaxed mixed integer programming,
           scenario analysis, GUSS, flow shop scheduling, production planning
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 import gamspy as gap
 
 
 def flow_shop(process_time_df, last_machine, last_item):
-    c = gap.Container(delayed_execution=True)
+    c = gap.Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # Sets
     i = c.addSet(

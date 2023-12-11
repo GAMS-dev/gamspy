@@ -8,6 +8,10 @@ Neculai Andrei, "Models, Test Problems and Applications for
 Mathematical Programming". Technical Press, Bucharest, 2003.
 Application A34, pp.397.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -20,7 +24,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # SETS #
     n = Set(cont, name="n", records=[f"c{c}" for c in range(1, 5)])

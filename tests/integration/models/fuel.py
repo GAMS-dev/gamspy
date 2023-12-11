@@ -17,6 +17,10 @@ Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
 Keywords: mixed integer nonlinear programming, scheduling, engineering, power
           generation, unit commitment problem
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 from gamspy import Card
@@ -32,7 +36,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     t = Set(m, name="t", records=["period-1", "period-2", "period-3"])

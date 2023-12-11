@@ -211,8 +211,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         self._set_definition(assignment, domain)
         self._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)

@@ -8,6 +8,10 @@ i=1,...,n.
 The second one determine the inverse by solving the linear system AX=I, where
 X is the inverse of A.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 from gamspy import Alias
@@ -36,7 +40,7 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SET #
     i = Set(m, name="i", records=[f"i{i}" for i in range(1, 6)])

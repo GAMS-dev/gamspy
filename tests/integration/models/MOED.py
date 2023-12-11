@@ -15,6 +15,10 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 from gamspy import Card
@@ -50,7 +54,7 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])

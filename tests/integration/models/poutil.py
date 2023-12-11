@@ -25,6 +25,10 @@ optimization,
           unit commitment, economic dispatch, power plant control,
           day-ahead market
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 from gamspy import Card
@@ -42,7 +46,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     power_forecast_recs = np.array(
         [

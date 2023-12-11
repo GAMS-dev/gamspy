@@ -6,6 +6,10 @@ A three stage stochastic programming model for SPDA
 * See also Zenios: Practical Financial Optimization, Section 6.4.
 * Last modified: Nov. 2005.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -59,7 +63,7 @@ def prepare_yield():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     Scenarios = Set(

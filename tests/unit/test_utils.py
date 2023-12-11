@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import platform
 import unittest
 
@@ -12,7 +13,9 @@ from gamspy.exceptions import GamspyException
 
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_utils(self):
         string = "(bla))"

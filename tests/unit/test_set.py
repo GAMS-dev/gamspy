@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 from gamspy import Alias
@@ -39,7 +40,9 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Set and domain containers are different
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         set1 = Set(self.m, "set1")
         with self.assertRaises(GamspyException):
             _ = Set(m, "set2", domain=[set1])
@@ -254,7 +257,9 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(count, 2)
 
         # UniverseAlias with no records
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         x = Set(m, "set1")
         a = UniverseAlias(m, "universe1")
         count = 0

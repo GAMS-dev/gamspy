@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import numpy as np
@@ -42,7 +43,9 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Parameter and domain containers are different
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         set1 = Set(self.m, "set1")
         with self.assertRaises(GamspyException):
             _ = Parameter(m, "param1", domain=[set1])
@@ -115,7 +118,9 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual(A.getStatement(), "Parameter A(*,*);")
 
     def test_parameter_assignment(self):
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         i = Set(self.m, "i")
         j = Set(m, "j")
@@ -192,7 +197,9 @@ class ParameterSuite(unittest.TestCase):
         self.assertRaises(ValueError, self.m.addParameter, "c", [s, s])
 
     def test_undef(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         _ = Parameter(
             m, name="rho", records=[np.nan]
         )  # Instead of using numpy there might be a NA from the math package

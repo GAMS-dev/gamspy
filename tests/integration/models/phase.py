@@ -7,6 +7,10 @@ Test Problem 1, pp. 180-181.
 Van der Waals equation, Tangent Plane distance minimization
 Ternary System
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Alias
 from gamspy import Container
@@ -19,7 +23,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SET #
     i = Set(m, name="i", records=["1", "2", "3"], description="components")

@@ -17,6 +17,10 @@ Keywords: mixed integer linear programming, mixed integer nonlinear
 programming,
           social golfer problem, combinatorial optimization
 """
+from __future__ import annotations
+
+import os
+
 from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
@@ -30,7 +34,9 @@ from gamspy.math import Max as gams_max
 
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     gf_c = gr_c * gg_c
 

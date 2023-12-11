@@ -1053,7 +1053,7 @@ class Container(gt.Container):
 
         for name in symbol_names:
             if name in self.data.keys():
-                updated_records = temp_container[name]._records
+                updated_records = temp_container[name].records
 
                 self[name]._records = updated_records
                 if updated_records is not None:

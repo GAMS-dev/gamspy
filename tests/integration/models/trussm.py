@@ -46,6 +46,10 @@ Second-order Cone Programming", Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image Processing.
 284 (1998) 193-228.
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 from gamspy import Container
@@ -61,7 +65,7 @@ from gamspy.math import uniform
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Prepare data
     forces = pd.DataFrame(
