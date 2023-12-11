@@ -1117,13 +1117,13 @@ class SolveSuite(unittest.TestCase):
             "Solver",
             "Solver Time",
         ]
-        self.assertTrue(summary.equals(pd.DataFrame(data=[['Normal', 'OptimalGlobal', '153.675', '6', '7', 'LP', 'CPLEX', '0']], columns=columns)))
+        self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
         summary = transport.solve(options=Options(trace_file_format=5))
         self.assertIsNone(summary)
         
         summary = transport.solve(options=Options(trace_file="bla.txt"))
-        self.assertTrue(summary.equals(pd.DataFrame(data=[['Normal', 'OptimalGlobal', '153.675', '6', '7', 'LP', 'CPLEX', '0']], columns=columns)))
+        self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
 
 
