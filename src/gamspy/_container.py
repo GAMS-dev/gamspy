@@ -300,7 +300,7 @@ class Container(gt.Container):
         neos_client: Optional[neos.NeosClient] = None,
         create_log_file: bool = False,
         is_implicit: bool = False,
-    ):
+    ) -> Union[pd.DataFrame, None]:
         if options is None:
             options = _map_options(
                 self.workspace,
@@ -340,7 +340,7 @@ class Container(gt.Container):
             assert neos_client
             neos.run(self, gams_string, options, neos_client)
             if not neos_client.is_blocking:
-                return
+                return None
 
         self.loadRecordsFromGdx(
             self._gdx_out, dirty_names + self._import_symbols
