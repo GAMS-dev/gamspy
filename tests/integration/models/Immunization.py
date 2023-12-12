@@ -124,6 +124,20 @@ def main():
     Liability = Parameter(
         m, name="Liability", domain=[t], description="Stream of liabilities"
     )
+
+    # Copy/transform data. Note division by 100 to get unit data, and
+    # subtraction of "Now" from Maturity date (so consistent with tau):
+
+    Coupon[i] = BondData[i, "Coupon"] / 100
+    Maturity[i] = BondData[i, "Maturity"] - Now
+
+    # Calculate the ex-coupon cashflow of Bond i in year t:
+
+    F[t, i] = (
+        Number(1).where[tau[t] == Maturity[i]]
+        + Coupon[i].where[(tau[t] <= Maturity[i]) & (tau[t] > 0)]
+    )
+
     Liability.setRecords(
         np.array(
             [
@@ -140,19 +154,6 @@ def main():
                 150000,
             ]
         )
-    )
-
-    # Copy/transform data. Note division by 100 to get unit data, and
-    # subtraction of "Now" from Maturity date (so consistent with tau):
-
-    Coupon[i] = BondData[i, "Coupon"] / 100
-    Maturity[i] = BondData[i, "Maturity"] - Now
-
-    # Calculate the ex-coupon cashflow of Bond i in year t:
-
-    F[t, i] = (
-        Number(1).where[tau[t] == Maturity[i]]
-        + Coupon[i].where[(tau[t] <= Maturity[i]) & (tau[t] > 0)]
     )
 
     r = Parameter(

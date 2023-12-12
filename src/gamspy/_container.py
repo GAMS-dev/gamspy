@@ -313,7 +313,9 @@ class Container(gt.Container):
             )
 
         dirty_names, modified_names = self._get_touched_symbol_names()
-        gams_string = self._generate_gams_string(backend, dirty_names)
+        gams_string = self._generate_gams_string(
+            backend, dirty_names, modified_names
+        )
 
         # Create gdx file to read records from
         self._clean_dirty_symbols(dirty_names)
@@ -997,6 +999,7 @@ class Container(gt.Container):
         self,
         backend: str = "local",
         dirty_names: List[str] = [],
+        modified_names: List[str] = [],
     ) -> str:
         LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         gdx_in, gdx_out = self._preprocess_gdx_paths(backend)
@@ -1012,6 +1015,10 @@ class Container(gt.Container):
 
                 if isinstance(statement, LOAD_SYMBOL_TYPES):
                     string += f"$load {statement.name}\n"
+
+        for symbol_name in modified_names:
+            if not isinstance(self[symbol_name], gp.Alias):
+                string += f"$load {symbol_name}\n"
 
         string += "$offUNDF\n$gdxIn\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
