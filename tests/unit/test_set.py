@@ -206,19 +206,19 @@ class SetSuite(unittest.TestCase):
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 
-    def _test_set_attributes(self):
+    def test_set_attributes(self):
         i = Set(self.m, "i")
-        self.assertEqual(i.pos.gamsRepr(), "( i.pos )")
-        self.assertEqual(i.ord.gamsRepr(), "( i.ord )")
-        self.assertEqual(i.off.gamsRepr(), "( i.off )")
-        self.assertEqual(i.rev.gamsRepr(), "( i.rev )")
-        self.assertEqual(i.uel.gamsRepr(), "( i.uel )")
-        self.assertEqual(i.len.gamsRepr(), "( i.len )")
-        self.assertEqual(i.tlen.gamsRepr(), "( i.tlen )")
-        self.assertEqual(i.val.gamsRepr(), "( i.val )")
-        self.assertEqual(i.tval.gamsRepr(), "( i.tval )")
-        self.assertEqual(i.first.gamsRepr(), "( i.first )")
-        self.assertEqual(i.last.gamsRepr(), "( i.last )")
+        self.assertEqual(i.pos.gamsRepr(), "i.pos")
+        self.assertEqual(i.ord.gamsRepr(), "i.ord")
+        self.assertEqual(i.off.gamsRepr(), "i.off")
+        self.assertEqual(i.rev.gamsRepr(), "i.rev")
+        self.assertEqual(i.uel.gamsRepr(), "i.uel")
+        self.assertEqual(i.len.gamsRepr(), "i.len")
+        self.assertEqual(i.tlen.gamsRepr(), "i.tlen")
+        self.assertEqual(i.val.gamsRepr(), "i.val")
+        self.assertEqual(i.tval.gamsRepr(), "i.tval")
+        self.assertEqual(i.first.gamsRepr(), "i.first")
+        self.assertEqual(i.last.gamsRepr(), "i.last")
 
     def test_iterable(self):
         # Set with no records
