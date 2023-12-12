@@ -203,7 +203,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.pos")
 
@@ -214,7 +214,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.ord")
 
@@ -225,7 +225,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.off")
 
@@ -237,7 +237,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.rev")
 
@@ -248,7 +248,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.uel")
 
@@ -259,7 +259,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.len")
 
@@ -270,7 +270,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
 
@@ -284,7 +284,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.val")
 
@@ -298,7 +298,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tval")
 
@@ -309,7 +309,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.first")
 
@@ -320,7 +320,7 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.last")
 

@@ -138,7 +138,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.pos")
 
@@ -149,7 +149,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.ord")
 
@@ -160,7 +160,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.off")
 
@@ -172,7 +172,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.rev")
 
@@ -183,7 +183,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.uel")
 
@@ -194,7 +194,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.len")
 
@@ -205,7 +205,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
 
@@ -219,7 +219,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.val")
 
@@ -233,7 +233,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tval")
 
@@ -244,7 +244,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.first")
 
@@ -255,7 +255,7 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
