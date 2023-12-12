@@ -24,11 +24,21 @@
 #
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import gamspy._algebra.expression as expression
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+
+if TYPE_CHECKING:
+    from gamspy._symbols.implicits import (
+        ImplicitSet,
+        ImplicitParameter,
+        ImplicitEquation,
+    )
+    from gamspy._algebra.expression import Expression
 
 
 class Condition:
@@ -37,33 +47,37 @@ class Condition:
 
     Parameters
     ----------
-    symbol: Alias | Set | Parameter | Variable | Equation | Expression
+    symbol: ImplicitSet | ImplicitParameter | ImplicitEquation | Expression
         Reference to the symbol to be conditioned.
 
     >>> muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
     >>> minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
     """
 
-    def __init__(self, symbol):
+    def __init__(
+        self,
+        symbol: (
+            "ImplicitSet"
+            | "ImplicitParameter"
+            | "ImplicitEquation"
+            | "Expression"
+        ),
+    ):
         self._symbol = symbol
 
-    def __getitem__(self, condition_expression):
+    def __getitem__(
+        self, condition: "Expression" | "ImplicitParameter" | "ImplicitSet"
+    ) -> Expression:
         sign_map = {"=g=": ">=", "=e=": "==", "=l=": "<="}
         if (
-            hasattr(condition_expression, "data")
-            and condition_expression.data in sign_map.keys()
+            isinstance(condition, expression.Expression)
+            and condition.data in sign_map.keys()
         ):
-            condition_expression.data = sign_map[condition_expression.data]
-            condition_expression.representation = (
-                condition_expression._create_representation()
-            )
-        return expression.Expression(self._symbol, "$", condition_expression)
+            condition.data = sign_map[condition.data]
+            condition.representation = condition._create_representation()
+        return expression.Expression(self._symbol, "$", condition)
 
     def __setitem__(self, condition_expression, right_hand_expression) -> None:
-        assert hasattr(
-            self._symbol, "container"  # pragma: no cover
-        ), f"Container must be defined for symbol {self._symbol.name}"
-
         if isinstance(self._symbol, ImplicitSymbol):
             self._symbol.container[self._symbol.parent.name]._is_dirty = True
 
@@ -72,13 +86,12 @@ class Condition:
                 "yes" if right_hand_expression is True else "no"
             )
 
-        op_type = (
-            ".."
-            if isinstance(
-                self._symbol, (syms.Equation, implicits.ImplicitEquation)
-            )
-            else "="
-        )
+        if isinstance(
+            self._symbol, (syms.Equation, implicits.ImplicitEquation)
+        ):
+            op_type = ".."
+        else:
+            op_type = "="
 
         condition = utils._replace_equality_signs(
             condition_expression.gamsRepr()

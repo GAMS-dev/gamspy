@@ -536,7 +536,7 @@ class EquationSuite(unittest.TestCase):
         e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
         self.assertEqual(
             e._definition.getStatement(),
-            "e .. sum(i $ (( i.val ) = (L - 1)),(( power(x(i),2) ) + ("
+            "e .. sum(i $ ((L - 1) = i.val),(( power(x(i),2) ) + ("
             " power(y(i),2) ))) =e= 1;",
         )
 
