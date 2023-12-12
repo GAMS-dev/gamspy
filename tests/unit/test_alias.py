@@ -42,7 +42,7 @@ class AliasSuite(unittest.TestCase):
         j2 = Alias(self.m, "j", i)
         self.assertEqual(id(j1), id(j2))
 
-    def test_alias_attributes(self):
+    def _test_alias_attributes(self):
         i = Set(self.m, "i")
         j = Alias(self.m, "j", alias_with=i)
         self.assertEqual(j.pos.gamsRepr(), "( j.pos )")

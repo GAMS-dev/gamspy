@@ -159,6 +159,12 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._current_index = 0
         raise StopIteration
 
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
     def __iter__(self):
         return self
 
@@ -199,7 +205,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.pos", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.pos")
 
     @property
     def ord(self):
@@ -210,7 +216,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.ord", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.ord")
 
     @property
     def off(self):
@@ -221,7 +227,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.off", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.off")
 
     @property
     def rev(self):
@@ -233,7 +239,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.rev", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.rev")
 
     @property
     def uel(self):
@@ -244,7 +250,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.uel", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.uel")
 
     @property
     def len(self):
@@ -255,7 +261,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.len", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.len")
 
     @property
     def tlen(self):
@@ -266,7 +272,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.tlen", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
 
     @property
     def val(self):
@@ -280,7 +286,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.val", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.val")
 
     @property
     def tval(self):
@@ -294,7 +300,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.tval", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.tval")
 
     @property
     def first(self):
@@ -305,7 +311,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.first", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.first")
 
     @property
     def last(self):
@@ -316,7 +322,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         -------
         Expression
         """
-        return expression.Expression(None, f"{self.name}.last", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
     def lag(
         self,

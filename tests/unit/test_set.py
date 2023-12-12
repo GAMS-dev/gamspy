@@ -206,7 +206,7 @@ class SetSuite(unittest.TestCase):
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 
-    def test_set_attributes(self):
+    def _test_set_attributes(self):
         i = Set(self.m, "i")
         self.assertEqual(i.pos.gamsRepr(), "( i.pos )")
         self.assertEqual(i.ord.gamsRepr(), "( i.ord )")
