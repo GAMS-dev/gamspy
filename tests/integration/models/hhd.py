@@ -14,6 +14,10 @@ Neculai Andrei, "Models, Test Problems and Applications for
 Mathematical Programming". Technical Press, Bucharest, 2003.
 Application U84, page 65. Application A13, page 360.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Container
 from gamspy import Equation
@@ -23,7 +27,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Variant 1
     # # SCALARS #

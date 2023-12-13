@@ -21,7 +21,10 @@ with gnuplot (if available and a feasible solution has been found).
 
 Contributor: Benjamin Mueller and Felipe Serrano
 """
+from __future__ import annotations
+
 import math
+import os
 
 from gamspy import Card
 from gamspy import Container
@@ -44,7 +47,7 @@ def fy(t):
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     i = Set(m, name="i", records=["1", "2", "3", "4"])

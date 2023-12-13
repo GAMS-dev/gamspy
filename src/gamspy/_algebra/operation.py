@@ -340,6 +340,12 @@ class Card(operable.Operable):
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "==", other)
 
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
+
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
 

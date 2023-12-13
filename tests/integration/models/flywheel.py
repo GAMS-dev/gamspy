@@ -5,6 +5,10 @@ Schittkowski, K., More test examples for nonlinear programming codes.
 Lecture Notes in Economics and Mathematical Systems, Vol.282, Springer-Verlag,
 Berlin, 1987. (Problem 346, page 167)
 """
+from __future__ import annotations
+
+import os
+
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
@@ -12,7 +16,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # VARIABLES #
     x1 = Variable(m, name="x1")

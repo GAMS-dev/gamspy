@@ -6,6 +6,10 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 2.4
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -60,7 +64,7 @@ def main():
     )
 
     # Define container
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     Time = Set(

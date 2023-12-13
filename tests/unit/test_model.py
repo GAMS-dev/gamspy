@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -14,7 +17,9 @@ from gamspy.exceptions import GamspyException
 
 class ModelSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_model(self):
         # Prepare data
@@ -113,7 +118,7 @@ class ModelSuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, j] = x[i, j] <= a[i]
 
         # Test model with specific equations
         test_model2 = Model(
@@ -184,7 +189,9 @@ class ModelSuite(unittest.TestCase):
         )
 
     def test_feasibility(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Prepare data
         distances = [

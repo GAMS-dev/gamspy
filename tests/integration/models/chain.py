@@ -23,6 +23,9 @@ Tech. rep., Mathematics and Computer Science Division, 2000.
 
 Cesari, L, Optimization - Theory and Applications. Springer Verlag, 1983.
 """
+from __future__ import annotations
+
+import os
 import sys
 
 import gamspy.math as gams_math
@@ -36,14 +39,11 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     n_rec = int(sys.argv[1]) if len(sys.argv) > 1 else 400
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -14,7 +15,9 @@ from gamspy.exceptions import GamspyException
 
 class AliasSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_alias_creation(self):
         i = Set(self.m, "i")
@@ -42,17 +45,17 @@ class AliasSuite(unittest.TestCase):
     def test_alias_attributes(self):
         i = Set(self.m, "i")
         j = Alias(self.m, "j", alias_with=i)
-        self.assertEqual(j.pos.gamsRepr(), "( j.pos )")
-        self.assertEqual(j.ord.gamsRepr(), "( j.ord )")
-        self.assertEqual(j.off.gamsRepr(), "( j.off )")
-        self.assertEqual(j.rev.gamsRepr(), "( j.rev )")
-        self.assertEqual(j.uel.gamsRepr(), "( j.uel )")
-        self.assertEqual(j.len.gamsRepr(), "( j.len )")
-        self.assertEqual(j.tlen.gamsRepr(), "( j.tlen )")
-        self.assertEqual(j.val.gamsRepr(), "( j.val )")
-        self.assertEqual(j.tval.gamsRepr(), "( j.tval )")
-        self.assertEqual(j.first.gamsRepr(), "( j.first )")
-        self.assertEqual(j.last.gamsRepr(), "( j.last )")
+        self.assertEqual(j.pos.gamsRepr(), "j.pos")
+        self.assertEqual(j.ord.gamsRepr(), "j.ord")
+        self.assertEqual(j.off.gamsRepr(), "j.off")
+        self.assertEqual(j.rev.gamsRepr(), "j.rev")
+        self.assertEqual(j.uel.gamsRepr(), "j.uel")
+        self.assertEqual(j.len.gamsRepr(), "j.len")
+        self.assertEqual(j.tlen.gamsRepr(), "j.tlen")
+        self.assertEqual(j.val.gamsRepr(), "j.val")
+        self.assertEqual(j.tval.gamsRepr(), "j.tval")
+        self.assertEqual(j.first.gamsRepr(), "j.first")
+        self.assertEqual(j.last.gamsRepr(), "j.last")
 
     def test_alias_string(self):
         # Set and Alias without domain
@@ -113,7 +116,9 @@ class AliasSuite(unittest.TestCase):
 
         self.m.write("test.gdx")
 
-        bla = Container(delayed_execution=True)
+        bla = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         bla.read("test.gdx")
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()

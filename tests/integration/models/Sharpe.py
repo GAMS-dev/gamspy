@@ -6,6 +6,9 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 3.3
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import numpy as np
@@ -24,7 +27,7 @@ from gamspy import Variable
 
 def main():
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/Sharpe.gdx",
     )
 

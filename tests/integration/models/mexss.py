@@ -17,6 +17,10 @@ Keywords: linear programming, production problem, distribution problem,
 scheduling,
           micro economics, steel industry
 """
+from __future__ import annotations
+
+import os
+
 import pandas
 
 from gamspy import Container
@@ -30,7 +34,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # Prepare data
     steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]

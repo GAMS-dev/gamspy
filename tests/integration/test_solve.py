@@ -949,7 +949,7 @@ class SolveSuite(unittest.TestCase):
         with self.assertRaises(Exception):
             c[i] = 90 * d[i, j] / 1000
 
-        m = Container()
+        m = Container(delayed_execution=True)
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])

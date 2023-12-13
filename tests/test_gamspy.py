@@ -29,12 +29,19 @@ from unit.test_variable import variable_suite
 
 import gamspy
 
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
+
 
 class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.11.2")
+        self.assertEqual(gamspy.__version__, "0.11.3")
 
 
 class DocsSuite(unittest.TestCase):

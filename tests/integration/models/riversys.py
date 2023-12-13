@@ -8,6 +8,10 @@ Adapted from:
 McKinney, D.C. and Savitsky, A.G., "Basic optimization models
 for water and energy management", Revision 6, February 2003.
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 import gamspy.math as gams_math
@@ -91,7 +95,7 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     n = Set(

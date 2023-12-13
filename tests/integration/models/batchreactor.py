@@ -9,6 +9,10 @@ Renfro J.G., Morshedi, A.M., Osbjornsen, O.A., Simultaneous optimization and
 solution of systems described by differential/algebraic equations. Computer
 and Chemical Engineering, vol.11, 1987, pp.503-517.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Alias
 from gamspy import Container
@@ -22,7 +26,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     nh = Set(m, name="nh", records=[str(idx) for idx in range(0, 101)])

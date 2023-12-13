@@ -65,6 +65,10 @@ Keywords: non linear programming, mixed integer linear programming,
           transportation problem, scheduling, economies of scale, non-convex
           objective, special ordered sets
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 from gamspy import Card
@@ -83,7 +87,7 @@ from gamspy.math import sqrt
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Sets
     i = Set(

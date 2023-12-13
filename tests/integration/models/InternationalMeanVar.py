@@ -22,6 +22,9 @@ We use real data for the 10-year period 1990-01-01 to 2000-01-01,
        Exchange rates, ITL to: (FRF, DEM, ESP, GBP, US, YEN, EUR)
        Also US to EUR.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -39,7 +42,10 @@ def main():
     gdx_file = (
         str(Path(__file__).parent.absolute()) + "/InternationalMeanVar.gdx"
     )
-    m = Container(delayed_execution=True, load_from=gdx_file)
+    m = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        load_from=gdx_file,
+    )
 
     # SETS #
     ASSETS = m.getSymbols(["ASSETS"])[0]

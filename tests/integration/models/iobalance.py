@@ -14,6 +14,10 @@ Keywords: linear programming, nonlinear programming, quadratic constraints,
 statistics,
           RAS approach
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -32,7 +36,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Sets
 

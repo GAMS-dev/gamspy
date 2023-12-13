@@ -17,6 +17,9 @@ Policy Models. The World Bank, 1988.
 Keywords: quadratic constraint programming, farming, agricultural economics,
           partial equilibrium, market behavior
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import numpy as np
@@ -35,7 +38,7 @@ from gamspy.math import sqr
 
 def main():
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/qdemo7.gdx",
     )
 
