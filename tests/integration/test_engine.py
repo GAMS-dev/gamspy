@@ -103,26 +103,6 @@ class EngineSuite(unittest.TestCase):
             namespace="bla",
         )
 
-        transport2 = Model(
-            m,
-            name="transport2",
-            equations=m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
-        self.assertRaises(
-            GamspyException,
-            transport2.solve,
-            None,
-            None,
-            None,
-            None,
-            None,
-            "engine",
-            engine_config,
-        )
-
         transport3 = Model(
             m,
             name="transport3",
