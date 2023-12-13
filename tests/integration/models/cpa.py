@@ -23,10 +23,7 @@ from gamspy import Equation
 from gamspy import Model
 from gamspy import Parameter
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():
