@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import os
 
-import gamspy.math as gams_math
 from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
@@ -28,10 +27,7 @@ from gamspy import Number
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():

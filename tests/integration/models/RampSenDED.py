@@ -22,7 +22,6 @@ import os
 import numpy as np
 import pandas as pd
 
-import gamspy.math as gams_math
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
@@ -30,6 +29,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.math import sqr
 
 
 def reformat_df(dataframe):
@@ -81,10 +81,6 @@ def data_records():
     )
 
     return gendata_recs, demands_recs
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
 
 
 def main():

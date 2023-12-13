@@ -118,7 +118,7 @@ class ModelSuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, j] = x[i, j] <= a[i]
 
         # Test model with specific equations
         test_model2 = Model(

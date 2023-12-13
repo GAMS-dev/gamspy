@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import unittest
 
+import numpy as np
 import pandas as pd
 
 import gamspy._symbols.implicits as implicits
@@ -60,7 +61,6 @@ class EquationSuite(unittest.TestCase):
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
 
-        c = Parameter(self.m, name="c", domain=[], records=0.5)
         x = Variable(
             self.m,
             name="x",
@@ -76,41 +76,47 @@ class EquationSuite(unittest.TestCase):
             description="Canning Plants",
         )
 
+        c = Parameter(
+            self.m, name="c", domain=[i], records=np.array([0.5, 0.6])
+        )
+
         # Equations
+        d = Parameter(self.m, name="d", records=0.5)
         eq1 = Equation(self.m, "eq1", type="nonbinding")
-        eq1[...] = x - c
+        eq1[...] = x - d
         self.assertEqual(
             eq1._definition.gamsRepr(),
-            "eq1 .. (x - c) =n= 0;",
+            "eq1 .. (x - d) =n= 0;",
         )
         self.assertEqual(eq1.type, "nonbinding")
 
+        y = Variable(self.m, "y", domain=[i])
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
-        eq2[i] = x[i] - c[i]
+        eq2[i] = y[i] - c[i]
         self.assertEqual(
             eq2._definition.gamsRepr(),
-            "eq2(i) .. (x(i) - c(i)) =n= 0;",
+            "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
-        eq2[i] = x[i] - c[i]
+        eq2[i] = y[i] - c[i]
         self.assertEqual(
             eq2._definition.gamsRepr(),
-            "eq2(i) .. (x(i) - c(i)) =n= 0;",
+            "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
         # eq
         eq3 = Equation(self.m, "eq3", domain=[i])
-        eq3[i] = x == c
+        eq3[i] = y[i] == c[i]
         self.assertEqual(eq3.type, "eq")
 
         # geq
         eq4 = Equation(self.m, "eq4", domain=[i])
-        eq4[i] = x >= c
+        eq4[i] = y[i] >= c[i]
         self.assertEqual(eq4.type, "eq")
 
         # leq
         eq5 = Equation(self.m, "eq5", domain=[i])
-        eq5[i] = x <= c
+        eq5[i] = y[i] <= c[i]
         self.assertEqual(eq5.type, "eq")
 
         self.assertEqual(str(EquationType.REGULAR), "REGULAR")
@@ -251,16 +257,16 @@ class EquationSuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla[i, j] = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, j] = x[i, j] <= a[i]
         self.assertEqual(
             bla._definition.getStatement(),
-            "bla(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
+            "bla(i,j) .. x(i,j) =l= a(i);",
         )
 
-        bla[i, "*"] = Sum((i, j), x[i, j]) <= a[i]
+        bla[i, "topeka"] = x[i, "topeka"] <= a[i]
         self.assertEqual(
             bla._definition.getStatement(),
-            "bla(i,*) .. sum((i,j),x(i,j)) =l= a(i);",
+            'bla(i,"topeka") .. x(i,"topeka") =l= a(i);',
         )
 
         # Equation definition in constructor
@@ -293,10 +299,10 @@ class EquationSuite(unittest.TestCase):
             domain=[i, j],
             description="observe supply limit at plant i",
         )
-        bla2[i, j] = Sum((i, j), x[i, j]) <= a[i]
+        bla2[i, j] = x[i, j] <= a[i]
         self.assertEqual(
             bla2._definition.getStatement(),
-            "bla2(i,j) .. sum((i,j),x(i,j)) =l= a(i);",
+            "bla2(i,j) .. x(i,j) =l= a(i);",
         )
 
         # eq[bla] with different domain
@@ -474,7 +480,7 @@ class EquationSuite(unittest.TestCase):
         a = Equation(m, "a", "regular", [i])
         a[i] = x[i] == 5
 
-        self.assertTrue(a._is_dirty)
+        self.assertFalse(a._is_dirty)
 
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)

@@ -23,10 +23,7 @@ from gamspy import Smax
 from gamspy import Smin
 from gamspy import Sum
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():
