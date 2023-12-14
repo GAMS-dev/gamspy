@@ -18,7 +18,9 @@ from gamspy.exceptions import GamspyException
 
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_parameter_creation(self):
         # no name

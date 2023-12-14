@@ -20,7 +20,9 @@ from gamspy import Variable
 
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_condition_on_expression(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
@@ -89,7 +91,7 @@ class ConditionSuite(unittest.TestCase):
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
         )
 
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         i = Set(
             m,
             name="i",
@@ -295,7 +297,7 @@ class ConditionSuite(unittest.TestCase):
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -442,7 +444,7 @@ class ConditionSuite(unittest.TestCase):
         self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1

@@ -15,7 +15,9 @@ from gamspy.exceptions import GamspyException
 
 class SetSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_set_creation(self):
         # no name
@@ -145,7 +147,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
@@ -195,7 +197,7 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 

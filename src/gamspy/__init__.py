@@ -25,6 +25,8 @@
 # flake8: noqa
 from __future__ import annotations
 
+from gams.transfer import SpecialValues
+
 import gamspy.math as math
 from .version import __version__
 from gamspy._algebra import Card
@@ -79,4 +81,5 @@ __all__ = [
     "Options",
     "EngineConfig",
     "NeosClient",
+    "SpecialValues",
 ]
