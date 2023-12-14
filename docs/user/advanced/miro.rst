@@ -32,7 +32,7 @@ For example, the following code snippet declares symbol `d` as a MIRO input and 
 After you mark your miro symbols with `is_miro_input` and `is_miro_output`, you can run MIRO with the following GAMSPy
 command-line utility: ::
 
-    gamspy run miro --path <path_to_MIRO_APPIMAGE> --model <path_to_your_model>
+    gamspy run miro --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
 This initializes the default values for your GAMS MIRO app and creates the necessary data contract. Then, it spawns 
 a GAMS MIRO app with base mode by default. To run the MIRO configuration mode instead, add the `--mode=config` argument: ::
