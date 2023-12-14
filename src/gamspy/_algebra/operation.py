@@ -118,6 +118,9 @@ class Operation(operable.Operable):
         output += index_str
         output += ","
 
+        if isinstance(self.expression, float):
+            self.expression = utils._map_special_values(self.expression)
+
         if isinstance(self.expression, bool):
             self.expression = (
                 "yes" if self.expression is True else "no"  # type: ignore

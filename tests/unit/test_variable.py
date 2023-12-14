@@ -15,7 +15,9 @@ from gamspy.exceptions import GamspyException
 
 class VariableSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_variable_creation(self):
         # no name

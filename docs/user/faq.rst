@@ -260,7 +260,7 @@ reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, wi
 be evaluated by the second solve statement.
 
 Why does `pip install gamspy` on Google Colab not resolve all dependencies?
---------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 Google Colab is a service that allows you to write and execute Python in your browser.
 It is developed mainly for ML/AI researchers and data scientists. Hence, it comes with many

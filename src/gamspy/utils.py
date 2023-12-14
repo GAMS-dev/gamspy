@@ -45,6 +45,14 @@ if TYPE_CHECKING:
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
 
+SPECIAL_VALUE_MAP = {
+    gt.SpecialValues.NA: "NA",
+    gt.SpecialValues.EPS: "EPS",
+    gt.SpecialValues.UNDEF: "UNDF",
+    gt.SpecialValues.POSINF: "INF",
+    gt.SpecialValues.NEGINF: "-INF",
+}
+
 
 def getInstalledSolvers() -> List[str]:
     """
@@ -409,6 +417,13 @@ def _to_list(
     if not isinstance(obj, list):
         obj = [obj]
     return obj
+
+
+def _map_special_values(value: float):
+    if value in SPECIAL_VALUE_MAP.keys():
+        return SPECIAL_VALUE_MAP[value]
+
+    return value
 
 
 def _get_domain_str(

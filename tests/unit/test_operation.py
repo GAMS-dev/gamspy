@@ -21,7 +21,9 @@ from gamspy import Variable
 
 class OperationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_operations(self):
         # Prepare data
@@ -163,7 +165,7 @@ class OperationSuite(unittest.TestCase):
         )
 
     def test_operation_overloads(self):
-        m = Container(delayed_execution=True)
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         c = Set(m, "c")
         s = Set(m, "s")
         a = Parameter(m, "a", domain=[c, s])

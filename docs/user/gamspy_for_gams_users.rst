@@ -63,9 +63,7 @@ GAMSPy:
     eq = gp.Equation(m, name="eq")
     eq[...] = Sum(i, a[i]) <= z
 
-GAMS:
-
-.. code-block:: gams
+GAMS: ::
 
     Set i / i1, i2 /;
     Parameter a / i1 1, i2 2 /;
@@ -91,9 +89,7 @@ GAMSPy:
     omega = Parameter(m, name="omega", domain=[i])
     omega[i] = (Ord(i) - 1) * step
 
-GAMS:
-
-.. code-block:: gams
+GAMS: ::
     
     Set i / i0..i180 /;
     Parameter step;
@@ -130,9 +126,7 @@ GAMSPy:
         branch[bus, node, "bij"] * 3.14 * 2,
     )
 
-GAMS:
-
-.. code-block:: gams
+GAMS: ::
     
     Set bus / i1..i6 /;
     Alias (bus, node);
@@ -163,9 +157,7 @@ GAMSPy:
     x = gp.Variable(m, "x", domain=[i])
     ie[i] = gp.Number(1).where[x.lo[i] == x.up[i]]
 
-GAMS:
-
-.. code-block:: gams
+GAMS: ::
     
     Set i / 1..4 /;
     Set ie(i);
@@ -205,8 +197,6 @@ GAMSPy:
 
     error01[s1,s2] = rt[s1,s2] & (~lfr[s1,s2]) | ((~rt[s1,s2]) & lfr[s1,s2])
 
-GAMS:
-
-.. code-block:: gams
+GAMS: ::
     
     error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);

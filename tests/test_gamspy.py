@@ -26,6 +26,7 @@ from unit.test_operation import operation_suite
 from unit.test_options import options_suite
 from unit.test_parameter import parameter_suite
 from unit.test_set import set_suite
+from unit.test_special_values import special_values_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
 
@@ -43,7 +44,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.11.3")
+        self.assertEqual(gamspy.__version__, "0.11.4")
 
 
 class DocsSuite(unittest.TestCase):
@@ -160,6 +161,7 @@ def main():
         condition_suite,
         magics_suite,
         options_suite,
+        special_values_suite,
     ]
 
     print(f"Running unittests\n{'='*80}")

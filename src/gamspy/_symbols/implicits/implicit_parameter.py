@@ -77,6 +77,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __setitem__(self, indices: list | str, assignment: Expression) -> None:
         domain = self.domain if indices == ... else utils._to_list(indices)
 
+        if isinstance(assignment, float):
+            assignment = utils._map_special_values(assignment)  # type: ignore
+
         statement = expression.Expression(
             ImplicitParameter(
                 parent=self.parent, name=self.name, domain=domain
@@ -88,6 +91,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
 
         self.parent._is_dirty = True
+        if not self.container.delayed_execution:
+            self.container._run(is_implicit=True)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
