@@ -223,8 +223,8 @@ def build_abstract_model():
     i = Alias(m, name="i", alias_with=j)
     tau = Alias(m, name="tau", alias_with=t)
 
-    lastJob = Set(m, name="lastJob")
-    actual = Set(m, name="actual")
+    lastJob = Set(m, domain=j, name="lastJob")
+    actual = Set(m, domain=j, name="actual")
 
     pred = Set(m, name="pred", domain=[i, j])
 
