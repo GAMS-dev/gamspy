@@ -147,10 +147,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: Expression,
+        assignment: Union[Expression, float, int],
     ) -> None:
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+
+        if isinstance(assignment, float):
+            assignment = utils._map_special_values(assignment)  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
