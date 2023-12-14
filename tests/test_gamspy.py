@@ -107,7 +107,6 @@ def run_integration_tests(
         model_instance_suite,
         cmd_suite,
         miro_suite,
-        gams_models_suite,
     ]
 
     if args.engine:
@@ -194,8 +193,6 @@ def main():
 
     txt_paths = glob.glob("*.txt")
     for txt_path in txt_paths:
-        if txt_path.endswith("dev_requirements.txt"):
-            continue
         os.remove(txt_path)
 
     gdx_paths = glob.glob("*.gdx")

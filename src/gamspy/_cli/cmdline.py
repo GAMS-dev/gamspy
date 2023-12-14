@@ -335,6 +335,7 @@ def run(args: Dict[str, str]):
         subprocess_env["MIRO_MODEL_PATH"] = model
         subprocess_env["MIRO_MODE"] = mode
         subprocess_env["MIRO_DEV_MODE"] = "true"
+        subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
 
         subprocess.run([path], env=subprocess_env, check=True)
 
