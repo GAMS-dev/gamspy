@@ -161,7 +161,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self._is_frozen = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(
             container,
@@ -174,11 +174,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # add defition if exists
         self._definition_domain = definition_domain
@@ -193,9 +195,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self._slack = self._create_attr("slack")
         self._infeas = self._create_attr("infeas")
 
-        # for records and setRecords
-        self._is_assigned = True
-
         # miro support
         self._is_miro_output = is_miro_output
 
@@ -203,7 +202,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return id(self)
 
     def __getitem__(self, indices: Union[tuple, str]):
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
@@ -213,9 +212,14 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Expression,
     ):
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
+        self._container_check(domain)
+
         self._set_definition(assignment, domain)
         self._is_dirty = True
+
+        if not self.container.delayed_execution:
+            self.container._run(is_implicit=True)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -244,7 +248,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._definition = assignment  # type: ignore
             return
 
-        domain = self._definition_domain if self._definition_domain else []
+        domain = (
+            self._definition_domain if self._definition_domain else self.domain
+        )
         self._set_definition(assignment, domain)
 
     def _set_definition(self, assignment, domain):
@@ -263,7 +269,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
         self._definition = statement
 
     def _adapt_mcp_equation(self, assignment):
@@ -406,15 +412,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -436,10 +439,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
-    def setRecords(self, records, uels_on_axes=False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
-
     def gamsRepr(self) -> str:
         """
         Representation of this Equation in GAMS language.
@@ -449,6 +448,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         str
         """
         return self.name
+
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
 
     def getStatement(self) -> str:
         """
@@ -461,9 +470,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         output = f"Equation {self.name}"
 
         if self.domain:
-            domain_names = [set.name for set in self.domain]  # type: ignore
-            domain_str = "(" + ",".join(domain_names) + ")"
-            output += domain_str
+            output += self._get_domain_str()
 
         if self.description:
             output += ' "' + self.description + '"'

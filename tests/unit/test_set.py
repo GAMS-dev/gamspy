@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 from gamspy import Alias
@@ -35,6 +38,14 @@ class SetSuite(unittest.TestCase):
         j1 = Set(self.m, "j")
         j2 = Set(self.m, "j")
         self.assertEqual(id(j1), id(j2))
+
+        # Set and domain containers are different
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Set(m, "set2", domain=[set1])
 
     def test_set_string(self):
         # Check if the name is reserved
@@ -83,9 +94,17 @@ class SetSuite(unittest.TestCase):
         )
 
     def test_records_assignment(self):
-        s = Set(self.m, "s")
+        new_cont = Container()
+        i = Set(self.m, "i")
+        j = Set(self.m, "j", domain=[i])
+        k = Set(new_cont, "k")
+
+        s = Set(self.m, "s", domain=[i])
         with self.assertRaises(TypeError):
             s.records = 5
+
+        with self.assertRaises(GamspyException):
+            j[k] = 5
 
     def test_set_operators(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
@@ -181,7 +200,7 @@ class SetSuite(unittest.TestCase):
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
         sMinDown = Set(m, name="sMinDown", domain=[s, t])
-        sMinDown[s, t.lead((Ord(t) - Ord(s)))] = 1
+        sMinDown[s, t.lead(Ord(t) - Ord(s))] = 1
         self.assertEqual(
             m._unsaved_statements[-1].gamsRepr(),
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
@@ -189,17 +208,17 @@ class SetSuite(unittest.TestCase):
 
     def test_set_attributes(self):
         i = Set(self.m, "i")
-        self.assertEqual(i.pos.gamsRepr(), "( i.pos )")
-        self.assertEqual(i.ord.gamsRepr(), "( i.ord )")
-        self.assertEqual(i.off.gamsRepr(), "( i.off )")
-        self.assertEqual(i.rev.gamsRepr(), "( i.rev )")
-        self.assertEqual(i.uel.gamsRepr(), "( i.uel )")
-        self.assertEqual(i.len.gamsRepr(), "( i.len )")
-        self.assertEqual(i.tlen.gamsRepr(), "( i.tlen )")
-        self.assertEqual(i.val.gamsRepr(), "( i.val )")
-        self.assertEqual(i.tval.gamsRepr(), "( i.tval )")
-        self.assertEqual(i.first.gamsRepr(), "( i.first )")
-        self.assertEqual(i.last.gamsRepr(), "( i.last )")
+        self.assertEqual(i.pos.gamsRepr(), "i.pos")
+        self.assertEqual(i.ord.gamsRepr(), "i.ord")
+        self.assertEqual(i.off.gamsRepr(), "i.off")
+        self.assertEqual(i.rev.gamsRepr(), "i.rev")
+        self.assertEqual(i.uel.gamsRepr(), "i.uel")
+        self.assertEqual(i.len.gamsRepr(), "i.len")
+        self.assertEqual(i.tlen.gamsRepr(), "i.tlen")
+        self.assertEqual(i.val.gamsRepr(), "i.val")
+        self.assertEqual(i.tval.gamsRepr(), "i.tval")
+        self.assertEqual(i.first.gamsRepr(), "i.first")
+        self.assertEqual(i.last.gamsRepr(), "i.last")
 
     def test_iterable(self):
         # Set with no records
@@ -238,7 +257,9 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(count, 2)
 
         # UniverseAlias with no records
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         x = Set(m, "set1")
         a = UniverseAlias(m, "universe1")
         count = 0

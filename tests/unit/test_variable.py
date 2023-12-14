@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -35,6 +38,14 @@ class VariableSuite(unittest.TestCase):
         j1 = Variable(self.m, "j")
         j2 = Variable(self.m, "j")
         self.assertEqual(id(j1), id(j2))
+
+        # Variable and domain containers are different
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Variable(m, "var1", domain=[set1])
 
     def test_variable_string(self):
         # Check if the name is reserved

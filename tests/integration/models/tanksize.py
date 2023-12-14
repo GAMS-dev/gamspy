@@ -20,6 +20,9 @@ Keywords: mixed integer nonlinear programming, storage design, global
 optimization
           continuous-time model, chemical engineering
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -31,7 +34,7 @@ from gamspy import Sum
 
 def main():
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/tanksize.gdx",
     )
 

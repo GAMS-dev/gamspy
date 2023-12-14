@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import numpy as np
@@ -38,6 +41,14 @@ class ParameterSuite(unittest.TestCase):
         j1 = Parameter(self.m, "j")
         j2 = Parameter(self.m, "j")
         self.assertEqual(id(j1), id(j2))
+
+        # Parameter and domain containers are different
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+        set1 = Set(self.m, "set1")
+        with self.assertRaises(GamspyException):
+            _ = Parameter(m, "param1", domain=[set1])
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -96,6 +107,27 @@ class ParameterSuite(unittest.TestCase):
             self.m._unsaved_statements[-1].gamsRepr(),
             "a(i) = (-a(i) * 5);",
         )
+
+        cont = Container(delayed_execution=False, working_directory=".")
+
+        s = Set(cont, "s")
+        m = Set(cont, "m")
+        A = Parameter(cont, "A", domain=[s, m])
+
+        A.domain = ["s", "m"]
+        self.assertEqual(A.getStatement(), "Parameter A(*,*);")
+
+    def test_parameter_assignment(self):
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+
+        i = Set(self.m, "i")
+        j = Set(m, "j")
+        a = Parameter(self.m, "a", domain=[i])
+
+        with self.assertRaises(GamspyException):
+            a[j] = 5
 
     def test_implicit_parameter_assignment(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
@@ -165,7 +197,9 @@ class ParameterSuite(unittest.TestCase):
         self.assertRaises(ValueError, self.m.addParameter, "c", [s, s])
 
     def test_undef(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         _ = Parameter(
             m, name="rho", records=[np.nan]
         )  # Instead of using numpy there might be a NA from the math package

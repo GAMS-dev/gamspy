@@ -68,6 +68,6 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         representation = self.name
 
         if self.domain:
-            representation += utils._getDomainStr(self.domain)
+            representation += utils._get_domain_str(self.domain)
 
         return representation

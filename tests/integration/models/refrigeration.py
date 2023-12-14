@@ -10,6 +10,10 @@ design problems using improved differential evolution algorithm.
 International Journal of Recent Trends in Engineering, vol.1, No.5,
 May 2009, pp.21-25.
 """
+from __future__ import annotations
+
+import os
+
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
@@ -18,7 +22,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # VARIABLES #
     x1 = Variable(m, name="x1")

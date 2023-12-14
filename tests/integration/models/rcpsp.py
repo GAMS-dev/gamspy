@@ -22,6 +22,10 @@ http://www.om-db.wi.tum.de/psplib/main.html
 As default the first instance from PSPLIBs subset with 30 projects is solved
 to optimality (makespan=43).
 """
+from __future__ import annotations
+
+import os
+
 from gamspy import Alias
 from gamspy import Container
 from gamspy import Domain
@@ -210,7 +214,7 @@ def fill_records(dataset, symbols):
 
 # Create model via GTP with algebra
 def build_abstract_model():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     j = Set(m, name="j")
     t = Set(m, name="t")

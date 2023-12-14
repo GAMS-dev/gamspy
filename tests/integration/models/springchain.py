@@ -16,7 +16,10 @@ Applications of second-order cone programming, Linear Algebra and its
 Applications, 284:193-228, November 1998, Special Issue on Linear Algebra
 in Control, Signals and Image Processing.
 """
+from __future__ import annotations
+
 import math
+import os
 
 import pandas as pd
 
@@ -34,7 +37,9 @@ from gamspy import Variable
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     N = 10
     NM1 = 9

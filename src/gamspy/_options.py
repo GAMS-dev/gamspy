@@ -24,6 +24,8 @@
 #
 from __future__ import annotations
 
+import logging
+import os
 from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -34,6 +36,15 @@ from gams import GamsWorkspace
 from pydantic import BaseModel
 
 from gamspy.exceptions import GamspyException
+
+logger = logging.getLogger("Options")
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 if TYPE_CHECKING:
     import io
@@ -89,7 +100,6 @@ option_map = {
     "report_solver_status": "sysout",
     "threads": "threads",
     "trace_file": "trace",
-    "trace_level": "tracelevel",
     "trace_file_format": "traceopt",
     "write_listing_file": "_writeoutput",
     "zero_rounding_threshold": "zerores",
@@ -144,7 +154,6 @@ class Options(BaseModel):
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
     trace_file: Optional[str] = None
-    trace_level: Optional[int] = None
     trace_file_format: Optional[Literal[0, 1, 2, 3, 4, 5]] = None
     write_listing_file: bool = True
     zero_rounding_threshold: Optional[float] = None
@@ -199,9 +208,70 @@ def _fix_log_option(
     return options
 
 
-def _mapOptions(
+def _set_options(
+    gams_options: GamsOptions,
+    options: Options,
+    is_seedable: bool = True,
+):
+    options_dict = options._getGamsCompatibleOptions()
+    for option, value in options_dict.items():
+        if value is not None:
+            if option == "seed" and not is_seedable:
+                continue
+            setattr(gams_options, option.lower(), value)
+
+    return gams_options
+
+
+def _set_trace_options(
+    gams_options: GamsOptions,
+    options: Optional[Options],
+    backend: str,
     workspace: GamsWorkspace,
+):
+    if options is not None:
+        if options.trace_file_format is not None:
+            if options.trace_file_format != 3:
+                logger.log(
+                    logging.INFO,
+                    "Trace file format is different than 3. GAMSPy will not"
+                    " return any summary!",
+                )
+            trace_option = options.trace_file_format
+        else:
+            trace_option = 3
+
+        if options.trace_file is None:
+            trace_path = (
+                "trace.txt"
+                if backend in ["engine", "neos"]
+                else os.path.join(workspace.working_directory, "trace.txt")
+            )
+        else:
+            trace_path = (
+                options.trace_file
+                if backend in ["engine", "neos"]
+                else os.path.abspath(options.trace_file)
+            )
+    else:
+        trace_option = 3
+        trace_path = (
+            "trace.txt"
+            if backend in ["engine", "neos"]
+            else os.path.join(workspace.working_directory, "trace.txt")
+        )
+
+    gams_options.trace = trace_path
+    gams_options.traceopt = trace_option
+
+    return gams_options
+
+
+def _map_options(
+    workspace: GamsWorkspace,
+    backend: str,
     options: Union[Options, None],
+    global_options: Union[Options, None],
     is_seedable: bool = True,
     output: Optional[io.TextIOWrapper] = None,
     create_log_file: bool = False,
@@ -213,6 +283,8 @@ def _mapOptions(
     ----------
     options : Options | None
         GAMSPy options
+    global_options : Options | None
+        Global options
     is_seedable : bool, optional
         only seedable at first run or in model.solve function, by default True
 
@@ -229,26 +301,24 @@ def _mapOptions(
     """
     gams_options = GamsOptions(workspace)
 
+    if global_options is not None:
+        gams_options = _set_options(
+            gams_options,
+            global_options,
+            is_seedable,
+        )
+
     if options is not None:
         if not isinstance(options, Options):
             raise GamspyException(
                 f"options must be of type Option but found {type(options)}"
             )
 
-        options_dict = options._getGamsCompatibleOptions()
+        gams_options = _set_options(gams_options, options, is_seedable)
 
-        for option, value in options_dict.items():
-            if option not in option_map.values():
-                raise GamspyException(
-                    f"Invalid option `{option}`. Possible options:"
-                    f" {option_map.keys()}"
-                )
-
-            if value is not None:
-                if option == "seed" and not is_seedable:
-                    continue
-                setattr(gams_options, option.lower(), value)
-
+    gams_options = _set_trace_options(
+        gams_options, options, backend, workspace
+    )
     gams_options = _fix_log_option(output, create_log_file, gams_options)
 
     return gams_options

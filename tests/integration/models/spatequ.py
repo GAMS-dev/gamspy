@@ -25,6 +25,9 @@ Contributed by: Phan Sy Hieu, November 2010
 Keywords: linear programming, nonlinear programming, mixed complementarity
           problem, spatial equilibrium model
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -37,7 +40,7 @@ from gamspy import Sum
 
 def main():
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/spatequ.gdx",
     )
 

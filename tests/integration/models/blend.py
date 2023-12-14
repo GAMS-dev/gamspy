@@ -10,6 +10,10 @@ Princeton University Press, Princeton, New Jersey, 1963.
 
 Keywords: linear programming, blending problem, manufacturing, alloy blending
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 from gamspy import Container
@@ -23,7 +27,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     alloy = Set(

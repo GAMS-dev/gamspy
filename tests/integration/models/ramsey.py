@@ -8,6 +8,10 @@ vol.38, No. 152, December 1928.
 Erwin Kalvelagen, (2003) An elementary Ramsey growth model.
 http://www.gams.com/~erwin/micro/growth.gms
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Card
 from gamspy import Container
@@ -21,7 +25,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     t = Set(

@@ -24,6 +24,10 @@ the Generalized Assignment Problem. Operations Research 37 (1989), 658-663.
 Keywords: mixed integer linear programming, relaxed mixed integer linear
           programming, general assignment problem, lagrangian relaxation, knapsack
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -40,10 +44,7 @@ from gamspy import Smax
 from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def table_records():
@@ -71,13 +72,17 @@ def table_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Original Model Definition
 
     # SETS
     i = Set(m, name="i", description="resources")
     j = Set(m, name="j", description="items")
+    # data for Martello model
+    # SETS
+    i.setRecords([f"r{r}" for r in range(1, 6)])
+    j.setRecords([f"i{i}" for i in range(1, 11)])
 
     # VARIABLES
     x = Variable(
@@ -118,6 +123,11 @@ def main():
     )
     b = Parameter(m, name="b", domain=[i], description="available resources")
 
+    # PARAMETERS
+    a.setRecords(table_records()[0])
+    f.setRecords(table_records()[1])
+    b.setRecords(np.array([28, 20, 27, 24, 19]))
+
     capacity[i] = Sum(j, a[i, j] * x[i, j]) <= b[i]
 
     choice[j] = Sum(i, x[i, j]) == 1
@@ -141,11 +151,6 @@ def main():
         objective=z,
     )
 
-    # data for Martello model
-    # SETS
-    i.setRecords([f"r{r}" for r in range(1, 6)])
-    j.setRecords([f"i{i}" for i in range(1, 11)])
-
     xopt = Set(
         m,
         name="xopt",
@@ -164,11 +169,6 @@ def main():
         ],
         description="optimal assignment",
     )
-
-    # PARAMETERS
-    a.setRecords(table_records()[0])
-    f.setRecords(table_records()[1])
-    b.setRecords(np.array([28, 20, 27, 24, 19]))
 
     #############################################################
     # if one wants to check the data, one can
@@ -357,6 +357,7 @@ def main():
     # one can compute a valid upper bound as follows:
 
     zfeas[...] = Sum(j, Smax(i, f[i, j]))
+
     results.write(
         "\n\nzfeas quick and dirty bound obj value      = "
         f" {round(zfeas.toValue(),3)}"
@@ -393,6 +394,7 @@ def main():
     count[...] = 1
     alpha[...] = 1
 
+    print(iter.toList())
     for iter_loop in iter.toList():
         if status.toValue() != 1:
             continue

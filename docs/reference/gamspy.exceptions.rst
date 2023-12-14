@@ -1,7 +1,7 @@
 exceptions
 ==========
 
-.. automodule:: gamspy.exceptions
+.. autoclass:: gamspy.exceptions.GamspyException
    :members:
    :undoc-members:
    :show-inheritance:

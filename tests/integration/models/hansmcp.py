@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import math
+import os
 from pathlib import Path
 
 from gamspy import Alias
@@ -17,7 +20,7 @@ from gamspy import VariableType
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     c = Set(m, "c")
     h = Set(m, "h")

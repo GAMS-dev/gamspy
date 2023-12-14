@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import unittest
 
 import pandas as pd
@@ -89,6 +90,18 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(delayed_execution=True)
+        i = Set(
+            m,
+            name="i",
+            records=pd.DataFrame(steel_plants),
+            description="steel plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=pd.DataFrame(markets),
+            description="markets",
+        )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -102,7 +115,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
         self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
+            defopLS._definition.getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
@@ -111,47 +124,40 @@ class ConditionSuite(unittest.TestCase):
             expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
         )
 
-        random_eq = Equation(m, "random", domain=[i, j])
-        random_eq[i, j] = Sum(i, muf[i, j]).where[muf[i, j] > 0] >= 0
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            "random(i,j) .. (sum(i,muf(i,j)) $ (muf(i,j) > 0)) =g= 0;",
-        )
-
         i["ahmsa"] = True
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = yes;',
         )
 
         i["ahmsa"] = False
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             'i("ahmsa") = no;',
         )
 
         t = Set(
-            self.m,
+            m,
             name="t",
             records=[str(i) for i in range(1, 10)],
             description="no. of Monte-Carlo draws",
         )
 
         Util_gap = Parameter(
-            self.m,
+            m,
             name="Util_gap",
             domain=[t],
             description="gap between these two util",
         )
 
         Util_lic = Parameter(
-            self.m,
+            m,
             name="Util_lic",
             domain=[t],
             description="util solved w/o MN",
         )
         Util_lic2 = Parameter(
-            self.m,
+            m,
             name="Util_lic2",
             domain=[t],
             description="util solved w/ MN",
@@ -163,7 +169,7 @@ class ConditionSuite(unittest.TestCase):
         ]
 
         self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
+            m._unsaved_statements[-1].getStatement(),
             "Util_gap(t) = (1 $ (( round(Util_lic(t), 10) ) ne ( round("
             "Util_lic2(t), 10) )));",
         )
@@ -302,7 +308,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
+            defopLS._definition.getStatement(),
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
@@ -313,7 +319,9 @@ class ConditionSuite(unittest.TestCase):
             "k(p) $ (k(p)) = yes;",
         )
 
-        m = Container()
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
@@ -344,7 +352,9 @@ class ConditionSuite(unittest.TestCase):
             [("Product_A", 20), ("Product_B", 25), ("Product_C", 30)]
         )
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
 

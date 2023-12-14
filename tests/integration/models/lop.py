@@ -22,6 +22,9 @@ Keywords: linear programming, mixed integer linear programming, passenger railwa
           shortest path, dutch railway, public rail transport, network optimization
 """
 # flake8: noqa
+from __future__ import annotations
+
+import os
 import sys
 from pathlib import Path
 

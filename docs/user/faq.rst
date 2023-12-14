@@ -258,3 +258,25 @@ statements like::
 you want to use the GAMSPy ``Parameter``, as changes to a Python variable are not 
 reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, will
 be evaluated by the second solve statement.
+
+Why does `pip install gamspy` on Google Colab not resolve all dependencies?
+--------------------------------------------------------------------------
+
+Google Colab is a service that allows you to write and execute Python in your browser.
+It is developed mainly for ML/AI researchers and data scientists. Hence, it comes with many
+pre-installed packages such as TensorFlow, PyTorch etc. One of these packages is 
+tensorflow-probability==0.22.0 which depends on typing-extensions below version 4.6.0.
+Since GAMSPy depends on pydantic which requires typing-extensions above 4.6.0, pip does not
+know how to resolve the issue. This issue has already been resolved by tensorflow-probability in
+version 0.22.1
+(check `this <https://github.com/tensorflow/probability/releases/tag/v0.22.1>`_). Unfortunately,
+Google Colab has not update to this version of tensorflow-probability, hence pip
+complains. This will be fixed as soon as Google Colab updates
+tensorflow-probability. There are also some packages in Google Colab which don't have the necessary dependencies
+in the environment resolved (lida, llmx). To solve all Google Colab related issues run the following: ::
+
+    pip install tensorflow-probability==0.22.1 lida llmx
+    
+Now, you can install GAMSPy without any errors: ::
+    
+    pip install gamspy

@@ -125,7 +125,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_frozen = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(
             container,
@@ -137,14 +137,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # allow conditions
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
-
-        # for records and setRecords
-        self._is_assigned = True
+        self.container._add_statement(self)
 
         # miro support
         self._is_miro_input = is_miro_input
@@ -153,7 +152,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -168,7 +167,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 " assigning to MIRO input symbols"
             )
 
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
+        self._container_check(domain)
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
@@ -176,11 +176,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run()
+            self.container._run(is_implicit=True)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
@@ -202,7 +202,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
@@ -218,9 +218,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 " attribute of the container can be set to False to allow"
                 " assigning to MIRO input symbols"
             )
-
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
 
         if records is not None:
             if not isinstance(records, pd.DataFrame):
@@ -243,10 +240,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
-    def setRecords(self, records: Any, uels_on_axes=False):
-        self._is_assigned = True
-        return super().setRecords(records, uels_on_axes)
-
     def gamsRepr(self) -> str:
         """
         Representation of this Parameter in GAMS language.
@@ -256,6 +249,16 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         str
         """
         return self.name
+
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
 
     def getStatement(self) -> str:
         """
@@ -267,7 +270,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         statement_name = self.name
         if self.domain:
-            statement_name += utils._getDomainStr(self.domain)
+            statement_name += self._get_domain_str()
 
         output = f"Parameter {statement_name}"
 

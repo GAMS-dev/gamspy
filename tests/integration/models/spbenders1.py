@@ -14,6 +14,10 @@ sequential solves of the master and subproblems in a GAMS loop.
 Keywords: linear programming, stochastic Benders algorithm, transportation
           problem
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 import gamspy.math as gams_math
@@ -28,7 +32,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Prepare data
     cost = pd.DataFrame(
