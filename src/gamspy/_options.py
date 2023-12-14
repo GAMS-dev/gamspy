@@ -320,5 +320,6 @@ def _map_options(
         gams_options, options, backend, workspace
     )
     gams_options = _fix_log_option(output, create_log_file, gams_options)
+    gams_options.previouswork = 1  # In case GAMS version differs on backend
 
     return gams_options

@@ -94,8 +94,6 @@ def run(
     output: Union[io.TextIOWrapper, None],
     engine_config: EngineConfig,
 ):
-    options.previouswork = 1  # In case GAMS version differs on Engine
-
     extra_model_files = _preprocess_extra_model_files(
         engine_config, container.workspace, container._gdx_in
     )

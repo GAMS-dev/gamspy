@@ -6,6 +6,7 @@ GAMSPy 0.11.4
 -------------------------------------------------------------------------------
 - General
   - Expose GTP special values via gp.SpecialValues
+  - Fix NEOS bug when the previous workfile comes from another backend.
 - Testing
   - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
 
