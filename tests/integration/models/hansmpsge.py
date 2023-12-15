@@ -17,8 +17,10 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
+from __future__ import annotations
 
 from pathlib import Path
+
 from gamspy import Container
 from gamspy import Model
 from gamspy import Problem
@@ -50,7 +52,7 @@ $include HANSEN.GEN
 """
     m = Container(
         working_directory=".",
-        load_from=str(Path(__file__).parent.absolute()) + "/hansmpgse.gdx",
+        load_from=str(Path(__file__).parent.absolute()) + "/hansmpsge.gdx",
     )
     m._addGamsCode(hansen_mpsge)
     hansen = Model(m, "hansen", problem=Problem.MCP)
