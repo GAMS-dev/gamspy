@@ -58,7 +58,7 @@ class Operation(operable.Operable):
         ],
         op_name: str,
     ):
-        self.domain = utils._toList(domain)
+        self.domain = utils._to_list(domain)
         assert len(self.domain) > 0, "Operation requires at least one index"
         self.expression = expression
         self._op_name = op_name
@@ -117,6 +117,9 @@ class Operation(operable.Operable):
 
         output += index_str
         output += ","
+
+        if isinstance(self.expression, float):
+            self.expression = utils._map_special_values(self.expression)
 
         if isinstance(self.expression, bool):
             self.expression = (
@@ -339,6 +342,12 @@ class Card(operable.Operable):
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "==", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)

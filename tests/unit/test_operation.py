@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -18,7 +21,9 @@ from gamspy import Variable
 
 class OperationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+        )
 
     def test_operations(self):
         # Prepare data
@@ -105,12 +110,18 @@ class OperationSuite(unittest.TestCase):
         # Ord, Card
         expression = Ord(i) == Ord(j)
         self.assertEqual(expression.gamsRepr(), "(ord(i) = ord(j))")
+        expression = Ord(i) != Ord(j)
+        self.assertEqual(expression.gamsRepr(), "(ord(i) ne ord(j))")
         expression = Card(i) == 5
         self.assertEqual(expression.gamsRepr(), "(card(i) = 5)")
+        expression = Card(i) != 5
+        self.assertEqual(expression.gamsRepr(), "(card(i) ne 5)")
 
     def test_operation_indices(self):
         # Test operation index
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         mt = 2016
         mg = 17
         maxdt = 40
@@ -147,10 +158,33 @@ class OperationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            m._unsaved_statements[-1].gamsRepr(),
+            eStartFast._definition.gamsRepr(),
             "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
             " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
             " =l= 1;",
+        )
+
+    def test_operation_overloads(self):
+        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        c = Set(m, "c")
+        s = Set(m, "s")
+        a = Parameter(m, "a", domain=[c, s])
+        p = Variable(m, "p", type="Positive", domain=c)
+
+        # test neq
+        profit = Equation(m, "profit", domain=s)
+        profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+        self.assertEqual(
+            profit._definition.getStatement(),
+            "profit(s) .. ( - sum(c,(a(c,s) * p(c)))) =g= 0;",
+        )
+
+        # test ne
+        bla = Parameter(m, "bla", domain=s)
+        bla[...] = Sum(c, a[c, s] * p[c]) != 0
+        self.assertEqual(
+            m._unsaved_statements[-1].getStatement(),
+            "bla(s) = (sum(c,(a(c,s) * p(c))) ne 0);",
         )
 
 

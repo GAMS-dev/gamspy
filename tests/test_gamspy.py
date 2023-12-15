@@ -24,17 +24,25 @@ from unit.test_operation import operation_suite
 from unit.test_options import options_suite
 from unit.test_parameter import parameter_suite
 from unit.test_set import set_suite
+from unit.test_special_values import special_values_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
 
 import gamspy
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
 
 
 class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.11.0")
+        self.assertEqual(gamspy.__version__, "0.11.4")
 
 
 class DocsSuite(unittest.TestCase):
@@ -97,7 +105,6 @@ def run_integration_tests(
         solve_suite,
         model_instance_suite,
         cmd_suite,
-        gams_models_suite,
     ]
 
     if args.engine:
@@ -105,6 +112,9 @@ def run_integration_tests(
 
     if args.neos:
         integration_suites.append(neos_suite)
+
+    if args.model_library:
+        integration_suites.append(gams_models_suite)
 
     print(f"Running integration tests\n{'='*80}")
     for suite in integration_suites:
@@ -122,6 +132,7 @@ def get_args():
     parser.add_argument("--doc", action="store_true")
     parser.add_argument("--neos", action="store_true")
     parser.add_argument("--engine", action="store_true")
+    parser.add_argument("--model-library", action="store_true")
 
     return parser.parse_args()
 
@@ -147,6 +158,7 @@ def main():
         condition_suite,
         magics_suite,
         options_suite,
+        special_values_suite,
     ]
 
     print(f"Running unittests\n{'='*80}")

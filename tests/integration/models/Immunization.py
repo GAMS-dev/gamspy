@@ -6,6 +6,10 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.4
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -27,7 +31,7 @@ from gamspy.math import sqr
 
 def main():
     # Define container
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(

@@ -17,6 +17,9 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
+from __future__ import annotations
+
+import os
 import sys
 
 from gamspy import Container
@@ -30,7 +33,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Prepare data
     distances = [

@@ -15,7 +15,10 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
-import gamspy.math as gams_math
+from __future__ import annotations
+
+import os
+
 from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
@@ -24,14 +27,11 @@ from gamspy import Number
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # VARIABLES #
     of1 = Variable(m, name="of1", type="free")

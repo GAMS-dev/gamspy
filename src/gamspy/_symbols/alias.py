@@ -91,21 +91,20 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         self._is_dirty = False
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         super().__init__(container, name, alias_with)
+
+        self._container_check(self.domain)
 
         # allow conditions
         self.where = condition.Condition(self)
 
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0
-
-        # for records and setRecords
-        self._is_assigned = True
 
     def __len__(self):
         if self.records is not None:
@@ -124,6 +123,141 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def __iter__(self):
         return self
+
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
+    # Set Attributes
+    @property
+    def pos(self):
+        """
+        Element position in the current set, starting with 1.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.pos")
+
+    @property
+    def ord(self):
+        """
+        Same as .pos but for ordered sets only.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.ord")
+
+    @property
+    def off(self):
+        """
+        Element position in the current set minus 1. So .off = .pos - 1
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.off")
+
+    @property
+    def rev(self):
+        """
+        Reverse element position in the current set, so the value for
+        the last element is 0, the value for the penultimate is 1, etc.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.rev")
+
+    @property
+    def uel(self):
+        """
+        Element position in the unique element list.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.uel")
+
+    @property
+    def len(self):
+        """
+        Length of the set element name (a count of the number of characters).
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.len")
+
+    @property
+    def tlen(self):
+        """
+        Length of the set element text (a count of the number of characters).
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
+
+    @property
+    def val(self):
+        """
+        If a set element is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.val")
+
+    @property
+    def tval(self):
+        """
+        If a set element text is a number, this attribute gives the value of the number.
+        For extended range arithmetic symbols, the symbols are reproduced.
+        If a set element text is a string that is not a number, then this attribute is
+        not defined and trying to use it results in an error.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.tval")
+
+    @property
+    def first(self):
+        """
+        Returns 1 for the first set element, otherwise 0.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.first")
+
+    @property
+    def last(self):
+        """
+        Returns 1 for the last set element, otherwise 0.
+
+        Returns
+        -------
+        ImplicitSet
+        """
+        return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
     def lag(
         self,
@@ -210,16 +344,3 @@ class Alias(gt.Alias, operable.Operable, Symbol):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
-
-    @property
-    def records(self):
-        return super().records
-
-    @records.setter
-    def records(self, records):
-        self.alias_with._is_assigned = True
-        self.alias_with.records = records
-
-    def setRecords(self, records, uels_on_axes=False):
-        self.alias_with._is_assigned = True
-        super().setRecords(records, uels_on_axes)

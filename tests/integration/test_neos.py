@@ -12,11 +12,14 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
 from gamspy._neos import NeosClient
+from gamspy.exceptions import GamspyException
 
-if os.path.exists(os.getcwd() + os.sep + ".env"):
+try:
     from dotenv import load_dotenv
 
     load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
 
 
 class NeosSuite(unittest.TestCase):
@@ -78,8 +81,58 @@ class NeosSuite(unittest.TestCase):
             math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
         )
 
+    def test_no_client(self):
+        m = Container(delayed_execution=True, working_directory=".")
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        b = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+        # Equation
+        supply = Equation(m, name="supply", domain=[i])
+        demand = Equation(m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        with self.assertRaises(GamspyException):
+            transport.solve(backend="neos")
+
     def test_different_solver(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Prepare data
         distances = [

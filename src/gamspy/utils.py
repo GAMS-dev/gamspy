@@ -35,9 +35,7 @@ from typing import Union
 
 import gams.transfer as gt
 from gams.core import gdx
-from gams.transfer._internals.specialvalues import SpecialValues
 
-import gamspy
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
 
@@ -46,6 +44,14 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
+
+SPECIAL_VALUE_MAP = {
+    gt.SpecialValues.NA: "NA",
+    gt.SpecialValues.EPS: "EPS",
+    gt.SpecialValues.UNDEF: "UNDF",
+    gt.SpecialValues.POSINF: "INF",
+    gt.SpecialValues.NEGINF: "-INF",
+}
 
 
 def getInstalledSolvers() -> List[str]:
@@ -82,10 +88,7 @@ def getInstalledSolvers() -> List[str]:
     with open(
         gamspy_base.directory + os.sep + capabilities_file[user_platform]
     ) as capabilities:
-        lines = capabilities.readlines()
-        lines = [line for line in lines if line != "\n" and line[0] != "*"]
-
-        for line in lines:
+        for line in capabilities:
             if line == "DEFAULTS\n":
                 break
 
@@ -202,24 +205,7 @@ def isin(symbol, sequence: Sequence) -> bool:
     return False
 
 
-def _loadPackageGlobals() -> None:  # pragma: no cover
-    gamspy._order = 0  # type: ignore
-
-
-def _getUniqueName() -> str:
-    """
-    Generates a unique name for elements with no name (e.g. Expressions).
-
-    Returns
-    -------
-    str
-        Unique name in string format
-    """
-    gamspy._order += 1  # type: ignore
-    return str(gamspy._order)  # type: ignore
-
-
-def _getGAMSPyBaseDirectory() -> str:
+def _get_gamspy_base_directory() -> str:
     """
     Returns the gamspy_base directory.
 
@@ -239,7 +225,7 @@ def _getGAMSPyBaseDirectory() -> str:
     return gamspy_base_directory
 
 
-def _reservedCheck(word: str) -> str:
+def _reserved_check(word: str) -> str:
     reserved_words = [
         "abort",
         "acronym",
@@ -347,7 +333,7 @@ def _reservedCheck(word: str) -> str:
     return word
 
 
-def _closeGdxHandle(handle):
+def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.
 
@@ -360,37 +346,14 @@ def _closeGdxHandle(handle):
     gdx.gdxLibraryUnload()
 
 
-def _replaceEqualitySigns(condition: str) -> str:
-    condition = condition.replace("=l=", "<=")
-    condition = condition.replace("=e=", "=")
-    condition = condition.replace("=g=", ">=")
-    return condition
+def _replace_equality_signs(string: str) -> str:
+    string = string.replace("=l=", "<=")
+    string = string.replace("=e=", "=")
+    string = string.replace("=g=", ">=")
+    return string
 
 
-def _set_special_values(gdxHandle):
-    """
-    Sets the special values
-
-    Parameters
-    ----------
-    gdxHandle : gdxHandle
-
-    Returns
-    -------
-    int
-    """
-    specVals = gdx.doubleArray(gdx.GMS_SVIDX_MAX)
-    specVals[gdx.GMS_SVIDX_UNDEF] = SpecialValues.UNDEF
-    specVals[gdx.GMS_SVIDX_NA] = SpecialValues.NA
-    specVals[gdx.GMS_SVIDX_EPS] = SpecialValues.EPS
-    specVals[gdx.GMS_SVIDX_PINF] = SpecialValues.POSINF
-    specVals[gdx.GMS_SVIDX_MINF] = SpecialValues.NEGINF
-
-    rc = gdx.gdxSetSpecialValues(gdxHandle, specVals)
-    return rc
-
-
-def _openGdxFile(system_directory: str, load_from: str):
+def _open_gdx_file(system_directory: str, load_from: str):
     """
     Opens the gdx file with given path
 
@@ -418,16 +381,13 @@ def _openGdxFile(system_directory: str, load_from: str):
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
         assert rc[0]
-
-        rc = _set_special_values(gdxHandle)
-        assert rc
     except AssertionError:
         raise GamspyException("GAMSPy could not open gdx file to read from.")
 
     return gdxHandle
 
 
-def _toList(
+def _to_list(
     obj: Union[
         Set,
         Alias,
@@ -459,7 +419,14 @@ def _toList(
     return obj
 
 
-def _getDomainStr(
+def _map_special_values(value: float):
+    if value in SPECIAL_VALUE_MAP.keys():
+        return SPECIAL_VALUE_MAP[value]
+
+    return value
+
+
+def _get_domain_str(
     domain: Iterable[Union[Set, Alias, ImplicitSet, str]]
 ) -> str:
     """
@@ -497,7 +464,7 @@ def _getDomainStr(
     return "(" + ",".join(set_strs) + ")"
 
 
-def _getMatchingParanthesisIndices(string: str) -> dict:
+def _get_matching_paranthesis_indices(string: str) -> dict:
     """
     Stack based paranthesis matcher.
 

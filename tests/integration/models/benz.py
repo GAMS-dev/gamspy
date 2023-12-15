@@ -14,6 +14,10 @@ Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
 1999.
 Section 7.3.5. Test problem 15, page 102.
 """
+from __future__ import annotations
+
+import os
+
 import gamspy.math as gams_math
 from gamspy import Container
 from gamspy import Equation
@@ -24,7 +28,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Variable
     q1 = Variable(m, name="q1")

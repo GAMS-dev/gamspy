@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -12,13 +15,16 @@ from gamspy import Problem
 from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
+from gamspy import UniverseAlias
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 
 
 class ContainerSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_container(self):
         import gams.transfer as gt
@@ -44,7 +50,9 @@ class ContainerSuite(unittest.TestCase):
         self.assertTrue(isinstance(self.m["e"], Equation))
 
         # Test getters
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         i = Set(m, "i")
         self.assertTrue(isinstance(m["i"], Set))
@@ -68,7 +76,9 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m.getEquations(), [e])
 
         # test addX syntax
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i1 = m.addSet("i")
         self.assertRaises(ValueError, m.addSet, "i", i1)
         self.assertTrue(isinstance(i1, Set))
@@ -112,8 +122,17 @@ class ContainerSuite(unittest.TestCase):
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
+    def test_working_directory_helpers(self):
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+        self.assertEqual(m.gdxInputName(), os.path.basename(m._gdx_in))
+        self.assertEqual(m.gdxOutputName(), os.path.basename(m._gdx_out))
+
     def test_read_write(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         _ = Set(m, "i", records=["i1", "i2"])
         _ = Set(m, "j", records=["j1", "j2"])
         m.write("test.gdx")
@@ -130,7 +149,9 @@ class ContainerSuite(unittest.TestCase):
         self.m.write("test.gdx")
 
         # Load all
-        new_container = Container(delayed_execution=True)
+        new_container = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(new_container, name="i")
         a = Parameter(new_container, name="a", domain=[i])
         new_container.loadRecordsFromGdx("test.gdx")
@@ -142,7 +163,9 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(a.records.values.tolist(), [["i1", 1.0], ["i2", 2.0]])
 
         # Load specific symbols
-        new_container2 = Container(delayed_execution=True)
+        new_container2 = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(new_container2, name="i")
         a = Parameter(new_container2, name="a", domain=[i])
         new_container2.loadRecordsFromGdx("test.gdx", ["i"])
@@ -182,24 +205,32 @@ class ContainerSuite(unittest.TestCase):
         self.m._addGamsCode("Set i / i1*i3 /;")
         self.assertEqual(self.m._unsaved_statements[-1], "Set i / i1*i3 /;")
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run()
+        m._run(is_implicit=True)
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
+
+        pi = Parameter(m, "pi")
+        with self.assertRaises(GamspyException):
+            m._addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
     def test_system_directory(self):
         import gamspy_base
 
         expected_path = gamspy_base.__path__[0]
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         self.assertEqual(m.system_directory.lower(), expected_path.lower())
 
         self.assertEqual(
-            utils._getGAMSPyBaseDirectory().lower(), expected_path.lower()
+            utils._get_gamspy_base_directory().lower(), expected_path.lower()
         )
 
     def test_non_empty_working_directory(self):
@@ -237,7 +268,9 @@ class ContainerSuite(unittest.TestCase):
             dummy.solve()
 
     def test_write_load_on_demand(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(m, name="i", records=["i1"])
         p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
         p2 = Parameter(m, name="p2", domain=[i])
@@ -265,6 +298,8 @@ class ContainerSuite(unittest.TestCase):
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        _ = Alias(m, "k", alias_with=j)
+        _ = UniverseAlias(m)
 
         # Data
         a = Parameter(m, name="a", domain=[i], records=capacities)
@@ -302,7 +337,9 @@ class ContainerSuite(unittest.TestCase):
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
 
     def test_generate_gams_string(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         i = Set(m, "i")
         _ = Alias(m, "a", i)

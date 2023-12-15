@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 from gamspy import Container
@@ -12,10 +15,14 @@ from gamspy import Variable
 
 class ModelInstanceSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_parameter_change(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Prepare data
         distances = [
@@ -87,7 +94,9 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertFalse(transport._is_frozen)
 
     def test_variable_change(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Prepare data
         distances = [
@@ -145,7 +154,9 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
 
     def test_fx(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         # Data
         INCOME0 = Parameter(

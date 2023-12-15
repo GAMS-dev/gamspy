@@ -5,6 +5,10 @@ References
 Kalvelagen, E., (2002) Solving systems of linear equations with GAMS.
 http://www.gams.com/~erwin/lineq.pdf
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -34,7 +38,7 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SET #
     i = Set(m, name="i", records=["i1", "i2"])

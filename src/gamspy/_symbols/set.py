@@ -40,6 +40,7 @@ import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException
 
+
 if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
@@ -120,7 +121,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         self.where = condition.Condition(self)
 
         # check if the name is a reserved word
-        name = utils._reservedCheck(name)
+        name = utils._reserved_check(name)
 
         singleton_check(is_singleton, records)
 
@@ -135,14 +136,13 @@ class Set(gt.Set, operable.Operable, Symbol):
             uels_on_axes,
         )
 
+        self._container_check(self.domain)
+
         # add statement
-        self.container._addStatement(self)
+        self.container._add_statement(self)
 
         # iterator index
         self._current_index = 0
-
-        # for records and setRecords
-        self._is_assigned = True
 
     def __len__(self):
         if self.records is not None:
@@ -159,11 +159,17 @@ class Set(gt.Set, operable.Operable, Symbol):
         self._current_index = 0
         raise StopIteration
 
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
     def __iter__(self):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -171,7 +177,8 @@ class Set(gt.Set, operable.Operable, Symbol):
         indices: tuple | str,
         assignment,
     ):
-        domain = self.domain if indices == ... else utils._toList(indices)
+        domain = self.domain if indices == ... else utils._to_list(indices)
+        self._container_check(domain)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore
@@ -182,11 +189,11 @@ class Set(gt.Set, operable.Operable, Symbol):
             assignment,
         )
 
-        self.container._addStatement(statement)
+        self.container._add_statement(statement)
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run()
+            self.container._run(is_implicit=True)
 
     # Set Attributes
     @property
@@ -196,9 +203,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.pos", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.pos")
 
     @property
     def ord(self):
@@ -207,9 +214,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.ord", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.ord")
 
     @property
     def off(self):
@@ -218,9 +225,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.off", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.off")
 
     @property
     def rev(self):
@@ -230,9 +237,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.rev", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.rev")
 
     @property
     def uel(self):
@@ -241,9 +248,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.uel", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.uel")
 
     @property
     def len(self):
@@ -252,9 +259,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.len", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.len")
 
     @property
     def tlen(self):
@@ -263,9 +270,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.tlen", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
 
     @property
     def val(self):
@@ -277,9 +284,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.val", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.val")
 
     @property
     def tval(self):
@@ -291,9 +298,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.tval", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.tval")
 
     @property
     def first(self):
@@ -302,9 +309,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.first", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.first")
 
     @property
     def last(self):
@@ -313,9 +320,9 @@ class Set(gt.Set, operable.Operable, Symbol):
 
         Returns
         -------
-        Expression
+        ImplicitSet
         """
-        return expression.Expression(None, f"{self.name}.last", None)
+        return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
     def lag(
         self,
@@ -419,15 +426,12 @@ class Set(gt.Set, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._run(is_implicit=True)
 
         return self._records
 
     @records.setter
     def records(self, records):
-        if hasattr(self, "_is_assigned"):
-            self._is_assigned = True
-
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")
@@ -449,10 +453,6 @@ class Set(gt.Set, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
-    def setRecords(self, records: Any, uels_on_axes: bool = False):
-        self._is_assigned = True
-        super().setRecords(records, uels_on_axes)
-
     def sameAs(self, other: Set | Alias) -> Expression:
         return expression.Expression(
             "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
@@ -468,6 +468,16 @@ class Set(gt.Set, operable.Operable, Symbol):
         """
         return self.name
 
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
+
     def getStatement(self) -> str:
         """
         Statement of the Set definition
@@ -481,10 +491,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         if self._is_singleton:
             output = f"Singleton {output}"
 
-        domain_str = ",".join(
-            [set if isinstance(set, str) else set.name for set in self.domain]
-        )
-        output += f"({domain_str})"
+        output += self._get_domain_str()
 
         if self.description:
             output += f' "{self.description}"'

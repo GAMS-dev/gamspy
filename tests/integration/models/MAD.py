@@ -6,6 +6,9 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 5.3
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -20,15 +23,15 @@ from gamspy import Smax
 from gamspy import Smin
 from gamspy import Sum
 from gamspy import Variable
-
-
-def sqr(x):
-    return gams_math.power(x, 2)
+from gamspy.math import sqr
 
 
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
-    m = Container(delayed_execution=True, load_from=gdx_file)
+    m = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        load_from=gdx_file,
+    )
 
     # SETS #
     i, l = m.getSymbols(["i", "l"])

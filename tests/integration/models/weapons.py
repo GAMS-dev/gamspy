@@ -12,6 +12,10 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
 Keywords: nonlinear programming, assignment problem, military application,
           nlp test problem
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 from gamspy import Card
@@ -28,7 +32,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     td_data = pd.DataFrame(
         [

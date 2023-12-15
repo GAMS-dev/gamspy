@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
@@ -16,7 +18,7 @@ class CmdSuite(unittest.TestCase):
         with open(this_folder + os.sep + "gamslice.txt", "w") as license_file:
             license_file.write(license)
 
-        gamspy_base_dir = utils._getGAMSPyBaseDirectory()
+        gamspy_base_dir = utils._get_gamspy_base_directory()
 
         # copy existing license to recover later
         shutil.copy(

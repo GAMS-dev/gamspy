@@ -399,7 +399,7 @@ you already sent to the server. ::
     print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
 
 
-Terms of use for NEOS can be found here: `Terms of Use <https://neos-server.org/neos/termofuse.html> _`.
+Terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
 
 Redirecting Output
 ------------------

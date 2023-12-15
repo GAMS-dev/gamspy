@@ -5,6 +5,10 @@ Economic load dispatch for 15 generator systems with transmission losses
 modeled using B-matrix formulation (Kron).
 EDC of a total power of 1980 MW using 15 power generating units.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 
 import gamspy.math as gams_math
@@ -326,7 +330,7 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # SETS #
     i = Set(

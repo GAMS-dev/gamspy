@@ -6,6 +6,10 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.3.1
 Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -61,7 +65,7 @@ def BondDataTable():
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     Time = Set(
         m,

@@ -21,6 +21,10 @@ Keywords: constrained nonlinear system, general equilibrium model, economic
 growth,
           industrialization, economic policy, Korean economy
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -134,7 +138,9 @@ def main():
     )
 
     # Model's container
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # Sets
     i = Set(cont, name="i", records=["agricult", "industry", "services"])

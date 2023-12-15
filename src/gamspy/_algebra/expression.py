@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
     from gamspy import Variable
 
 GMS_MAX_LINE_LENGTH = 80000
-LINE_LENGTH_OFFSET = 1024
+LINE_LENGTH_OFFSET = 79000
 
 
 class Expression(operable.Operable):
@@ -66,33 +67,58 @@ class Expression(operable.Operable):
     """
 
     def __init__(self, left, data, right) -> None:
-        self.name = utils._getUniqueName()
         self.left = left
         self.data = data
         self.right = right
-        self.representation = self._create_representation(left, data, right)
+        self.representation = self._create_representation()
         self.where = condition.Condition(self)
 
-    def _create_representation(self, left, data, right):
-        if left is None:
+    def _create_representation(self):
+        left_str, right_str = self._get_operand_representations()
+        out_str = self._create_output_str(left_str, right_str)
+
+        # Adapt to GAMS quirks
+        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
+            return out_str[1:-1]
+
+        if self.data == "$":
+            # defopLS(o,p) $ sumc(o,p) <= 0.5 .. op(o,p) =e= 1;   -> not valid
+            # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
+            out_str = self._fix_condition_paranthesis(out_str)
+
+        if self.data == "==":
+            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
+            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
+            out_str = out_str.replace("==", "=")
+
+        if self.data in ["=", ".."] and out_str[0] == "(":
+            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
+            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
+            indices = utils._get_matching_paranthesis_indices(out_str)
+            match_index = indices[0]
+            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
+
+        return out_str
+
+    def _get_operand_representations(self) -> Tuple[str, str]:
+        if self.left is None:
             left_str = ""
         else:
             left_str = (
-                str(left)
-                if isinstance(left, (int, float, str))
-                else left.gamsRepr()
+                str(self.left)
+                if isinstance(self.left, (int, float, str))
+                else self.left.gamsRepr()
             )
 
-        if right is None:
+        if self.right is None:
             right_str = ""
         else:
             right_str = (
-                str(right)
-                if isinstance(right, (int, float, str))
-                else right.gamsRepr()
+                str(self.right)
+                if isinstance(self.right, (int, float, str))
+                else self.right.gamsRepr()
             )
 
-        # negative sign causes an extra operation if not in paranthesis
         # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0)); -> not valid
         # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
         if isinstance(self.left, (int, float)) and self.left < 0:
@@ -101,7 +127,7 @@ class Expression(operable.Operable):
         if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
-        if data == "=" and isinstance(
+        if self.data == "=" and isinstance(
             self.left,
             (
                 syms.Set,
@@ -114,44 +140,24 @@ class Expression(operable.Operable):
         ):
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
-            right_str = right_str.replace("=e=", "=")
-            right_str = right_str.replace("=l=", "<=")
-            right_str = right_str.replace("=g=", ">=")
+            right_str = utils._replace_equality_signs(right_str)
 
+        return left_str, right_str
+
+    def _create_output_str(self, left_str: str, right_str: str) -> str:
         # get around 80000 line length limitation in GAMS
-        length = len(left_str) + len(data) + len(right_str)
+        length = len(left_str) + len(self.data) + len(right_str)
         if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
-            out_str = f"{left_str} {data}\n {right_str}"
+            out_str = f"{left_str} {self.data}\n {right_str}"
         else:
-            out_str = f"{left_str} {data} {right_str}"
+            out_str = f"{left_str} {self.data} {right_str}"
 
-        # if it's an assignment add semicolon, otherwise add paranthesis to ensure
-        # the order of execution
-        out_str = f"{out_str};" if data in ["..", "="] else f"({out_str})"
+        if self.data in ["..", "="]:
+            return f"{out_str};"
+        elif self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
+            return out_str
 
-        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
-            return out_str[1:-1]
-
-        if data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
-            # (test.. a =g= b) -> not valid
-            # test.. a =g= b   -> valid
-            out_str = out_str[1:-1]  # remove the paranthesis
-
-        out_str = self._fix_condition_paranthesis(out_str)
-
-        if data == "==":
-            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
-            out_str = out_str.replace("==", "=")
-
-        if data in ["=", ".."] and out_str[0] == "(":
-            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
-            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            indices = utils._getMatchingParanthesisIndices(out_str)
-            match_index = indices[0]
-            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
-
-        return out_str
+        return f"({out_str})"
 
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
@@ -160,14 +166,13 @@ class Expression(operable.Operable):
         return Expression(self, "ne", other)
 
     def _fix_condition_paranthesis(self, string: str) -> str:
-        if self.data == "$":
-            left, right = string.split("$", 1)
-            right = right.strip()
+        left, right = string.split("$", 1)
+        right = right.strip()
 
-            if right[0] != "(":
-                right = f"({right})"
+        if right[0] != "(":
+            right = f"({right})"
 
-            string = f"{left}$ {right}"
+        string = f"{left}$ {right}"
 
         return string
 
@@ -195,7 +200,6 @@ class Expression(operable.Operable):
         return self.gamsRepr()
 
     def find_variables(self) -> list[Variable]:
-        """Find variables in an expression"""
         current = self
 
         stack = []

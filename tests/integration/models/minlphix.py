@@ -76,6 +76,10 @@ Keywords: mixed integer nonlinear programming, chemical engineering,
 distillation
           sequences, heat integrated distillation
 """
+from __future__ import annotations
+
+import os
+
 import numpy as np
 import pandas as pd
 
@@ -95,7 +99,9 @@ from gamspy.math import sqrt
 
 
 def main():
-    cont = Container(delayed_execution=True)
+    cont = Container(
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+    )
 
     # Set
     i = Set(cont, name="i", records=[f"c-{i}" for i in range(1, 5)])

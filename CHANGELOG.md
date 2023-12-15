@@ -2,16 +2,67 @@ GAMSPy CHANGELOG
 ================
 
 -------------------------------------------------------------------------------
+GAMSPy 0.11.4
+-------------------------------------------------------------------------------
+- General
+  - Expose GTP special values via gp.SpecialValues
+  - Fix NEOS bug when the previous workfile comes from another backend.
+- Documentation
+  - Fix Variable attribute assignments in user guide.
+- Testing
+  - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
+
+-------------------------------------------------------------------------------
+GAMSPy 0.11.3
+-------------------------------------------------------------------------------
+- General
+  - Fix setRecords bug
+  - Run after an equation is defined
+- Testing
+  - Fix incorrect order of setRecords in gapmin model
+  - Fix domain violation in the unit tests revealed by the execution of 
+  equation definitions in immediate mode.
+  - Use gams_math.sqr instead of custom sqr function in tests.
+
+-------------------------------------------------------------------------------
+GAMSPy 0.11.2
+-------------------------------------------------------------------------------
+- General
+  - Fix the bug in writing only modified symbols.
+  - Return summary dataframe for all synchronous backends.
+  - Fix the bug in using set, alias attributes in conditions.
+- Documentation
+  - Re-run notebooks to reflect the changes in solve summary.
+- Testing
+  - Add tests for the returned summary dataframe from solve.
+  - Add tests for solve with trace options.
+
+-------------------------------------------------------------------------------
+GAMSPy 0.11.1
+-------------------------------------------------------------------------------
+- General
+  - Fix missing atttributes of Alias such as .first, .last etc.
+  - Fix global option bug
+  - Display summary on Jupyter Notebook.
+- Testing
+  - Add tests for Alias attributes.
+
+-------------------------------------------------------------------------------
 GAMSPy 0.11.0
 -------------------------------------------------------------------------------
 - General
   - Generate expression representation as soon as it is created to avoid tall recursions.
   - Find variables in equations by iteratively traversing instead of doing recursion.
   - Add NEOS Server as a backend to solve models.
+  - Fix domain for the equations that were specified in the constructor of the equation.
+  - Check if the container of domain symbols of a symbol match with the symbol's container.
+  - Check if the container is valid before running the model.
 - Documentation
   - Add documentation for NEOS backend.
 - Testing
   - Add tests for NEOS backend.
+  - Add tests for equations that were defined in the constructor.
+  - Add tests for checking the containers of domain symbols.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.10.5

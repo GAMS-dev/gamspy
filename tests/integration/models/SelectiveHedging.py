@@ -6,6 +6,9 @@ Indexation model with selective hedging
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 7.2.3
 * Last modified: Apr 2008.
 """
+from __future__ import annotations
+
+import os
 from pathlib import Path
 
 from gamspy import Alias
@@ -25,7 +28,7 @@ from gamspy import Variable
 def main(output=None):
     # Define container
     m = Container(
-        delayed_execution=True,
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute())
         + "/SelectiveHedging.gdx",
     )

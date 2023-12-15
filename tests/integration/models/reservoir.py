@@ -9,6 +9,10 @@ http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
 Andrei, N., Optimal management of system of two reservoirs.
 Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 """
+from __future__ import annotations
+
+import os
+
 import pandas as pd
 
 from gamspy import Container
@@ -23,7 +27,7 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     # Set
     n = Set(m, name="n", records=["res1", "res2"])

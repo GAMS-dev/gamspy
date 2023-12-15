@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import os
 import unittest
 
 import pandas as pd
@@ -14,7 +17,9 @@ from gamspy.exceptions import GamspyException
 
 class MathSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
     def test_math(self):
         # Prepare data
@@ -272,7 +277,9 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( binomial(b(i),3) )")
 
     def test_math_2(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
 
@@ -352,7 +359,9 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( sigmoid(a(i)) )")
 
     def test_logical(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
         p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])
@@ -361,7 +370,7 @@ class MathSuite(unittest.TestCase):
         defopLS = Equation(m, "defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == gams_math.ifthen(sumc[o, p] >= 0.5, 1, 0)
         self.assertEqual(
-            m._unsaved_statements[-1].gamsRepr(),
+            defopLS._definition.gamsRepr(),
             "defopLS(o,p) .. op(o,p) =e= ( ifthen(sumc(o,p) >= 0.5, 1, 0) );",
         )
 
