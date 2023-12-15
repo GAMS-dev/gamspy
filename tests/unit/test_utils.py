@@ -98,6 +98,7 @@ class UtilsSuite(unittest.TestCase):
             "IPOPTH",
             "KNITRO",
             "MINOS",
+            "MPSGE",
             "MOSEK",
             "SCIP",
             "SHOT",
