@@ -52,7 +52,7 @@ $include HANSEN.GEN
 """
     m = Container(
         working_directory=".",
-        load_from=str(Path(__file__).parent.absolute()) + "/hansmpsge.gdx",
+        load_from=str(Path(__file__).parent.absolute()) + "/hansmge.gdx",
     )
     m._addGamsCode(hansen_mpsge)
     hansen = Model(m, "hansen", problem=Problem.MCP)
