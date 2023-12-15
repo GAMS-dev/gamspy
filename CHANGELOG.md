@@ -11,6 +11,7 @@ GAMSPy 0.11.4
   - Fix Variable attribute assignments in user guide.
 - Testing
   - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
+  - Add hansmpsge model to the model library.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.3
