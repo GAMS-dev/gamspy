@@ -299,6 +299,17 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self, name=f"-{self.name}", domain=self._domain
         )
 
+    def t(self) -> implicits.ImplicitParameter:
+        from gamspy.math.matrix import permute
+        dims = [x for x in range(len(self.domain))]
+        if len(dims) < 2:
+            raise GamspyException("Parameter must contain at least 2 dimensions to transpose")
+
+        x = dims[-1]
+        dims[-1] = dims[-2]
+        dims[-2] = x
+        return permute(self, dims)
+
     @property
     def records(self):
         """

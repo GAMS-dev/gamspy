@@ -9,6 +9,9 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
+from gamspy.exceptions import GamspyException
+from gamspy.math.matrix import permute
+
 
 if TYPE_CHECKING:
     from gamspy import Equation, Parameter, Set, Variable
@@ -22,6 +25,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str] = [],
         records: Any | None = None,
+        permutation: List[int] | None = None
     ) -> None:
         """Implicit Parameter
 
@@ -35,12 +39,14 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         super().__init__(parent, name, domain)
         self._records = records
         self._assignment = None
+        self.permutation = permutation
 
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
             parent=self.parent,
             name=f"-{self.name}",
             domain=self.domain,
+            permutation=self.permutation,
         )
 
     def __invert__(self):
@@ -50,7 +56,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain = validation.validate_domain(self, indices)
 
         return ImplicitParameter(
-            parent=self.parent, name=self.name, domain=domain
+            parent=self.parent,
+            name=self.name,
+            domain=domain,
+            permutation=self.permutation,
         )
 
     def __setitem__(self, indices: list | str, rhs: Expression) -> None:
@@ -62,7 +71,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         statement = expression.Expression(
             ImplicitParameter(
-                parent=self.parent, name=self.name, domain=domain
+                parent=self.parent,
+                name=self.name,
+                domain=domain,
+                permutation=self.permutation,
             ),
             "=",
             rhs,
@@ -90,6 +102,16 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
 
+    def t(self) -> ImplicitParameter:
+        dims = [x for x in range(len(self.domain))]
+        if len(dims) < 2:
+            raise GamspyException("Parameter must contain at least 2 dimensions to transpose")
+
+        x = dims[-1]
+        dims[-1] = dims[-2]
+        dims[-2] = x
+        return permute(self, dims)
+
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.
 
@@ -98,6 +120,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         """
         representation = self.name
         if self.domain:
-            representation += utils._get_domain_str(self.domain)
+            domain = self.domain
+            if self.permutation is not None:
+                domain = utils._permute_domain(domain, self.permutation)
+
+            representation += utils._get_domain_str(domain)
 
         return representation

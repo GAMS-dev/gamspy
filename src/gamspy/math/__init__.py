@@ -91,6 +91,8 @@ from gamspy.math.trigonometric import (
     tanh,
 )
 
+from gamspy.math.matrix import permute
+
 __all__ = [
     "cos",
     "cosh",
@@ -112,6 +114,7 @@ __all__ = [
     "log_beta",
     "log_gamma",
     "logit",
+    "permute",
     "abs",
     "ceil",
     "dist",

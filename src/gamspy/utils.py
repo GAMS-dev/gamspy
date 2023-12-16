@@ -463,3 +463,37 @@ def _get_matching_paranthesis_indices(string: str) -> int:
         raise AssertionError("Too many opening parentheses!")
 
     return matching_indices[0]
+
+
+def _permute_domain(domain, dims):
+    """
+    Returns a new array where original domain's dimensions are permuted.
+
+    Parameters
+    ----------
+    domain : List[Set | str]
+    dims : List[int]
+
+    Returns
+    -------
+    List[Set | str]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> domain = [i, j, k]
+    >>> new_domain = gp.utils._permute_domain(domain, [2, 0, 1])
+    >>> new_domain[0] is domain[2]
+    True
+    >>> new_domain[1] is domain[0]
+    True
+    >>> new_domain[2] is domain[1]
+    True
+
+    """
+    new_domain = [domain[dim] for dim in dims]
+    return new_domain
