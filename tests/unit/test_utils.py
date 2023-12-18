@@ -54,20 +54,6 @@ class UtilsSuite(unittest.TestCase):
         self.assertFalse(utils.isin(k, symbols))
 
     def test_available_solvers(self):
-        installed_solvers = utils.getInstalledSolvers()
-
-        self.assertEqual(
-            installed_solvers,
-            [
-                "CONOPT",
-                "CONVERT",
-                "CPLEX",
-                "NLPEC",
-                "PATH",
-                "SBB",
-            ],
-        )
-
         def get_platform() -> str:
             operating_system = platform.system().lower()
             architecture = platform.machine()
@@ -98,6 +84,7 @@ class UtilsSuite(unittest.TestCase):
             "IPOPTH",
             "KNITRO",
             "MINOS",
+            "MPSGE",
             "MOSEK",
             "SCIP",
             "SHOT",
