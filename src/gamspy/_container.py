@@ -299,6 +299,7 @@ class Container(gt.Container):
         neos_client: Optional[neos.NeosClient] = None,
         create_log_file: bool = False,
         is_implicit: bool = False,
+        keep_flags: bool = False,
     ) -> Union[pd.DataFrame, None]:
         if options is None:
             options = _map_options(
@@ -318,7 +319,7 @@ class Container(gt.Container):
 
         # Create gdx file to read records from
         self._clean_dirty_symbols(dirty_names)
-        self._update_modified_state(modified_names)
+
         self.isValid(verbose=True, force=True)
         super().write(self._gdx_in, modified_names)
 
@@ -348,6 +349,9 @@ class Container(gt.Container):
         )
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._is_first_run = False
+
+        if not keep_flags:
+            self._update_modified_state(modified_names)
 
         return self._prepare_summary(
             is_implicit, options, backend, engine_config
@@ -1040,6 +1044,9 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: Optional[List[str]] = None,
+        load_records: bool = True,
+        mode: Optional[str] = None,
+        encoding: Optional[str] = None,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -1049,6 +1056,9 @@ class Container(gt.Container):
         ----------
         load_from : str
         symbol_names : List[str], optional
+        load_records : bool
+        mode : str, optional
+        encoding : str, optional
 
         Examples
         --------
@@ -1062,13 +1072,16 @@ class Container(gt.Container):
         True
 
         """
-        super().read(load_from, symbol_names)
+        super().read(load_from, symbol_names, load_records, mode, encoding)
         self._cast_symbols(symbol_names)
 
     def write(
         self,
         write_to: str,
-        symbols: Optional[List[str]] = None,
+        symbol_names: Optional[List[str]] = None,
+        compress: bool = False,
+        mode: Optional[str] = None,
+        eps_to_zero: bool = True,
     ) -> None:
         """
         Writes specified symbols to the gdx file. If symbol_names are
@@ -1077,7 +1090,10 @@ class Container(gt.Container):
         Parameters
         ----------
         write_to : str
-        symbols : List[str], optional
+        symbol_names : List[str], optional
+        compress : bool
+        mode : str, optional
+        eps_to_zero : bool
 
         Examples
         --------
@@ -1087,14 +1103,18 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, modified_names = self._get_touched_symbol_names()
+        dirty_names, _ = self._get_touched_symbol_names()
 
         if len(dirty_names) > 0:
-            self._run(is_implicit=True)
+            self._run(is_implicit=True, keep_flags=True)
 
-        super().write(write_to, symbols)
+        super().write(
+            write_to,
+            symbol_names,
+            compress,
+            mode=mode,
+            eps_to_zero=eps_to_zero,
+        )
 
-        for name in modified_names:
-            self[name].modified = True
         for name in dirty_names:
             self[name]._is_dirty = True
