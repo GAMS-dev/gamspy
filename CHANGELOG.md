@@ -7,6 +7,7 @@ GAMSPy 0.11.4
 - General
   - Expose GTP special values via gp.SpecialValues
   - Fix NEOS bug when the previous workfile comes from another backend.
+  - Optimize read function of Container by assigning the symbols' attributes directly while casting.
 - Documentation
   - Fix Variable attribute assignments in user guide.
 - Testing
