@@ -44,7 +44,6 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsOptions
 from gams import GamsWorkspace
-from gams.control.workspace import GamsException
 from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
@@ -467,7 +466,7 @@ class Container(gt.Container):
             "Solver",
             "Solver Time",
         ]
-        with open(options.trace) as file:
+        with open(os.path.join(self.working_directory, options.trace)) as file:
             line = file.readlines()[-1]
             (
                 _,
@@ -530,37 +529,6 @@ class Container(gt.Container):
             raise exception
         finally:
             self._unsaved_statements = []
-
-    def _run_engine(
-        self,
-        options: GamsOptions,
-        output: Union[io.TextIOWrapper, None],
-        engine_config: Union[EngineConfig, None],
-    ):
-        options.previouswork = 1  # In case GAMS version differs on Engine
-
-        assert engine_config
-
-        extra_model_files = engine_config._preprocess_extra_model_files(
-            self.workspace, self._gdx_in
-        )
-
-        try:
-            self._job.run_engine(  # type: ignore
-                engine_configuration=engine_config._get_engine_config(),
-                extra_model_files=extra_model_files,
-                gams_options=options,
-                checkpoint=self._save_to,
-                output=output,
-                create_out_db=False,
-                engine_options=engine_config.engine_options,
-                remove_results=engine_config.remove_results,
-            )
-        except GamsException as e:
-            raise GamspyException(str(e))
-        finally:
-            self._unsaved_statements = []
-            options.forcework = 0
 
     @property
     def delayed_execution(self) -> bool:
@@ -1165,8 +1133,8 @@ class Container(gt.Container):
         """
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
-        temp_container = Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names, cast_to_gamspy=False)
+        temp_container = gt.Container(system_directory=self.system_directory)
+        temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
@@ -1182,7 +1150,6 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: Optional[List[str]] = None,
-        cast_to_gamspy: bool = True,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -1206,9 +1173,7 @@ class Container(gt.Container):
 
         """
         super().read(load_from, symbol_names)
-
-        if cast_to_gamspy:
-            self._cast_symbols(symbol_names)
+        self._cast_symbols(symbol_names)
 
     def write(
         self,
@@ -1239,4 +1204,7 @@ class Container(gt.Container):
 
         super().write(write_to, symbols)
 
-        self._update_modified_state(modified_names)
+        for name in modified_names:
+            self[name].modified = True
+        for name in dirty_names:
+            self[name]._is_dirty = True

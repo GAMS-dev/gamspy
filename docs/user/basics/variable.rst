@@ -337,7 +337,7 @@ Assignment statements operate on one variable attribute at a time, and require t
 specify which attribute is being used. Any index list comes after the suffix. ::
 
     x.up[c,i,j] = 1000
-    phi.lo = inf
+    phi.lo[...] = inf
 
 A very common use is to bound one particular entry individually: ::
 
@@ -596,8 +596,8 @@ bound :math:`L` is 1 and the upper bound :math:`U` is ``float('inf')``. As usual
 bounds may be changed with the variable attributes ``lo`` and ``up``. ::
 
     x = Variable(m, "x", type = "semicont")
-    x.lo = 1.5
-    x.up = 23.1
+    x.lo[...] = 1.5
+    x.up[...] = 23.1
 
 The slice of code above declares the variable ``x`` to be a semi-continuous variable that may 
 either be zero or behave as a continuous variable between 1.5 and 23.1.
@@ -637,8 +637,8 @@ the variable attributes ``lo`` and ``up``. Note that in relaxed model types the 
 requirement is relaxed. ::
 
     x = Variable(m, "x", type = "semiint")
-    x.lo = 2
-    x.up = 25
+    x.lo[...] = 2
+    x.up[...] = 25
 
 The slice of code above declares the variable ``x`` to be a semi-integer variable that may 
 either be zero or take any integer value between 2 and 25. Note that the bounds for ``semiint`` 

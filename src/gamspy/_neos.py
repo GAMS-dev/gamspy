@@ -427,3 +427,10 @@ def run(
             os.path.join(container.working_directory, "output.gdx"),
             container._gdx_out,
         )
+
+        if not os.path.exists(container._gdx_out):
+            raise GamspyException(
+                "The job was not completed successfully. Check"
+                f" {os.path.join(container.working_directory, 'solve.log')} for"
+                " details."
+            )
