@@ -675,6 +675,9 @@ class Model:
             )
             equations_str += "," + limited_variables_str
 
-        model_str = f"Model {self.name} / {equations_str} /;"
+        model_str = f"Model {self.name}"
+        if equations_str != "":
+            model_str += f" / {equations_str} /"
+        model_str += ";"
 
         return model_str

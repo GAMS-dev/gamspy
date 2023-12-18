@@ -33,6 +33,8 @@ flowshop,:ref:`GAMSPy <flowshop>`,`GAMS <https://www.gams.com/latest/gamslib_ml/
 food,:ref:`GAMSPy <food>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_food.html>`__,
 fuel,:ref:`GAMSPy <fuel>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html>`__,
 gapmin,:ref:`GAMSPy <gapmin>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html>`__,
+hansmcp,:ref:`GAMSPy <hansmcp>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html>`__,:download:`hansmcp.gdx <../../tests/integration/models/hansmcp.gdx>`
+hansmge,:ref:`GAMSPy <hansmge>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html>`__,:download:`hansmge.gdx <../../tests/integration/models/hansmge.gdx>`
 heatex3,:ref:`GAMSPy <heatex3>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html>`__,
 Horizon,:ref:`GAMSPy <Horizon>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html>`__,
 Immunization,:ref:`GAMSPy <Immunization>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Immunization.html>`__,
