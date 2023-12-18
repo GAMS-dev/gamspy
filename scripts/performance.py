@@ -27,9 +27,9 @@ else:
 results = []
 for i in range(args.iters):
     start = time.time()
-    subprocess.run(commands)
+    subprocess.run(commands, env=env, check=True)
     end = time.time()
     print(f"[{i + 1}] took: {end - start}")
     results.append(end - start)
 
-print(f"Took {sum(results) / args.iters} on averag")
+print(f"Took {sum(results) / args.iters} on average")
