@@ -413,6 +413,32 @@ class ContainerSuite(unittest.TestCase):
             ["i", "j", "a", "b", "d", "c", "x", "supply", "demand"],
         )
 
+    def test_recovered_state(self):
+        m = Container(delayed_execution=True)
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        m.write("test.gdx")
+        self.assertTrue(c.modified)
+        self.assertTrue(c._is_dirty)
+
 
 def container_suite():
     suite = unittest.TestSuite()
