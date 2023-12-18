@@ -1023,8 +1023,8 @@ class Container(gt.Container):
         """
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
-        temp_container = Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names, cast_to_gamspy=False)
+        temp_container = gt.Container(system_directory=self.system_directory)
+        temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
@@ -1040,7 +1040,6 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: Optional[List[str]] = None,
-        cast_to_gamspy: bool = True,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -1064,9 +1063,7 @@ class Container(gt.Container):
 
         """
         super().read(load_from, symbol_names)
-
-        if cast_to_gamspy:
-            self._cast_symbols(symbol_names)
+        self._cast_symbols(symbol_names)
 
     def write(
         self,
@@ -1097,4 +1094,7 @@ class Container(gt.Container):
 
         super().write(write_to, symbols)
 
-        self._update_modified_state(modified_names)
+        for name in modified_names:
+            self[name].modified = True
+        for name in dirty_names:
+            self[name]._is_dirty = True

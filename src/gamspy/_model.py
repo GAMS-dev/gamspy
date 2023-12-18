@@ -33,6 +33,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 from typing import Union
 
+import gams.transfer as gt
 from gams import GamsOptions
 
 import gamspy as gp
@@ -434,7 +435,7 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = gp.Container(
+        temp_container = gt.Container(
             system_directory=self.container.system_directory
         )
         temp_container.read(
@@ -443,7 +444,6 @@ class Model:
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
                 for gams_attr in attribute_map.keys()
             ],
-            cast_to_gamspy=False,
         )
 
         for gams_attr, python_attr in attribute_map.items():
