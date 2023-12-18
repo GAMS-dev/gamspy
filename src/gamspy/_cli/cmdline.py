@@ -300,7 +300,7 @@ def run(args: Dict[str, str]):
     component = args["component"]
 
     if component == "miro":
-        model = args["model"]
+        model = os.path.abspath(args["model"])
         mode = args["mode"]
         path = os.getenv("MIRO_PATH", None)
 
