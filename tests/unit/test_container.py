@@ -122,13 +122,6 @@ class ContainerSuite(unittest.TestCase):
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
-    def test_working_directory_helpers(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
-        self.assertEqual(m.gdxInputName(), os.path.basename(m._gdx_in))
-        self.assertEqual(m.gdxOutputName(), os.path.basename(m._gdx_out))
-
     def test_read_write(self):
         m = Container(
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))

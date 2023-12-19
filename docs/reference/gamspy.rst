@@ -14,6 +14,7 @@ gamspy
    gamspy._model
    gamspy.Problem
    gamspy.Sense
+   gamspy.Options
    gamspy._algebra.domain
    gamspy._algebra.number
    gamspy.Sum
@@ -25,5 +26,4 @@ gamspy
    gamspy._engine
    gamspy.math
    gamspy.utils
-   gamspy.exceptions
    gamspy.SpecialValues

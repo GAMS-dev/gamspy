@@ -150,14 +150,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         definition_domain: Optional[list] = None,
     ):
         type = cast_type(type)
-
-        # enable load on demand
         self._is_dirty = False
-
-        # allow freezing
         self._is_frozen = False
-
-        # check if the name is a reserved word
         name = utils._reserved_check(name)
 
         super().__init__(
@@ -173,13 +167,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         self._container_check(self.domain)
 
-        # allow conditions
         self.where = condition.Condition(self)
-
-        # add statement
         self.container._add_statement(self)
-
-        # add defition if exists
         self._definition_domain = definition_domain
         self._init_definition(definition)
 

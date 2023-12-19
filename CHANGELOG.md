@@ -12,6 +12,7 @@ GAMSPy 0.11.4
   - Do not expose cast_to_gamspy to user.
 - Documentation
   - Fix Variable attribute assignments in user guide.
+  - Add more examples in docstrings.
 - Testing
   - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
   - Add hansmpsge model to the model library.
