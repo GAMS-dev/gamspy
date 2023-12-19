@@ -177,7 +177,8 @@ class Container(gt.Container):
         )
 
         filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-        data_path = f"data_{filename}"
+        directory = os.path.dirname(sys.argv[0])
+        data_path = os.path.join(directory, f"data_{filename}")
         try:
             os.mkdir(data_path)
         except FileExistsError:
