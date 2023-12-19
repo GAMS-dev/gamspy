@@ -2,8 +2,8 @@
 
 .. _hansmge:
 
-A Transportation Problem (TRNSPORT)
-===================================
+Hansen's Activity Analysis Example - MPSGE.
+===========================================
 
 :download:`hansmge.py <../../../tests/integration/models/hansmge.py>` |hansmge.gdx|
 

@@ -1,21 +1,11 @@
 """
-A Transportation Problem (TRNSPORT)
+Hansen's Activity Analysis Example - MPSGE.
 
-This problem finds a least cost shipping schedule that meets
-requirements at markets and supplies at factories.
+Scarf, H, and Hansen, T, The Computation of Economic Equilibria.
+Yale University Press, 1973.
 
-
-Dantzig, G B, Chapter 3.3. In Linear Programming and Extensions.
-Princeton University Press, Princeton, New Jersey, 1963.
-
-This formulation is described in detail in:
-Rosenthal, R E, Chapter 2: A GAMS Tutorial. In GAMS: A User's Guide.
-The Scientific Press, Redwood City, California, 1988.
-
-The line numbers will not match those in the book because of these
-comments.
-
-Keywords: linear programming, transportation problem, scheduling
+Keywords: mixed complementarity problem, general equilibrium model, activity analysis,
+          social accounting matrix, European regional policy
 """
 from __future__ import annotations
 
