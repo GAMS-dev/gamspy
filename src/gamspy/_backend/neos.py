@@ -36,6 +36,7 @@ from typing import Optional
 from typing import Tuple
 from typing import TYPE_CHECKING
 
+import gamspy._backend.backend as backend
 from gamspy.exceptions import GamspyException
 
 logger = logging.getLogger("NEOS")
@@ -397,40 +398,79 @@ class NeosClient:
         return job_number, job_password
 
 
-def run(
-    container: Container,
-    gams_string: str,
-    options: GamsOptions,
-    client: NeosClient,
-):
-    client._prepare_xml(
-        gams_string,
-        container._gdx_in,
-        container._restart_from._checkpoint_file_name,
-        container._save_to.name,
-        options=options,
-        working_directory=container.working_directory,
-    )
-    job_number, job_password = client.submit_job(
-        is_blocking=client.is_blocking,
-        working_directory=container.working_directory,
-    )
-
-    if client.is_blocking:
-        client.download_output(
-            job_number,
-            job_password,
-            working_directory=container.working_directory,
-        )
-
-        shutil.move(
-            os.path.join(container.working_directory, "output.gdx"),
-            container._gdx_out,
-        )
-
-        if not os.path.exists(container._gdx_out):
+class NEOSServer(backend.Backend):
+    def __init__(
+        self,
+        container: "Container",
+        options: "GamsOptions",
+        client: NeosClient | None,
+    ) -> None:
+        if client is None:
             raise GamspyException(
-                "The job was not completed successfully. Check"
-                f" {os.path.join(container.working_directory, 'solve.log')} for"
-                " details."
+                "`neos_client` must be provided to solve on NEOS Server"
             )
+
+        self.container = container
+        self.options = options
+        self.client = client
+        self.gdx_in = "in.gdx"
+        self.gdx_out = "output.gdx"
+
+    def is_async(self):
+        return False if self.client.is_blocking else True
+
+    def preprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+    ):
+        self.gams_string = self.container._generate_gams_string(
+            self.gdx_in, self.gdx_out, dirty_names, modified_names
+        )
+
+    def run(self):
+        self.client._prepare_xml(
+            self.gams_string,
+            self.container._gdx_in,
+            self.container._restart_from._checkpoint_file_name,
+            self.container._save_to.name,
+            options=self.options,
+            working_directory=self.container.working_directory,
+        )
+        job_number, job_password = self.client.submit_job(
+            is_blocking=self.client.is_blocking,
+            working_directory=self.container.working_directory,
+        )
+
+        if self.client.is_blocking:
+            self.client.download_output(
+                job_number,
+                job_password,
+                working_directory=self.container.working_directory,
+            )
+
+            shutil.move(
+                os.path.join(self.container.working_directory, "output.gdx"),
+                self.container._gdx_out,
+            )
+
+            if not os.path.exists(self.container._gdx_out):
+                raise GamspyException(
+                    "The job was not completed successfully. Check"
+                    f" {os.path.join(self.container.working_directory, 'solve.log')} for"
+                    " details."
+                )
+
+        self.container._unsaved_statements = []
+
+    def postprocess(self, is_implicit: bool = False):
+        if (
+            self.options.traceopt == 3
+            and self.client.is_blocking
+            and not is_implicit
+        ):
+            return self.prepare_summary(
+                self.container.working_directory, self.options.trace
+            )
+
+        return None

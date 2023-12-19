@@ -43,16 +43,12 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsOptions
 from gams import GamsWorkspace
-from gams.control.workspace import GamsExceptionExecution
 from gams.core import gdx
 
 import gamspy as gp
-import gamspy._engine as engine
-import gamspy._neos as neos
 import gamspy.utils as utils
-from gamspy._model import ModelStatus
+from gamspy._backend.backend import backend_factory
 from gamspy._options import _map_options
-from gamspy.exceptions import customize_exception
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -66,7 +62,8 @@ if TYPE_CHECKING:
         Model,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._engine import EngineConfig
+    from gamspy._backend.engine import EngineConfig
+    from gamspy._backend.neos import NeosClient
     from gamspy._options import Options
 
 
@@ -295,8 +292,8 @@ class Container(gt.Container):
         options: Optional[GamsOptions] = None,
         output: Optional[io.TextIOWrapper] = None,
         backend: Literal["local", "engine", "neos"] = "local",
-        engine_config: Optional[EngineConfig] = None,
-        neos_client: Optional[neos.NeosClient] = None,
+        engine_config: Optional["EngineConfig"] = None,
+        neos_client: Optional["NeosClient"] = None,
         create_log_file: bool = False,
         is_implicit: bool = False,
     ) -> Union[pd.DataFrame, None]:
@@ -311,154 +308,37 @@ class Container(gt.Container):
                 create_log_file=create_log_file,
             )
 
+        # Create gdx file to for symbols to be loaded
         dirty_names, modified_names = self._get_touched_symbol_names()
-        gams_string = self._generate_gams_string(
-            backend, dirty_names, modified_names
-        )
-
-        # Create gdx file to read records from
         self._clean_dirty_symbols(dirty_names)
-        self._update_modified_state(modified_names)
         self.isValid(verbose=True, force=True)
         super().write(self._gdx_in, modified_names)
 
-        # If there is no restart checkpoint, set it to None
-        checkpoint = self._restart_from if not self._is_first_run else None
-
-        self._job = GamsJob(
-            self.workspace,
-            job_name=f"_job_{uuid.uuid4()}",
-            source=gams_string,
-            checkpoint=checkpoint,
+        runner = backend_factory(
+            self,
+            options,
+            output,
+            backend,
+            engine_config,
+            neos_client,
         )
 
-        if backend == "local":
-            self._run_local(options, output)
-        elif backend == "engine":
-            assert engine_config
-            engine.run(self, options, output, engine_config)
-        elif backend == "neos":
-            assert neos_client
-            neos.run(self, gams_string, options, neos_client)
-            if not neos_client.is_blocking:
-                return None
+        runner.preprocess(dirty_names, modified_names)
+        runner.run()
+
+        if runner.is_async():
+            return None
+
+        summary = runner.postprocess(is_implicit)
 
         self.loadRecordsFromGdx(
             self._gdx_out, dirty_names + self._import_symbols
         )
         self._restart_from, self._save_to = self._save_to, self._restart_from
         self._is_first_run = False
+        self._update_modified_state(modified_names)
 
-        return self._prepare_summary(
-            is_implicit, options, backend, engine_config
-        )
-
-    def _prepare_summary(
-        self,
-        is_implicit: bool,
-        options: GamsOptions,
-        backend: str,
-        engine_config: EngineConfig | None,
-    ) -> Union[pd.DataFrame, None]:
-        if is_implicit or options.traceopt != 3:
-            return None
-
-        if backend == "engine":
-            if engine_config is None:
-                return None
-            else:
-                if engine_config.remove_results:
-                    return None
-
-        solve_stat = [
-            "",
-            "Normal",
-            "Iteration",
-            "Resource",
-            "Solver",
-            "EvalError",
-            "Capability",
-            "License",
-            "User",
-            "SetupErr",
-            "SolverErr",
-            "InternalErr",
-            "Skipped",
-            "SystemErr",
-        ]
-        HEADER = [
-            "Solver Status",
-            "Model Status",
-            "Objective",
-            "Num of Equations",
-            "Num of Variables",
-            "Model Type",
-            "Solver",
-            "Solver Time",
-        ]
-        with open(os.path.join(self.working_directory, options.trace)) as file:
-            line = file.readlines()[-1]
-            (
-                _,
-                model_type,
-                solver_name,
-                _,
-                _,
-                _,
-                _,
-                num_equations,
-                num_variables,
-                _,
-                _,
-                _,
-                _,
-                model_status,
-                solver_status,
-                objective_value,
-                _,
-                solver_time,
-                _,
-                _,
-                _,
-                _,
-            ) = line.split(",")
-
-        dataframe = pd.DataFrame(
-            [
-                [
-                    solve_stat[int(solver_status)],
-                    ModelStatus(int(model_status)).name,
-                    objective_value,
-                    num_equations,
-                    num_variables,
-                    model_type,
-                    solver_name,
-                    solver_time,
-                ]
-            ],
-            columns=HEADER,
-        )
-        return dataframe
-
-    def _run_local(
-        self,
-        options: GamsOptions,
-        output: Union[io.TextIOWrapper, None],
-    ):
-        try:
-            self._job.run(  # type: ignore
-                gams_options=options,
-                checkpoint=self._save_to,
-                create_out_db=False,
-                output=output,
-            )
-        except GamsExceptionExecution as exception:
-            exception = customize_exception(
-                self.workspace, options, self._job, exception
-            )
-            raise exception
-        finally:
-            self._unsaved_statements = []
+        return summary
 
     def _get_unload_symbols_str(
         self, dirty_names: List[str], gdx_out: str
@@ -483,12 +363,12 @@ class Container(gt.Container):
 
     def _generate_gams_string(
         self,
-        backend: str = "local",
-        dirty_names: List[str] = [],
-        modified_names: List[str] = [],
+        gdx_in: str,
+        gdx_out: str,
+        dirty_names: List[str],
+        modified_names: List[str],
     ) -> str:
         LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-        gdx_in, gdx_out = self._preprocess_gdx_paths(backend)
 
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
@@ -991,7 +871,7 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._generate_gams_string()
+        return self._generate_gams_string(self._gdx_in, self._gdx_out, [], [])
 
     def loadRecordsFromGdx(
         self,

@@ -11,7 +11,7 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy._neos import NeosClient
+from gamspy._backend.neos import NeosClient
 from gamspy.exceptions import GamspyException
 
 try:
