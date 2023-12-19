@@ -99,6 +99,8 @@ class Sense(Enum):
 
 
 class ModelStatus(Enum):
+    """An enumeration for model status types"""
+
     OptimalGlobal = 1
     OptimalLocal = 2
     Unbounded = 3
@@ -477,45 +479,6 @@ class Model:
             if name in self.container.data.keys():
                 del self.container.data[name]
 
-    def interrupt(self) -> None:
-        """
-        Sends interrupt signal to the running job.
-
-        Raises
-        ------
-        GamspyException
-            If the job is not initialized
-        """
-        self.container._interrupt()
-
-    def freeze(
-        self,
-        modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: dict | None = None,
-    ) -> None:
-        """
-        Freezes all symbols except modifiable symbols.
-
-        Parameters
-        ----------
-        modifiables : List[Union[Parameter, ImplicitParameter]]
-        freeze_options : Optional[dict], optional
-        """
-        self.container._run(is_implicit=True)
-
-        self.instance = ModelInstance(
-            self.container, self, modifiables, freeze_options
-        )
-        self._is_frozen = True
-
-    def unfreeze(self) -> None:
-        """Unfreezes all symbols"""
-        for symbol in self.container.data.values():
-            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
-                symbol._is_frozen = False
-
-        self._is_frozen = False
-
     def _make_variable_and_equations_dirty(self):
         if (
             self._objective_variable is not None
@@ -563,6 +526,45 @@ class Model:
                 "`engine_config` must be provided to solve on GAMS Engine"
             )
 
+    def interrupt(self) -> None:
+        """
+        Sends interrupt signal to the running job.
+
+        Raises
+        ------
+        GamspyException
+            If the job is not initialized
+        """
+        self.container._interrupt()
+
+    def freeze(
+        self,
+        modifiables: list[Parameter | ImplicitParameter],
+        freeze_options: dict | None = None,
+    ) -> None:
+        """
+        Freezes all symbols except modifiable symbols.
+
+        Parameters
+        ----------
+        modifiables : List[Parameter | ImplicitParameter]
+        freeze_options : dict, optional
+        """
+        self.container._run(is_implicit=True)
+
+        self.instance = ModelInstance(
+            self.container, self, modifiables, freeze_options
+        )
+        self._is_frozen = True
+
+    def unfreeze(self) -> None:
+        """Unfreezes all symbols"""
+        for symbol in self.container.data.values():
+            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
+                symbol._is_frozen = False
+
+        self._is_frozen = False
+
     def solve(
         self,
         solver: str | None = None,
@@ -594,6 +596,10 @@ class Model:
             Backend to run on
         engine_config : EngineConfig, optional
             GAMS Engine configuration
+        neos_client : NeosClient, optional
+            NEOS Client to communicate with NEOS Server
+        create_log_file : bool
+            Allows creating a log file
 
         Raises
         ------

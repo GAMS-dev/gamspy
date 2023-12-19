@@ -47,155 +47,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-class Set(gt.Set, operable.Operable, Symbol):
-    """
-    Represents a Set symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_SetDefinition.html
-
-    Parameters
-    ----------
-    container : Container
-    name : str
-    domain : list, optional
-    is_singleton : bool, optional
-    records : int | float | DataFrame, optional
-    domain_forwarding : bool, optional
-    description : str, optional
-    uels_on_axes : bool
-
-    Examples
-    --------
-    >>> import gamspy as gp
-    >>> m = gp.Container()
-    >>> i = gp.Set(m, "i", records=['i1','i2'])
-
-    """
-
-    def __new__(
-        cls,
-        container: Container,
-        name: str,
-        domain: list[Set | str] | None = None,
-        is_singleton: bool = False,
-        records: Any | None = None,
-        domain_forwarding: bool = False,
-        description: str = "",
-        uels_on_axes: bool = False,
-    ):
-        if not isinstance(container, gp.Container):
-            raise TypeError(
-                "Container must of type `Container` but found"
-                f" {type(container)}"
-            )
-
-        if not isinstance(name, str):
-            raise TypeError(f"Name must of type `str` but found {type(name)}")
-
-        try:
-            symbol = container[name]
-            if isinstance(symbol, cls):
-                return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not a Set object)"
-                )
-        except KeyError:
-            return object.__new__(cls)
-
-    def __init__(
-        self,
-        container: Container,
-        name: str,
-        domain: list[Set | str] | None = None,
-        is_singleton: bool = False,
-        records: Any | None = None,
-        domain_forwarding: bool = False,
-        description: str = "",
-        uels_on_axes: bool = False,
-    ):
-        # enable load on demand
-        self._is_dirty = False
-
-        # allow conditions
-        self.where = condition.Condition(self)
-
-        # check if the name is a reserved word
-        name = utils._reserved_check(name)
-
-        singleton_check(is_singleton, records)
-
-        super().__init__(
-            container,
-            name,
-            domain,
-            is_singleton,
-            records,
-            domain_forwarding,
-            description,
-            uels_on_axes,
-        )
-
-        self._container_check(self.domain)
-
-        # add statement
-        self.container._add_statement(self)
-
-        # iterator index
-        self._current_index = 0
-
-    def __len__(self):
-        if self.records is not None:
-            return len(self.records.index)
-
-        return 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __le__(self, other):
-        return expression.Expression(self, "<=", other)
-
-    def __ge__(self, other):
-        return expression.Expression(self, ">=", other)
-
-    def __iter__(self):
-        return self
-
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        return implicits.ImplicitSet(self, name=self.name, domain=domain)
-
-    def __setitem__(
-        self,
-        indices: tuple | str,
-        assignment,
-    ):
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        self._container_check(domain)
-
-        if isinstance(assignment, bool):
-            assignment = "yes" if assignment is True else "no"  # type: ignore
-
-        statement = expression.Expression(
-            implicits.ImplicitSet(self, name=self.name, domain=domain),
-            "=",
-            assignment,
-        )
-
-        self.container._add_statement(statement)
-
-        self._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
-
-    # Set Attributes
+class SetMixin:
     @property
     def pos(self):
         """
@@ -325,7 +177,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
     def lag(
-        self,
+        self: Alias | Set,
         n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
@@ -354,10 +206,15 @@ class Set(gt.Set, operable.Operable, Symbol):
         >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
         >>> a = gp.Parameter(m, name="a", domain=[t])
         >>> b = gp.Parameter(m, name="b", domain=[t])
-        >>>
+        >>> c = gp.Parameter(m, name="c", domain=[t])
         >>> a[t] = 1986 + gp.Ord(t)
         >>> b[t] = -1
         >>> b[t] = a[t.lag(1, "linear")]
+        >>> b.records.values.tolist()
+        [['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
+        >>> c[t] = a[t.lag(1, "circular")]
+        >>> c.records.values.tolist()
+        [['y-1987', 1991.0], ['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
@@ -370,7 +227,7 @@ class Set(gt.Set, operable.Operable, Symbol):
         raise ValueError("Lag type must be linear or circular")
 
     def lead(
-        self,
+        self: Set | Alias,
         n: int | Symbol | Expression,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
@@ -399,10 +256,15 @@ class Set(gt.Set, operable.Operable, Symbol):
         >>> t = gp.Set(m, name="t", description="time sequence", records=[f"y-{x}" for x in range(1987, 1992)])
         >>> a = gp.Parameter(m, name="a", domain=[t])
         >>> c = gp.Parameter(m, name="c", domain=[t])
-        >>>
+        >>> d = gp.Parameter(m, name="d", domain=[t])
         >>> a[t] = 1986 + gp.Ord(t)
         >>> c[t] = -1
         >>> c[t.lead(2, "linear")] = a[t]
+        >>> c.records.values.tolist()
+        [['y-1987', -1.0], ['y-1988', -1.0], ['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
+        >>> d[t.lead(2, "circular")] = a[t]
+        >>> d.records.values.tolist()
+        [['y-1987', 1990.0], ['y-1988', 1991.0], ['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
@@ -413,6 +275,162 @@ class Set(gt.Set, operable.Operable, Symbol):
             return implicits.ImplicitSet(self, name=f"{self.name} + {jump}")
 
         raise ValueError("Lead type must be linear or circular")
+
+    def sameAs(self: Set | Alias, other: Set | Alias) -> Expression:
+        """
+        Evaluates to true if this set is identical to the given set or alias, false otherwise.
+
+        Parameters
+        ----------
+        other : Set | Alias
+
+        Returns
+        -------
+        Expression
+        """
+        return expression.Expression(
+            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+        )
+
+
+class Set(gt.Set, operable.Operable, Symbol, SetMixin):
+    """
+    Represents a Set symbol in GAMS.
+    https://www.gams.com/latest/docs/UG_SetDefinition.html
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+    domain : list, optional
+    is_singleton : bool, optional
+    records : int | float | DataFrame, optional
+    domain_forwarding : bool, optional
+    description : str, optional
+    uels_on_axes : bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2'])
+
+    """
+
+    def __new__(
+        cls,
+        container: Container,
+        name: str,
+        domain: list[Set | str] | None = None,
+        is_singleton: bool = False,
+        records: Any | None = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ):
+        if not isinstance(container, gp.Container):
+            raise TypeError(
+                "Container must of type `Container` but found"
+                f" {type(container)}"
+            )
+
+        if not isinstance(name, str):
+            raise TypeError(f"Name must of type `str` but found {type(name)}")
+
+        try:
+            symbol = container[name]
+            if isinstance(symbol, cls):
+                return symbol
+            else:
+                raise TypeError(
+                    f"Cannot overwrite symbol `{name}` in container"
+                    " because it is not a Set object)"
+                )
+        except KeyError:
+            return object.__new__(cls)
+
+    def __init__(
+        self,
+        container: Container,
+        name: str,
+        domain: list[Set | str] | None = None,
+        is_singleton: bool = False,
+        records: Any | None = None,
+        domain_forwarding: bool = False,
+        description: str = "",
+        uels_on_axes: bool = False,
+    ):
+        self._is_dirty = False
+        self.where = condition.Condition(self)
+        name = utils._reserved_check(name)
+
+        singleton_check(is_singleton, records)
+
+        super().__init__(
+            container,
+            name,
+            domain,
+            is_singleton,
+            records,
+            domain_forwarding,
+            description,
+            uels_on_axes,
+        )
+
+        self._container_check(self.domain)
+        self.container._add_statement(self)
+        self._current_index = 0
+
+    def __len__(self):
+        if self.records is not None:
+            return len(self.records.index)
+
+        return 0
+
+    def __next__(self):
+        if self._current_index < len(self):
+            row = self.records.iloc[self._current_index]
+            self._current_index += 1
+            return row
+
+        self._current_index = 0
+        raise StopIteration
+
+    def __le__(self, other):
+        return expression.Expression(self, "<=", other)
+
+    def __ge__(self, other):
+        return expression.Expression(self, ">=", other)
+
+    def __iter__(self):
+        return self
+
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
+        domain = self.domain if indices == ... else utils._to_list(indices)
+        return implicits.ImplicitSet(self, name=self.name, domain=domain)
+
+    def __setitem__(
+        self,
+        indices: tuple | str,
+        assignment,
+    ):
+        domain = self.domain if indices == ... else utils._to_list(indices)
+        self._container_check(domain)
+
+        if isinstance(assignment, bool):
+            assignment = "yes" if assignment is True else "no"  # type: ignore
+
+        statement = expression.Expression(
+            implicits.ImplicitSet(self, name=self.name, domain=domain),
+            "=",
+            assignment,
+        )
+
+        self.container._add_statement(statement)
+
+        self._is_dirty = True
+        if not self.container.delayed_execution:
+            self.container._run(is_implicit=True)
 
     @property
     def records(self):
@@ -452,11 +470,6 @@ class Set(gt.Set, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
-
-    def sameAs(self, other: Set | Alias) -> Expression:
-        return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
-        )
 
     def gamsRepr(self) -> str:
         """
