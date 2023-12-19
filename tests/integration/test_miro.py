@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import pathlib
@@ -29,7 +31,7 @@ class MiroSuite(unittest.TestCase):
 
         # Test default.gdx
         new_container = Container()
-        new_container.read(f"data_miro{os.sep}default.gdx")
+        new_container.read(f"{directory}{os.sep}data_miro{os.sep}default.gdx")
 
         # Miro input d
         self.assertTrue("d" in new_container.data.keys())
@@ -84,7 +86,7 @@ class MiroSuite(unittest.TestCase):
         self.assertEqual(new_container["z"].records.level.item(), 153.675)
 
         # Test generated json
-        with open(f"conf_miro{os.sep}miro_io.json") as file:
+        with open(f"{directory}{os.sep}conf_miro{os.sep}miro_io.json") as file:
             contract = json.load(file)
             self.assertEqual(
                 contract,
