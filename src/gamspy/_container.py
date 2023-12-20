@@ -141,74 +141,86 @@ class Container(gt.Container):
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
 
+    def _assign_symbol_attributes(
+        self,
+        gp_symbol: Union["Set", "Parameter", "Variable", "Equation"],
+        gtp_symbol: Union[
+            "gt.Set", "gt.Parameter", "gt.Variable", "gt.Equation"
+        ],
+        domain: List[Union[str, "Set", "Alias"]],
+    ):
+        gp_symbol._domain = domain
+        gp_symbol._records = gtp_symbol._records
+        gp_symbol._domain_forwarding = gtp_symbol._domain_forwarding
+        gp_symbol._description = gtp_symbol._description
+
     def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
-        """
-        Casts all symbols in the GAMS Transfer container to GAMSpy symbols
-        """
+        """Casts GTP symbols to GAMSpy symbols"""
         symbol_names = symbol_names if symbol_names else list(self.data.keys())
 
         for symbol_name in symbol_names:
-            symbol = self.data[symbol_name]
+            gtp_symbol = self.data[symbol_name]
             new_domain = [
-                self.data[set.name] if not isinstance(set, str) else set
-                for set in symbol.domain
+                (
+                    self.data[member.name]
+                    if not isinstance(member, str)
+                    else member
+                )
+                for member in gtp_symbol.domain
             ]
 
             del self.data[symbol_name]
 
-            if isinstance(symbol, gt.Alias):
-                alias_with = self[symbol.alias_with.name]
+            if isinstance(gtp_symbol, gt.Alias):
+                alias_with = self.data[gtp_symbol.alias_with.name]
                 _ = gp.Alias(
                     self,
-                    symbol.name,
+                    gtp_symbol.name,
                     alias_with,
                 )
-            elif isinstance(symbol, gt.UniverseAlias):
+            elif isinstance(gtp_symbol, gt.UniverseAlias):
                 _ = gp.UniverseAlias(
                     self,
-                    symbol.name,
+                    gtp_symbol.name,
                 )
-            elif isinstance(symbol, gt.Set):
-                _ = gp.Set(
+            elif isinstance(gtp_symbol, gt.Set):
+                gp_symbol = gp.Set(
                     self,
-                    symbol.name,
-                    new_domain,
-                    symbol.is_singleton,
-                    symbol._records,
-                    symbol.domain_forwarding,
-                    symbol.description,
+                    gtp_symbol.name,
                 )
-            elif isinstance(symbol, gt.Parameter):
-                _ = gp.Parameter(
+
+                gp_symbol._is_singleton = gtp_symbol.is_singleton
+                self._assign_symbol_attributes(
+                    gp_symbol, gtp_symbol, new_domain
+                )
+            elif isinstance(gtp_symbol, gt.Parameter):
+                gp_symbol = gp.Parameter(
                     self,
-                    symbol.name,
-                    new_domain,
-                    symbol._records,
-                    symbol.domain_forwarding,
-                    symbol.description,
+                    gtp_symbol.name,
                 )
-            elif isinstance(symbol, gt.Variable):
-                _ = gp.Variable(
+                self._assign_symbol_attributes(
+                    gp_symbol, gtp_symbol, new_domain
+                )
+            elif isinstance(gtp_symbol, gt.Variable):
+                gp_symbol = gp.Variable(
                     self,
-                    symbol.name,
-                    symbol.type,
-                    new_domain,
-                    symbol._records,
-                    symbol.domain_forwarding,
-                    symbol.description,
+                    gtp_symbol.name,
+                    gtp_symbol.type,
                 )
-            elif isinstance(symbol, gt.Equation):
-                symbol_type = symbol.type
-                if symbol.type in ["eq", "leq", "geq"]:
+                self._assign_symbol_attributes(
+                    gp_symbol, gtp_symbol, new_domain
+                )
+            elif isinstance(gtp_symbol, gt.Equation):
+                symbol_type = gtp_symbol.type
+                if gtp_symbol.type in ["eq", "leq", "geq"]:
                     symbol_type = "regular"
-                _ = gp.Equation(
+                gp_symbol = gp.Equation(
                     container=self,
-                    name=symbol.name,
+                    name=gtp_symbol.name,
                     type=symbol_type,
-                    domain=new_domain,
-                    records=symbol._records,
-                    domain_forwarding=symbol.domain_forwarding,
-                    description=symbol.description,
+                )
+                self._assign_symbol_attributes(
+                    gp_symbol, gtp_symbol, new_domain
                 )
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> List[str]:
@@ -873,6 +885,9 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: Optional[List[str]] = None,
+        load_records: bool = True,
+        mode: Optional[str] = None,
+        encoding: Optional[str] = None,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -882,6 +897,9 @@ class Container(gt.Container):
         ----------
         load_from : str
         symbol_names : List[str], optional
+        load_records : bool
+        mode : str, optional
+        encoding : str, optional
 
         Examples
         --------
@@ -895,7 +913,7 @@ class Container(gt.Container):
         True
 
         """
-        super().read(load_from, symbol_names)
+        super().read(load_from, symbol_names, load_records, mode, encoding)
         self._cast_symbols(symbol_names)
 
     def write(
@@ -913,7 +931,10 @@ class Container(gt.Container):
         Parameters
         ----------
         write_to : str
-        symbols : List[str], optional
+        symbol_names : List[str], optional
+        compress : bool
+        mode : str, optional
+        eps_to_zero : bool
 
         Examples
         --------
