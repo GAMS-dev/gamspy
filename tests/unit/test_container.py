@@ -437,7 +437,7 @@ class ContainerSuite(unittest.TestCase):
 
         m.write("test.gdx")
         self.assertTrue(c.modified)
-        self.assertTrue(c._is_dirty)
+        self.assertFalse(c._is_dirty)
 
     def test_write(self):
         from gamspy import SpecialValues

@@ -1115,6 +1115,3 @@ class Container(gt.Container):
             mode=mode,
             eps_to_zero=eps_to_zero,
         )
-
-        for name in dirty_names:
-            self[name]._is_dirty = True
