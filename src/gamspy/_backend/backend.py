@@ -86,6 +86,10 @@ class Backend(ABC):
     def is_async(self):
         ...
 
+    @abstractmethod
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        ...
+
     def preprocess(self):
         dirty_names, modified_names = (
             self.container._get_touched_symbol_names()
@@ -99,20 +103,6 @@ class Backend(ABC):
         )
 
         return gams_string, dirty_names, modified_names
-
-    @abstractmethod
-    def run(self, gams_string: str):
-        ...
-
-    @abstractmethod
-    def postprocess(
-        self,
-        dirty_names: List[str],
-        modified_names: List[str],
-        is_implicit: bool = False,
-        keep_flags: bool = False,
-    ):
-        ...
 
     def prepare_summary(self, working_directory: str, trace_file: str):
         from gamspy._model import ModelStatus
