@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import Literal
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 
@@ -34,17 +32,15 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._symbols.set import SetMixin
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Set, Container
-    from gamspy._algebra.expression import Expression
 
 
-class Alias(gt.Alias, operable.Operable, Symbol):
+class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     """
     Represents an Alias symbol in GAMS.
     https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet
@@ -87,23 +83,14 @@ class Alias(gt.Alias, operable.Operable, Symbol):
             return object.__new__(Alias)
 
     def __init__(self, container: Container, name: str, alias_with: Set):
-        # enable load on demand
         self._is_dirty = False
-
-        # check if the name is a reserved word
         name = utils._reserved_check(name)
 
         super().__init__(container, name, alias_with)
 
         self._container_check(self.domain)
-
-        # allow conditions
         self.where = condition.Condition(self)
-
-        # add statement
         self.container._add_statement(self)
-
-        # iterator index
         self._current_index = 0
 
     def __len__(self):
@@ -129,201 +116,6 @@ class Alias(gt.Alias, operable.Operable, Symbol):
 
     def __ge__(self, other):
         return expression.Expression(self, ">=", other)
-
-    # Set Attributes
-    @property
-    def pos(self):
-        """
-        Element position in the current set, starting with 1.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.pos")
-
-    @property
-    def ord(self):
-        """
-        Same as .pos but for ordered sets only.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.ord")
-
-    @property
-    def off(self):
-        """
-        Element position in the current set minus 1. So .off = .pos - 1
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.off")
-
-    @property
-    def rev(self):
-        """
-        Reverse element position in the current set, so the value for
-        the last element is 0, the value for the penultimate is 1, etc.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.rev")
-
-    @property
-    def uel(self):
-        """
-        Element position in the unique element list.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.uel")
-
-    @property
-    def len(self):
-        """
-        Length of the set element name (a count of the number of characters).
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.len")
-
-    @property
-    def tlen(self):
-        """
-        Length of the set element text (a count of the number of characters).
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
-
-    @property
-    def val(self):
-        """
-        If a set element is a number, this attribute gives the value of the number.
-        For extended range arithmetic symbols, the symbols are reproduced.
-        If a set element is a string that is not a number, then this attribute is
-        not defined and trying to use it results in an error.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.val")
-
-    @property
-    def tval(self):
-        """
-        If a set element text is a number, this attribute gives the value of the number.
-        For extended range arithmetic symbols, the symbols are reproduced.
-        If a set element text is a string that is not a number, then this attribute is
-        not defined and trying to use it results in an error.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.tval")
-
-    @property
-    def first(self):
-        """
-        Returns 1 for the first set element, otherwise 0.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.first")
-
-    @property
-    def last(self):
-        """
-        Returns 1 for the last set element, otherwise 0.
-
-        Returns
-        -------
-        ImplicitSet
-        """
-        return implicits.ImplicitSet(self, name=f"{self.name}.last")
-
-    def lag(
-        self,
-        n: Union[int, Symbol, Expression],
-        type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
-        """Lag operation shifts the values of a Set or Alias by one to the left
-
-        Parameters
-        ----------
-        n : int | Symbol | Expression
-        type : 'linear' or 'circular', optional
-
-        Returns
-        -------
-        ImplicitSet
-
-        Raises
-        ------
-        ValueError
-            When type is not circular or linear
-        """
-        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=f"{self.name} -- {jump}")
-        elif type == "linear":
-            return implicits.ImplicitSet(self, name=f"{self.name} - {jump}")
-
-        raise ValueError("Lag type must be linear or circular")
-
-    def lead(
-        self,
-        n: Union[int, Symbol, Expression],
-        type: Literal["linear", "circular"] = "linear",
-    ) -> ImplicitSet:
-        """
-        Lead shifts the values of a Set or Alias by one to the right
-
-        Parameters
-        ----------
-        n : int | Symbol | Expression
-        type : 'linear' or 'circular', optional
-
-        Returns
-        -------
-        ImplicitSet
-
-        Raises
-        ------
-        ValueError
-            When type is not circular or linear
-        """
-        jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
-
-        if type == "circular":
-            return implicits.ImplicitSet(self, name=f"{self.name} ++ {jump}")
-        elif type == "linear":
-            return implicits.ImplicitSet(self, name=f"{self.name} + {jump}")
-
-        raise ValueError("Lead type must be linear or circular")
-
-    def sameAs(self, other: Union[Set, Alias]) -> Expression:
-        return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
-        )
 
     def gamsRepr(self) -> str:
         """

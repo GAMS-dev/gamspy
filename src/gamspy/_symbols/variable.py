@@ -132,14 +132,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
     ):
         type = cast_type(type)
-
-        # enable load on demand
         self._is_dirty = False
-
-        # allow freezing
         self._is_frozen = False
-
-        # check if the name is a reserved word
         name = utils._reserved_check(name)
 
         super().__init__(
@@ -154,11 +148,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         )
 
         self._container_check(self.domain)
-
-        # allow conditions
         self.where = condition.Condition(self)
-
-        # add statement
         self.container._add_statement(self)
 
         # create attributes
@@ -298,7 +288,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(is_implicit=True)
+        self.container._run()
 
         return self._records
 

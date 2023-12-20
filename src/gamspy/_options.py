@@ -269,9 +269,9 @@ def _set_trace_options(
 
 def _map_options(
     workspace: GamsWorkspace,
-    backend: str,
-    options: Union[Options, None],
-    global_options: Union[Options, None],
+    backend: str = "local",
+    options: Union[Options, None] = None,
+    global_options: Union[Options, None] = None,
     is_seedable: bool = True,
     output: Optional[io.TextIOWrapper] = None,
     create_log_file: bool = False,
@@ -320,5 +320,6 @@ def _map_options(
         gams_options, options, backend, workspace
     )
     gams_options = _fix_log_option(output, create_log_file, gams_options)
+    gams_options.previouswork = 1  # In case GAMS version differs on backend
 
     return gams_options

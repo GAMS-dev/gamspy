@@ -36,6 +36,7 @@ from typing import Optional
 from typing import Tuple
 from typing import TYPE_CHECKING
 
+import gamspy._backend.backend as backend
 from gamspy.exceptions import GamspyException
 
 logger = logging.getLogger("NEOS")
@@ -397,33 +398,100 @@ class NeosClient:
         return job_number, job_password
 
 
-def run(
-    container: Container,
-    gams_string: str,
-    options: GamsOptions,
-    client: NeosClient,
-):
-    client._prepare_xml(
-        gams_string,
-        container._gdx_in,
-        container._restart_from._checkpoint_file_name,
-        container._save_to.name,
-        options=options,
-        working_directory=container.working_directory,
-    )
-    job_number, job_password = client.submit_job(
-        is_blocking=client.is_blocking,
-        working_directory=container.working_directory,
-    )
+class NEOSServer(backend.Backend):
+    def __init__(
+        self,
+        container: "Container",
+        options: "GamsOptions",
+        client: NeosClient | None,
+    ) -> None:
+        if client is None:
+            raise GamspyException(
+                "`neos_client` must be provided to solve on NEOS Server"
+            )
 
-    if client.is_blocking:
-        client.download_output(
-            job_number,
-            job_password,
-            working_directory=container.working_directory,
+        super().__init__(container, "in.gdx", "output.gdx")
+
+        self.options = options
+        self.client = client
+
+    def is_async(self):
+        return False if self.client.is_blocking else True
+
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Generate gams string and write modified symbols to gdx
+        gams_string, dirty_names, modified_names = self.preprocess()
+
+        # Run the model
+        self.run(gams_string)
+
+        if self.is_async():
+            return None
+
+        # Synchronize GAMSPy with checkpoint and return a summary
+        summary = self.postprocess(
+            dirty_names, modified_names, is_implicit, keep_flags
         )
 
-        shutil.move(
-            os.path.join(container.working_directory, "output.gdx"),
-            container._gdx_out,
+        return summary
+
+    def run(self, gams_string: str):
+        self.client._prepare_xml(
+            gams_string,
+            self.container._gdx_in,
+            self.container._restart_from._checkpoint_file_name,
+            self.container._save_to.name,
+            options=self.options,
+            working_directory=self.container.working_directory,
         )
+        job_number, job_password = self.client.submit_job(
+            is_blocking=self.client.is_blocking,
+            working_directory=self.container.working_directory,
+        )
+
+        if self.client.is_blocking:
+            self.client.download_output(
+                job_number,
+                job_password,
+                working_directory=self.container.working_directory,
+            )
+
+            shutil.move(
+                os.path.join(self.container.working_directory, "output.gdx"),
+                self.container._gdx_out,
+            )
+
+            if not os.path.exists(self.container._gdx_out):
+                raise GamspyException(
+                    "The job was not completed successfully. Check"
+                    f" {os.path.join(self.container.working_directory, 'solve.log')} for"
+                    " details."
+                )
+
+        self.container._unsaved_statements = []
+
+    def postprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+        is_implicit: bool = False,
+        keep_flags: bool = False,
+    ):
+        self.container.loadRecordsFromGdx(
+            self.container._gdx_out,
+            dirty_names + self.container._import_symbols,
+        )
+        self.container._swap_checkpoints()
+        if not keep_flags:
+            self.update_modified_state(modified_names)
+
+        if (
+            self.options.traceopt == 3
+            and self.client.is_blocking
+            and not is_implicit
+        ):
+            return self.prepare_summary(
+                self.container.working_directory, self.options.trace
+            )
+
+        return None

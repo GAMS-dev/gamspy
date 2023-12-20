@@ -111,13 +111,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
-        # enable load on demand
         self._is_dirty = False
-
-        # allow freezing
         self._is_frozen = False
-
-        # check if the name is a reserved word
         name = utils._reserved_check(name)
 
         super().__init__(
@@ -131,11 +126,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         )
 
         self._container_check(self.domain)
-
-        # allow conditions
         self.where = condition.Condition(self)
-
-        # add statement
         self.container._add_statement(self)
 
     def __getitem__(
@@ -147,10 +138,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: Expression,
+        assignment: Union[Expression, float, int],
     ) -> None:
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+
+        if isinstance(assignment, float):
+            assignment = utils._map_special_values(assignment)  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
@@ -162,7 +156,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
+            self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
@@ -184,7 +178,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(is_implicit=True)
+        self.container._run()
 
         return self._records
 

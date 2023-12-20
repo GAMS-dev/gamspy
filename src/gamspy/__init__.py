@@ -25,6 +25,8 @@
 # flake8: noqa
 from __future__ import annotations
 
+from gams.transfer import SpecialValues
+
 import gamspy.math as math
 from .version import __version__
 from gamspy._algebra import Card
@@ -35,13 +37,13 @@ from gamspy._algebra import Product
 from gamspy._algebra import Smax
 from gamspy._algebra import Smin
 from gamspy._algebra import Sum
+from gamspy._backend.engine import EngineConfig
+from gamspy._backend.neos import NeosClient
 from gamspy._container import Container
-from gamspy._engine import EngineConfig
 from gamspy._model import Model
 from gamspy._model import ModelStatus
 from gamspy._model import Problem
 from gamspy._model import Sense
-from gamspy._neos import NeosClient
 from gamspy._options import Options
 from gamspy._symbols import Alias
 from gamspy._symbols import Equation
@@ -79,4 +81,5 @@ __all__ = [
     "Options",
     "EngineConfig",
     "NeosClient",
+    "SpecialValues",
 ]

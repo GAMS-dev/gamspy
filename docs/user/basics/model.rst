@@ -299,13 +299,13 @@ Solver Options
 In addition to solve options, user can specify solver options to be used by the solver as a dictionary. For all possible
 solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
-Solve Locally
+Solving Locally
 ---------------
 
 Models are solved locally (on your machine) by default. 
 
-Solve Using GAMS Engine
------------------------
+Solving with GAMS Engine
+------------------------
 
 In order to send your model to be solved to GAMS Engine, you need to define the configuration of GAMS Engine.
 This can be done by importing ``EngineConfig`` and creating an instance. Then, the user can pass it to the 
@@ -331,8 +331,11 @@ This can be done by importing ``EngineConfig`` and creating an instance. Then, t
     )
     model.solve(solver="CONOPT", backend="engine", engine_config=config)
 
-Solve Using NEOS Server
------------------------
+Solving with NEOS Server
+------------------------
+
+Synchronous Solve
+~~~~~~~~~~~~~~~~~~
 
 In order to send your model to be solved to NEOS Server, you need to create a NeosClient.
 This can be done by importing ``NeosClient`` and creating an instance. Then, the user can pass it to the 
@@ -369,6 +372,9 @@ and password in the same way: ::
 
     NEOS_EMAIL=<your_email> NEOS_USER=<your_username> NEOS_PASSWORD=<your_password> python <your_script>
 
+Asynchronous Solve
+~~~~~~~~~~~~~~~~~~
+
 If you just want to send your jobs to NEOS server without blocking until the results are received,
 `is_blocking` parameter can be set to `False` in `NeosClient`.
 
@@ -398,8 +404,26 @@ you already sent to the server. ::
 
     print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
 
+The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
+last submitted job, we can do that following: ::
 
-Terms of use for NEOS can be found here: `Terms of Use <https://neos-server.org/neos/termofuse.html> _`.
+    job_number, job_password = client.jobs[-1]
+    client.get_final_results(job_number, job_password)
+    client.download_output(
+        job_number, job_password, working_directory="my_out_directory"
+    )
+
+The results would be downloaded to the given working directory. The downloaded gdx file will always have name "output.gdx". 
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
+file: ::
+
+    container = Container(load_from="my_out_directory/output.gdx")
+    # or
+    container = Container()
+    container.read("my_out_directory/output.gdx")
+
+
+Terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
 
 Redirecting Output
 ------------------

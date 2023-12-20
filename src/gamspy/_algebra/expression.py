@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -73,6 +74,33 @@ class Expression(operable.Operable):
         self.where = condition.Condition(self)
 
     def _create_representation(self):
+        left_str, right_str = self._get_operand_representations()
+        out_str = self._create_output_str(left_str, right_str)
+
+        # Adapt to GAMS quirks
+        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
+            return out_str[1:-1]
+
+        if self.data == "$":
+            # defopLS(o,p) $ sumc(o,p) <= 0.5 .. op(o,p) =e= 1;   -> not valid
+            # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
+            out_str = self._fix_condition_paranthesis(out_str)
+
+        if self.data == "==":
+            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
+            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
+            out_str = out_str.replace("==", "=")
+
+        if self.data in ["=", ".."] and out_str[0] == "(":
+            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
+            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
+            indices = utils._get_matching_paranthesis_indices(out_str)
+            match_index = indices[0]
+            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
+
+        return out_str
+
+    def _get_operand_representations(self) -> Tuple[str, str]:
         if self.left is None:
             left_str = ""
         else:
@@ -114,6 +142,9 @@ class Expression(operable.Operable):
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
             right_str = utils._replace_equality_signs(right_str)
 
+        return left_str, right_str
+
+    def _create_output_str(self, left_str: str, right_str: str) -> str:
         # get around 80000 line length limitation in GAMS
         length = len(left_str) + len(self.data) + len(right_str)
         if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
@@ -121,34 +152,12 @@ class Expression(operable.Operable):
         else:
             out_str = f"{left_str} {self.data} {right_str}"
 
-        # if it's an assignment add semicolon, otherwise add paranthesis to ensure
-        # the order of execution
-        out_str = f"{out_str};" if self.data in ["..", "="] else f"({out_str})"
+        if self.data in ["..", "="]:
+            return f"{out_str};"
+        elif self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
+            return out_str
 
-        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
-            return out_str[1:-1]
-
-        if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b=", "."]:
-            # (test.. a =g= b) -> not valid
-            # test.. a =g= b   -> valid
-            out_str = out_str[1:-1]  # remove the paranthesis
-
-        if self.data == "$":
-            out_str = self._fix_condition_paranthesis(out_str)
-
-        if self.data == "==":
-            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
-            out_str = out_str.replace("==", "=")
-
-        if self.data in ["=", ".."] and out_str[0] == "(":
-            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
-            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            indices = utils._get_matching_paranthesis_indices(out_str)
-            match_index = indices[0]
-            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
-
-        return out_str
+        return f"({out_str})"
 
     def __eq__(self, other):  # type: ignore
         return Expression(self, "=e=", other)
@@ -157,8 +166,6 @@ class Expression(operable.Operable):
         return Expression(self, "ne", other)
 
     def _fix_condition_paranthesis(self, string: str) -> str:
-        # defopLS(o,p) $ sumc(o,p) <= 0.5 .. op(o,p) =e= 1;   -> not valid
-        # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
         left, right = string.split("$", 1)
         right = right.strip()
 
