@@ -73,10 +73,23 @@ def permute(
             domain=permuted_domain,
             permutation=dims
         )
-    elif isinstance(Variable):
-        raise NotImplemented()
-    elif isinstance(implicits.ImplicitVariable):
-        raise NotImplemented()
+    elif isinstance(x, Variable):
+        return implicits.ImplicitVariable(
+            x,
+            name=x.name,
+            domain=permuted_domain,
+            permutation=dims
+        )
+    elif isinstance(x, implicits.ImplicitVariable):
+        if x.permutation is not None:
+            dims = utils._permute_domain(x.permutation, dims)
+
+        return implicits.ImplicitVariable(
+            x.parent,
+            name=x.name,
+            domain=permuted_domain,
+            permutation=dims
+        )
 
 
 

@@ -304,6 +304,20 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def t(self) -> implicits.ImplicitVariable:
+        from gamspy.math.matrix import permute
+        # Ask if exceptions need to be re-raised as ValidationError
+        # If  implicit variable needs to be subscriptable since we can
+        # create it by transpose
+        dims = [x for x in range(len(self.domain))]
+        if len(dims) < 2:
+            raise ValidationError("Variable must contain at least 2 dimensions to transpose")
+
+        x = dims[-1]
+        dims[-1] = dims[-2]
+        dims[-2] = x
+        return permute(self, dims)
+
     def _init_attributes(self):
         level = self._create_attr("l")
         marginal = self._create_attr("m")
