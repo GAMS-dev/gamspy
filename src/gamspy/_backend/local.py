@@ -49,25 +49,31 @@ class Local(backend.Backend):
         options: "GamsOptions",
         output: Optional[io.TextIOWrapper] = None,
     ) -> None:
-        self.container = container
+        super().__init__(container, container._gdx_in, container._gdx_out)
         self.options = options
         self.output = output
-        self.gdx_in = container._gdx_in
-        self.gdx_out = container._gdx_out
 
     def is_async(self):
         return False
 
-    def preprocess(
-        self,
-        dirty_names: List[str],
-        modified_names: List[str],
-    ):
-        self.gams_string = self.container._generate_gams_string(
-            self.gdx_in, self.gdx_out, dirty_names, modified_names
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Generate gams string and write modified symbols to gdx
+        gams_string, dirty_names, modified_names = self.preprocess()
+
+        # Run the model
+        self.run(gams_string)
+
+        if self.is_async():
+            return None
+
+        # Synchronize GAMSPy with checkpoint and return a summary
+        summary = self.postprocess(
+            dirty_names, modified_names, is_implicit, keep_flags
         )
 
-    def run(self):
+        return summary
+
+    def run(self, gams_string: str):
         checkpoint = None
         if os.path.exists(self.container._restart_from._checkpoint_file_name):
             checkpoint = self.container._restart_from
@@ -75,13 +81,13 @@ class Local(backend.Backend):
         job = GamsJob(
             self.container.workspace,
             job_name=f"_job_{uuid.uuid4()}",
-            source=self.gams_string,
+            source=gams_string,
             checkpoint=checkpoint,
         )
 
         try:
             self.container._job = job
-            job.run(  # type: ignore
+            job.run(
                 gams_options=self.options,
                 checkpoint=self.container._save_to,
                 create_out_db=False,
@@ -95,7 +101,21 @@ class Local(backend.Backend):
         finally:
             self.container._unsaved_statements = []
 
-    def postprocess(self, is_implicit: bool = False):
+    def postprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+        is_implicit: bool = False,
+        keep_flags: bool = False,
+    ):
+        self.container.loadRecordsFromGdx(
+            self.container._gdx_out,
+            dirty_names + self.container._import_symbols,
+        )
+        self.container._swap_checkpoints()
+        if not keep_flags:
+            self.container._update_modified_state(modified_names)
+
         if self.options.traceopt == 3 and not is_implicit:
             return self.prepare_summary(
                 self.container.working_directory, self.options.trace

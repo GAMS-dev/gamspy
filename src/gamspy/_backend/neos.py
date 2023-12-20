@@ -410,27 +410,34 @@ class NEOSServer(backend.Backend):
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 
-        self.container = container
+        super().__init__(container, "in.gdx", "output.gdx")
+
         self.options = options
         self.client = client
-        self.gdx_in = "in.gdx"
-        self.gdx_out = "output.gdx"
 
     def is_async(self):
         return False if self.client.is_blocking else True
 
-    def preprocess(
-        self,
-        dirty_names: List[str],
-        modified_names: List[str],
-    ):
-        self.gams_string = self.container._generate_gams_string(
-            self.gdx_in, self.gdx_out, dirty_names, modified_names
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Generate gams string and write modified symbols to gdx
+        gams_string, dirty_names, modified_names = self.preprocess()
+
+        # Run the model
+        self.run(gams_string)
+
+        if self.is_async():
+            return None
+
+        # Synchronize GAMSPy with checkpoint and return a summary
+        summary = self.postprocess(
+            dirty_names, modified_names, is_implicit, keep_flags
         )
 
-    def run(self):
+        return summary
+
+    def run(self, gams_string: str):
         self.client._prepare_xml(
-            self.gams_string,
+            gams_string,
             self.container._gdx_in,
             self.container._restart_from._checkpoint_file_name,
             self.container._save_to.name,
@@ -463,7 +470,21 @@ class NEOSServer(backend.Backend):
 
         self.container._unsaved_statements = []
 
-    def postprocess(self, is_implicit: bool = False):
+    def postprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+        is_implicit: bool = False,
+        keep_flags: bool = False,
+    ):
+        self.container.loadRecordsFromGdx(
+            self.container._gdx_out,
+            dirty_names + self.container._import_symbols,
+        )
+        self.container._swap_checkpoints()
+        if not keep_flags:
+            self.container._update_modified_state(modified_names)
+
         if (
             self.options.traceopt == 3
             and self.client.is_blocking

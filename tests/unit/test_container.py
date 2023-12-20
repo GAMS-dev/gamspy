@@ -204,7 +204,7 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run(is_implicit=True)
+        m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
@@ -272,7 +272,7 @@ class ContainerSuite(unittest.TestCase):
         m = Container(delayed_execution=True, load_from="data.gdx")
         self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
 
-    def _test_copy(self):
+    def test_copy(self):
         m = Container(delayed_execution=True, working_directory=".")
 
         # Prepare data
@@ -316,7 +316,7 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 
         transport = Model(
-            m,
+            new_cont,
             name="transport",
             equations=m.getEquations(),
             problem="LP",
@@ -326,7 +326,7 @@ class ContainerSuite(unittest.TestCase):
 
         transport.solve()
 
-        self.assertIsNotNone(m.gamsJobName())
+        self.assertIsNotNone(new_cont.gamsJobName())
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
 
     def test_generate_gams_string(self):

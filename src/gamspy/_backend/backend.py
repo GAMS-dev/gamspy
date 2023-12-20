@@ -77,20 +77,41 @@ def backend_factory(
 
 
 class Backend(ABC):
+    def __init__(self, container: "Container", gdx_in: str, gdx_out: str):
+        self.container = container
+        self.gdx_in = gdx_in
+        self.gdx_out = gdx_out
+
     @abstractmethod
     def is_async(self):
         ...
 
+    def preprocess(self):
+        dirty_names, modified_names = (
+            self.container._get_touched_symbol_names()
+        )
+        self.container._clean_dirty_symbols(dirty_names)
+        self.container.isValid(verbose=True, force=True)
+        self.container.write(self.container._gdx_in, modified_names)
+
+        gams_string = self.container._generate_gams_string(
+            self.gdx_in, self.gdx_out, dirty_names, modified_names
+        )
+
+        return gams_string, dirty_names, modified_names
+
     @abstractmethod
-    def preprocess(self, dirty_names: List[str], modified_names: List[str]):
+    def run(self, gams_string: str):
         ...
 
     @abstractmethod
-    def run(self):
-        ...
-
-    @abstractmethod
-    def postprocess(self, is_implicit: bool = False):
+    def postprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+        is_implicit: bool = False,
+        keep_flags: bool = False,
+    ):
         ...
 
     def prepare_summary(self, working_directory: str, trace_file: str):

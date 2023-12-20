@@ -82,26 +82,37 @@ class GAMSEngine(backend.Backend):
                 "`engine_config` must be provided to solve on GAMS Engine"
             )
 
-        self.container = container
+        super().__init__(
+            container,
+            os.path.basename(container._gdx_in),
+            os.path.basename(container._gdx_out),
+        )
+
         self.config = config
         self.options = options
         self.output = output
-        self.gdx_in = os.path.basename(container._gdx_in)
-        self.gdx_out = os.path.basename(container._gdx_out)
 
     def is_async(self):
         return False
 
-    def preprocess(
-        self,
-        dirty_names: List[str],
-        modified_names: List[str],
-    ):
-        self.gams_string = self.container._generate_gams_string(
-            self.gdx_in, self.gdx_out, dirty_names, modified_names
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Generate gams string and write modified symbols to gdx
+        gams_string, dirty_names, modified_names = self.preprocess()
+
+        # Run the model
+        self.run(gams_string)
+
+        if self.is_async():
+            return None
+
+        # Synchronize GAMSPy with checkpoint and return a summary
+        summary = self.postprocess(
+            dirty_names, modified_names, is_implicit, keep_flags
         )
 
-    def run(self):
+        return summary
+
+    def run(self, gams_string: str):
         extra_model_files = self._preprocess_extra_model_files()
 
         checkpoint = None
@@ -111,7 +122,7 @@ class GAMSEngine(backend.Backend):
         job = GamsJob(
             self.container.workspace,
             job_name=f"_job_{uuid.uuid4()}",
-            source=self.gams_string,
+            source=gams_string,
             checkpoint=checkpoint,
         )
 
@@ -132,7 +143,21 @@ class GAMSEngine(backend.Backend):
         finally:
             self.container._unsaved_statements = []
 
-    def postprocess(self, is_implicit: bool = False):
+    def postprocess(
+        self,
+        dirty_names: List[str],
+        modified_names: List[str],
+        is_implicit: bool = False,
+        keep_flags: bool = False,
+    ):
+        self.container.loadRecordsFromGdx(
+            self.container._gdx_out,
+            dirty_names + self.container._import_symbols,
+        )
+        self.container._swap_checkpoints()
+        if not keep_flags:
+            self.container._update_modified_state(modified_names)
+
         if (
             self.config.remove_results
             or self.options.traceopt != 3

@@ -111,4 +111,4 @@ class Condition:
         if not self._symbol.container.delayed_execution and not isinstance(
             self._symbol, implicits.ImplicitEquation
         ):
-            self._symbol.container._run(is_implicit=True)
+            self._symbol.container._run()

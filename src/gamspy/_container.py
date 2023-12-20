@@ -24,7 +24,6 @@
 #
 from __future__ import annotations
 
-import io
 import os
 import shutil
 import uuid
@@ -41,7 +40,6 @@ import pandas as pd
 from gams import DebugLevel
 from gams import GamsCheckpoint
 from gams import GamsJob
-from gams import GamsOptions
 from gams import GamsWorkspace
 from gams.core import gdx
 
@@ -62,8 +60,6 @@ if TYPE_CHECKING:
         Model,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._backend.engine import EngineConfig
-    from gamspy._backend.neos import NeosClient
     from gamspy._options import Options
 
 
@@ -287,58 +283,25 @@ class Container(gt.Container):
         for name in modified_names:
             self[name].modified = False
 
-    def _run(
-        self,
-        options: Optional[GamsOptions] = None,
-        output: Optional[io.TextIOWrapper] = None,
-        backend: Literal["local", "engine", "neos"] = "local",
-        engine_config: Optional["EngineConfig"] = None,
-        neos_client: Optional["NeosClient"] = None,
-        create_log_file: bool = False,
-        is_implicit: bool = False,
-    ) -> Union[pd.DataFrame, None]:
-        if options is None:
-            options = _map_options(
-                self.workspace,
-                backend=backend,
-                options=None,
-                global_options=self._options,
-                is_seedable=self._is_first_run,
-                output=output,
-                create_log_file=create_log_file,
-            )
-
-        # Create gdx file to for symbols to be loaded
-        dirty_names, modified_names = self._get_touched_symbol_names()
-        self._clean_dirty_symbols(dirty_names)
-        self.isValid(verbose=True, force=True)
-        super().write(self._gdx_in, modified_names)
-
-        runner = backend_factory(
-            self,
-            options,
-            output,
-            backend,
-            engine_config,
-            neos_client,
+    def _run(self, keep_flags: bool = False) -> Union[pd.DataFrame, None]:
+        options = _map_options(
+            self.workspace,
+            backend="local",
+            options=None,
+            global_options=self._options,
+            is_seedable=self._is_first_run,
         )
 
-        runner.preprocess(dirty_names, modified_names)
-        runner.run()
+        runner = backend_factory(self, options)
 
-        if runner.is_async():
-            return None
+        summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
 
-        summary = runner.postprocess(is_implicit)
-
-        self.loadRecordsFromGdx(
-            self._gdx_out, dirty_names + self._import_symbols
-        )
-        self._restart_from, self._save_to = self._save_to, self._restart_from
         self._is_first_run = False
-        self._update_modified_state(modified_names)
 
         return summary
+
+    def _swap_checkpoints(self):
+        self._restart_from, self._save_to = self._save_to, self._restart_from
 
     def _get_unload_symbols_str(
         self, dirty_names: List[str], gdx_out: str
@@ -759,7 +722,7 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._run(is_implicit=True)
+        self._run()
 
         for name, symbol in self:
             new_domain = []
@@ -948,7 +911,10 @@ class Container(gt.Container):
     def write(
         self,
         write_to: str,
-        symbols: Optional[List[str]] = None,
+        symbol_names: Optional[List[str]] = None,
+        compress: bool = False,
+        mode: Optional[str] = None,
+        eps_to_zero: bool = True,
     ) -> None:
         """
         Writes specified symbols to the gdx file. If symbol_names are
@@ -967,14 +933,18 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, modified_names = self._get_touched_symbol_names()
+        dirty_names, _ = self._get_touched_symbol_names()
 
         if len(dirty_names) > 0:
-            self._run(is_implicit=True)
+            self._run(keep_flags=True)
 
-        super().write(write_to, symbols)
+        super().write(
+            write_to,
+            symbol_names,
+            compress,
+            mode=mode,
+            eps_to_zero=eps_to_zero,
+        )
 
-        for name in modified_names:
-            self[name].modified = True
         for name in dirty_names:
             self[name]._is_dirty = True
