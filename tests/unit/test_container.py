@@ -430,7 +430,24 @@ class ContainerSuite(unittest.TestCase):
 
         m.write("test.gdx")
         self.assertTrue(c.modified)
-        self.assertTrue(c._is_dirty)
+        self.assertFalse(c._is_dirty)
+
+    def test_write(self):
+        from gamspy import SpecialValues
+
+        _ = Parameter(self.m, "a", records=SpecialValues.EPS)
+        self.m.write("test.gdx", eps_to_zero=True)
+
+        m = Container(load_from="test.gdx")
+        self.assertEqual(int(m["a"].toValue()), 0)
+
+    def test_read(self):
+        _ = Parameter(self.m, "a", records=5)
+        self.m.write("test.gdx")
+
+        m = Container()
+        m.read("test.gdx", load_records=False)
+        self.assertIsNone(m["a"].records, None)
 
 
 def container_suite():
