@@ -275,19 +275,9 @@ class Container(gt.Container):
 
         return dirty_names, modified_names
 
-    def _clean_dirty_symbols(self, dirty_names: List[str]):
-        for name in dirty_names:
-            self[name]._is_dirty = False
-
-    def _update_modified_state(self, modified_names: List[str]):
-        for name in modified_names:
-            self[name].modified = False
-
     def _run(self, keep_flags: bool = False) -> Union[pd.DataFrame, None]:
         options = _map_options(
             self.workspace,
-            backend="local",
-            options=None,
             global_options=self._options,
             is_seedable=self._is_first_run,
         )
@@ -945,6 +935,3 @@ class Container(gt.Container):
             mode=mode,
             eps_to_zero=eps_to_zero,
         )
-
-        for name in dirty_names:
-            self[name]._is_dirty = True

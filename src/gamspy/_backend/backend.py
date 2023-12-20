@@ -90,7 +90,7 @@ class Backend(ABC):
         dirty_names, modified_names = (
             self.container._get_touched_symbol_names()
         )
-        self.container._clean_dirty_symbols(dirty_names)
+        self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
         self.container.write(self.container._gdx_in, modified_names)
 
@@ -160,3 +160,11 @@ class Backend(ABC):
             columns=HEADER,
         )
         return dataframe
+
+    def update_modified_state(self, modified_names: List[str]):
+        for name in modified_names:
+            self.container[name].modified = False
+
+    def clean_dirty_symbols(self, dirty_names: List[str]):
+        for name in dirty_names:
+            self.container[name]._is_dirty = False

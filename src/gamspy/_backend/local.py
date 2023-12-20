@@ -114,7 +114,7 @@ class Local(backend.Backend):
         )
         self.container._swap_checkpoints()
         if not keep_flags:
-            self.container._update_modified_state(modified_names)
+            self.update_modified_state(modified_names)
 
         if self.options.traceopt == 3 and not is_implicit:
             return self.prepare_summary(

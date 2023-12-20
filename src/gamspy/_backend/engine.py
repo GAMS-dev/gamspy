@@ -156,7 +156,7 @@ class GAMSEngine(backend.Backend):
         )
         self.container._swap_checkpoints()
         if not keep_flags:
-            self.container._update_modified_state(modified_names)
+            self.update_modified_state(modified_names)
 
         if (
             self.config.remove_results
