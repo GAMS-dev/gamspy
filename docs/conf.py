@@ -80,7 +80,8 @@ html_theme_options = {
         "image_light": "_static/gamspy_logo.png",
         "image_dark": "_static/gamspy_logo_dark.png",
     },
-    "show_nav_level": 1,
+    "show_nav_level": 2,
+    "show_toc_level": 2,
 }
 
 autodoc_member_order = "bysource"
