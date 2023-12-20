@@ -13,6 +13,7 @@ GAMSPy 0.11.4
 - Documentation
   - Fix Variable attribute assignments in user guide.
   - Add more examples in docstrings.
+  - Add docs for collecting the results of non-blocking NEOS Server solves.
 - Testing
   - Test the special value usage in assignments for Parameter, ImplicitParameter and Operation (Sum, Smax, Smin, Product).
   - Add hansmpsge model to the model library.
