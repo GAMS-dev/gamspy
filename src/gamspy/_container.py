@@ -168,8 +168,12 @@ class Container(gt.Container):
         for symbol_name in symbol_names:
             gtp_symbol = self.data[symbol_name]
             new_domain = [
-                self.data[set.name] if not isinstance(set, str) else set
-                for set in gtp_symbol.domain
+                (
+                    self.data[member.name]
+                    if not isinstance(member, str)
+                    else member
+                )
+                for member in gtp_symbol.domain
             ]
 
             del self.data[symbol_name]
