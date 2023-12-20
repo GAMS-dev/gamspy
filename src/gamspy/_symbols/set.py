@@ -430,7 +430,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
+            self.container._run()
 
     @property
     def records(self):
@@ -444,7 +444,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(is_implicit=True)
+        self.container._run()
 
         return self._records
 
