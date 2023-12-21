@@ -473,11 +473,10 @@ References and Links
 - A. Ben-Tal and A. Nemirovski,
   Lectures on Modern Convex Optimization: Analysis, Algorithms, and Engineering Applications,
   MPS/SIAM Series on Optimization, SIAM Press, 2001.
-- M. Lobo, L. Vandenberghe, S. Boyd and H. Lebret, <a href="http://stanford.edu/~boyd/papers/socp.html">
-  Applications of Second-Order Cone Programming</a>, Linear Algebra and its 
+- M. Lobo, L. Vandenberghe, S. Boyd and H. Lebret, `Applications of Second-Order Cone Programming <http://stanford.edu/~boyd/papers/socp.html>`_, Linear Algebra and its 
   Applications, 284:193-228, November 1998, Special Issue on Linear Algebra in 
   Control, Signals and Image Processing.
-- MOSEK ApS, [MOSEK Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/index.html), 2015.
+- MOSEK ApS, `MOSEK Modeling Cookbook <https://docs.mosek.com/modeling-cookbook/index.html>`_, 2015.
 - G. Pataki G and S. Schmieta, The DIMACS Library of Semidefinite-Quadratic-Linear 
   Programs. Tech. rep., Computational Optimization Research Center, Columbia 
   University, 2002.
