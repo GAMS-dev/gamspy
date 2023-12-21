@@ -315,17 +315,6 @@ class Container(gt.Container):
         unload_str = ",".join(unload_names)
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
-    def _preprocess_gdx_paths(self, backend: str) -> Tuple[str, str]:
-        if backend == "engine":
-            return (
-                os.path.basename(self._gdx_in),
-                os.path.basename(self._gdx_out),
-            )
-        elif backend == "neos":
-            return "in.gdx", "output.gdx"
-
-        return self._gdx_in, self._gdx_out
-
     def _generate_gams_string(
         self,
         gdx_in: str,
