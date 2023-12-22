@@ -107,7 +107,10 @@ def get_args():
         "-p",
         "--path",
         type=str,
-        help="Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux)",
+        help=(
+            "Path to the MIRO executable (.exe on Windows, .app on macOS or"
+            " .AppImage on Linux)"
+        ),
         default=None,
     )
     miro_group.add_argument(
