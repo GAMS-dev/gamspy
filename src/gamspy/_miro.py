@@ -37,6 +37,9 @@ class MiroJSONEncoder:
             if len(symbol.domain) == 0:
                 scalars.append(name)
 
+            if isinstance(symbol, gp.Set) and symbol.is_singleton:
+                scalars.append(name)
+
         return scalars
 
     def _prepare_scalars(

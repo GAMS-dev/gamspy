@@ -48,6 +48,13 @@ def main():
     # Set
     i = Set(m, name="i", records=["seattle", "san-diego"])
     j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+    _ = Set(
+        m,
+        name="model_type",
+        records=["lp"],
+        is_singleton=True,
+        is_miro_input=True,
+    )
 
     # Data
     a = Parameter(m, name="a", domain=[i], records=capacities)

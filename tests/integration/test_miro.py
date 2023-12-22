@@ -104,9 +104,9 @@ class MiroSuite(unittest.TestCase):
                         },
                         "_scalars": {
                             "alias": "Input Scalars",
-                            "symnames": ["f"],
-                            "symtext": ["f"],
-                            "symtypes": ["parameter"],
+                            "symnames": ["model_type", "f"],
+                            "symtext": ["model_type", "f"],
+                            "symtypes": ["set", "parameter"],
                             "headers": {
                                 "scalar": {
                                     "type": "string",
