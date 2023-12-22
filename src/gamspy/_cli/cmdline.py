@@ -107,7 +107,7 @@ def get_args():
         "-p",
         "--path",
         type=str,
-        help="Path to the MIRO app image",
+        help="Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux)",
         default=None,
     )
     miro_group.add_argument(
@@ -335,6 +335,7 @@ def run(args: Dict[str, str]):
         subprocess_env["MIRO_MODEL_PATH"] = model
         subprocess_env["MIRO_MODE"] = mode
         subprocess_env["MIRO_DEV_MODE"] = "true"
+        subprocess_env["MIRO_USE_TMP"] = "false"
         subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
 
         subprocess.run([path], env=subprocess_env, check=True)
