@@ -68,9 +68,6 @@ class UniverseAlias(gt.UniverseAlias):
         # allow conditions
         self.where = condition.Condition(self)
 
-        # add statement
-        self.container._add_statement(self)
-
         # iterator index
         self._current_index = 0
 

@@ -63,11 +63,15 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._options import Options
+    from gamspy._symbols.symbol import Symbol
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
-
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+
+LOAD_SYMBOL_TYPES = (gt.Set, gt.Parameter, gt.Variable, gt.Equation)
+MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
+MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
 
 
 class Container(gt.Container):
@@ -386,6 +390,27 @@ class Container(gt.Container):
         unload_str = ",".join(unload_names)
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
+    def _get_load_str(self, statement: "Symbol", gdx_in: str) -> str:
+        if (
+            isinstance(statement, MIRO_INPUT_TYPES)
+            and statement._is_miro_input
+        ):
+            if not IS_MIRO_INIT and MIRO_GDX_IN:
+                self.loadRecordsFromGdx(MIRO_GDX_IN, [statement.name])
+                if statement.hasDomainViolations():
+                    raise GamspyException(
+                        f"Symbol {statement.name} has domain violations!"
+                    )
+                string = self._get_load_miro_input_str(statement, gdx_in)
+            else:
+                string = f"$load {statement.name}\n"
+
+            self._miro_input_symbols.append(statement.name)
+        else:
+            string = f"$load {statement.name}\n"
+
+        return string
+
     def _get_load_miro_input_str(self, statement, gdx_in):
         string = "$gdxIn\n"  # close the old one
         string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
@@ -406,44 +431,18 @@ class Container(gt.Container):
         dirty_names: List[str],
         modified_names: List[str],
     ) -> str:
-        LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-        MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
-        MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
-
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
                 string += statement + "\n"
-            elif isinstance(statement, gp.UniverseAlias):
-                continue
             else:
                 string += statement.getStatement() + "\n"
 
                 if isinstance(statement, LOAD_SYMBOL_TYPES):
-                    if (
-                        isinstance(statement, MIRO_INPUT_TYPES)
-                        and statement._is_miro_input
-                    ):
-                        if not IS_MIRO_INIT and MIRO_GDX_IN:
-                            self.loadRecordsFromGdx(
-                                MIRO_GDX_IN, [statement.name]
-                            )
-                            string += self._get_load_miro_input_str(
-                                statement, gdx_in
-                            )
-                        else:
-                            string += f"$load {statement.name}\n"
+                    string += self._get_load_str(statement, gdx_in)
 
-                        self._miro_input_symbols.append(statement.name)
-                    else:
-                        string += f"$load {statement.name}\n"
-
-                # add miro output symbol
-                if (
-                    isinstance(statement, MIRO_OUTPUT_TYPES)
-                    and statement._is_miro_output
-                ):
-                    self._miro_output_symbols.append(statement.name)
+                    if statement._is_miro_output:
+                        self._miro_output_symbols.append(statement.name)
 
         for symbol_name in modified_names:
             if not isinstance(self[symbol_name], gp.Alias) and (
