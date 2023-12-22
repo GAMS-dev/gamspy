@@ -122,13 +122,6 @@ class ContainerSuite(unittest.TestCase):
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
-    def test_working_directory_helpers(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
-        self.assertEqual(m.gdxInputName(), os.path.basename(m._gdx_in))
-        self.assertEqual(m.gdxOutputName(), os.path.basename(m._gdx_out))
-
     def test_read_write(self):
         m = Container(
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
@@ -211,7 +204,7 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run(is_implicit=True)
+        m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
@@ -323,7 +316,7 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 
         transport = Model(
-            m,
+            new_cont,
             name="transport",
             equations=m.getEquations(),
             problem="LP",
@@ -333,7 +326,7 @@ class ContainerSuite(unittest.TestCase):
 
         transport.solve()
 
-        self.assertIsNotNone(m.gamsJobName())
+        self.assertIsNotNone(new_cont.gamsJobName())
         self.assertAlmostEqual(transport.objective_value, 153.675, 3)
 
     def test_generate_gams_string(self):
@@ -437,7 +430,24 @@ class ContainerSuite(unittest.TestCase):
 
         m.write("test.gdx")
         self.assertTrue(c.modified)
-        self.assertTrue(c._is_dirty)
+        self.assertFalse(c._is_dirty)
+
+    def test_write(self):
+        from gamspy import SpecialValues
+
+        _ = Parameter(self.m, "a", records=SpecialValues.EPS)
+        self.m.write("test.gdx", eps_to_zero=True)
+
+        m = Container(load_from="test.gdx")
+        self.assertEqual(int(m["a"].toValue()), 0)
+
+    def test_read(self):
+        _ = Parameter(self.m, "a", records=5)
+        self.m.write("test.gdx")
+
+        m = Container()
+        m.read("test.gdx", load_records=False)
+        self.assertIsNone(m["a"].records, None)
 
 
 def container_suite():

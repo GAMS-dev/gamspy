@@ -17,7 +17,7 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
-import sys
+from __future__ import annotations
 
 from gamspy import Container
 from gamspy import Equation
@@ -82,7 +82,8 @@ def main():
         sense=Sense.MIN,
         objective=z,
     )
-    transport.solve(output=sys.stdout)
+    transport.solve()
+    print(transport.objective_value)
 
 
 if __name__ == "__main__":

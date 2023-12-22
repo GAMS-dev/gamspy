@@ -118,13 +118,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        # enable load on demand
         self._is_dirty = False
-
-        # allow freezing
         self._is_frozen = False
-
-        # check if the name is a reserved word
         name = utils._reserved_check(name)
 
         super().__init__(
@@ -138,11 +133,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         )
 
         self._container_check(self.domain)
-
-        # allow conditions
         self.where = condition.Condition(self)
-
-        # add statement
         self.container._add_statement(self)
 
         # miro support
@@ -183,7 +174,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         self._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
+            self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)
@@ -205,7 +196,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run(is_implicit=True)
+        self.container._run()
 
         return self._records
 

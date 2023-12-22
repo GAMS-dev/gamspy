@@ -92,7 +92,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         self.parent._is_dirty = True
         if not self.container.delayed_execution:
-            self.container._run(is_implicit=True)
+            self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "==", other)

@@ -40,9 +40,8 @@ import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
 import gamspy.utils as utils
-from gamspy._engine import EngineConfig
+from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
-from gamspy._neos import NeosClient
 from gamspy._options import _map_options
 from gamspy.exceptions import GamspyException
 
@@ -52,6 +51,8 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._options import Options
+    from gamspy._backend.engine import EngineConfig
+    from gamspy._backend.neos import NeosClient
     import pandas as pd
 
 
@@ -99,6 +100,8 @@ class Sense(Enum):
 
 
 class ModelStatus(Enum):
+    """An enumeration for model status types"""
+
     OptimalGlobal = 1
     OptimalLocal = 2
     Unbounded = 3
@@ -335,10 +338,6 @@ class Model:
 
         return assignment
 
-    def _create_attribute_symbols(self) -> None:
-        for symbol_name in self._attr_symbol_names:
-            _ = gp.Parameter(self.container, symbol_name)
-
     def _prepare_gams_options(
         self,
         solver: str | None = None,
@@ -426,9 +425,10 @@ class Model:
 
         self.container._unsaved_statements.append(solve_string + ";\n")
 
-    def _assign_model_attributes(self) -> None:
+    def _create_model_attributes(self) -> None:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
+            _ = gp.Parameter(self.container, symbol_name)
 
             self.container._unsaved_statements.append(
                 f"{symbol_name} = {self.name}.{attr_name};"
@@ -477,45 +477,6 @@ class Model:
             if name in self.container.data.keys():
                 del self.container.data[name]
 
-    def interrupt(self) -> None:
-        """
-        Sends interrupt signal to the running job.
-
-        Raises
-        ------
-        GamspyException
-            If the job is not initialized
-        """
-        self.container._interrupt()
-
-    def freeze(
-        self,
-        modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: dict | None = None,
-    ) -> None:
-        """
-        Freezes all symbols except modifiable symbols.
-
-        Parameters
-        ----------
-        modifiables : List[Union[Parameter, ImplicitParameter]]
-        freeze_options : Optional[dict], optional
-        """
-        self.container._run(is_implicit=True)
-
-        self.instance = ModelInstance(
-            self.container, self, modifiables, freeze_options
-        )
-        self._is_frozen = True
-
-    def unfreeze(self) -> None:
-        """Unfreezes all symbols"""
-        for symbol in self.container.data.values():
-            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
-                symbol._is_frozen = False
-
-        self._is_frozen = False
-
     def _make_variable_and_equations_dirty(self):
         if (
             self._objective_variable is not None
@@ -541,27 +502,44 @@ class Model:
                 equation._is_dirty = True
                 variable._is_dirty = True
 
-    def _verify_backend_args(
+    def interrupt(self) -> None:
+        """
+        Sends interrupt signal to the running job.
+
+        Raises
+        ------
+        GamspyException
+            If the job is not initialized
+        """
+        self.container._interrupt()
+
+    def freeze(
         self,
-        backend: str,
-        engine_config: Union[EngineConfig, None],
-        neos_client: Union[NeosClient, None],
-    ):
-        if backend not in ["local", "engine", "neos"]:
-            raise GamspyException(
-                f"`{backend}` is not a valid backend. Possible backends:"
-                " local, engine, and neos"
-            )
+        modifiables: list[Parameter | ImplicitParameter],
+        freeze_options: dict | None = None,
+    ) -> None:
+        """
+        Freezes all symbols except modifiable symbols.
 
-        if backend == "neos" and not isinstance(neos_client, NeosClient):
-            raise GamspyException(
-                "`neos_client` must be provided to solve on NEOS Server"
-            )
+        Parameters
+        ----------
+        modifiables : List[Parameter | ImplicitParameter]
+        freeze_options : dict, optional
+        """
+        self.container._run()
 
-        if backend == "engine" and not isinstance(engine_config, EngineConfig):
-            raise GamspyException(
-                "`engine_config` must be provided to solve on GAMS Engine"
-            )
+        self.instance = ModelInstance(
+            self.container, self, modifiables, freeze_options
+        )
+        self._is_frozen = True
+
+    def unfreeze(self) -> None:
+        """Unfreezes all symbols"""
+        for symbol in self.container.data.values():
+            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
+                symbol._is_frozen = False
+
+        self._is_frozen = False
 
     def solve(
         self,
@@ -594,6 +572,10 @@ class Model:
             Backend to run on
         engine_config : EngineConfig, optional
             GAMS Engine configuration
+        neos_client : NeosClient, optional
+            NEOS Client to communicate with NEOS Server
+        create_log_file : bool
+            Allows creating a log file
 
         Raises
         ------
@@ -605,8 +587,6 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
-        self._verify_backend_args(backend, engine_config, neos_client)
-
         if self._is_frozen:
             self.instance.solve(model_instance_options, output)
             return None
@@ -621,18 +601,22 @@ class Model:
         )
 
         self._append_solve_string()
-        self._create_attribute_symbols()
-        self._assign_model_attributes()
+        self._create_model_attributes()
         self._make_variable_and_equations_dirty()
 
-        summary = self.container._run(
-            gams_options, output, backend, engine_config, neos_client
+        runner = backend_factory(
+            self.container,
+            gams_options,
+            output,
+            backend,
+            engine_config,
+            neos_client,
         )
 
-        if backend == "neos" and not neos_client.is_blocking:  # type: ignore
-            return None
+        summary = runner.solve()
 
-        self._update_model_attributes()
+        if not runner.is_async():
+            self._update_model_attributes()
         self._delete_autogenerated_symbols()
 
         return summary
@@ -675,6 +659,9 @@ class Model:
             )
             equations_str += "," + limited_variables_str
 
-        model_str = f"Model {self.name} / {equations_str} /;"
+        model_str = f"Model {self.name}"
+        if equations_str != "":
+            model_str += f" / {equations_str} /"
+        model_str += ";"
 
         return model_str
