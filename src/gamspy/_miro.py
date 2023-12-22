@@ -130,8 +130,6 @@ class MiroJSONEncoder:
             domain_keys = symbol.records.columns.to_list()
             domain_values = []
 
-            print(f"Symbol name: {name}, Records: {symbol.records}")
-
             for dtype, column in zip(symbol.records.dtypes, domain_keys):
                 domain_values.append(
                     {"type": type_map[dtype.name], "alias": column}
