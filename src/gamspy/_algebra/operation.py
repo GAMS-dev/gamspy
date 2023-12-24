@@ -124,8 +124,9 @@ class Sum(Operation):
     --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Sum(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="regular")
+    >>> d = gp.Parameter(m, "d", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Sum(i, d[i]) <= v
     """
 
     def __init__(
@@ -149,8 +150,9 @@ class Product(Operation):
     --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Product(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="regular")
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Product(i, p[i]) <= v
     """
 
     def __init__(
@@ -174,8 +176,9 @@ class Smin(Operation):
     --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Smin(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="regular")
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Smin(i, p[i]) <= v
     """
 
     def __init__(
@@ -199,8 +202,9 @@ class Smax(Operation):
     --------
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Smax(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="regular")
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Smax(i, p[i]) <= v
     """
 
     def __init__(
