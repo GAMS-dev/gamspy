@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import gams.transfer as gt
+
 import gamspy as gp
+import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
@@ -29,3 +32,13 @@ class Symbol:
                     f"`Domain `{set.name}` must be in the same container"
                     f" with `{self.name}`"
                 )
+
+    def _get_domain_str(self):
+        set_strs = []
+        for set in self.domain:
+            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                set_strs.append(set.gamsRepr())
+            elif isinstance(set, str):
+                set_strs.append("*")
+
+        return "(" + ",".join(set_strs) + ")"
