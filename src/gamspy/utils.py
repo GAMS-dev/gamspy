@@ -28,10 +28,7 @@ import os
 import platform
 from collections.abc import Sequence
 from typing import Iterable
-from typing import List
-from typing import Tuple
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -54,7 +51,7 @@ SPECIAL_VALUE_MAP = {
 }
 
 
-def getInstalledSolvers() -> List[str]:
+def getInstalledSolvers() -> list[str]:
     """
     Returns the list of installed solvers
 
@@ -99,7 +96,7 @@ def getInstalledSolvers() -> List[str]:
     return solver_names
 
 
-def getAvailableSolvers() -> List[str]:
+def getAvailableSolvers() -> list[str]:
     """
     Returns all available solvers that can be installed.
 
@@ -387,16 +384,9 @@ def _open_gdx_file(system_directory: str, load_from: str):
 
 
 def _to_list(
-    obj: Union[
-        Set,
-        Alias,
-        str,
-        Tuple,
-        Domain,
-        Expression,
-        list,
-        ImplicitSet,
-    ]
+    obj: (
+        Set | Alias | str | tuple | Domain | Expression | list | ImplicitSet
+    ),
 ) -> list:
     """
     Converts the given object to a list
@@ -425,9 +415,7 @@ def _map_special_values(value: float):
     return value
 
 
-def _get_domain_str(
-    domain: Iterable[Union[Set, Alias, ImplicitSet, str]]
-) -> str:
+def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     """
     Creates the string format of a given domain
 

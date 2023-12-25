@@ -31,9 +31,6 @@ import shutil
 import time
 import xmlrpc.client
 import zipfile
-from typing import List
-from typing import Optional
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
@@ -57,8 +54,8 @@ class NeosClient:
         self,
         email: str,
         server: str = "https://neos-server.org:3333",
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
         priority: str = "long",
         is_blocking: bool = True,
     ) -> None:
@@ -87,7 +84,7 @@ class NeosClient:
         self.priority = priority
         self.is_blocking = is_blocking
         self.neos = xmlrpc.client.ServerProxy(server)
-        self.jobs: List[tuple] = []
+        self.jobs: list[tuple] = []
 
     def is_alive(self) -> bool:
         """
@@ -343,7 +340,7 @@ class NeosClient:
         xml_path: str = "neos.xml",
         is_blocking: bool = True,
         working_directory: str = ".",
-    ) -> Tuple[int, str]:
+    ) -> tuple[int, str]:
         """
         Submits the job to NEOS Server.
 
@@ -401,8 +398,8 @@ class NeosClient:
 class NEOSServer(backend.Backend):
     def __init__(
         self,
-        container: "Container",
-        options: "GamsOptions",
+        container: Container,
+        options: GamsOptions,
         client: NeosClient | None,
     ) -> None:
         if client is None:
@@ -472,8 +469,8 @@ class NEOSServer(backend.Backend):
 
     def postprocess(
         self,
-        dirty_names: List[str],
-        modified_names: List[str],
+        dirty_names: list[str],
+        modified_names: list[str],
         is_implicit: bool = False,
         keep_flags: bool = False,
     ):

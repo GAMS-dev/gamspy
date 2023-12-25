@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import List
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy as gp
 from gamspy.exceptions import GamspyException
@@ -19,8 +17,8 @@ class Symbol:
         """Declaration string of the symbol in GAMS"""
 
     def _container_check(
-        self: Union[Set, Parameter, Variable, Equation],
-        domain: List[Union[str, Set, Alias]],
+        self: Set | Parameter | Variable | Equation,
+        domain: list[str | Set | Alias],
     ):
         for set in domain:
             if (

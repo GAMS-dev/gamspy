@@ -3,11 +3,8 @@ from __future__ import annotations
 import os
 from abc import ABC
 from abc import abstractmethod
-from typing import List
 from typing import Literal
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import pandas as pd
 
@@ -50,13 +47,13 @@ HEADER = [
 
 
 def backend_factory(
-    container: "Container",
-    options: Optional["GamsOptions"] = None,
-    output: Optional["io.TextIOWrapper"] = None,
+    container: Container,
+    options: GamsOptions | None = None,
+    output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
-    engine_config: Optional["EngineConfig"] = None,
-    neos_client: Optional["NeosClient"] = None,
-) -> Union["Local", "GAMSEngine", "NEOSServer"]:
+    engine_config: EngineConfig | None = None,
+    neos_client: NeosClient | None = None,
+) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
@@ -77,7 +74,7 @@ def backend_factory(
 
 
 class Backend(ABC):
-    def __init__(self, container: "Container", gdx_in: str, gdx_out: str):
+    def __init__(self, container: Container, gdx_in: str, gdx_out: str):
         self.container = container
         self.gdx_in = gdx_in
         self.gdx_out = gdx_out
@@ -151,10 +148,10 @@ class Backend(ABC):
         )
         return dataframe
 
-    def update_modified_state(self, modified_names: List[str]):
+    def update_modified_state(self, modified_names: list[str]):
         for name in modified_names:
             self.container[name].modified = False
 
-    def clean_dirty_symbols(self, dirty_names: List[str]):
+    def clean_dirty_symbols(self, dirty_names: list[str]):
         for name in dirty_names:
             self.container[name]._is_dirty = False

@@ -57,16 +57,13 @@ class Condition:
     def __init__(
         self,
         symbol: (
-            "ImplicitSet"
-            | "ImplicitParameter"
-            | "ImplicitEquation"
-            | "Expression"
+            ImplicitSet | ImplicitParameter | ImplicitEquation | Expression
         ),
     ):
         self._symbol = symbol
 
     def __getitem__(
-        self, condition: "Expression" | "ImplicitParameter" | "ImplicitSet"
+        self, condition: Expression | ImplicitParameter | ImplicitSet
     ) -> Expression:
         sign_map = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         if (
@@ -108,7 +105,5 @@ class Condition:
 
         self._symbol.container._add_statement(statement)
 
-        if not self._symbol.container.delayed_execution and not isinstance(
-            self._symbol, implicits.ImplicitEquation
-        ):
+        if not self._symbol.container.delayed_execution:
             self._symbol.container._run()

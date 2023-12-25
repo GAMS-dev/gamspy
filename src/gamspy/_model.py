@@ -29,9 +29,7 @@ import os
 from enum import Enum
 from typing import Iterable
 from typing import Literal
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 from gams import GamsOptions
@@ -550,9 +548,9 @@ class Model:
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         engine_config: EngineConfig | None = None,
-        neos_client: Optional[NeosClient] = None,
+        neos_client: NeosClient | None = None,
         create_log_file: bool = False,
-    ) -> Union[pd.DataFrame, None]:
+    ) -> pd.DataFrame | None:
         """
         Generates the gams string, writes it to a file and runs it
 

@@ -26,8 +26,6 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
 
 from gams import GamsJob
@@ -45,9 +43,9 @@ if TYPE_CHECKING:
 class Local(backend.Backend):
     def __init__(
         self,
-        container: "Container",
-        options: "GamsOptions",
-        output: Optional[io.TextIOWrapper] = None,
+        container: Container,
+        options: GamsOptions,
+        output: io.TextIOWrapper | None = None,
     ) -> None:
         super().__init__(container, container._gdx_in, container._gdx_out)
         self.options = options
@@ -103,8 +101,8 @@ class Local(backend.Backend):
 
     def postprocess(
         self,
-        dirty_names: List[str],
-        modified_names: List[str],
+        dirty_names: list[str],
+        modified_names: list[str],
         is_implicit: bool = False,
         keep_flags: bool = False,
     ):
