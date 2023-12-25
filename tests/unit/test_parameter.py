@@ -81,7 +81,7 @@ class ParameterSuite(unittest.TestCase):
 
         b = Parameter(self.m, "b")
         self.assertEqual(b.getStatement(), "Parameter b;")
-        self.assertEqual((b == 5).gamsRepr(), "(b = 5)")
+        self.assertEqual((b == 5).gamsRepr(), "(b eq 5)")
         self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):

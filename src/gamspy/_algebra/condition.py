@@ -68,7 +68,7 @@ class Condition:
     def __getitem__(
         self, condition: "Expression" | "ImplicitParameter" | "ImplicitSet"
     ) -> Expression:
-        sign_map = {"=g=": ">=", "=e=": "==", "=l=": "<="}
+        sign_map = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         if (
             isinstance(condition, expression.Expression)
             and condition.data in sign_map.keys()

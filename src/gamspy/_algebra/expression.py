@@ -86,11 +86,6 @@ class Expression(operable.Operable):
             # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
             out_str = self._fix_condition_paranthesis(out_str)
 
-        if self.data == "==":
-            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
-            out_str = out_str.replace("==", "=")
-
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid

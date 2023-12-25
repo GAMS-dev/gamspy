@@ -109,11 +109,11 @@ class OperationSuite(unittest.TestCase):
 
         # Ord, Card
         expression = Ord(i) == Ord(j)
-        self.assertEqual(expression.gamsRepr(), "(ord(i) = ord(j))")
+        self.assertEqual(expression.gamsRepr(), "(ord(i) eq ord(j))")
         expression = Ord(i) != Ord(j)
         self.assertEqual(expression.gamsRepr(), "(ord(i) ne ord(j))")
         expression = Card(i) == 5
-        self.assertEqual(expression.gamsRepr(), "(card(i) = 5)")
+        self.assertEqual(expression.gamsRepr(), "(card(i) eq 5)")
         expression = Card(i) != 5
         self.assertEqual(expression.gamsRepr(), "(card(i) ne 5)")
 

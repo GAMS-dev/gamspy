@@ -95,7 +95,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             self.container._run()
 
     def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)

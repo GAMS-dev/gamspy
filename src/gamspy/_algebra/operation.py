@@ -105,7 +105,7 @@ class Operation(operable.Operable):
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
         output = output.replace("=g=", ">=")
-        output = output.replace("=e=", "==")
+        output = output.replace("=e=", "eq")
 
         return output
 
@@ -291,7 +291,7 @@ class Ord(operable.Operable):
         self._set = set
 
     def __eq__(self, other) -> Expression:  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
         return expression.Expression(self, ">=", other)
@@ -341,7 +341,7 @@ class Card(operable.Operable):
         self._symbol = symbol
 
     def __eq__(self, other) -> Expression:  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
         return expression.Expression(self, ">=", other)
