@@ -72,6 +72,36 @@ class Expression(operable.Operable):
             right._fix_equalities()
         self.representation = self._create_representation()
         self.where = condition.Condition(self)
+        self.domain = self._create_domain()
+
+    def _create_domain(self):
+        if self.left is None or isinstance(self.left, (int, float, str)):
+            left_domain = []  # left is a scalar
+        elif isinstance(self.left, domain.Domain):
+            left_domain = self.left.sets
+        else:
+            left_domain = self.left.domain
+
+        if self.right is None or isinstance(self.right, (int, float, str)):
+            right_domain = []  # right is a scalar
+        elif isinstance(self.right, domain.Domain):
+            right_domain = self.right.sets
+        else:
+            right_domain = self.right.domain
+
+        domain_gather = "matrix" if self.data == "@" else "union"
+        result_domain = []
+        if domain_gather == "union":
+            for d in [*left_domain, *right_domain]:
+                if isinstance(d, str):
+                    continue  # string domains are fixed and they do not count
+
+                if d not in result_domain:
+                    result_domain.append(d)
+        else:
+            raise NotImplementedError
+
+        return result_domain
 
     def _create_representation(self):
         left_str, right_str = self._get_operand_representations()
