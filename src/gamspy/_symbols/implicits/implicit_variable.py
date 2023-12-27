@@ -18,7 +18,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         parent: Variable,
         name: str,
         domain: list[Set | str],
-        permutation: List[int] | None = None
+        permutation: List[int] | None = None,
     ):
         """
         Implicit Variable
@@ -40,7 +40,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         return implicits.ImplicitParameter(
             self.parent,
             name=f"{self.gamsRepr()}.{attr_name}",
-            permutation=self.permutation
+            permutation=self.permutation,
         )
 
     def _init_attributes(self):
@@ -62,12 +62,15 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def t(self) -> implicits.ImplicitVariable:
         from gamspy.math.matrix import permute
+
         # Ask if exceptions need to be re-raised as GamspyException
         # If  implicit variable needs to be subscriptable since we can
         # create it by transpose
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise GamspyException("Variable must contain at least 2 dimensions to transpose")
+            raise GamspyException(
+                "Variable must contain at least 2 dimensions to transpose"
+            )
 
         x = dims[-1]
         dims[-1] = dims[-2]

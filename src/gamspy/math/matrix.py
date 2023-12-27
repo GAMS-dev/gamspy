@@ -39,12 +39,19 @@ from gamspy._symbols.variable import Variable
 
 
 def permute(
-    x: Union[Parameter, implicits.ImplicitParameter, Variable, implicits.ImplicitVariable],
-    dims: List[int]
+    x: Union[
+        Parameter,
+        implicits.ImplicitParameter,
+        Variable,
+        implicits.ImplicitVariable,
+    ],
+    dims: List[int],
 ):
     dims_len = len(dims)
     if min(dims) != 0 or max(dims) != dims_len - 1:
-        raise GamspyException("Permute requires the order of indices from 0 to n-1")
+        raise GamspyException(
+            "Permute requires the order of indices from 0 to n-1"
+        )
 
     if len(set(dims)) != dims_len:
         raise GamspyException("Permute dimensions must be unique")
@@ -60,7 +67,7 @@ def permute(
             name=x.name,
             records=x.records,
             domain=permuted_domain,
-            permutation=dims
+            permutation=dims,
         )
     elif isinstance(x, implicits.ImplicitParameter):
         if x.permutation is not None:
@@ -71,27 +78,16 @@ def permute(
             name=x.name,
             records=x._records,
             domain=permuted_domain,
-            permutation=dims
+            permutation=dims,
         )
     elif isinstance(x, Variable):
         return implicits.ImplicitVariable(
-            x,
-            name=x.name,
-            domain=permuted_domain,
-            permutation=dims
+            x, name=x.name, domain=permuted_domain, permutation=dims
         )
     elif isinstance(x, implicits.ImplicitVariable):
         if x.permutation is not None:
             dims = utils._permute_domain(x.permutation, dims)
 
         return implicits.ImplicitVariable(
-            x.parent,
-            name=x.name,
-            domain=permuted_domain,
-            permutation=dims
+            x.parent, name=x.name, domain=permuted_domain, permutation=dims
         )
-
-
-
-
-

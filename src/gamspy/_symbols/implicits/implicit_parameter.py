@@ -25,7 +25,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str] = [],
         records: Any | None = None,
-        permutation: List[int] | None = None
+        permutation: List[int] | None = None,
     ) -> None:
         """Implicit Parameter
 
@@ -105,7 +105,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def t(self) -> ImplicitParameter:
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise GamspyException("Parameter must contain at least 2 dimensions to transpose")
+            raise GamspyException(
+                "Parameter must contain at least 2 dimensions to transpose"
+            )
 
         x = dims[-1]
         dims[-1] = dims[-2]

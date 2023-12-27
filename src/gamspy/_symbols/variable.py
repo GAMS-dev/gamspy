@@ -306,7 +306,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def t(self) -> implicits.ImplicitVariable:
         from gamspy.math.matrix import permute
-        # Ask if exceptions need to be re-raised as ValidationError
         # If  implicit variable needs to be subscriptable since we can
         # create it by transpose
         dims = [x for x in range(len(self.domain))]
