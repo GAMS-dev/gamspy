@@ -33,6 +33,7 @@ class Operation(operable.Operable):
 
         # allow conditions
         self.where = condition.Condition(self)
+        self.domain = None
 
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):
@@ -61,7 +62,9 @@ class Operation(operable.Operable):
             return index_str
 
         return (
-            "(" + ",".join([index.gamsRepr() for index in self.op_domain]) + ")"
+            "("
+            + ",".join([index.gamsRepr() for index in self.op_domain])
+            + ")"
         )
 
     def __eq__(self, other):  # type: ignore
@@ -135,6 +138,12 @@ class Sum(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "sum")
+        if isinstance(expression, (int, bool)):
+            self.domain = []
+        else:
+            self.domain = [
+                x for x in expression.domain if x not in self.op_domain
+            ]
 
 
 class Product(Operation):
@@ -161,6 +170,12 @@ class Product(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
+        if isinstance(expression, (int, bool)):
+            self.domain = []
+        else:
+            self.domain = [
+                x for x in expression.domain if x not in self.op_domain
+            ]
 
 
 class Smin(Operation):
@@ -187,6 +202,12 @@ class Smin(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smin")
+        if isinstance(expression, (int, bool)):
+            self.domain = []
+        else:
+            self.domain = [
+                x for x in expression.domain if x not in self.op_domain
+            ]
 
 
 class Smax(Operation):
@@ -213,6 +234,12 @@ class Smax(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
+        if isinstance(expression, (int, bool)):
+            self.domain = []
+        else:
+            self.domain = [
+                x for x in expression.domain if x not in self.op_domain
+            ]
 
 
 class Ord(operable.Operable):
@@ -240,6 +267,7 @@ class Ord(operable.Operable):
 
     def __init__(self, set: Set | Alias):
         self._set = set
+        self.domain = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -286,6 +314,7 @@ class Card(operable.Operable):
         symbol: Set | Alias | Parameter,
     ) -> None:
         self._symbol = symbol
+        self.domain = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)

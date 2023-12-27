@@ -25,6 +25,7 @@ class Number(operable.Operable):
     def __init__(self, value: int | float):
         self._value = value
         self.where = condition.Condition(self)
+        self.domain = []
 
     def gamsRepr(self) -> str:
         """
