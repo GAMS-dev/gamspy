@@ -26,8 +26,8 @@ class Operation(operable.Operable):
         ),
         op_name: str,
     ):
-        self.domain = utils._to_list(domain)
-        assert len(self.domain) > 0, "Operation requires at least one index"
+        self.op_domain = utils._to_list(domain)
+        assert len(self.op_domain) > 0, "Operation requires at least one index"
         self.expression = expression
         self._op_name = op_name
 
@@ -47,8 +47,8 @@ class Operation(operable.Operable):
         return []
 
     def _get_index_str(self) -> str:
-        if len(self.domain) == 1:
-            item = self.domain[0]
+        if len(self.op_domain) == 1:
+            item = self.op_domain[0]
             index_str = item.gamsRepr()
 
             if isinstance(item, expression.Expression) and isinstance(
@@ -61,7 +61,7 @@ class Operation(operable.Operable):
             return index_str
 
         return (
-            "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
+            "(" + ",".join([index.gamsRepr() for index in self.op_domain]) + ")"
         )
 
     def __eq__(self, other):  # type: ignore
