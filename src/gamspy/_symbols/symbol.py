@@ -6,7 +6,7 @@ import gams.transfer as gt
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Set, Alias, Parameter, Variable, Equation
@@ -28,7 +28,7 @@ class Symbol:
                 isinstance(set, (gp.Set, gp.Alias))
                 and set.container != self.container
             ):
-                raise GamspyException(
+                raise ValidationError(
                     f"`Domain `{set.name}` must be in the same container"
                     f" with `{self.name}`"
                 )

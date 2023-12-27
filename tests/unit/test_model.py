@@ -12,7 +12,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class ModelSuite(unittest.TestCase):
@@ -107,7 +107,7 @@ class ModelSuite(unittest.TestCase):
         self.assertEqual(test_model.objective_value, 153.675)
 
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Model, self.m, "set", "LP")
+        self.assertRaises(ValidationError, Model, self.m, "set", "LP")
 
         # Equation definition with more than one index
         bla = Equation(
@@ -236,7 +236,7 @@ class ModelSuite(unittest.TestCase):
         self.assertIsNotNone(x.records)
 
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             Model,
             m,
             "transport2",
@@ -247,7 +247,7 @@ class ModelSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             Model,
             m,
             "transport2",

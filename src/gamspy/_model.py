@@ -41,7 +41,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Variable, Equation, Container
@@ -283,12 +283,12 @@ class Model:
 
         if self.sense == gp.Sense.FEASIBILITY:
             if assignment is not None:
-                raise GamspyException(
+                raise ValidationError(
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
             if self.problem in [gp.Problem.CNS, gp.Problem.MCP]:
-                raise GamspyException(
+                raise ValidationError(
                     "Problem type cannot be CNS or MCP when the sense is"
                     " FEASIBILITY"
                 )
@@ -360,7 +360,7 @@ class Model:
 
         if solver_options:
             if solver is None:
-                raise GamspyException(
+                raise ValidationError(
                     "You need to provide a 'solver' to apply solver options."
                 )
 
@@ -509,7 +509,10 @@ class Model:
         GamspyException
             If the job is not initialized
         """
-        self.container._interrupt()
+        if self.container._job:
+            self.container._job.interrupt()
+        else:
+            raise ValidationError("There is no initialized job to interrupt.")
 
     def freeze(
         self,

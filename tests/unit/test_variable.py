@@ -10,7 +10,7 @@ from gamspy import Container
 from gamspy import Set
 from gamspy import Variable
 from gamspy import VariableType
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class VariableSuite(unittest.TestCase):
@@ -46,12 +46,12 @@ class VariableSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Variable(m, "var1", domain=[set1])
 
     def test_variable_string(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Variable, self.m, "set")
+        self.assertRaises(ValidationError, Variable, self.m, "set")
 
         # Set
         i = Set(self.m, name="i", records=["bla", "damn"])

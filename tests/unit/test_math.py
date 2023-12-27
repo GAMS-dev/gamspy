@@ -12,7 +12,7 @@ from gamspy import Equation
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class MathSuite(unittest.TestCase):
@@ -301,22 +301,22 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.lse_max(a[i])
         self.assertEqual(op1.gamsRepr(), "( lseMax(a(i)) )")
 
-        self.assertRaises(GamspyException, gams_math.lse_max)
+        self.assertRaises(ValidationError, gams_math.lse_max)
 
         op1 = gams_math.lse_max_sc(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( lseMaxSc(a(i),a(i)) )")
 
-        self.assertRaises(GamspyException, gams_math.lse_max_sc, 5)
+        self.assertRaises(ValidationError, gams_math.lse_max_sc, 5)
 
         op1 = gams_math.lse_min(a[i])
         self.assertEqual(op1.gamsRepr(), "( lseMin(a(i)) )")
 
-        self.assertRaises(GamspyException, gams_math.lse_min)
+        self.assertRaises(ValidationError, gams_math.lse_min)
 
         op1 = gams_math.lse_min_sc(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( lseMinSc(a(i),a(i)) )")
 
-        self.assertRaises(GamspyException, gams_math.lse_min_sc, 5)
+        self.assertRaises(ValidationError, gams_math.lse_min_sc, 5)
 
         op1 = gams_math.ncp_cm(a[i], a[i], 3)
         self.assertEqual(op1.gamsRepr(), "( ncpCM(a(i),a(i),3) )")

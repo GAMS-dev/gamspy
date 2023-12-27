@@ -37,6 +37,10 @@ class GamspyException(Exception):
     """Plain Gamspy exception."""
 
 
+class ValidationError(Exception):
+    """An error while validating data."""
+
+
 error_codes = {
     1: "Solver is to be called, the system should never return this number",
     2: "There was a compilation error",

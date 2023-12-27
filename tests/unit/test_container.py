@@ -17,7 +17,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import UniverseAlias
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class ContainerSuite(unittest.TestCase):
@@ -209,7 +209,7 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
         pi = Parameter(m, "pi")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             m._addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
     def test_system_directory(self):
@@ -311,7 +311,7 @@ class ContainerSuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        self.assertRaises(GamspyException, m.copy, ".")
+        self.assertRaises(ValidationError, m.copy, ".")
         new_cont = m.copy(working_directory="test")
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 

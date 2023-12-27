@@ -39,6 +39,7 @@ import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Model, Container
@@ -215,7 +216,7 @@ class ModelInstance:
             if key in possible_options:
                 setattr(options, key, value)
             else:
-                raise GamspyException(
+                raise ValidationError(
                     f"{key} is not a model instance option. All options:"
                     f" {possible_options}"
                 )

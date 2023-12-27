@@ -10,7 +10,7 @@ from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import UniverseAlias
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class SetSuite(unittest.TestCase):
@@ -46,12 +46,12 @@ class SetSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Set(m, "set2", domain=[set1])
 
     def test_set_string(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Set, self.m, "set")
+        self.assertRaises(ValidationError, Set, self.m, "set")
 
         # Without records
         b = Set(self.m, "b")
@@ -92,7 +92,7 @@ class SetSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException, Set, self.m, "s2", None, True, ["i1", "i2"]
+            ValidationError, Set, self.m, "s2", None, True, ["i1", "i2"]
         )
 
     def test_records_assignment(self):
@@ -105,7 +105,7 @@ class SetSuite(unittest.TestCase):
         with self.assertRaises(TypeError):
             s.records = 5
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j[k] = 5
 
     def test_set_operators(self):

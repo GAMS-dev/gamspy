@@ -38,7 +38,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 if TYPE_CHECKING:
@@ -507,6 +507,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 def singleton_check(is_singleton: bool, records: Any | None):
     if is_singleton:
         if records is not None and len(records) > 1:
-            raise GamspyException(
+            raise ValidationError(
                 "Singleton set records size cannot be more than one."
             )

@@ -35,6 +35,7 @@ from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
@@ -72,10 +73,9 @@ def getInstalledSolvers() -> list[str]:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
 
     solver_names = []
     capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
@@ -117,10 +117,10 @@ def getAvailableSolvers() -> list[str]:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
     return gamspy_base.available_solvers
 
 
@@ -212,10 +212,9 @@ def _get_gamspy_base_directory() -> str:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
 
     gamspy_base_directory = gamspy_base.__path__[0]
     return gamspy_base_directory
@@ -321,7 +320,7 @@ def _reserved_check(word: str) -> str:
     ]
 
     if word.lower() in reserved_words:
-        raise GamspyException(
+        raise ValidationError(
             "Name cannot be one of the reserved words. List of reserved"
             f" words: {reserved_words}"
         )
@@ -384,9 +383,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
 
 
 def _to_list(
-    obj: (
-        Set | Alias | str | tuple | Domain | Expression | list | ImplicitSet
-    ),
+    obj: Set | Alias | str | tuple | Domain | Expression | list | ImplicitSet,
 ) -> list:
     """
     Converts the given object to a list

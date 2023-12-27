@@ -43,7 +43,7 @@ import gamspy as gp
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._options import _map_options
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import (
@@ -129,7 +129,7 @@ class Container(gt.Container):
             not isinstance(import_symbols, list)
             or any(not isinstance(symbol, str) for symbol in import_symbols)
         ):
-            raise GamspyException("import_symbols must be a list of strings")
+            raise ValidationError("import_symbols must be a list of strings")
 
         self._import_symbols = import_symbols
         self._unsaved_statements.append(gams_code)
@@ -140,7 +140,7 @@ class Container(gt.Container):
     def _assign_symbol_attributes(
         self,
         gp_symbol: Set | Parameter | Variable | Equation,
-        gtp_symbol: (gt.Set | gt.Parameter | gt.Variable | gt.Equation),
+        gtp_symbol: gt.Set | gt.Parameter | gt.Variable | gt.Equation,
         domain: list[str | Set | Alias],
     ):
         gp_symbol._domain = domain
@@ -240,15 +240,7 @@ class Container(gt.Container):
 
         return symbol_names
 
-    def _interrupt(self):
-        if self._job:
-            self._job.interrupt()
-        else:
-            raise GamspyException("There is no job initialized.")
-
-    def _setup_paths(
-        self,
-    ) -> tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
+    def _setup_paths(self) -> tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
         suffix = uuid.uuid4()
         save_to = GamsCheckpoint(self.workspace, f"_save_{suffix}.g00")
         restart_from = GamsCheckpoint(self.workspace, f"_restart_{suffix}.g00")
@@ -702,7 +694,7 @@ class Container(gt.Container):
         """
         m = Container(working_directory=working_directory)
         if m.working_directory == self.working_directory:
-            raise GamspyException(
+            raise ValidationError(
                 "Copy of a container cannot have the same working directory"
                 " with the original container."
             )

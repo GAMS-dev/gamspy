@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -67,7 +67,7 @@ def backend_factory(
 
         return Local(container, options, output)
     else:
-        raise GamspyException(
+        raise ValidationError(
             f"`{backend}` is not a valid backend. Possible backends:"
             " local, engine, and neos"
         )

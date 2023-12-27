@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("NEOS")
 logger.setLevel(logging.INFO)
@@ -403,7 +404,7 @@ class NEOSServer(backend.Backend):
         client: NeosClient | None,
     ) -> None:
         if client is None:
-            raise GamspyException(
+            raise ValidationError(
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 

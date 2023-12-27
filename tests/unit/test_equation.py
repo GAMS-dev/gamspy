@@ -17,7 +17,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 from gamspy.math import sqr
 
 
@@ -54,7 +54,7 @@ class EquationSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Equation(m, "eq1", domain=[set1])
 
     def test_equation_types(self):
@@ -130,7 +130,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_declaration(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Equation, self.m, "set")
+        self.assertRaises(ValidationError, Equation, self.m, "set")
 
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -526,7 +526,7 @@ class EquationSuite(unittest.TestCase):
         j = Set(m, "j")
         a = Equation(self.m, "a", domain=[i])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             a[j] = 5
 
         m = Container(

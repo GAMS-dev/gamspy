@@ -40,6 +40,7 @@ from pydantic import BaseModel
 
 import gamspy._backend.backend as backend
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -78,7 +79,7 @@ class GAMSEngine(backend.Backend):
         output: Optional[io.TextIOWrapper] = None,
     ) -> None:
         if config is None:
-            raise GamspyException(
+            raise ValidationError(
                 "`engine_config` must be provided to solve on GAMS Engine"
             )
 
