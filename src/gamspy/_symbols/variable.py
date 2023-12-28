@@ -526,7 +526,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         -------
         str
         """
-        return self.name
+        representation = self.name
+        if self.domain:
+            representation += self._get_domain_str()
+
+        return representation
 
     def getDeclaration(self) -> str:
         """
