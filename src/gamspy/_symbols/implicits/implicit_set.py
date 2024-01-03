@@ -64,6 +64,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def __le__(self, other) -> Expression:
         return expression.Expression(self, "<=", other)
 
+    @property
+    def dimension(self):
+        return self.parent.dimension
+
     def gamsRepr(self) -> str:
         representation = self.name
 

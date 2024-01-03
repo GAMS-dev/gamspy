@@ -333,12 +333,12 @@ class SolveSuite(unittest.TestCase):
             problem="LP",
             sense="min",
             objective=z,
-            limited_variables=[x[i]],
+            limited_variables=[x[i,j]],
         )
 
         self.assertEqual(
             transport.getStatement(),
-            "Model transport / cost,supply,demand,x(i) /;",
+            "Model transport / cost,supply,demand,x(i,j) /;",
         )
 
     def test_interrupt(self):

@@ -40,8 +40,8 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import ImplicitSet
-    from gamspy import Alias, Set
+    from gamspy._symbols.implicits import ImplicitSet, ImplicitParameter
+    from gamspy import Alias, Set, Parameter, Equation
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
 
@@ -222,6 +222,35 @@ def _get_gamspy_base_directory() -> str:
 
     gamspy_base_directory = gamspy_base.__path__[0]
     return gamspy_base_directory
+
+
+def _get_dimension(
+    domain: List["Set" | "Alias" | "ImplicitSet" | str],
+):
+    dimension = 0
+
+    for elem in domain:
+        if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+            dimension += elem.dimension
+        else:
+            dimension += 1
+
+    return dimension
+
+
+def _verify_dimension(
+    domain: List["Set" | "Alias" | "ImplicitSet" | str],
+    symbol: Union["Set", "Parameter", "Equation", "ImplicitParameter"],
+):
+    dimension = _get_dimension(domain)
+
+    if dimension != symbol.dimension:
+        raise GamspyException(
+            f"The symbol {symbol.name} is referenced with"
+            f" {'more' if dimension > symbol.dimension else 'less'} indices"
+            f" than declared. Declared dimension is {symbol.dimension} but"
+            f" given dimension is {dimension}"
+        )
 
 
 def _reserved_check(word: str) -> str:

@@ -31,7 +31,7 @@ class MagicsSuite(unittest.TestCase):
         b = Parameter(self.m, name="b", domain=[j], records=demands)
 
         # Variable
-        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i], type="Positive")
 
         # ADD
         # Parameter + Variable, Variable + Parameter,

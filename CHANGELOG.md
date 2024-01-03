@@ -2,6 +2,14 @@ GAMSPy CHANGELOG
 ================
 
 -------------------------------------------------------------------------------
+GAMSPy 0.11.5
+-------------------------------------------------------------------------------
+- General
+  - Verify dimensionality of the symbol and the given indices to provide better error messages.
+- Testing
+  - Add tests to check if incompatible dimensionality throws exception.
+
+-------------------------------------------------------------------------------
 GAMSPy 0.11.4
 -------------------------------------------------------------------------------
 - General

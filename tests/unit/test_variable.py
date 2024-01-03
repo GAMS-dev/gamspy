@@ -7,6 +7,7 @@ import pandas as pd
 
 import gamspy._symbols.implicits as implicits
 from gamspy import Container
+from gamspy import Equation
 from gamspy import Set
 from gamspy import Variable
 from gamspy import VariableType
@@ -341,6 +342,17 @@ class VariableSuite(unittest.TestCase):
             a.records.level.to_list(),
             [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
         )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Variable(self.m, "j3", domain=[j1, j2])
+        j4 = Set(self.m, "j4")
+
+        e1 = Equation(self.m, "e1", domain=[j1, j2])
+
+        with self.assertRaises(GamspyException):
+            e1[j1, j2] = j3[j1, j2, j4] * 5 <= 5
 
 
 def variable_suite():
