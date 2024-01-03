@@ -709,11 +709,10 @@ class Model:
         if self._matches:
             matches_str = ",".join(
                 [
-                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                    f"{equation.gamsRepr()}.{variable.name}"
                     for equation, variable in self._matches.items()
                 ]
             )
-
             equations_str = (
                 ",".join([equations_str, matches_str])
                 if equations

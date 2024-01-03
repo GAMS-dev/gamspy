@@ -83,7 +83,7 @@ class VariableSuite(unittest.TestCase):
 
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
-        self.assertEqual(v1.gamsRepr(), "v1")
+        self.assertEqual(v1.gamsRepr(), "v1(i)")
         self.assertEqual(
             v1.getDeclaration(),
             "free Variable v1(i);",
@@ -93,7 +93,7 @@ class VariableSuite(unittest.TestCase):
 
         # Variable two domain
         v2 = Variable(self.m, name="v2", domain=[i, j])
-        self.assertEqual(v2.gamsRepr(), "v2")
+        self.assertEqual(v2.gamsRepr(), "v2(i,j)")
         self.assertEqual(
             v2.getDeclaration(),
             "free Variable v2(i,j);",
