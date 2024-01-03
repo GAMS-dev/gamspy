@@ -286,6 +286,24 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
 
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Set(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(GamspyException):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(GamspyException):
+            j3[j1, j2, j4] = 5
+
+        j5 = Set(self.m, "j5", domain=[j1, j2])
+        j6 = Set(self.m, "j6", domain=[j1, j2])
+
+        with self.assertRaises(GamspyException):
+            j6[j1, j2] = j5[j1, j2, j3]
+
 
 def set_suite():
     suite = unittest.TestSuite()

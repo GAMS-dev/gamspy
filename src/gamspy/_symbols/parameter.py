@@ -133,6 +133,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
         domain = self.domain if indices == ... else utils._to_list(indices)
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -142,6 +144,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     ) -> None:
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+        utils._verify_dimension(domain, self)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore

@@ -183,6 +183,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     def __getitem__(self, indices: tuple | str):
         domain = self.domain if indices == ... else utils._to_list(indices)
+
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
@@ -194,6 +197,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     ):
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+
+        utils._verify_dimension(domain, self)
 
         self._set_definition(assignment, domain)
         self._is_dirty = True

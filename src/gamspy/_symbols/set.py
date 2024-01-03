@@ -407,6 +407,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = self.domain if indices == ... else utils._to_list(indices)
+
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -416,6 +419,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+        utils._verify_dimension(domain, self)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

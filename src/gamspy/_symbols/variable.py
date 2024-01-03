@@ -156,6 +156,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = self.domain if indices == ... else utils._to_list(indices)
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):

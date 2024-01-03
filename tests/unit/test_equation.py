@@ -546,6 +546,40 @@ class EquationSuite(unittest.TestCase):
             " power(y(i),2) ))) =e= 1;",
         )
 
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Equation(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(GamspyException):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(GamspyException):
+            j3[j1, j2, j4] = 5
+
+        i = Set(self.m, name="i")
+        ii = Set(self.m, name="ii", domain=[i])
+        j = Set(self.m, name="j")
+        jj = Set(self.m, name="jj", domain=[j])
+        k = Set(self.m, name="k")
+        kk = Set(self.m, name="kk", domain=[k])
+        TSAM = Variable(self.m, name="TSAM", domain=[i, j])
+        A = Variable(self.m, name="A", domain=[i, j])
+        Y = Variable(self.m, name="Y", domain=[i, j])
+        NONZERO = Set(self.m, name="NONZERO")
+        SAMCOEF = Equation(
+            self.m,
+            name="SAMCOEF",
+            domain=[i, j],
+            description="define SAM coefficients",
+        )
+
+        with self.assertRaises(GamspyException):
+            SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = (
+                TSAM[ii, jj] == A[ii, jj] * Y[jj]
+            )
+
 
 def equation_suite():
     suite = unittest.TestSuite()

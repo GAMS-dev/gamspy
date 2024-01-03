@@ -215,6 +215,21 @@ class ParameterSuite(unittest.TestCase):
             f"execute_unload '{m._gdx_out}' \n",
         )
 
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Parameter(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(GamspyException):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(GamspyException):
+            j3[j1, j2, j4] = 5
+
+        with self.assertRaises(GamspyException):
+            j3[j1, j2] = j3[j1, j2, j4] * 5
+
 
 def parameter_suite():
     suite = unittest.TestSuite()
