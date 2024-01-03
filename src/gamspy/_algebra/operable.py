@@ -5,6 +5,7 @@ import typing
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
+from gamspy.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
@@ -118,65 +119,81 @@ class Operable:
         import gamspy._algebra.operation as operation
 
         sum_dim = self._validate_matrix_mult_dims(other)
-        # TODO discuss let a be a parameter over domain [i, j]
-        # does that ever make sense to write a itself as gamsRepr
-        # as it needs to be domain controlled
         return operation.Sum([sum_dim], self * other)
 
     def _validate_matrix_mult_dims(self, other):
         """Validates the dimensions for the matrix multiplication"""
         left_len = len(self.domain)
         right_len = len(other.domain)
-        assert left_len > 0, "Matrix multiplication requires at least 1 domain"
-        assert (
-            right_len > 0
-        ), "Matrix multiplication requires at least 1 domain"
+        if left_len == 0:
+            raise ValidationError(
+                "Matrix multiplication requires at least 1 domain, left side"
+                " is scalar"
+            )
+
+        if right_len == 0:
+            raise ValidationError(
+                "Matrix multiplication requires at least 1 domain, right side"
+                " is scalar"
+            )
 
         lr = (left_len, right_len)
         if lr == (1, 1):
             # Dot product
-            assert (
-                self.domain[0] == other.domain[0]
-            ), "Dot product requires same domain"
+            if self.domain[0] != other.domain[0]:
+                raise ValidationError("Dot product requires same domain")
+
             return self.domain[0]
         elif lr == (2, 2):
             # Matrix multiplication
-            assert (
-                self.domain[1] == other.domain[0]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[1] != other.domain[0]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[1]
         elif lr == (1, 2):
             # Vector matrix, vector 1-prepended
-            assert (
-                self.domain[0] == other.domain[0]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[0] != other.domain[0]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[0]
         elif lr == (2, 1):
             # Matrix vector, ordinary
-            assert (
-                self.domain[1] == other.domain[0]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[1] != other.domain[0]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[1]
         elif left_len == 1 and right_len > 2:
             # Vector batched-matrix, vector 1-prepended
-            assert (
-                self.domain[0] == other.domain[-2]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[0] != other.domain[-2]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[0]
         elif left_len > 2 and right_len == 1:
             # batched-matrix vector, ordinary
-            assert (
-                self.domain[-1] == other.domain[0]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[-1] != other.domain[0]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[-1]
         elif left_len > 2 and right_len > 2:
             # batched-matrix batched-matrix
-            assert (
-                self.domain[-1] == other.domain[-2]
-            ), "Matrix multiplication dimensions do not match"
+            if self.domain[-1] != other.domain[-2]:
+                raise ValidationError(
+                    "Matrix multiplication dimensions do not match"
+                )
+
             return self.domain[-1]
         else:
-            raise NotImplementedError(
+            raise ValidationError(
                 f"Matrix multiplication for left dim: {left_len},"
                 " right dim: {right_len} not implemented"
             )

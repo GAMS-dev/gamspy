@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, List
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -9,7 +9,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 
@@ -105,7 +105,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def t(self) -> ImplicitParameter:
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise GamspyException(
+            raise ValidationError(
                 "Parameter must contain at least 2 dimensions to transpose"
             )
 

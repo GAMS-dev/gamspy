@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import List
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -7,6 +8,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gams.transfer import Set, Variable
@@ -63,12 +65,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def t(self) -> implicits.ImplicitVariable:
         from gamspy.math.matrix import permute
 
-        # Ask if exceptions need to be re-raised as GamspyException
-        # If  implicit variable needs to be subscriptable since we can
-        # create it by transpose
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise GamspyException(
+            raise ValidationError(
                 "Variable must contain at least 2 dimensions to transpose"
             )
 

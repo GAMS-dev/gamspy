@@ -89,17 +89,13 @@ class Expression(operable.Operable):
         else:
             right_domain = self.right.domain
 
-        domain_gather = "matrix" if self.data == "@" else "union"
         result_domain = []
-        if domain_gather == "union":
-            for d in [*left_domain, *right_domain]:
-                if isinstance(d, str):
-                    continue  # string domains are fixed and they do not count
+        for d in [*left_domain, *right_domain]:
+            if isinstance(d, str):
+                continue  # string domains are fixed and they do not count
 
-                if d not in result_domain:
-                    result_domain.append(d)
-        else:
-            raise NotImplementedError
+            if d not in result_domain:
+                result_domain.append(d)
 
         return result_domain
 

@@ -24,18 +24,26 @@
 #
 from __future__ import annotations
 
-from typing import Tuple, List
-from typing import TYPE_CHECKING
+from typing import List
 from typing import Union
 
-import gamspy._algebra.expression as expression
-import gamspy.utils as utils
-
 import gamspy._symbols.implicits as implicits
-from gamspy.exceptions import GamspyException
-
+import gamspy.utils as utils
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
+from gamspy.exceptions import ValidationError
+
+
+# TODO add documentation for these!
+def trace(
+    x: Union[
+        Parameter,
+        implicits.ImplicitParameter,
+        Variable,
+        implicits.ImplicitVariable,
+    ]
+):
+    raise NotImplementedError()
 
 
 def permute(
@@ -47,18 +55,20 @@ def permute(
     ],
     dims: List[int],
 ):
+    # TODO Accept permuting expressions!
+    # Might be needed in some context
     dims_len = len(dims)
     if min(dims) != 0 or max(dims) != dims_len - 1:
-        raise GamspyException(
+        raise ValidationError(
             "Permute requires the order of indices from 0 to n-1"
         )
 
     if len(set(dims)) != dims_len:
-        raise GamspyException("Permute dimensions must be unique")
+        raise ValidationError("Permute dimensions must be unique")
 
     for i in dims:
         if not isinstance(i, int):
-            raise GamspyException("Permute dimensions must be integers")
+            raise ValidationError("Permute dimensions must be integers")
 
     permuted_domain = utils._permute_domain(x.domain, dims)
     if isinstance(x, Parameter):

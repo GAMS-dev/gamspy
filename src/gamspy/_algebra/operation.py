@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from typing import List
 from typing import TYPE_CHECKING
+from typing import Union
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
@@ -27,13 +29,15 @@ class Operation(operable.Operable):
         op_name: str,
     ):
         self.op_domain = utils._to_list(domain)
-        assert len(self.op_domain) > 0, "Operation requires at least one index"
+        if len(self.op_domain) == 0:
+            raise ValidationError("Operation requires at least one index")
+
         self.expression = expression
         self._op_name = op_name
 
         # allow conditions
         self.where = condition.Condition(self)
-        self.domain = None
+        self.domain: List[Union[Set, Alias]] = []
 
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):
@@ -267,7 +271,7 @@ class Ord(operable.Operable):
 
     def __init__(self, set: Set | Alias):
         self._set = set
-        self.domain = []
+        self.domain: List[Union[Set, Alias]] = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -314,7 +318,7 @@ class Card(operable.Operable):
         symbol: Set | Alias | Parameter,
     ) -> None:
         self._symbol = symbol
-        self.domain = []
+        self.domain: List[Union[Set, Alias]] = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
