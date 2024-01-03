@@ -351,7 +351,7 @@ class VariableSuite(unittest.TestCase):
 
         e1 = Equation(self.m, "e1", domain=[j1, j2])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             e1[j1, j2] = j3[j1, j2, j4] * 5 <= 5
 
 

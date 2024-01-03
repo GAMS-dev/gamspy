@@ -28,7 +28,9 @@ import os
 import platform
 from collections.abc import Sequence
 from typing import Iterable
+from typing import List
 from typing import TYPE_CHECKING
+from typing import Union
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -221,7 +223,7 @@ def _get_gamspy_base_directory() -> str:
 
 
 def _get_dimension(
-    domain: List["Set" | "Alias" | "ImplicitSet" | str],
+    domain: List[Set | Alias | ImplicitSet | str],
 ):
     dimension = 0
 
@@ -235,13 +237,13 @@ def _get_dimension(
 
 
 def _verify_dimension(
-    domain: List["Set" | "Alias" | "ImplicitSet" | str],
-    symbol: Union["Set", "Parameter", "Equation", "ImplicitParameter"],
+    domain: List[Set | Alias | ImplicitSet | str],
+    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
 ):
     dimension = _get_dimension(domain)
 
     if dimension != symbol.dimension:
-        raise GamspyException(
+        raise ValidationError(
             f"The symbol {symbol.name} is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"

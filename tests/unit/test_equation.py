@@ -550,12 +550,12 @@ class EquationSuite(unittest.TestCase):
         j1 = Set(self.m, "j1")
         j2 = Set(self.m, "j2")
         j3 = Equation(self.m, "j3", domain=[j1, j2])
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3["bla"] = 5
 
         j4 = Set(self.m, "j4")
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3[j1, j2, j4] = 5
 
         i = Set(self.m, name="i")
@@ -575,7 +575,7 @@ class EquationSuite(unittest.TestCase):
             description="define SAM coefficients",
         )
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = (
                 TSAM[ii, jj] == A[ii, jj] * Y[jj]
             )

@@ -219,15 +219,15 @@ class ParameterSuite(unittest.TestCase):
         j1 = Set(self.m, "j1")
         j2 = Set(self.m, "j2")
         j3 = Parameter(self.m, "j3", domain=[j1, j2])
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3["bla"] = 5
 
         j4 = Set(self.m, "j4")
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3[j1, j2, j4] = 5
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3[j1, j2] = j3[j1, j2, j4] * 5
 
 

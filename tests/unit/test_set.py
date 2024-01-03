@@ -290,18 +290,18 @@ class SetSuite(unittest.TestCase):
         j1 = Set(self.m, "j1")
         j2 = Set(self.m, "j2")
         j3 = Set(self.m, "j3", domain=[j1, j2])
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3["bla"] = 5
 
         j4 = Set(self.m, "j4")
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j3[j1, j2, j4] = 5
 
         j5 = Set(self.m, "j5", domain=[j1, j2])
         j6 = Set(self.m, "j6", domain=[j1, j2])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j6[j1, j2] = j5[j1, j2, j3]
 
 
