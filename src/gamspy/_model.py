@@ -169,10 +169,10 @@ class Model:
     equations : str | Iterable
         List of Equation objects or str. ``all`` as a string represents
         all the equations specified before the creation of this model
-    problem : str
-        Problem type (e.g. LP, NLP etc.)
-    sense : "MIN", "MAX", or "FEASIBILITY", optional
-        Minimize or maximize
+    problem : Problem
+        'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP', or 'MPSGE'
+    sense : Sense, optional
+        "MIN", "MAX", or "FEASIBILITY"
     objective : Variable | Expression, optional
         Objective variable to minimize or maximize or objective itself
     limited_variables : Iterable, optional
@@ -195,9 +195,9 @@ class Model:
         self,
         container: Container,
         name: str,
-        problem: str,
+        problem: Problem,
         equations: list[Equation] = [],
-        sense: Literal["MIN", "MAX", "FEASIBILITY"] | None = None,
+        sense: Sense | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,
         limited_variables: Iterable[Variable] | None = None,
@@ -210,7 +210,7 @@ class Model:
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
-        self.equations = equations
+        self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -253,6 +253,15 @@ class Model:
             f"{self._generate_prefix}{self.name}_{attr_name}"
             for attr_name in attribute_map.keys()
         ]
+
+    def __repr__(self) -> str:
+        return f"<Model `{self.name}` ({hex(id(self))})>"
+
+    def __str__(self) -> str:
+        return (
+            f"Model {self.name}:\n  Problem Type: {self.problem}\n  Sense:"
+            f" {self.sense}\n  Equations: {self.equations}"
+        )
 
     def _set_objective_variable(
         self,
@@ -406,12 +415,14 @@ class Model:
 
         if (
             problem not in [Problem.CNS, Problem.MCP]
-            and not isinstance(equations, list)
+            and not isinstance(equations, (list, tuple))
             or any(
                 not isinstance(equation, gp.Equation) for equation in equations
             )
         ):
-            raise TypeError("equations must be list of Equation objects")
+            raise TypeError(
+                "equations must be list or tuple of Equation objects"
+            )
 
         return problem, sense
 

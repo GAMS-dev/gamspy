@@ -276,7 +276,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self: Set | Alias, other: Set | Alias) -> Expression:
+    def sameAs(self: Set | Alias, other: Set | Alias | str) -> Expression:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -288,8 +288,13 @@ class SetMixin:
         -------
         Expression
         """
+        other_str = (
+            f"'{str(other)}'"
+            if isinstance(other, (str, int, float))
+            else other.gamsRepr()
+        )
         return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+            "sameAs(", ",".join([self.gamsRepr(), other_str]), ")"
         )
 
 
