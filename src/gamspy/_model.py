@@ -209,7 +209,7 @@ class Model:
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
-        self.equations = equations
+        self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -408,12 +408,14 @@ class Model:
 
         if (
             problem not in [Problem.CNS, Problem.MCP]
-            and not isinstance(equations, list)
+            and not isinstance(equations, (list, tuple))
             or any(
                 not isinstance(equation, gp.Equation) for equation in equations
             )
         ):
-            raise TypeError("equations must be list of Equation objects")
+            raise TypeError(
+                "equations must be list or tuple of Equation objects"
+            )
 
         return problem, sense
 
