@@ -95,7 +95,7 @@ def getInstalledSolvers() -> list[str]:
 
     solver_names.remove("SCENSOLVER")
 
-    return solver_names
+    return sorted(solver_names)
 
 
 def getAvailableSolvers() -> list[str]:
@@ -123,7 +123,7 @@ def getAvailableSolvers() -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return gamspy_base.available_solvers
+    return sorted(gamspy_base.available_solvers)
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
