@@ -6,6 +6,7 @@ GAMSPy 0.11.5
 -------------------------------------------------------------------------------
 - General
   - Verify dimensionality of the symbol and the given indices to provide better error messages.
+  - List available and installed solvers in alphabetically sorted order.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
 
