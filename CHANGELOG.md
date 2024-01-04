@@ -6,6 +6,7 @@ GAMSPy 0.11.5
 -------------------------------------------------------------------------------
 - General
   - Verify dimensionality of the symbol and the given indices to provide better error messages.
+  - Add __str__ and __repr__ to Model.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
 
