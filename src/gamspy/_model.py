@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import io
 import os
+import uuid
 from enum import Enum
 from typing import Iterable
 from typing import Literal
@@ -294,15 +295,16 @@ class Model:
                 )
 
             # Generate an objective variable
+            auto_id = str(uuid.uuid4()).replace("-", "_")
             variable = gp.Variable(
                 self.container,
-                f"{self._generate_prefix}{self.name}_objective_variable",
+                f"{self._generate_prefix}_{auto_id}_variable",
             )
 
             # Generate an equation
             equation = gp.Equation(
                 self.container,
-                f"{self._generate_prefix}{self.name}_equation",
+                f"{self._generate_prefix}_{auto_id}_equation",
             )
 
             equation[...] = variable == 0
@@ -316,15 +318,16 @@ class Model:
             assignment, (expression.Expression, operation.Operation)
         ):
             # Generate an objective variable
+            auto_id = str(uuid.uuid4()).replace("-", "_")
             variable = gp.Variable(
                 self.container,
-                f"{self._generate_prefix}{self.name}_objective_variable",
+                f"{self._generate_prefix}_{auto_id}_variable",
             )
 
             # Generate an equation
             equation = gp.Equation(
                 self.container,
-                f"{self._generate_prefix}{self.name}_equation",
+                f"{self._generate_prefix}_{auto_id}_equation",
             )
 
             # Sum((i,j),c[i,j]*x[i,j])->Sum((i,j),c[i,j]*x[i,j]) =e= var
