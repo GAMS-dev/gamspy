@@ -8,6 +8,7 @@ GAMSPy 0.11.5
   - Verify dimensionality of the symbol and the given indices to provide better error messages.
   - Allow Model object to also accept tuple of equations.
   - List available and installed solvers in alphabetically sorted order.
+  - Add __str__ and __repr__ to Model.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
 
