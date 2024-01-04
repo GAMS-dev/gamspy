@@ -9,6 +9,7 @@ GAMSPy 0.11.5
   - Allow Model object to also accept tuple of equations.
   - List available and installed solvers in alphabetically sorted order.
   - Add __str__ and __repr__ to Model.
+  - Allow literals in sameAs operation.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
 

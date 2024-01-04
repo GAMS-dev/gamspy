@@ -286,6 +286,15 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
 
+        m = Container(delayed_execution=True)
+        i = Set(m, "i", records=["1", "2", "3"])
+        p = Parameter(m, "p", [i])
+        p[i] = i.sameAs("2")
+        self.assertEqual(
+            m._unsaved_statements[-1].getStatement(),
+            "p(i) = (sameAs( i,'2' ));",
+        )
+
     def test_assignment_dimensionality(self):
         j1 = Set(self.m, "j1")
         j2 = Set(self.m, "j2")
