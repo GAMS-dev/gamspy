@@ -306,6 +306,8 @@ class Model:
             )
 
             equation[...] = variable == 0
+            equation._is_dirty = False
+            variable._is_dirty = False
             self.equations.append(equation)
 
             return variable
@@ -330,6 +332,8 @@ class Model:
 
             # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
             equation[...] = assignment
+            equation._is_dirty = False
+            variable._is_dirty = False
             self.equations.append(equation)
 
             return variable

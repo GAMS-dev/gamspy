@@ -813,6 +813,14 @@ class Container(gt.Container):
         """
         return self._generate_gams_string(self._gdx_in, self._gdx_out, [], [])
 
+    def getEquations(self):
+        equations = [
+            equation
+            for equation in self.listEquations()
+            if not equation.startswith(gp.Model._generate_prefix)
+        ]
+        return self.getSymbols(equations)
+
     def loadRecordsFromGdx(
         self,
         load_from: str,
