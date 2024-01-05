@@ -14,6 +14,8 @@ GAMSPy 0.11.5
   - Allow literals in sameAs operation.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
+- Documentation
+  - Add documentation for `matches` argument of Model.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.4
