@@ -15,6 +15,8 @@ GAMSPy 0.11.5
   - Make Number operable.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
+- Documentation
+  - Add documentation for `matches` argument of Model.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.4
