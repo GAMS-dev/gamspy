@@ -38,7 +38,7 @@ import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 if TYPE_CHECKING:
@@ -276,7 +276,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self: Set | Alias, other: Set | Alias) -> Expression:
+    def sameAs(self: Set | Alias, other: Set | Alias | str) -> Expression:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -288,8 +288,13 @@ class SetMixin:
         -------
         Expression
         """
+        other_str = (
+            f"'{str(other)}'"
+            if isinstance(other, (str, int, float))
+            else other.gamsRepr()
+        )
         return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+            "sameAs(", ",".join([self.gamsRepr(), other_str]), ")"
         )
 
 
@@ -416,6 +421,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = self.domain if indices == ... else utils._to_list(indices)
+
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -425,6 +433,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+        utils._verify_dimension(domain, self)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore
@@ -464,7 +473,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             and self._is_miro_input
             and self.container.miro_protect
         ):
-            raise GamspyException(
+            raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"
                 " attribute of the container can be set to False to allow"
                 " assigning to MIRO input symbols"
@@ -501,16 +510,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
         return self.name
 
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
-
     def getStatement(self) -> str:
         """
         Statement of the Set definition
@@ -537,6 +536,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 def singleton_check(is_singleton: bool, records: Any | None):
     if is_singleton:
         if records is not None and len(records) > 1:
-            raise GamspyException(
+            raise ValidationError(
                 "Singleton set records size cannot be more than one."
             )

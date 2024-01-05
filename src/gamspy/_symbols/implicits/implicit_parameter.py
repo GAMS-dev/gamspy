@@ -70,6 +70,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
     def __getitem__(self, indices: list | str) -> ImplicitParameter:
         domain = self.domain if indices == ... else utils._to_list(indices)
+
+        utils._verify_dimension(domain, self)
+
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain
         )
@@ -94,8 +97,12 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         if not self.container.delayed_execution:
             self.container._run()
 
+    @property
+    def dimension(self):
+        return self.parent.dimension
+
     def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)

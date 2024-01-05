@@ -26,10 +26,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
-from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -95,8 +92,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -127,8 +124,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -163,10 +160,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # miro support
         self._is_miro_output = is_miro_output
 
-    def __getitem__(
-        self, indices: Union[tuple, str]
-    ) -> implicits.ImplicitVariable:
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = self.domain if indices == ... else utils._to_list(indices)
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
@@ -331,16 +328,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self.name
 
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
-
     def getStatement(self) -> str:
         """
         Statement of the Variable definition
@@ -365,7 +352,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return output
 
 
-def cast_type(type: Union[str, VariableType]) -> str:
+def cast_type(type: str | VariableType) -> str:
     if isinstance(type, str) and type.lower() not in VariableType.values():
         raise ValueError(
             f"Allowed variable types: {VariableType.values()} but"

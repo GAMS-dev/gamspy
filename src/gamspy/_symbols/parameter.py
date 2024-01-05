@@ -144,6 +144,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
         domain = self.domain if indices == ... else utils._to_list(indices)
+        utils._verify_dimension(domain, self)
+
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -160,6 +162,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         domain = self.domain if indices == ... else utils._to_list(indices)
         self._container_check(domain)
+        utils._verify_dimension(domain, self)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore
@@ -177,7 +180,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container._run()
 
     def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __neg__(self):
         return implicits.ImplicitParameter(
@@ -243,16 +246,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         str
         """
         return self.name
-
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
 
     def getStatement(self) -> str:
         """

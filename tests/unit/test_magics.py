@@ -31,7 +31,7 @@ class MagicsSuite(unittest.TestCase):
         b = Parameter(self.m, name="b", domain=[j], records=demands)
 
         # Variable
-        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i], type="Positive")
 
         # ADD
         # Parameter + Variable, Variable + Parameter,
@@ -167,11 +167,11 @@ class MagicsSuite(unittest.TestCase):
         # E
         # Parameter == Variable, Variable == Parameter
         op1 = b[i] == x[i]
-        self.assertEqual(op1.gamsRepr(), "(b(i) = x(i))")
+        self.assertEqual(op1.gamsRepr(), "(b(i) eq x(i))")
         op2 = x[i] == b[i]
         self.assertEqual(op2.gamsRepr(), "x(i) =e= b(i)")
         op3 = b[i] == b[i]
-        self.assertEqual(op3.gamsRepr(), "(b(i) = b(i))")
+        self.assertEqual(op3.gamsRepr(), "(b(i) eq b(i))")
 
         # not
         # not Parameter/Variable

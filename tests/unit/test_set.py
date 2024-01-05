@@ -10,7 +10,7 @@ from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import UniverseAlias
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class SetSuite(unittest.TestCase):
@@ -46,12 +46,12 @@ class SetSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Set(m, "set2", domain=[set1])
 
     def test_set_string(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Set, self.m, "set")
+        self.assertRaises(ValidationError, Set, self.m, "set")
 
         # Without records
         b = Set(self.m, "b")
@@ -92,7 +92,7 @@ class SetSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException, Set, self.m, "s2", None, True, ["i1", "i2"]
+            ValidationError, Set, self.m, "s2", None, True, ["i1", "i2"]
         )
 
     def test_records_assignment(self):
@@ -105,7 +105,7 @@ class SetSuite(unittest.TestCase):
         with self.assertRaises(TypeError):
             s.records = 5
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j[k] = 5
 
     def test_set_operators(self):
@@ -285,6 +285,33 @@ class SetSuite(unittest.TestCase):
         j = Alias(self.m, "j", i)
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
+
+        m = Container(delayed_execution=True)
+        i = Set(m, "i", records=["1", "2", "3"])
+        p = Parameter(m, "p", [i])
+        p[i] = i.sameAs("2")
+        self.assertEqual(
+            m._unsaved_statements[-1].getStatement(),
+            "p(i) = (sameAs( i,'2' ));",
+        )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Set(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(ValidationError):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2, j4] = 5
+
+        j5 = Set(self.m, "j5", domain=[j1, j2])
+        j6 = Set(self.m, "j6", domain=[j1, j2])
+
+        with self.assertRaises(ValidationError):
+            j6[j1, j2] = j5[j1, j2, j3]
 
 
 def set_suite():

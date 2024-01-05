@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import Tuple
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -46,16 +44,10 @@ if TYPE_CHECKING:
 class Operation(operable.Operable):
     def __init__(
         self,
-        domain: Union[
-            Set,
-            Alias,
-            Tuple[Union[Set, Alias]],
-            Domain,
-            Expression,
-        ],
-        expression: Union[
-            Expression, ImplicitVariable, ImplicitParameter, int, bool
-        ],
+        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        expression: (
+            Expression | ImplicitVariable | ImplicitParameter | int | bool
+        ),
         op_name: str,
     ):
         self.domain = utils._to_list(domain)
@@ -105,7 +97,7 @@ class Operation(operable.Operable):
     def _replace_operations(self, output: str) -> str:
         output = output.replace("=l=", "<=")
         output = output.replace("=g=", ">=")
-        output = output.replace("=e=", "==")
+        output = output.replace("=e=", "eq")
 
         return output
 
@@ -159,14 +151,8 @@ class Sum(Operation):
 
     def __init__(
         self,
-        domain: Union[
-            Set,
-            Alias,
-            Tuple[Union[Set, Alias]],
-            Domain,
-            Expression,
-        ],
-        expression: Union[Expression, int, bool],
+        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "sum")
 
@@ -190,14 +176,8 @@ class Product(Operation):
 
     def __init__(
         self,
-        domain: Union[
-            Set,
-            Alias,
-            Tuple[Union[Set, Alias]],
-            Domain,
-            Expression,
-        ],
-        expression: Union[Expression, int, bool],
+        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
 
@@ -221,14 +201,8 @@ class Smin(Operation):
 
     def __init__(
         self,
-        domain: Union[
-            Set,
-            Alias,
-            Tuple[Union[Set, Alias]],
-            Domain,
-            Expression,
-        ],
-        expression: Union[Expression, int, bool],
+        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smin")
 
@@ -252,14 +226,8 @@ class Smax(Operation):
 
     def __init__(
         self,
-        domain: Union[
-            Set,
-            Alias,
-            Tuple[Union[Set, Alias]],
-            Domain,
-            Expression,
-        ],
-        expression: Union[Expression, int, bool],
+        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
 
@@ -287,11 +255,11 @@ class Ord(operable.Operable):
     >>> val[t] = gp.Ord(t)
     """
 
-    def __init__(self, set: Union[Set, Alias]):
+    def __init__(self, set: Set | Alias):
         self._set = set
 
     def __eq__(self, other) -> Expression:  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
         return expression.Expression(self, ">=", other)
@@ -332,16 +300,12 @@ class Card(operable.Operable):
 
     def __init__(
         self,
-        symbol: Union[
-            Set,
-            Alias,
-            Parameter,
-        ],
+        symbol: (Set | Alias | Parameter),
     ) -> None:
         self._symbol = symbol
 
     def __eq__(self, other) -> Expression:  # type: ignore
-        return expression.Expression(self, "==", other)
+        return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
         return expression.Expression(self, ">=", other)

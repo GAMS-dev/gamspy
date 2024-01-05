@@ -26,12 +26,11 @@ from __future__ import annotations
 
 import io
 import os
+import uuid
 from enum import Enum
 from typing import Iterable
 from typing import Literal
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 from gams import GamsOptions
@@ -43,7 +42,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Parameter, Variable, Equation, Container
@@ -170,10 +169,10 @@ class Model:
     equations : str | Iterable
         List of Equation objects or str. ``all`` as a string represents
         all the equations specified before the creation of this model
-    problem : str
-        Problem type (e.g. LP, NLP etc.)
-    sense : "MIN", "MAX", or "FEASIBILITY", optional
-        Minimize or maximize
+    problem : Problem
+        'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP', or 'MPSGE'
+    sense : Sense, optional
+        "MIN", "MAX", or "FEASIBILITY"
     objective : Variable | Expression, optional
         Objective variable to minimize or maximize or objective itself
     limited_variables : Iterable, optional
@@ -196,9 +195,9 @@ class Model:
         self,
         container: Container,
         name: str,
-        problem: str,
+        problem: Problem,
         equations: list[Equation] = [],
-        sense: Literal["MIN", "MAX", "FEASIBILITY"] | None = None,
+        sense: Sense | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,
         limited_variables: Iterable[Variable] | None = None,
@@ -211,7 +210,7 @@ class Model:
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
-        self.equations = equations
+        self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -255,6 +254,15 @@ class Model:
             for attr_name in attribute_map.keys()
         ]
 
+    def __repr__(self) -> str:
+        return f"<Model `{self.name}` ({hex(id(self))})>"
+
+    def __str__(self) -> str:
+        return (
+            f"Model {self.name}:\n  Problem Type: {self.problem}\n  Sense:"
+            f" {self.sense}\n  Equations: {self.equations}"
+        )
+
     def _set_objective_variable(
         self,
         assignment: None | (Variable | Operation | Expression) = None,
@@ -285,29 +293,32 @@ class Model:
 
         if self.sense == gp.Sense.FEASIBILITY:
             if assignment is not None:
-                raise GamspyException(
+                raise ValidationError(
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
             if self.problem in [gp.Problem.CNS, gp.Problem.MCP]:
-                raise GamspyException(
+                raise ValidationError(
                     "Problem type cannot be CNS or MCP when the sense is"
                     " FEASIBILITY"
                 )
 
             # Generate an objective variable
+            auto_id = str(uuid.uuid4()).replace("-", "_")
             variable = gp.Variable(
                 self.container,
-                f"{self._generate_prefix}{self.name}_objective_variable",
+                f"{self._generate_prefix}_{auto_id}_variable",
             )
 
             # Generate an equation
             equation = gp.Equation(
                 self.container,
-                f"{self._generate_prefix}{self.name}_equation",
+                f"{self._generate_prefix}_{auto_id}_equation",
             )
 
             equation[...] = variable == 0
+            equation._is_dirty = False
+            variable._is_dirty = False
             self.equations.append(equation)
 
             return variable
@@ -316,15 +327,16 @@ class Model:
             assignment, (expression.Expression, operation.Operation)
         ):
             # Generate an objective variable
+            auto_id = str(uuid.uuid4()).replace("-", "_")
             variable = gp.Variable(
                 self.container,
-                f"{self._generate_prefix}{self.name}_objective_variable",
+                f"{self._generate_prefix}_{auto_id}_variable",
             )
 
             # Generate an equation
             equation = gp.Equation(
                 self.container,
-                f"{self._generate_prefix}{self.name}_equation",
+                f"{self._generate_prefix}_{auto_id}_equation",
             )
 
             # Sum((i,j),c[i,j]*x[i,j])->Sum((i,j),c[i,j]*x[i,j]) =e= var
@@ -332,6 +344,8 @@ class Model:
 
             # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
             equation[...] = assignment
+            equation._is_dirty = False
+            variable._is_dirty = False
             self.equations.append(equation)
 
             return variable
@@ -362,7 +376,7 @@ class Model:
 
         if solver_options:
             if solver is None:
-                raise GamspyException(
+                raise ValidationError(
                     "You need to provide a 'solver' to apply solver options."
                 )
 
@@ -401,12 +415,14 @@ class Model:
 
         if (
             problem not in [Problem.CNS, Problem.MCP]
-            and not isinstance(equations, list)
+            and not isinstance(equations, (list, tuple))
             or any(
                 not isinstance(equation, gp.Equation) for equation in equations
             )
         ):
-            raise TypeError("equations must be list of Equation objects")
+            raise TypeError(
+                "equations must be list or tuple of Equation objects"
+            )
 
         return problem, sense
 
@@ -511,7 +527,10 @@ class Model:
         GamspyException
             If the job is not initialized
         """
-        self.container._interrupt()
+        if self.container._job:
+            self.container._job.interrupt()
+        else:
+            raise ValidationError("There is no initialized job to interrupt.")
 
     def freeze(
         self,
@@ -550,9 +569,9 @@ class Model:
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         engine_config: EngineConfig | None = None,
-        neos_client: Optional[NeosClient] = None,
+        neos_client: NeosClient | None = None,
         create_log_file: bool = False,
-    ) -> Union[pd.DataFrame, None]:
+    ) -> pd.DataFrame | None:
         """
         Generates the gams string, writes it to a file and runs it
 

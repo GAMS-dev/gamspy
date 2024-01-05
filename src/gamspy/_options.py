@@ -35,7 +35,7 @@ from gams import GamsOptions
 from gams import GamsWorkspace
 from pydantic import BaseModel
 
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("Options")
 logger.setLevel(logging.INFO)
@@ -310,7 +310,7 @@ def _map_options(
 
     if options is not None:
         if not isinstance(options, Options):
-            raise GamspyException(
+            raise ValidationError(
                 f"options must be of type Option but found {type(options)}"
             )
 

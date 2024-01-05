@@ -30,7 +30,7 @@ from typing import Union
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -397,7 +397,7 @@ def lse_max(*xs) -> Expression:
     Expression
     """
     if len(xs) < 1:
-        raise GamspyException("lse_max requires at least 1 x")
+        raise ValidationError("lse_max requires at least 1 x")
 
     x_str = ",".join([_stringify(x) for x in xs])
     return expression.Expression(None, f"lseMax({x_str})", None)
@@ -414,7 +414,7 @@ def lse_max_sc(t, *xs) -> Expression:
     t_str = _stringify(t)
 
     if len(xs) < 1:
-        raise GamspyException("lse_max requires at least 1 x")
+        raise ValidationError("lse_max requires at least 1 x")
 
     x_str = ",".join([_stringify(x) for x in xs])
 
@@ -430,7 +430,7 @@ def lse_min(*xs) -> Expression:
     Expression
     """
     if len(xs) < 1:
-        raise GamspyException("lse_max requires at least 1 x")
+        raise ValidationError("lse_max requires at least 1 x")
 
     x_str = ",".join([_stringify(x) for x in xs])
     return expression.Expression(None, f"lseMin({x_str})", None)
@@ -447,18 +447,14 @@ def lse_min_sc(t, *xs) -> Expression:
     t_str = _stringify(t)
 
     if len(xs) < 1:
-        raise GamspyException("lse_max requires at least 1 x")
+        raise ValidationError("lse_max requires at least 1 x")
 
     x_str = ",".join([_stringify(x) for x in xs])
 
     return expression.Expression(None, f"lseMinSc({t_str},{x_str})", None)
 
 
-def ncp_cm(
-    x: Symbol,
-    y: Symbol,
-    z: Union[float, int],
-) -> Expression:
+def ncp_cm(x: Symbol, y: Symbol, z: Union[float, int]) -> Expression:
     """
     Chen-Mangasarian smoothing
 
@@ -477,11 +473,7 @@ def ncp_cm(
     return expression.Expression(None, f"ncpCM({x_str},{y_str},{z})", None)
 
 
-def ncp_f(
-    x: Symbol,
-    y: Symbol,
-    z: Union[int, float] = 0,
-) -> Expression:
+def ncp_f(x: Symbol, y: Symbol, z: Union[int, float] = 0) -> Expression:
     """
     Fisher-Burmeister smoothing
 
@@ -523,11 +515,7 @@ def ncpVUpow(
     return expression.Expression(None, f"ncpVUpow({r_str},{s_str},{mu}", None)
 
 
-def ncpVUsin(
-    r: Symbol,
-    s: Symbol,
-    mu: Union[int, float] = 0,
-) -> Expression:
+def ncpVUsin(r: Symbol, s: Symbol, mu: Union[int, float] = 0) -> Expression:
     """
     NCP Veelken-Ulbrich: smoothed min(r,s)
 

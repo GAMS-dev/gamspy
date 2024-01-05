@@ -29,7 +29,6 @@ import platform
 from collections.abc import Sequence
 from typing import Iterable
 from typing import List
-from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -38,10 +37,11 @@ from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import ImplicitSet
-    from gamspy import Alias, Set
+    from gamspy._symbols.implicits import ImplicitSet, ImplicitParameter
+    from gamspy import Alias, Set, Parameter, Equation
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
 
@@ -54,7 +54,7 @@ SPECIAL_VALUE_MAP = {
 }
 
 
-def getInstalledSolvers() -> List[str]:
+def getInstalledSolvers() -> list[str]:
     """
     Returns the list of installed solvers
 
@@ -75,10 +75,9 @@ def getInstalledSolvers() -> List[str]:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
 
     solver_names = []
     capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
@@ -96,10 +95,10 @@ def getInstalledSolvers() -> List[str]:
 
     solver_names.remove("SCENSOLVER")
 
-    return solver_names
+    return sorted(solver_names)
 
 
-def getAvailableSolvers() -> List[str]:
+def getAvailableSolvers() -> list[str]:
     """
     Returns all available solvers that can be installed.
 
@@ -120,11 +119,11 @@ def getAvailableSolvers() -> List[str]:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
-    return gamspy_base.available_solvers
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return sorted(gamspy_base.available_solvers)
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
@@ -215,13 +214,41 @@ def _get_gamspy_base_directory() -> str:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
 
     gamspy_base_directory = gamspy_base.__path__[0]
     return gamspy_base_directory
+
+
+def _get_dimension(
+    domain: List[Set | Alias | ImplicitSet | str],
+):
+    dimension = 0
+
+    for elem in domain:
+        if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+            dimension += elem.dimension
+        else:
+            dimension += 1
+
+    return dimension
+
+
+def _verify_dimension(
+    domain: List[Set | Alias | ImplicitSet | str],
+    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+):
+    dimension = _get_dimension(domain)
+
+    if dimension != symbol.dimension:
+        raise ValidationError(
+            f"The symbol {symbol.name} is referenced with"
+            f" {'more' if dimension > symbol.dimension else 'less'} indices"
+            f" than declared. Declared dimension is {symbol.dimension} but"
+            f" given dimension is {dimension}"
+        )
 
 
 def _reserved_check(word: str) -> str:
@@ -324,7 +351,7 @@ def _reserved_check(word: str) -> str:
     ]
 
     if word.lower() in reserved_words:
-        raise GamspyException(
+        raise ValidationError(
             "Name cannot be one of the reserved words. List of reserved"
             f" words: {reserved_words}"
         )
@@ -387,16 +414,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
 
 
 def _to_list(
-    obj: Union[
-        Set,
-        Alias,
-        str,
-        Tuple,
-        Domain,
-        Expression,
-        list,
-        ImplicitSet,
-    ]
+    obj: Set | Alias | str | tuple | Domain | Expression | list | ImplicitSet,
 ) -> list:
     """
     Converts the given object to a list
@@ -425,9 +443,7 @@ def _map_special_values(value: float):
     return value
 
 
-def _get_domain_str(
-    domain: Iterable[Union[Set, Alias, ImplicitSet, str]]
-) -> str:
+def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     """
     Creates the string format of a given domain
 

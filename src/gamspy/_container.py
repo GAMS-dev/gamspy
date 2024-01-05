@@ -29,12 +29,8 @@ import shutil
 import sys
 import uuid
 from typing import Any
-from typing import List
 from typing import Literal
-from typing import Optional
-from typing import Tuple
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -50,6 +46,7 @@ from gamspy._backend.backend import backend_factory
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import _map_options
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import (
@@ -104,12 +101,12 @@ class Container(gt.Container):
 
     def __init__(
         self,
-        load_from: Optional[str] = None,
-        system_directory: Optional[str] = None,
-        working_directory: Optional[str] = None,
+        load_from: str | None = None,
+        system_directory: str | None = None,
+        working_directory: str | None = None,
         delayed_execution: bool = False,
-        options: Optional[Options] = None,
         miro_protect: bool = True,
+        options: Options | None = None,
     ):
         system_directory = (
             system_directory
@@ -123,7 +120,7 @@ class Container(gt.Container):
         self.miro_protect = miro_protect
 
         # import symbols from arbitrary gams code
-        self._import_symbols: List[str] = []
+        self._import_symbols: list[str] = []
 
         super().__init__(load_from, system_directory)
 
@@ -140,12 +137,12 @@ class Container(gt.Container):
             self._gdx_out,
         ) = self._setup_paths()
 
-        self._job: Optional[GamsJob] = None
+        self._job: GamsJob | None = None
         self._options = options
 
         # needed for miro
-        self._miro_input_symbols: List[str] = []
-        self._miro_output_symbols: List[str] = []
+        self._miro_input_symbols: list[str] = []
+        self._miro_output_symbols: list[str] = []
         self._first_destruct = True
 
     def __del__(self):
@@ -186,7 +183,7 @@ class Container(gt.Container):
         )
 
     def _addGamsCode(
-        self, gams_code: str, import_symbols: List[str] = []
+        self, gams_code: str, import_symbols: list[str] = []
     ) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
@@ -200,7 +197,7 @@ class Container(gt.Container):
             not isinstance(import_symbols, list)
             or any(not isinstance(symbol, str) for symbol in import_symbols)
         ):
-            raise GamspyException("import_symbols must be a list of strings")
+            raise ValidationError("import_symbols must be a list of strings")
 
         self._import_symbols = import_symbols
         self._unsaved_statements.append(gams_code)
@@ -210,18 +207,16 @@ class Container(gt.Container):
 
     def _assign_symbol_attributes(
         self,
-        gp_symbol: Union["Set", "Parameter", "Variable", "Equation"],
-        gtp_symbol: Union[
-            "gt.Set", "gt.Parameter", "gt.Variable", "gt.Equation"
-        ],
-        domain: List[Union[str, "Set", "Alias"]],
+        gp_symbol: Set | Parameter | Variable | Equation,
+        gtp_symbol: gt.Set | gt.Parameter | gt.Variable | gt.Equation,
+        domain: list[str | Set | Alias],
     ):
         gp_symbol._domain = domain
         gp_symbol._records = gtp_symbol._records
         gp_symbol._domain_forwarding = gtp_symbol._domain_forwarding
         gp_symbol._description = gtp_symbol._description
 
-    def _cast_symbols(self, symbol_names: Optional[List[str]] = None) -> None:
+    def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""
         symbol_names = symbol_names if symbol_names else list(self.data.keys())
 
@@ -290,7 +285,7 @@ class Container(gt.Container):
                     gp_symbol, gtp_symbol, new_domain
                 )
 
-    def _get_symbol_names_from_gdx(self, load_from: str) -> List[str]:
+    def _get_symbol_names_from_gdx(self, load_from: str) -> list[str]:
         gdx_handle = utils._open_gdx_file(self.system_directory, load_from)
         _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
@@ -306,22 +301,14 @@ class Container(gt.Container):
     def _get_symbol_names_to_load(
         self,
         load_from: str,
-        symbol_names: Optional[List[str]] = None,
-    ) -> List[str]:
+        symbol_names: list[str] | None = None,
+    ) -> list[str]:
         if symbol_names is None or symbol_names == []:
             symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names
 
-    def _interrupt(self):
-        if self._job:
-            self._job.interrupt()
-        else:
-            raise GamspyException("There is no job initialized.")
-
-    def _setup_paths(
-        self,
-    ) -> Tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
+    def _setup_paths(self) -> tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
         suffix = uuid.uuid4()
         save_to = GamsCheckpoint(self.workspace, f"_save_{suffix}.g00")
         restart_from = GamsCheckpoint(self.workspace, f"_restart_{suffix}.g00")
@@ -330,7 +317,7 @@ class Container(gt.Container):
 
         return save_to, restart_from, gdx_in, gdx_out
 
-    def _get_autogenerated_symbol_names(self) -> List[str]:
+    def _get_autogenerated_symbol_names(self) -> list[str]:
         names = []
         for name in self.data.keys():
             if name.startswith(gp.Model._generate_prefix):
@@ -338,7 +325,7 @@ class Container(gt.Container):
 
         return names
 
-    def _get_touched_symbol_names(self) -> Tuple[List[str], List[str]]:
+    def _get_touched_symbol_names(self) -> tuple[list[str], list[str]]:
         dirty_names = []
         modified_names = []
 
@@ -362,7 +349,7 @@ class Container(gt.Container):
 
         return dirty_names, modified_names
 
-    def _run(self, keep_flags: bool = False) -> Union[pd.DataFrame, None]:
+    def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
         options = _map_options(
             self.workspace,
             global_options=self._options,
@@ -381,7 +368,7 @@ class Container(gt.Container):
         self._restart_from, self._save_to = self._save_to, self._restart_from
 
     def _get_unload_symbols_str(
-        self, dirty_names: List[str], gdx_out: str
+        self, dirty_names: list[str], gdx_out: str
     ) -> str:
         # Write dirty names, import symbols and autogenerated names to gdx
         autogenerated_names = self._get_autogenerated_symbol_names()
@@ -390,7 +377,7 @@ class Container(gt.Container):
         unload_str = ",".join(unload_names)
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
-    def _get_load_str(self, statement: "Symbol", gdx_in: str) -> str:
+    def _get_load_str(self, statement: Symbol, gdx_in: str) -> str:
         if (
             isinstance(statement, MIRO_INPUT_TYPES)
             and statement._is_miro_input
@@ -428,8 +415,8 @@ class Container(gt.Container):
         self,
         gdx_in: str,
         gdx_out: str,
-        dirty_names: List[str],
-        modified_names: List[str],
+        dirty_names: list[str],
+        modified_names: list[str],
     ) -> str:
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
@@ -470,7 +457,7 @@ class Container(gt.Container):
         """
         return self._delayed_execution
 
-    def gamsJobName(self) -> Union[str, None]:
+    def gamsJobName(self) -> str | None:
         """
         Returns the name of the latest GAMS job that was executed
 
@@ -500,7 +487,7 @@ class Container(gt.Container):
         """
         return self._gdx_out
 
-    def addAlias(self, name: str, alias_with: Union[Set, Alias]) -> Alias:
+    def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
         """
         Creates a new Alias and adds it to the container
 
@@ -534,9 +521,9 @@ class Container(gt.Container):
     def addSet(
         self,
         name: str,
-        domain: Optional[List[Union[Set, str]]] = None,
+        domain: list[Set | str] | None = None,
         is_singleton: bool = False,
-        records: Optional[Any] = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -587,8 +574,8 @@ class Container(gt.Container):
     def addParameter(
         self,
         name: str,
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -638,8 +625,8 @@ class Container(gt.Container):
         self,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -690,14 +677,14 @@ class Container(gt.Container):
     def addEquation(
         self,
         name: str,
-        type: Union[str, EquationType] = "regular",
-        domain: Optional[List[Union[Set, str]]] = None,
-        definition: Optional[Expression] = None,
-        records: Optional[Any] = None,
+        type: str | EquationType = "regular",
+        domain: list[Set | str] | None = None,
+        definition: Expression | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition_domain: Optional[List[Union[Set, str]]] = None,
+        definition_domain: list[Set | str] | None = None,
     ) -> Equation:
         """
         Creates an Equation and adds it to the Container
@@ -750,11 +737,11 @@ class Container(gt.Container):
         self,
         name: str,
         problem: str,
-        equations: List[Equation],
-        sense: Optional[Literal["MIN", "MAX"]] = None,
-        objective: Optional[Union[Variable, Expression]] = None,
-        matches: Optional[dict] = None,
-        limited_variables: Optional[list] = None,
+        equations: list[Equation],
+        sense: Literal["MIN", "MAX"] | None = None,
+        objective: Variable | Expression | None = None,
+        matches: dict | None = None,
+        limited_variables: list | None = None,
     ) -> Model:
         """
         Creates a Model and adds it to the Container
@@ -822,7 +809,7 @@ class Container(gt.Container):
         """
         m = Container(working_directory=working_directory)
         if m.working_directory == self.working_directory:
-            raise GamspyException(
+            raise ValidationError(
                 "Copy of a container cannot have the same working directory"
                 " with the original container."
             )
@@ -941,10 +928,18 @@ class Container(gt.Container):
         """
         return self._generate_gams_string(self._gdx_in, self._gdx_out, [], [])
 
+    def getEquations(self):
+        equations = [
+            equation
+            for equation in self.listEquations()
+            if not equation.startswith(gp.Model._generate_prefix)
+        ]
+        return self.getSymbols(equations)
+
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbol_names: Optional[List[str]] = None,
+        symbol_names: list[str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a gdx file. If no
@@ -987,10 +982,10 @@ class Container(gt.Container):
     def read(
         self,
         load_from: str,
-        symbol_names: Optional[List[str]] = None,
+        symbol_names: list[str] | None = None,
         load_records: bool = True,
-        mode: Optional[str] = None,
-        encoding: Optional[str] = None,
+        mode: str | None = None,
+        encoding: str | None = None,
     ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
@@ -1022,9 +1017,9 @@ class Container(gt.Container):
     def write(
         self,
         write_to: str,
-        symbol_names: Optional[List[str]] = None,
+        symbol_names: list[str] | None = None,
         compress: bool = False,
-        mode: Optional[str] = None,
+        mode: str | None = None,
         eps_to_zero: bool = True,
     ) -> None:
         """

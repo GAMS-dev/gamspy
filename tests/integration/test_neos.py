@@ -12,7 +12,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
 from gamspy._backend.neos import NeosClient
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 try:
     from dotenv import load_dotenv
@@ -126,7 +126,7 @@ class NeosSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             transport.solve(backend="neos")
 
     def test_different_solver(self):

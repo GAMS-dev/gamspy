@@ -13,7 +13,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class ParameterSuite(unittest.TestCase):
@@ -49,14 +49,14 @@ class ParameterSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Parameter(m, "param1", domain=[set1])
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Parameter, self.m, "set")
+        self.assertRaises(ValidationError, Parameter, self.m, "set")
 
         i = Set(
             self.m,
@@ -81,7 +81,7 @@ class ParameterSuite(unittest.TestCase):
 
         b = Parameter(self.m, "b")
         self.assertEqual(b.getStatement(), "Parameter b;")
-        self.assertEqual((b == 5).gamsRepr(), "(b = 5)")
+        self.assertEqual((b == 5).gamsRepr(), "(b eq 5)")
         self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):
@@ -128,7 +128,7 @@ class ParameterSuite(unittest.TestCase):
         j = Set(m, "j")
         a = Parameter(self.m, "a", domain=[i])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             a[j] = 5
 
     def test_implicit_parameter_assignment(self):
@@ -214,6 +214,21 @@ class ParameterSuite(unittest.TestCase):
             "$offUNDF\n$gdxIn\n"
             f"execute_unload '{m._gdx_out}' \n",
         )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Parameter(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(ValidationError):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2, j4] = 5
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2] = j3[j1, j2, j4] * 5
 
 
 def parameter_suite():

@@ -8,7 +8,6 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from gams.control.workspace import GamsExceptionExecution
 
 from gamspy import Card
 from gamspy import Container
@@ -24,6 +23,7 @@ from gamspy import Smax
 from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class SolveSuite(unittest.TestCase):
@@ -275,7 +275,7 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
 
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             transport.solve,
             None,
             None,
@@ -311,13 +311,13 @@ class SolveSuite(unittest.TestCase):
 
         # Test invalid commandline options
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             transport.solve,
             None,
             {"bla": 100},
         )
 
-        self.assertRaises(GamspyException, transport.solve, None, 5)
+        self.assertRaises(ValidationError, transport.solve, None, 5)
 
         # Try to solve invalid model
         m = Container(delayed_execution=True)
@@ -333,12 +333,12 @@ class SolveSuite(unittest.TestCase):
             problem="LP",
             sense="min",
             objective=z,
-            limited_variables=[x[i]],
+            limited_variables=[x[i,j]],
         )
 
         self.assertEqual(
             transport.getStatement(),
-            "Model transport / cost,supply,demand,x(i) /;",
+            "Model transport / cost,supply,demand,x(i,j) /;",
         )
 
     def test_interrupt(self):
@@ -846,7 +846,7 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=c,
         )
-        self.assertRaises(GamspyException, energy.interrupt)
+        self.assertRaises(ValidationError, energy.interrupt)
 
         def interrupt_gams(model):
             time.sleep(2)
@@ -916,7 +916,7 @@ class SolveSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException, transport.solve, None, None, {"rtmaxv": "1.e12"}
+            ValidationError, transport.solve, None, None, {"rtmaxv": "1.e12"}
         )
 
     def test_delayed_execution(self):

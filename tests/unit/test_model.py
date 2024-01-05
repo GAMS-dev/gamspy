@@ -12,7 +12,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class ModelSuite(unittest.TestCase):
@@ -64,7 +64,7 @@ class ModelSuite(unittest.TestCase):
             name="cost",
             description="define objective function",
         )
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
 
         # Equation definition with an index
         supply = Equation(
@@ -107,7 +107,7 @@ class ModelSuite(unittest.TestCase):
         self.assertEqual(test_model.objective_value, 153.675)
 
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Model, self.m, "set", "LP")
+        self.assertRaises(ValidationError, Model, self.m, "set", "LP")
 
         # Equation definition with more than one index
         bla = Equation(
@@ -236,7 +236,7 @@ class ModelSuite(unittest.TestCase):
         self.assertIsNotNone(x.records)
 
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             Model,
             m,
             "transport2",
@@ -247,7 +247,7 @@ class ModelSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException,
+            ValidationError,
             Model,
             m,
             "transport2",
@@ -255,6 +255,73 @@ class ModelSuite(unittest.TestCase):
             m.getEquations(),
             "feasibility",
         )
+
+    def test_tuple_equations(self):
+        distances = pd.DataFrame(
+            [
+                ["seattle", "new-york", 2.5],
+                ["seattle", "chicago", 1.7],
+                ["seattle", "topeka", 1.8],
+                ["san-diego", "new-york", 2.5],
+                ["san-diego", "chicago", 1.8],
+                ["san-diego", "topeka", 1.4],
+            ]
+        )
+        canning_plants = ["seattle", "san-diego"]
+        markets = ["new-york", "chicago", "topeka"]
+        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Sets
+        i = Set(
+            self.m,
+            name="i",
+            records=canning_plants,
+            description="Canning Plants",
+        )
+        j = Set(self.m, name="j", records=markets, description="Markets")
+
+        # Params
+        a = Parameter(self.m, name="a", domain=[i], records=capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variables
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
+
+        # Equation definition without an index
+        cost = Equation(
+            self.m,
+            name="cost",
+            description="define objective function",
+        )
+        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+
+        # Equation definition with an index
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=[i],
+            description="observe supply limit at plant i",
+        )
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+
+        demand = Equation(self.m, name="demand", domain=[j])
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        # Model with implicit objective
+        test_model = Model(
+            self.m,
+            name="test_model",
+            equations=(supply, demand),
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        test_model.solve()
 
 
 def model_suite():
