@@ -25,9 +25,10 @@
 from __future__ import annotations
 
 import gamspy._algebra.condition as condition
+import gamspy._algebra.operable as operable
 
 
-class Number:
+class Number(operable.Operable):
     """
     Needed for conditions on numbers.
 

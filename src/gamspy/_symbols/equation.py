@@ -257,10 +257,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._definition = statement
 
-    def _adapt_mcp_equation(self, assignment):
+    def _adapt_mcp_equation(self, assignment: Expression | Operation):
         assignment = assignment == 0
-        assignment.replace(assignment.data, non_regular_map[self.type])
-        assignment.data = non_regular_map[self.type]
+
+        if self.type in non_regular_map.keys():
+            assignment.replace(assignment.data, non_regular_map[self.type])
+            assignment.data = non_regular_map[self.type]
 
         return assignment
 
