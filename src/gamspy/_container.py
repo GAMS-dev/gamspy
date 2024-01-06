@@ -141,9 +141,7 @@ class Container(gt.Container):
         self,
         gp_symbol: Set | Parameter | Variable | Equation,
         gtp_symbol: gt.Set | gt.Parameter | gt.Variable | gt.Equation,
-        domain: list[str | Set | Alias],
     ):
-        gp_symbol._domain = domain
         gp_symbol._records = gtp_symbol._records
         gp_symbol._domain_forwarding = gtp_symbol._domain_forwarding
         gp_symbol._description = gtp_symbol._description
@@ -178,32 +176,20 @@ class Container(gt.Container):
                     gtp_symbol.name,
                 )
             elif isinstance(gtp_symbol, gt.Set):
-                gp_symbol = gp.Set(
-                    self,
-                    gtp_symbol.name,
-                )
+                gp_symbol = gp.Set(self, gtp_symbol.name, domain=new_domain)
 
                 gp_symbol._is_singleton = gtp_symbol.is_singleton
-                self._assign_symbol_attributes(
-                    gp_symbol, gtp_symbol, new_domain
-                )
+                self._assign_symbol_attributes(gp_symbol, gtp_symbol)
             elif isinstance(gtp_symbol, gt.Parameter):
                 gp_symbol = gp.Parameter(
-                    self,
-                    gtp_symbol.name,
+                    self, gtp_symbol.name, domain=new_domain
                 )
-                self._assign_symbol_attributes(
-                    gp_symbol, gtp_symbol, new_domain
-                )
+                self._assign_symbol_attributes(gp_symbol, gtp_symbol)
             elif isinstance(gtp_symbol, gt.Variable):
                 gp_symbol = gp.Variable(
-                    self,
-                    gtp_symbol.name,
-                    gtp_symbol.type,
+                    self, gtp_symbol.name, gtp_symbol.type, domain=new_domain
                 )
-                self._assign_symbol_attributes(
-                    gp_symbol, gtp_symbol, new_domain
-                )
+                self._assign_symbol_attributes(gp_symbol, gtp_symbol)
             elif isinstance(gtp_symbol, gt.Equation):
                 symbol_type = gtp_symbol.type
                 if gtp_symbol.type in ["eq", "leq", "geq"]:
@@ -212,10 +198,9 @@ class Container(gt.Container):
                     container=self,
                     name=gtp_symbol.name,
                     type=symbol_type,
+                    domain=new_domain,
                 )
-                self._assign_symbol_attributes(
-                    gp_symbol, gtp_symbol, new_domain
-                )
+                self._assign_symbol_attributes(gp_symbol, gtp_symbol)
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> list[str]:
         gdx_handle = utils._open_gdx_file(self.system_directory, load_from)

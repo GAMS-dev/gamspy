@@ -40,6 +40,7 @@ def main():
     returns, val = cont.getSymbols(["return", "val"])
 
     # Set
+    print(days.domain)
     d = Set(cont, name="d", domain=[days], description="selected days")
     s = Set(cont, name="s", domain=[stocks], description="selected stocks")
 

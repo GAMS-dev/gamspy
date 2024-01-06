@@ -13,8 +13,10 @@ GAMSPy 0.11.5
   - Add __str__ and __repr__ to Model.
   - Allow literals in sameAs operation.
   - Make Number operable.
+  - Add more data validation functions.
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
+  - Test validation errors.
 - Documentation
   - Add documentation for `matches` argument of Model.
 

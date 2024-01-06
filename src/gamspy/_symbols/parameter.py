@@ -38,6 +38,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
@@ -113,7 +114,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     ):
         self._is_dirty = False
         self._is_frozen = False
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         super().__init__(
             container,
@@ -125,15 +126,19 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             uels_on_axes,
         )
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
         self.where = condition.Condition(self)
         self.container._add_statement(self)
 
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        utils._verify_dimension(domain, self)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_domain(domain, self)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
@@ -142,9 +147,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Union[Expression, float, int],
     ) -> None:
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        self._container_check(domain)
-        utils._verify_dimension(domain, self)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_container(self, domain)
+        validation.validate_domain(domain, self)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore

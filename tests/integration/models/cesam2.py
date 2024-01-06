@@ -235,7 +235,7 @@ def main(is_centropy=False):
     j = Alias(m, name="j", alias_with=i)
     jj = Alias(m, name="jj", alias_with=ii)
     ii[i] = True
-    ii["Total"] = False
+    ii["TOTAL"] = False
 
     # Parameters
     stderr1 = Parameter(
@@ -415,7 +415,7 @@ def main(is_centropy=False):
         m,
         name="acoeff",
         domain=[i],
-        records=["act", "fac", "ent", "hou"],
+        records=["ACT", "FAC", "ent", "hou"],
         description="accounts with prior on column coefficients",
     )
 
@@ -433,13 +433,13 @@ def main(is_centropy=False):
     # row and column sums. Initial column sums or other values
     # could have been used instead, depending on knowledge of data quality
     # and any other prior information.
-    ColSum0[ii] = (SAM[ii, "total"] + SAM["total", ii]) / 2
-    gdpfc0[...] = SAM["fac", "act"]
+    ColSum0[ii] = (SAM[ii, "TOTAL"] + SAM["TOTAL", ii]) / 2
+    gdpfc0[...] = SAM["FAC", "ACT"]
     gdp0[...] = (
-        SAM["fac", "act"]
-        + SAM["gov", "act"]
-        - SAM["act", "gov"]
-        + SAM["gov", "com"]
+        SAM["FAC", "ACT"]
+        + SAM["GOV", "ACT"]
+        - SAM["ACT", "GOV"]
+        + SAM["GOV", "COM"]
     )
 
     macrov0["gdp2"] = gdp0
@@ -664,14 +664,14 @@ def main(is_centropy=False):
     )
 
     # Macro aggregates measured with error
-    GDPFCDEF[...] = MACROV["gdpfc2"] == TSAM["fac", "act"]
+    GDPFCDEF[...] = MACROV["gdpfc2"] == TSAM["FAC", "ACT"]
 
     GDPDEF[...] = (
         MACROV["gdp2"]
-        == TSAM["fac", "act"]
-        + TSAM["gov", "act"]
-        - TSAM["act", "gov"]
-        + TSAM["gov", "com"]
+        == TSAM["FAC", "ACT"]
+        + TSAM["GOV", "ACT"]
+        - TSAM["ACT", "GOV"]
+        + TSAM["GOV", "COM"]
     )
 
     MACROEQ[macro] = MACROV[macro] == macrov0[macro] + ERR2[macro]
@@ -782,8 +782,8 @@ def main(is_centropy=False):
     ANEW = Parameter(m, name="ANEW", domain=[i, j])
 
     Macsam1[ii, jj] = TSAM.l[ii, jj]
-    Macsam1["total", jj] = Sum(ii, Macsam1[ii, jj])
-    Macsam1[ii, "total"] = Sum(jj, Macsam1[ii, jj])
+    Macsam1["TOTAL", jj] = Sum(ii, Macsam1[ii, jj])
+    Macsam1[ii, "TOTAL"] = Sum(jj, Macsam1[ii, jj])
     Macsam2[i, j] = Macsam1[i, j] * scalesam
     percent1[i, j].where[SAM0[i, j]] = (
         100 * (Macsam1[i, j] - SAM0[i, j]) / SAM0[i, j]
@@ -792,19 +792,19 @@ def main(is_centropy=False):
     SAMBALCHK[jj] = TSAM.l["TOTAL", jj] - TSAM.l[jj, "TOTAL"]
 
     gdp00[...] = (
-        Macsam1["fac", "act"]
-        + Macsam1["gov", "act"]
-        - Macsam1["act", "gov"]
-        + Macsam1["gov", "com"]
+        Macsam1["FAC", "ACT"]
+        + Macsam1["GOV", "ACT"]
+        - Macsam1["ACT", "GOV"]
+        + Macsam1["GOV", "COM"]
     )
-    gdpfc00[...] = Macsam1["fac", "act"]
+    gdpfc00[...] = Macsam1["FAC", "ACT"]
 
     # print some stuff
     ANEW[ii, jj] = A.l[ii, jj]
-    ANEW["total", jj] = Sum(ii, A.l[ii, jj])
-    ANEW[ii, "total"] = Sum(jj, A.l[ii, jj])
-    Abar0["total", jj] = Sum(ii, Abar0[ii, jj])
-    Abar0[ii, "total"] = Sum(jj, Abar0[ii, jj])
+    ANEW["TOTAL", jj] = Sum(ii, A.l[ii, jj])
+    ANEW[ii, "TOTAL"] = Sum(jj, A.l[ii, jj])
+    Abar0["TOTAL", jj] = Sum(ii, Abar0[ii, jj])
+    Abar0[ii, "TOTAL"] = Sum(jj, Abar0[ii, jj])
 
     meanerr1 = Parameter(m, name="meanerr1")
     meanerr2 = Parameter(m, name="meanerr2")

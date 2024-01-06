@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
@@ -69,16 +70,24 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return expression.Expression("", "not", self)
 
     def __getitem__(self, indices: list | str) -> ImplicitParameter:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
 
-        utils._verify_dimension(domain, self)
+        validation.validate_domain(domain, self)
 
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain
         )
 
     def __setitem__(self, indices: list | str, assignment: Expression) -> None:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore
