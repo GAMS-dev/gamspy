@@ -313,6 +313,14 @@ class SetSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             j6[j1, j2] = j5[j1, j2, j3]
 
+    def test_domain_verification(self):
+        m = Container()
+        i1 = Set(m, "i1", records=["i1", "i2"])
+        i2 = Set(m, "i2", records=["i1"], domain=i1)
+
+        with self.assertRaises(ValidationError):
+            i2["i3"] = True
+
 
 def set_suite():
     suite = unittest.TestSuite()

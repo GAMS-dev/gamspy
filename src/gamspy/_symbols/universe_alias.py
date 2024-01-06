@@ -6,7 +6,7 @@ import gams.transfer as gt
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
-import gamspy.utils as utils
+import gamspy._validation as validation
 
 if TYPE_CHECKING:
     from gamspy import Container
@@ -61,7 +61,7 @@ class UniverseAlias(gt.UniverseAlias):
 
         """
         # check if the name is a reserved word
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         super().__init__(container, name)
 

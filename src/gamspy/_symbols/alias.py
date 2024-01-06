@@ -32,7 +32,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy.utils as utils
+import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
 from gamspy._symbols.symbol import Symbol
 
@@ -84,11 +84,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def __init__(self, container: Container, name: str, alias_with: Set):
         self._is_dirty = False
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         super().__init__(container, name, alias_with)
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
         self.where = condition.Condition(self)
         self.container._add_statement(self)
         self._current_index = 0

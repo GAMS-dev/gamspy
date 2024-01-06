@@ -230,6 +230,18 @@ class ParameterSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             j3[j1, j2] = j3[j1, j2, j4] * 5
 
+    def test_domain_verification(self):
+        m = Container()
+        i1 = Set(m, "i1", records=["i1", "i2"])
+        a1 = Parameter(m, "a1", domain=i1, records=[("i1", 1), ("i2", 2)])
+        a1["i1"] = 5
+
+        with self.assertRaises(ValidationError):
+            a1["i3"] = 5
+
+        with self.assertRaises(ValidationError):
+            a1["i3"] = a1["i3"] * 5
+
 
 def parameter_suite():
     suite = unittest.TestSuite()

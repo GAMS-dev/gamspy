@@ -91,6 +91,10 @@ class ConditionSuite(unittest.TestCase):
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
         )
 
+    def test_condition_on_number(self):
+        steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
+        markets = ["mexico-df", "monterrey", "guadalaja"]
+
         m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
         i = Set(
             m,
@@ -105,8 +109,8 @@ class ConditionSuite(unittest.TestCase):
             description="markets",
         )
 
-        p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
-        o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
+        p = Set(m, name="p", records=[f"pos{elem}" for elem in range(1, 11)])
+        o = Set(m, name="o", records=[f"opt{elem}" for elem in range(1, 6)])
 
         sumc = Parameter(m, name="sumc", domain=[o, p])
         sumc[o, p] = gamspy_math.uniform(0, 1)
@@ -119,6 +123,13 @@ class ConditionSuite(unittest.TestCase):
         self.assertEqual(
             defopLS._definition.getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
+        )
+
+        muf = Parameter(
+            m,
+            name="muf",
+            domain=[i, j],
+            description="transport rate: final products",
         )
 
         expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]

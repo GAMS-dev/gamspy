@@ -38,7 +38,7 @@ from gams import GamsOptions
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
-import gamspy.utils as utils
+import gamspy._validation as validation
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
@@ -203,7 +203,7 @@ class Model:
         limited_variables: Iterable[Variable] | None = None,
     ):
         # check if the name is a reserved word
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         self.name = name
         self.container = container
@@ -527,7 +527,7 @@ class Model:
         GamspyException
             If the job is not initialized
         """
-        if self.container._job:
+        if self.container._job is not None:
             self.container._job.interrupt()
         else:
             raise ValidationError("There is no initialized job to interrupt.")

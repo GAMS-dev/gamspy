@@ -29,10 +29,9 @@ class MathSuite(unittest.TestCase):
 
         # Set
         i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=demands)
         s1 = Parameter(self.m, name="s1", records=5)
         s2 = Parameter(self.m, name="s2", records=3)
         s3 = Parameter(self.m, name="s3", records=6)
