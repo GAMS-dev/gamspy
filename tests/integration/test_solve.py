@@ -1158,6 +1158,27 @@ class SolveSuite(unittest.TestCase):
             
         with self.assertRaises(TypeError):
             c[b[j]] = 90 * d[i, j] / 1000
+            
+    def test_after_exception(self):
+        m = Container(delayed_execution=True)
+        x = Variable(m, "x", type="positive")
+        e = Equation(m, "e", definition=x <= x + 1)
+        t = Model(
+            m,
+            name="t",
+            equations=[e],
+            problem="LP",
+            sense=Sense.MIN,
+            objective=x,
+        )
+        x.lo[...] = 0  # triggers GAMS
+        try:
+            t.solve()  # this fails with GAMS compilation error `Objective variable is not a free variable`
+        except GamspyException:
+            pass
+        f = Parameter(m, "f")
+        f[...] = 5
+        self.assertEqual(m._unsaved_statements[-1].getStatement(), "f = 5;")
     
 
 def solve_suite():

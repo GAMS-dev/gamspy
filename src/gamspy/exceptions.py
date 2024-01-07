@@ -111,7 +111,7 @@ def customize_exception(
     options: GamsOptions,
     job: GamsJob,
     exception: GamsExceptionExecution,
-) -> GamsExceptionExecution:
+) -> str:
     error_message = ""
     if not options._writeoutput:
         exception.value = error_message
@@ -155,11 +155,8 @@ def customize_exception(
 
             index += 1
 
-    exception.value = (
-        error_message + exception.value if error_message else exception.value
-    )
-    exception.value += (
+    explanation = (
         f"\nMeaning of return code {exception.rc}: {error_codes[exception.rc]}"
     )
 
-    return exception
+    return error_message + explanation
