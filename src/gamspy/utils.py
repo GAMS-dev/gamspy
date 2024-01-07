@@ -35,6 +35,7 @@ from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
@@ -320,8 +321,6 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     Exception
         Given domain must contain only sets, aliases or strings
     """
-    from gamspy._algebra.domain import DomainException
-
     set_strs = []
     for set in domain:
         if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
@@ -332,7 +331,7 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
             else:
                 set_strs.append('"' + set + '"')
         else:
-            raise DomainException(
+            raise ValidationError(
                 f"Domain type must be str, Set or Alias but found {type(set)}"
             )
 

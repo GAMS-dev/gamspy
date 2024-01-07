@@ -28,14 +28,11 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Set, Alias
     from gamspy._symbols.implicits import ImplicitSet
-
-
-class DomainException(Exception):
-    """Exception raised if a domain is not valid."""
 
 
 class Domain:
@@ -70,10 +67,10 @@ class Domain:
 
     def _sanity_check(self, sets: tuple[Set | Alias | ImplicitSet, ...]):
         if len(sets) < 2:
-            raise DomainException("Domain requires at least 2 sets")
+            raise ValidationError("Domain requires at least 2 sets")
 
         if all(not hasattr(set, "container") for set in sets):
-            raise DomainException(
+            raise ValidationError(
                 "At least one of the sets in the domain must be a Set or Alias"
             )
 

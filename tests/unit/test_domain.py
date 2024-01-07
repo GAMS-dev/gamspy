@@ -7,7 +7,7 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Parameter
 from gamspy import Set
-from gamspy._algebra.domain import DomainException
+from gamspy.exceptions import ValidationError
 
 
 class DomainSuite(unittest.TestCase):
@@ -25,10 +25,10 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(domain.gamsRepr(), "(i,j)")
 
         # Domain with less than two sets
-        self.assertRaises(DomainException, Domain, i)
+        self.assertRaises(ValidationError, Domain, i)
 
         # Domain with no set or alias symbols
-        self.assertRaises(DomainException, Domain, "i", "j")
+        self.assertRaises(ValidationError, Domain, "i", "j")
 
     def test_domain_forwarding(self):
         m = Container(
