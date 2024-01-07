@@ -7,8 +7,8 @@ import unittest
 import gamspy.utils as utils
 from gamspy import Container
 from gamspy import Set
-from gamspy._algebra.domain import DomainException
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class UtilsSuite(unittest.TestCase):
@@ -30,7 +30,7 @@ class UtilsSuite(unittest.TestCase):
 
         i = Set(self.m, "i", records=["i1", "i2"])
         self.assertEqual(utils._get_domain_str([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(DomainException, utils._get_domain_str, [5])
+        self.assertRaises(ValidationError, utils._get_domain_str, [5])
 
         # invalid system directory
         self.assertRaises(GamspyException, utils._open_gdx_file, "bla", "bla")
