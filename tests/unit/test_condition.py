@@ -21,7 +21,8 @@ from gamspy import Variable
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_condition_on_expression(self):
@@ -95,7 +96,10 @@ class ConditionSuite(unittest.TestCase):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
         markets = ["mexico-df", "monterrey", "guadalaja"]
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         i = Set(
             m,
             name="i",
@@ -308,7 +312,10 @@ class ConditionSuite(unittest.TestCase):
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -333,7 +340,8 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
@@ -366,7 +374,8 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
@@ -455,7 +464,10 @@ class ConditionSuite(unittest.TestCase):
         self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1

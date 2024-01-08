@@ -27,7 +27,10 @@ from gamspy.math import sqr
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # SCALAR #
     R = Parameter(m, name="R", records=40)

@@ -28,7 +28,10 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Sets
     t = Set(m, name="t", records=[f"q-{i}" for i in range(1, 5)])

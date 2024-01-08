@@ -17,7 +17,8 @@ from gamspy.exceptions import ValidationError
 class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_variable_creation(self):
@@ -44,7 +45,8 @@ class VariableSuite(unittest.TestCase):
 
         # Variable and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):

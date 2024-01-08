@@ -62,7 +62,10 @@ class OptionsSuite(unittest.TestCase):
         self.assertEqual(options.report_underflow, True)
 
     def test_seed(self):
-        m = Container(options=Options(seed=1))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            options=Options(seed=1),
+        )
         p1 = Parameter(m, "p1")
         p1[...] = math.normal(0, 1)
         self.assertEqual(p1.records.value.item(), 0.45286287828275534)
@@ -72,7 +75,10 @@ class OptionsSuite(unittest.TestCase):
         self.assertEqual(p2.records.value.item(), -0.4841775276628964)
 
         # change seed
-        m = Container(options=Options(seed=5))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            options=Options(seed=5),
+        )
         p1 = Parameter(m, "p1")
         p1[...] = math.normal(0, 1)
         self.assertEqual(p1.records.value.item(), 0.14657004110784333)
@@ -83,7 +89,11 @@ class OptionsSuite(unittest.TestCase):
 
     def test_global_options(self):
         options = Options(lp="conopt")
-        m = Container(delayed_execution=True, options=options)
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+            options=options,
+        )
 
         # Prepare data
         distances = [

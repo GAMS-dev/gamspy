@@ -16,7 +16,8 @@ from gamspy.exceptions import ValidationError
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_set_creation(self):
@@ -43,7 +44,8 @@ class SetSuite(unittest.TestCase):
 
         # Set and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -96,7 +98,9 @@ class SetSuite(unittest.TestCase):
         )
 
     def test_records_assignment(self):
-        new_cont = Container()
+        new_cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i = Set(self.m, "i")
         j = Set(self.m, "j", domain=[i])
         k = Set(new_cont, "k")
@@ -147,7 +151,10 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
@@ -156,7 +163,9 @@ class SetSuite(unittest.TestCase):
             'i("i1") = no;',
         )
 
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
         self.assertEqual(k._is_dirty, False)
@@ -197,7 +206,10 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
@@ -260,7 +272,8 @@ class SetSuite(unittest.TestCase):
 
         # UniverseAlias with no records
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         x = Set(m, "set1")
         a = UniverseAlias(m, "universe1")
@@ -286,7 +299,10 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+        )
         i = Set(m, "i", records=["1", "2", "3"])
         p = Parameter(m, "p", [i])
         p[i] = i.sameAs("2")
@@ -314,7 +330,9 @@ class SetSuite(unittest.TestCase):
             j6[j1, j2] = j5[j1, j2, j3]
 
     def test_domain_verification(self):
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i1 = Set(m, "i1", records=["i1", "i2"])
         i2 = Set(m, "i2", records=["i1"], domain=i1)
 

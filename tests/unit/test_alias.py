@@ -16,7 +16,8 @@ from gamspy.exceptions import ValidationError
 class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_alias_creation(self):
@@ -117,7 +118,8 @@ class AliasSuite(unittest.TestCase):
         self.m.write("test.gdx")
 
         bla = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         bla.read("test.gdx")
         self.assertEqual(

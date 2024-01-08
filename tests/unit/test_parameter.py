@@ -19,7 +19,8 @@ from gamspy.exceptions import ValidationError
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_parameter_creation(self):
@@ -46,7 +47,8 @@ class ParameterSuite(unittest.TestCase):
 
         # Parameter and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -110,7 +112,11 @@ class ParameterSuite(unittest.TestCase):
             "a(i) = (-a(i) * 5);",
         )
 
-        cont = Container(delayed_execution=False, working_directory=".")
+        cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=False,
+            working_directory=".",
+        )
 
         s = Set(cont, "s")
         m = Set(cont, "m")
@@ -121,7 +127,8 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_assignment(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
@@ -200,7 +207,8 @@ class ParameterSuite(unittest.TestCase):
 
     def test_undef(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         _ = Parameter(
             m, name="rho", records=[np.nan]
@@ -231,7 +239,9 @@ class ParameterSuite(unittest.TestCase):
             j3[j1, j2] = j3[j1, j2, j4] * 5
 
     def test_domain_verification(self):
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i1 = Set(m, "i1", records=["i1", "i2"])
         a1 = Parameter(m, "a1", domain=i1, records=[("i1", 1), ("i2", 2)])
         a1["i1"] = 5
