@@ -269,6 +269,12 @@ class Container(gt.Container):
                 dirty_names.append(name)
 
             if symbol.modified:
+                if (
+                    isinstance(symbol, gt.Alias)
+                    and symbol.alias_with.name not in modified_names
+                ):
+                    modified_names.append(symbol.alias_with.name)
+
                 modified_names.append(name)
 
         return dirty_names, modified_names
