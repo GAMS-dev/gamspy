@@ -19,6 +19,7 @@ GAMSPy 0.11.5
 - Testing
   - Add tests to check if incompatible dimensionality throws exception.
   - Test validation errors.
+  - Allow providing system directory for the tests via environment variable.
 - Documentation
   - Add documentation for `matches` argument of Model.
 
