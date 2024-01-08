@@ -71,7 +71,10 @@ def main(mip=False):
         id_vars="index", var_name="Category", value_name="Value"
     )
 
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Sets
     p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])

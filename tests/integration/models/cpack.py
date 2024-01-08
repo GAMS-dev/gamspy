@@ -37,7 +37,10 @@ from gamspy.math import sqr
 k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 print("Number of circles =", k)
 
-c = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+c = Container(
+    system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+    delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+)
 
 # Set
 i = Set(c, name="i", description="circles", records=[str(i) for i in range(k)])

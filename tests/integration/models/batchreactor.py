@@ -26,7 +26,10 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Set
     nh = Set(m, name="nh", records=[str(idx) for idx in range(0, 101)])

@@ -139,7 +139,8 @@ def main():
 
     # Model's container
     cont = Container(
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

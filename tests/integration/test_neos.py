@@ -24,7 +24,11 @@ except Exception:
 
 class NeosSuite(unittest.TestCase):
     def test_neos_blocking(self):
-        m = Container(delayed_execution=True, working_directory=".")
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+            working_directory=".",
+        )
 
         # Prepare data
         distances = [
@@ -82,7 +86,11 @@ class NeosSuite(unittest.TestCase):
         )
 
     def test_no_client(self):
-        m = Container(delayed_execution=True, working_directory=".")
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+            working_directory=".",
+        )
 
         # Prepare data
         distances = [
@@ -131,7 +139,8 @@ class NeosSuite(unittest.TestCase):
 
     def test_different_solver(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -190,7 +199,11 @@ class NeosSuite(unittest.TestCase):
         )
 
     def test_neos_non_blocking(self):
-        m = Container(delayed_execution=True, working_directory=".")
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+            working_directory=".",
+        )
 
         # Prepare data
         distances = [
@@ -246,7 +259,10 @@ class NeosSuite(unittest.TestCase):
             job_number, job_password, working_directory="my_out_directory"
         )
 
-        container = Container(load_from="my_out_directory/output.gdx")
+        container = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            load_from="my_out_directory/output.gdx",
+        )
         self.assertTrue("x" in container.data.keys())
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))

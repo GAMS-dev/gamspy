@@ -53,7 +53,10 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # SET #
     gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])

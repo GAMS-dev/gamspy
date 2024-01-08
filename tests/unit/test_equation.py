@@ -24,7 +24,8 @@ from gamspy.math import sqr
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_equation_creation(self):
@@ -51,7 +52,8 @@ class EquationSuite(unittest.TestCase):
 
         # Equation and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -320,7 +322,8 @@ class EquationSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -474,7 +477,9 @@ class EquationSuite(unittest.TestCase):
         )
         self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
 
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i = Set(m, "i", records=[f"i{i}" for i in range(10)])
         x = Variable(m, "x", domain=[i])
         a = Equation(m, "a", "regular", [i])
@@ -508,7 +513,10 @@ class EquationSuite(unittest.TestCase):
         model.solve()
 
     def test_changed_domain(self):
-        cont = Container(delayed_execution=False)
+        cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=False,
+        )
 
         s = Set(cont, "s")
         m = Set(cont, "m")
@@ -519,7 +527,8 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_assignment(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
@@ -530,7 +539,8 @@ class EquationSuite(unittest.TestCase):
             a[j] = 5
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)
