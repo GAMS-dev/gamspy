@@ -29,6 +29,7 @@ from gamspy.math import sqr
 
 def main():
     cont = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx",
         delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
@@ -40,6 +41,7 @@ def main():
     returns, val = cont.getSymbols(["return", "val"])
 
     # Set
+    print(days.domain)
     d = Set(cont, name="d", domain=[days], description="selected days")
     s = Set(cont, name="s", domain=[stocks], description="selected stocks")
 

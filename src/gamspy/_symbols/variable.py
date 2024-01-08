@@ -26,10 +26,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
-from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -39,6 +36,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
@@ -94,8 +92,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -125,8 +123,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -134,7 +132,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         type = cast_type(type)
         self._is_dirty = False
         self._is_frozen = False
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         super().__init__(
             container,
@@ -147,7 +145,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             uels_on_axes,
         )
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
         self.where = condition.Condition(self)
         self.container._add_statement(self)
 
@@ -157,10 +155,14 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._prior = self._create_attr("prior")
         self._stage = self._create_attr("stage")
 
-    def __getitem__(
-        self, indices: Union[tuple, str]
-    ) -> implicits.ImplicitVariable:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_domain(domain, self)
+
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
@@ -325,16 +327,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self.name
 
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
-
     def getStatement(self) -> str:
         """
         Statement of the Variable definition
@@ -359,7 +351,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return output
 
 
-def cast_type(type: Union[str, VariableType]) -> str:
+def cast_type(type: str | VariableType) -> str:
     if isinstance(type, str) and type.lower() not in VariableType.values():
         raise ValueError(
             f"Allowed variable types: {VariableType.values()} but"

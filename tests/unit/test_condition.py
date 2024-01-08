@@ -21,7 +21,8 @@ from gamspy import Variable
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_condition_on_expression(self):
@@ -91,7 +92,14 @@ class ConditionSuite(unittest.TestCase):
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
         )
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+    def test_condition_on_number(self):
+        steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
+        markets = ["mexico-df", "monterrey", "guadalaja"]
+
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         i = Set(
             m,
             name="i",
@@ -105,8 +113,8 @@ class ConditionSuite(unittest.TestCase):
             description="markets",
         )
 
-        p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
-        o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
+        p = Set(m, name="p", records=[f"pos{elem}" for elem in range(1, 11)])
+        o = Set(m, name="o", records=[f"opt{elem}" for elem in range(1, 6)])
 
         sumc = Parameter(m, name="sumc", domain=[o, p])
         sumc[o, p] = gamspy_math.uniform(0, 1)
@@ -119,6 +127,13 @@ class ConditionSuite(unittest.TestCase):
         self.assertEqual(
             defopLS._definition.getStatement(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
+        )
+
+        muf = Parameter(
+            m,
+            name="muf",
+            domain=[i, j],
+            description="transport rate: final products",
         )
 
         expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]
@@ -297,7 +312,10 @@ class ConditionSuite(unittest.TestCase):
             "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -322,7 +340,8 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
@@ -355,7 +374,8 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
@@ -444,7 +464,10 @@ class ConditionSuite(unittest.TestCase):
         self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1

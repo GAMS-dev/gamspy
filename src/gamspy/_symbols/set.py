@@ -36,9 +36,10 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 if TYPE_CHECKING:
@@ -276,7 +277,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self: Set | Alias, other: Set | Alias) -> Expression:
+    def sameAs(self: Set | Alias, other: Set | Alias | str) -> Expression:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -288,8 +289,13 @@ class SetMixin:
         -------
         Expression
         """
+        other_str = (
+            f"'{str(other)}'"
+            if isinstance(other, (str, int, float))
+            else other.gamsRepr()
+        )
         return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other.gamsRepr()]), ")"
+            "sameAs(", ",".join([self.gamsRepr(), other_str]), ")"
         )
 
 
@@ -362,7 +368,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         self._is_dirty = False
         self.where = condition.Condition(self)
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         singleton_check(is_singleton, records)
 
@@ -377,7 +383,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             uels_on_axes,
         )
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
         self.container._add_statement(self)
         self._current_index = 0
 
@@ -406,7 +412,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+
+        validation.validate_domain(domain, self)
+
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
     def __setitem__(
@@ -414,8 +427,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         indices: tuple | str,
         assignment,
     ):
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        self._container_check(domain)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_container(self, domain)
+        validation.validate_domain(domain, self)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore
@@ -481,16 +499,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
         return self.name
 
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
-
     def getStatement(self) -> str:
         """
         Statement of the Set definition
@@ -517,6 +525,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 def singleton_check(is_singleton: bool, records: Any | None):
     if is_singleton:
         if records is not None and len(records) > 1:
-            raise GamspyException(
+            raise ValidationError(
                 "Singleton set records size cannot be more than one."
             )

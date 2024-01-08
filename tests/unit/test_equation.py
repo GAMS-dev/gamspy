@@ -17,14 +17,15 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 from gamspy.math import sqr
 
 
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_equation_creation(self):
@@ -51,10 +52,11 @@ class EquationSuite(unittest.TestCase):
 
         # Equation and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Equation(m, "eq1", domain=[set1])
 
     def test_equation_types(self):
@@ -130,7 +132,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_declaration(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Equation, self.m, "set")
+        self.assertRaises(ValidationError, Equation, self.m, "set")
 
         # Prepare data
         canning_plants = ["seattle", "san-diego"]
@@ -320,7 +322,8 @@ class EquationSuite(unittest.TestCase):
         )
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -474,7 +477,9 @@ class EquationSuite(unittest.TestCase):
         )
         self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
 
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i = Set(m, "i", records=[f"i{i}" for i in range(10)])
         x = Variable(m, "x", domain=[i])
         a = Equation(m, "a", "regular", [i])
@@ -508,7 +513,10 @@ class EquationSuite(unittest.TestCase):
         model.solve()
 
     def test_changed_domain(self):
-        cont = Container(delayed_execution=False)
+        cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=False,
+        )
 
         s = Set(cont, "s")
         m = Set(cont, "m")
@@ -519,18 +527,20 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_assignment(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
         j = Set(m, "j")
         a = Equation(self.m, "a", domain=[i])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             a[j] = 5
 
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)
@@ -542,9 +552,43 @@ class EquationSuite(unittest.TestCase):
         e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
         self.assertEqual(
             e._definition.getStatement(),
-            "e .. sum(i $ ((L - 1) = i.val),(( power(x(i),2) ) + ("
+            "e .. sum(i $ ((L - 1) eq i.val),(( power(x(i),2) ) + ("
             " power(y(i),2) ))) =e= 1;",
         )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Equation(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(ValidationError):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2, j4] = 5
+
+        i = Set(self.m, name="i")
+        ii = Set(self.m, name="ii", domain=[i])
+        j = Set(self.m, name="j")
+        jj = Set(self.m, name="jj", domain=[j])
+        k = Set(self.m, name="k")
+        kk = Set(self.m, name="kk", domain=[k])
+        TSAM = Variable(self.m, name="TSAM", domain=[i, j])
+        A = Variable(self.m, name="A", domain=[i, j])
+        Y = Variable(self.m, name="Y", domain=[i, j])
+        NONZERO = Set(self.m, name="NONZERO")
+        SAMCOEF = Equation(
+            self.m,
+            name="SAMCOEF",
+            domain=[i, j],
+            description="define SAM coefficients",
+        )
+
+        with self.assertRaises(ValidationError):
+            SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = (
+                TSAM[ii, jj] == A[ii, jj] * Y[jj]
+            )
 
 
 def equation_suite():

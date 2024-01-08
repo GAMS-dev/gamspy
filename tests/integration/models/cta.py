@@ -19,6 +19,8 @@ S Raghavan and Edward A Wasil, Springer, 2005, pp 45-59.
 
 Keywords: mixed integer linear programming, statistical disclosure limitations
 """
+from __future__ import annotations
+
 import math
 import os
 import sys
@@ -40,7 +42,10 @@ from gamspy.math import Round
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=True,
+    )
 
     # Sets
     i = Set(m, name="i", description="rows")

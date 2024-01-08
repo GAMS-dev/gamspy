@@ -7,16 +7,18 @@ import pandas as pd
 
 import gamspy._symbols.implicits as implicits
 from gamspy import Container
+from gamspy import Equation
 from gamspy import Set
 from gamspy import Variable
 from gamspy import VariableType
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_variable_creation(self):
@@ -43,15 +45,16 @@ class VariableSuite(unittest.TestCase):
 
         # Variable and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Variable(m, "var1", domain=[set1])
 
     def test_variable_string(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Variable, self.m, "set")
+        self.assertRaises(ValidationError, Variable, self.m, "set")
 
         # Set
         i = Set(self.m, name="i", records=["bla", "damn"])
@@ -341,6 +344,17 @@ class VariableSuite(unittest.TestCase):
             a.records.level.to_list(),
             [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
         )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Variable(self.m, "j3", domain=[j1, j2])
+        j4 = Set(self.m, "j4")
+
+        e1 = Equation(self.m, "e1", domain=[j1, j2])
+
+        with self.assertRaises(ValidationError):
+            e1[j1, j2] = j3[j1, j2, j4] * 5 <= 5
 
 
 def variable_suite():

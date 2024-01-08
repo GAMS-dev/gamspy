@@ -7,14 +7,15 @@ import unittest
 import gamspy.utils as utils
 from gamspy import Container
 from gamspy import Set
-from gamspy._algebra.domain import DomainException
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_utils(self):
@@ -30,7 +31,7 @@ class UtilsSuite(unittest.TestCase):
 
         i = Set(self.m, "i", records=["i1", "i2"])
         self.assertEqual(utils._get_domain_str([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(DomainException, utils._get_domain_str, [5])
+        self.assertRaises(ValidationError, utils._get_domain_str, [5])
 
         # invalid system directory
         self.assertRaises(GamspyException, utils._open_gdx_file, "bla", "bla")
@@ -68,15 +69,12 @@ class UtilsSuite(unittest.TestCase):
         available_solvers = utils.getAvailableSolvers()
 
         expected = [
-            "NLPEC",
-            "SBB",
-            "CONOPT",
-            "CONVERT",
-            "CPLEX",
-            "PATH",
             "BARON",
+            "CONOPT",
             "CONOPT4",
+            "CONVERT",
             "COPT",
+            "CPLEX",
             "DICOPT",
             "GUROBI",
             "HIGHS",
@@ -84,8 +82,11 @@ class UtilsSuite(unittest.TestCase):
             "IPOPTH",
             "KNITRO",
             "MINOS",
-            "MPSGE",
             "MOSEK",
+            "MPSGE",
+            "NLPEC",
+            "PATH",
+            "SBB",
             "SCIP",
             "SHOT",
             "SNOPT",

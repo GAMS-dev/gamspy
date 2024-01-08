@@ -35,6 +35,7 @@ import gamspy.utils as utils
 from .util import add_solver_entry
 from .util import remove_solver_entry
 from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 def get_args():
@@ -82,10 +83,9 @@ def install_solver(args: Dict[str, str]):
 
     try:
         import gamspy_base
-    except ModuleNotFoundError:
-        raise GamspyException(
-            "You must first install gamspy_base to use this functionality"
-        )
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
 
     if not args["skip_pip_install"]:
         # install specified solver
@@ -106,13 +106,12 @@ def install_solver(args: Dict[str, str]):
     else:
         try:
             solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-        except ModuleNotFoundError:
-            raise GamspyException(
-                f"You must install gamspy_{solver_name} first!"
-            )
+        except ModuleNotFoundError as e:
+            e.msg = f"You must install gamspy_{solver_name} first!"
+            raise e
 
         if solver_lib.__version__ != gamspy_base.__version__:
-            raise GamspyException(
+            raise ValidationError(
                 f"gamspy_base version ({gamspy_base.__version__}) and solver"
                 f" version ({solver_lib.__version__}) must match! Run `gamspy"
                 " update` to update your solvers."

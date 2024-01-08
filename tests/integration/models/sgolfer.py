@@ -35,7 +35,8 @@ from gamspy.math import Max as gams_max
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     cont = Container(
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     gf_c = gr_c * gg_c

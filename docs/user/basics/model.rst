@@ -58,6 +58,42 @@ can be specified as a string as well.
 Also the direction types of the optimization (MIN, MAX, or FEASIBILITY) are
 exposed with ``Sense`` enum but it can be specified as a string similarly.
 
+Matches for MCP Models
+======================
+
+Mixed Complementarity Problem (MCP) models can be defined as pair-wise complementarities between
+variables and equations. ``Model`` accepts these pair-wise complementarities through its `matches`
+argument in its constructor. ::
+
+    p = Variable(m, "p", type=VariableType.POSITIVE, domain=c)
+    y = Variable(m, "y", type=VariableType.POSITIVE, domain=s)
+    i = Variable(m, "i", type=VariableType.POSITIVE, domain=h)
+
+    mkt = Equation(m, "mkt", domain=c)
+    profit = Equation(m, "profit", domain=s)
+    income = Equation(m, "income", domain=h)
+
+    mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= Sum(
+        h.where[esub[h] != 1],
+        (i[h] / Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
+        * alpha[c, h]
+        * (1 / p[c]) ** esub[h],
+    ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
+
+    profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+    income[h] = i[h] >= Sum(c, p[c] * e[c, h])
+
+    hansen = Model(
+        m,
+        "hansen",
+        problem=Problem.MCP,
+        matches={mkt: p, profit: y, income: i},
+    )
+
+One does not have to provide equations that are provided in the matches in the `equations` argument.
+An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
+
+
 Model Attributes
 ================
 

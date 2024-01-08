@@ -24,7 +24,6 @@
 #
 from __future__ import annotations
 
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -86,11 +85,6 @@ class Expression(operable.Operable):
             # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
             out_str = self._fix_condition_paranthesis(out_str)
 
-        if self.data == "==":
-            # volume.lo(t)$(ord(t) == card(t)) = 2000; -> not valid
-            # volume.lo(t)$(ord(t) = card(t)) = 2000;  -> valid
-            out_str = out_str.replace("==", "=")
-
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
@@ -100,7 +94,7 @@ class Expression(operable.Operable):
 
         return out_str
 
-    def _get_operand_representations(self) -> Tuple[str, str]:
+    def _get_operand_representations(self) -> tuple[str, str]:
         if self.left is None:
             left_str = ""
         else:
@@ -129,14 +123,7 @@ class Expression(operable.Operable):
 
         if self.data == "=" and isinstance(
             self.left,
-            (
-                syms.Set,
-                syms.Parameter,
-                syms.Variable,
-                implicits.ImplicitSet,
-                implicits.ImplicitParameter,
-                implicits.ImplicitVariable,
-            ),
+            (implicits.ImplicitSet, implicits.ImplicitParameter),
         ):
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
             # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid

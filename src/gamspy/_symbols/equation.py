@@ -26,10 +26,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Any
-from typing import List
-from typing import Optional
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
@@ -39,6 +36,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
@@ -107,14 +105,14 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        type: Union[str, EquationType] = "regular",
-        domain: Optional[List[Union[Set, str]]] = None,
-        definition: Optional[Union[Variable, Operation, Expression]] = None,
-        records: Optional[Any] = None,
+        type: str | EquationType = "regular",
+        domain: list[Set | str] | None = None,
+        definition: Variable | Operation | Expression | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition_domain: Optional[list] = None,
+        definition_domain: list | None = None,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -140,19 +138,19 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self,
         container: Container,
         name: str,
-        type: Union[str, EquationType] = "regular",
-        domain: Optional[List[Union[Set, str]]] = None,
-        definition: Optional[Union[Variable, Operation, Expression]] = None,
-        records: Optional[Any] = None,
+        type: str | EquationType = "regular",
+        domain: list[Set | str] | None = None,
+        definition: Variable | Operation | Expression | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition_domain: Optional[list] = None,
+        definition_domain: list | None = None,
     ):
         type = cast_type(type)
         self._is_dirty = False
         self._is_frozen = False
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         super().__init__(
             container,
@@ -165,7 +163,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             uels_on_axes,
         )
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
 
         self.where = condition.Condition(self)
         self.container._add_statement(self)
@@ -184,19 +182,32 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def __hash__(self):
         return id(self)
 
-    def __getitem__(self, indices: Union[tuple, str]):
-        domain = self.domain if indices == ... else utils._to_list(indices)
+    def __getitem__(self, indices: tuple | str):
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+
+        validation.validate_domain(domain, self)
+
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
         )
 
     def __setitem__(
         self,
-        indices: Union[tuple, str, implicits.ImplicitSet],
+        indices: tuple | str | implicits.ImplicitSet,
         assignment: Expression,
     ):
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        self._container_check(domain)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_container(self, domain)
+
+        validation.validate_domain(domain, self)
 
         self._set_definition(assignment, domain)
         self._is_dirty = True
@@ -225,7 +236,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     def _init_definition(
         self,
-        assignment: Optional[Union[Variable, Operation, Expression]] = None,
+        assignment: Variable | Operation | Expression | None = None,
     ) -> None:
         if assignment is None:
             self._definition = assignment  # type: ignore
@@ -255,10 +266,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._definition = statement
 
-    def _adapt_mcp_equation(self, assignment):
+    def _adapt_mcp_equation(self, assignment: Expression | Operation):
         assignment = assignment == 0
-        assignment.replace(assignment.data, non_regular_map[self.type])
-        assignment.data = non_regular_map[self.type]
+
+        if self.type in non_regular_map.keys():
+            assignment.replace(assignment.data, non_regular_map[self.type])
+            assignment.data = non_regular_map[self.type]
 
         return assignment
 
@@ -432,16 +445,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self.name
 
-    def _get_domain_str(self):
-        set_strs = []
-        for set in self.domain:
-            if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(set.gamsRepr())
-            elif isinstance(set, str):
-                set_strs.append("*")
-
-        return "(" + ",".join(set_strs) + ")"
-
     def getStatement(self) -> str:
         """
         Statement of the Equation declaration
@@ -462,7 +465,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return output
 
 
-def cast_type(type: Union[str, EquationType]) -> str:
+def cast_type(type: str | EquationType) -> str:
     if isinstance(type, str):
         if type.upper() not in EquationType.values():
             raise ValueError(

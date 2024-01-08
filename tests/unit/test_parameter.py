@@ -13,13 +13,14 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_parameter_creation(self):
@@ -46,17 +47,18 @@ class ParameterSuite(unittest.TestCase):
 
         # Parameter and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Parameter(m, "param1", domain=[set1])
 
     def test_parameter_string(self):
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Parameter, self.m, "set")
+        self.assertRaises(ValidationError, Parameter, self.m, "set")
 
         i = Set(
             self.m,
@@ -81,7 +83,7 @@ class ParameterSuite(unittest.TestCase):
 
         b = Parameter(self.m, "b")
         self.assertEqual(b.getStatement(), "Parameter b;")
-        self.assertEqual((b == 5).gamsRepr(), "(b = 5)")
+        self.assertEqual((b == 5).gamsRepr(), "(b eq 5)")
         self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):
@@ -110,7 +112,11 @@ class ParameterSuite(unittest.TestCase):
             "a(i) = (-a(i) * 5);",
         )
 
-        cont = Container(delayed_execution=False, working_directory=".")
+        cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=False,
+            working_directory=".",
+        )
 
         s = Set(cont, "s")
         m = Set(cont, "m")
@@ -121,14 +127,15 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_assignment(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
         j = Set(m, "j")
         a = Parameter(self.m, "a", domain=[i])
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             a[j] = 5
 
     def test_implicit_parameter_assignment(self):
@@ -200,7 +207,8 @@ class ParameterSuite(unittest.TestCase):
 
     def test_undef(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         _ = Parameter(
             m, name="rho", records=[np.nan]
@@ -214,6 +222,35 @@ class ParameterSuite(unittest.TestCase):
             "$offUNDF\n$gdxIn\n"
             f"execute_unload '{m._gdx_out}' \n",
         )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Parameter(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(ValidationError):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2, j4] = 5
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2] = j3[j1, j2, j4] * 5
+
+    def test_domain_verification(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
+        i1 = Set(m, "i1", records=["i1", "i2"])
+        a1 = Parameter(m, "a1", domain=i1, records=[("i1", 1), ("i2", 2)])
+        a1["i1"] = 5
+
+        with self.assertRaises(ValidationError):
+            a1["i3"] = 5
+
+        with self.assertRaises(ValidationError):
+            a1["i3"] = a1["i3"] * 5
 
 
 def parameter_suite():

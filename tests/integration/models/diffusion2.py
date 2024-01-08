@@ -479,7 +479,10 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # SETS #
     time = Set(m, name="time", records=[f"t{t}" for t in range(1, 26)])

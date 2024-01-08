@@ -51,7 +51,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | str] = [],
+        domain: list[Set | str] = ["*"],
     ) -> None:
         super().__init__(parent, name, domain)
 
@@ -64,10 +64,14 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     def __le__(self, other) -> Expression:
         return expression.Expression(self, "<=", other)
 
+    @property
+    def dimension(self):
+        return self.parent.dimension
+
     def gamsRepr(self) -> str:
         representation = self.name
 
-        if self.domain:
+        if self.domain != ["*"]:
             representation += utils._get_domain_str(self.domain)
 
         return representation

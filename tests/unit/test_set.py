@@ -10,13 +10,14 @@ from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Set
 from gamspy import UniverseAlias
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
         )
 
     def test_set_creation(self):
@@ -43,15 +44,16 @@ class SetSuite(unittest.TestCase):
 
         # Set and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             _ = Set(m, "set2", domain=[set1])
 
     def test_set_string(self):
         # Check if the name is reserved
-        self.assertRaises(GamspyException, Set, self.m, "set")
+        self.assertRaises(ValidationError, Set, self.m, "set")
 
         # Without records
         b = Set(self.m, "b")
@@ -92,11 +94,13 @@ class SetSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            GamspyException, Set, self.m, "s2", None, True, ["i1", "i2"]
+            ValidationError, Set, self.m, "s2", None, True, ["i1", "i2"]
         )
 
     def test_records_assignment(self):
-        new_cont = Container()
+        new_cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i = Set(self.m, "i")
         j = Set(self.m, "j", domain=[i])
         k = Set(new_cont, "k")
@@ -105,7 +109,7 @@ class SetSuite(unittest.TestCase):
         with self.assertRaises(TypeError):
             s.records = 5
 
-        with self.assertRaises(GamspyException):
+        with self.assertRaises(ValidationError):
             j[k] = 5
 
     def test_set_operators(self):
@@ -147,7 +151,10 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
@@ -156,7 +163,9 @@ class SetSuite(unittest.TestCase):
             'i("i1") = no;',
         )
 
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
         self.assertEqual(k._is_dirty, False)
@@ -197,7 +206,10 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+        )
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
@@ -260,7 +272,8 @@ class SetSuite(unittest.TestCase):
 
         # UniverseAlias with no records
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         x = Set(m, "set1")
         a = UniverseAlias(m, "universe1")
@@ -285,6 +298,46 @@ class SetSuite(unittest.TestCase):
         j = Alias(self.m, "j", i)
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
+
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=True,
+        )
+        i = Set(m, "i", records=["1", "2", "3"])
+        p = Parameter(m, "p", [i])
+        p[i] = i.sameAs("2")
+        self.assertEqual(
+            m._unsaved_statements[-1].getStatement(),
+            "p(i) = (sameAs( i,'2' ));",
+        )
+
+    def test_assignment_dimensionality(self):
+        j1 = Set(self.m, "j1")
+        j2 = Set(self.m, "j2")
+        j3 = Set(self.m, "j3", domain=[j1, j2])
+        with self.assertRaises(ValidationError):
+            j3["bla"] = 5
+
+        j4 = Set(self.m, "j4")
+
+        with self.assertRaises(ValidationError):
+            j3[j1, j2, j4] = 5
+
+        j5 = Set(self.m, "j5", domain=[j1, j2])
+        j6 = Set(self.m, "j6", domain=[j1, j2])
+
+        with self.assertRaises(ValidationError):
+            j6[j1, j2] = j5[j1, j2, j3]
+
+    def test_domain_verification(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
+        i1 = Set(m, "i1", records=["i1", "i2"])
+        i2 = Set(m, "i2", records=["i1"], domain=i1)
+
+        with self.assertRaises(ValidationError):
+            i2["i3"] = True
 
 
 def set_suite():

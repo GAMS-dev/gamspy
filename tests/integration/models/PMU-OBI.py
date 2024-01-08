@@ -32,7 +32,10 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Set
     bus = Set(m, name="bus", records=[str(idx) for idx in range(1, 15)])
