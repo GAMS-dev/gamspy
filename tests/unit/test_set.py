@@ -17,7 +17,7 @@ class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_set_creation(self):
@@ -121,8 +121,9 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(ord.gamsRepr(), "ord(i)")
 
     def test_implicit_sets(self):
-        j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
-        k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
+        m = Container(delayed_execution=True)
+        j = Set(m, "j", records=["seattle", "san-diego", "california"])
+        k = Set(m, "k", domain=[j], records=["seattle", "san-diego"])
 
         expr = k[j] <= k[j]
         self.assertEqual(expr.gamsRepr(), "(k(j) <= k(j))")
@@ -131,7 +132,7 @@ class SetSuite(unittest.TestCase):
 
         k[j] = ~k[j]
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            m._unsaved_statements[-1].gamsRepr(),
             "k(j) = ( not k(j));",
         )
 
@@ -153,7 +154,7 @@ class SetSuite(unittest.TestCase):
     def test_dynamic_sets(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=True,
         )
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
@@ -208,7 +209,7 @@ class SetSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=True,
         )
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])

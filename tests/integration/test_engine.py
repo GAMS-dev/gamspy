@@ -30,13 +30,13 @@ class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_engine(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -129,7 +129,7 @@ class EngineSuite(unittest.TestCase):
     def test_no_config(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -181,7 +181,7 @@ class EngineSuite(unittest.TestCase):
     def test_extra_files(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -249,7 +249,7 @@ class EngineSuite(unittest.TestCase):
     def test_solve_twice(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -308,7 +308,7 @@ class EngineSuite(unittest.TestCase):
     def test_summary(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data

@@ -18,7 +18,7 @@ class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_variable_creation(self):
@@ -192,8 +192,9 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(v4.type, "positive")
 
     def test_variable_attributes(self):
+        m = Container(delayed_execution=True)
         pi = Variable(
-            self.m,
+            m,
             "pi",
             records=pd.DataFrame(data=[3.14159], columns=["level"]),
         )
@@ -244,8 +245,8 @@ class VariableSuite(unittest.TestCase):
         )
         self.assertEqual(pi.stage.gamsRepr(), "pi.stage")
 
-        i = Set(self.m, name="i", records=["bla", "damn"])
-        test = Variable(self.m, "test", domain=[i])
+        i = Set(m, name="i", records=["bla", "damn"])
+        test = Variable(m, "test", domain=[i])
         self.assertTrue(
             hasattr(test, "l")
             and isinstance(test.l, implicits.ImplicitParameter)
@@ -279,11 +280,11 @@ class VariableSuite(unittest.TestCase):
             and isinstance(test.stage, implicits.ImplicitParameter)
         )
 
-        k = Set(self.m, "k")
-        x = Variable(self.m, "x", domain=[k])
+        k = Set(m, "k")
+        x = Variable(m, "x", domain=[k])
         x.l[k] = 5
         self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
+            m._unsaved_statements[-1].gamsRepr(),
             "x.l(k) = 5;",
         )
         self.assertTrue(x._is_dirty)
