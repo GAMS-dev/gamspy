@@ -192,7 +192,9 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(v4.type, "positive")
 
     def test_variable_attributes(self):
-        m = Container(delayed_execution=True)
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         pi = Variable(
             m,
             "pi",
@@ -283,11 +285,15 @@ class VariableSuite(unittest.TestCase):
         k = Set(m, "k")
         x = Variable(m, "x", domain=[k])
         x.l[k] = 5
-        self.assertEqual(
-            m._unsaved_statements[-1].gamsRepr(),
-            "x.l(k) = 5;",
-        )
-        self.assertTrue(x._is_dirty)
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "x.l(k) = 5;",
+            )
+            self.assertTrue(x._is_dirty)
+        else:
+            self.assertFalse(x._is_dirty)
 
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

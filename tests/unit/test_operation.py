@@ -169,7 +169,7 @@ class OperationSuite(unittest.TestCase):
     def test_operation_overloads(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=True,
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         c = Set(m, "c")
         s = Set(m, "s")
@@ -187,10 +187,12 @@ class OperationSuite(unittest.TestCase):
         # test ne
         bla = Parameter(m, "bla", domain=s)
         bla[...] = Sum(c, a[c, s] * p[c]) != 0
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            "bla(s) = (sum(c,(a(c,s) * p(c))) ne 0);",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                "bla(s) = (sum(c,(a(c,s) * p(c))) ne 0);",
+            )
 
 
 def operation_suite():

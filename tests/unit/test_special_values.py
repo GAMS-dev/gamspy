@@ -14,7 +14,7 @@ class SpecialValuesSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=True,
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_parameter_special_values(self):
@@ -26,29 +26,35 @@ class SpecialValuesSuite(unittest.TestCase):
 
         b = Parameter(self.m, "b", domain=[i])
         b[...] = gp.SpecialValues.EPS
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b(i) = EPS;"
-        )
+
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = EPS;"
+            )
 
         b[...] = gp.SpecialValues.NA
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b(i) = NA;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = NA;"
+            )
 
         b[...] = gp.SpecialValues.UNDEF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b(i) = UNDF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = UNDF;"
+            )
 
         b[...] = gp.SpecialValues.POSINF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b(i) = INF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = INF;"
+            )
 
         b[...] = gp.SpecialValues.NEGINF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b(i) = -INF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = -INF;"
+            )
 
     def test_implicit_parameter_special_values(self):
         i = Set(self.m, "i", records=["i1", "i2"])
