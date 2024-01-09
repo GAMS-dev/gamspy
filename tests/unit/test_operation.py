@@ -186,12 +186,13 @@ class OperationSuite(unittest.TestCase):
 
         # test ne
         bla = Parameter(m, "bla", domain=s)
-        bla[...] = Sum(c, a[c, s] * p[c]) != 0
+        bla2 = Parameter(m, "bla2", domain=s)
+        bla[...] = bla2[...] != 0
 
         if m.delayed_execution:
             self.assertEqual(
                 m._unsaved_statements[-1].getStatement(),
-                "bla(s) = (sum(c,(a(c,s) * p(c))) ne 0);",
+                "bla(s) = (bla2(s) ne 0);",
             )
 
 

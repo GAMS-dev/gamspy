@@ -117,6 +117,12 @@ class ConditionSuite(unittest.TestCase):
             records=pd.DataFrame(markets),
             description="markets",
         )
+        k = Set(
+            m,
+            name="k",
+            records=pd.DataFrame(steel_plants),
+            description="steel plants",
+        )
 
         p = Set(m, name="p", records=[f"pos{elem}" for elem in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{elem}" for elem in range(1, 6)])
@@ -148,19 +154,19 @@ class ConditionSuite(unittest.TestCase):
             expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
         )
 
-        i["ahmsa"] = True
+        k["ahmsa"] = True
         if m.delayed_execution:
             self.assertEqual(
                 m._unsaved_statements[-1].getStatement(),
-                'i("ahmsa") = yes;',
+                'k("ahmsa") = yes;',
             )
 
-        i["ahmsa"] = False
+        k["ahmsa"] = False
 
         if m.delayed_execution:
             self.assertEqual(
                 m._unsaved_statements[-1].getStatement(),
-                'i("ahmsa") = no;',
+                'k("ahmsa") = no;',
             )
 
         t = Set(

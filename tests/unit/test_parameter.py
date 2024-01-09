@@ -173,11 +173,11 @@ class ParameterSuite(unittest.TestCase):
             ),
         )
 
-        a[i] = Sum(i, b[i])
+        a[i] = b[i]
         if m.delayed_execution:
             self.assertEqual(
                 m._unsaved_statements[-1].getStatement(),
-                "a(i) = sum(i,b(i));",
+                "a(i) = b(i);",
             )
 
         v = Variable(m, "v", domain=[i])

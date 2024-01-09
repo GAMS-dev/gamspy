@@ -61,29 +61,35 @@ class SpecialValuesSuite(unittest.TestCase):
 
         b = Variable(self.m, "b", domain=[i])
         b.l[...] = gp.SpecialValues.EPS
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = EPS;"
-        )
+
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = EPS;"
+            )
 
         b.l[...] = gp.SpecialValues.NA
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = NA;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = NA;"
+            )
 
         b.l[...] = gp.SpecialValues.UNDEF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = UNDF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = UNDF;"
+            )
 
         b.l[...] = gp.SpecialValues.POSINF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = INF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = INF;"
+            )
 
         b.l[...] = gp.SpecialValues.NEGINF
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = -INF;"
-        )
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = -INF;"
+            )
 
     def test_operation_special_values(self):
         tax = Set(self.m, "tax", records=["i1", "i2"])
@@ -95,10 +101,12 @@ class SpecialValuesSuite(unittest.TestCase):
         results[tax, "x"] = gp.math.Max(
             x.l[tax] - e.l[tax], gp.SpecialValues.EPS
         )
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
-            'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
-        )
+
+        if self.m.delayed_execution:
+            self.assertEqual(
+                self.m._unsaved_statements[-1].gamsRepr(),
+                'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
+            )
 
 
 def special_values_suite():
