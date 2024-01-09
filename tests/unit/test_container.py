@@ -462,8 +462,13 @@ class ContainerSuite(unittest.TestCase):
         c[i, j] = 90 * d[i, j] / 1000
 
         m.write("test.gdx")
-        self.assertTrue(c.modified)
-        self.assertFalse(c._is_dirty)
+
+        if m.delayed_execution:
+            self.assertTrue(c.modified)
+            self.assertTrue(c._is_dirty)
+        else:
+            self.assertFalse(c.modified)
+            self.assertFalse(c._is_dirty)
 
     def test_write(self):
         from gamspy import SpecialValues
