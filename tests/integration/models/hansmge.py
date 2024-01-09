@@ -9,6 +9,7 @@ Keywords: mixed complementarity problem, general equilibrium model, activity ana
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from gamspy import Container
@@ -41,6 +42,7 @@ $sysInclude mpsgeset HANSEN
 $include HANSEN.GEN
 """
     m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         working_directory=".",
         load_from=str(Path(__file__).parent.absolute()) + "/hansmge.gdx",
     )

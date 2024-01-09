@@ -36,6 +36,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
@@ -374,7 +375,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         self._is_dirty = False
         self.where = condition.Condition(self)
-        name = utils._reserved_check(name)
+        name = validation.validate_name(name)
 
         singleton_check(is_singleton, records)
 
@@ -389,7 +390,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             uels_on_axes,
         )
 
-        self._container_check(self.domain)
+        validation.validate_container(self, self.domain)
         self.container._add_statement(self)
         self._current_index = 0
         self._is_miro_input = is_miro_input
@@ -420,9 +421,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
 
-        utils._verify_dimension(domain, self)
+        validation.validate_domain(domain, self)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
@@ -431,9 +436,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         indices: tuple | str,
         assignment,
     ):
-        domain = self.domain if indices == ... else utils._to_list(indices)
-        self._container_check(domain)
-        utils._verify_dimension(domain, self)
+        domain = (
+            self.domain
+            if isinstance(indices, type(...))
+            else utils._to_list(indices)
+        )
+        validation.validate_container(self, domain)
+        validation.validate_domain(domain, self)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

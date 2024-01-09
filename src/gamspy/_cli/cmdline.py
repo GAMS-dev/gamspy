@@ -31,7 +31,6 @@ import platform
 import shutil
 import subprocess
 import sys
-from typing import Dict
 
 import gamspy.utils as utils
 from .util import add_solver_entry
@@ -41,13 +40,11 @@ from gamspy.exceptions import ValidationError
 
 
 def get_args():
-    parser = argparse.ArgumentParser(
-        prog="gamspy",
-        description="A script for installing solvers and licenses",
-    )
+    parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
+
     parser.add_argument(
         "command",
-        choices=["install", "list", "run", "update", "uninstall"],
+        choices=["install", "list", "run", "update", "uninstall", "version"],
         type=str,
     )
     parser.add_argument(
@@ -57,34 +54,6 @@ def get_args():
         nargs="?",
         default=None,
     )
-
-    install_group = parser.add_argument_group(
-        "install solver", description="`gamspy install solver` options"
-    )
-    install_group.add_argument(
-        "name", type=str, nargs="?", default=None, help="Solver name"
-    )
-    install_group.add_argument(
-        "--skip-pip-install",
-        action="store_true",
-        help=(
-            "If you already have the solver installed, skip pip install and"
-            " update gamspy installed solver list."
-        ),
-    )
-    install_group.add_argument(
-        "--skip-pip-uninstall",
-        action="store_true",
-        help=(
-            "If you don't want to uninstall the package of the solver, skip"
-            " uninstall and update gamspy installed solver list."
-        ),
-    )
-
-    list_group = parser.add_argument_group(
-        "list solvers", description="`gamspy list solvers` options"
-    )
-    list_group.add_argument("-a", "--all", action="store_true")
 
     miro_group = parser.add_argument_group(
         "run miro", description="`gamspy run miro` options"
@@ -115,21 +84,60 @@ def get_args():
         default=None,
     )
     miro_group.add_argument(
-        "-s",
         "--skip-execution",
         help="Whether to skip model execution",
         action="store_true",
     )
     parser.add_argument("--version", action="store_true")
 
-    res = vars(parser.parse_args())
+    _ = parser.add_argument_group(
+        "gamspy install|uninstall license",
+        description="Options for installing/uninstalling a license.",
+    )
 
-    return res
+    install_group = parser.add_argument_group(
+        "gamspy install|uninstall solver",
+        description="Options for installing solvers",
+    )
+    install_group.add_argument(
+        "name", type=str, nargs="?", default=None, help="Solver name"
+    )
+    install_group.add_argument(
+        "--skip-pip-install",
+        "-s",
+        action="store_true",
+        help=(
+            "If you already have the solver installed, skip pip install and"
+            " update gamspy installed solver list."
+        ),
+    )
+    install_group.add_argument(
+        "--skip-pip-uninstall",
+        "-u",
+        action="store_true",
+        help=(
+            "If you don't want to uninstall the package of the solver, skip"
+            " uninstall and update gamspy installed solver list."
+        ),
+    )
+
+    list_group = parser.add_argument_group(
+        "list solvers", description="`gamspy list solvers` options"
+    )
+    list_group.add_argument("-a", "--all", action="store_true")
+
+    return parser.parse_args()
 
 
-def install_license(args: Dict[str, str]):
+def install_license(args: argparse.Namespace):
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    shutil.copy(args["name"], gamspy_base_dir + os.sep + "gamslice.txt")
+
+    if args.name is None or not os.path.exists(args.name):
+        raise ValidationError(
+            f'Given license path ("{args.name}") is not valid.'
+        )
+
+    shutil.copy(args.name, gamspy_base_dir + os.sep + "gamslice.txt")
 
 
 def uninstall_license():
@@ -137,8 +145,14 @@ def uninstall_license():
     os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
 
 
-def install_solver(args: Dict[str, str]):
-    solver_name = args["name"]
+def install_solver(args: argparse.Namespace):
+    solver_name = args.name
+
+    if solver_name.upper() not in utils.getAvailableSolvers():
+        raise ValidationError(
+            f'Given solver name ("{solver_name}") is not valid. Available'
+            f" solvers that can be installed: {utils.getAvailableSolvers()}"
+        )
 
     try:
         import gamspy_base
@@ -146,7 +160,7 @@ def install_solver(args: Dict[str, str]):
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    if not args["skip_pip_install"]:
+    if not args.skip_pip_install:
         # install specified solver
         try:
             _ = subprocess.run(
@@ -219,18 +233,25 @@ def append_dist_info(files, gamspy_base_dir: str):
         record.write("\n".join(lines))
 
 
-def uninstall_solver(args: Dict[str, str]):
-    solver_name = args["name"]
+def uninstall_solver(args: argparse.Namespace):
+    solver_name = args.name
 
-    if not args["skip_pip_uninstall"]:
+    if solver_name.upper() not in utils.getInstalledSolvers():
+        raise ValidationError(
+            f'Given solver name ("{solver_name}") is not valid. Installed'
+            " solvers solvers that can be uninstalled:"
+            f" {utils.getInstalledSolvers()}"
+        )
+
+    if not args.skip_pip_uninstall:
         # uninstall specified solver
         try:
             _ = subprocess.run(
-                ["pip", "uninstall", f"gamspy_{solver_name}"], check=True
+                ["pip", "uninstall", f"gamspy-{solver_name}"], check=True
             )
         except subprocess.CalledProcessError as e:
             raise GamspyException(
-                f"Could not uninstall gamspy_{solver_name}: {e.output}"
+                f"Could not uninstall gamspy-{solver_name}: {e.output}"
             )
 
     # do not delete files from gamspy_base as other solvers might depend on it
@@ -238,10 +259,10 @@ def uninstall_solver(args: Dict[str, str]):
     remove_solver_entry(gamspy_base_dir, solver_name)
 
 
-def install(args: Dict[str, str]):
-    if args["component"] == "license":
+def install(args: argparse.Namespace):
+    if args.component == "license":
         install_license(args)
-    elif args["component"] == "solver":
+    elif args.component == "solver":
         install_solver(args)
 
 
@@ -253,13 +274,13 @@ def update():
             [
                 "pip",
                 "install",
-                "gamspy_base",
+                "gamspy-base",
                 "--force-reinstall",
             ],
             check=True,
         )
     except subprocess.CalledProcessError as e:
-        raise GamspyException(f"Could not uninstall gamspy_base: {e.output}")
+        raise GamspyException(f"Could not uninstall gamspy-base: {e.output}")
 
     import gamspy_base
 
@@ -276,7 +297,7 @@ def update():
                 [
                     "pip",
                     "install",
-                    f"gamspy_{solver.lower()}=={gamspy_base.version}",
+                    f"gamspy-{solver.lower()}=={gamspy_base.version}",
                     "--force-reinstall",
                 ],
                 check=True,
@@ -284,30 +305,30 @@ def update():
         except subprocess.CalledProcessError as e:
             raise GamspyException(
                 "Could not uninstall"
-                f" gamspy_{solver.lower()}=={gamspy_base.version}: {e.output}"
+                f" gamspy-{solver.lower()}=={gamspy_base.version}: {e.output}"
             )
 
 
-def list(args: Dict[str, str]):
-    component = args["component"]
+def list_solvers(args: argparse.Namespace):
+    component = args.component
 
     if component == "solvers":
-        if args["all"]:
+        if args.all:
             return utils.getAvailableSolvers()
 
         print(utils.getInstalledSolvers())
 
 
-def run(args: Dict[str, str]):
-    component = args["component"]
+def run(args: argparse.Namespace):
+    component = args.component
 
     if component == "miro":
-        model = os.path.abspath(args["model"])
-        mode = args["mode"]
+        model = os.path.abspath(args.model)
+        mode = args.mode
         path = os.getenv("MIRO_PATH", None)
 
-        if args["path"] is not None:
-            path = args["path"]
+        if args.path is not None:
+            path = args.path
 
         if model is None or path is None:
             raise GamspyException(
@@ -321,7 +342,7 @@ def run(args: Dict[str, str]):
             path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
 
         # Initialize MIRO
-        if not args["skip_execution"]:
+        if not args.skip_execution:
             subprocess_env = os.environ.copy()
             subprocess_env["MIRO"] = "1"
             subprocess.run(
@@ -342,11 +363,13 @@ def run(args: Dict[str, str]):
 
         subprocess.run([path], env=subprocess_env, check=True)
 
+    return None
 
-def uninstall(args: Dict[str, str]):
-    if args["component"] == "license":
+
+def uninstall(args: argparse.Namespace):
+    if args.component == "license":
         uninstall_license()
-    elif args["component"] == "solver":
+    elif args.component == "solver":
         uninstall_solver(args)
 
 
@@ -355,19 +378,19 @@ def main():
     Entry point for gamspy command line application.
     """
     args = get_args()
-    if args["version"]:
+    if args.command == "version":
         import gamspy
 
         print(f"GAMSPy version: {gamspy.__version__}")
-        return
-
-    if args["command"] == "install":
+    elif args.command == "install":
         install(args)
-    elif args["command"] == "list":
-        list(args)
-    elif args["command"] == "run":
+    elif args.command == "run":
         run(args)
-    elif args["command"] == "update":
+    elif args.command == "update":
         update()
-    elif args["command"] == "uninstall":
+    elif args.command == "list":
+        solvers = list_solvers(args)
+        if solvers:
+            print(solvers)
+    elif args.command == "uninstall":
         uninstall(args)

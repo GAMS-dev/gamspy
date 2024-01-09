@@ -92,7 +92,10 @@ def data_records():
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # SETS #
     bus = Set(m, name="bus", records=[str(buses) for buses in range(1, 7)])

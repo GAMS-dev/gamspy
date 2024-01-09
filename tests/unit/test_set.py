@@ -16,7 +16,8 @@ from gamspy.exceptions import ValidationError
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_set_creation(self):
@@ -43,7 +44,8 @@ class SetSuite(unittest.TestCase):
 
         # Set and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -96,7 +98,9 @@ class SetSuite(unittest.TestCase):
         )
 
     def test_records_assignment(self):
-        new_cont = Container()
+        new_cont = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
         i = Set(self.m, "i")
         j = Set(self.m, "j", domain=[i])
         k = Set(new_cont, "k")
@@ -117,8 +121,11 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(ord.gamsRepr(), "ord(i)")
 
     def test_implicit_sets(self):
-        j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
-        k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
+        j = Set(m, "j", records=["seattle", "san-diego", "california"])
+        k = Set(m, "k", domain=[j], records=["seattle", "san-diego"])
 
         expr = k[j] <= k[j]
         self.assertEqual(expr.gamsRepr(), "(k(j) <= k(j))")
@@ -126,10 +133,12 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(expr.gamsRepr(), "(k(j) >= k(j))")
 
         k[j] = ~k[j]
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
-            "k(j) = ( not k(j));",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "k(j) = ( not k(j));",
+            )
 
     def test_set_operations(self):
         i = Set(self.m, "i", records=["seattle", "san-diego"])
@@ -147,19 +156,30 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "i - k")
 
     def test_dynamic_sets(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            'i("i1") = no;',
-        )
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                'i("i1") = no;',
+            )
 
-        m = Container()
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
-        self.assertEqual(k._is_dirty, False)
+
+        if m.delayed_execution:
+            self.assertTrue(k._is_dirty)
+        else:
+            self.assertFalse(k._is_dirty)
 
     def test_lag_and_lead(self):
         set = Set(
@@ -197,16 +217,21 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
         sMinDown = Set(m, name="sMinDown", domain=[s, t])
         sMinDown[s, t.lead(Ord(t) - Ord(s))] = 1
-        self.assertEqual(
-            m._unsaved_statements[-1].gamsRepr(),
-            "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
+            )
 
     def test_set_attributes(self):
         i = Set(self.m, "i")
@@ -260,7 +285,8 @@ class SetSuite(unittest.TestCase):
 
         # UniverseAlias with no records
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         x = Set(m, "set1")
         a = UniverseAlias(m, "universe1")
@@ -286,14 +312,19 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
         self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
 
-        m = Container(delayed_execution=True)
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
         i = Set(m, "i", records=["1", "2", "3"])
         p = Parameter(m, "p", [i])
         p[i] = i.sameAs("2")
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            "p(i) = (sameAs( i,'2' ));",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                "p(i) = (sameAs( i,'2' ));",
+            )
 
     def test_assignment_dimensionality(self):
         j1 = Set(self.m, "j1")
@@ -312,6 +343,16 @@ class SetSuite(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             j6[j1, j2] = j5[j1, j2, j3]
+
+    def test_domain_verification(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
+        i1 = Set(m, "i1", records=["i1", "i2"])
+        i2 = Set(m, "i2", records=["i1"], domain=i1)
+
+        with self.assertRaises(ValidationError):
+            i2["i3"] = True
 
 
 def set_suite():

@@ -14,7 +14,8 @@ from gamspy import Variable
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_magics(self):
@@ -25,10 +26,9 @@ class MagicsSuite(unittest.TestCase):
 
         # Set
         i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=demands)
 
         # Variable
         x = Variable(self.m, name="x", domain=[i], type="Positive")

@@ -36,7 +36,10 @@ from gamspy import Variable
 
 
 def main():
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Set
     t = Set(m, name="t", records=["period-1", "period-2", "period-3"])

@@ -28,9 +28,7 @@ import os
 import platform
 from collections.abc import Sequence
 from typing import Iterable
-from typing import List
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -40,8 +38,8 @@ from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import ImplicitSet, ImplicitParameter
-    from gamspy import Alias, Set, Parameter, Equation
+    from gamspy._symbols.implicits import ImplicitSet
+    from gamspy import Alias, Set
     from gamspy import Domain
     from gamspy._algebra.expression import Expression
 
@@ -222,143 +220,6 @@ def _get_gamspy_base_directory() -> str:
     return gamspy_base_directory
 
 
-def _get_dimension(
-    domain: List[Set | Alias | ImplicitSet | str],
-):
-    dimension = 0
-
-    for elem in domain:
-        if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-            dimension += elem.dimension
-        else:
-            dimension += 1
-
-    return dimension
-
-
-def _verify_dimension(
-    domain: List[Set | Alias | ImplicitSet | str],
-    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
-):
-    dimension = _get_dimension(domain)
-
-    if dimension != symbol.dimension:
-        raise ValidationError(
-            f"The symbol {symbol.name} is referenced with"
-            f" {'more' if dimension > symbol.dimension else 'less'} indices"
-            f" than declared. Declared dimension is {symbol.dimension} but"
-            f" given dimension is {dimension}"
-        )
-
-
-def _reserved_check(word: str) -> str:
-    reserved_words = [
-        "abort",
-        "acronym",
-        "acronyms",
-        "alias",
-        "all",
-        "and",
-        "binary",
-        "break",
-        "card",
-        "continue",
-        "diag",
-        "display",
-        "do",
-        "else",
-        "elseif",
-        "endfor",
-        "endif",
-        "endloop",
-        "endwhile",
-        "eps",
-        "equation",
-        "equations",
-        "execute",
-        "execute_load",
-        "execute_loaddc",
-        "execute_loadhandle",
-        "execute_loadpoint",
-        "execute_unload",
-        "execute_unloaddi",
-        "execute_unloadidx",
-        "file",
-        "files",
-        "for",
-        "free",
-        "function",
-        "functions",
-        "gdxLoad",
-        "if",
-        "inf",
-        "integer",
-        "logic",
-        "loop",
-        "model",
-        "models",
-        "na",
-        "negative",
-        "nonnegative",
-        "no",
-        "not",
-        "option",
-        "options",
-        "or",
-        "ord",
-        "parameter",
-        "parameters",
-        "positive",
-        "prod",
-        "put",
-        "put_utility",
-        "putclear",
-        "putclose",
-        "putfmcl",
-        "puthd",
-        "putheader",
-        "putpage",
-        "puttitle",
-        "puttl",
-        "repeat",
-        "sameas",
-        "sand",
-        "scalar",
-        "scalars",
-        "semicont",
-        "semiint",
-        "set",
-        "sets",
-        "singleton",
-        "smax",
-        "smin",
-        "solve",
-        "sor",
-        "sos1",
-        "sos2",
-        "sum",
-        "system",
-        "table",
-        "tables",
-        "then",
-        "undf",
-        "until",
-        "variable",
-        "variables",
-        "while",
-        "xor",
-        "yes",
-    ]
-
-    if word.lower() in reserved_words:
-        raise ValidationError(
-            "Name cannot be one of the reserved words. List of reserved"
-            f" words: {reserved_words}"
-        )
-
-    return word
-
-
 def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.
@@ -460,8 +321,6 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     Exception
         Given domain must contain only sets, aliases or strings
     """
-    from gamspy._algebra.domain import DomainException
-
     set_strs = []
     for set in domain:
         if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
@@ -472,7 +331,7 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
             else:
                 set_strs.append('"' + set + '"')
         else:
-            raise DomainException(
+            raise ValidationError(
                 f"Domain type must be str, Set or Alias but found {type(set)}"
             )
 

@@ -7,13 +7,14 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Parameter
 from gamspy import Set
-from gamspy._algebra.domain import DomainException
+from gamspy.exceptions import ValidationError
 
 
 class DomainSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_domain(self):
@@ -25,14 +26,15 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(domain.gamsRepr(), "(i,j)")
 
         # Domain with less than two sets
-        self.assertRaises(DomainException, Domain, i)
+        self.assertRaises(ValidationError, Domain, i)
 
         # Domain with no set or alias symbols
-        self.assertRaises(DomainException, Domain, "i", "j")
+        self.assertRaises(ValidationError, Domain, "i", "j")
 
     def test_domain_forwarding(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, name="i")
         _ = Parameter(

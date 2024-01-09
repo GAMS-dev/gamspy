@@ -6,6 +6,7 @@
 
    User Guide <user/index>
    API Reference <reference/index>
+   CLI Reference <cli/index>
    Release Notes <release/index>
 
 ###############

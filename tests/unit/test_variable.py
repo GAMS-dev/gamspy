@@ -17,7 +17,8 @@ from gamspy.exceptions import ValidationError
 class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_variable_creation(self):
@@ -44,7 +45,8 @@ class VariableSuite(unittest.TestCase):
 
         # Variable and domain containers are different
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -190,8 +192,11 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(v4.type, "positive")
 
     def test_variable_attributes(self):
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         pi = Variable(
-            self.m,
+            m,
             "pi",
             records=pd.DataFrame(data=[3.14159], columns=["level"]),
         )
@@ -242,8 +247,8 @@ class VariableSuite(unittest.TestCase):
         )
         self.assertEqual(pi.stage.gamsRepr(), "pi.stage")
 
-        i = Set(self.m, name="i", records=["bla", "damn"])
-        test = Variable(self.m, "test", domain=[i])
+        i = Set(m, name="i", records=["bla", "damn"])
+        test = Variable(m, "test", domain=[i])
         self.assertTrue(
             hasattr(test, "l")
             and isinstance(test.l, implicits.ImplicitParameter)
@@ -277,14 +282,18 @@ class VariableSuite(unittest.TestCase):
             and isinstance(test.stage, implicits.ImplicitParameter)
         )
 
-        k = Set(self.m, "k")
-        x = Variable(self.m, "x", domain=[k])
+        k = Set(m, "k")
+        x = Variable(m, "x", domain=[k])
         x.l[k] = 5
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
-            "x.l(k) = 5;",
-        )
-        self.assertTrue(x._is_dirty)
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "x.l(k) = 5;",
+            )
+            self.assertTrue(x._is_dirty)
+        else:
+            self.assertFalse(x._is_dirty)
 
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

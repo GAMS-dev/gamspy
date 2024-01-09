@@ -47,9 +47,9 @@ from gamspy import Variable
 
 def main():
     m = Container(
-        delayed_execution=True,
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/lop.gdx",
-        # system_directory="/opt/gams/gams44.0_linux_x64_64_sfx",
     )
 
     # Sets

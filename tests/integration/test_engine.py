@@ -29,11 +29,15 @@ except Exception:
 class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_engine(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
         # Prepare data
         distances = [
@@ -123,7 +127,10 @@ class EngineSuite(unittest.TestCase):
         )
 
     def test_no_config(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
         # Prepare data
         distances = [
@@ -172,7 +179,10 @@ class EngineSuite(unittest.TestCase):
             transport.solve(backend="engine")
 
     def test_extra_files(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
         # Prepare data
         distances = [
@@ -237,7 +247,10 @@ class EngineSuite(unittest.TestCase):
         os.unlink(same_directory_file.name)
 
     def test_solve_twice(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
         # Prepare data
         distances = [
@@ -293,7 +306,10 @@ class EngineSuite(unittest.TestCase):
         transport.solve(backend="engine", engine_config=engine_config)
 
     def test_summary(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
         # Prepare data
         distances = [

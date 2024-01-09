@@ -18,7 +18,8 @@ from gamspy.exceptions import ValidationError
 class MathSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_math(self):
@@ -29,10 +30,9 @@ class MathSuite(unittest.TestCase):
 
         # Set
         i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=demands)
         s1 = Parameter(self.m, name="s1", records=5)
         s2 = Parameter(self.m, name="s2", records=3)
         s3 = Parameter(self.m, name="s3", records=6)
@@ -278,7 +278,8 @@ class MathSuite(unittest.TestCase):
 
     def test_math_2(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -360,7 +361,8 @@ class MathSuite(unittest.TestCase):
 
     def test_logical(self):
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])

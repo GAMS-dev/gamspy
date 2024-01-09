@@ -16,7 +16,8 @@ from gamspy.exceptions import ValidationError
 class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_alias_creation(self):
@@ -117,7 +118,8 @@ class AliasSuite(unittest.TestCase):
         self.m.write("test.gdx")
 
         bla = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         bla.read("test.gdx")
         self.assertEqual(
@@ -134,6 +136,15 @@ class AliasSuite(unittest.TestCase):
         i.modified = False
         j.records = pd.DataFrame([["a", "b"]])
         self.assertTrue(i.modified)
+
+    def test_alias_modified_list(self):
+        nodes = self.m.addSet("nodes", description="nodes", records=["s"])
+        i = self.m.addAlias("i", nodes)
+        _ = self.m.addSet(
+            "s", domain=[i], description="sources", records=["s"]
+        )
+        _, modified_names = self.m._get_touched_symbol_names()
+        self.assertEqual(modified_names, ["nodes", "i", "s"])
 
 
 def alias_suite():

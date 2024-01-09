@@ -22,7 +22,8 @@ from gamspy import Variable
 class OperationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False)
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_operations(self):
@@ -120,7 +121,8 @@ class OperationSuite(unittest.TestCase):
     def test_operation_indices(self):
         # Test operation index
         m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         mt = 2016
         mg = 17
@@ -165,7 +167,10 @@ class OperationSuite(unittest.TestCase):
         )
 
     def test_operation_overloads(self):
-        m = Container(delayed_execution=os.getenv("DELAYED_EXECUTION", False))
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
         c = Set(m, "c")
         s = Set(m, "s")
         a = Parameter(m, "a", domain=[c, s])
@@ -181,11 +186,14 @@ class OperationSuite(unittest.TestCase):
 
         # test ne
         bla = Parameter(m, "bla", domain=s)
-        bla[...] = Sum(c, a[c, s] * p[c]) != 0
-        self.assertEqual(
-            m._unsaved_statements[-1].getStatement(),
-            "bla(s) = (sum(c,(a(c,s) * p(c))) ne 0);",
-        )
+        bla2 = Parameter(m, "bla2", domain=s)
+        bla[...] = bla2[...] != 0
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                "bla(s) = (bla2(s) ne 0);",
+            )
 
 
 def operation_suite():

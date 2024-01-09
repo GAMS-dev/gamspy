@@ -39,7 +39,10 @@ def main():
     # Otherwise, it takes a lot of time
     NUM_DRAWS = 11
 
-    m = Container(delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+    m = Container(
+        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+    )
 
     # Sets
     i = Set(
