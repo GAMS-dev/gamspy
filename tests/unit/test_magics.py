@@ -180,6 +180,12 @@ class MagicsSuite(unittest.TestCase):
         op2 = ~x[i]
         self.assertEqual(op2.gamsRepr(), "( not x(i))")
 
+        # unary
+        op1 = -(b[i] + x[i])
+        self.assertEqual(op1.gamsRepr(), "( - (b(i) + x(i)))")
+        op2 = -(x[i] + b[i])
+        self.assertEqual(op2.gamsRepr(), "( - (x(i) + b(i)))")
+
 
 def magics_suite():
     suite = unittest.TestSuite()
