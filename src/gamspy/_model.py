@@ -473,15 +473,14 @@ class Model:
             self._objective_variable._is_dirty = True
 
         for equation in self.equations:
-            if equation.name.startswith(Model._generate_prefix):
-                continue
-
-            equation._is_dirty = True
+            if not equation.name.startswith(Model._generate_prefix):
+                equation._is_dirty = True
 
             if equation._definition is not None:
                 variables = equation._definition.find_variables()
                 for name in variables:
-                    self.container[name]._is_dirty = True
+                    if not name.startswith(Model._generate_prefix):
+                        self.container[name]._is_dirty = True
 
         if self._matches:
             for equation, variable in self._matches.items():

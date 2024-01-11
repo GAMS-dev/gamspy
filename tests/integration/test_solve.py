@@ -17,6 +17,7 @@ from gamspy import ModelStatus
 from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
+from gamspy import Problem
 from gamspy import Sense
 from gamspy import Set
 from gamspy import Smax
@@ -24,6 +25,7 @@ from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
+from gamspy.math import sqr
 
 
 class SolveSuite(unittest.TestCase):
@@ -1192,6 +1194,14 @@ class SolveSuite(unittest.TestCase):
         
         if m.delayed_execution:
             self.assertEqual(m._unsaved_statements[-1].getStatement(), "f = 5;")
+            
+    def test_variable_discovery(self):
+        x = self.m.addVariable('x')
+        l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
+        self.assertTrue('x' in l2.equations[0]._definition.find_variables())
+        
+        e = Equation(self.m, "e", definition=x+5)
+        self.assertTrue('x' in e._definition.find_variables())
     
 
 def solve_suite():

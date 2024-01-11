@@ -34,6 +34,7 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy import Variable
@@ -210,17 +211,20 @@ class Expression(operable.Operable):
             elif stack:
                 current = stack.pop()
 
-                if current is not None:
-                    if isinstance(current, gp.Variable):
-                        variables.append(current.name)
-                    elif isinstance(current, implicits.ImplicitVariable):
-                        variables.append(current.parent.name)
-                    elif isinstance(current, (operation.Operation)):
-                        operation_variables = current._extract_variables()
-                        variables += operation_variables
-                    current = (
-                        current.right if hasattr(current, "right") else None
-                    )
+                if hasattr(current, "data") and isinstance(
+                    current.data, MathOp
+                ):
+                    variables += current.data.find_variables()
+
+                if isinstance(current, gp.Variable):
+                    variables.append(current.name)
+                elif isinstance(current, implicits.ImplicitVariable):
+                    variables.append(current.parent.name)
+                elif isinstance(current, operation.Operation):
+                    operation_variables = current._extract_variables()
+                    variables += operation_variables
+
+                current = current.right if hasattr(current, "right") else None
             else:
                 break
 
