@@ -40,8 +40,6 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
-    from gamspy import Domain
-    from gamspy._algebra.expression import Expression
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
@@ -274,9 +272,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
     return gdxHandle
 
 
-def _to_list(
-    obj: Set | Alias | str | tuple | Domain | Expression | list | ImplicitSet,
-) -> list:
+def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
     """
     Converts the given object to a list
 

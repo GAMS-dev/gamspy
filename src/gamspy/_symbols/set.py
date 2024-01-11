@@ -37,7 +37,6 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
@@ -412,13 +411,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
 
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
@@ -427,13 +422,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         indices: tuple | str,
         assignment,
     ):
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
         validation.validate_container(self, domain)
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

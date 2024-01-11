@@ -6,6 +6,7 @@ from typing import Union
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
+import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -49,8 +50,8 @@ def get_domain_path(symbol) -> List[str]:
 
 
 def validate_dimension(
-    domain: List[Set | Alias | ImplicitSet | str],
     symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+    domain: List[Set | Alias | ImplicitSet | str],
 ):
     dimension = get_dimension(domain)
 
@@ -64,8 +65,8 @@ def validate_dimension(
 
 
 def validate_one_dimensional_sets(
-    domain: List[Set | Alias | ImplicitSet | str],
     symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+    domain: List[Set | Alias | ImplicitSet | str],
 ):
     index = 0
 
@@ -100,7 +101,8 @@ def validate_one_dimensional_sets(
 def validate_type(domain):
     for given in domain:
         if not isinstance(
-            given, (gp.Set, gp.Alias, implicits.ImplicitSet, str)
+            given,
+            (gp.Set, gp.Alias, implicits.ImplicitSet, str, type(...), slice),
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -108,12 +110,62 @@ def validate_type(domain):
             )
 
 
-def validate_domain(
-    domain: List[Set | Alias | ImplicitSet | str],
-    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+def _get_ellipsis_range(domain, given_domain):
+    start = 0
+    end = len(domain)
+
+    for item in given_domain:
+        if isinstance(item, type(...)):
+            break
+
+        start += 1
+
+    for item in reversed(given_domain):
+        if isinstance(item, type(...)):
+            break
+
+        end -= 1
+
+    return start, end
+
+
+def _transform_given_indices(
+    domain: list[Set | Alias | str],
+    indices: Set | Alias | str | tuple | ImplicitSet,
 ):
-    validate_type(domain)
-    validate_dimension(domain, symbol)
+    new_domain = []
+    given_domain = utils._to_list(indices)
+    validate_type(given_domain)
+
+    if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
+        raise ValidationError(
+            "There cannot be more than one ellipsis in indexing"
+        )
+
+    index = 0
+    for item in given_domain:
+        dimension = (
+            1 if isinstance(item, (str, type(...), slice)) else item.dimension
+        )
+        if isinstance(item, type(...)):
+            start, end = _get_ellipsis_range(domain, given_domain)
+            new_domain += domain[start:end]
+            index = end
+        elif isinstance(item, slice):
+            new_domain.append(domain[index])
+            index += dimension
+        else:
+            new_domain.append(item)
+            index += dimension
+
+    return new_domain
+
+
+def validate_domain(
+    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+    domain: List[Set | Alias | ImplicitSet | str],
+):
+    validate_dimension(symbol, domain)
 
     index = 0
     for given in domain:
@@ -130,7 +182,7 @@ def validate_domain(
 
         index += dimension
 
-    validate_one_dimensional_sets(domain, symbol)
+    validate_one_dimensional_sets(symbol, domain)
 
 
 def validate_container(

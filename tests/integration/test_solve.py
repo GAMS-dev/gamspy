@@ -9,6 +9,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
+import gamspy._validation as validation
 from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
@@ -1024,6 +1025,64 @@ class SolveSuite(unittest.TestCase):
 
         supply.l[...] = 5
         self.assertEqual(supply.records.level.to_list(), [5.0, 5.0])
+        
+        domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
+        self.assertEqual(domain, ["a", "b", "c"])
+
+        domain = validation._transform_given_indices(["a", "b", "c"], ["a", ..., "c"])
+        self.assertEqual(domain, ["a", "b", "c"])
+
+        domain = validation._transform_given_indices(["a", "b", "c"], [..., "c"])
+        self.assertEqual(domain, ["a", "b", "c"])
+        
+        with self.assertRaises(ValidationError):
+            c[..., ...] = 5
+        
+    def test_slice(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        i2 = Set(m, name="i2", records=["seattle", "san-diego"])
+        i3 = Set(m, name="i3", records=["seattle", "san-diego"])
+        i4 = Set(m, name="i4", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        k = Set(m, "k", domain=[i, i2, i3, i4])
+        self.assertEqual(k[..., i4].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[i, ..., i4].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[i, ...].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[..., i3, :].gamsRepr(), "k(i,i2,i3,i4)")
+
+        # Data
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        self.assertEqual(a[:].gamsRepr(), "a(i)")
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        self.assertEqual(c[:, :].gamsRepr(), "c(i,j)")
+        c[:, :] = 90 * d[:, :] / 1000
+
+        # Variable
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        self.assertEqual(x[:, :].gamsRepr(), "x(i,j)")
+
+        # Equation
+        supply = Equation(m, name="supply", domain=[i])
+        self.assertEqual(supply[:].gamsRepr(), "supply(i)")
+
+        supply.l[:] = 5
+        self.assertEqual(supply.l[:].gamsRepr(), "supply.l(i)")
         
     def test_max_line_length(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))

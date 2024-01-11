@@ -5,6 +5,11 @@ GAMSPy CHANGELOG
 GAMSPy 0.11.6
 -------------------------------------------------------------------------------
 - General
+  - Support slices for indexing.
+- Testing
+  - Add tests for slicing and ellipsis.
+- Documentation
+  - Document indexing with slices and ellipsis.
   - Fix unary operator for expressions
   - Fixes SpecialValues bug in expressions.
   - Fix the bug for nonbinding equations.
