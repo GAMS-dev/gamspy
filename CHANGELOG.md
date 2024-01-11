@@ -7,9 +7,11 @@ GAMSPy 0.11.6
 - General
   - Fix unary operator for expressions
   - Fixes SpecialValues bug in expressions.
+  - Fix the bug for nonbinding equations.
 - Testing
   - Add tests for unary operator applied to expressions.
   - Add tests to verify the correctness of SpecialValues in expressions.
+  - Add more tests for nonbinding equations.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.5

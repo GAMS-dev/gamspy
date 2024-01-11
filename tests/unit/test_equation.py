@@ -130,6 +130,19 @@ class EquationSuite(unittest.TestCase):
             ["REGULAR", "NONBINDING", "EXTERNAL", "CONE", "BOOLEAN"],
         )
 
+    def test_nonbinding(self):
+        x = Variable(self.m, "x")
+        e = Equation(self.m, "e", definition=x == 0, type="NONBINDING")
+        self.assertEqual(e._definition.getStatement(), "e .. x =n= 0;")
+
+        x1 = Variable(self.m, "x1")
+        e1 = Equation(self.m, "e1", definition=x1 >= 0, type="NONBINDING")
+        self.assertEqual(e1._definition.getStatement(), "e1 .. x1 =n= 0;")
+
+        x2 = Variable(self.m, "x2")
+        e2 = Equation(self.m, "e2", definition=x2 <= 0, type="NONBINDING")
+        self.assertEqual(e2._definition.getStatement(), "e2 .. x2 =n= 0;")
+
     def test_equation_declaration(self):
         # Check if the name is reserved
         self.assertRaises(ValidationError, Equation, self.m, "set")
@@ -507,6 +520,20 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(
             f2._definition.gamsRepr(),
             "f2 .. (x - c) =n= 0;",
+        )
+
+        f3 = Equation(
+            self.m, name="f3", type="nonbinding", definition=(x - c) == 0
+        )
+        self.assertEqual(
+            f3._definition.gamsRepr(),
+            "f3 .. (x - c) =n= 0;",
+        )
+
+        f4 = Equation(self.m, name="f4", definition=x - c)
+        self.assertEqual(
+            f4._definition.gamsRepr(),
+            "f4 .. (x - c) =e= 0;",
         )
 
         model = Model(self.m, "mcp_model", "MCP", matches={f: x})

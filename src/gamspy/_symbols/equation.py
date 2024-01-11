@@ -239,8 +239,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         assignment: Variable | Operation | Expression | None = None,
     ) -> None:
         if assignment is None:
-            self._definition = assignment  # type: ignore
-            return
+            self._definition = None  # type: ignore
+            return None
 
         domain = (
             self._definition_domain if self._definition_domain else self.domain
@@ -250,7 +250,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def _set_definition(self, assignment, domain):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = self._adapt_mcp_equation(assignment)
+            assignment = assignment == 0
+
+        if self.type in non_regular_map.keys():
+            assignment.replace_operator(non_regular_map[self.type])
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -265,15 +268,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         self.container._add_statement(statement)
         self._definition = statement
-
-    def _adapt_mcp_equation(self, assignment: Expression | Operation):
-        assignment = assignment == 0
-
-        if self.type in non_regular_map.keys():
-            assignment.replace(assignment.data, non_regular_map[self.type])
-            assignment.data = non_regular_map[self.type]
-
-        return assignment
 
     @property
     def l(self):  # noqa: E741, E743
