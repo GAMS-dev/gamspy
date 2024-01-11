@@ -158,6 +158,9 @@ class Expression(operable.Operable):
     def __ne__(self, other):  # type: ignore
         return Expression(self, "ne", other)
 
+    def __neg__(self):
+        return Expression(None, "-", self)
+
     def _fix_condition_paranthesis(self, string: str) -> str:
         left, right = string.split("$", 1)
         right = right.strip()

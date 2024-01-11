@@ -5,8 +5,10 @@ GAMSPy CHANGELOG
 GAMSPy 0.11.6
 -------------------------------------------------------------------------------
 - General
+  - Fix unary operator for expressions
   - Fixes SpecialValues bug in expressions.
 - Testing
+  - Add tests for unary operator applied to expressions.
   - Add tests to verify the correctness of SpecialValues in expressions.
 
 -------------------------------------------------------------------------------
