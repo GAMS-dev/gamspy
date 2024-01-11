@@ -165,6 +165,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         )
 
         self.container._add_statement(statement)
+        self._assignment = statement
 
         self._is_dirty = True
         if not self.container.delayed_execution:

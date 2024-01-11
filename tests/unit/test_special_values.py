@@ -18,6 +18,10 @@ class SpecialValuesSuite(unittest.TestCase):
         )
 
     def test_parameter_special_values(self):
+        x = Parameter(self.m, "x", records=5)
+        x[...] = x + gp.SpecialValues.EPS
+        self.assertEqual(x._assignment.getStatement(), "x = (x + EPS);")
+
         i = Set(self.m, "i", records=["i1", "i2"])
 
         # Test special values in parameter
