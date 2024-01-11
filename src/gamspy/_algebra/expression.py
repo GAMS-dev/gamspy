@@ -172,8 +172,9 @@ class Expression(operable.Operable):
 
         return string
 
-    def replace(self, a: str, b: str):
-        self.representation = b.join(self.representation.rsplit(a, 1))
+    def replace_operator(self, operator: str):
+        self.data = operator
+        self.representation = self._create_representation()
 
     def gamsRepr(self) -> str:
         """
