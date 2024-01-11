@@ -95,6 +95,12 @@ class Expression(operable.Operable):
         return out_str
 
     def _get_operand_representations(self) -> tuple[str, str]:
+        if isinstance(self.left, float):
+            self.left = utils._map_special_values(self.left)
+
+        if isinstance(self.right, float):
+            self.right = utils._map_special_values(self.right)
+
         if self.left is None:
             left_str = ""
         else:
