@@ -37,7 +37,6 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
@@ -183,13 +182,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return id(self)
 
     def __getitem__(self, indices: tuple | str):
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
 
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
@@ -200,14 +195,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         indices: tuple | str | implicits.ImplicitSet,
         assignment: Expression,
     ):
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
         validation.validate_container(self, domain)
 
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         self._set_definition(assignment, domain)
         self._is_dirty = True
