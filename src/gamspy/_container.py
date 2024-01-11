@@ -633,7 +633,7 @@ class Container(gt.Container):
         self,
         name: str,
         problem: str,
-        equations: list[Equation],
+        equations: list[Equation] = [],
         sense: Literal["MIN", "MAX"] | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,

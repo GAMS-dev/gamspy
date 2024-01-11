@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy._algebra.expression as expression
-from gamspy.math.misc import _stringify
+from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -51,14 +51,9 @@ def binomial(
     Expression
     """
     if isinstance(n, (int, float)) and isinstance(k, (int, float)):
-        return expression.Expression(None, f"binomial({n},{k})", None)
+        return expression.Expression(None, MathOp("binomial", (n, k)), None)
 
-    n_string = _stringify(n)
-    k_string = _stringify(k)
-
-    return expression.Expression(
-        None, f"binomial({n_string},{k_string})", None
-    )
+    return expression.Expression(None, MathOp("binomial", (n, k)), None)
 
 
 def centropy(
@@ -87,10 +82,7 @@ def centropy(
     if z < 0:
         raise ValueError("z must be greater than or equal to 0")
 
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-
-    return expression.Expression(None, f"centropy({x_str},{y_str},{z})", None)
+    return expression.Expression(None, MathOp("centropy", (x, y, z)), None)
 
 
 def uniform(
@@ -110,10 +102,8 @@ def uniform(
     -------
     Expression
     """
-    lower_str = _stringify(lower_bound)
-    upper_str = _stringify(upper_bound)
     return expression.Expression(
-        None, f"uniform({lower_str},{upper_str})", None
+        None, MathOp("uniform", (lower_bound, upper_bound)), None
     )
 
 
@@ -134,7 +124,7 @@ def uniformInt(
     """
     return expression.Expression(
         None,
-        f"uniformInt({lower_bound},{upper_bound})",
+        MathOp("uniformInt", (lower_bound, upper_bound)),
         None,
     )
 
@@ -153,4 +143,4 @@ def normal(mean: Union[int, float], dev: Union[int, float]) -> Expression:
     -------
     Expression
     """
-    return expression.Expression(None, f"normal({mean},{dev})", None)
+    return expression.Expression(None, MathOp("normal", (mean, dev)), None)

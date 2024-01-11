@@ -579,8 +579,8 @@ class EquationSuite(unittest.TestCase):
         e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
         self.assertEqual(
             e._definition.getStatement(),
-            "e .. sum(i $ ((L - 1) eq i.val),(( power(x(i),2) ) + ("
-            " power(y(i),2) ))) =e= 1;",
+            "e .. sum(i $ ((L - 1) eq i.val),(( sqr(x(i)) ) + ("
+            " sqr(y(i)) ))) =e= 1;",
         )
 
     def test_assignment_dimensionality(self):

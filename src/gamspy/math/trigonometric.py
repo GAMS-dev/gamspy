@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy._algebra.expression as expression
-from gamspy.math.misc import _stringify
+from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -43,8 +43,7 @@ def cos(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"cos({x_str})", None)
+    return expression.Expression(None, MathOp("cos", (x,)), None)
 
 
 def cosh(x: Union[int, float, Symbol]) -> Expression:
@@ -55,8 +54,7 @@ def cosh(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"cosh({x_str})", None)
+    return expression.Expression(None, MathOp("cosh", (x,)), None)
 
 
 def sin(x: Union[float, Symbol]) -> Expression:
@@ -67,8 +65,7 @@ def sin(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sin({x_str})", None)
+    return expression.Expression(None, MathOp("sin", (x,)), None)
 
 
 def sinh(x: Union[float, Symbol]) -> Expression:
@@ -79,8 +76,7 @@ def sinh(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sinh({x_str})", None)
+    return expression.Expression(None, MathOp("sinh", (x,)), None)
 
 
 def tan(x: Union[float, Symbol]) -> Expression:
@@ -91,8 +87,7 @@ def tan(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"tan({x_str})", None)
+    return expression.Expression(None, MathOp("tan", (x,)), None)
 
 
 def tanh(x: Union[float, Symbol]) -> Expression:
@@ -103,8 +98,7 @@ def tanh(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"tanh({x_str})", None)
+    return expression.Expression(None, MathOp("tanh", (x,)), None)
 
 
 def acos(x: Union[float, Symbol]) -> Expression:
@@ -115,8 +109,7 @@ def acos(x: Union[float, Symbol]) -> Expression:
     -------
     Expresion | float
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"arccos({x_str})", None)
+    return expression.Expression(None, MathOp("arccos", (x,)), None)
 
 
 def asin(x: Union[float, Symbol]) -> Expression:
@@ -127,8 +120,7 @@ def asin(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"arcsin({x_str})", None)
+    return expression.Expression(None, MathOp("arcsin", (x,)), None)
 
 
 def atan(x: Union[float, Symbol]) -> Expression:
@@ -139,8 +131,7 @@ def atan(x: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"arctan({x_str})", None)
+    return expression.Expression(None, MathOp("arctan", (x,)), None)
 
 
 def atan2(
@@ -153,7 +144,4 @@ def atan2(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-
-    return expression.Expression(None, f"arctan2({y_str},{x_str})", None)
+    return expression.Expression(None, MathOp("arctan2", (y, x)), None)
