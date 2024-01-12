@@ -135,6 +135,25 @@ class MiroJSONEncoder:
                     {"type": type_map[dtype.name], "alias": column}
                 )
 
+            if (
+                isinstance(symbol, gp.Parameter)
+                and symbol._is_miro_table
+                and symbol.dimension > 0
+            ):
+                last_item = symbol.domain[-1]
+                if isinstance(last_item, (gp.Set, gp.Alias)):
+                    set_values = last_item.records["uni"].values.tolist()
+
+                    domain_keys = domain_keys[:-2]
+                    domain_keys += set_values
+
+                    domain_values = domain_values[:-2]
+                    for elem in last_item.records["uni"].values.tolist():
+                        domain_values.append(
+                            {"type": "numeric", "alias": elem}
+                        )
+
+            assert len(domain_keys) == len(domain_values)
             headers_dict = dict(zip(domain_keys, domain_values))
 
             info.append(

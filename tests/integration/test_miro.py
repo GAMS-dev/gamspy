@@ -12,7 +12,10 @@ from gamspy import Container
 
 class MiroSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(delayed_execution=True)
+        self.m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
 
     def test_miro(self):
         directory = str(pathlib.Path(__file__).parent.resolve())
@@ -98,8 +101,18 @@ class MiroSuite(unittest.TestCase):
                             "symtype": "parameter",
                             "headers": {
                                 "i": {"type": "string", "alias": "i"},
-                                "j": {"type": "string", "alias": "j"},
-                                "value": {"type": "numeric", "alias": "value"},
+                                "new-york": {
+                                    "type": "numeric",
+                                    "alias": "new-york",
+                                },
+                                "chicago": {
+                                    "type": "numeric",
+                                    "alias": "chicago",
+                                },
+                                "topeka": {
+                                    "type": "numeric",
+                                    "alias": "topeka",
+                                },
                             },
                         },
                         "_scalars": {

@@ -85,6 +85,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
+        is_miro_table: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -118,6 +119,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_input: bool = False,
         is_miro_output: bool = False,
+        is_miro_table: bool = False,
     ):
         self._is_dirty = False
         self._is_frozen = False
@@ -140,6 +142,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # miro support
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
+        self._is_miro_table = is_miro_table
 
     def __getitem__(
         self, indices: Union[tuple, str]

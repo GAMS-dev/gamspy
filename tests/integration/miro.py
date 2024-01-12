@@ -60,7 +60,12 @@ def main():
     a = Parameter(m, name="a", domain=[i], records=capacities)
     b = Parameter(m, name="b", domain=[j], records=demands)
     d = Parameter(
-        m, name="d", domain=[i, j], records=distances, is_miro_input=True
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        is_miro_input=True,
+        is_miro_table=True,
     )
     c = Parameter(m, name="c", domain=[i, j])
     f = Parameter(m, name="f", records=90, is_miro_input=True)
