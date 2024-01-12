@@ -85,8 +85,8 @@ def main():
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
-    eq2[...] = P["G1"] == P12
-    eq3[...] = P["G2"] + P12 == L2 / Sbase
+    eq2[...] = P["g1"] == P12
+    eq3[...] = P["g2"] + P12 == L2 / Sbase
     eq4[...] = P12 == (delta["1"] - delta["2"]) / X12
 
     P.lo[gen] = data[gen, "Pmin"] / Sbase
