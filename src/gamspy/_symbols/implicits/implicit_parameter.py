@@ -70,24 +70,16 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return expression.Expression("", "not", self)
 
     def __getitem__(self, indices: list | str) -> ImplicitParameter:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
 
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain
         )
 
     def __setitem__(self, indices: list | str, assignment: Expression) -> None:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore

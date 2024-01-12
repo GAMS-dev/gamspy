@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -66,22 +68,22 @@ for f in files:
         f"https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_{name}.html",
     ]
 
+    csv["Model"].append(name)
+    csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
+    csv["Data"].append(data_link)
+    with open(f"docs/examples/model_lib/{name}.rst", "w") as rst_file:
+        rst_file.write(rst_str)
+
     # check in which lib the model is
+    found = False
     for link in links:
-        found = False
         if open_url(link).status == 200:
-            found = True
-            # Table
-            csv["Model"].append(name)
-            csv["GAMSPy"].append(f":ref:`GAMSPy <{name}>`")
             csv["GAMS"].append(f"`GAMS <{link}>`__")
-            csv["Data"].append(data_link)
-            # write rst
-            with open(f"docs/examples/model_lib/{name}.rst", "w") as rst_file:
-                rst_file.write(rst_str)
+            found = True
             break
+
     if not found:
-        print(f"{name} not found in lib")
+        csv["GAMS"].append("")
 
 # write model lib table
 pd.DataFrame(csv).sort_values(

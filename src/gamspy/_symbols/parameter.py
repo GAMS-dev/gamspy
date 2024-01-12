@@ -147,12 +147,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
-        validation.validate_domain(domain, self)
+        domain = validation._transform_given_indices(self.domain, indices)
+        validation.validate_domain(self, domain)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
@@ -161,13 +157,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Union[Expression, float, int],
     ) -> None:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
+        domain = validation._transform_given_indices(self.domain, indices)
         validation.validate_container(self, domain)
-        validation.validate_domain(domain, self)
+        validation.validate_domain(self, domain)
 
         if self._is_miro_input and self.container.miro_protect:
             raise GamspyException(
@@ -186,6 +178,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         )
 
         self.container._add_statement(statement)
+        self._assignment = statement
 
         self._is_dirty = True
         if not self.container.delayed_execution:

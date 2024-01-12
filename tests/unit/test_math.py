@@ -101,7 +101,7 @@ class MathSuite(unittest.TestCase):
         # sqr
         op2 = gams_math.sqr(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "( power(b(i),2) )")
+        self.assertEqual(op2.gamsRepr(), "( sqr(b(i)) )")
 
         # mod
         op2 = gams_math.mod(b[i], 3)
@@ -151,7 +151,7 @@ class MathSuite(unittest.TestCase):
 
         op2 = gams_math.Round(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "( round(b(i), 0) )")
+        self.assertEqual(op2.gamsRepr(), "( round(b(i),0) )")
 
         # sin
         op2 = gams_math.sin(b[i])
@@ -216,12 +216,12 @@ class MathSuite(unittest.TestCase):
         # div
         op2 = gams_math.div(b[i], 3)
         self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "( div(b(i), 3) )")
+        self.assertEqual(op2.gamsRepr(), "( div(b(i),3) )")
 
         # div0
         op2 = gams_math.div0(b[i], 3)
         self.assertTrue(isinstance(op2, expression.Expression))
-        self.assertEqual(op2.gamsRepr(), "( div0(b(i), 3) )")
+        self.assertEqual(op2.gamsRepr(), "( div0(b(i),3) )")
 
         # factorial
         op2 = gams_math.factorial(b[i])
@@ -247,7 +247,7 @@ class MathSuite(unittest.TestCase):
         self.assertRaises(Exception, gams_math.dist, (1, 2), 5)
 
         op2 = gams_math.dist(b[i], 3)
-        self.assertEqual(op2.gamsRepr(), "( eDist(b(i), 3) )")
+        self.assertEqual(op2.gamsRepr(), "( eDist(b(i),3) )")
 
         # uniform
         op2 = gams_math.uniform(0, 1)
@@ -326,7 +326,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "( ncpF(a(i),a(i),0) )")
 
         op1 = gams_math.ncpVUpow(a[i], a[i])
-        self.assertEqual(op1.gamsRepr(), "( ncpVUpow(a(i),a(i),0 )")
+        self.assertEqual(op1.gamsRepr(), "( ncpVUpow(a(i),a(i),0) )")
 
         op1 = gams_math.ncpVUsin(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpVUsin(a(i),a(i),0) )")
@@ -344,7 +344,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "( randTriangle(1,2,3) )")
 
         op1 = gams_math.slrec(a[i])
-        self.assertEqual(op1.gamsRepr(), "( slrec(a(i),1e-10 )")
+        self.assertEqual(op1.gamsRepr(), "( slrec(a(i),1e-10) )")
 
         op1 = gams_math.sqrec(a[i])
         self.assertEqual(op1.gamsRepr(), "( sqrec(a(i),1e-10) )")
@@ -373,7 +373,7 @@ class MathSuite(unittest.TestCase):
         defopLS[o, p] = op[o, p] == gams_math.ifthen(sumc[o, p] >= 0.5, 1, 0)
         self.assertEqual(
             defopLS._definition.gamsRepr(),
-            "defopLS(o,p) .. op(o,p) =e= ( ifthen(sumc(o,p) >= 0.5, 1, 0) );",
+            "defopLS(o,p) .. op(o,p) =e= ( ifthen(sumc(o,p) >= 0.5,1,0) );",
         )
 
         # bool_and

@@ -34,6 +34,7 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy import Variable
@@ -95,6 +96,12 @@ class Expression(operable.Operable):
         return out_str
 
     def _get_operand_representations(self) -> tuple[str, str]:
+        if isinstance(self.left, float):
+            self.left = utils._map_special_values(self.left)
+
+        if isinstance(self.right, float):
+            self.right = utils._map_special_values(self.right)
+
         if self.left is None:
             left_str = ""
         else:
@@ -152,6 +159,9 @@ class Expression(operable.Operable):
     def __ne__(self, other):  # type: ignore
         return Expression(self, "ne", other)
 
+    def __neg__(self):
+        return Expression(None, "-", self)
+
     def _fix_condition_paranthesis(self, string: str) -> str:
         left, right = string.split("$", 1)
         right = right.strip()
@@ -163,8 +173,9 @@ class Expression(operable.Operable):
 
         return string
 
-    def replace(self, a: str, b: str):
-        self.representation = b.join(self.representation.rsplit(a, 1))
+    def replace_operator(self, operator: str):
+        self.data = operator
+        self.representation = self._create_representation()
 
     def gamsRepr(self) -> str:
         """
@@ -200,17 +211,20 @@ class Expression(operable.Operable):
             elif stack:
                 current = stack.pop()
 
-                if current is not None:
-                    if isinstance(current, gp.Variable):
-                        variables.append(current.name)
-                    elif isinstance(current, implicits.ImplicitVariable):
-                        variables.append(current.parent.name)
-                    elif isinstance(current, (operation.Operation)):
-                        operation_variables = current._extract_variables()
-                        variables += operation_variables
-                    current = (
-                        current.right if hasattr(current, "right") else None
-                    )
+                if hasattr(current, "data") and isinstance(
+                    current.data, MathOp
+                ):
+                    variables += current.data.find_variables()
+
+                if isinstance(current, gp.Variable):
+                    variables.append(current.name)
+                elif isinstance(current, implicits.ImplicitVariable):
+                    variables.append(current.parent.name)
+                elif isinstance(current, operation.Operation):
+                    operation_variables = current._extract_variables()
+                    variables += operation_variables
+
+                current = current.right if hasattr(current, "right") else None
             else:
                 break
 

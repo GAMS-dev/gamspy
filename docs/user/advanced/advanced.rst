@@ -9,6 +9,7 @@ fundamental GAMSPy ideas and philosophy.
 .. toctree::
    :maxdepth: 1
 
+   ./indexing
    ./card_ord
    ./lag_lead
    ./number
