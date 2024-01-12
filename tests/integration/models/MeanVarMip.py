@@ -313,8 +313,7 @@ def main():
 
     # We set the curret holding to the optimal unconstrained mean-variance portfolio
     # with lamda = 0.5
-
-    InitHold["Cash_EU"] = 0.3686
+    InitHold["CASH_EU"] = 0.3686
     InitHold["YRS_1_3"] = 0.3597
     InitHold["EMU"] = 0.0
     InitHold["EU_EX"] = 0.0

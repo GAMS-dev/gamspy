@@ -65,37 +65,26 @@ def validate_dimension(
 
 
 def validate_one_dimensional_sets(
-    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
-    domain: List[Set | Alias | ImplicitSet | str],
+    given: str | Set | Alias | ImplicitSet,
+    actual: str | Set | Alias,
 ):
-    index = 0
+    if isinstance(given, implicits.ImplicitSet):
+        return
 
-    for given in domain:
-        dimension = 1 if isinstance(given, str) else given.dimension
-        if isinstance(given, (str, implicits.ImplicitSet)) or dimension != 1:
-            index += dimension
-            continue
+    given_path = get_domain_path(given)
 
-        given_path = get_domain_path(given)
-
-        actual = symbol.domain[index]
-        if actual == "*" or actual.dimension != 1:
-            continue
-
-        if (
-            isinstance(actual, gp.Set)
-            and actual.name not in given_path
-            or (
-                isinstance(actual, gp.Alias)
-                and actual.alias_with.name not in given_path
-            )
-        ):
-            raise ValidationError(
-                f"`Given set `{given}` is not a valid domain for declared"
-                f" domain `{actual}`"
-            )
-
-        index += 1
+    if (
+        isinstance(actual, gp.Set)
+        and actual.name not in given_path
+        or (
+            isinstance(actual, gp.Alias)
+            and actual.alias_with.name not in given_path
+        )
+    ):
+        raise ValidationError(
+            f"`Given set `{given}` is not a valid domain for declared"
+            f" domain `{actual}`"
+        )
 
 
 def validate_type(domain):
@@ -167,22 +156,25 @@ def validate_domain(
 ):
     validate_dimension(symbol, domain)
 
-    index = 0
+    offset = 0
     for given in domain:
-        dimension = 1 if isinstance(given, str) else given.dimension
-        actual = symbol.domain[index : index + dimension]
+        given_dim = 1 if isinstance(given, str) else given.dimension
+        actual = symbol.domain[offset]
+        actual_dim = 1 if isinstance(actual, str) else actual.dimension
 
-        if isinstance(given, str) and symbol._records is not None:
-            for item in actual:
-                if item != "*" and not item.records.isin([given]).sum().any():
+        if actual_dim == 1 and given_dim == 1:
+            if isinstance(given, str):
+                if (
+                    hasattr(actual, "records")
+                    and not actual.records.isin([given]).sum().any()
+                ):
                     raise ValidationError(
                         f"Literal index `{given}` was not found in set"
                         f" `{actual}`"
                     )
-
-        index += dimension
-
-    validate_one_dimensional_sets(symbol, domain)
+            else:
+                validate_one_dimensional_sets(given, actual)
+        offset += given_dim
 
 
 def validate_container(
