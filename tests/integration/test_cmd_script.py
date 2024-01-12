@@ -31,16 +31,13 @@ class CmdSuite(unittest.TestCase):
         )
 
         _ = subprocess.run(
-            " ".join(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    os.path.abspath(this_folder + os.sep + "gamslice.txt"),
-                ]
-            ),
-            shell=True,
-            capture_output=True,
+            [
+                "gamspy",
+                "install",
+                "license",
+                os.path.abspath(this_folder + os.sep + "gamslice.txt"),
+            ],
+            check=True,
         )
 
         new_license_modified_time = os.path.getmtime(
@@ -54,6 +51,26 @@ class CmdSuite(unittest.TestCase):
             this_folder + os.sep + "backup.txt",
             gamspy_base_dir + os.sep + "gamslice.txt",
         )
+
+        with self.assertRaises(subprocess.CalledProcessError):
+            _ = subprocess.run(
+                ["gamspy", "install", "license", "blabla"],
+                check=True,
+            )
+
+    def test_install_solver(self):
+        with self.assertRaises(subprocess.CalledProcessError):
+            _ = subprocess.run(
+                ["gamspy", "install", "solver", "bla"],
+                check=True,
+            )
+
+    def test_uninstall_solver(self):
+        with self.assertRaises(subprocess.CalledProcessError):
+            _ = subprocess.run(
+                ["gamspy", "uninstall", "solver", "bla"],
+                check=True,
+            )
 
 
 def cmd_suite():

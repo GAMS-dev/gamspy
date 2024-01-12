@@ -9,6 +9,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
+import gamspy._validation as validation
 from gamspy import Card
 from gamspy import Container
 from gamspy import Equation
@@ -17,6 +18,7 @@ from gamspy import ModelStatus
 from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
+from gamspy import Problem
 from gamspy import Sense
 from gamspy import Set
 from gamspy import Smax
@@ -24,11 +26,12 @@ from gamspy import Sum
 from gamspy import Variable
 from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
+from gamspy.math import sqr
 
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
     def test_read_on_demand(self):
         # Prepare data
@@ -52,7 +55,10 @@ class SolveSuite(unittest.TestCase):
             self.m, name="k", records=["seattle", "san-diego", "california"]
         )
         k["seattle"] = False
-        self.assertTrue(k._is_dirty)
+        if self.m.delayed_execution:
+            self.assertTrue(k._is_dirty)
+        else:
+            self.assertFalse(k._is_dirty)
         self.assertEqual(
             k.records.loc[0, :].values.tolist(), ["san-diego", ""]
         )
@@ -66,7 +72,10 @@ class SolveSuite(unittest.TestCase):
         e = Parameter(self.m, name="e")
 
         c[i, j] = 90 * d[i, j] / 1000
-        self.assertTrue(c._is_dirty)
+        if self.m.delayed_execution:
+            self.assertTrue(c._is_dirty)
+        else:
+            self.assertFalse(c._is_dirty)
         self.assertEqual(
             c.records.values.tolist(),
             [
@@ -81,7 +90,10 @@ class SolveSuite(unittest.TestCase):
         self.assertFalse(c._is_dirty)
 
         e[...] = 5
-        self.assertTrue(e._is_dirty)
+        if self.m.delayed_execution:
+            self.assertTrue(e._is_dirty)
+        else:
+            self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
         self.assertEqual(e[...], 5)
 
@@ -320,7 +332,7 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(ValidationError, transport.solve, None, 5)
 
         # Try to solve invalid model
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
@@ -342,7 +354,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_interrupt(self):
-        cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
         power_forecast_recs = np.array(
             [
@@ -846,7 +858,9 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=c,
         )
-        self.assertRaises(ValidationError, energy.interrupt)
+        
+        if cont.delayed_execution:
+            self.assertRaises(ValidationError, energy.interrupt)
 
         def interrupt_gams(model):
             time.sleep(2)
@@ -861,7 +875,7 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(energy.objective_value)
 
     def test_solver_options(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
         # Prepare data
         distances = [
@@ -949,7 +963,7 @@ class SolveSuite(unittest.TestCase):
         with self.assertRaises(Exception):
             c[i] = 90 * d[i, j] / 1000
 
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -962,7 +976,7 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(x.records)
 
     def test_ellipsis(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
         # Prepare data
         distances = [
@@ -1012,8 +1026,66 @@ class SolveSuite(unittest.TestCase):
         supply.l[...] = 5
         self.assertEqual(supply.records.level.to_list(), [5.0, 5.0])
         
+        domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
+        self.assertEqual(domain, ["a", "b", "c"])
+
+        domain = validation._transform_given_indices(["a", "b", "c"], ["a", ..., "c"])
+        self.assertEqual(domain, ["a", "b", "c"])
+
+        domain = validation._transform_given_indices(["a", "b", "c"], [..., "c"])
+        self.assertEqual(domain, ["a", "b", "c"])
+        
+        with self.assertRaises(ValidationError):
+            c[..., ...] = 5
+        
+    def test_slice(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        i2 = Set(m, name="i2", records=["seattle", "san-diego"])
+        i3 = Set(m, name="i3", records=["seattle", "san-diego"])
+        i4 = Set(m, name="i4", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        k = Set(m, "k", domain=[i, i2, i3, i4])
+        self.assertEqual(k[..., i4].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[i, ..., i4].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[i, ...].gamsRepr(), "k(i,i2,i3,i4)")
+        self.assertEqual(k[..., i3, :].gamsRepr(), "k(i,i2,i3,i4)")
+
+        # Data
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        self.assertEqual(a[:].gamsRepr(), "a(i)")
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        self.assertEqual(c[:, :].gamsRepr(), "c(i,j)")
+        c[:, :] = 90 * d[:, :] / 1000
+
+        # Variable
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        self.assertEqual(x[:, :].gamsRepr(), "x(i,j)")
+
+        # Equation
+        supply = Equation(m, name="supply", domain=[i])
+        self.assertEqual(supply[:].gamsRepr(), "supply(i)")
+
+        supply.l[:] = 5
+        self.assertEqual(supply.l[:].gamsRepr(), "supply.l(i)")
+        
     def test_max_line_length(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
         # Prepare data
         distances = [
@@ -1062,7 +1134,7 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         
     def test_summary(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 
         # Prepare data
         distances = [
@@ -1116,7 +1188,7 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
         
         # Prepare data
         distances = pd.DataFrame(
@@ -1160,7 +1232,7 @@ class SolveSuite(unittest.TestCase):
             c[b[j]] = 90 * d[i, j] / 1000
             
     def test_after_exception(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=True)
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
         x = Variable(m, "x", type="positive")
         e = Equation(m, "e", definition=x <= x + 1)
         t = Model(
@@ -1178,7 +1250,17 @@ class SolveSuite(unittest.TestCase):
             pass
         f = Parameter(m, "f")
         f[...] = 5
-        self.assertEqual(m._unsaved_statements[-1].getStatement(), "f = 5;")
+        
+        if m.delayed_execution:
+            self.assertEqual(m._unsaved_statements[-1].getStatement(), "f = 5;")
+            
+    def test_variable_discovery(self):
+        x = self.m.addVariable('x')
+        l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
+        self.assertTrue('x' in l2.equations[0]._definition.find_variables())
+        
+        e = Equation(self.m, "e", definition=x+5)
+        self.assertTrue('x' in e._definition.find_variables())
     
 
 def solve_suite():

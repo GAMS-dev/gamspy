@@ -28,7 +28,9 @@ from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
+import gamspy as gp
 import gamspy._algebra.expression as expression
+import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -38,11 +40,51 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 
+class MathOp:
+    def __init__(
+        self,
+        op_name: str,
+        elements: tuple,
+    ):
+        self.op_name = op_name
+        self.elements = elements
+
+    def gamsRepr(self):
+        operands_str = ",".join([_stringify(elem) for elem in self.elements])
+        return f"{self.op_name}({operands_str})"
+
+    def find_variables(self):
+        variables = []
+        for elem in self.elements:
+            if isinstance(elem, gp.Variable):
+                variables.append(elem.name)
+            elif isinstance(elem, implicits.ImplicitVariable):
+                variables.append(elem.parent.name)
+            elif isinstance(elem, expression.Expression):
+                variables += elem.find_variables()
+
+        return variables
+
+    def __str__(self):
+        return self.gamsRepr()
+
+    def __len__(self):
+        return len(self.gamsRepr())
+
+
 def _stringify(x: Union[int, float, Symbol, ImplicitSymbol]):
     if isinstance(x, float):
-        x = utils._map_special_values(x)
+        x = utils._map_special_values(
+            x,
+        )
 
-    return str(x) if isinstance(x, (str, int, float)) else x.gamsRepr()
+    return (
+        str(
+            x,
+        )
+        if isinstance(x, (str, int, float))
+        else x.gamsRepr()
+    )
 
 
 def abs(x: Union[int, float, Symbol]) -> Expression:
@@ -53,8 +95,7 @@ def abs(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"abs({x_str})", None)
+    return expression.Expression(None, MathOp("abs", (x,)), None)
 
 
 def ceil(x: Union[int, float, Symbol]) -> Expression:
@@ -65,8 +106,7 @@ def ceil(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"ceil({x_str})", None)
+    return expression.Expression(None, MathOp("ceil", (x,)), None)
 
 
 def div(
@@ -84,11 +124,8 @@ def div(
     -------
     Expression
     """
-    dividend_str = _stringify(dividend)
-    divisor_str = _stringify(divisor)
-
     return expression.Expression(
-        None, f"div({dividend_str}, {divisor_str})", None
+        None, MathOp("div", (dividend, divisor)), None
     )
 
 
@@ -107,11 +144,8 @@ def div0(
     -------
     Expression
     """
-    dividend_str = _stringify(dividend)
-    divisor_str = _stringify(divisor)
-
     return expression.Expression(
-        None, f"div0({dividend_str}, {divisor_str})", None
+        None, MathOp("div0", (dividend, divisor)), None
     )
 
 
@@ -134,10 +168,7 @@ def dist(
     if isinstance(x1, tuple) or isinstance(x2, tuple):
         raise Exception("Both should be a tuple or none")
 
-    x1_str = _stringify(x1)
-    x2_str = _stringify(x2)
-
-    return expression.Expression(None, f"eDist({x1_str}, {x2_str})", None)
+    return expression.Expression(None, MathOp("eDist", (x1, x2)), None)
 
 
 def factorial(x: Union[int, Symbol]) -> Expression:
@@ -148,8 +179,7 @@ def factorial(x: Union[int, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"fact({x_str})", None)
+    return expression.Expression(None, MathOp("fact", (x,)), None)
 
 
 def floor(x: Union[int, float, Symbol]) -> Expression:
@@ -160,8 +190,7 @@ def floor(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"floor({x_str})", None)
+    return expression.Expression(None, MathOp("floor", (x,)), None)
 
 
 def fractional(x: Union[int, float, Symbol]) -> Expression:
@@ -172,8 +201,7 @@ def fractional(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"frac({x_str})", None)
+    return expression.Expression(None, MathOp("frac", (x,)), None)
 
 
 def Min(*values) -> Expression:
@@ -184,8 +212,7 @@ def Min(*values) -> Expression:
     -------
     Expression
     """
-    values_str = ",".join([_stringify(value) for value in values])
-    return expression.Expression(None, f"min({values_str})", None)
+    return expression.Expression(None, MathOp("min", values), None)
 
 
 def Max(*values) -> Expression:
@@ -196,8 +223,7 @@ def Max(*values) -> Expression:
     -------
     Expression
     """
-    values_str = ",".join([_stringify(value) for value in values])
-    return expression.Expression(None, f"max({values_str})", None)
+    return expression.Expression(None, MathOp("max", values), None)
 
 
 def mod(x: Union[float, Symbol], y: Union[float, Symbol]) -> Expression:
@@ -208,9 +234,7 @@ def mod(x: Union[float, Symbol], y: Union[float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"mod({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("mod", (x, y)), None)
 
 
 def Round(x: Union[float, Symbol], num_decimals: int = 0) -> Expression:
@@ -226,8 +250,9 @@ def Round(x: Union[float, Symbol], num_decimals: int = 0) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"round({x_str}, {num_decimals})", None)
+    return expression.Expression(
+        None, MathOp("round", (x, num_decimals)), None
+    )
 
 
 def sign(x: Symbol) -> Expression:
@@ -242,8 +267,7 @@ def sign(x: Symbol) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sign({x_str})", None)
+    return expression.Expression(None, MathOp("sign", (x,)), None)
 
 
 def slexp(
@@ -261,8 +285,7 @@ def slexp(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"slexp({x_str},{S})", None)
+    return expression.Expression(None, MathOp("slexp", (x, S)), None)
 
 
 def sqexp(
@@ -280,8 +303,7 @@ def sqexp(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sqexp({x_str},{S})", None)
+    return expression.Expression(None, MathOp("sqexp", (x, S)), None)
 
 
 def sqrt(x: Union[int, float, Symbol]) -> Expression:
@@ -292,8 +314,7 @@ def sqrt(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sqrt({x_str})", None)
+    return expression.Expression(None, MathOp("sqrt", (x,)), None)
 
 
 def truncate(x: Union[int, float, Symbol]) -> Expression:
@@ -304,8 +325,7 @@ def truncate(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"trunc({x_str})", None)
+    return expression.Expression(None, MathOp("trunc", (x,)), None)
 
 
 def beta(
@@ -323,9 +343,7 @@ def beta(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"beta({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("beta", (x, y)), None)
 
 
 def regularized_beta(
@@ -344,12 +362,7 @@ def regularized_beta(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    z_str = _stringify(z)
-    return expression.Expression(
-        None, f"betaReg({x_str},{y_str},{z_str})", None
-    )
+    return expression.Expression(None, MathOp("betaReg", (x, y, z)), None)
 
 
 def gamma(x: Union[int, float, Symbol]) -> Expression:
@@ -364,8 +377,7 @@ def gamma(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"gamma({x_str})", None)
+    return expression.Expression(None, MathOp("gamma", (x,)), None)
 
 
 def regularized_gamma(
@@ -383,9 +395,7 @@ def regularized_gamma(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    a_str = _stringify(a)
-    return expression.Expression(None, f"gammaReg({x_str},{a_str})", None)
+    return expression.Expression(None, MathOp("gammaReg", (x, a)), None)
 
 
 def lse_max(*xs) -> Expression:
@@ -399,8 +409,7 @@ def lse_max(*xs) -> Expression:
     if len(xs) < 1:
         raise ValidationError("lse_max requires at least 1 x")
 
-    x_str = ",".join([_stringify(x) for x in xs])
-    return expression.Expression(None, f"lseMax({x_str})", None)
+    return expression.Expression(None, MathOp("lseMax", xs), None)
 
 
 def lse_max_sc(t, *xs) -> Expression:
@@ -411,14 +420,10 @@ def lse_max_sc(t, *xs) -> Expression:
     -------
     Expression
     """
-    t_str = _stringify(t)
-
     if len(xs) < 1:
         raise ValidationError("lse_max requires at least 1 x")
 
-    x_str = ",".join([_stringify(x) for x in xs])
-
-    return expression.Expression(None, f"lseMaxSc({t_str},{x_str})", None)
+    return expression.Expression(None, MathOp("lseMaxSc", xs + (t,)), None)
 
 
 def lse_min(*xs) -> Expression:
@@ -432,8 +437,7 @@ def lse_min(*xs) -> Expression:
     if len(xs) < 1:
         raise ValidationError("lse_max requires at least 1 x")
 
-    x_str = ",".join([_stringify(x) for x in xs])
-    return expression.Expression(None, f"lseMin({x_str})", None)
+    return expression.Expression(None, MathOp("lseMin", xs), None)
 
 
 def lse_min_sc(t, *xs) -> Expression:
@@ -444,14 +448,10 @@ def lse_min_sc(t, *xs) -> Expression:
     -------
     Expression
     """
-    t_str = _stringify(t)
-
     if len(xs) < 1:
         raise ValidationError("lse_max requires at least 1 x")
 
-    x_str = ",".join([_stringify(x) for x in xs])
-
-    return expression.Expression(None, f"lseMinSc({t_str},{x_str})", None)
+    return expression.Expression(None, MathOp("lseMinSc", (t,) + xs), None)
 
 
 def ncp_cm(x: Symbol, y: Symbol, z: Union[float, int]) -> Expression:
@@ -468,9 +468,7 @@ def ncp_cm(x: Symbol, y: Symbol, z: Union[float, int]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"ncpCM({x_str},{y_str},{z})", None)
+    return expression.Expression(None, MathOp("ncpCM", (x, y, z)), None)
 
 
 def ncp_f(x: Symbol, y: Symbol, z: Union[int, float] = 0) -> Expression:
@@ -487,9 +485,7 @@ def ncp_f(x: Symbol, y: Symbol, z: Union[int, float] = 0) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"ncpF({x_str},{y_str},{z})", None)
+    return expression.Expression(None, MathOp("ncpF", (x, y, z)), None)
 
 
 def ncpVUpow(
@@ -510,9 +506,7 @@ def ncpVUpow(
     -------
     Expression
     """
-    r_str = _stringify(r)
-    s_str = _stringify(s)
-    return expression.Expression(None, f"ncpVUpow({r_str},{s_str},{mu}", None)
+    return expression.Expression(None, MathOp("ncpVUpow", (r, s, mu)), None)
 
 
 def ncpVUsin(r: Symbol, s: Symbol, mu: Union[int, float] = 0) -> Expression:
@@ -529,9 +523,7 @@ def ncpVUsin(r: Symbol, s: Symbol, mu: Union[int, float] = 0) -> Expression:
     -------
     Expression
     """
-    r_str = _stringify(r)
-    s_str = _stringify(s)
-    return expression.Expression(None, f"ncpVUsin({r_str},{s_str},{mu})", None)
+    return expression.Expression(None, MathOp("ncpVUsin", (r, s, mu)), None)
 
 
 def poly(x, *args) -> Expression:
@@ -542,10 +534,7 @@ def poly(x, *args) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    args_str = ",".join(str(arg) for arg in args)
-
-    return expression.Expression(None, f"poly({x_str},{args_str})", None)
+    return expression.Expression(None, MathOp("poly", (x,) + args), None)
 
 
 def sigmoid(x: Union[int, float, Symbol]) -> Expression:
@@ -560,8 +549,7 @@ def sigmoid(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sigmoid({x_str})", None)
+    return expression.Expression(None, MathOp("sigmoid", (x,)), None)
 
 
 def rand_binomial(n: Union[int, float], p: Union[int, float]) -> Expression:
@@ -578,7 +566,7 @@ def rand_binomial(n: Union[int, float], p: Union[int, float]) -> Expression:
     -------
     Expression
     """
-    return expression.Expression(None, f"randBinomial({n},{p})", None)
+    return expression.Expression(None, MathOp("randBinomial", (n, p)), None)
 
 
 def rand_linear(
@@ -599,7 +587,7 @@ def rand_linear(
     Expression
     """
     return expression.Expression(
-        None, f"randLinear({low},{slope},{high})", None
+        None, MathOp("randLinear", (low, slope, high)), None
     )
 
 
@@ -621,7 +609,7 @@ def rand_triangle(
     Expression
     """
     return expression.Expression(
-        None, f"randTriangle({low},{mid},{high})", None
+        None, MathOp("randTriangle", (low, mid, high)), None
     )
 
 
@@ -640,8 +628,7 @@ def slrec(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"slrec({x_str},{S}", None)
+    return expression.Expression(None, MathOp("slrec", (x, S)), None)
 
 
 def sqrec(
@@ -659,8 +646,7 @@ def sqrec(
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"sqrec({x_str},{S})", None)
+    return expression.Expression(None, MathOp("sqrec", (x, S)), None)
 
 
 def entropy(x: Union[int, float, Symbol]) -> Expression:
@@ -675,8 +661,7 @@ def entropy(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"entropy({x_str})", None)
+    return expression.Expression(None, MathOp("entropy", (x,)), None)
 
 
 def errorf(x: Union[int, float, Symbol]) -> Expression:
@@ -691,8 +676,7 @@ def errorf(x: Union[int, float, Symbol]) -> Expression:
     -------
     Expression
     """
-    x_str = _stringify(x)
-    return expression.Expression(None, f"errorf({x_str})", None)
+    return expression.Expression(None, MathOp("errorf", (x,)), None)
 
 
 def ifthen(
@@ -727,76 +711,54 @@ def ifthen(
     condition_str = condition.gamsRepr()
     condition_str = utils._replace_equality_signs(condition_str)
 
-    ifthen_str = f"ifthen({condition_str}, {yes_return}, {no_return})"
-    return expression.Expression(None, ifthen_str, None)
+    return expression.Expression(
+        None, MathOp("ifthen", (condition_str, yes_return, no_return)), None
+    )
 
 
 def bool_and(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"bool_and({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("bool_and", (x, y)), None)
 
 
 def bool_eqv(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"bool_eqv({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("bool_eqv", (x, y)), None)
 
 
 def bool_imp(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"bool_imp({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("bool_imp", (x, y)), None)
 
 
 def bool_not(x: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    return expression.Expression(None, f"bool_not({x_str})", None)
+    return expression.Expression(None, MathOp("bool_not", (x,)), None)
 
 
 def bool_or(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"bool_or({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("bool_or", (x, y)), None)
 
 
 def bool_xor(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"bool_xor({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("bool_xor", (x, y)), None)
 
 
 def rel_eq(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_eq({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_eq", (x, y)), None)
 
 
 def rel_ge(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_ge({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_ge", (x, y)), None)
 
 
 def rel_gt(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_gt({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_gt", (x, y)), None)
 
 
 def rel_le(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_le({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_le", (x, y)), None)
 
 
 def rel_lt(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_lt({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_lt", (x, y)), None)
 
 
 def rel_ne(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
-    x_str = _stringify(x)
-    y_str = _stringify(y)
-    return expression.Expression(None, f"rel_ne({x_str},{y_str})", None)
+    return expression.Expression(None, MathOp("rel_ne", (x, y)), None)

@@ -20,7 +20,7 @@ class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=os.getenv("DELAYED_EXECUTION", False),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_parameter_creation(self):
@@ -87,16 +87,19 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
         i = Set(
-            self.m,
+            m,
             name="i",
             records=canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
-            self.m,
+            m,
             name="a",
             domain=[i],
             records=pd.DataFrame(
@@ -107,14 +110,16 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual(a[i].gamsRepr(), "a(i)")
 
         a[i] = -a[i] * 5
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
-            "a(i) = (-a(i) * 5);",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "a(i) = (-a(i) * 5);",
+            )
 
         cont = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=False,
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
 
@@ -139,16 +144,19 @@ class ParameterSuite(unittest.TestCase):
             a[j] = 5
 
     def test_implicit_parameter_assignment(self):
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
+        )
         canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
         i = Set(
-            self.m,
+            m,
             name="i",
             records=canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
-            self.m,
+            m,
             name="a",
             domain=[i],
             records=pd.DataFrame(
@@ -157,7 +165,7 @@ class ParameterSuite(unittest.TestCase):
         )
 
         b = Parameter(
-            self.m,
+            m,
             name="b",
             domain=[i],
             records=pd.DataFrame(
@@ -165,30 +173,37 @@ class ParameterSuite(unittest.TestCase):
             ),
         )
 
-        a[i] = Sum(i, b[i])
-        self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
-            "a(i) = sum(i,b(i));",
-        )
+        a[i] = b[i]
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                "a(i) = b(i);",
+            )
 
-        v = Variable(self.m, "v", domain=[i])
+        v = Variable(m, "v", domain=[i])
         v.l[i] = v.l[i] * 5
-        self.assertEqual(
-            self.m._unsaved_statements[-1].getStatement(),
-            "v.l(i) = (v.l(i) * 5);",
-        )
+
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].getStatement(),
+                "v.l(i) = (v.l(i) * 5);",
+            )
 
     def test_equality(self):
-        j = Set(self.m, "j")
-        h = Set(self.m, "h")
-        hp = Alias(self.m, "hp", h)
-        lamb = Parameter(self.m, "lambda", domain=[j, h])
-        gamma = Parameter(self.m, "gamma", domain=[j, h])
-        gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
-        self.assertEqual(
-            self.m._unsaved_statements[-1].gamsRepr(),
-            "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
+        m = Container(
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
         )
+        j = Set(m, "j")
+        h = Set(m, "h")
+        hp = Alias(m, "hp", h)
+        lamb = Parameter(m, "lambda", domain=[j, h])
+        gamma = Parameter(m, "gamma", domain=[j, h])
+        gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
+        if m.delayed_execution:
+            self.assertEqual(
+                m._unsaved_statements[-1].gamsRepr(),
+                "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
+            )
 
     def test_override(self):
         # Parameter record override

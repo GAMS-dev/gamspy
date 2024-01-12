@@ -37,7 +37,6 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
-import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
@@ -156,12 +155,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self._stage = self._create_attr("stage")
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
-        domain = (
-            self.domain
-            if isinstance(indices, type(...))
-            else utils._to_list(indices)
-        )
-        validation.validate_domain(domain, self)
+        domain = validation._transform_given_indices(self.domain, indices)
+        validation.validate_domain(self, domain)
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 

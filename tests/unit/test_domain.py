@@ -7,6 +7,7 @@ from gamspy import Container
 from gamspy import Domain
 from gamspy import Parameter
 from gamspy import Set
+from gamspy import Sum
 from gamspy.exceptions import ValidationError
 
 
@@ -45,6 +46,17 @@ class DomainSuite(unittest.TestCase):
             records=[["i1", 1]],
         )
         self.assertEqual(i.toList(), ["i1"])
+
+    def test_domain_validation(self):
+        # DATA
+        times = Set(self.m, "times", records=["release", "duration"])
+        job = Set(self.m, "job", records=["job1", "job2"])
+        data = Parameter(self.m, "data", domain=[times, job])
+
+        M = self.m.addParameter("M")
+        M[...] = Sum(job, data["release", job] + data["duration", job])
+        with self.assertRaises(ValidationError):
+            M[...] = Sum(job, data["rbla", job] + data["bla", job])
 
 
 def domain_suite():

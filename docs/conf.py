@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../src"))
 project = "GAMSpy"
 copyright = "2023, GAMS Development Corporation"
 author = "GAMS"
-release = "0.11.5"
+release = "0.11.6"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
