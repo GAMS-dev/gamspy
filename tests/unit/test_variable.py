@@ -297,6 +297,7 @@ class VariableSuite(unittest.TestCase):
 
     def test_scalar_attr_assignment(self):
         a = Variable(self.m, "a")
+        b = Variable(self.m, "b", "binary")
         a.l = 5
         if self.m.delayed_execution:
             self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
@@ -323,10 +324,10 @@ class VariableSuite(unittest.TestCase):
         if self.m.delayed_execution:
             self.assertEqual(a.fx._assignment.getStatement(), "a.fx = 5;")
 
-        a.prior = 5
+        b.prior = 5
         if self.m.delayed_execution:
             self.assertEqual(
-                a.prior._assignment.getStatement(), "a.prior = 5;"
+                b.prior._assignment.getStatement(), "b.prior = 5;"
             )
 
         a.stage = 5

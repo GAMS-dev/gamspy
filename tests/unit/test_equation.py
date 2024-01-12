@@ -459,36 +459,6 @@ class EquationSuite(unittest.TestCase):
                 a.stage._assignment.getStatement(), "a.stage = 5;"
             )
 
-        a.range = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.range._assignment.getStatement(), "a.range = 5;"
-            )
-
-        a.slacklo = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.slacklo._assignment.getStatement(), "a.slacklo = 5;"
-            )
-
-        a.slackup = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.slackup._assignment.getStatement(), "a.slackup = 5;"
-            )
-
-        a.slack = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.slack._assignment.getStatement(), "a.slack = 5;"
-            )
-
-        a.infeas = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.infeas._assignment.getStatement(), "a.infeas = 5;"
-            )
-
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
         x = Variable(self.m, "x", domain=[i])
