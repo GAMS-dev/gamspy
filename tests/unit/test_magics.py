@@ -25,7 +25,7 @@ class MagicsSuite(unittest.TestCase):
         )
 
         # Set
-        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        i = Set(self.m, name="i", records=["new-york", "chicago", "topeka"])
 
         # Parameter
         b = Parameter(self.m, name="b", domain=[i], records=demands)
