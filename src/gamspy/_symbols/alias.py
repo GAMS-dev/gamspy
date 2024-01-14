@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
+from gams.core import gdx
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -60,6 +61,36 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     """
 
+    @classmethod
+    def _constructor_bypass(
+        cls, container: Container, name: str, alias_with: Set
+    ):
+        # create new symbol object
+        obj = Alias.__new__(cls, container, name, alias_with)
+
+        # set private properties directly
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._alias_with = alias_with
+        obj._modified = True
+
+        # typing
+        obj._gams_type = gdx.GMS_DT_ALIAS
+        obj._gams_subtype = 1
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj._is_dirty = False
+        obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
+        obj._current_index = 0
+
+        return obj
+
     def __new__(cls, container: Container, name: str, alias_with: Set):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -83,15 +114,27 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             return object.__new__(Alias)
 
     def __init__(self, container: Container, name: str, alias_with: Set):
-        self._is_dirty = False
-        name = validation.validate_name(name)
+        # does symbol exist
+        has_symbol = False
+        if isinstance(getattr(self, "container", None), gp.Container):
+            has_symbol = True
 
-        super().__init__(container, name, alias_with)
+        if has_symbol:
+            # reset some properties
+            self._requires_state_check = True
+            self.container._requires_state_check = True
+            self.modified = True
+            self.alias_with = alias_with
+        else:
+            self._is_dirty = False
+            name = validation.validate_name(name)
 
-        validation.validate_container(self, self.domain)
-        self.where = condition.Condition(self)
-        self.container._add_statement(self)
-        self._current_index = 0
+            super().__init__(container, name, alias_with)
+
+            validation.validate_container(self, self.domain)
+            self.where = condition.Condition(self)
+            self.container._add_statement(self)
+            self._current_index = 0
 
     def __len__(self):
         if self.records is not None:

@@ -25,13 +25,13 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_creation(self):
         # no name
-        self.assertRaises(TypeError, Parameter, self.m)
+        self.assertRaises((TypeError, ValidationError), Parameter, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Parameter, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Parameter)
+        self.assertRaises((TypeError, ValidationError), Parameter)
 
         # non-container type container
         self.assertRaises(TypeError, Parameter, 5, "j")

@@ -24,12 +24,14 @@
 #
 from __future__ import annotations
 
+import itertools
 from typing import Any
 from typing import Literal
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 import pandas as pd
+from gams.core import gdx
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -322,6 +324,59 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     """
 
+    @classmethod
+    def _constructor_bypass(
+        cls,
+        container: Container,
+        name: str,
+        domain: list[str | Set] = [],
+        is_singleton: bool = False,
+        records: Any | None = None,
+        description: str = "",
+    ):
+        # create new symbol object
+        obj = Set.__new__(
+            cls,
+            container,
+            name,
+            domain,
+            is_singleton,
+            records,
+            description=description,
+        )
+
+        # set private properties directly
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._domain = domain
+        obj._domain_forwarding = False
+        obj._description = description
+
+        obj._records = records
+        obj._modified = True
+        obj._is_singleton = is_singleton
+
+        # typing
+        if obj.is_singleton:
+            obj._gams_type = gdx.GMS_DT_SET
+            obj._gams_subtype = 1
+        else:
+            obj._gams_type = gdx.GMS_DT_SET
+            obj._gams_subtype = 0
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj._is_dirty = False
+        obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
+        obj._current_index = 0
+
+        return obj
+
     def __new__(
         cls,
         container: Container,
@@ -365,26 +420,86 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         description: str = "",
         uels_on_axes: bool = False,
     ):
-        self._is_dirty = False
-        self.where = condition.Condition(self)
-        name = validation.validate_name(name)
+        # domain handling
+        if domain is None:
+            domain = ["*"]
 
-        singleton_check(is_singleton, records)
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
 
-        super().__init__(
-            container,
-            name,
-            domain,
-            is_singleton,
-            records,
-            domain_forwarding,
-            description,
-            uels_on_axes,
-        )
+        # does symbol exist
+        has_symbol = False
+        if isinstance(getattr(self, "container", None), gp.Container):
+            has_symbol = True
 
-        validation.validate_container(self, self.domain)
-        self.container._add_statement(self)
-        self._current_index = 0
+        if has_symbol:
+            try:
+                if not isinstance(self, Set):
+                    raise TypeError(
+                        f"Cannot overwrite symbol {self.name} in container"
+                        " because it is not a Set object)"
+                    )
+
+                if any(
+                    d1 != d2
+                    for d1, d2 in itertools.zip_longest(self.domain, domain)
+                ):
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless symbol"
+                        " domains are equal"
+                    )
+
+                if self.is_singleton != is_singleton:
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless"
+                        " 'is_singleton' is left unchanged"
+                    )
+
+                if self.domain_forwarding != domain_forwarding:
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless"
+                        " 'domain_forwarding' is left unchanged"
+                    )
+
+            except ValueError as err:
+                raise ValueError(err)
+
+            except TypeError as err:
+                raise TypeError(err)
+
+            # reset some properties
+            self._requires_state_check = True
+            self.container._requires_state_check = True
+            if description != "":
+                self.description = description
+            self.records = None
+            self.modified = True
+
+            # only set records if records are provided
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+
+        else:
+            self._is_dirty = False
+            self.where = condition.Condition(self)
+            name = validation.validate_name(name)
+
+            singleton_check(is_singleton, records)
+
+            super().__init__(
+                container,
+                name,
+                domain,
+                is_singleton,
+                records,
+                domain_forwarding,
+                description,
+                uels_on_axes,
+            )
+
+            validation.validate_container(self, self.domain)
+            self.container._add_statement(self)
+            self._current_index = 0
 
     def __len__(self):
         if self.records is not None:
