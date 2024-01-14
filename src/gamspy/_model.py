@@ -599,12 +599,10 @@ class Model:
             backend,
             engine_config,
             neos_client,
+            self,
         )
 
         summary = runner.solve()
-
-        if not runner.is_async():
-            self._update_model_attributes()
 
         return summary
 

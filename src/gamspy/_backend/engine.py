@@ -45,6 +45,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import io
     from gamspy import Container
+    from gamspy import Model
 
 
 class EngineConfig(BaseModel):
@@ -77,6 +78,7 @@ class GAMSEngine(backend.Backend):
         config: "EngineConfig" | None,
         options: "GamsOptions",
         output: Optional[io.TextIOWrapper] = None,
+        model: Model | None = None,
     ) -> None:
         if config is None:
             raise ValidationError(
@@ -92,6 +94,7 @@ class GAMSEngine(backend.Backend):
         self.config = config
         self.options = options
         self.output = output
+        self.model = model
 
     def is_async(self):
         return False
@@ -137,6 +140,8 @@ class GAMSEngine(backend.Backend):
                 engine_options=self.config.engine_options,
                 remove_results=self.config.remove_results,
             )
+            if not self.is_async() and self.model:
+                self.model._update_model_attributes()
         except (GamsException, GamsExceptionExecution) as e:
             raise GamspyException(str(e))
         finally:

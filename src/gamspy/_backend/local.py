@@ -39,6 +39,7 @@ from gamspy.exceptions import GamspyException
 if TYPE_CHECKING:
     import io
     from gamspy import Container
+    from gamspy import Model
 
 
 class Local(backend.Backend):
@@ -47,10 +48,12 @@ class Local(backend.Backend):
         container: Container,
         options: GamsOptions,
         output: io.TextIOWrapper | None = None,
+        model: Model | None = None,
     ) -> None:
         super().__init__(container, container._gdx_in, container._gdx_out)
         self.options = options
         self.output = output
+        self.model = model
 
     def is_async(self):
         return False
@@ -90,6 +93,8 @@ class Local(backend.Backend):
                 create_out_db=False,
                 output=self.output,
             )
+            if not self.is_async() and self.model:
+                self.model._update_model_attributes()
         except GamsExceptionExecution as exception:
             message = customize_exception(
                 self.container.workspace, self.options, job, exception
