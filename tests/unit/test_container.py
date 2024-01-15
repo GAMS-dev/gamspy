@@ -118,7 +118,7 @@ class ContainerSuite(unittest.TestCase):
         e1 = m.addEquation("e")
         self.assertRaises(ValueError, m.addEquation, "e", "regular", i1)
         self.assertTrue(isinstance(e1, Equation))
-        e2 = m.addEquation("e", "regular")
+        e2 = m.addEquation("e")
         self.assertTrue(id(e1) == id(e2))
         self.assertRaises(ValueError, m.addEquation, "e", "bla")
         self.assertRaises(ValueError, m.addEquation, "e", "leq")
