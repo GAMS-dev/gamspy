@@ -184,6 +184,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # miro support
         self._is_miro_output = is_miro_output
 
+        if is_miro_output:
+            self.container._miro_output_symbols.append(self.name)
+
     def __hash__(self):
         return id(self)
 

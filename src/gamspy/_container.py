@@ -397,8 +397,6 @@ class Container(gt.Container):
                 string = self._get_load_miro_input_str(statement, gdx_in)
             else:
                 string = f"$load {statement.name}\n"
-
-            self._miro_input_symbols.append(statement.name)
         else:
             string = f"$load {statement.name}\n"
 
@@ -436,9 +434,6 @@ class Container(gt.Container):
                     and statement.modified
                 ):
                     string += self._get_load_str(statement, gdx_in)
-
-                    if statement._is_miro_output:
-                        self._miro_output_symbols.append(statement.name)
 
         for symbol_name in modified_names:
             if (

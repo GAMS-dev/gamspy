@@ -1,56 +1,6 @@
 {
     "modelTitle": "GAMSPy App",
     "inputSymbols": {
-        "ilocdata": {
-            "alias": "Plant location information",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "lat": {
-                    "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
-                }
-            }
-        },
-        "d": {
-            "alias": "distance in thousands of miles",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
-        "b": {
-            "alias": "demand at market j in cases",
-            "symtype": "parameter",
-            "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
         "jlocdata": {
             "alias": "Market location information",
             "symtype": "parameter",
@@ -76,6 +26,56 @@
                 "I": {
                     "type": "string",
                     "alias": "canning plants"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
+        "ilocdata": {
+            "alias": "Plant location information",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
+                }
+            }
+        },
+        "b": {
+            "alias": "demand at market j in cases",
+            "symtype": "parameter",
+            "headers": {
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
+        "d": {
+            "alias": "distance in thousands of miles",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
                 },
                 "value": {
                     "type": "numeric",

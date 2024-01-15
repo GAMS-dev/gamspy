@@ -144,6 +144,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_miro_output = is_miro_output
         self._is_miro_table = is_miro_table
 
+        if is_miro_input:
+            self.container._miro_input_symbols.append(self.name)
+
+        if is_miro_output:
+            self.container._miro_output_symbols.append(self.name)
+
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:

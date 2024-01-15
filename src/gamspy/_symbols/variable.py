@@ -160,6 +160,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # miro support
         self._is_miro_output = is_miro_output
 
+        if is_miro_output:
+            self.container._miro_output_symbols.append(self.name)
+
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = validation._transform_given_indices(self.domain, indices)
         validation.validate_domain(self, domain)

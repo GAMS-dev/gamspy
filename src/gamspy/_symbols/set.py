@@ -395,6 +395,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
 
+        if is_miro_input:
+            self.container._miro_input_symbols.append(self.name)
+
+        if is_miro_output:
+            self.container._miro_output_symbols.append(self.name)
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
