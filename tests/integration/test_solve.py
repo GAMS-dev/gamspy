@@ -32,6 +32,17 @@ from gamspy.math import sqr
 class SolveSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        
+    def test_uel_order(self):
+        i = Set(self.m,'i')
+        p = self.m.addParameter('base',[i])
+        d = Parameter(self.m,'d')
+        i.setRecords(['i1','i2'])
+        d[...] = 0 # trigger the execution of GAMS
+        i.setRecords(['i0','i1'])
+        p[i] = i.ord
+        self.assertEqual(p.records.values.tolist(), [['i1', 1.0], ['i0', 2.0]])
+
 
     def test_read_on_demand(self):
         # Prepare data
