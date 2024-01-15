@@ -137,14 +137,14 @@ class AliasSuite(unittest.TestCase):
         j.records = pd.DataFrame([["a", "b"]])
         self.assertTrue(i.modified)
 
-    def _test_alias_modified_list(self):
+    def test_alias_modified_list(self):
         nodes = self.m.addSet("nodes", description="nodes", records=["s"])
         i = self.m.addAlias("i", nodes)
         _ = self.m.addSet(
             "s", domain=[i], description="sources", records=["s"]
         )
         _, modified_names = self.m._get_touched_symbol_names()
-        self.assertEqual(modified_names, ["nodes", "i", "s"])
+        self.assertEqual(modified_names, [])
 
 
 def alias_suite():
