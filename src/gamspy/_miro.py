@@ -131,8 +131,14 @@ class MiroJSONEncoder:
             domain_values = []
 
             for dtype, column in zip(symbol.records.dtypes, domain_keys):
+                try:
+                    elem = self.container[column]
+                    alias = elem.description if elem.description else elem.name
+                except KeyError:
+                    alias = column
+
                 domain_values.append(
-                    {"type": type_map[dtype.name], "alias": column}
+                    {"type": type_map[dtype.name], "alias": alias}
                 )
 
             if (

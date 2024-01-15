@@ -24,7 +24,10 @@ class MiroSuite(unittest.TestCase):
 
         try:
             subprocess.run(
-                [sys.executable, directory + os.sep + "miro.py"],
+                [
+                    sys.executable,
+                    directory + os.sep + "miro_models" + os.sep + "miro.py",
+                ],
                 env=current_environment,
                 check=True,
                 capture_output=True,
@@ -89,7 +92,9 @@ class MiroSuite(unittest.TestCase):
         self.assertEqual(new_container["z"].records.level.item(), 153.675)
 
         # Test generated json
-        with open(f"{directory}{os.sep}conf_miro{os.sep}miro_io.json") as file:
+        with open(
+            f"{directory}{os.sep}miro_models{os.sep}conf_miro{os.sep}miro_io.json"
+        ) as file:
             contract = json.load(file)
             self.assertEqual(
                 contract,
@@ -100,7 +105,10 @@ class MiroSuite(unittest.TestCase):
                             "alias": "distance in thousands of miles",
                             "symtype": "parameter",
                             "headers": {
-                                "i": {"type": "string", "alias": "i"},
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
                                 "new-york": {
                                     "type": "numeric",
                                     "alias": "new-york",
@@ -121,8 +129,8 @@ class MiroSuite(unittest.TestCase):
                             "symtext": [
                                 "model_type",
                                 (
-                                    "freight in dollars per case per"
-                                    " thousand miles"
+                                    "freight in dollars per case per thousand"
+                                    " miles"
                                 ),
                             ],
                             "symtypes": ["set", "parameter"],
@@ -147,36 +155,27 @@ class MiroSuite(unittest.TestCase):
                             "alias": "shipment quantities in cases",
                             "symtype": "variable",
                             "headers": {
-                                "i": {"type": "string", "alias": "i"},
-                                "j": {"type": "string", "alias": "j"},
-                                "level": {
-                                    "type": "numeric",
-                                    "alias": "level",
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
                                 },
+                                "j": {"type": "string", "alias": "markets"},
+                                "level": {"type": "numeric", "alias": "level"},
                                 "marginal": {
                                     "type": "numeric",
                                     "alias": "marginal",
                                 },
-                                "lower": {
-                                    "type": "numeric",
-                                    "alias": "lower",
-                                },
-                                "upper": {
-                                    "type": "numeric",
-                                    "alias": "upper",
-                                },
-                                "scale": {
-                                    "type": "numeric",
-                                    "alias": "scale",
-                                },
+                                "lower": {"type": "numeric", "alias": "lower"},
+                                "upper": {"type": "numeric", "alias": "upper"},
+                                "scale": {"type": "numeric", "alias": "scale"},
                             },
                         },
                         "_scalarsve_out": {
                             "alias": "Output Variable/Equation Scalars",
                             "symnames": ["z"],
                             "symtext": [
-                                "total transportation costs in thousands"
-                                " of dollars"
+                                "total transportation costs in thousands of"
+                                " dollars"
                             ],
                             "symtypes": ["variable"],
                             "headers": {
@@ -188,25 +187,177 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "Scalar Description",
                                 },
-                                "level": {
-                                    "type": "numeric",
-                                    "alias": "Level",
-                                },
+                                "level": {"type": "numeric", "alias": "Level"},
                                 "marginal": {
                                     "type": "numeric",
                                     "alias": "Marginal",
                                 },
-                                "lower": {
-                                    "type": "numeric",
-                                    "alias": "Lower",
+                                "lower": {"type": "numeric", "alias": "Lower"},
+                                "upper": {"type": "numeric", "alias": "Upper"},
+                                "scale": {"type": "numeric", "alias": "Scale"},
+                            },
+                        },
+                    },
+                },
+            )
+
+    def test_contract(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        current_environment = os.environ.copy()
+        current_environment["MIRO"] = "1"
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    directory + os.sep + "miro_models" + os.sep + "miro2.py",
+                ],
+                env=current_environment,
+                check=True,
+                capture_output=True,
+            )
+        except Exception as e:
+            print(e)
+
+        with open(
+            f"{directory}{os.sep}miro_models{os.sep}conf_miro2{os.sep}miro2_io.json"
+        ) as file:
+            contract = json.load(file)
+            self.assertEqual(
+                contract,
+                {
+                    "modelTitle": "GAMSPy App",
+                    "inputSymbols": {
+                        "d": {
+                            "alias": "distance in thousands of miles",
+                            "symtype": "parameter",
+                            "headers": {
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
                                 },
-                                "upper": {
-                                    "type": "numeric",
-                                    "alias": "Upper",
+                                "j": {"type": "string", "alias": "markets"},
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
+                        "a": {
+                            "alias": "capacity of plant i in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
                                 },
-                                "scale": {
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
+                        "ilocdata": {
+                            "alias": "Plant location information",
+                            "symtype": "parameter",
+                            "headers": {
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lng": {"type": "numeric", "alias": "lng"},
+                            },
+                        },
+                        "b": {
+                            "alias": "demand at market j in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "j": {"type": "string", "alias": "markets"},
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
+                        "jlocdata": {
+                            "alias": "Market location information",
+                            "symtype": "parameter",
+                            "headers": {
+                                "j": {"type": "string", "alias": "markets"},
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lng": {"type": "numeric", "alias": "lng"},
+                            },
+                        },
+                        "_scalars": {
+                            "alias": "Input Scalars",
+                            "symnames": ["type", "f", "mins", "beta"],
+                            "symtext": [
+                                "selected model type",
+                                (
+                                    "freight in dollars per case per thousand"
+                                    " miles"
+                                ),
+                                "minimum shipment (MIP- and MINLP-only)",
+                                "beta (MINLP-only)",
+                            ],
+                            "symtypes": [
+                                "set",
+                                "parameter",
+                                "parameter",
+                                "parameter",
+                            ],
+                            "headers": {
+                                "scalar": {
+                                    "type": "string",
+                                    "alias": "Scalar Name",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "alias": "Scalar Description",
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "alias": "Scalar Value",
+                                },
+                            },
+                        },
+                    },
+                    "outputSymbols": {
+                        "schedule": {
+                            "alias": "shipment quantities in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "i": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "j": {"type": "string", "alias": "markets"},
+                                "lngP": {"type": "numeric", "alias": "lngP"},
+                                "latP": {"type": "numeric", "alias": "latP"},
+                                "lngM": {"type": "numeric", "alias": "lngM"},
+                                "latM": {"type": "numeric", "alias": "latM"},
+                                "cap": {"type": "numeric", "alias": "cap"},
+                                "demand": {
                                     "type": "numeric",
-                                    "alias": "Scale",
+                                    "alias": "demand",
+                                },
+                                "quantities": {
+                                    "type": "numeric",
+                                    "alias": "quantities",
+                                },
+                            },
+                        },
+                        "_scalars_out": {
+                            "alias": "Output Scalars",
+                            "symnames": ["total_cost"],
+                            "symtext": [
+                                "total transportation costs in thousands of"
+                                " dollars"
+                            ],
+                            "symtypes": ["parameter"],
+                            "headers": {
+                                "scalar": {
+                                    "type": "string",
+                                    "alias": "Scalar Name",
+                                },
+                                "description": {
+                                    "type": "string",
+                                    "alias": "Scalar Description",
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "alias": "Scalar Value",
                                 },
                             },
                         },
