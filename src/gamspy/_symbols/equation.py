@@ -302,9 +302,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         return id(self)
 
     def __getitem__(self, indices: tuple | str):
-        domain = validation._transform_given_indices(self.domain, indices)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
@@ -315,10 +313,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         indices: tuple | str | implicits.ImplicitSet,
         assignment: Expression,
     ):
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_container(self, domain)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         self._set_definition(assignment, domain)
         self._is_dirty = True
@@ -391,6 +386,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._l
 
+    @l.setter
+    def l(self, value: int | float | Expression):
+        self._l[...] = value
+
     @property
     def m(self):
         """
@@ -401,6 +400,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._m
+
+    @m.setter
+    def m(self, value: int | float | Expression):
+        self._m[...] = value
 
     @property
     def lo(self):
@@ -413,6 +416,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._lo
 
+    @lo.setter
+    def lo(self, value: int | float | Expression):
+        self._lo[...] = value
+
     @property
     def up(self):
         """
@@ -423,6 +430,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._up
+
+    @up.setter
+    def up(self, value: int | float | Expression):
+        self._up[...] = value
 
     @property
     def scale(self):
@@ -435,6 +446,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._s
 
+    @scale.setter
+    def scale(self, value: int | float | Expression):
+        self._s[...] = value
+
     @property
     def stage(self):
         """
@@ -445,6 +460,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._stage
+
+    @stage.setter
+    def stage(self, value: int | float | Expression):
+        self._stage[...] = value
 
     @property
     def range(self):

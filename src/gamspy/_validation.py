@@ -152,8 +152,10 @@ def _transform_given_indices(
 
 def validate_domain(
     symbol: Union[Set, Parameter, Equation, ImplicitParameter],
-    domain: List[Set | Alias | ImplicitSet | str],
+    indices: Set | Alias | str | tuple | ImplicitSet,
 ):
+    domain = _transform_given_indices(symbol.domain, indices)
+    validate_container(symbol, domain)
     validate_dimension(symbol, domain)
 
     offset = 0
@@ -175,6 +177,8 @@ def validate_domain(
             else:
                 validate_one_dimensional_sets(given, actual)
         offset += given_dim
+
+    return domain
 
 
 def validate_container(

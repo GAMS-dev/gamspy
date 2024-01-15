@@ -528,9 +528,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
-        domain = validation._transform_given_indices(self.domain, indices)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
@@ -539,9 +537,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         indices: tuple | str,
         assignment,
     ):
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_container(self, domain)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         if isinstance(assignment, bool):
             assignment = "yes" if assignment is True else "no"  # type: ignore

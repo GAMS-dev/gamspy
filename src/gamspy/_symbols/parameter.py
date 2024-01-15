@@ -224,8 +224,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
@@ -234,9 +233,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Union[Expression, float, int],
     ) -> None:
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_container(self, domain)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore
