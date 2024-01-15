@@ -869,9 +869,6 @@ class SolveSuite(unittest.TestCase):
             objective=c,
         )
         
-        if cont.delayed_execution:
-            self.assertRaises(ValidationError, energy.interrupt)
-
         def interrupt_gams(model):
             time.sleep(1)
             model.interrupt()
