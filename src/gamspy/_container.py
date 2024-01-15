@@ -27,6 +27,7 @@ from __future__ import annotations
 import os
 import shutil
 import uuid
+import warnings
 from typing import Any
 from typing import Literal
 from typing import TYPE_CHECKING
@@ -100,6 +101,12 @@ class Container(gt.Container):
         )
 
         self._delayed_execution = delayed_execution
+
+        if delayed_execution:
+            warnings.warn(
+                "Delayed execution mode will be deprecated in 0.12.0."
+            )
+
         self._unsaved_statements: list = []
         self._is_first_run = True
 

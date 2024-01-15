@@ -6,8 +6,10 @@ GAMSPy 0.11.7
 -------------------------------------------------------------------------------
 - General
   - Allow variable/equation attribute assignment without any index.
+  - Run GAMS on symbol declaration.
 - Testing
   - Test scalar variable/equation assignment without any index.
+  - Test uel order.
 - Documentation
   - Document assigning to scalar variable/equation.
 
