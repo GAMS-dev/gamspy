@@ -46,8 +46,18 @@ def main():
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     # Set
-    i = Set(m, name="i", records=["seattle", "san-diego"])
-    j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
     _ = Set(
         m,
         name="model_type",
@@ -57,25 +67,59 @@ def main():
     )
 
     # Data
-    a = Parameter(m, name="a", domain=[i], records=capacities)
-    b = Parameter(m, name="b", domain=[j], records=demands)
+    a = Parameter(
+        m,
+        name="a",
+        domain=[i],
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=[j],
+        records=demands,
+        description="demand at market j in cases",
+    )
     d = Parameter(
         m,
         name="d",
         domain=[i, j],
         records=distances,
+        description="distance in thousands of miles",
         is_miro_input=True,
         is_miro_table=True,
     )
-    c = Parameter(m, name="c", domain=[i, j])
-    f = Parameter(m, name="f", records=90, is_miro_input=True)
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    f = Parameter(
+        m,
+        name="f",
+        records=90,
+        description="freight in dollars per case per thousand miles",
+        is_miro_input=True,
+    )
     c[i, j] = f * d[i, j] / 1000
 
     # Variable
     x = Variable(
-        m, name="x", domain=[i, j], type="Positive", is_miro_output=True
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+        is_miro_output=True,
     )
-    z = Variable(m, name="z", is_miro_output=True)
+    z = Variable(
+        m,
+        name="z",
+        description="total transportation costs in thousands of dollars",
+        is_miro_output=True,
+    )
 
     # Equation
     supply = Equation(m, name="supply", domain=[i])

@@ -97,7 +97,7 @@ class MiroSuite(unittest.TestCase):
                     "modelTitle": "GAMSPy App",
                     "inputSymbols": {
                         "d": {
-                            "alias": "d",
+                            "alias": "distance in thousands of miles",
                             "symtype": "parameter",
                             "headers": {
                                 "i": {"type": "string", "alias": "i"},
@@ -118,7 +118,13 @@ class MiroSuite(unittest.TestCase):
                         "_scalars": {
                             "alias": "Input Scalars",
                             "symnames": ["model_type", "f"],
-                            "symtext": ["model_type", "f"],
+                            "symtext": [
+                                "model_type",
+                                (
+                                    "freight in dollars per case per"
+                                    " thousand miles"
+                                ),
+                            ],
                             "symtypes": ["set", "parameter"],
                             "headers": {
                                 "scalar": {
@@ -138,25 +144,40 @@ class MiroSuite(unittest.TestCase):
                     },
                     "outputSymbols": {
                         "x": {
-                            "alias": "x",
+                            "alias": "shipment quantities in cases",
                             "symtype": "variable",
                             "headers": {
                                 "i": {"type": "string", "alias": "i"},
                                 "j": {"type": "string", "alias": "j"},
-                                "level": {"type": "numeric", "alias": "level"},
+                                "level": {
+                                    "type": "numeric",
+                                    "alias": "level",
+                                },
                                 "marginal": {
                                     "type": "numeric",
                                     "alias": "marginal",
                                 },
-                                "lower": {"type": "numeric", "alias": "lower"},
-                                "upper": {"type": "numeric", "alias": "upper"},
-                                "scale": {"type": "numeric", "alias": "scale"},
+                                "lower": {
+                                    "type": "numeric",
+                                    "alias": "lower",
+                                },
+                                "upper": {
+                                    "type": "numeric",
+                                    "alias": "upper",
+                                },
+                                "scale": {
+                                    "type": "numeric",
+                                    "alias": "scale",
+                                },
                             },
                         },
                         "_scalarsve_out": {
                             "alias": "Output Variable/Equation Scalars",
                             "symnames": ["z"],
-                            "symtext": ["z"],
+                            "symtext": [
+                                "total transportation costs in thousands"
+                                " of dollars"
+                            ],
                             "symtypes": ["variable"],
                             "headers": {
                                 "scalar": {
@@ -167,14 +188,26 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "Scalar Description",
                                 },
-                                "level": {"type": "numeric", "alias": "Level"},
+                                "level": {
+                                    "type": "numeric",
+                                    "alias": "Level",
+                                },
                                 "marginal": {
                                     "type": "numeric",
                                     "alias": "Marginal",
                                 },
-                                "lower": {"type": "numeric", "alias": "Lower"},
-                                "upper": {"type": "numeric", "alias": "Upper"},
-                                "scale": {"type": "numeric", "alias": "Scale"},
+                                "lower": {
+                                    "type": "numeric",
+                                    "alias": "Lower",
+                                },
+                                "upper": {
+                                    "type": "numeric",
+                                    "alias": "Upper",
+                                },
+                                "scale": {
+                                    "type": "numeric",
+                                    "alias": "Scale",
+                                },
                             },
                         },
                     },

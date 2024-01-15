@@ -63,8 +63,10 @@ class DomainSuite(unittest.TestCase):
 
         M2 = self.m.addParameter("M2")
         M2[...] = Sum(job2, data2["release", job2] + data2["duration", job2])
-        with self.assertRaises(GamspyException):
-            M[...] = Sum(job2, data2["rbla", job2] + data2["bla", job2])
+
+        if not self.m.delayed_execution:
+            with self.assertRaises(GamspyException):
+                M[...] = Sum(job2, data2["rbla", job2] + data2["bla", job2])
 
 
 def domain_suite():

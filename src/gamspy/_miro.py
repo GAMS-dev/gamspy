@@ -52,13 +52,13 @@ class MiroJSONEncoder:
             symbol = self.container[name]
 
             if isinstance(symbol, (gp.Set, gp.Parameter)):
-                sp_names.append(name)
+                sp_names.append(name.lower())
                 sp_texts.append(
                     symbol.description if symbol.description else symbol.name
                 )
                 sp_types.append(type(symbol).__name__.lower())
             elif isinstance(symbol, (gp.Variable, gp.Equation)):
-                ve_names.append(name)
+                ve_names.append(name.lower())
                 ve_texts.append(
                     symbol.description if symbol.description else symbol.name
                 )
@@ -161,7 +161,7 @@ class MiroJSONEncoder:
                     "alias": (
                         symbol.description
                         if symbol.description
-                        else symbol.name
+                        else symbol.name.lower()
                     ),
                     "symtype": type_map[type(symbol)],
                     "headers": headers_dict,
@@ -214,7 +214,7 @@ class MiroJSONEncoder:
             "outputSymbols": output_symbols_dict,
         }
 
-        return json.dumps(miro_dict)
+        return json.dumps(miro_dict, indent=4)
 
     def writeJson(self):
         content = self._prepare_json()
