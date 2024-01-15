@@ -38,7 +38,8 @@ from gams import VarType
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException
+from gamspy._options import ModelInstanceOptions
+from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -76,22 +77,29 @@ update_action_map = {
     "fx": UpdateAction.Fixed,
 }
 
-update_type_map = {
-    "0": SymbolUpdateType.Zero,
-    "base_case": SymbolUpdateType.BaseCase,
-    "accumulate": SymbolUpdateType.Accumulate,
-    "inherit": SymbolUpdateType._Inherit,
-}
-
 
 class ModelInstance:
+    """
+    ModelInstance class provides a controlled way of modifying a model instance
+    and solving the resulting problem in the most efficient way, by communicating
+    only the changes of the model to the solver and doing a hot start (in case of
+    a continuous model like LP) without the use of disk IO.
+
+    Parameters
+    ----------
+    container : Container
+    model : Model
+    modifiables : list[Parameter  |  ImplicitParameter]
+    freeze_options : Options | dict | None, optional
+    """
+
     def __init__(
         self,
         container: Container,
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: dict | None = None,
-    ) -> None:
+        freeze_options: Options | dict | None = None,
+    ):
         self.modifiables = self._init_modifiables(modifiables)
         self.main_container = container
         self.instance_container = gp.Container(
@@ -104,7 +112,9 @@ class ModelInstance:
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
 
-    def instantiate(self, model: Model, freeze_options: dict | None = None):
+    def instantiate(
+        self, model: Model, freeze_options: Options | dict | None = None
+    ):
         options = self._prepare_freeze_options(freeze_options)
 
         solve_string = f"{model.name} using {model.problem}"
@@ -121,11 +131,11 @@ class ModelInstance:
 
     def solve(
         self,
-        options_dict: dict | None = None,
+        given_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         # get options from dict
-        options, update_type = self._prepare_options(options_dict)
+        options, update_type = self._prepare_options(given_options)
 
         # update sync_db
         self.main_container.write(self.instance.sync_db._gmd)
@@ -156,6 +166,7 @@ class ModelInstance:
 
         # update model status
         self.model.status = gp.ModelStatus(self.instance.model_status)
+        self.model.solver_status = self.instance.solver_status
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
@@ -185,44 +196,34 @@ class ModelInstance:
         return will_be_modified
 
     def _prepare_freeze_options(
-        self, options_dict: dict | None
+        self, given_options: Options | dict | None
     ) -> GamsOptions:
-        if options_dict is None:
+        if isinstance(given_options, Options):
+            given_options = given_options._get_gams_compatible_options()
+
+        if given_options is None:
             return
 
         options = GamsOptions(self.model.container.workspace)
 
-        for key, value in options_dict.items():
+        for key, value in given_options.items():
             setattr(options, key, value)
 
     def _prepare_options(
-        self, options_dict: dict | None
+        self, given_options: ModelInstanceOptions | dict | None
     ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
 
-        if options_dict is None:
+        if given_options is None:
             return None, update_type
 
-        possible_options = [
-            "solver",
-            "opt_file",
-            "no_match_limit",
-            "debug",
-            "update_type",
-        ]
         options = GamsModelInstanceOpt()
 
-        for key, value in options_dict.items():
-            if key in possible_options:
-                setattr(options, key, value)
-            else:
-                raise ValidationError(
-                    f"{key} is not a model instance option. All options:"
-                    f" {possible_options}"
-                )
+        for key, value in given_options.items():
+            setattr(options, key, value)
 
             if key == "update_type":
-                update_type = update_type_map[key]
+                update_type = value
 
         return options, update_type
 
@@ -305,7 +306,7 @@ class ModelInstance:
 
                 modifiable.parent._is_frozen = True
             else:
-                raise GamspyException(
+                raise ValidationError(
                     f"Symbol type {type(modifiable)} cannot be modified in a"
                     " frozen solve"
                 )
