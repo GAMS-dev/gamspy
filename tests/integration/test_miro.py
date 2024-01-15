@@ -37,7 +37,9 @@ class MiroSuite(unittest.TestCase):
 
         # Test default.gdx
         new_container = Container()
-        new_container.read(f"{directory}{os.sep}data_miro{os.sep}default.gdx")
+        new_container.read(
+            f"{directory}{os.sep}miro_models{os.sep}data_miro{os.sep}default.gdx"
+        )
 
         # Miro input d
         self.assertTrue("d" in new_container.data.keys())

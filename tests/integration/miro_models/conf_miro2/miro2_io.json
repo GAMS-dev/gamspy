@@ -19,6 +19,24 @@
                 }
             }
         },
+        "d": {
+            "alias": "distance in thousands of miles",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
         "a": {
             "alias": "capacity of plant i in cases",
             "symtype": "parameter",
@@ -55,24 +73,6 @@
             "alias": "demand at market j in cases",
             "symtype": "parameter",
             "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
-        "d": {
-            "alias": "distance in thousands of miles",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
                 "j": {
                     "type": "string",
                     "alias": "markets"
