@@ -33,7 +33,7 @@ from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
-from gams.core import gdx
+from gams.core.gdx import GMS_DT_PAR
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -98,7 +98,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj._modified = True
 
         # typing
-        obj._gams_type = gdx.GMS_DT_PAR
+        obj._gams_type = GMS_DT_PAR
         obj._gams_subtype = 0
 
         # add to container

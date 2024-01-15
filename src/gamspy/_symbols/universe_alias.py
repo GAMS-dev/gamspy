@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-from gams.core import gdx
+from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -27,7 +27,7 @@ class UniverseAlias(gt.UniverseAlias):
         obj._modified = True
 
         # typing
-        obj._gams_type = gdx.GMS_DT_ALIAS
+        obj._gams_type = GMS_DT_ALIAS
         obj._gams_subtype = 0
 
         # add to container

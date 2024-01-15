@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 import pandas as pd
-from gams.core import gdx
+from gams.core.gdx import GMS_DT_VAR
 from gams.transfer._internals import (
     TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
 )
@@ -115,7 +115,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # set private properties directly
         obj._type = type
-        obj._gams_type = gdx.GMS_DT_VAR
+        obj._gams_type = GMS_DT_VAR
         obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
 
         obj._requires_state_check = False

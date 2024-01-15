@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 import pandas as pd
-from gams.core import gdx
+from gams.core.gdx import GMS_DT_SET
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -360,10 +360,10 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         # typing
         if obj.is_singleton:
-            obj._gams_type = gdx.GMS_DT_SET
+            obj._gams_type = GMS_DT_SET
             obj._gams_subtype = 1
         else:
-            obj._gams_type = gdx.GMS_DT_SET
+            obj._gams_type = GMS_DT_SET
             obj._gams_subtype = 0
 
         # add to container
