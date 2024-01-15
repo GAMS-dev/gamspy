@@ -191,6 +191,8 @@ class MiroJSONEncoder:
         )
         symbol_dicts = self._prepare_symbols(non_scalars)
 
+        non_scalars = [name.lower() for name in non_scalars]
+
         keys = non_scalars
         values = symbol_dicts
 

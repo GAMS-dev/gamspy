@@ -49,17 +49,17 @@ def main():
     loc_data = {
         "i": [
             ["Seattle", "lat", 47.608013],
-            ["Seattle", "lng", -122.335167],
+            ["Seattle", "lnG", -122.335167],
             ["San-Diego", "lat", 32.715736],
-            ["San-Diego", "lng", -117.161087],
+            ["San-Diego", "lnG", -117.161087],
         ],
         "j": [
             ["New-York", "lat", 40.730610],
-            ["New-York", "lng", -73.935242],
+            ["New-York", "lnG", -73.935242],
             ["Chicago", "lat", 41.881832],
-            ["Chicago", "lng", -87.623177],
+            ["Chicago", "lnG", -87.623177],
             ["Topeka", "lat", 39.056198],
-            ["Topeka", "lng", -95.695312],
+            ["Topeka", "lnG", -95.695312],
         ],
     }
 
@@ -69,7 +69,7 @@ def main():
     # Set
     i = Set(
         m,
-        name="i",
+        name="I",
         records=["seattle", "san-diego"],
         description="canning plants",
     )
@@ -82,7 +82,7 @@ def main():
     loc_hdr = Set(
         m,
         name="loc_hdr",
-        records=["lat", "lng"],
+        records=["lat", "lnG"],
         description="location data header",
     )
     model_type = Set(
@@ -144,7 +144,7 @@ def main():
     )
     i_loc_data = Parameter(
         m,
-        name="ilocdata",
+        name="ilocdAta",
         records=loc_data["i"],
         domain=[i, loc_hdr],
         is_miro_input=True,
@@ -299,9 +299,9 @@ def main():
     )
 
     total_cost[...] = z.l
-    schedule[i, j, "lngP"] = i_loc_data[i, "lng"]
+    schedule[i, j, "lngP"] = i_loc_data[i, "lnG"]
     schedule[i, j, "latP"] = i_loc_data[i, "lat"]
-    schedule[i, j, "lngM"] = j_loc_data[j, "lng"]
+    schedule[i, j, "lngM"] = j_loc_data[j, "lnG"]
     schedule[i, j, "latM"] = j_loc_data[j, "lat"]
     schedule[i, j, "cap"] = a[i]
     schedule[i, j, "demand"] = b[j]
