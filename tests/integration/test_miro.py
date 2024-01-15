@@ -227,39 +227,28 @@ class MiroSuite(unittest.TestCase):
                 {
                     "modelTitle": "GAMSPy App",
                     "inputSymbols": {
+                        "ilocdata": {
+                            "alias": "Plant location information",
+                            "symtype": "parameter",
+                            "headers": {
+                                "I": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lnG": {"type": "numeric", "alias": "lnG"},
+                            },
+                        },
                         "d": {
                             "alias": "distance in thousands of miles",
                             "symtype": "parameter",
                             "headers": {
-                                "i": {
+                                "I": {
                                     "type": "string",
                                     "alias": "canning plants",
                                 },
                                 "j": {"type": "string", "alias": "markets"},
                                 "value": {"type": "numeric", "alias": "value"},
-                            },
-                        },
-                        "a": {
-                            "alias": "capacity of plant i in cases",
-                            "symtype": "parameter",
-                            "headers": {
-                                "i": {
-                                    "type": "string",
-                                    "alias": "canning plants",
-                                },
-                                "value": {"type": "numeric", "alias": "value"},
-                            },
-                        },
-                        "ilocdata": {
-                            "alias": "Plant location information",
-                            "symtype": "parameter",
-                            "headers": {
-                                "i": {
-                                    "type": "string",
-                                    "alias": "canning plants",
-                                },
-                                "lat": {"type": "numeric", "alias": "lat"},
-                                "lng": {"type": "numeric", "alias": "lng"},
                             },
                         },
                         "b": {
@@ -276,7 +265,18 @@ class MiroSuite(unittest.TestCase):
                             "headers": {
                                 "j": {"type": "string", "alias": "markets"},
                                 "lat": {"type": "numeric", "alias": "lat"},
-                                "lng": {"type": "numeric", "alias": "lng"},
+                                "lnG": {"type": "numeric", "alias": "lnG"},
+                            },
+                        },
+                        "a": {
+                            "alias": "capacity of plant i in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "I": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "value": {"type": "numeric", "alias": "value"},
                             },
                         },
                         "_scalars": {
@@ -318,7 +318,7 @@ class MiroSuite(unittest.TestCase):
                             "alias": "shipment quantities in cases",
                             "symtype": "parameter",
                             "headers": {
-                                "i": {
+                                "I": {
                                     "type": "string",
                                     "alias": "canning plants",
                                 },
