@@ -351,6 +351,13 @@ Or to provide initial values for a nonlinear problem: ::
 
     c.l[t]   =  4*cinit[t]
 
+It is also possible to do an assignment without any index to scalar variables: ::
+
+    import gamspy as gp
+    m = gp.Container()
+    v = gp.Variable(m, "i")
+    v.l = 5
+
 Remember that the order is important in assignments, and notice that the two pairs of 
 statements below produce very different results. In the first case, the lower bound for 
 ``c['1985']`` will be 0.01, but in the second, the lower bound is 1. ::

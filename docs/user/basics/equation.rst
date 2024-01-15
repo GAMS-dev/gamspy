@@ -461,3 +461,19 @@ They are given in the following table:
      - ``.infeas``
      - Amount by which an equation is infeasible falling below its lower bound
        or above its upper bound. This is defined as max(0, lower bound - level, level - upper bound). 
+
+`Equation` attributes can be assigned just like `Variable` attributes. For example to assign an initial value
+to a scalar equation: ::
+
+  import gamspy as gp
+  m = gp.Container()
+  e = gp.Equation(m, "e")
+  e.l = 5
+
+or to assign an initial value to an equation with non-scalar domain: ::
+
+  import gamspy as gp
+  m = gp.Container()
+  i = gp.Set(m, "i", records=['i1', 'i2'])
+  e = gp.Equation(m, "e", domain=[i])
+  e.l[i] = 5

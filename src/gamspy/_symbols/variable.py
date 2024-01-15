@@ -41,6 +41,7 @@ from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
+    from gamspy._algebra.expression import Expression
 
 
 class VariableType(Enum):
@@ -196,6 +197,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self._l
 
+    @l.setter
+    def l(self, value: int | float | Expression):
+        self._l[...] = value
+
     @property
     def m(self):
         """
@@ -206,6 +211,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._m
+
+    @m.setter
+    def m(self, value: int | float | Expression):
+        self._m[...] = value
 
     @property
     def lo(self):
@@ -218,6 +227,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self._lo
 
+    @lo.setter
+    def lo(self, value: int | float | Expression):
+        self._lo[...] = value
+
     @property
     def up(self):
         """
@@ -228,6 +241,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._up
+
+    @up.setter
+    def up(self, value: int | float | Expression):
+        self._up[...] = value
 
     @property
     def scale(self):
@@ -240,6 +257,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self._s
 
+    @scale.setter
+    def scale(self, value: int | float | Expression):
+        self._s[...] = value
+
     @property
     def fx(self):
         """
@@ -250,6 +271,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._fx
+
+    @fx.setter
+    def fx(self, value: int | float | Expression):
+        self._fx[...] = value
 
     @property
     def prior(self):
@@ -262,6 +287,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         return self._prior
 
+    @prior.setter
+    def prior(self, value: int | float | Expression):
+        self._prior[...] = value
+
     @property
     def stage(self):
         """
@@ -272,6 +301,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._stage
+
+    @stage.setter
+    def stage(self, value: int | float | Expression):
+        self._stage[...] = value
 
     @property
     def records(self):
