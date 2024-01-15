@@ -10,6 +10,7 @@ GAMSPy 0.11.7
   - Test scalar variable/equation assignment without any index.
 - Documentation
   - Document assigning to scalar variable/equation.
+  - Update documentation of frozen solve (model instance in GAMS). 
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.6

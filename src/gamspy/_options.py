@@ -33,6 +33,7 @@ from typing import Union
 
 from gams import GamsOptions
 from gams import GamsWorkspace
+from gams import SymbolUpdateType
 from pydantic import BaseModel
 
 from gamspy.exceptions import ValidationError
@@ -159,10 +160,7 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    class Config:
-        extra = "forbid"
-
-    def _getGamsCompatibleOptions(self):
+    def _get_gams_compatible_options(self):
         options_dict = self.model_dump()
         if options_dict["allow_suffix_in_equation"] is not None:
             allows_suffix = options_dict["allow_suffix_in_equation"]
@@ -213,7 +211,7 @@ def _set_options(
     options: Options,
     is_seedable: bool = True,
 ):
-    options_dict = options._getGamsCompatibleOptions()
+    options_dict = options._get_gams_compatible_options()
     for option, value in options_dict.items():
         if value is not None:
             if option == "seed" and not is_seedable:
@@ -323,3 +321,27 @@ def _map_options(
     gams_options.previouswork = 1  # In case GAMS version differs on backend
 
     return gams_options
+
+
+update_type_map = {
+    "0": SymbolUpdateType.Zero,
+    "base_case": SymbolUpdateType.BaseCase,
+    "accumulate": SymbolUpdateType.Accumulate,
+    "inherit": SymbolUpdateType._Inherit,
+}
+
+
+class ModelInstanceOptions(BaseModel):
+    solver: Optional[str] = None
+    opt_file: int = -1
+    no_match_limit: int = 0
+    debug: bool = False
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
+        "base_case"
+    )
+
+    def items(self):
+        dictionary = self.model_dump()
+        dictionary["update_type"] = update_type_map[dictionary["update_type"]]
+
+        return dictionary
