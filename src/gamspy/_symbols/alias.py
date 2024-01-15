@@ -136,6 +136,8 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
             self._current_index = 0
 
+            self.container._run()
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)

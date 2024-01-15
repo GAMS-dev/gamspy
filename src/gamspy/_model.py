@@ -429,7 +429,7 @@ class Model:
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
-            _ = gp.Parameter(self.container, symbol_name)
+            _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
             self.container._unsaved_statements.append(
                 f"{symbol_name} = {self.name}.{attr_name};"
@@ -439,6 +439,7 @@ class Model:
         temp_container = gt.Container(
             system_directory=self.container.system_directory
         )
+
         temp_container.read(
             self.container._gdx_out,
             [

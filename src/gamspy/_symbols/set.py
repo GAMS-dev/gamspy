@@ -501,6 +501,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
             self._current_index = 0
 
+            self.container._run()
+
     def __len__(self):
         if self.records is not None:
             return len(self.records.index)
@@ -594,6 +596,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        self.container._run()
+
+        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

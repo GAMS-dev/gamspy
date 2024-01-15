@@ -246,7 +246,7 @@ class Container(gt.Container):
         load_from: str,
         symbol_names: list[str] | None = None,
     ) -> list[str]:
-        if symbol_names is None or symbol_names == []:
+        if symbol_names is None:
             symbol_names = self._get_symbol_names_from_gdx(load_from)
 
         return symbol_names

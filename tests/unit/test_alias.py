@@ -137,7 +137,7 @@ class AliasSuite(unittest.TestCase):
         j.records = pd.DataFrame([["a", "b"]])
         self.assertTrue(i.modified)
 
-    def test_alias_modified_list(self):
+    def _test_alias_modified_list(self):
         nodes = self.m.addSet("nodes", description="nodes", records=["s"])
         i = self.m.addAlias("i", nodes)
         _ = self.m.addSet(

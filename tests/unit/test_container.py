@@ -373,11 +373,6 @@ class ContainerSuite(unittest.TestCase):
             m.generateGamsString(),
             "$onMultiR\n$onUNDF\n$gdxIn"
             f" {m._gdx_in}\n"
-            "Set i(*);\n$load i\n"
-            "Alias(i,a);\n"
-            "Parameter p;\n$load p\n"
-            "free Variable v;\n$load v\n"
-            "Equation e;\n$load e\n"
             "$offUNDF\n$gdxIn\n"
             f"execute_unload '{m._gdx_out}' \n",
         )

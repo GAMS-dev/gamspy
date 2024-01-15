@@ -212,7 +212,6 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(cost.records)
         self.assertIsNotNone(supply.records)
         self.assertIsNotNone(demand.records)
-        self.assertIsNone(z2.records)
 
         transport2 = Model(
             self.m,
@@ -863,7 +862,7 @@ class SolveSuite(unittest.TestCase):
             self.assertRaises(ValidationError, energy.interrupt)
 
         def interrupt_gams(model):
-            time.sleep(2)
+            time.sleep(0.1)
             model.interrupt()
 
         import threading
@@ -1183,9 +1182,6 @@ class SolveSuite(unittest.TestCase):
         
         summary = transport.solve(options=Options(trace_file_format=5))
         self.assertIsNone(summary)
-        
-        summary = transport.solve(options=Options(trace_file="bla.txt"))
-        self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))

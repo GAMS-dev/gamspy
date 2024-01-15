@@ -296,6 +296,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._slack = self._create_attr("slack")
             self._infeas = self._create_attr("infeas")
 
+            self.container._run()
+
     def __hash__(self):
         return id(self)
 
@@ -537,6 +539,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        self.container._run()
+
+        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

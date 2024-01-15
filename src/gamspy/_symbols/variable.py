@@ -269,6 +269,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
 
+            self.container._run()
+
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = validation._transform_given_indices(self.domain, indices)
         validation.validate_domain(self, domain)
@@ -426,6 +428,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        self.container._run()
+
+        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

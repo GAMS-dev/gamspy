@@ -219,6 +219,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
+            self.container._run()
+
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
@@ -298,6 +300,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        self.container._run()
+
+        super().setRecords(records, uels_on_axes)
 
     def gamsRepr(self) -> str:
         """

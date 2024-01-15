@@ -4,7 +4,6 @@ import math
 import os
 from pathlib import Path
 
-from gamspy import Alias
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
@@ -12,7 +11,6 @@ from gamspy import Number
 from gamspy import Ord
 from gamspy import Parameter
 from gamspy import Problem
-from gamspy import Set
 from gamspy import Smax
 from gamspy import Sum
 from gamspy import Variable
@@ -23,23 +21,18 @@ def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        load_from=str(Path(__file__).parent.absolute()) + "/hansmcp.gdx",
     )
 
-    c = Set(m, "c")
-    h = Set(m, "h")
-    s = Set(m, "s")
-    cc = Alias(m, "cc", c)
+    c = m["c"]
+    h = m["h"]
+    s = m["s"]
+    cc = m["cc"]
 
-    e = Parameter(m, "e", domain=[c, h])
-    d = Parameter(m, "d", domain=[c, h])
-    esub = Parameter(m, "esub", domain=h)
-    data = Parameter(m, "data", domain=["*", c, s])
-
-    # Load the records of the symbols from a gdx file.
-    m.loadRecordsFromGdx(
-        str(Path(__file__).parent.absolute()) + "/hansmcp.gdx",
-        ["c", "h", "s", "e", "d", "esub", "data"],
-    )
+    e = m["e"]
+    d = m["d"]
+    esub = m["esub"]
+    data = m["data"]
 
     alpha = Parameter(m, "alpha", domain=[c, h])
     a = Parameter(m, "a", domain=[c, s])

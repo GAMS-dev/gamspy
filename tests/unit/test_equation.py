@@ -17,6 +17,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 from gamspy.math import sqr
 
@@ -321,18 +322,19 @@ class EquationSuite(unittest.TestCase):
         )
 
         # eq[bla] with different domain
-        bla3 = Equation(
-            self.m,
-            name="bla3",
-            domain=[i, j],
-            description="observe supply limit at plant i",
-            definition=Sum((i, j), x[i, j]) <= a[i],
-            definition_domain=[i, "bla"],
-        )
-        self.assertEqual(
-            bla3._definition.getStatement(),
-            'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
-        )
+        with self.assertRaises(GamspyException):
+            bla3 = Equation(
+                self.m,
+                name="bla3",
+                domain=[i, j],
+                description="observe supply limit at plant i",
+                definition=Sum((i, j), x[i, j]) <= a[i],
+                definition_domain=[i, "bla"],
+            )
+            self.assertEqual(
+                bla3._definition.getStatement(),
+                'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
+            )
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
