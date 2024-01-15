@@ -280,6 +280,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._l
 
+    @l.setter
+    def l(self, value: int | float | Expression):
+        self._l[...] = value
+
     @property
     def m(self):
         """
@@ -290,6 +294,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._m
+
+    @m.setter
+    def m(self, value: int | float | Expression):
+        self._m[...] = value
 
     @property
     def lo(self):
@@ -302,6 +310,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._lo
 
+    @lo.setter
+    def lo(self, value: int | float | Expression):
+        self._lo[...] = value
+
     @property
     def up(self):
         """
@@ -312,6 +324,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._up
+
+    @up.setter
+    def up(self, value: int | float | Expression):
+        self._up[...] = value
 
     @property
     def scale(self):
@@ -324,6 +340,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self._s
 
+    @scale.setter
+    def scale(self, value: int | float | Expression):
+        self._s[...] = value
+
     @property
     def stage(self):
         """
@@ -334,6 +354,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._stage
+
+    @stage.setter
+    def stage(self, value: int | float | Expression):
+        self._stage[...] = value
 
     @property
     def range(self):

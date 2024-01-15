@@ -17,3 +17,4 @@ fundamental GAMSPy ideas and philosophy.
    ./special_features
    ./debugging
    ./miro
+   ./model_instance

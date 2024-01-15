@@ -295,6 +295,47 @@ class VariableSuite(unittest.TestCase):
         else:
             self.assertFalse(x._is_dirty)
 
+    def test_scalar_attr_assignment(self):
+        a = Variable(self.m, "a")
+        b = Variable(self.m, "b", "binary")
+        a.l = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
+
+        a.m = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.m._assignment.getStatement(), "a.m = 5;")
+
+        a.lo = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.lo._assignment.getStatement(), "a.lo = 5;")
+
+        a.up = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.up._assignment.getStatement(), "a.up = 5;")
+
+        a.scale = 5
+        if self.m.delayed_execution:
+            self.assertEqual(
+                a.scale._assignment.getStatement(), "a.scale = 5;"
+            )
+
+        a.fx = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.fx._assignment.getStatement(), "a.fx = 5;")
+
+        b.prior = 5
+        if self.m.delayed_execution:
+            self.assertEqual(
+                b.prior._assignment.getStatement(), "b.prior = 5;"
+            )
+
+        a.stage = 5
+        if self.m.delayed_execution:
+            self.assertEqual(
+                a.stage._assignment.getStatement(), "a.stage = 5;"
+            )
+
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
         a = Variable(self.m, "a", "free", [i])
