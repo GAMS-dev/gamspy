@@ -873,13 +873,12 @@ class SolveSuite(unittest.TestCase):
             self.assertRaises(ValidationError, energy.interrupt)
 
         def interrupt_gams(model):
-            time.sleep(0.1)
+            time.sleep(1)
             model.interrupt()
 
         import threading
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
-
         energy.solve(options=Options(relative_optimality_gap=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
