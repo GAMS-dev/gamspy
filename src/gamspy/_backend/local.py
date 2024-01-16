@@ -108,7 +108,6 @@ class Local(backend.Backend):
         self.container._load_records_from_gdx(
             self.container._gdx_out,
             dirty_names + self.container._import_symbols,
-            is_implicit,
         )
         self.container._swap_checkpoints()
 

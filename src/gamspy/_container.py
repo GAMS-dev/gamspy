@@ -856,7 +856,7 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: list[str] | None = None,
-        is_implicit: bool = False,
+        user_invoked: bool = False,
     ):
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
@@ -868,16 +868,16 @@ class Container(gt.Container):
                 updated_records = temp_container[name].records
 
                 self[name]._records = updated_records
+
                 if updated_records is not None:
                     self[name]._domain_labels = self[name].domain_names
             else:
                 self.read(load_from, [name])
 
-            if not is_implicit:
-                self[name]._is_dirty = True
+            if user_invoked:
                 self[name].modified = True
 
-        if not is_implicit:
+        if user_invoked:
             self._run()
 
     def loadRecordsFromGdx(
@@ -908,7 +908,7 @@ class Container(gt.Container):
         True
 
         """
-        self._load_records_from_gdx(load_from, symbol_names)
+        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
 
     def read(
         self,

@@ -95,6 +95,7 @@ class Backend(ABC):
         )
         self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
+        # print(f"{modified_names=}")
         self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
