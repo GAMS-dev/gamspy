@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 import gamspy as gp
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container
@@ -144,9 +145,29 @@ class MiroJSONEncoder:
             if (
                 isinstance(symbol, gp.Parameter)
                 and symbol._is_miro_table
-                and symbol.dimension > 0
+                and symbol.dimension > 1
             ):
                 last_item = symbol.domain[-1]
+
+                if last_item == "*":
+                    raise ValidationError(
+                        "The last domain of the miro table cannot be the"
+                        " universal set!"
+                    )
+
+                if symbol.domain_forwarding:
+                    raise ValidationError(
+                        "Cannot use domain forwarding feature for miro tables."
+                    )
+
+                if (
+                    hasattr(last_item, "_is_miro_input")
+                    and last_item._is_miro_input
+                ):
+                    raise ValidationError(
+                        "The last column of miro table cannot be a miro input!"
+                    )
+
                 if isinstance(last_item, (gp.Set, gp.Alias)):
                     set_values = last_item.records["uni"].values.tolist()
 
