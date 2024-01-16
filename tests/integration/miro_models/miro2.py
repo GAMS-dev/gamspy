@@ -67,6 +67,7 @@ def main():
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     # Set
+    _ = Set(m, "k", is_miro_input=True)
     i = Set(
         m,
         name="I",

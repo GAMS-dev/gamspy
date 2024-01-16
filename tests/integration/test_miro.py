@@ -229,16 +229,12 @@ class MiroSuite(unittest.TestCase):
                 {
                     "modelTitle": "GAMSPy App",
                     "inputSymbols": {
-                        "ilocdata": {
-                            "alias": "Plant location information",
+                        "b": {
+                            "alias": "demand at market j in cases",
                             "symtype": "parameter",
                             "headers": {
-                                "I": {
-                                    "type": "string",
-                                    "alias": "canning plants",
-                                },
-                                "lat": {"type": "numeric", "alias": "lat"},
-                                "lnG": {"type": "numeric", "alias": "lnG"},
+                                "j": {"type": "string", "alias": "markets"},
+                                "value": {"type": "numeric", "alias": "value"},
                             },
                         },
                         "d": {
@@ -249,14 +245,6 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "canning plants",
                                 },
-                                "j": {"type": "string", "alias": "markets"},
-                                "value": {"type": "numeric", "alias": "value"},
-                            },
-                        },
-                        "b": {
-                            "alias": "demand at market j in cases",
-                            "symtype": "parameter",
-                            "headers": {
                                 "j": {"type": "string", "alias": "markets"},
                                 "value": {"type": "numeric", "alias": "value"},
                             },
@@ -279,6 +267,29 @@ class MiroSuite(unittest.TestCase):
                                     "alias": "canning plants",
                                 },
                                 "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
+                        "ilocdata": {
+                            "alias": "Plant location information",
+                            "symtype": "parameter",
+                            "headers": {
+                                "I": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lnG": {"type": "numeric", "alias": "lnG"},
+                            },
+                        },
+                        "k": {
+                            "alias": "k",
+                            "symtype": "set",
+                            "headers": {
+                                "uni": {"type": "string", "alias": "uni"},
+                                "element_text": {
+                                    "type": "string",
+                                    "alias": "element_text",
+                                },
                             },
                         },
                         "_scalars": {

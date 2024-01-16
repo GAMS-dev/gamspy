@@ -1,21 +1,17 @@
 {
     "modelTitle": "GAMSPy App",
     "inputSymbols": {
-        "jlocdata": {
-            "alias": "Market location information",
+        "b": {
+            "alias": "demand at market j in cases",
             "symtype": "parameter",
             "headers": {
                 "j": {
                     "type": "string",
                     "alias": "markets"
                 },
-                "lat": {
+                "value": {
                     "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
+                    "alias": "value"
                 }
             }
         },
@@ -34,6 +30,24 @@
                 "value": {
                     "type": "numeric",
                     "alias": "value"
+                }
+            }
+        },
+        "jlocdata": {
+            "alias": "Market location information",
+            "symtype": "parameter",
+            "headers": {
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
                 }
             }
         },
@@ -69,17 +83,17 @@
                 }
             }
         },
-        "b": {
-            "alias": "demand at market j in cases",
-            "symtype": "parameter",
+        "k": {
+            "alias": "k",
+            "symtype": "set",
             "headers": {
-                "j": {
+                "uni": {
                     "type": "string",
-                    "alias": "markets"
+                    "alias": "uni"
                 },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
                 }
             }
         },
