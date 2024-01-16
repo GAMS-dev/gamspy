@@ -142,12 +142,14 @@ class MiroJSONEncoder:
                     {"type": type_map[dtype.name], "alias": alias}
                 )
 
-            if (
-                isinstance(symbol, gp.Parameter)
-                and symbol._is_miro_table
-                and symbol.dimension > 1
-            ):
+            if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
                 last_item = symbol.domain[-1]
+
+                if symbol.dimension < 2:
+                    raise ValidationError(
+                        "The symbol for miro table must have at least two"
+                        " domain elements."
+                    )
 
                 if last_item == "*":
                     raise ValidationError(
@@ -155,7 +157,13 @@ class MiroJSONEncoder:
                         " universal set!"
                     )
 
-                if symbol.domain_forwarding:
+                if (
+                    isinstance(symbol.domain_forwarding, list)
+                    and symbol.domain_forwarding[-1]
+                ) or (
+                    isinstance(symbol.domain_forwarding, bool)
+                    and symbol.domain_forwarding
+                ):
                     raise ValidationError(
                         "Cannot use domain forwarding feature for miro tables."
                     )
