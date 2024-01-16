@@ -249,6 +249,8 @@ class Model:
         self.solver_status = None
         self.solver_version = None
 
+        self.container._run()
+
     def __repr__(self) -> str:
         return f"<Model `{self.name}` ({hex(id(self))})>"
 

@@ -141,6 +141,8 @@ class Container(gt.Container):
         self._import_symbols = import_symbols
         self._unsaved_statements.append(gams_code)
 
+        self._run()
+
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
 
@@ -850,6 +852,34 @@ class Container(gt.Container):
         ]
         return self.getSymbols(equations)
 
+    def _load_records_from_gdx(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+        is_implicit: bool = False,
+    ):
+        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
+
+        temp_container = gt.Container(system_directory=self.system_directory)
+        temp_container.read(load_from, symbol_names)
+
+        for name in symbol_names:
+            if name in self.data.keys():
+                updated_records = temp_container[name].records
+
+                self[name]._records = updated_records
+                if updated_records is not None:
+                    self[name]._domain_labels = self[name].domain_names
+            else:
+                self.read(load_from, [name])
+
+            if not is_implicit:
+                self[name]._is_dirty = True
+                self[name].modified = True
+
+        if not is_implicit:
+            self._run()
+
     def loadRecordsFromGdx(
         self,
         load_from: str,
@@ -878,20 +908,7 @@ class Container(gt.Container):
         True
 
         """
-        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
-
-        temp_container = gt.Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names)
-
-        for name in symbol_names:
-            if name in self.data.keys():
-                updated_records = temp_container[name].records
-
-                self[name]._records = updated_records
-                if updated_records is not None:
-                    self[name]._domain_labels = self[name].domain_names
-            else:
-                self.read(load_from, [name])
+        self._load_records_from_gdx(load_from, symbol_names)
 
     def read(
         self,

@@ -285,6 +285,24 @@ class SolveSuite(unittest.TestCase):
             sense="min",
             objective=z,
         )
+        
+        
+        freeLinks = Set(self.m, "freeLinks", domain=[i,j], records=[('seattle', 'chicago')])
+        # Test limited variables
+        transport2 = Model(
+            self.m,
+            name="transport2",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective=z,
+            limited_variables=[x[freeLinks]],
+        )
+
+        self.assertEqual(
+            transport2.getStatement(),
+            "Model transport2 / cost,supply,demand,x(freeLinks) /;",
+        )
 
         # Test output redirection
         with open("test.gms", "w") as file:
@@ -346,22 +364,6 @@ class SolveSuite(unittest.TestCase):
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
-
-        # Test limited variables
-        transport = Model(
-            m,
-            name="transport",
-            equations=[cost, supply, demand],
-            problem="LP",
-            sense="min",
-            objective=z,
-            limited_variables=[x[i,j]],
-        )
-
-        self.assertEqual(
-            transport.getStatement(),
-            "Model transport / cost,supply,demand,x(i,j) /;",
-        )
 
     def test_interrupt(self):
         cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))

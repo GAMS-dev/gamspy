@@ -50,7 +50,7 @@ def get_domain_path(symbol) -> List[str]:
 
 
 def validate_dimension(
-    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+    symbol: Union[Set, Parameter, Variable, Equation, ImplicitParameter],
     domain: List[Set | Alias | ImplicitSet | str],
 ):
     dimension = get_dimension(domain)
