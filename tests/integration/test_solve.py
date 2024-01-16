@@ -1190,6 +1190,17 @@ class SolveSuite(unittest.TestCase):
         summary = transport.solve(options=Options(trace_file_format=5))
         self.assertIsNone(summary)
         
+        transport2 = Model(
+            m,
+            name="transport2",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        summary = transport2.solve(options=Options(trace_file="different_path.txt"))
+        self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
+        
     def test_validation(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
         

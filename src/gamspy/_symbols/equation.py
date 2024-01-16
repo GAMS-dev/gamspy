@@ -560,9 +560,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                     symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
-        self.container._run()
-
         super().setRecords(records, uels_on_axes)
+        self.container._run()
 
     def gamsRepr(self) -> str:
         """
