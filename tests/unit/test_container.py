@@ -17,6 +17,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import UniverseAlias
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 
 
@@ -448,6 +449,16 @@ class ContainerSuite(unittest.TestCase):
         )
         m.read("test.gdx", load_records=False)
         self.assertIsNone(m["a"].records, None)
+
+    def test_debugging_level(self):
+        from gamspy.math import sqrt
+
+        m = Container(debugging_level="keep_on_error")
+        e = Equation(m, "e")
+        with self.assertRaises(GamspyException):
+            e[:] = sqrt(e) == 5
+
+        self.assertTrue(os.path.exists(m.working_directory))
 
 
 def container_suite():
