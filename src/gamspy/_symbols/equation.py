@@ -24,12 +24,16 @@
 #
 from __future__ import annotations
 
+import itertools
 from enum import Enum
 from typing import Any
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 import pandas as pd
+from gams.core.gdx import GMS_DT_EQU
+from gams.transfer._internals import EQU_TYPE
+from gams.transfer._internals import TRANSFER_TO_GAMS_EQUATION_SUBTYPES
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -100,6 +104,62 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     """
 
+    @classmethod
+    def _constructor_bypass(
+        cls,
+        container: Container,
+        name: str,
+        type: str | EquationType = "regular",
+        domain: list[Set | str] | None = None,
+        records: Any | None = None,
+        description: str = "",
+    ):
+        # create new symbol object
+        obj = Equation.__new__(
+            cls,
+            container,
+            name,
+            type,
+            domain,
+            records=records,
+            description=description,
+        )
+
+        # set private properties directly
+        type = cast_type(type)
+        obj.type = EQU_TYPE[type]
+        obj._gams_type = GMS_DT_EQU
+        obj._gams_subtype = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._domain = domain
+        obj._domain_forwarding = False
+        obj._description = description
+        obj._records = None
+        obj._modified = True
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj._is_dirty = False
+        obj._is_frozen = False
+        obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
+
+        # create attributes
+        obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
+        obj._stage = obj._create_attr("stage")
+        obj._range = obj._create_attr("range")
+        obj._slacklo = obj._create_attr("slacklo")
+        obj._slackup = obj._create_attr("slackup")
+        obj._slack = obj._create_attr("slack")
+        obj._infeas = obj._create_attr("infeas")
+
+        return obj
+
     def __new__(
         cls,
         container: Container,
@@ -146,45 +206,103 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         definition_domain: list | None = None,
     ):
-        type = cast_type(type)
-        self._is_dirty = False
-        self._is_frozen = False
-        name = validation.validate_name(name)
+        # domain handling
+        if domain is None:
+            domain = []
 
-        super().__init__(
-            container,
-            name,
-            type,
-            domain,
-            records,
-            domain_forwarding,
-            description,
-            uels_on_axes,
-        )
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
 
-        validation.validate_container(self, self.domain)
+        # does symbol exist
+        has_symbol = False
+        if isinstance(getattr(self, "container", None), gp.Container):
+            has_symbol = True
 
-        self.where = condition.Condition(self)
-        self.container._add_statement(self)
-        self._definition_domain = definition_domain
-        self._init_definition(definition)
+        if has_symbol:
+            try:
+                type = cast_type(type)
+                if self.type != type.casefold():
+                    raise TypeError(
+                        "Cannot overwrite symbol in container unless equation"
+                        f" types are equal: `{self.type}` !="
+                        f" `{type.casefold()}`"
+                    )
 
-        # create attributes
-        self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
-        self._stage = self._create_attr("stage")
-        self._range = self._create_attr("range")
-        self._slacklo = self._create_attr("slacklo")
-        self._slackup = self._create_attr("slackup")
-        self._slack = self._create_attr("slack")
-        self._infeas = self._create_attr("infeas")
+                if any(
+                    d1 != d2
+                    for d1, d2 in itertools.zip_longest(self.domain, domain)
+                ):
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless symbol"
+                        " domains are equal"
+                    )
+
+                if self.domain_forwarding != domain_forwarding:
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless"
+                        " 'domain_forwarding' is left unchanged"
+                    )
+
+            except ValueError as err:
+                raise ValueError(err)
+
+            except TypeError as err:
+                raise TypeError(err)
+
+            # reset some properties
+            self._requires_state_check = True
+            self.container._requires_state_check = True
+            if description != "":
+                self.description = description
+            self.records = None
+            self.modified = True
+
+            # only set records if records are provided
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+
+        else:
+            type = cast_type(type)
+            self._is_dirty = False
+            self._is_frozen = False
+            name = validation.validate_name(name)
+
+            super().__init__(
+                container,
+                name,
+                type,
+                domain,
+                records,
+                domain_forwarding,
+                description,
+                uels_on_axes,
+            )
+
+            validation.validate_container(self, self.domain)
+
+            self.where = condition.Condition(self)
+            self.container._add_statement(self)
+            self._definition_domain = definition_domain
+            self._init_definition(definition)
+
+            # create attributes
+            self._l, self._m, self._lo, self._up, self._s = (
+                self._init_attributes()
+            )
+            self._stage = self._create_attr("stage")
+            self._range = self._create_attr("range")
+            self._slacklo = self._create_attr("slacklo")
+            self._slackup = self._create_attr("slackup")
+            self._slack = self._create_attr("slack")
+            self._infeas = self._create_attr("infeas")
+
+            self.container._run()
 
     def __hash__(self):
         return id(self)
 
     def __getitem__(self, indices: tuple | str):
-        domain = validation._transform_given_indices(self.domain, indices)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitEquation(
             self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
@@ -195,10 +313,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         indices: tuple | str | implicits.ImplicitSet,
         assignment: Expression,
     ):
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_container(self, domain)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         self._set_definition(assignment, domain)
         self._is_dirty = True
@@ -444,6 +559,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
 
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.container._run()
+
     def gamsRepr(self) -> str:
         """
         Representation of this Equation in GAMS language.
@@ -484,10 +603,10 @@ def cast_type(type: str | EquationType) -> str:
 
         # assign eq by default
         if type.upper() == "REGULAR":
-            type = "EQ"
+            type = "eq"
 
     elif isinstance(type, EquationType):
         # assign eq by default
-        type = "EQ" if EquationType.REGULAR else str(type)
+        type = "eq" if EquationType.REGULAR else str(type)
 
     return type

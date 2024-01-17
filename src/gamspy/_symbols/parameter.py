@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+import itertools
 from typing import Any
 from typing import List
 from typing import Optional
@@ -32,6 +33,7 @@ from typing import Union
 
 import gams.transfer as gt
 import pandas as pd
+from gams.core.gdx import GMS_DT_PAR
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -70,6 +72,46 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
 
     """
+
+    @classmethod
+    def _constructor_bypass(
+        cls,
+        container: Container,
+        name: str,
+        domain: List[Union[str, Set]] = [],
+        records: Optional[Any] = None,
+        description: str = "",
+    ):
+        obj = Parameter.__new__(
+            cls, container, name, domain, records, description=description
+        )
+
+        # set private properties directly
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._domain = domain
+        obj._domain_forwarding = False
+        obj._description = description
+        obj._records = records
+        obj._modified = True
+
+        # typing
+        obj._gams_type = GMS_DT_PAR
+        obj._gams_subtype = 0
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj._is_dirty = False
+        obj._is_frozen = False
+
+        obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
+
+        return obj
 
     def __new__(
         cls,
@@ -112,29 +154,77 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
-        self._is_dirty = False
-        self._is_frozen = False
-        name = validation.validate_name(name)
+        # domain handling
+        if domain is None:
+            domain = []
 
-        super().__init__(
-            container,
-            name,
-            domain,
-            records,
-            domain_forwarding,
-            description,
-            uels_on_axes,
-        )
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
 
-        validation.validate_container(self, self.domain)
-        self.where = condition.Condition(self)
-        self.container._add_statement(self)
+        # does symbol exist
+        has_symbol = False
+        if isinstance(getattr(self, "container", None), gp.Container):
+            has_symbol = True
+
+        if has_symbol:
+            try:
+                if any(
+                    d1 != d2
+                    for d1, d2 in itertools.zip_longest(self.domain, domain)
+                ):
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless symbol"
+                        " domains are equal"
+                    )
+
+                if self.domain_forwarding != domain_forwarding:
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless"
+                        " 'domain_forwarding' is left unchanged"
+                    )
+
+            except ValueError as err:
+                raise ValueError(err)
+
+            except TypeError as err:
+                raise TypeError(err)
+
+            # reset some properties
+            self._requires_state_check = True
+            self.container._requires_state_check = True
+            if description != "":
+                self.description = description
+            self.records = None
+            self.modified = True
+
+            # only set records if records are provided
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+        else:
+            self._is_dirty = False
+            self._is_frozen = False
+            name = validation.validate_name(name)
+
+            super().__init__(
+                container,
+                name,
+                domain,
+                records,
+                domain_forwarding,
+                description,
+                uels_on_axes,
+            )
+
+            validation.validate_container(self, self.domain)
+            self.where = condition.Condition(self)
+            self.container._add_statement(self)
+
+            self.container._run()
 
     def __getitem__(
         self, indices: Union[tuple, str]
     ) -> implicits.ImplicitParameter:
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
@@ -143,9 +233,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         indices: Union[tuple, str, implicits.ImplicitSet],
         assignment: Union[Expression, float, int],
     ) -> None:
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_container(self, domain)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore
@@ -209,6 +297,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for symbol in self.container.data.values():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.container._run()
 
     def gamsRepr(self) -> str:
         """

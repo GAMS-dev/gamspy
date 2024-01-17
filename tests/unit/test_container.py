@@ -113,7 +113,7 @@ class ContainerSuite(unittest.TestCase):
         v2 = m.addVariable("v", description="blabla", records=pd.DataFrame())
         self.assertTrue(id(v1) == id(v2))
         self.assertRaises(ValueError, m.addVariable, "v", "free", ["*"])
-        self.assertRaises(ValueError, m.addVariable, "v", "dayum")
+        self.assertRaises(TypeError, m.addVariable, "v", "dayum")
 
         e1 = m.addEquation("e")
         self.assertRaises(ValueError, m.addEquation, "e", "regular", i1)
@@ -201,9 +201,6 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(Sense.values(), ["MIN", "MAX", "FEASIBILITY"])
 
     def test_arbitrary_gams_code(self):
-        self.m._addGamsCode("Set i / i1*i3 /;")
-        self.assertEqual(self.m._unsaved_statements[-1], "Set i / i1*i3 /;")
-
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
@@ -211,7 +208,6 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
@@ -373,11 +369,6 @@ class ContainerSuite(unittest.TestCase):
             m.generateGamsString(),
             "$onMultiR\n$onUNDF\n$gdxIn"
             f" {m._gdx_in}\n"
-            "Set i(*);\n$load i\n"
-            "Alias(i,a);\n"
-            "Parameter p;\n$load p\n"
-            "free Variable v;\n$load v\n"
-            "Equation e;\n$load e\n"
             "$offUNDF\n$gdxIn\n"
             f"execute_unload '{m._gdx_out}' \n",
         )

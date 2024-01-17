@@ -24,12 +24,17 @@
 #
 from __future__ import annotations
 
+import itertools
 from enum import Enum
 from typing import Any
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 import pandas as pd
+from gams.core.gdx import GMS_DT_VAR
+from gams.transfer._internals import (
+    TRANSFER_TO_GAMS_VARIABLE_SUBTYPES,
+)
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -87,6 +92,59 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     """
 
+    @classmethod
+    def _constructor_bypass(
+        cls,
+        container: Container,
+        name: str,
+        type: str = "free",
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
+        description: str = "",
+    ):
+        # create new symbol object
+        obj = Variable.__new__(
+            cls,
+            container,
+            name,
+            type,
+            domain,
+            records,
+            description=description,
+        )
+
+        # set private properties directly
+        obj._type = type
+        obj._gams_type = GMS_DT_VAR
+        obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
+
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._domain = domain
+        obj._domain_forwarding = False
+        obj._description = description
+        obj._records = records
+        obj._modified = True
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
+        obj._is_dirty = False
+        obj._is_frozen = False
+
+        # create attributes
+        obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
+        obj._fx = obj._create_attr("fx")
+        obj._prior = obj._create_attr("prior")
+        obj._stage = obj._create_attr("stage")
+
+        return obj
+
     def __new__(
         cls,
         container: Container,
@@ -129,35 +187,93 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         description: str = "",
         uels_on_axes: bool = False,
     ):
-        type = cast_type(type)
-        self._is_dirty = False
-        self._is_frozen = False
-        name = validation.validate_name(name)
+        # domain handling
+        if domain is None:
+            domain = []
 
-        super().__init__(
-            container,
-            name,
-            type,
-            domain,
-            records,
-            domain_forwarding,
-            description,
-            uels_on_axes,
-        )
+        if isinstance(domain, (gp.Set, gp.Alias, str)):
+            domain = [domain]
 
-        validation.validate_container(self, self.domain)
-        self.where = condition.Condition(self)
-        self.container._add_statement(self)
+        # does symbol exist
+        has_symbol = False
+        if isinstance(getattr(self, "container", None), gp.Container):
+            has_symbol = True
 
-        # create attributes
-        self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
-        self._fx = self._create_attr("fx")
-        self._prior = self._create_attr("prior")
-        self._stage = self._create_attr("stage")
+        if has_symbol:
+            try:
+                if self.type != type.casefold():
+                    raise TypeError(
+                        "Cannot overwrite symbol in container unless variable"
+                        f" types are equal: `{self.type}` !="
+                        f" `{type.casefold()}`"
+                    )
+
+                if any(
+                    d1 != d2
+                    for d1, d2 in itertools.zip_longest(self.domain, domain)
+                ):
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless symbol"
+                        " domains are equal"
+                    )
+
+                if self.domain_forwarding != domain_forwarding:
+                    raise ValueError(
+                        "Cannot overwrite symbol in container unless"
+                        " 'domain_forwarding' is left unchanged"
+                    )
+
+            except ValueError as err:
+                raise ValueError(err)
+
+            except TypeError as err:
+                raise TypeError(err)
+
+            # reset some properties
+            self._requires_state_check = True
+            self.container._requires_state_check = True
+            if description != "":
+                self.description = description
+            self.records = None
+            self.modified = True
+
+            # only set records if records are provided
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+
+        else:
+            type = cast_type(type)
+            self._is_dirty = False
+            self._is_frozen = False
+            name = validation.validate_name(name)
+
+            super().__init__(
+                container,
+                name,
+                type,
+                domain,
+                records,
+                domain_forwarding,
+                description,
+                uels_on_axes,
+            )
+
+            validation.validate_container(self, self.domain)
+            self.where = condition.Condition(self)
+            self.container._add_statement(self)
+
+            # create attributes
+            self._l, self._m, self._lo, self._up, self._s = (
+                self._init_attributes()
+            )
+            self._fx = self._create_attr("fx")
+            self._prior = self._create_attr("prior")
+            self._stage = self._create_attr("stage")
+
+            self.container._run()
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
-        domain = validation._transform_given_indices(self.domain, indices)
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
@@ -344,6 +460,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 # reset state check flags for all symbols in the container
                 for _, symbol in self.container.data.items():
                     symbol._requires_state_check = True
+
+    def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        super().setRecords(records, uels_on_axes)
+        self.container._run()
 
     def gamsRepr(self) -> str:
         """

@@ -32,6 +32,17 @@ from gamspy.math import sqr
 class SolveSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        
+    def test_uel_order(self):
+        i = Set(self.m,'i')
+        p = self.m.addParameter('base',[i])
+        d = Parameter(self.m,'d')
+        i.setRecords(['i1','i2'])
+        d[...] = 0 # trigger the execution of GAMS
+        i.setRecords(['i0','i1'])
+        p[i] = i.ord
+        self.assertEqual(p.records.values.tolist(), [['i1', 1.0], ['i0', 2.0]])
+
 
     def test_read_on_demand(self):
         # Prepare data
@@ -212,7 +223,6 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(cost.records)
         self.assertIsNotNone(supply.records)
         self.assertIsNotNone(demand.records)
-        self.assertIsNone(z2.records)
 
         transport2 = Model(
             self.m,
@@ -275,6 +285,24 @@ class SolveSuite(unittest.TestCase):
             sense="min",
             objective=z,
         )
+        
+        
+        freeLinks = Set(self.m, "freeLinks", domain=[i,j], records=[('seattle', 'chicago')])
+        # Test limited variables
+        transport2 = Model(
+            self.m,
+            name="transport2",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective=z,
+            limited_variables=[x[freeLinks]],
+        )
+
+        self.assertEqual(
+            transport2.getStatement(),
+            "Model transport2 / cost,supply,demand,x(freeLinks) /;",
+        )
 
         # Test output redirection
         with open("test.gms", "w") as file:
@@ -336,22 +364,6 @@ class SolveSuite(unittest.TestCase):
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
-
-        # Test limited variables
-        transport = Model(
-            m,
-            name="transport",
-            equations=[cost, supply, demand],
-            problem="LP",
-            sense="min",
-            objective=z,
-            limited_variables=[x[i,j]],
-        )
-
-        self.assertEqual(
-            transport.getStatement(),
-            "Model transport / cost,supply,demand,x(i,j) /;",
-        )
 
     def test_interrupt(self):
         cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
@@ -859,17 +871,13 @@ class SolveSuite(unittest.TestCase):
             objective=c,
         )
         
-        if cont.delayed_execution:
-            self.assertRaises(ValidationError, energy.interrupt)
-
         def interrupt_gams(model):
-            time.sleep(2)
+            time.sleep(1)
             model.interrupt()
 
         import threading
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
-
         energy.solve(options=Options(relative_optimality_gap=0.000001))
 
         self.assertIsNotNone(energy.objective_value)
@@ -1184,7 +1192,15 @@ class SolveSuite(unittest.TestCase):
         summary = transport.solve(options=Options(trace_file_format=5))
         self.assertIsNone(summary)
         
-        summary = transport.solve(options=Options(trace_file="bla.txt"))
+        transport2 = Model(
+            m,
+            name="transport2",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        summary = transport2.solve(options=Options(trace_file="different_path.txt"))
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
