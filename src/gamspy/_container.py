@@ -80,6 +80,8 @@ class Container(gt.Container):
     working_directory : str, optional
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
+    debugging_level : str, optional
+        Decides on keeping the temporary files generate by GAMS, by default "delete"
     delayed_execution : bool, optional
         Delayed execution mode, by default False
     options : Options
