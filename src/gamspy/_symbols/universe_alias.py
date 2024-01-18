@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
+from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -13,6 +14,36 @@ if TYPE_CHECKING:
 
 
 class UniverseAlias(gt.UniverseAlias):
+    @classmethod
+    def _constructor_bypass(cls, container: Container, name: str):
+        # create new symbol object
+        obj = UniverseAlias.__new__(cls, container, name)
+
+        # set private properties directly
+        obj._requires_state_check = False
+        obj._container = container
+        container._requires_state_check = True
+        obj._name = name
+        obj._modified = True
+
+        # typing
+        obj._gams_type = GMS_DT_ALIAS
+        obj._gams_subtype = 0
+
+        # add to container
+        container.data.update({name: obj})
+
+        # gamspy attributes
+        obj.where = condition.Condition(obj)
+
+        # add statement
+        obj.container._add_statement(obj)
+
+        # iterator index
+        obj._current_index = 0
+
+        return obj
+
     def __new__(cls, container: Container, name: str = "universe"):
         if not isinstance(container, gp.Container):
             raise TypeError(

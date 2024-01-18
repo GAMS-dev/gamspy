@@ -70,9 +70,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return expression.Expression("", "not", self)
 
     def __getitem__(self, indices: list | str) -> ImplicitParameter:
-        domain = validation._transform_given_indices(self.domain, indices)
-
-        validation.validate_domain(self, domain)
+        domain = validation.validate_domain(self, indices)
 
         return ImplicitParameter(
             parent=self.parent, name=self.name, domain=domain

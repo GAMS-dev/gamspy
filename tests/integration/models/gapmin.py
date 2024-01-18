@@ -337,6 +337,7 @@ def main():
 
     # use RMIP duals
     w[j] = choice.m[j]
+    print(f"{m.working_directory + os.sep + m.gamsJobName()}.gms")
 
     # use optimal duals
     # w[j] = wopt[j]

@@ -7,9 +7,11 @@ GAMSPy 0.12.0
 - General
   - Implement GAMS MIRO integration.
   - Allow variable/equation attribute assignment without any index.
+  - Run GAMS on symbol declaration and setRecords.
 - Testing
   - Add tests for GAMS MIRO.
   - Test scalar variable/equation assignment without any index.
+  - Test uel order.
 - Documentation
   - Add documentation of GAMS MIRO integration.
   - Document assigning to scalar variable/equation.
