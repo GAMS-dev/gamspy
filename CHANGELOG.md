@@ -2,13 +2,16 @@ GAMSPy CHANGELOG
 ================
 
 -------------------------------------------------------------------------------
-GAMSPy 0.11.7
+GAMSPy 0.12.0
 -------------------------------------------------------------------------------
 - General
+  - Implement GAMS MIRO integration.
   - Allow variable/equation attribute assignment without any index.
 - Testing
+  - Add tests for GAMS MIRO.
   - Test scalar variable/equation assignment without any index.
 - Documentation
+  - Add documentation of GAMS MIRO integration.
   - Document assigning to scalar variable/equation.
   - Update documentation of frozen solve (model instance in GAMS). 
 
@@ -114,7 +117,6 @@ GAMSPy 0.11.1
 GAMSPy 0.11.0
 -------------------------------------------------------------------------------
 - General
-  - Implement GAMS MIRO integration.
   - Generate expression representation as soon as it is created to avoid tall recursions.
   - Find variables in equations by iteratively traversing instead of doing recursion.
   - Add NEOS Server as a backend to solve models.
@@ -122,10 +124,8 @@ GAMSPy 0.11.0
   - Check if the container of domain symbols of a symbol match with the symbol's container.
   - Check if the container is valid before running the model.
 - Documentation
-  - Add documentation of GAMS MIRO integration.
   - Add documentation for NEOS backend.
 - Testing
-  - Add tests for GAMS MIRO.
   - Add NEOS Server as a backend to solve models.
   - Add tests for NEOS backend.
   - Add tests for equations that were defined in the constructor.
