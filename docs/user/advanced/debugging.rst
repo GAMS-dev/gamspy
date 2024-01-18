@@ -73,7 +73,7 @@ specified as `keep` or `keep_on_error`.
 
 In this example, you keep your working directory in the temp directory in your
 operating system. The temp directories for Linux, Darwin, and Windows are usually 
-`/tmp`, `/var/tmp`, and `C:\TEMP` respectively. You can see the path for your 
+`/tmp`, `/var/tmp`, and `C:\Users\username\AppData\Local\Temp` respectively. You can see the path for your 
 model's temporary files by printing `container.working_directory`.
 
 Specifying the Working Directory
