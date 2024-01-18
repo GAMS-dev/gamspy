@@ -185,6 +185,9 @@ class Container(gt.Container):
         except FileExistsError:
             pass
 
+        for name in symbols:
+            self[name]._is_dirty = False
+
         super().write(
             os.path.join(data_path, "default.gdx"),
             symbols,
@@ -413,7 +416,7 @@ class Container(gt.Container):
             and statement._is_miro_input
         ):
             if not IS_MIRO_INIT and MIRO_GDX_IN:
-                self.loadRecordsFromGdx(MIRO_GDX_IN, [statement.name])
+                self._load_records_from_gdx(MIRO_GDX_IN, [statement.name])
                 if statement.hasDomainViolations():
                     raise GamspyException(
                         f"Symbol {statement.name} has domain violations!"
