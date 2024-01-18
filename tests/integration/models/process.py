@@ -9,6 +9,7 @@ of Nonlinear Programming. John Wiley and Sons, New York, 1968.
 
 Keywords: nonlinear programming, alkylation process, chemical engineering
 """
+
 from __future__ import annotations
 
 import os
@@ -29,16 +30,45 @@ def main():
     )
 
     # Variables
-    olefin = Variable(m, name="olefin", type="positive")
-    isor = Variable(m, name="isor", type="positive")
-    acid = Variable(m, name="acid", type="positive")
-    alkylate = Variable(m, name="alkylate", type="positive")
-    isom = Variable(m, name="isom", type="positive")
-    strength = Variable(m, name="strength", type="positive")
-    octane = Variable(m, name="octane", type="positive")
-    ratio = Variable(m, name="ratio", type="positive")
-    dilute = Variable(m, name="dilute", type="positive")
-    f4 = Variable(m, name="f4", type="positive")
+    olefin = Variable(
+        m, name="olefin", type="positive", description="olefin feed (bpd)"
+    )
+    isor = Variable(
+        m, name="isor", type="positive", description="isobutane recycle (bpd)"
+    )
+    acid = Variable(
+        m,
+        name="acid",
+        type="positive",
+        description="acid addition rate (1000lb per day)",
+    )
+    alkylate = Variable(
+        m, name="alkylate", type="positive", description="alkylate yield (bpd)"
+    )
+    isom = Variable(
+        m, name="isom", type="positive", description="isobutane makeup (bpd)"
+    )
+    strength = Variable(
+        m,
+        name="strength",
+        type="positive",
+        description="acid strength (weight pct)",
+    )
+    octane = Variable(
+        m, name="octane", type="positive", description="motor octane number"
+    )
+    ratio = Variable(
+        m,
+        name="ratio",
+        type="positive",
+        description="isobutane makeup to olefin ratio",
+    )
+    dilute = Variable(
+        m, name="dilute", type="positive", description="acid dilution factor"
+    )
+    f4 = Variable(
+        m, name="f4", type="positive", description="f-4 performance number"
+    )
 
     profit = Variable(m, name="profit")
     rangey = Variable(m, name="rangey")
@@ -47,18 +77,28 @@ def main():
     rangef = Variable(m, name="rangef")
 
     # Equations
-    yield1 = Equation(m, name="yield1")
-    rngyield = Equation(m, name="rngyield")
-    makeup = Equation(m, name="makeup")
-    sdef = Equation(m, name="sdef")
-    motor = Equation(m, name="motor")
-    rngmotor = Equation(m, name="rngmotor")
-    drat = Equation(m, name="drat")
-    ddil = Equation(m, name="ddil")
-    rngddil = Equation(m, name="rngddil")
-    df4 = Equation(m, name="df4")
-    rngdf4 = Equation(m, name="rngdf4")
-    dprofit = Equation(m, name="dprofit")
+    yield1 = Equation(
+        m, name="yield1", description="alkylate yield definition"
+    )
+    rngyield = Equation(
+        m, name="rngyield", description="ranged alkylate yield definition"
+    )
+    makeup = Equation(
+        m, name="makeup", description="isobutane makeup definition"
+    )
+    sdef = Equation(m, name="sdef", description="acid strength definition")
+    motor = Equation(m, name="motor", description="motor octane number")
+    rngmotor = Equation(
+        m, name="rngmotor", description="ranged motor octane number"
+    )
+    drat = Equation(m, name="drat", description="isobutane to olefin ratio")
+    ddil = Equation(m, name="ddil", description="dilution definition")
+    rngddil = Equation(
+        m, name="rngddil", description="ranged dilution definition"
+    )
+    df4 = Equation(m, name="df4", description="f-4 definition")
+    rngdf4 = Equation(m, name="rngdf4", description="ranged f-4 definition")
+    dprofit = Equation(m, name="dprofit", description="profit definition")
 
     yield1[...] = alkylate == olefin * (
         1.12 + 0.13167 * ratio - 0.00667 * sqr(ratio)

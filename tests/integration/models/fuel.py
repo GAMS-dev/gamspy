@@ -17,6 +17,7 @@ Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
 Keywords: mixed integer nonlinear programming, scheduling, engineering, power
           generation, unit commitment problem
 """
+
 from __future__ import annotations
 
 import os
@@ -42,31 +43,59 @@ def main():
     )
 
     # Set
-    t = Set(m, name="t", records=["period-1", "period-2", "period-3"])
+    t = Set(
+        m,
+        name="t",
+        records=["period-1", "period-2", "period-3"],
+        description="scheduling periods (2hrs)",
+    )
 
     # Data
     load = Parameter(
         m,
         name="load",
-        domain=[t],
+        domain=t,
         records=pd.DataFrame(
             [["period-1", 400], ["period-2", 900], ["period-3", 700]]
         ),
+        description="system load",
     )
     initlev = Parameter(
         m,
         name="initlev",
-        domain=[t],
+        domain=t,
         records=pd.DataFrame([["period-1", 3000]]),
+        description="initial level of the oil storage tank",
     )
 
     # Variable
-    status = Variable(m, name="status", domain=[t], type="Binary")
-    poil = Variable(m, name="poil", domain=[t])
-    others = Variable(m, name="others", domain=[t])
-    oil = Variable(m, name="oil", domain=[t], type="Positive")
-    volume = Variable(m, name="volume", domain=[t], type="Positive")
-    cost = Variable(m, name="cost")
+    status = Variable(
+        m,
+        name="status",
+        domain=t,
+        type="Binary",
+        description="on or off status of the oil based generating unit",
+    )
+    poil = Variable(
+        m,
+        name="poil",
+        domain=t,
+        description="generation level of oil based unit",
+    )
+    others = Variable(
+        m, name="others", domain=t, description="other generation"
+    )
+    oil = Variable(
+        m, name="oil", domain=t, type="Positive", description="oil consumption"
+    )
+    volume = Variable(
+        m,
+        name="volume",
+        domain=t,
+        type="Positive",
+        description="the volume of oil in the storage tank",
+    )
+    cost = Variable(m, name="cost", description="total operating cost")
 
     volume.up[t] = 4000
     volume.lo[t].where[Ord(t) == Card(t)] = 2000
@@ -75,12 +104,38 @@ def main():
     others.up[t] = 700
 
     # Equation
-    costfn = Equation(m, name="costfn")
-    lowoil = Equation(m, name="lowoil", domain=[t])
-    maxoil = Equation(m, name="maxoil", domain=[t])
-    floweq = Equation(m, name="floweq", domain=[t])
-    demcons = Equation(m, name="demcons", domain=[t])
-    oileq = Equation(m, name="oileq", domain=[t])
+    costfn = Equation(
+        m,
+        name="costfn",
+        description="total operating cost of unit 2 -- the objective fn",
+    )
+    lowoil = Equation(
+        m,
+        name="lowoil",
+        domain=t,
+        description="lower limit on oil generating unit",
+    )
+    maxoil = Equation(
+        m,
+        name="maxoil",
+        domain=t,
+        description="upper limit on oil generating unit",
+    )
+    floweq = Equation(
+        m,
+        name="floweq",
+        domain=t,
+        description="the oil flow balance in the storage tank",
+    )
+    demcons = Equation(
+        m,
+        name="demcons",
+        domain=t,
+        description="total generation must meet the load",
+    )
+    oileq = Equation(
+        m, name="oileq", domain=t, description="calculation of oil consumption"
+    )
 
     costfn[...] = cost == Sum(
         t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2)

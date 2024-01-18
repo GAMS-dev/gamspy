@@ -12,6 +12,7 @@ University Press, New York and Oxford, 1979.
 
 Keywords: nonlinear programming, econometrics, economic development
 """
+
 from __future__ import annotations
 
 import os
@@ -51,24 +52,22 @@ def main():
         rho,
         deli,
         efy,
-    ) = container.getSymbols(
-        [
-            "aio",
-            "pdat",
-            "ddat",
-            "tdat",
-            "mew",
-            "xsi",
-            "gam",
-            "alp",
-            "ynot",
-            "sig",
-            "thet",
-            "rho",
-            "del",
-            "efy",
-        ]
-    )
+    ) = container.getSymbols([
+        "aio",
+        "pdat",
+        "ddat",
+        "tdat",
+        "mew",
+        "xsi",
+        "gam",
+        "alp",
+        "ynot",
+        "sig",
+        "thet",
+        "rho",
+        "del",
+        "efy",
+    ])
     lbar, plab, kbar, dbar = container.getSymbols(
         ["lbar", "plab", "kbar", "dbar"]
     )

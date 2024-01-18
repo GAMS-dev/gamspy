@@ -21,6 +21,7 @@ Research 110, 3 (1998), 474-489.
 Keywords: linear programming, mixed integer linear programming, passenger railway optimization,
           shortest path, dutch railway, public rail transport, network optimization
 """
+
 # flake8: noqa
 from __future__ import annotations
 
@@ -91,18 +92,37 @@ def main():
     )
     sp.solve()
 
-    tree = Set(m, "tree", domain=[s, s1, s2])
+    tree = Set(
+        m, "tree", domain=[s, s1, s2], description="shortest path tree from s"
+    )
     tree[s, s1, s2] = f.l[s, s1, s2]
 
-    r = Set(m, "r", records=[str(idx) for idx in range(1, 101)])
-    k = Set(m, "k", domain=[s, s])
-    v = Set(m, "v", domain=[s, r])
-    unvisit = Set(m, "unvisit", domain=[s])
-    visit = Set(m, "visit", domain=[s])
-    from_ = Set(m, "from", domain=[s])
-    to = Set(m, "to", domain=[s])
-    l = Set(m, "l", domain=[s, s1, s2, s3])  # noqa: E741
-    lr = Set(m, "lr", domain=[s, s1, s2, r])
+    r = Set(
+        m, "r", records=[str(idx) for idx in range(1, 101)], description="rank"
+    )
+    k = Set(m, "k", domain=[s, s], description="arcs from root to a node")
+    v = Set(
+        m,
+        "v",
+        domain=[s, r],
+        description="nodes with rank from root to a node",
+    )
+    unvisit = Set(m, "unvisit", domain=s, description="unvisited nodes")
+    visit = Set(m, "visit", domain=s, description="visited nodes")
+    from_ = Set(m, "from", domain=s, description="from nodes")
+    to = Set(m, "to", domain=s, description="to nodes")
+    l = Set(
+        m,
+        "l",
+        domain=[s, s1, s2, s3],
+        description="line from s to s1 with edge s2s3",
+    )  # noqa: E741
+    lr = Set(
+        m,
+        "lr",
+        domain=[s, s1, s2, r],
+        description="rank of s2 in line from s to s1",
+    )
 
     root = Alias(m, "root", s)
     r1 = Alias(m, "r1", r)
@@ -156,13 +176,20 @@ def main():
 
         from_[s] = False
 
-    error02 = Set(m, "error02", domain=[s1, s2])
+    error02 = Set(
+        m,
+        "error02",
+        domain=[s1, s2],
+        description="arcs not covered by shortest path lines",
+    )
     error02[s1, s2] = lfr[s1, s2] & (Sum(l[root, s, s1, s2], 1) == 0)
 
     if len(error02):
         sys.exit(f"There is an error {error02.records}")
 
-    ll = Set(m, "ll", domain=[s, s])
+    ll = Set(
+        m, "ll", domain=[s, s], description="station pair represening a line"
+    )
     ll[s1, s2] = Ord(s1) < Ord(s2)
 
     l[root, s, s1, s2].where[~ll[root, s]] = False
@@ -171,25 +198,49 @@ def main():
     l[root, s, s1, s2].where[l[root, s, s2, s1] & rt[s1, s2]] = True
     l[root, s, s1, s2].where[~rt[s1, s2]] = False
 
-    rp = Parameter(m, "rp", domain=[s, s, s])
-    lastrp = Parameter(m, "lastrp", domain=[s, s])
+    rp = Parameter(m, "rp", domain=[s, s, s], description="rank of node")
+    lastrp = Parameter(
+        m, "lastrp", domain=[s, s], description="rank of the last node in line"
+    )
 
     rp[ll, s] = Sum(r.where[lr[ll, s, r]], Ord(r))
     lastrp[ll] = Smax(s, rp[ll, s])
 
-    load = Parameter(m, "load", domain=[s1, s2])
+    load = Parameter(
+        m, "load", domain=[s1, s2], description="passenger load of an edge"
+    )
     load[s1, s2].where[rt[s1, s2]] = Sum(
         l[root, s, s1, s2].where[od[root, s]], od[root, s]
     )
 
-    dt = Variable(m, "dt", domain=[s1, s2])
-    freq = Variable(m, "freq", domain=[s1, s2])
-    phi = Variable(m, "phi", domain=[s1, s2], type="integer")
-    obj = Variable(m, "obj")
+    dt = Variable(
+        m,
+        "dt",
+        domain=[s1, s2],
+        description="direct traveler between s1 and s2",
+    )
+    freq = Variable(
+        m, "freq", domain=[s1, s2], description="frequency on arc s1s2"
+    )
+    phi = Variable(
+        m,
+        "phi",
+        domain=[s1, s2],
+        type="integer",
+        description="frequency of line between s1 and s2",
+    )
+    obj = Variable(m, "obj", description="objective variable")
 
-    deffreqlop = Equation(m, "deffreqlop", domain=[s1, s2])
-    dtlimit = Equation(m, "dtlimit", domain=[s1, s2])
-    defobjdtlop = Equation(m, "defobjdtlop")
+    deffreqlop = Equation(
+        m,
+        "deffreqlop",
+        domain=[s1, s2],
+        description="definition of the frequency for each edge",
+    )
+    dtlimit = Equation(
+        m, "dtlimit", domain=[s1, s2], description="limit the direct travelers"
+    )
+    defobjdtlop = Equation(m, "defobjdtlop", description="objective function")
 
     deffreqlop[s1, s2].where[rt[s1, s2]] = freq[s1, s2] == Sum(
         l[ll, s1, s2], phi[ll]
@@ -224,10 +275,22 @@ def main():
     solrep["DT", ll, "freq"] = phi.l[ll]
     solrep["DT", ll, "cars"].where[phi.l[ll]] = mincars + Card(ac) - 1
 
-    xcost = Parameter(m, "xcost", domain=[root, s, lf])
-    ycost = Parameter(m, "ycost", domain=[root, s, lf])
-    length = Parameter(m, "len", domain=[s, s])
-    sigma = Parameter(m, "sigma", domain=[s, s])
+    xcost = Parameter(
+        m,
+        "xcost",
+        domain=[root, s, lf],
+        description="operating and capcital cost for line with mincars cars",
+    )
+    ycost = Parameter(
+        m,
+        "ycost",
+        domain=[root, s, lf],
+        description="operating and capcital cost for additional cars",
+    )
+    length = Parameter(m, "len", domain=[s, s], description="length of line")
+    sigma = Parameter(
+        m, "sigma", domain=[s, s], description="line circulation factor"
+    )
 
     length[ll] = Sum(l[ll, s1, s2], rt[s1, s2])
     sigma[ll] = (
@@ -244,14 +307,42 @@ def main():
         Ord(lf) * length[ll] * crm + gams_math.ceil(sigma[ll] * Ord(lf)) * cfx
     )
 
-    x = Variable(m, "x", type="binary", domain=[s1, s2, lf])
-    y = Variable(m, "y", type="integer", domain=[s1, s2, lf])
+    x = Variable(
+        m,
+        "x",
+        type="binary",
+        domain=[s1, s2, lf],
+        description="line frequency indicator of line s1-s2",
+    )
+    y = Variable(
+        m,
+        "y",
+        type="integer",
+        domain=[s1, s2, lf],
+        description="additional cars on line s1-s2 with frequency lf",
+    )
 
-    deffreqilp = Equation(m, "deffreqilp", domain=[s, s])
-    defloadilp = Equation(m, "defloadilp", domain=[s, s])
-    oneilp = Equation(m, "oneilp", domain=[s, s])
-    couplexy = Equation(m, "couplexy", domain=[s, s, lf])
-    defobjilp = Equation(m, "defobjilp")
+    deffreqilp = Equation(
+        m,
+        "deffreqilp",
+        domain=[s, s],
+        description="definition of the frequency for each edge",
+    )
+    defloadilp = Equation(
+        m,
+        "defloadilp",
+        domain=[s, s],
+        description="capacity of lines fulfill the demand",
+    )
+    oneilp = Equation(
+        m, "oneilp", domain=[s, s], description="only one frequency per line"
+    )
+    couplexy = Equation(
+        m, "couplexy", domain=[s, s, lf], description="coupling constraints"
+    )
+    defobjilp = Equation(
+        m, "defobjilp", description="definition of the objective"
+    )
 
     deffreqilp[s1, s2].where[rt[s1, s2]] = freq[s1, s2] == Sum(
         (l[ll, s1, s2], lf), Ord(lf) * x[ll, lf]
@@ -289,13 +380,33 @@ def main():
     )
     solsum["ILP", "cost"] = obj.l
 
-    cap = Parameter(m, "cap", domain=[s, s])
-    sol = Set(m, "sol", domain=[s, s])
+    cap = Parameter(
+        m, "cap", domain=[s, s], description="the capacity of a line"
+    )
+    sol = Set(
+        m, "sol", domain=[s, s], description="the actual lines in a line plan"
+    )
 
-    dtr = Variable(m, "dtr", domain=[s, s, s, s], type="positive")
+    dtr = Variable(
+        m,
+        "dtr",
+        domain=[s, s, s, s],
+        type="positive",
+        description="direct travelers of OD pair u v in line on route s s",
+    )
 
-    dtllimit = Equation(m, "dtllimit", domain=[s, s1, s2, s3])
-    sumbound = Equation(m, "sumbound", domain=[s, s])
+    dtllimit = Equation(
+        m,
+        "dtllimit",
+        domain=[s, s1, s2, s3],
+        description="limit direct travelers in line s-s1 on edge s2-s3",
+    )
+    sumbound = Equation(
+        m,
+        "sumbound",
+        domain=[s, s],
+        description="sum of direct travels <= total number of travelers",
+    )
 
     dtllimit[l[sol, s, s1]] = (
         Sum(

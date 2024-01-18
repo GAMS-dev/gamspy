@@ -7,6 +7,7 @@ Yale University Press, 1973.
 Keywords: mixed complementarity problem, general equilibrium model, activity analysis,
           social accounting matrix, European regional policy
 """
+
 from __future__ import annotations
 
 import os

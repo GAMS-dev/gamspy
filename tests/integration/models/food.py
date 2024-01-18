@@ -45,6 +45,7 @@ and Sons, 1978.
 Keywords: mixed integer linear programming, food manufacturing, blending
 problem
 """
+
 from __future__ import annotations
 
 import os
@@ -238,17 +239,55 @@ def main():
     profit = gp.Variable(c, name="profit", description="objective variable")
 
     # Equation
-    defObj = gp.Equation(c, name="defObj")
-    defUsePv = gp.Equation(c, name="defUsePv", domain=m)
-    defUsePnv = gp.Equation(c, name="defUsePnv", domain=m)
-    defProduce = gp.Equation(c, name="defProduce", domain=m)
-    defHmin = gp.Equation(c, name="defHmin", domain=m)
-    defHmax = gp.Equation(c, name="defHmax", domain=m)
-    stockbal = gp.Equation(c, name="stockbal", domain=[m, p])
-    minUse = gp.Equation(c, name="minUse", domain=[m, p])
-    maxUse = gp.Equation(c, name="maxUse", domain=[m, p])
-    maxNuse = gp.Equation(c, name="maxNuse", domain=m)
-    defLogic1 = gp.Equation(c, name="defLogic1", domain=m)
+    defObj = gp.Equation(c, name="defObj", description="objective")
+    defUsePv = gp.Equation(
+        c,
+        name="defUsePv",
+        domain=m,
+        description="maximum use of vegetable oils",
+    )
+    defUsePnv = gp.Equation(
+        c,
+        name="defUsePnv",
+        domain=m,
+        description="maximum use of non-vegetable oils",
+    )
+    defProduce = gp.Equation(
+        c, name="defProduce", domain=m, description="production of refined oil"
+    )
+    defHmin = gp.Equation(
+        c, name="defHmin", domain=m, description="minmum hardness requirement"
+    )
+    defHmax = gp.Equation(
+        c, name="defHmax", domain=m, description="maximum hardness requirement"
+    )
+    stockbal = gp.Equation(
+        c,
+        name="stockbal",
+        domain=[m, p],
+        description="stock balance constraint",
+    )
+    minUse = gp.Equation(
+        c, name="minUse", domain=[m, p], description="minimum usage of raw oil"
+    )
+    maxUse = gp.Equation(
+        c,
+        name="maxUse",
+        domain=[m, p],
+        description="usage of raw oil is 0 if induse is 0",
+    )
+    maxNuse = gp.Equation(
+        c,
+        name="maxNuse",
+        domain=m,
+        description="maximum number of raw oils used in a blend",
+    )
+    defLogic1 = gp.Equation(
+        c,
+        name="defLogic1",
+        domain=m,
+        description="if some vegetable raw oil is use we also need to use o1",
+    )
 
     defObj[...] = profit == gp.Sum(m, sp * produce[m]) - gp.Sum(
         (m, p), cost[m, p] * buy[m, p]

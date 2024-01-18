@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -172,9 +173,9 @@ def main():
     # VARIABLES #
     OF = Variable(m, name="OF", type="free")
     Pij = Variable(m, name="Pij", type="free", domain=[bus, node, k])
-    Pg = Variable(m, name="Pg", type="free", domain=[Gen])
-    delta = Variable(m, name="delta", type="free", domain=[bus])
-    LS = Variable(m, name="LS", type="free", domain=[bus])
+    Pg = Variable(m, name="Pg", type="free", domain=Gen)
+    delta = Variable(m, name="delta", type="free", domain=bus)
+    LS = Variable(m, name="LS", type="free", domain=bus)
     alpha = Variable(m, name="alpha", type="binary", domain=[bus, node, k])
 
     alpha.l[bus, node, k] = 1
@@ -198,7 +199,7 @@ def main():
     const1E = Equation(
         m, name="const1E", type="regular", domain=[bus, node, k]
     )
-    const2 = Equation(m, name="const2", type="regular", domain=[bus])
+    const2 = Equation(m, name="const2", type="regular", domain=bus)
     const3 = Equation(m, name="const3", type="regular")
 
     const1A[bus, node, k].where[conex[node, bus]] = Pij[bus, node, k] - branch[

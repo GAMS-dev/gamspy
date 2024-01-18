@@ -8,6 +8,7 @@ Adapted from:
 McKinney, D.C. and Savitsky, A.G., "Basic optimization models
 for water and energy management", Revision 6, February 2003.
 """
+
 from __future__ import annotations
 
 import os
@@ -119,28 +120,28 @@ def main():
     nn = Set(
         m,
         name="nn",
-        domain=[n],
+        domain=n,
         records=[f"Node_{n}" for n in range(1, 6)],
         description="Nodes",
     )
     ns = Set(
         m,
         name="ns",
-        domain=[n],
+        domain=n,
         records=["Source_1", "Source_2"],
         description="Sources nodes",
     )
     nr = Set(
         m,
         name="nr",
-        domain=[n],
+        domain=n,
         records=["User_1", "User_2", "Outlet"],
         description="Users nodes",
     )
     nl = Set(
         m,
         name="nl",
-        domain=[n],
+        domain=n,
         records=["Res_1", "Res_2"],
         description="Reservoir nodes",
     )
@@ -203,14 +204,14 @@ def main():
     Ini_S = Parameter(
         m,
         name="Ini_S",
-        domain=[n],
+        domain=n,
         records=[("Res_1", 1000), ("Res_2", 300)],
         description="Initial storage in reservoirs. (m3)",
     )
     ret = Parameter(
         m,
         name="ret",
-        domain=[n],
+        domain=n,
         records=[("User_1", 0.5), ("User_2", 0.5), ("Outlet", 0.0)],
         description="Return flow coefficients",
     )

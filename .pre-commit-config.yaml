@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.12.1
     hooks:
     -   id: black
         exclude: ^docs/
@@ -8,13 +8,13 @@ repos:
         language_version: python3
 
 -   repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+    rev: 7.0.0
     hooks:
     -   id: flake8
         exclude: ^docs/
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
     -   id: end-of-file-fixer
         exclude: ^docs/
@@ -23,20 +23,10 @@ repos:
     -   id: check-ast
     -   id: check-case-conflict
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v1.4.1'
+    rev: 'v1.8.0'
     hooks:
     -   id: mypy
         files: '^src\/gamspy\/(.*?)$'
--   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.10.0
-    hooks:
-    -   id: reorder-python-imports
-        args: [
-            --application-directories, '.:src',
-            --py38-plus,
-            --add-import,
-            'from __future__ import annotations'
-        ]
 -   repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:

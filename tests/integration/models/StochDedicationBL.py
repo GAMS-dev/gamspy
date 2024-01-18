@@ -7,6 +7,7 @@ Stochastic Dedication model with borrowing and lending variables
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 6.2.2
 * Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -48,22 +49,39 @@ def main():
     Price = m.getSymbols(["Price"])[0]
 
     # Parameters
-    Srf, SF, SLiability = m.getSymbols(
-        [
-            "Srf",
-            "SF",
-            "SLiability",
-        ]
-    )
+    Srf, SF, SLiability = m.getSymbols([
+        "Srf",
+        "SF",
+        "SLiability",
+    ])
 
     # Variables
-    x = Variable(m, "x", domain=[i], type="Positive")
-    surplus = Variable(m, "surplus", domain=[t, l], type="Positive")
-    borrow = Variable(m, "borrow", domain=[t, l], type="Positive")
-    v0 = Variable(m, "v0")
+    x = Variable(
+        m, "x", domain=i, type="Positive", description="Face value purchased"
+    )
+    surplus = Variable(
+        m,
+        "surplus",
+        domain=[t, l],
+        type="Positive",
+        description="Amount of money reinvested",
+    )
+    borrow = Variable(
+        m,
+        "borrow",
+        domain=[t, l],
+        type="Positive",
+        description="Amount of money borrowed",
+    )
+    v0 = Variable(m, "v0", description="Upfront investment")
 
     # Equations
-    CashFlowCon = Equation(m, "CashFlowCon", domain=[t, l])
+    CashFlowCon = Equation(
+        m,
+        "CashFlowCon",
+        domain=[t, l],
+        description="Equations defining the cashflow balance",
+    )
 
     CashFlowCon[t, l] = (
         Sum(i, SF[t, i, l] * x[i]).where[tau[t] > 0]

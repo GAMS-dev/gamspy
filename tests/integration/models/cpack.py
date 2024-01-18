@@ -14,6 +14,7 @@ Journal of Global Optimization 38 (2007), 79-101.
 
 Keywords: quadratic constraint programming, circle packing problem, mathematics
 """
+
 from __future__ import annotations
 
 import math
@@ -50,14 +51,14 @@ ij[i, j].where[Ord(i) < Ord(j)] = True
 
 # Variables
 r = Variable(c, name="r", description="radius of circles")
-x = Variable(c, name="x", domain=[i], description="abscissa of circle")
-y = Variable(c, name="y", domain=[i], description="ordinate of circle")
+x = Variable(c, name="x", domain=i, description="abscissa of circle")
+y = Variable(c, name="y", domain=i, description="ordinate of circle")
 
 # Equations
 circumscribe = Equation(
     c,
     name="circumscribe",
-    domain=[i],
+    domain=i,
     description="enforce circle is enclosed in unit circle",
 )
 circumscribe[i] = sqr(1 - r) >= sqr(x[i]) + sqr(y[i])

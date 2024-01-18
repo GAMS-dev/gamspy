@@ -628,12 +628,10 @@ class Model:
         equations_str = ",".join(equations)
 
         if self._matches:
-            matches_str = ",".join(
-                [
-                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
-                    for equation, variable in self._matches.items()
-                ]
-            )
+            matches_str = ",".join([
+                f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                for equation, variable in self._matches.items()
+            ])
 
             equations_str = (
                 ",".join([equations_str, matches_str])

@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -200,8 +201,8 @@ def main():
 
     # EQUATIONS #
     costThermal = Equation(m, name="costThermal", type="regular")
-    balanceP = Equation(m, name="balanceP", type="regular", domain=[t])
-    balanceW = Equation(m, name="balanceW", type="regular", domain=[t])
+    balanceP = Equation(m, name="balanceP", type="regular", domain=t)
+    balanceW = Equation(m, name="balanceW", type="regular", domain=t)
     costCoprodcalc = Equation(m, name="costCoprodcalc", type="regular")
     Objective = Equation(m, name="Objective", type="regular")
     costwatercalc = Equation(m, name="costwatercalc", type="regular")
