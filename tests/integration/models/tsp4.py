@@ -13,6 +13,7 @@ de Wetering, A V, private communication.
 Keywords: mixed integer linear programming, traveling salesman problem, iterative
           subtour elimination
 """
+
 from __future__ import annotations
 
 import os
@@ -62,12 +63,12 @@ def main():
     # EQUATIONS
     objective = Equation(m, name="objective", description="total cost")
     rowsum = Equation(
-        m, name="rowsum", domain=[ii], description="leave each city only once"
+        m, name="rowsum", domain=ii, description="leave each city only once"
     )
     colsum = Equation(
         m,
         name="colsum",
-        domain=[jj],
+        domain=jj,
         description="arrive at each city only once",
     )
 
@@ -110,7 +111,7 @@ def main():
     visited = Set(
         m,
         name="visited",
-        domain=[i],
+        domain=i,
         description="flag whether a city is already visited",
     )
 
@@ -118,21 +119,21 @@ def main():
     fromi = Set(
         m,
         name="fromi",
-        domain=[i],
+        domain=i,
         is_singleton=True,
         description="contains always one element: the from city",
     )
     nextj = Set(
         m,
         name="nextj",
-        domain=[j],
+        domain=j,
         is_singleton=True,
         description="contains always one element: the to city",
     )
     tt = Set(
         m,
         name="tt",
-        domain=[t],
+        domain=t,
         is_singleton=True,
         description="contains always one element: the current subtour",
     )
@@ -155,20 +156,20 @@ def main():
     curcut = Set(
         m,
         name="curcut",
-        domain=[cc],
+        domain=cc,
         description="current cut always one element",
     )
-    allcuts = Set(m, name="allcuts", domain=[cc], description="total cuts")
+    allcuts = Set(m, name="allcuts", domain=cc, description="total cuts")
 
     # Parameter
     cutcoeff = Parameter(m, name="cutcoeff", domain=[cc, i, j])
-    rhs = Parameter(m, name="rhs", domain=[cc])
+    rhs = Parameter(m, name="rhs", domain=cc)
     nosubtours = Parameter(
         m, name="nosubtours", description="number of subtours"
     )
 
     # Equation
-    cut = Equation(m, name="cut", domain=[cc], description="dynamic cuts")
+    cut = Equation(m, name="cut", domain=cc, description="dynamic cuts")
 
     cut[allcuts] = (
         Sum([i, j], cutcoeff[allcuts, i, j] * x[i, j]) <= rhs[allcuts]

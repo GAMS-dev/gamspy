@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -35,18 +36,16 @@ def main():
     x1 = Variable(m, name="x1")
     x2 = Variable(m, name="x2")
     x3 = Variable(m, name="x3")
-    of = Variable(m, name="of")
 
     # EQUATIONS #
     eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
     eq3 = Equation(m, name="eq3", type="regular")
-    eq4 = Equation(m, name="eq4", type="regular")
 
     eq1[...] = x1 + 2 * x2 <= 3
     eq2[...] = x2 + x3 <= 2
     eq3[...] = x1 + x2 + x3 == 4
-    eq4[...] = x1 + 2 * x2 - 3 * x3 == of
+    of = x1 + 2 * x2 - 3 * x3
 
     LP1 = Model(
         m,
@@ -70,7 +69,7 @@ def main():
     print("x1:  ", round(x1.toValue(), 3))
     print("x2:  ", round(x2.toValue(), 3))
     print("x3:  ", round(x3.toValue(), 3))
-    print("of:  ", round(of.toValue(), 3))
+    print("of:  ", round(LP1.objective_value, 3))
 
     LP2 = Model(
         m,
@@ -85,7 +84,7 @@ def main():
     print("x1:  ", round(x1.toValue(), 3))
     print("x2:  ", round(x2.toValue(), 3))
     print("x3:  ", round(x3.toValue(), 3))
-    print("of:  ", round(of.toValue(), 3))
+    print("of:  ", round(LP2.objective_value, 3))
 
     import math
 

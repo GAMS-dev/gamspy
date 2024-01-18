@@ -14,6 +14,7 @@ Keywords: linear programming, nonlinear programming, quadratic constraints,
 statistics,
           RAS approach
 """
+
 from __future__ import annotations
 
 import os
@@ -52,40 +53,36 @@ def main():
         m,
         name="a0",
         domain=[i, j],
-        records=np.array(
-            [
-                [0.120, 0.100, 0.049],
-                [0.210, 0.247, 0.265],
-                [0.026, 0.249, 0.145],
-            ]
-        ),
+        records=np.array([
+            [0.120, 0.100, 0.049],
+            [0.210, 0.247, 0.265],
+            [0.026, 0.249, 0.145],
+        ]),
+        description="known base matrix",
     )
 
     z1 = Parameter(
         m,
         name="z1",
         domain=[i, j],
-        records=np.array(
-            [
-                [98, 72, 75],
-                [65, 8, 63],
-                [88, 27, 44],
-            ]
-        ),
+        records=np.array([
+            [98, 72, 75],
+            [65, 8, 63],
+            [88, 27, 44],
+        ]),
+        description="unknown industry flows",
     )
 
-    x = Parameter(m, name="x", domain=[j], records=np.array([421, 284, 283]))
-    u = Parameter(
+    x = Parameter(
         m,
-        name="u",
-        domain=[i],
+        name="x",
+        domain=j,
+        records=np.array([421, 284, 283]),
+        description="observed total output",
     )
-    v = Parameter(
-        m,
-        name="v",
-        domain=[j],
-    )
-    a1 = Parameter(m, name="ai", domain=[i, j])
+    u = Parameter(m, name="u", domain=i, description="observed row totals")
+    v = Parameter(m, name="v", domain=j, description="observed column totals")
+    a1 = Parameter(m, name="ai", domain=[i, j], description="unknown matrix A")
 
     u[i] = Sum(j, z1[i, j])
     v[j] = Sum(i, z1[i, j])
@@ -98,14 +95,14 @@ def main():
 
     # --- 1: RAS updating
 
-    r = Parameter(m, name="r", domain=[i])
-    s = Parameter(m, name="s", domain=[j])
+    r = Parameter(m, name="r", domain=i, description="row adjustment")
+    s = Parameter(m, name="s", domain=j, description="column adjustment")
 
     r[i] = 1
     s[j] = 1
 
-    oldr = Parameter(m, name="oldr", domain=[i])
-    olds = Parameter(m, name="olds", domain=[j])
+    oldr = Parameter(m, name="oldr", domain=i)
+    olds = Parameter(m, name="olds", domain=j)
     maxdelta = Parameter(m, name="maxdelta")
     maxdelta[...] = 1
 
@@ -123,7 +120,9 @@ def main():
             break
 
     # Parameter
-    report = Parameter(m, name="report", domain=["*", i, j])
+    report = Parameter(
+        m, name="report", domain=["*", i, j], description="summary report"
+    )
     # option report:3:1:2
 
     report["A0", i, j] = a0[i, j]
@@ -133,13 +132,19 @@ def main():
     # --- 2: Entropy formulation   a*ln(a/a0)
     #        The RAS procedure gives the solution to the Entropy formulation
     # Variable
-    obj = Variable(m, name="obj", type="free")
-    a = Variable(m, name="a", type="positive", domain=[i, j])
+    obj = Variable(m, name="obj", type="free", description="objective value")
+    a = Variable(
+        m,
+        name="a",
+        type="positive",
+        domain=[i, j],
+        description="estimated A matrix",
+    )
 
     # Equation
-    rowbal = Equation(m, name="rowbal", domain=[i])
-    colbal = Equation(m, name="colbal", domain=[j])
-    defobjent = Equation(m, name="defobjent")
+    rowbal = Equation(m, name="rowbal", domain=i, description="row totals")
+    colbal = Equation(m, name="colbal", domain=j, description="column totals")
+    defobjent = Equation(m, name="defobjent", description="entropy definition")
 
     rowbal[i] = Sum(j, a[i, j] * x[j]) == u[i]
 
@@ -166,17 +171,25 @@ def main():
 
     # --- 3: Entropy with flow variable
     #        we can balance the flow matrix instead of the A matrix
-    zv = Variable(m, name="zv", type="free", domain=[i, j])
+    zv = Variable(
+        m, name="zv", type="free", domain=[i, j], description="industry flows"
+    )
 
-    rowbalz = Equation(m, name="rowbalz", domain=[i])
-    colbalz = Equation(m, name="colbalz", domain=[j])
-    defobjentz = Equation(m, name="defobjentz")
+    rowbalz = Equation(m, name="rowbalz", domain=i, description="row totals")
+    colbalz = Equation(
+        m, name="colbalz", domain=j, description="column totals tive"
+    )
+    defobjentz = Equation(
+        m, name="defobjentz", description="entropy objective using flows"
+    )
 
     rowbalz[i] = Sum(j, zv[i, j]) == u[i]
 
     colbalz[j] = Sum(i, zv[i, j]) == v[j]
 
-    zbar = Parameter(m, name="zbar", domain=[i, j])
+    zbar = Parameter(
+        m, name="zbar", domain=[i, j], description="reference flow"
+    )
 
     zbar[i, j] = a0[i, j] * x[j]
     zv.lo[i, j] = 1
@@ -202,17 +215,39 @@ def main():
     #        MAPE Mean absolute percentage error
     #        Linf Infinity norm
     # Positive Variable
-    ap = Variable(m, name="ap", type="positive", domain=[i, j])
-    an = Variable(m, name="an", type="positive", domain=[i, j])
-    amax = Variable(m, name="amax", type="positive")
+    ap = Variable(
+        m,
+        name="ap",
+        type="positive",
+        domain=[i, j],
+        description="positive deviation iation",
+    )
+    an = Variable(
+        m,
+        name="an",
+        type="positive",
+        domain=[i, j],
+        description="negative deviation",
+    )
+    amax = Variable(
+        m, name="amax", type="positive", description="maximum absilute dev"
+    )
 
     # Equation
-    defabs = Equation(m, name="defabs", domain=[i, j])
-    defmaxp = Equation(m, name="defmaxp", domain=[i, j])
-    defmaxn = Equation(m, name="defmaxn", domain=[i, j])
-    defmad = Equation(m, name="defmad")
-    defmade = Equation(m, name="defmade")
-    deflinf = Equation(m, name="deflinf")
+    defabs = Equation(
+        m, name="defabs", domain=[i, j], description="absolute definition"
+    )
+    defmaxp = Equation(
+        m, name="defmaxp", domain=[i, j], description="max positive"
+    )
+    defmaxn = Equation(
+        m, name="defmaxn", domain=[i, j], description="max neagtive"
+    )
+    defmad = Equation(m, name="defmad", description="MAD definition")
+    defmade = Equation(
+        m, name="defmade", description="mean absolute percentage error"
+    )
+    deflinf = Equation(m, name="deflinf", description="infinity norm")
 
     defabs[i, j] = a[i, j] - a0[i, j] == ap[i, j] - an[i, j]
 

@@ -25,15 +25,18 @@ def main():
         delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
-    c = Set(m, "c")
-    h = Set(m, "h")
-    s = Set(m, "s")
+    c = Set(m, "c", description="commodities")
+    h = Set(m, "h", description="consumers")
+    s = Set(m, "s", description="sectors")
+
     cc = Alias(m, "cc", c)
 
-    e = Parameter(m, "e", domain=[c, h])
-    d = Parameter(m, "d", domain=[c, h])
-    esub = Parameter(m, "esub", domain=h)
-    data = Parameter(m, "data", domain=["*", c, s])
+    e = Parameter(m, "e", domain=[c, h], description="commodity endowments")
+    d = Parameter(m, "d", domain=[c, h], description="reference demands")
+    esub = Parameter(m, "esub", domain=h, description="elasticities in demand")
+    data = Parameter(
+        m, "data", domain=["*", c, s], description="activity analysis matrix"
+    )
 
     # Load the records of the symbols from a gdx file.
     m.loadRecordsFromGdx(
@@ -41,19 +44,36 @@ def main():
         ["c", "h", "s", "e", "d", "esub", "data"],
     )
 
-    alpha = Parameter(m, "alpha", domain=[c, h])
-    a = Parameter(m, "a", domain=[c, s])
+    alpha = Parameter(
+        m,
+        "alpha",
+        domain=[c, h],
+        description="demand function share parameter",
+    )
+    a = Parameter(
+        m, "a", domain=[c, s], description="activity analysis matrix"
+    )
 
     alpha[c, h] = d[c, h] / Sum(cc, d[cc, h])
     a[c, s] = data["output", c, s] - data["input", c, s]
 
-    p = Variable(m, "p", type=VariableType.POSITIVE, domain=c)
-    y = Variable(m, "y", type=VariableType.POSITIVE, domain=s)
-    i = Variable(m, "i", type=VariableType.POSITIVE, domain=h)
+    p = Variable(
+        m,
+        "p",
+        type=VariableType.POSITIVE,
+        domain=c,
+        description="commodity price",
+    )
+    y = Variable(
+        m, "y", type=VariableType.POSITIVE, domain=s, description="production"
+    )
+    i = Variable(
+        m, "i", type=VariableType.POSITIVE, domain=h, description="income"
+    )
 
-    mkt = Equation(m, "mkt", domain=c)
-    profit = Equation(m, "profit", domain=s)
-    income = Equation(m, "income", domain=h)
+    mkt = Equation(m, "mkt", domain=c, description="commodity market")
+    profit = Equation(m, "profit", domain=s, description="zero profit")
+    income = Equation(m, "income", domain=h, description="income index")
 
     mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= Sum(
         h.where[esub[h] != 1],

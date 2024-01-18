@@ -9,6 +9,7 @@ March 2012.
 Keywords: nonlinear programming, contract theory, principal-agent problem,
           adverse selection, parts supply problem
 """
+
 from __future__ import annotations
 
 import os
@@ -62,11 +63,11 @@ def main():
     j = Alias(m, name="j", alias_with=i)
 
     # Parameters
-    theta = Parameter(m, name="theta", domain=[i], description="efficiency")
+    theta = Parameter(m, name="theta", domain=i, description="efficiency")
     pt = Parameter(
         m, name="pt", domain=[i, t], description="probability of type"
     )
-    p = Parameter(m, name="p", domain=[i], description="probability of type")
+    p = Parameter(m, name="p", domain=i, description="probability of type")
 
     theta[i] = Ord(i) / Card(i)
 
@@ -90,7 +91,7 @@ def main():
     )
     # (MHRC: monotone hazard rate condition)
     noMHRC = Parameter(
-        m, name="noMHRC", domain=[t], description=">=1: no MHRC case"
+        m, name="noMHRC", domain=t, description=">=1: no MHRC case"
     )
 
     F[i, t] = Sum(j.where[Ord(j) <= Ord(i)], pt[j, t])
@@ -102,13 +103,11 @@ def main():
     ru = Parameter(m, name="ru", records=0, description="reservation utility")
 
     # Definition of Primal/Dual Variables
-    x = Variable(
-        m, name="x", type="positive", domain=[i], description="quality"
-    )
+    x = Variable(m, name="x", type="positive", domain=i, description="quality")
     b = Variable(
-        m, name="b", type="positive", domain=[i], description="maker's revenue"
+        m, name="b", type="positive", domain=i, description="maker's revenue"
     )
-    w = Variable(m, name="w", type="positive", domain=[i], description="price")
+    w = Variable(m, name="w", type="positive", domain=i, description="price")
     Util = Variable(m, name="Util", type="free", description="maker's utility")
 
     # Equations
@@ -116,25 +115,25 @@ def main():
     rev = Equation(
         m,
         name="rev",
-        domain=[i],
+        domain=i,
         description="maker's revenue function",
     )
     pc = Equation(
         m,
         name="pc",
-        domain=[i],
+        domain=i,
         description="participation constraint",
     )
     licd = Equation(
         m,
         name="licd",
-        domain=[i],
+        domain=i,
         description="incentive compatibility constraint",
     )
     licu = Equation(
         m,
         name="licu",
-        domain=[i],
+        domain=i,
         description="incentive compatibility constraint",
     )
     ic = Equation(
@@ -146,7 +145,7 @@ def main():
     mn = Equation(
         m,
         name="mn",
-        domain=[i],
+        domain=i,
         description="monotonicity constraint",
     )
 
@@ -187,15 +186,15 @@ def main():
 
     # Parameters
     Util_lic = Parameter(
-        m, name="Util_lic", domain=[t], description="util solved w/o MN"
+        m, name="Util_lic", domain=t, description="util solved w/o MN"
     )
     Util_lic2 = Parameter(
-        m, name="Util_lic2", domain=[t], description="util solved w/ MN"
+        m, name="Util_lic2", domain=t, description="util solved w/ MN"
     )
     Util_gap = Parameter(
         m,
         name="Util_gap",
-        domain=[t],
+        domain=t,
         description="gap between these two util",
     )
     x_lic = Parameter(
@@ -207,13 +206,13 @@ def main():
     MN_lic = Parameter(
         m,
         name="MN_lic",
-        domain=[t],
+        domain=t,
         description="monotonicity of x solved w/o MN",
     )
     MN_lic2 = Parameter(
         m,
         name="MN_lic2",
-        domain=[t],
+        domain=t,
         description="monotonicity of x solved w/ MN",
     )
 

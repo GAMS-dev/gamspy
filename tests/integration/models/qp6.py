@@ -10,6 +10,7 @@ de Wetering, A V, private communication.
 
 Keywords: mixed complementarity problem, quadratic programming, finance
 """
+
 from __future__ import annotations
 
 import os
@@ -41,7 +42,6 @@ def main():
     returns, val = cont.getSymbols(["return", "val"])
 
     # Set
-    print(days.domain)
     d = Set(cont, name="d", domain=[days], description="selected days")
     s = Set(cont, name="s", domain=[stocks], description="selected stocks")
 
@@ -51,7 +51,7 @@ def main():
 
     # Parameter
     mean = Parameter(
-        cont, name="mean", domain=[stocks], description="mean of daily return"
+        cont, name="mean", domain=stocks, description="mean of daily return"
     )
     dev = Parameter(
         cont, name="dev", domain=[stocks, days], description="deviations"
@@ -67,21 +67,21 @@ def main():
         cont,
         name="x",
         type="positive",
-        domain=[stocks],
+        domain=stocks,
         description="investments",
     )
     w = Variable(
         cont,
         name="w",
         type="free",
-        domain=[days],
+        domain=days,
         description="intermediate variables",
     )
 
     # Equation
     budget = Equation(cont, name="budget")
     retcon = Equation(cont, name="retcon", description="returns constraint")
-    wdef = Equation(cont, name="wdef", domain=[days])
+    wdef = Equation(cont, name="wdef", domain=days)
 
     wdef[d] = w[d] == Sum(s, x[s] * dev[s, d])
 
@@ -90,12 +90,12 @@ def main():
     retcon[...] = Sum(s, mean[s] * x[s]) >= totmean * 1.25
 
     # Equation
-    d_x = Equation(cont, name="d_x", domain=[stocks])
-    d_w = Equation(cont, name="d_w", domain=[days])
+    d_x = Equation(cont, name="d_x", domain=stocks)
+    d_w = Equation(cont, name="d_w", domain=days)
 
     # Variable
     m_budget = Variable(cont, name="m_budget", type="free")
-    m_wdef = Variable(cont, name="m_wdef", type="free", domain=[days])
+    m_wdef = Variable(cont, name="m_wdef", type="free", domain=days)
 
     # Positive Variable
     m_retcon = Variable(cont, name="m_retcon", type="positive")

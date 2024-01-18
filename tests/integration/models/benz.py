@@ -14,6 +14,7 @@ Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
 1999.
 Section 7.3.5. Test problem 15, page 102.
 """
+
 from __future__ import annotations
 
 import os
@@ -36,8 +37,8 @@ def main():
     # Variable
     q1 = Variable(m, name="q1")
     q2 = Variable(m, name="q2")
-    w = Variable(m, name="w")
-    k = Variable(m, name="k")
+    w = Variable(m, name="w", description="frequency")
+    k = Variable(m, name="k", description="stability margin")
 
     # Equation
     g1 = Equation(m, name="g1")

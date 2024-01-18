@@ -8,6 +8,7 @@ vol.38, No. 152, December 1928.
 Erwin Kalvelagen, (2003) An elementary Ramsey growth model.
 http://www.gams.com/~erwin/micro/growth.gms
 """
+
 from __future__ import annotations
 
 import os
@@ -37,12 +38,10 @@ def main():
         records=[f"t{t}" for t in range(1, 51)],
         description="time periods",
     )
-    tfirst = Set(
-        m, name="tfirst", domain=[t], description="first interval (t0)"
-    )
-    tlast = Set(m, name="tlast", domain=[t], description="last intervat [T]")
+    tfirst = Set(m, name="tfirst", domain=t, description="first interval (t0)")
+    tlast = Set(m, name="tlast", domain=t, description="last intervat [T]")
     tnotlast = Set(
-        m, name="tnotlast", domain=[t], description="all intervals but last"
+        m, name="tnotlast", domain=t, description="all intervals but last"
     )
 
     tfirst[t].where[Ord(t) == 1] = True
@@ -73,16 +72,16 @@ def main():
 
     # PARAMETERS #
     L = Parameter(
-        m, name="L", domain=[t], description="labor (production input)"
+        m, name="L", domain=t, description="labor (production input)"
     )
     beta = Parameter(
         m,
         name="beta",
-        domain=[t],
+        domain=t,
         description="weight factor for future utilities",
     )
     tval = Parameter(
-        m, name="tval", domain=[t], description="numerical value of t"
+        m, name="tval", domain=t, description="numerical value of t"
     )
 
     tval[t] = Ord(t) - 1
@@ -99,10 +98,10 @@ def main():
     a = (C0 + I0) / (K0**b * L0 ** (1 - b))
 
     # VARIABLES #
-    C = Variable(m, name="C", domain=[t], description="consumption")
-    Y = Variable(m, name="Y", domain=[t], description="production")
-    K = Variable(m, name="K", domain=[t], description="capital")
-    I = Variable(m, name="I", domain=[t], description="investment")
+    C = Variable(m, name="C", domain=t, description="consumption")
+    Y = Variable(m, name="Y", domain=t, description="production")
+    K = Variable(m, name="K", domain=t, description="capital")
+    I = Variable(m, name="I", domain=t, description="investment")
     W = Variable(m, name="W", description="total utility")
 
     # EQUATIONS #
@@ -113,28 +112,28 @@ def main():
         m,
         name="production",
         type="regular",
-        domain=[t],
+        domain=t,
         description="Cobb-Douglas production function",
     )
     allocation = Equation(
         m,
         name="allocation",
         type="regular",
-        domain=[t],
+        domain=t,
         description="household choose between consumption and saving",
     )
     accumulation = Equation(
         m,
         name="accumulation",
         type="regular",
-        domain=[t],
+        domain=t,
         description="capital accumulation",
     )
     final = Equation(
         m,
         name="final",
         type="regular",
-        domain=[t],
+        domain=t,
         description="minimal investment in final period",
     )
 

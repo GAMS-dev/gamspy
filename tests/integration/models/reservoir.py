@@ -9,6 +9,7 @@ http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
 Andrei, N., Optimal management of system of two reservoirs.
 Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 """
+
 from __future__ import annotations
 
 import os
@@ -33,7 +34,7 @@ def main():
     )
 
     # Set
-    n = Set(m, name="n", records=["res1", "res2"])
+    n = Set(m, name="n", records=["res1", "res2"], description="reservoirs")
     t = Set(
         m,
         name="t",
@@ -52,66 +53,82 @@ def main():
             "dec",
             "enda",
         ],
+        description="time",
     )
-    tt = Set(m, name="tt", domain=[t], records=["ian"])
+    tt = Set(m, name="tt", domain=t, records=["ian"])
 
     # Data
     q = Parameter(
         m,
         name="q",
         domain=[n, t],
-        records=pd.DataFrame(
-            [
-                ["res1", "ian", 128],
-                ["res1", "feb", 125],
-                ["res1", "mar", 234],
-                ["res1", "apr", 360],
-                ["res1", "mai", 541],
-                ["res1", "jun", 645],
-                ["res1", "jul", 807],
-                ["res1", "aug", 512],
-                ["res1", "sep", 267],
-                ["res1", "oct", 210],
-                ["res1", "nov", 981],
-                ["res1", "dec", 928],
-                ["res1", "enda", 250],
-            ]
-        ),
+        records=pd.DataFrame([
+            ["res1", "ian", 128],
+            ["res1", "feb", 125],
+            ["res1", "mar", 234],
+            ["res1", "apr", 360],
+            ["res1", "mai", 541],
+            ["res1", "jun", 645],
+            ["res1", "jul", 807],
+            ["res1", "aug", 512],
+            ["res1", "sep", 267],
+            ["res1", "oct", 210],
+            ["res1", "nov", 981],
+            ["res1", "dec", 928],
+            ["res1", "enda", 250],
+        ]),
+        description="inflow water in the first reservoir rez1 (mil.m3)",
     )
     r = Parameter(
         m,
         name="r",
         domain=[n, t],
-        records=pd.DataFrame(
-            [
-                ["res1", "ian", 100],
-                ["res1", "feb", 150],
-                ["res1", "mar", 200],
-                ["res1", "apr", 500],
-                ["res1", "mai", 222],
-                ["res1", "jun", 700],
-                ["res1", "jul", 333],
-                ["res1", "aug", 333],
-                ["res1", "sep", 300],
-                ["res1", "oct", 250],
-                ["res1", "nov", 250],
-                ["res1", "dec", 250],
-                ["res1", "enda", 200],
-            ]
+        records=pd.DataFrame([
+            ["res1", "ian", 100],
+            ["res1", "feb", 150],
+            ["res1", "mar", 200],
+            ["res1", "apr", 500],
+            ["res1", "mai", 222],
+            ["res1", "jun", 700],
+            ["res1", "jul", 333],
+            ["res1", "aug", 333],
+            ["res1", "sep", 300],
+            ["res1", "oct", 250],
+            ["res1", "nov", 250],
+            ["res1", "dec", 250],
+            ["res1", "enda", 200],
+        ]),
+        description=(
+            "required released water from the first reservoir rez1 (mil.m3)"
         ),
     )
 
     # Variable
-    q2 = Variable(m, name="q2", domain=[t])
-    r2 = Variable(m, name="r2", domain=[t])
+    q2 = Variable(m, name="q2", domain=t)
+    r2 = Variable(m, name="r2", domain=t)
     s = Variable(m, name="s", domain=[n, t])
     obj = Variable(m, name="obj")
 
     # Equation
-    bal1 = Equation(m, domain=[n, t], name="bal1")
-    bal2 = Equation(m, domain=[n, t], name="bal2")
-    dec = Equation(m, domain=[n, t], name="dec")
-    objf = Equation(m, name="objf")
+    bal1 = Equation(
+        m,
+        domain=[n, t],
+        name="bal1",
+        description="water balance in reservoir S1",
+    )
+    bal2 = Equation(
+        m,
+        domain=[n, t],
+        name="bal2",
+        description="water balance in reservoir S2",
+    )
+    dec = Equation(
+        m,
+        domain=[n, t],
+        name="dec",
+        description="decisions of filling the reservoirs",
+    )
+    objf = Equation(m, name="objf", description="objective function")
 
     bal1[n, t].where[~tt[t]] = (
         s["res1", t] - s["res1", t.lag(1, "linear")]

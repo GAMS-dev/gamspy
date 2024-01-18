@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -97,19 +98,19 @@ def main():
     # VARIABLES #
     cost = Variable(m, name="cost", type="free")
 
-    E = Variable(m, name="E", type="positive", domain=[t])
-    G = Variable(m, name="G", type="positive", domain=[t])
-    H1 = Variable(m, name="H1", type="positive", domain=[t])
-    H2 = Variable(m, name="H2", type="positive", domain=[t])
+    E = Variable(m, name="E", type="positive", domain=t)
+    G = Variable(m, name="G", type="positive", domain=t)
+    H1 = Variable(m, name="H1", type="positive", domain=t)
+    H2 = Variable(m, name="H2", type="positive", domain=t)
 
     H2.up[t] = CBmax
 
     # EQUATIONS #
     eq1 = Equation(m, name="eq1", type="regular")
-    eq2 = Equation(m, name="eq2", type="regular", domain=[t])
-    eq3 = Equation(m, name="eq3", type="regular", domain=[t])
-    eq4 = Equation(m, name="eq4", type="regular", domain=[t])
-    eq5 = Equation(m, name="eq5", type="regular", domain=[t])
+    eq2 = Equation(m, name="eq2", type="regular", domain=t)
+    eq3 = Equation(m, name="eq3", type="regular", domain=t)
+    eq4 = Equation(m, name="eq4", type="regular", domain=t)
+    eq5 = Equation(m, name="eq5", type="regular", domain=t)
 
     eq1[...] = cost == Sum(t, data[t, "lamda"] * E[t] + 12 * G[t])
     eq2[t] = eta_ee * E[t] == data[t, "De"]

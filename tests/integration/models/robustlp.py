@@ -35,6 +35,7 @@ Processing. 284 (November, 1998).
 Keywords: linear programming, quadratic constraint programming, robust
 optimization, second order cone programming
 """
+
 from __future__ import annotations
 
 import os
@@ -66,20 +67,20 @@ def main():
 
     # Data
     a = Parameter(m, name="a", domain=[i, j])
-    b = Parameter(m, name="b", domain=[i])
-    c = Parameter(m, name="c", domain=[j])
+    b = Parameter(m, name="b", domain=i)
+    c = Parameter(m, name="c", domain=j)
     b[i] = 1
     c[j] = -1
 
     a[i, j] = uniform(0, 1)
 
     # Variable
-    x = Variable(m, name="x", domain=[j])
+    x = Variable(m, name="x", domain=j)
     obj = Variable(m, name="obj")
 
     # Equation
     defobj = Equation(m, name="defobj")
-    cons = Equation(m, name="cons", domain=[i])
+    cons = Equation(m, name="cons", domain=i)
 
     defobj[...] = obj == Sum(j, c[j] * x[j])
     cons[i] = Sum(j, a[i, j] * x[j]) <= b[i]
@@ -98,11 +99,11 @@ def main():
     results["lp", j] = x.l[j]
     results["lp", "obj"] = obj.l
 
-    lmbda = Variable(m, name="lambda", domain=[j])
-    gamma = Variable(m, name="gamma", domain=[j])
+    lmbda = Variable(m, name="lambda", domain=j)
+    gamma = Variable(m, name="gamma", domain=j)
 
-    lpcons = Equation(m, name="lpcons", domain=[i])
-    defdual = Equation(m, name="defdual", domain=[j])
+    lpcons = Equation(m, name="lpcons", domain=i)
+    defdual = Equation(m, name="defdual", domain=j)
 
     lpcons[i] = (
         mu * Sum(j, lmbda[j] + gamma[j]) + Sum(j, a[i, j] * x[j]) <= b[i]
@@ -126,12 +127,12 @@ def main():
     p = Parameter(m, name="p", domain=[i, j, k])
     p[i, j, j] = mu
 
-    y = Variable(m, name="y", domain=[i])
+    y = Variable(m, name="y", domain=i)
     v = Variable(m, name="v", domain=[i, k])
 
-    defrhs = Equation(m, name="defrhs", domain=[i])
+    defrhs = Equation(m, name="defrhs", domain=i)
     defv = Equation(m, name="defv", domain=[i, k])
-    socpqcpcons = Equation(m, name="socpqcpcons", domain=[i])
+    socpqcpcons = Equation(m, name="socpqcpcons", domain=i)
 
     defrhs[i] = y[i] == b[i] - Sum(j, a[i, j] * x[j])
     defv[i, k] = v[i, k] == Sum(j, p[i, j, k] * x[j])

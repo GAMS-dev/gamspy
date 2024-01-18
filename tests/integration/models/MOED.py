@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -64,7 +65,7 @@ def main():
     counter = Set(m, name="counter", records=[f"c{i}" for i in range(1, 12)])
 
     # PARAMETERS
-    report = Parameter(m, name="report", domain=["*"])
+    report = Parameter(m, name="report", domain="*")
     rep = Parameter(m, name="rep", domain=[counter, "*"])
     rep2 = Parameter(m, name="rep2", domain=[counter, gen])
     data = Parameter(m, name="data", domain=[gen, "*"], records=data_records())
@@ -74,7 +75,7 @@ def main():
     Elim = Parameter(m, name="Elim")
 
     # VARIABLES #
-    P = Variable(m, name="P", domain=[gen])
+    P = Variable(m, name="P", domain=gen)
     TE = Variable(m, name="TE")
     TC = Variable(m, name="TC")
 

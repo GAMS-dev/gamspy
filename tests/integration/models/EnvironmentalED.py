@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -70,7 +71,7 @@ def main():
     Eprice = Parameter(m, name="Eprice", records=0.1)
 
     # VARIABLES #
-    P = Variable(m, name="P", type="free", domain=[gen])
+    P = Variable(m, name="P", type="free", domain=gen)
     OF = Variable(m, name="OF", type="free")
     TE = Variable(m, name="TE", type="free")
     TC = Variable(m, name="TC", type="free")

@@ -82,12 +82,10 @@ class Backend(ABC):
         self.gdx_out = gdx_out
 
     @abstractmethod
-    def is_async(self):
-        ...
+    def is_async(self): ...
 
     @abstractmethod
-    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
-        ...
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False): ...
 
     def preprocess(self, keep_flags: bool = False):
         dirty_names, modified_names = (
@@ -138,18 +136,16 @@ class Backend(ABC):
             ) = line.split(",")
 
         dataframe = pd.DataFrame(
-            [
-                [
-                    SOLVE_STATUS[int(solver_status)],
-                    ModelStatus(int(model_status)).name,
-                    objective_value,
-                    num_equations,
-                    num_variables,
-                    model_type,
-                    solver_name,
-                    solver_time,
-                ]
-            ],
+            [[
+                SOLVE_STATUS[int(solver_status)],
+                ModelStatus(int(model_status)).name,
+                objective_value,
+                num_equations,
+                num_variables,
+                model_type,
+                solver_name,
+                solver_time,
+            ]],
             columns=HEADER,
         )
         return dataframe

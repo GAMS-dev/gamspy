@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -51,34 +52,32 @@ def data_records():
     gen_recs = reformat_df(pd.DataFrame(data, columns=cols, index=inds))
 
     # Demand data
-    demand_recs = np.array(
-        [
-            510,
-            530,
-            516,
-            510,
-            515,
-            544,
-            646,
-            686,
-            741,
-            734,
-            748,
-            760,
-            754,
-            700,
-            686,
-            720,
-            714,
-            761,
-            727,
-            714,
-            618,
-            584,
-            578,
-            544,
-        ]
-    )
+    demand_recs = np.array([
+        510,
+        530,
+        516,
+        510,
+        515,
+        544,
+        646,
+        686,
+        741,
+        734,
+        748,
+        760,
+        754,
+        700,
+        686,
+        720,
+        714,
+        761,
+        727,
+        714,
+        618,
+        584,
+        578,
+        544,
+    ])
 
     return gen_recs, demand_recs
 
@@ -104,7 +103,7 @@ def main():
     )
 
     # PARAMETERS #
-    demand = Parameter(m, name="demand", domain=[t], records=data_records()[1])
+    demand = Parameter(m, name="demand", domain=t, records=data_records()[1])
     gendata = Parameter(
         m,
         name="gendata",
@@ -114,9 +113,6 @@ def main():
     )
 
     # VARIABLES #
-    costThermal = Variable(
-        m, name="costThermal", type="free", description="cost of thermal units"
-    )
     p = Variable(
         m,
         name="p",
@@ -134,11 +130,10 @@ def main():
     # EQUATIONS #
     Genconst3 = Equation(m, name="Genconst3", type="regular", domain=[i, t])
     Genconst4 = Equation(m, name="Genconst4", type="regular", domain=[i, t])
-    costThermalcalc = Equation(m, name="costThermalcalc", type="regular")
-    balance = Equation(m, name="balance", type="regular", domain=[t])
+    balance = Equation(m, name="balance", type="regular", domain=t)
     EMcalc = Equation(m, name="EMcalc", type="regular")
 
-    costThermalcalc[...] = costThermal == Sum(
+    costThermal = Sum(
         [t, i],
         gendata[i, "a"] * sqr(p[i, t])
         + gendata[i, "b"] * p[i, t]

@@ -44,7 +44,7 @@ if TYPE_CHECKING:
 class Operation(operable.Operable):
     def __init__(
         self,
-        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
         expression: (
             Expression | ImplicitVariable | ImplicitParameter | int | bool
         ),
@@ -151,7 +151,7 @@ class Sum(Operation):
 
     def __init__(
         self,
-        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "sum")
@@ -176,7 +176,7 @@ class Product(Operation):
 
     def __init__(
         self,
-        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
@@ -201,7 +201,7 @@ class Smin(Operation):
 
     def __init__(
         self,
-        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smin")
@@ -226,7 +226,7 @@ class Smax(Operation):
 
     def __init__(
         self,
-        domain: (Set | Alias | tuple[Set | Alias] | Domain | Expression),
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
@@ -300,7 +300,7 @@ class Card(operable.Operable):
 
     def __init__(
         self,
-        symbol: (Set | Alias | Parameter),
+        symbol: Set | Alias | Parameter,
     ) -> None:
         self._symbol = symbol
 

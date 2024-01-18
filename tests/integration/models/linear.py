@@ -13,6 +13,7 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 86-88.
 Keywords: linear programming, nonlinear programming, discontinuous derivatives,
           linear regression, econometrics
 """
+
 from __future__ import annotations
 
 import os
@@ -38,128 +39,162 @@ def main():
     )
 
     # Data
-    dat_df = pd.DataFrame(
-        [
-            ["1", "y", 99],
-            ["1", "a", 1],
-            ["1", "b", 85],
-            ["1", "c", 76],
-            ["1", "d", 44],
-            ["2", "y", 93],
-            ["2", "a", 1],
-            ["2", "b", 82],
-            ["2", "c", 78],
-            ["2", "d", 42],
-            ["3", "y", 99],
-            ["3", "a", 1],
-            ["3", "b", 75],
-            ["3", "c", 73],
-            ["3", "d", 42],
-            ["4", "y", 97],
-            ["4", "a", 1],
-            ["4", "b", 74],
-            ["4", "c", 72],
-            ["4", "d", 44],
-            ["5", "y", 90],
-            ["5", "a", 1],
-            ["5", "b", 76],
-            ["5", "c", 73],
-            ["5", "d", 43],
-            ["6", "y", 96],
-            ["6", "a", 1],
-            ["6", "b", 74],
-            ["6", "c", 69],
-            ["6", "d", 46],
-            ["7", "y", 93],
-            ["7", "a", 1],
-            ["7", "b", 73],
-            ["7", "c", 69],
-            ["7", "d", 46],
-            ["8", "y", 130],
-            ["8", "a", 1],
-            ["8", "b", 96],
-            ["8", "c", 80],
-            ["8", "d", 36],
-            ["9", "y", 118],
-            ["9", "a", 1],
-            ["9", "b", 93],
-            ["9", "c", 78],
-            ["9", "d", 36],
-            ["10", "y", 88],
-            ["10", "a", 1],
-            ["10", "b", 70],
-            ["10", "c", 73],
-            ["10", "d", 37],
-            ["11", "y", 89],
-            ["11", "a", 1],
-            ["11", "b", 82],
-            ["11", "c", 71],
-            ["11", "d", 46],
-            ["12", "y", 93],
-            ["12", "a", 1],
-            ["12", "b", 80],
-            ["12", "c", 72],
-            ["12", "d", 45],
-            ["13", "y", 94],
-            ["13", "a", 1],
-            ["13", "b", 77],
-            ["13", "c", 76],
-            ["13", "d", 42],
-            ["14", "y", 75],
-            ["14", "a", 1],
-            ["14", "b", 67],
-            ["14", "c", 76],
-            ["14", "d", 50],
-            ["15", "y", 84],
-            ["15", "a", 1],
-            ["15", "b", 82],
-            ["15", "c", 70],
-            ["15", "d", 48],
-            ["16", "y", 91],
-            ["16", "a", 1],
-            ["16", "b", 76],
-            ["16", "c", 76],
-            ["16", "d", 41],
-            ["17", "y", 100],
-            ["17", "a", 1],
-            ["17", "b", 74],
-            ["17", "c", 78],
-            ["17", "d", 31],
-            ["18", "y", 98],
-            ["18", "a", 1],
-            ["18", "b", 71],
-            ["18", "c", 80],
-            ["18", "d", 29],
-            ["19", "y", 101],
-            ["19", "a", 1],
-            ["19", "b", 70],
-            ["19", "c", 83],
-            ["19", "d", 39],
-            ["20", "y", 80],
-            ["20", "a", 1],
-            ["20", "b", 64],
-            ["20", "c", 79],
-            ["20", "d", 38],
-        ]
-    )
+    dat_df = pd.DataFrame([
+        ["1", "y", 99],
+        ["1", "a", 1],
+        ["1", "b", 85],
+        ["1", "c", 76],
+        ["1", "d", 44],
+        ["2", "y", 93],
+        ["2", "a", 1],
+        ["2", "b", 82],
+        ["2", "c", 78],
+        ["2", "d", 42],
+        ["3", "y", 99],
+        ["3", "a", 1],
+        ["3", "b", 75],
+        ["3", "c", 73],
+        ["3", "d", 42],
+        ["4", "y", 97],
+        ["4", "a", 1],
+        ["4", "b", 74],
+        ["4", "c", 72],
+        ["4", "d", 44],
+        ["5", "y", 90],
+        ["5", "a", 1],
+        ["5", "b", 76],
+        ["5", "c", 73],
+        ["5", "d", 43],
+        ["6", "y", 96],
+        ["6", "a", 1],
+        ["6", "b", 74],
+        ["6", "c", 69],
+        ["6", "d", 46],
+        ["7", "y", 93],
+        ["7", "a", 1],
+        ["7", "b", 73],
+        ["7", "c", 69],
+        ["7", "d", 46],
+        ["8", "y", 130],
+        ["8", "a", 1],
+        ["8", "b", 96],
+        ["8", "c", 80],
+        ["8", "d", 36],
+        ["9", "y", 118],
+        ["9", "a", 1],
+        ["9", "b", 93],
+        ["9", "c", 78],
+        ["9", "d", 36],
+        ["10", "y", 88],
+        ["10", "a", 1],
+        ["10", "b", 70],
+        ["10", "c", 73],
+        ["10", "d", 37],
+        ["11", "y", 89],
+        ["11", "a", 1],
+        ["11", "b", 82],
+        ["11", "c", 71],
+        ["11", "d", 46],
+        ["12", "y", 93],
+        ["12", "a", 1],
+        ["12", "b", 80],
+        ["12", "c", 72],
+        ["12", "d", 45],
+        ["13", "y", 94],
+        ["13", "a", 1],
+        ["13", "b", 77],
+        ["13", "c", 76],
+        ["13", "d", 42],
+        ["14", "y", 75],
+        ["14", "a", 1],
+        ["14", "b", 67],
+        ["14", "c", 76],
+        ["14", "d", 50],
+        ["15", "y", 84],
+        ["15", "a", 1],
+        ["15", "b", 82],
+        ["15", "c", 70],
+        ["15", "d", 48],
+        ["16", "y", 91],
+        ["16", "a", 1],
+        ["16", "b", 76],
+        ["16", "c", 76],
+        ["16", "d", 41],
+        ["17", "y", 100],
+        ["17", "a", 1],
+        ["17", "b", 74],
+        ["17", "c", 78],
+        ["17", "d", 31],
+        ["18", "y", 98],
+        ["18", "a", 1],
+        ["18", "b", 71],
+        ["18", "c", 80],
+        ["18", "d", 29],
+        ["19", "y", 101],
+        ["19", "a", 1],
+        ["19", "b", 70],
+        ["19", "c", 83],
+        ["19", "d", 39],
+        ["20", "y", 80],
+        ["20", "a", 1],
+        ["20", "b", 64],
+        ["20", "c", 79],
+        ["20", "d", 38],
+    ])
 
     # Sets
-    i = Set(m, name="i", records=list(range(1, 21)))
-    n = Set(m, name="n", records=["a", "b", "c", "d"])
+    i = Set(
+        m,
+        name="i",
+        records=list(range(1, 21)),
+        description="observation number",
+    )
+    n = Set(
+        m,
+        name="n",
+        records=["a", "b", "c", "d"],
+        description="index of independent variables",
+    )
 
     # Parameters
     dat = Parameter(m, name="dat", domain=[i, "*"], records=dat_df)
 
     # Variables
-    obj = Variable(m, name="obj", type="free")
-    dev = Variable(m, name="dev", type="free", domain=[i])
-    devp = Variable(m, name="devp", type="positive", domain=[i])
-    devn = Variable(m, name="devn", type="positive", domain=[i])
-    b = Variable(m, name="b", type="free", domain=[n])
+    obj = Variable(m, name="obj", type="free", description="objective value")
+    dev = Variable(
+        m, name="dev", type="free", domain=i, description="total deviation"
+    )
+    devp = Variable(
+        m,
+        name="devp",
+        type="positive",
+        domain=i,
+        description="positive deviation",
+    )
+    devn = Variable(
+        m,
+        name="devn",
+        type="positive",
+        domain=i,
+        description="negative deviation",
+    )
+    b = Variable(m, name="b", type="free", domain=n, description="estimates")
 
     # Equations
-    ddev = Equation(m, name="ddev", domain=[i])
-    ddeva = Equation(m, name="ddeva", domain=[i])
+    ddev = Equation(
+        m,
+        name="ddev",
+        domain=i,
+        description="definition of deviations using total deviations",
+    )
+    ddeva = Equation(
+        m,
+        name="ddeva",
+        domain=i,
+        description=(
+            "definition of deviations using positive and negative deviations"
+        ),
+    )
     ls1 = Equation(m, name="ls1")
     ls1a = Equation(m, name="ls1a")
     ls2 = Equation(m, name="ls2")
@@ -280,7 +315,9 @@ def main():
     )
 
     # Reporting Parameter
-    result = Parameter(m, name="result", domain=["*", "*"])
+    result = Parameter(
+        m, name="result", domain=["*", "*"], description="summary table"
+    )
 
     b.l[n] = 1
     dev.l[i] = dat[i, "y"] - Sum(n, b.l[n] * dat[i, n])
