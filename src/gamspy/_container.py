@@ -171,6 +171,7 @@ class Container(gt.Container):
 
         encoder.writeJson()
 
+    def _write_default_gdx_miro(self):
         # create data_<model>/default.gdx
         symbols = list(
             set(self._miro_input_symbols + self._miro_output_symbols)
@@ -387,6 +388,9 @@ class Container(gt.Container):
         summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
 
         self._is_first_run = False
+
+        if IS_MIRO_INIT:
+            self._write_default_gdx_miro()
 
         return summary
 

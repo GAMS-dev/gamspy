@@ -33,7 +33,7 @@ class MiroSuite(unittest.TestCase):
                 capture_output=True,
             )
         except Exception as e:
-            print(e)
+            exit(e)
 
         # Test default.gdx
         new_container = Container()
@@ -218,7 +218,7 @@ class MiroSuite(unittest.TestCase):
                 capture_output=True,
             )
         except Exception as e:
-            print(e)
+            exit(e)
 
         with open(
             f"{directory}{os.sep}miro_models{os.sep}conf_miro2{os.sep}miro2_io.json"

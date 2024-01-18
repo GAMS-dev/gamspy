@@ -15,24 +15,6 @@
                 }
             }
         },
-        "d": {
-            "alias": "distance in thousands of miles",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
         "jlocdata": {
             "alias": "Market location information",
             "symtype": "parameter",
@@ -40,6 +22,24 @@
                 "j": {
                     "type": "string",
                     "alias": "markets"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
+                }
+            }
+        },
+        "ilocdata": {
+            "alias": "Plant location information",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
                 },
                 "lat": {
                     "type": "numeric",
@@ -65,24 +65,6 @@
                 }
             }
         },
-        "ilocdata": {
-            "alias": "Plant location information",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "lat": {
-                    "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
-                }
-            }
-        },
         "k": {
             "alias": "k",
             "symtype": "set",
@@ -94,6 +76,24 @@
                 "element_text": {
                     "type": "string",
                     "alias": "element_text"
+                }
+            }
+        },
+        "d": {
+            "alias": "distance in thousands of miles",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
                 }
             }
         },

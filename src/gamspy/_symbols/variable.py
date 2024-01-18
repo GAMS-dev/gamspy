@@ -243,12 +243,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self.container._requires_state_check = True
             if description != "":
                 self.description = description
+
+            previous_state = self.container.miro_protect
+            self.container.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
+            self.container.miro_protect = previous_state
 
         else:
             type = cast_type(type)
@@ -256,6 +260,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._is_frozen = False
             name = validation.validate_name(name)
 
+            previous_state = container.miro_protect
+            container.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -283,6 +289,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._stage = self._create_attr("stage")
 
             self.container._run()
+            container.miro_protect = True
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = validation.validate_domain(self, indices)

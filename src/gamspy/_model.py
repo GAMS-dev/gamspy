@@ -54,6 +54,8 @@ if TYPE_CHECKING:
     from gamspy._backend.neos import NeosClient
     import pandas as pd
 
+IS_MIRO_INIT = os.getenv("MIRO", False)
+
 
 class Problem(Enum):
     """An enumeration for problem all problem types"""
@@ -606,6 +608,9 @@ class Model:
         )
 
         summary = runner.solve()
+
+        if IS_MIRO_INIT:
+            self.container._write_default_gdx_miro()
 
         return summary
 
