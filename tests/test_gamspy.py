@@ -206,7 +206,8 @@ def main():
 
     gams_paths = glob.glob("_*")
     for gams_path in gams_paths:
-        os.remove(gams_path)
+        if os.path.isfile(gams_path):
+            os.remove(gams_path)
 
     return 0
 
