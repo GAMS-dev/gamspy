@@ -30,6 +30,7 @@ the GAMS model library.
 Keywords: nonlinear programming, contract theory, principal-agent problem,
           adverse selection, parts supply problem
 """
+
 from __future__ import annotations
 
 import os
@@ -56,37 +57,84 @@ def main():
     )
 
     # Set
-    i = Set(cont, name="i", records=["1", "2"])
-    t = Set(cont, name="t", records=["1"])
+    i = Set(cont, name="i", records=["1", "2"], description="type of supplier")
+    t = Set(cont, name="t", records=["1"], description="Monte-Carlo draws")
     j = Alias(cont, name="j", alias_with=i)
 
     # Parameter
     theta = Parameter(
-        cont, name="theta", domain=[i], records=[[1, 0.2], [2, 0.3]]
+        cont,
+        name="theta",
+        domain=i,
+        records=[[1, 0.2], [2, 0.3]],
+        description="efficiency",
     )
-    pt = Parameter(cont, name="pt", domain=[i, t])
-    p = Parameter(cont, name="p", domain=[i], records=[[1, 0.2], [2, 0.8]])
-    icweight = Parameter(cont, name="icweight", domain=[i])
-    ru = Parameter(cont, name="ru", records=0)
+    pt = Parameter(
+        cont, name="pt", domain=[i, t], description="probability of type"
+    )
+    p = Parameter(
+        cont,
+        name="p",
+        domain=i,
+        records=[[1, 0.2], [2, 0.8]],
+        description="probability of type for currently evaluated scenario",
+    )
+    icweight = Parameter(
+        cont, name="icweight", domain=i, description="weight in ic constraints"
+    )
+    ru = Parameter(
+        cont, name="ru", records=0, description="reservation utility"
+    )
 
     pt[i, t] = gams_math.uniform(0, 1)
     pt[i, t] = pt[i, t] / Sum(j, pt[j, t])
     pt[i, t] = p[i]
 
     # Variable
-    x = Variable(cont, name="x", domain=[i], type="Positive")
-    b = Variable(cont, name="b", domain=[i], type="Positive")
-    w = Variable(cont, name="w", domain=[i], type="Positive")
-    util = Variable(cont, name="util")
+    x = Variable(
+        cont, name="x", domain=i, type="Positive", description="quality"
+    )
+    b = Variable(
+        cont,
+        name="b",
+        domain=i,
+        type="Positive",
+        description="maker's revenue",
+    )
+    w = Variable(
+        cont, name="w", domain=i, type="Positive", description="price"
+    )
+    util = Variable(cont, name="util", description="maker's utility")
 
     # Equation
-    obj = Equation(cont, name="obj")
-    rev = Equation(cont, name="rev", domain=[i])
-    pc = Equation(cont, name="pc", domain=[i])
-    ic = Equation(cont, name="ic", domain=[i, j])
-    licd = Equation(cont, name="licd", domain=[i])
-    licu = Equation(cont, name="licu", domain=[i])
-    mn = Equation(cont, name="mn", domain=[i])
+    obj = Equation(cont, name="obj", description="maker's utility function")
+    rev = Equation(
+        cont, name="rev", domain=i, description="maker's revenue function"
+    )
+    pc = Equation(
+        cont, name="pc", domain=i, description="participation constraint"
+    )
+    ic = Equation(
+        cont,
+        name="ic",
+        domain=[i, j],
+        description="incentive compatibility constraint",
+    )
+    licd = Equation(
+        cont,
+        name="licd",
+        domain=i,
+        description="incentive compatibility constraint",
+    )
+    licu = Equation(
+        cont,
+        name="licu",
+        domain=i,
+        description="incentive compatibility constraint",
+    )
+    mn = Equation(
+        cont, name="mn", domain=i, description="monotonicity constraint"
+    )
 
     obj[...] = util == Sum(i, p[i] * (b[i] - w[i]))
     rev[i] = b[i] == gams_math.sqrt(x[i])

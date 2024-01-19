@@ -17,6 +17,7 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
+
 from __future__ import annotations
 
 import os
@@ -52,22 +53,68 @@ def main():
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     # Set
-    i = Set(m, name="i", records=["seattle", "san-diego"])
-    j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
 
     # Data
-    a = Parameter(m, name="a", domain=[i], records=capacities)
-    b = Parameter(m, name="b", domain=[j], records=demands)
-    d = Parameter(m, name="d", domain=[i, j], records=distances)
-    c = Parameter(m, name="c", domain=[i, j])
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
     c[i, j] = 90 * d[i, j] / 1000
 
     # Variable
-    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
 
     # Equation
-    supply = Equation(m, name="supply", domain=[i])
-    demand = Equation(m, name="demand", domain=[j])
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
 
     supply[i] = Sum(j, x[i, j]) <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]

@@ -24,16 +24,14 @@ class ModelSuite(unittest.TestCase):
 
     def test_model(self):
         # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
+        distances = pd.DataFrame([
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ])
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
@@ -259,16 +257,14 @@ class ModelSuite(unittest.TestCase):
         )
 
     def test_tuple_equations(self):
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
+        distances = pd.DataFrame([
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ])
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])

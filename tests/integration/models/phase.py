@@ -7,6 +7,7 @@ Test Problem 1, pp. 180-181.
 Van der Waals equation, Tangent Plane distance minimization
 Ternary System
 """
+
 from __future__ import annotations
 
 import os
@@ -35,11 +36,33 @@ def main():
     j = Alias(m, name="j", alias_with=i)
 
     # PARAMETERS #
-    feedmf = Parameter(m, name="feedmf", domain=[i])
-    feedz = Parameter(m, name="feedz")
-    feedfc = Parameter(m, name="feedfc", domain=[i])
-    b = Parameter(m, name="b", domain=[i])
-    a = Parameter(m, name="a", domain=[i, j])
+    feedmf = Parameter(
+        m,
+        name="feedmf",
+        domain=i,
+        description="mole fraction of component i in candidate phase",
+    )
+    feedz = Parameter(
+        m, name="feedz", description="compressibility of candidate phase"
+    )
+    feedfc = Parameter(
+        m,
+        name="feedfc",
+        domain=i,
+        description="fugacity coefficient of component i in candidate phase",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=i,
+        description="Van der Waals pure-component parameter",
+    )
+    a = Parameter(
+        m,
+        name="a",
+        domain=[i, j],
+        description="Van der Waals mixture parameter",
+    )
 
     feedmf["1"] = 0.83
     feedmf["2"] = 0.085
@@ -66,18 +89,50 @@ def main():
     a["3", "3"] = 0.63263
 
     # VARIABLES #
-    dist = Variable(m, name="dist")
-    x = Variable(m, name="x", domain=[i])
-    z = Variable(m, name="z")
-    amix = Variable(m, name="amix")
-    bmix = Variable(m, name="bmix")
+    dist = Variable(m, name="dist", description="tangent plane distance")
+    x = Variable(
+        m,
+        name="x",
+        domain=i,
+        description="mole fractio of component i in incipient phase",
+    )
+    z = Variable(m, name="z", description="compressibility of incipient phase")
+    amix = Variable(
+        m,
+        name="amix",
+        description="mixture A parameter (function of composition)",
+    )
+    bmix = Variable(
+        m,
+        name="bmix",
+        description="mixture B parameter (function of composition)",
+    )
 
     # EQUATIONS #
-    obj = Equation(m, name="obj", type="regular")
-    eos = Equation(m, name="eos", type="regular")
-    defa = Equation(m, name="defa", type="regular")
-    defb = Equation(m, name="defb", type="regular")
-    molesum = Equation(m, name="molesum", type="regular")
+    obj = Equation(
+        m,
+        name="obj",
+        type="regular",
+        description="objective (tangent plane distance)",
+    )
+    eos = Equation(
+        m,
+        name="eos",
+        type="regular",
+        description="equation of state constraint",
+    )
+    defa = Equation(
+        m, name="defa", type="regular", description="definition of Amix"
+    )
+    defb = Equation(
+        m, name="defb", type="regular", description="definition of Bmix"
+    )
+    molesum = Equation(
+        m,
+        name="molesum",
+        type="regular",
+        description="mole fractions sum to 1",
+    )
 
     # Objective function to be minimized:
     obj[...] = dist == (

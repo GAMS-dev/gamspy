@@ -16,6 +16,7 @@ Applications of second-order cone programming, Linear Algebra and its
 Applications, 284:193-228, November 1998, Special Issue on Linear Algebra
 in Control, Signals and Image Processing.
 """
+
 from __future__ import annotations
 
 import math
@@ -46,7 +47,12 @@ def main():
     NM1 = 9
 
     # Set
-    n = Set(cont, name="n", records=[f"n{str(i)}" for i in range(N + 1)])
+    n = Set(
+        cont,
+        name="n",
+        records=[f"n{str(i)}" for i in range(N + 1)],
+        description="spring index",
+    )
 
     # Data
     a_x = 0
@@ -60,27 +66,38 @@ def main():
     m = Parameter(
         cont,
         name="m",
-        domain=[n],
+        domain=n,
         records=pd.DataFrame([[f"n{i}", 1] for i in range(1, NM1 + 1)]),
+        description="mass of each hanging node",
     )
 
     # Variable
     obj = Variable(cont, name="obj")
-    x = Variable(cont, name="x", domain=[n])
-    y = Variable(cont, name="y", domain=[n])
-    delta_x = Variable(cont, name="delta_x", domain=[n])
-    delta_y = Variable(cont, name="delta_y", domain=[n])
+    x = Variable(
+        cont, name="x", domain=n, description="x-coordinates of nodes"
+    )
+    y = Variable(
+        cont, name="y", domain=n, description="y-coordinates of nodes"
+    )
+    delta_x = Variable(cont, name="delta_x", domain=n)
+    delta_y = Variable(cont, name="delta_y", domain=n)
     unit = Variable(cont, name="unit")
-    t_L0 = Variable(cont, name="t_L0", domain=[n], type="Positive")
-    t = Variable(cont, name="t", domain=[n], type="Positive")
+    t_L0 = Variable(cont, name="t_L0", domain=n, type="Positive")
+    t = Variable(
+        cont,
+        name="t",
+        domain=n,
+        type="Positive",
+        description="extension of each spring",
+    )
     v = Variable(cont, name="v", type="Positive")
 
     # Equation
     pot_energy = Equation(cont, name="pot_energy")
-    delta_x_eq = Equation(cont, name="delta_x_eq", domain=[n])
-    delta_y_eq = Equation(cont, name="delta_y_eq", domain=[n])
-    link_L0 = Equation(cont, name="link_L0", domain=[n])
-    link_up = Equation(cont, name="link_up", domain=[n])
+    delta_x_eq = Equation(cont, name="delta_x_eq", domain=n)
+    delta_y_eq = Equation(cont, name="delta_y_eq", domain=n)
+    link_L0 = Equation(cont, name="link_L0", domain=n)
+    link_up = Equation(cont, name="link_up", domain=n)
     cone_eq = Equation(cont, name="cone_eq")
 
     pot_energy[...] = (

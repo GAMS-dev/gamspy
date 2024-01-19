@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.4
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -38,20 +39,18 @@ def main():
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
-        np.array(
-            [
-                [112.35, 2006, 8],
-                [105.33, 2003, 8],
-                [111.25, 2007, 7],
-                [107.30, 2004, 7],
-                [107.62, 2011, 6],
-                [106.68, 2009, 6],
-                [101.93, 2002, 6],
-                [101.30, 2005, 5],
-                [101.61, 2003, 5],
-                [100.06, 2002, 4],
-            ]
-        ),
+        np.array([
+            [112.35, 2006, 8],
+            [105.33, 2003, 8],
+            [111.25, 2007, 7],
+            [107.30, 2004, 7],
+            [107.62, 2011, 6],
+            [106.68, 2009, 6],
+            [101.93, 2002, 6],
+            [101.30, 2005, 5],
+            [101.61, 2003, 5],
+            [100.06, 2002, 4],
+        ]),
         columns=["Price", "Maturity", "Coupon"],
         index=[
             "DS-8-06",
@@ -111,21 +110,25 @@ def main():
     Horizon[...] = Card(t) - 1
 
     # PARAMETER #
-    tau = Parameter(m, name="tau", domain=[t], description="Time in years")
+    tau = Parameter(m, name="tau", domain=t, description="Time in years")
 
     # Note: time starts from 0
     tau[t] = Ord(t) - 1
 
-    Coupon = Parameter(m, name="Coupon", domain=[i], description="Coupons")
+    Coupon = Parameter(m, name="Coupon", domain=i, description="Coupons")
     Maturity = Parameter(
-        m, name="Maturity", domain=[i], description="Maturities"
+        m, name="Maturity", domain=i, description="Maturities"
     )
     F = Parameter(m, name="F", domain=[t, i], description="Cashflows")
     BondData = Parameter(
-        m, name="BondData", domain=[i, "*"], records=bond_data_recs
+        m,
+        name="BondData",
+        domain=[i, "*"],
+        records=bond_data_recs,
+        description="Bonds data",
     )
     Liability = Parameter(
-        m, name="Liability", domain=[t], description="Stream of liabilities"
+        m, name="Liability", domain=t, description="Stream of liabilities"
     )
 
     # Copy/transform data. Note division by 100 to get unit data, and
@@ -142,62 +145,56 @@ def main():
     )
 
     Liability.setRecords(
-        np.array(
-            [
-                0,
-                80000,
-                100000,
-                110000,
-                120000,
-                140000,
-                120000,
-                90000,
-                50000,
-                75000,
-                150000,
-            ]
-        )
+        np.array([
+            0,
+            80000,
+            100000,
+            110000,
+            120000,
+            140000,
+            120000,
+            90000,
+            50000,
+            75000,
+            150000,
+        ])
     )
 
     r = Parameter(
         m,
         name="r",
-        domain=[t],
-        records=np.array(
-            [
-                0,
-                0.0422,
-                0.0440,
-                0.0450,
-                0.0466,
-                0.0480,
-                0.0482,
-                0.0485,
-                0.0488,
-                0.0491,
-                0.0493,
-            ]
-        ),
+        domain=t,
+        records=np.array([
+            0,
+            0.0422,
+            0.0440,
+            0.0450,
+            0.0466,
+            0.0480,
+            0.0482,
+            0.0485,
+            0.0488,
+            0.0491,
+            0.0493,
+        ]),
         description="spot rates",
     )
     y = Parameter(
         m,
         name="y",
-        domain=[i],
-        records=np.array(
-            [
-                0.0501,
-                0.0500,
-                0.0469,
-                0.0426,
-                0.0489,
-                0.0485,
-                0.0392,
-                0.0453,
-                0.0406,
-                0.0386,
-            ]
-        ),
+        domain=i,
+        records=np.array([
+            0.0501,
+            0.0500,
+            0.0469,
+            0.0426,
+            0.0489,
+            0.0485,
+            0.0392,
+            0.0453,
+            0.0406,
+            0.0386,
+        ]),
         description="yield rates",
     )
 
@@ -206,13 +203,11 @@ def main():
     # Present value, Fisher & Weil duration, and convexity for
     # the bonds.
     PV = Parameter(
-        m, name="PV", domain=[i], description="Present value of assets"
+        m, name="PV", domain=i, description="Present value of assets"
     )
-    Dur = Parameter(
-        m, name="Dur", domain=[i], description="Duration of assets"
-    )
+    Dur = Parameter(m, name="Dur", domain=i, description="Duration of assets")
     Conv = Parameter(
-        m, name="Conv", domain=[i], description="Convexity of assets"
+        m, name="Conv", domain=i, description="Convexity of assets"
     )
 
     # Present value, Fisher & Weil duration, and convexity for
@@ -265,7 +260,7 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings of bonds (amount of face value)",
     )
     z = Variable(m, name="z", description="Objective function value")

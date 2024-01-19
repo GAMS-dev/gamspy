@@ -6,6 +6,7 @@ Tracking international bond index - GDX input
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 8.2
 * Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -72,21 +73,19 @@ def main():
         ReinvestmentRate,
         IndexReturns,
         pr,
-    ) = m.getSymbols(
-        [
-            "ExchangeRates0",
-            "ExchangeRates1",
-            "Price0",
-            "Price1",
-            "InitialHoldings",
-            "Accruals0",
-            "Accruals1",
-            "Outstanding",
-            "ReinvestmentRate",
-            "IndexReturns",
-            "pr",
-        ]
-    )
+    ) = m.getSymbols([
+        "ExchangeRates0",
+        "ExchangeRates1",
+        "Price0",
+        "Price1",
+        "InitialHoldings",
+        "Accruals0",
+        "Accruals1",
+        "Outstanding",
+        "ReinvestmentRate",
+        "IndexReturns",
+        "pr",
+    ])
 
     # SCALARS #
     TrnCstB = Parameter(
@@ -148,21 +147,21 @@ def main():
         m,
         name="X0",
         type="positive",
-        domain=["*"],
+        domain="*",
         description="Face value bought today.",
     )
     Y0 = Variable(
         m,
         name="Y0",
         type="positive",
-        domain=["*"],
+        domain="*",
         description="Face value sold today.",
     )
     Z0 = Variable(
         m,
         name="Z0",
         type="positive",
-        domain=["*"],
+        domain="*",
         description="Face value hold today for the next period.",
     )
     Cash = Variable(
@@ -177,10 +176,9 @@ def main():
         m,
         name="FinalCash",
         type="positive",
-        domain=[l],
+        domain=l,
         description="Amount of cash resulting from portfolio liquidation",
     )
-    z = Variable(m, name="z", description="Objective function value")
 
     # Set the upper bound on the holdings
     for jj, ii, _ in JxI.records.itertuples(index=False):
@@ -192,12 +190,6 @@ def main():
     Y0.up[i].where[JxI["CHF", i]] = CHFtrade / Price0[i]
 
     # EQUATIONS #
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        type="regular",
-        description="Objective function definition (Expected return)",
-    )
     CashInventoryCon = Equation(
         m,
         name="CashInventoryCon",
@@ -208,25 +200,25 @@ def main():
         m,
         name="FinalCashCon",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Cash balance equations at the end of first stage.",
     )
     InventoryCon = Equation(
         m,
         name="InventoryCon",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Constraints defining the asset inventory balance",
     )
     MADCon = Equation(
         m,
         name="MADCon",
         type="regular",
-        domain=[l],
+        domain=l,
         description="MAD constraints",
     )
 
-    ObjDef[...] = z == 1000 * Sum(l, pr[l] * (FinalCash[l] / InitVal - 1))
+    Obj = 1000 * Sum(l, pr[l] * (FinalCash[l] / InitVal - 1))
 
     CashInventoryCon[...] = (
         CashInfusion
@@ -261,7 +253,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense="MAX",
-        objective=z,
+        objective=Obj,
     )
 
     # Find a feasible EpsTolerance
@@ -303,7 +295,7 @@ def main():
             break
 
     CurrentValue = Parameter(
-        m, name="CurrentValue", domain=[i], description="Holdings in USD"
+        m, name="CurrentValue", domain=i, description="Holdings in USD"
     )
     CurrentValue[i] = Sum(JxI[j, i], ExchangeRates0[j]) * Price0[i] * Z0.l[i]
 
@@ -325,13 +317,15 @@ def main():
 
     print("Summary Report: \n", SummaryReport.pivot().round(3))
     print("\nEpsTolerance: \n", round(EpsTolerance.records.value[0], 3))
-    print("\nObjective Function Value: \n", round(z.records.level[0], 3))
+    print(
+        "\nObjective Function Value: \n", round(BondIndex.objective_value, 3)
+    )
     print("\nInitVal: \n", round(InitVal.records.value[0], 3))
     print(CurrentValue.records)
 
     ResultHandle = open("BondIndex.csv", "w", encoding="UTF-8")
     ResultHandle.write(
-        f'"Objective Function", {round(z.records.level[0],3)}\n'
+        f'"Objective Function", {round(BondIndex.objective_value,3)}\n'
     )
     ResultHandle.write(
         f'"Final Epsilon", {round(EpsTolerance.records.value[0],3)}\n'

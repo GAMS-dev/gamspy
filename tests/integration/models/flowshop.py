@@ -22,6 +22,7 @@ Optimization, 2002.
 Keywords: mixed integer linear programming, relaxed mixed integer programming,
           scenario analysis, GUSS, flow shop scheduling, production planning
 """
+
 from __future__ import annotations
 
 import os
@@ -84,12 +85,12 @@ def flow_shop(process_time_df, last_machine, last_item):
     # Equations
     oneInPosition = c.addEquation(
         name="oneInPosition",
-        domain=[k],
+        domain=k,
         description="every position gets a jobs",
     )
     oneRankPer = c.addEquation(
         name="oneRankPer",
-        domain=[i],
+        domain=i,
         description="every job is assigned a rank",
     )
     onMachRel = c.addEquation(

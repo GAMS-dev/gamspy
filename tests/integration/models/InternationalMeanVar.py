@@ -22,6 +22,7 @@ We use real data for the 10-year period 1990-01-01 to 2000-01-01,
        Exchange rates, ITL to: (FRF, DEM, ESP, GBP, US, YEN, EUR)
        Also US to EUR.
 """
+
 from __future__ import annotations
 
 import os
@@ -66,7 +67,7 @@ def main():
 
     # Build more symbols
     # SETS #
-    ACTIVE = Set(m, name="ACTIVE", domain=[ASSETS])
+    ACTIVE = Set(m, name="ACTIVE", domain=ASSETS)
 
     a = Alias(m, name="a", alias_with=ACTIVE)
     a1 = Alias(m, name="a1", alias_with=ACTIVE)
@@ -89,7 +90,7 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings of assets",
     )
     PortVariance = Variable(
@@ -322,9 +323,7 @@ def main():
 
     # Create a convenient subset containing only the general Italian stock index:
 
-    It_general = Set(
-        m, name="It_general", domain=[ASSETS], records=["ITMHIST"]
-    )
+    It_general = Set(m, name="It_general", domain=ASSETS, records=["ITMHIST"])
 
     # The only constraint which need to be redefined is the
     # normalization constraint. Indeed, it must be se to 0.

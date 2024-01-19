@@ -5,6 +5,7 @@ Schittkowski, K., More test examples for nonlinear programming codes.
 Lecture Notes in Economics and Mathematical Systems, Vol.282, Springer-Verlag,
 Berlin, 1987. (Problem 346, page 167)
 """
+
 from __future__ import annotations
 
 import os

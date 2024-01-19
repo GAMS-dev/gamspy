@@ -11,6 +11,7 @@ Please see:
 Kendrick, D, Caution and Probing in a Macroeconomic Model.
 Journal of Economic Dynamics and Control 4, 2 (1982) pp.149-170.
 """
+
 from __future__ import annotations
 
 import os
@@ -59,9 +60,9 @@ def main():
         ],
         description="horizon",
     )
-    ku = Set(cont, name="ku", domain=[k], description="control horizon")
-    ki = Set(cont, name="ki", domain=[k], description="initial period")
-    kt = Set(cont, name="kt", domain=[k], description="terminal period")
+    ku = Set(cont, name="ku", domain=k, description="control horizon")
+    ki = Set(cont, name="ki", domain=k, description="initial period")
+    kt = Set(cont, name="kt", domain=k, description="terminal period")
 
     # ALIASES #
     nn = Alias(cont, name="nn", alias_with=n)
@@ -104,21 +105,21 @@ def main():
     c = Parameter(
         cont,
         name="c",
-        domain=[n],
+        domain=n,
         records=[("consumpt", -59.4), ("invest", -184.7)],
         description="constant term",
     )
     xinit = Parameter(
         cont,
         name="xinit",
-        domain=[n],
+        domain=n,
         records=[("consumpt", 387.9), ("invest", 85.3)],
         description="initial value",
     )
     uinit = Parameter(
         cont,
         name="uinit",
-        domain=[m],
+        domain=m,
         records=[("gov-expend", 110.5), ("money", 147.1)],
         description="initial controls",
     )

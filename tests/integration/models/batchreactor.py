@@ -9,6 +9,7 @@ Renfro J.G., Morshedi, A.M., Osbjornsen, O.A., Simultaneous optimization and
 solution of systems described by differential/algebraic equations. Computer
 and Chemical Engineering, vol.11, 1987, pp.503-517.
 """
+
 from __future__ import annotations
 
 import os
@@ -32,28 +33,60 @@ def main():
     )
 
     # Set
-    nh = Set(m, name="nh", records=[str(idx) for idx in range(0, 101)])
+    nh = Set(
+        m,
+        name="nh",
+        records=[str(idx) for idx in range(0, 101)],
+        description="Number of subintervals",
+    )
     k = Alias(m, name="k", alias_with=nh)
 
     # Data
-    ca_0 = Parameter(m, name="ca_0", records=1.0)
-    cb_0 = Parameter(m, name="cb_0", records=0.0)
+    ca_0 = Parameter(
+        m, name="ca_0", records=1.0, description="initial value for ca"
+    )
+    cb_0 = Parameter(
+        m, name="cb_0", records=0.0, description="initial value for cb"
+    )
     h = Parameter(m, name="h", records=1)
 
     # Variable
-    ca = Variable(m, name="ca", domain=[nh])
-    cb = Variable(m, name="cb", domain=[nh])
-    t = Variable(m, name="t", domain=[nh])
-    k1 = Variable(m, name="k1", domain=[nh])
-    k2 = Variable(m, name="k2", domain=[nh])
-    obj = Variable(m, name="obj")
+    ca = Variable(
+        m, name="ca", domain=nh, description="concentration of component A"
+    )
+    cb = Variable(
+        m, name="cb", domain=nh, description="concentration of component B"
+    )
+    t = Variable(
+        m,
+        name="t",
+        domain=nh,
+        description="temperature of reactor (control variable)",
+    )
+    k1 = Variable(
+        m,
+        name="k1",
+        domain=nh,
+        description="rate constant for the first reaction",
+    )
+    k2 = Variable(
+        m,
+        name="k2",
+        domain=nh,
+        description="rate constant for the second reaction",
+    )
+    obj = Variable(m, name="obj", description="criterion")
 
     # Equation
-    eobj = Equation(m, name="eobj")
-    state1 = Equation(m, domain=[nh], name="state1")
-    state2 = Equation(m, domain=[nh], name="state2")
-    ek1 = Equation(m, domain=[nh], name="ek1")
-    ek2 = Equation(m, domain=[nh], name="ek2")
+    eobj = Equation(m, name="eobj", description="criterion definition")
+    state1 = Equation(
+        m, domain=nh, name="state1", description="state equation 1"
+    )
+    state2 = Equation(
+        m, domain=nh, name="state2", description="state equation 2"
+    )
+    ek1 = Equation(m, domain=nh, name="ek1")
+    ek2 = Equation(m, domain=nh, name="ek2")
 
     eobj[...] = obj == cb["100"]
 

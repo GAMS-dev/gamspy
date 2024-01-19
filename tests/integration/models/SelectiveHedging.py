@@ -6,6 +6,7 @@ Indexation model with selective hedging
 * PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 7.2.3
 * Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -60,9 +61,7 @@ def main(output=None):
     USDCHFForwardRate = Parameter(
         m, name="USDCHFForwardRate", description="USD-CHF forward rate"
     )
-    pr = Parameter(
-        m, name="pr", domain=[l], description="Scenario probability"
-    )
+    pr = Parameter(m, name="pr", domain=l, description="Scenario probability")
 
     USDDEMForwardRate[...] = -0.005
     USDCHFForwardRate[...] = 0.001
@@ -116,16 +115,16 @@ def main(output=None):
 
     # VARIABLES #
     z = Variable(m, name="z")
-    h = Variable(m, name="h", type="positive", domain=[i])
-    u = Variable(m, name="u", type="positive", domain=[i])
-    y = Variable(m, name="y", type="positive", domain=[l])
+    h = Variable(m, name="h", type="positive", domain=i)
+    u = Variable(m, name="u", type="positive", domain=i)
+    y = Variable(m, name="y", type="positive", domain=l)
 
     # EQUATIONS #
     ObjDef = Equation(m, name="ObjDef")
     ReturnCon = Equation(m, name="ReturnCon")
     NormalCon = Equation(m, name="NormalCon")
-    yPosDef = Equation(m, name="yPosDef", domain=[l])
-    yNegDef = Equation(m, name="yNegDef", domain=[l])
+    yPosDef = Equation(m, name="yPosDef", domain=l)
+    yNegDef = Equation(m, name="yNegDef", domain=l)
 
     ObjDef[...] = z == Sum(l, pr[l] * y[l])
 

@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -66,6 +67,7 @@ def main():
             ("13", "14"),
         ],
         domain=[bus, node],
+        description="Bus connectivity matrix",
     )
     conex[bus, node].where[conex[node, bus]] = 1
 
@@ -74,13 +76,13 @@ def main():
 
     # Variable
     OF = Variable(m, name="OF")
-    PMU = Variable(m, name="PMU", domain=[bus], type="Binary")
-    alpha = Variable(m, name="alpha", domain=[bus], type="Binary")
+    PMU = Variable(m, name="PMU", domain=bus, type="Binary")
+    alpha = Variable(m, name="alpha", domain=bus, type="Binary")
 
     # Equation
     eq1 = Equation(m, name="eq1")
     eq2 = Equation(m, name="eq2")
-    eq3 = Equation(m, name="eq3", domain=[bus])
+    eq3 = Equation(m, name="eq3", domain=bus)
 
     eq1[...] = Sum(bus, PMU[bus]) <= NPMU
     eq2[...] = OF == Sum(node, alpha[node])
@@ -99,7 +101,7 @@ def main():
 
     counter = Set(m, "counter", records=[f"c{idx}" for idx in range(1, 5)])
     report = Parameter(m, "report", domain=[bus, counter])
-    OBIrep = Parameter(m, "OBIrep", domain=[counter])
+    OBIrep = Parameter(m, "OBIrep", domain=counter)
 
     for idx, iter, _ in counter.records.itertuples():
         NPMU[...] = idx + 1

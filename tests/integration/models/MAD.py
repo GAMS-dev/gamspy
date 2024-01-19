@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 5.3
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -55,13 +56,9 @@ def main():
     Budget[...] = 100.0
 
     # PARAMETERS #
-    pr = Parameter(
-        m, name="pr", domain=[l], description="Scenario probability"
-    )
+    pr = Parameter(m, name="pr", domain=l, description="Scenario probability")
     P = Parameter(m, name="P", domain=[i, l], description="Final values")
-    EP = Parameter(
-        m, name="EP", domain=[i], description="Expected final values"
-    )
+    EP = Parameter(m, name="EP", domain=i, description="Expected final values")
     AssetReturns = m.getSymbols(["AssetReturns"])[0]
 
     pr[l] = 1.0 / Card(l)
@@ -84,14 +81,14 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings of assets in monetary units (not proportions)",
     )
     y = Variable(
         m,
         name="y",
         type="positive",
-        domain=[l],
+        domain=l,
         description="Measures of the absolute deviation",
     )
     z = Variable(m, name="z", description="Objective function value")
@@ -119,14 +116,14 @@ def main():
         m,
         name="yPosDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Equations defining the positive deviations",
     )
     yNegDef = Equation(
         m,
         name="yNegDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Equations defining the negative deviations",
     )
 
@@ -241,7 +238,7 @@ def main():
         m,
         name="yPosWeightDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description=(
             "Equations defining the positive deviations with weight attached"
         ),
@@ -250,7 +247,7 @@ def main():
         m,
         name="yNegWeightDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description=(
             "Equations defining the positive deviations with weight attached"
         ),

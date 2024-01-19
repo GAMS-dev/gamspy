@@ -101,6 +101,7 @@ _______________________
 Keywords: mixed integer linear programming, nonlinear programming, chemical engineering,
           distillation sequences, heat integrated distillation
 """
+
 from __future__ import annotations
 
 import os
@@ -132,30 +133,57 @@ def main():
 
     # SETS #
     # the set of all columns and their condensers in the superstructure
-    i = Set(cont, name="i", records=[f"c-{i}" for i in range(1, 5)])
+    i = Set(
+        cont,
+        name="i",
+        records=[f"c-{i}" for i in range(1, 5)],
+        description="condensers-columns",
+    )
     # the set of all reboilers in the superstructure
-    j = Set(cont, name="j", records=[f"r-{i}" for i in range(1, 5)])
+    j = Set(
+        cont,
+        name="j",
+        records=[f"r-{i}" for i in range(1, 5)],
+        description="reboilers",
+    )
     # the set of all hot utilities available
-    hu = Set(cont, name="hu", records=["lp", "ex"])
+    hu = Set(
+        cont, name="hu", records=["lp", "ex"], description="hot utilities"
+    )
     # the set of all cold utilities available
-    cu = Set(cont, name="cu", records=["cw"])
+    cu = Set(cont, name="cu", records=["cw"], description="cold utilities")
     # an index for linear fit coefficients
-    n = Set(cont, name="n", records=["a", "b"])
+    n = Set(cont, name="n", records=["a", "b"], description="index")
     # the set of all intermediate products in superstructure
-    m = Set(cont, name="m", records=["ab", "bc"])
+    m = Set(cont, name="m", records=["ab", "bc"], description="intermediates")
     # this set maps columns to produced intermediate products
     pm = Set(
-        cont, name="pm", domain=[i, m], records=[("c-1", "bc"), ("c-2", "ab")]
+        cont,
+        name="pm",
+        domain=[i, m],
+        records=[("c-1", "bc"), ("c-2", "ab")],
+        description="products",
     )
     # this set maps columns to intermediate product feeds
     fm = Set(
-        cont, name="fm", domain=[i, m], records=[("c-3", "bc"), ("c-4", "ab")]
+        cont,
+        name="fm",
+        domain=[i, m],
+        records=[("c-3", "bc"), ("c-4", "ab")],
+        description="feeds",
     )
     # these sets are for dynamic control of solution algorithm
-    km = Set(cont, name="km", records=[f"k-{i}" for i in range(1, 101)])
-    k = Set(cont, name="k", domain=[km])
-    kiter = Set(cont, name="kiter", domain=[km])
-    kdynmax = Set(cont, name="kdynmax", domain=[km])
+    km = Set(
+        cont,
+        name="km",
+        records=[f"k-{i}" for i in range(1, 101)],
+        description="static iterations",
+    )
+    k = Set(cont, name="k", domain=km, description="dynamic iterations")
+    kiter = Set(cont, name="kiter", domain=km, description="dynamic counter")
+    kdynmax = Set(
+        cont, name="kdynmax", domain=km, description="dynamic loop control"
+    )
 
     # alias sets for condensers and reboilers
     ip = Alias(cont, name="ip", alias_with=i)
@@ -170,7 +198,11 @@ def main():
     # PARAMETERS #
     # defines the set of leading columns in the superstructure
     zlead = Parameter(
-        cont, name="zlead", domain=[i], records=[["c-1", 1], ["c-2", 1]]
+        cont,
+        name="zlead",
+        domain=i,
+        records=[["c-1", 1], ["c-2", 1]],
+        description="leading columns in superstructure",
     )
 
     # defines allowable matches of heat integration for superstructure
@@ -185,18 +217,26 @@ def main():
             ["c-3", "r-1", 1],
             ["c-4", "r-2", 1],
         ],
+        description="condenser to reboiler allowable matches",
     )
 
     # Parameter used in pure integer constraint to permit only one
     # direction of heat integration between two columns
     # this would yield an infeasible solution but the constraint
     # is included explicitly to reduce milp solution time
-    zlim = Parameter(cont, name="zlim", domain=[i, j])
+    zlim = Parameter(
+        cont,
+        name="zlim",
+        domain=[i, j],
+        description="direction of heat integration",
+    )
     zlim[i, j] = Number(1).where[(zcrhx[i, j]) & (Ord(i) < Ord(j))]
 
     # relates appropriate reboiler to the condenser of same column
     # (preferably should use an alias rather than a different set)
-    zcr = Parameter(cont, name="zcr", domain=[i, j])
+    zcr = Parameter(
+        cont, name="zcr", domain=[i, j], description="reboiler-condenser pairs"
+    )
     zcr[i, j] = Number(1).where[Ord(i) == Ord(j)]
 
     # =====================================================================
@@ -212,19 +252,32 @@ def main():
     # primal problem throughout the rest of the iterations
     # =====================================================================
     yhxp = Parameter(
-        cont, name="yhxp", domain=[i, j], records=[["c-1", "r-3", 1]]
+        cont,
+        name="yhxp",
+        domain=[i, j],
+        records=[["c-1", "r-3", 1]],
+        description="current proposal for heat integration matches",
     )
     yhup = Parameter(
-        cont, name="yhup", domain=[hu, j], records=[["lp", "r-1", 1]]
+        cont,
+        name="yhup",
+        domain=[hu, j],
+        records=[["lp", "r-1", 1]],
+        description="current binary proposal for hot utility matches",
     )
     ycup = Parameter(
         cont,
         name="ycup",
         domain=[i, cu],
         records=[["c-1", "cw", 1], ["c-3", "cw", 1]],
+        description="current binary proposal for cold utility matches",
     )
     ycolp = Parameter(
-        cont, name="ycolp", domain=[i], records=[["c-1", 1], ["c-3", 1]]
+        cont,
+        name="ycolp",
+        domain=i,
+        records=[["c-1", 1], ["c-3", 1]],
+        description="current storage for columns in superstructure",
     )
 
     # =====================================================================
@@ -232,10 +285,30 @@ def main():
     # for all the iterations performed for use in integer cuts
     # and recovering optimal solution
     # =====================================================================
-    yhxk = Parameter(cont, name="yhxk", domain=[i, j, km])
-    yhuk = Parameter(cont, name="yhuk", domain=[hu, j, km])
-    ycuk = Parameter(cont, name="ycuk", domain=[i, cu, km])
-    ycolk = Parameter(cont, name="ycolk", domain=[i, km])
+    yhxk = Parameter(
+        cont,
+        name="yhxk",
+        domain=[i, j, km],
+        description="binary storage parameter yhx",
+    )
+    yhuk = Parameter(
+        cont,
+        name="yhuk",
+        domain=[hu, j, km],
+        description="binary storage parameter yhu",
+    )
+    ycuk = Parameter(
+        cont,
+        name="ycuk",
+        domain=[i, cu, km],
+        description="binary storage parameter ycu",
+    )
+    ycolk = Parameter(
+        cont,
+        name="ycolk",
+        domain=[i, km],
+        description="binary storage parameter ycol",
+    )
 
     # =====================================================================
     # Declaration of parameters for rest of model
@@ -246,17 +319,24 @@ def main():
         name="spltfrc",
         domain=[i, m],
         records=[["c-1", "bc", 0.20], ["c-2", "ab", 0.90]],
+        description="split fraction of distillation columns",
     )
     # minimum condenser temperatures obtained from simulation data
     tcmin = Parameter(
         cont,
         name="tcmin",
-        domain=[i],
+        domain=i,
         records=np.array([341.92, 343.01, 353.54, 341.92]),
+        description="minimum condenser temperatures",
     )
     # either hottest hot utility-dtmin or for individual separations
     # 2*dtmin below critical temperature of bottoms product
-    trmax = Parameter(cont, name="trmax", domain=[j])
+    trmax = Parameter(
+        cont,
+        name="trmax",
+        domain=j,
+        description="maximum reboiler temperatures",
+    )
 
     trmax[j] = 1000
 
@@ -269,23 +349,33 @@ def main():
     fc = Parameter(
         cont,
         name="fc",
-        domain=[i],
+        domain=i,
         records=np.array([151.125, 180.003, 4.2286, 213.42]),
+        description="fixed charge for distillation columns",
     )
     vc = Parameter(
         cont,
         name="vc",
-        domain=[i],
+        domain=i,
         records=np.array([0.003375, 0.000893, 0.004458, 0.003176]),
+        description="variable charge for distillation columns",
     )
     thu = Parameter(
-        cont, name="thu", domain=[hu], records=np.array([421.0, 373.0])
+        cont,
+        name="thu",
+        domain=hu,
+        records=np.array([421.0, 373.0]),
+        description="hot utility temperatures",
     )
 
     # hot utility cost coeff - gives cost in thousands of dollars per year
     # ucost = q(10e+6 kj/hr)*costhu[hu]
     costhu = Parameter(
-        cont, name="costhu", domain=[hu], records=np.array([24.908, 9.139])
+        cont,
+        name="costhu",
+        domain=hu,
+        records=np.array([24.908, 9.139]),
+        description="hot utility cost coefficients",
     )
     kf = Parameter(
         cont,
@@ -294,6 +384,7 @@ def main():
         records=np.array(
             [[32.4, 0.0225], [25.0, 0.0130], [3.76, 0.0043], [35.1, 0.0156]]
         ),
+        description="coeff. for heat duty temperature fits",
     )
     af = Parameter(
         cont,
@@ -302,23 +393,84 @@ def main():
         records=np.array(
             [[9.541, 1.028], [12.24, 1.050], [8.756, 1.029], [9.181, 1.005]]
         ),
+        description="coeff. for column temperature fits",
     )
 
     # =====================================================================
     # define scalar quantities for rest of model
     # =====================================================================
-    totflow = Parameter(cont, name="totflow", records=396)
-    u = Parameter(cont, name="u", records=1500)
-    uint = Parameter(cont, name="uint", records=20)
-    fchx = Parameter(cont, name="fchx", records=3.392)
-    vchx = Parameter(cont, name="vchx", records=0.0893)
-    htc = Parameter(cont, name="htc", records=0.0028)
-    dtmin = Parameter(cont, name="dtmin", records=10.0)
-    tcin = Parameter(cont, name="tcin", records=305.0)
-    tcout = Parameter(cont, name="tcout", records=325.0)
-    costcw = Parameter(cont, name="costcw", records=4.65)
-    beta = Parameter(cont, name="beta", records=0.52)
-    alpha = Parameter(cont, name="alpha", records=0.40)
+    totflow = Parameter(
+        cont,
+        name="totflow",
+        records=396,
+        description="total flow to superstructure",
+    )
+    u = Parameter(
+        cont,
+        name="u",
+        records=1500,
+        description="large number for logical constraints",
+    )
+    uint = Parameter(
+        cont,
+        name="uint",
+        records=20,
+        description="upper bound for integer logical",
+    )
+    fchx = Parameter(
+        cont,
+        name="fchx",
+        records=3.392,
+        description="fixed charge for heat exchangers scaled",
+    )
+    vchx = Parameter(
+        cont,
+        name="vchx",
+        records=0.0893,
+        description="variable charge for heat exchangers scaled",
+    )
+    htc = Parameter(
+        cont,
+        name="htc",
+        records=0.0028,
+        description="overall heat transfer coefficient",
+    )
+    dtmin = Parameter(
+        cont,
+        name="dtmin",
+        records=10.0,
+        description="minimum temperature approach",
+    )
+    tcin = Parameter(
+        cont,
+        name="tcin",
+        records=305.0,
+        description="inlet temperature of cold water",
+    )
+    tcout = Parameter(
+        cont,
+        name="tcout",
+        records=325.0,
+        description="outlet temperature of cold water",
+    )
+    costcw = Parameter(
+        cont,
+        name="costcw",
+        records=4.65,
+        description="cooling water cost coefficient",
+    )
+    beta = Parameter(
+        cont,
+        name="beta",
+        records=0.52,
+        description="income tax correction factor",
+    )
+    alpha = Parameter(
+        cont,
+        name="alpha",
+        records=0.40,
+        description="one over payout time factor in years",
+    )
 
     # =====================================================================
     # The parameters declared here are assigned throughout the
@@ -332,62 +484,269 @@ def main():
 
     # Storage of variable levels for each iteration
     # Identifier derived from name of variable with letter "k" appended
-    fk = Parameter(cont, name="fk", domain=[i, km])
-    qrk = Parameter(cont, name="qrk", domain=[j, km])
-    qck = Parameter(cont, name="qck", domain=[i, km])
-    qcrk = Parameter(cont, name="qcrk", domain=[i, j, km])
-    qhuk = Parameter(cont, name="qhuk", domain=[hu, j, km])
-    qcuk = Parameter(cont, name="qcuk", domain=[i, cu, km])
-    tck = Parameter(cont, name="tck", domain=[i, km])
-    trk = Parameter(cont, name="trk", domain=[j, km])
-    lmtdk = Parameter(cont, name="lmtdk", domain=[i, km])
+    fk = Parameter(
+        cont, name="fk", domain=[i, km], description="storage of flowrates"
+    )
+    qrk = Parameter(
+        cont,
+        name="qrk",
+        domain=[j, km],
+        description="storage of reboiler duties",
+    )
+    qck = Parameter(
+        cont,
+        name="qck",
+        domain=[i, km],
+        description="storage of condenser duties",
+    )
+    qcrk = Parameter(
+        cont,
+        name="qcrk",
+        domain=[i, j, km],
+        description="storage of heat integrated exchanges",
+    )
+    qhuk = Parameter(
+        cont,
+        name="qhuk",
+        domain=[hu, j, km],
+        description="storage of hot utility usage",
+    )
+    qcuk = Parameter(
+        cont,
+        name="qcuk",
+        domain=[i, cu, km],
+        description="storage of cold utility usage",
+    )
+    tck = Parameter(
+        cont,
+        name="tck",
+        domain=[i, km],
+        description="storage of condenser temperatures",
+    )
+    trk = Parameter(
+        cont,
+        name="trk",
+        domain=[j, km],
+        description="storage of reboiler temperatures",
+    )
+    lmtdk = Parameter(
+        cont, name="lmtdk", domain=[i, km], description="storage of lmtds"
+    )
 
-    zoaup = Parameter(cont, name="zoaup", records=np.inf)
+    zoaup = Parameter(
+        cont,
+        name="zoaup",
+        records=np.inf,
+        description="single value storage of upper bound",
+    )
 
     # storage of optimal binary variable combination
     # continuous variable levels are not stored separately as they
     # can be obtained from the xxxk storage parameters above
-    yhxopt = Parameter(cont, name="yhxopt", domain=[i, j])
-    yhuopt = Parameter(cont, name="yhuopt", domain=[hu, j])
-    ycuopt = Parameter(cont, name="ycuopt", domain=[i, cu])
-    ycolopt = Parameter(cont, name="ycolopt", domain=[i])
+    yhxopt = Parameter(
+        cont,
+        name="yhxopt",
+        domain=[i, j],
+        description="optimal heat integration",
+    )
+    yhuopt = Parameter(
+        cont,
+        name="yhuopt",
+        domain=[hu, j],
+        description="optimal hot utility match",
+    )
+    ycuopt = Parameter(
+        cont,
+        name="ycuopt",
+        domain=[i, cu],
+        description="optimal cold utility match",
+    )
+    ycolopt = Parameter(
+        cont, name="ycolopt", domain=i, description="optimal superstructure"
+    )
 
-    kopt = Parameter(cont, name="kopt")
+    kopt = Parameter(
+        cont,
+        name="kopt",
+        description="iteration at which optimal solution was found",
+    )
 
     # storage of sign() of Lagrange multiplier from nonlinear equalities
-    lmtdmar = Parameter(cont, name="lmtdmar", domain=[i, km])
+    lmtdmar = Parameter(
+        cont,
+        name="lmtdmar",
+        domain=[i, km],
+        description="direction matrix for nonlinear equalities",
+    )
 
     # VARIABLES #
 
     # Free Variables
-    zoau = Variable(cont, name="zoau")
-    zoal = Variable(cont, name="zoal")
-    vqcr = Variable(cont, name="vqcr", domain=[km])
-    vqhu = Variable(cont, name="vqhu", domain=[km])
-    vqcu = Variable(cont, name="vqcu", domain=[km])
+    zoau = Variable(
+        cont,
+        name="zoau",
+        description="objective function value of nlp subproblem",
+    )
+    zoal = Variable(
+        cont,
+        name="zoal",
+        description="objective function value of milp masters",
+    )
+    vqcr = Variable(
+        cont,
+        name="vqcr",
+        domain=km,
+        description="heat integration contribution to milpcon",
+    )
+    vqhu = Variable(
+        cont,
+        name="vqhu",
+        domain=km,
+        description="hot utility exchange contribution to milpcon",
+    )
+    vqcu = Variable(
+        cont,
+        name="vqcu",
+        domain=km,
+        description="cold utility exchange contribution to milpcon",
+    )
 
     # Positive Variables
-    f = Variable(cont, name="f", type="positive", domain=[i])
-    qr = Variable(cont, name="qr", type="positive", domain=[j])
-    qc = Variable(cont, name="qc", type="positive", domain=[i])
-    qcr = Variable(cont, name="qcr", type="positive", domain=[i, j])
-    qhu = Variable(cont, name="qhu", type="positive", domain=[hu, j])
-    qcu = Variable(cont, name="qcu", type="positive", domain=[i, cu])
-    tc = Variable(cont, name="tc", type="positive", domain=[i])
-    tr = Variable(cont, name="tr", type="positive", domain=[j])
-    lmtd = Variable(cont, name="lmtd", type="positive", domain=[i])
-    sl1 = Variable(cont, name="sl1", type="positive", domain=[i])
-    sl2 = Variable(cont, name="sl2", type="positive", domain=[i])
-    s1 = Variable(cont, name="s1", type="positive", domain=[i])
-    s2 = Variable(cont, name="s2", type="positive", domain=[i])
-    s3 = Variable(cont, name="s3", type="positive", domain=[i])
-    s4 = Variable(cont, name="s4", type="positive", domain=[i])
+    f = Variable(
+        cont,
+        name="f",
+        type="positive",
+        domain=i,
+        description="flowrates to columns",
+    )
+    qr = Variable(
+        cont,
+        name="qr",
+        type="positive",
+        domain=j,
+        description="reboiler duties for column with reboiler j",
+    )
+    qc = Variable(
+        cont,
+        name="qc",
+        type="positive",
+        domain=i,
+        description="condenser duties for column i",
+    )
+    qcr = Variable(
+        cont,
+        name="qcr",
+        type="positive",
+        domain=[i, j],
+        description="heat integration heat transfer",
+    )
+    qhu = Variable(
+        cont,
+        name="qhu",
+        type="positive",
+        domain=[hu, j],
+        description="hot utility heat transfer",
+    )
+    qcu = Variable(
+        cont,
+        name="qcu",
+        type="positive",
+        domain=[i, cu],
+        description="cold utility heat transfer",
+    )
+    tc = Variable(
+        cont,
+        name="tc",
+        type="positive",
+        domain=i,
+        description="condenser temperature for column with cond. i",
+    )
+    tr = Variable(
+        cont,
+        name="tr",
+        type="positive",
+        domain=j,
+        description="reboiler temperature for column with reb. j",
+    )
+    lmtd = Variable(
+        cont,
+        name="lmtd",
+        type="positive",
+        domain=i,
+        description="lmtd for cooling water exchanges",
+    )
+    sl1 = Variable(
+        cont,
+        name="sl1",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for lmtd equalities",
+    )
+    sl2 = Variable(
+        cont,
+        name="sl2",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for lmtd equalities",
+    )
+    s1 = Variable(
+        cont,
+        name="s1",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for reb-con equalities",
+    )
+    s2 = Variable(
+        cont,
+        name="s2",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for reb-con equalities",
+    )
+    s3 = Variable(
+        cont,
+        name="s3",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for duty equalities",
+    )
+    s4 = Variable(
+        cont,
+        name="s4",
+        type="positive",
+        domain=i,
+        description="artificial slack variable for duty equalities",
+    )
 
     # Binary Variables
-    yhx = Variable(cont, name="yhx", type="binary", domain=[i, j])
-    yhu = Variable(cont, name="yhu", type="binary", domain=[hu, j])
-    ycu = Variable(cont, name="ycu", type="binary", domain=[i, cu])
-    ycol = Variable(cont, name="ycol", type="binary", domain=[i])
+    yhx = Variable(
+        cont,
+        name="yhx",
+        type="binary",
+        domain=[i, j],
+        description="heat integration matches condenser i reboiler j",
+    )
+    yhu = Variable(
+        cont,
+        name="yhu",
+        type="binary",
+        domain=[hu, j],
+        description="hot utility matches hot utility hu reboiler j",
+    )
+    ycu = Variable(
+        cont,
+        name="ycu",
+        type="binary",
+        domain=[i, cu],
+        description="cold utility matches condenser i cold util cu",
+    )
+    ycol = Variable(
+        cont,
+        name="ycol",
+        type="binary",
+        domain=i,
+        description="columns in superstructure",
+    )
 
     # =====================================================================
     # declaration of equations
@@ -404,51 +763,300 @@ def main():
     # to the equation name.
     # =====================================================================
     # EQUATIONS #
-    nlpobj = Equation(cont, name="nlpobj", type="regular")
-    milpcon = Equation(cont, name="milpcon", type="regular", domain=[km])
-    evqcr = Equation(cont, name="evqcr", type="regular", domain=[km])
-    evqhu = Equation(cont, name="evqhu", type="regular", domain=[km])
-    evqcu = Equation(cont, name="evqcu", type="regular", domain=[km])
-    lmtdsn = Equation(cont, name="lmtdsn", type="regular", domain=[i])
-    lmtdsm = Equation(cont, name="lmtdsm", type="regular", domain=[i, km])
-    ntempset = Equation(cont, name="ntempset", type="regular", domain=[i])
-    tempset = Equation(cont, name="tempset", type="regular", domain=[i])
-    nartrex1 = Equation(cont, name="nartrex1", type="regular", domain=[i])
-    artrex1 = Equation(cont, name="artrex1", type="regular", domain=[i])
-    nartrex2 = Equation(cont, name="nartrex2", type="regular", domain=[i])
-    artrex2 = Equation(cont, name="artrex2", type="regular", domain=[i])
-    material = Equation(cont, name="material", type="regular", domain=[m])
-    feed = Equation(cont, name="feed", type="regular")
-    nmatlog = Equation(cont, name="nmatlog", type="regular", domain=[i])
-    matlog = Equation(cont, name="matlog", type="regular", domain=[i])
-    duty = Equation(cont, name="duty", type="regular", domain=[i])
-    rebcon = Equation(cont, name="rebcon", type="regular", domain=[i, j])
-    conheat = Equation(cont, name="conheat", type="regular", domain=[i])
-    rebheat = Equation(cont, name="rebheat", type="regular", domain=[j])
-    dtminlp = Equation(cont, name="dtminlp", type="regular", domain=[j])
-    ndtminc = Equation(cont, name="ndtminc", type="regular", domain=[i])
-    dtminc = Equation(cont, name="dtminc", type="regular", domain=[i])
-    trtcdef = Equation(cont, name="trtcdef", type="regular", domain=[i, j])
-    ndtmincr = Equation(cont, name="ndtmincr", type="regular", domain=[i, j])
-    ndtminex = Equation(cont, name="ndtminex", type="regular", domain=[j])
-    nhxclog = Equation(cont, name="nhxclog", type="regular", domain=[i, j])
-    nhxhulog = Equation(cont, name="nhxhulog", type="regular", domain=[hu, j])
-    nhxculog = Equation(cont, name="nhxculog", type="regular", domain=[i, cu])
-    nqcqrlog = Equation(cont, name="nqcqrlog", type="regular", domain=[i])
-    dtmincr = Equation(cont, name="dtmincr", type="regular", domain=[i, j])
-    dtminex = Equation(cont, name="dtminex", type="regular", domain=[j])
-    hxclog = Equation(cont, name="hxclog", type="regular", domain=[i, j])
-    hxhulog = Equation(cont, name="hxhulog", type="regular", domain=[hu, j])
-    hxculog = Equation(cont, name="hxculog", type="regular", domain=[i, cu])
-    qcqrlog = Equation(cont, name="qcqrlog", type="regular", domain=[i])
+    nlpobj = Equation(
+        cont,
+        name="nlpobj",
+        type="regular",
+        description="nlp subproblems objective",
+    )
+    milpcon = Equation(
+        cont,
+        name="milpcon",
+        type="regular",
+        domain=km,
+        description="nonlinear contribution to milp objective",
+    )
+    evqcr = Equation(
+        cont,
+        name="evqcr",
+        type="regular",
+        domain=km,
+        description="heat integration contribution to milpcon",
+    )
+    evqhu = Equation(
+        cont,
+        name="evqhu",
+        type="regular",
+        domain=km,
+        description="hot utility exchange contribution to milpcon",
+    )
+    evqcu = Equation(
+        cont,
+        name="evqcu",
+        type="regular",
+        domain=km,
+        description="cold utility exchange contribution to milpcon",
+    )
+    lmtdsn = Equation(
+        cont,
+        name="lmtdsn",
+        type="regular",
+        domain=i,
+        description="nonlinear form of lmtd definition",
+    )
+    lmtdsm = Equation(
+        cont,
+        name="lmtdsm",
+        type="regular",
+        domain=[i, km],
+        description="linearization of lmtdsn(i) in milp masters",
+    )
+    ntempset = Equation(
+        cont,
+        name="ntempset",
+        type="regular",
+        domain=i,
+        description="sets temperatures of inactive columns to 0 (nlp)",
+    )
+    tempset = Equation(
+        cont,
+        name="tempset",
+        type="regular",
+        domain=i,
+        description="sets temperatures of inactive columns to 0 (milp)",
+    )
+    nartrex1 = Equation(
+        cont,
+        name="nartrex1",
+        type="regular",
+        domain=i,
+        description="relaxes artificial slack variables (nlp)",
+    )
+    artrex1 = Equation(
+        cont,
+        name="artrex1",
+        type="regular",
+        domain=i,
+        description="relaxes artificial slack variables (milp)",
+    )
+    nartrex2 = Equation(
+        cont,
+        name="nartrex2",
+        type="regular",
+        domain=i,
+        description="relaxes artificial slack variables (nlp)",
+    )
+    artrex2 = Equation(
+        cont,
+        name="artrex2",
+        type="regular",
+        domain=i,
+        description="relaxes artificial slack variables (milp)",
+    )
+    material = Equation(
+        cont,
+        name="material",
+        type="regular",
+        domain=m,
+        description="material balances for each intermediate product",
+    )
+    feed = Equation(
+        cont, name="feed", type="regular", description="feed to superstructure"
+    )
+    nmatlog = Equation(
+        cont,
+        name="nmatlog",
+        type="regular",
+        domain=i,
+        description="material balance logical constraints (nlp)",
+    )
+    matlog = Equation(
+        cont,
+        name="matlog",
+        type="regular",
+        domain=i,
+        description="material balance logical constraints",
+    )
+    duty = Equation(
+        cont,
+        name="duty",
+        type="regular",
+        domain=i,
+        description="heat duty definition of condenser i",
+    )
+    rebcon = Equation(
+        cont,
+        name="rebcon",
+        type="regular",
+        domain=[i, j],
+        description="equates condenser and reboiler duties",
+    )
+    conheat = Equation(
+        cont,
+        name="conheat",
+        type="regular",
+        domain=i,
+        description="condenser heat balances",
+    )
+    rebheat = Equation(
+        cont,
+        name="rebheat",
+        type="regular",
+        domain=j,
+        description="reboiler heat balances",
+    )
+    dtminlp = Equation(
+        cont,
+        name="dtminlp",
+        type="regular",
+        domain=j,
+        description="minimum temp approach for low pressure steam",
+    )
+    ndtminc = Equation(
+        cont,
+        name="ndtminc",
+        type="regular",
+        domain=i,
+        description="minimum temp allowable for each condenser (nlp)",
+    )
+    dtminc = Equation(
+        cont,
+        name="dtminc",
+        type="regular",
+        domain=i,
+        description="minimum temp allowable for each condenser",
+    )
+    trtcdef = Equation(
+        cont,
+        name="trtcdef",
+        type="regular",
+        domain=[i, j],
+        description="relates reboiler and condenser temps of columns",
+    )
+    ndtmincr = Equation(
+        cont,
+        name="ndtmincr",
+        type="regular",
+        domain=[i, j],
+        description="minimum temp approach for heat integration (nlp)",
+    )
+    ndtminex = Equation(
+        cont,
+        name="ndtminex",
+        type="regular",
+        domain=j,
+        description="minimum temp approach for exhaust steam (nlp)",
+    )
+    nhxclog = Equation(
+        cont,
+        name="nhxclog",
+        type="regular",
+        domain=[i, j],
+        description="logical constraint for heat balances (nlp)",
+    )
+    nhxhulog = Equation(
+        cont,
+        name="nhxhulog",
+        type="regular",
+        domain=[hu, j],
+        description="logical constraint for heat balances (nlp)",
+    )
+    nhxculog = Equation(
+        cont,
+        name="nhxculog",
+        type="regular",
+        domain=[i, cu],
+        description="logical constraint for heat balances (nlp)",
+    )
+    nqcqrlog = Equation(
+        cont,
+        name="nqcqrlog",
+        type="regular",
+        domain=i,
+        description="logical constraint for con-reb duties (nlp)",
+    )
+    dtmincr = Equation(
+        cont,
+        name="dtmincr",
+        type="regular",
+        domain=[i, j],
+        description="minimum temp approach for heat integration",
+    )
+    dtminex = Equation(
+        cont,
+        name="dtminex",
+        type="regular",
+        domain=j,
+        description="minimum temp approach for exhaust steam",
+    )
+    hxclog = Equation(
+        cont,
+        name="hxclog",
+        type="regular",
+        domain=[i, j],
+        description="logical constraint for heat balances",
+    )
+    hxhulog = Equation(
+        cont,
+        name="hxhulog",
+        type="regular",
+        domain=[hu, j],
+        description="logical constraint for heat balances",
+    )
+    hxculog = Equation(
+        cont,
+        name="hxculog",
+        type="regular",
+        domain=[i, cu],
+        description="logical constraint for heat balances",
+    )
+    qcqrlog = Equation(
+        cont,
+        name="qcqrlog",
+        type="regular",
+        domain=i,
+        description="logical constraint for con-reb duties",
+    )
 
     # these are the pure binary constraints of the minlp
-    sequen = Equation(cont, name="sequen", type="regular", domain=[m])
-    lead = Equation(cont, name="lead", type="regular")
-    limutil = Equation(cont, name="limutil", type="regular", domain=[j])
-    hidirect = Equation(cont, name="hidirect", type="regular", domain=[i, j])
-    heat = Equation(cont, name="heat", type="regular", domain=[i])
-    cuts = Equation(cont, name="cuts", type="regular", domain=[km])
+    sequen = Equation(
+        cont,
+        name="sequen",
+        type="regular",
+        domain=m,
+        description="restricts superstructure to a single sequence",
+    )
+    lead = Equation(
+        cont, name="lead", type="regular", description="sequence control"
+    )
+    limutil = Equation(
+        cont,
+        name="limutil",
+        type="regular",
+        domain=j,
+        description="limits columns to have a single hot utility",
+    )
+    hidirect = Equation(
+        cont,
+        name="hidirect",
+        type="regular",
+        domain=[i, j],
+        description="requires a single direction of heat integration",
+    )
+    heat = Equation(
+        cont,
+        name="heat",
+        type="regular",
+        domain=i,
+        description="logical integer constraint",
+    )
+    cuts = Equation(
+        cont,
+        name="cuts",
+        type="regular",
+        domain=km,
+        description="integer cuts for kth iteration",
+    )
 
     # =====================================================================
     # equations for nlp subproblems

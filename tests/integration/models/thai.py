@@ -12,6 +12,7 @@ Interfaces 16, 4 (1986), 356-366.
 Keywords: mixed integer linear programming, routing, naval recruitment,
           scheduling
 """
+
 from __future__ import annotations
 
 import os
@@ -48,14 +49,12 @@ def main():
         demand,
         voycap,
         shiplim,
-    ) = m.getSymbols(
-        [
-            "objdef",
-            "demand",
-            "voycap",
-            "shiplim",
-        ]
-    )
+    ) = m.getSymbols([
+        "objdef",
+        "demand",
+        "voycap",
+        "shiplim",
+    ])
 
     objdef[...] = obj == w1 * Sum(
         Domain(j, k).where[vc[j, k]], z[j, k]

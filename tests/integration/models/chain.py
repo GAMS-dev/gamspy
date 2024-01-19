@@ -23,6 +23,7 @@ Tech. rep., Mathematics and Computer Science Division, 2000.
 
 Cesari, L, Optimization - Theory and Applications. Springer Verlag, 1983.
 """
+
 from __future__ import annotations
 
 import os
@@ -82,9 +83,8 @@ def main():
     h[...] = tf / n
 
     # VARIABLES #
-    x = Variable(m, name="x", domain=[i], description="height of the chain")
-    u = Variable(m, name="u", domain=[i], description="derivative of x")
-    energy = Variable(m, name="energy", description="potential energy")
+    x = Variable(m, name="x", domain=i, description="height of the chain")
+    u = Variable(m, name="u", domain=i, description="derivative of x")
 
     x.fx["i0"] = a
     x.fx[f"i{n_rec}"] = b
@@ -99,14 +99,17 @@ def main():
     u.l[i] = 4 * gams_math.abs(b - a) * (((Ord(i) - 1) / n) - tmin)
 
     # EQUATIONS #
-    obj = Equation(m, name="obj", type="regular")
-    x_eqn = Equation(m, name="x_eqn", type="regular", domain=[i])
+    x_eqn = Equation(m, name="x_eqn", type="regular", domain=i)
     length_eqn = Equation(m, name="length_eqn", type="regular")
 
-    obj[...] = energy == 0.5 * h * Sum(
-        nh[i.lead(1)],
-        x[i] * gams_math.sqrt(1 + sqr(u[i]))
-        + x[i.lead(1)] * gams_math.sqrt(1 + sqr(u[i.lead(1)])),
+    energy = (
+        0.5
+        * h
+        * Sum(
+            nh[i.lead(1)],
+            x[i] * gams_math.sqrt(1 + sqr(u[i]))
+            + x[i.lead(1)] * gams_math.sqrt(1 + sqr(u[i.lead(1)])),
+        )
     )
 
     x_eqn[i.lead(1)] = x[i.lead(1)] == x[i] + 0.5 * h * (u[i] + u[i.lead(1)])
@@ -132,7 +135,7 @@ def main():
     )
 
     chain.solve()
-    print("Objective Function Value:  ", round(energy.toValue(), 4))
+    print("Objective Function Value:  ", round(chain.objective_value, 4))
 
     import math
 

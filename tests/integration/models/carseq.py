@@ -27,6 +27,7 @@ Keywords: mixed integer linear programming, mixed integer nonlinear
 programming,
           production planning, car manufacturing, line problem
 """
+
 from __future__ import annotations
 
 import os
@@ -51,16 +52,14 @@ from gamspy.math import ifthen
 
 
 def main(mip=False):
-    classData_recs = np.array(
-        [
-            [1, 1, 0, 1, 1, 0],
-            [1, 0, 0, 0, 1, 0],
-            [2, 0, 1, 0, 0, 1],
-            [2, 0, 1, 0, 1, 0],
-            [2, 1, 0, 1, 0, 0],
-            [2, 1, 1, 0, 0, 0],
-        ]
-    )
+    classData_recs = np.array([
+        [1, 1, 0, 1, 1, 0],
+        [1, 0, 0, 0, 1, 0],
+        [2, 0, 1, 0, 0, 1],
+        [2, 0, 1, 0, 1, 0],
+        [2, 1, 0, 1, 0, 0],
+        [2, 1, 1, 0, 0, 0],
+    ])
     classData_recs = pd.DataFrame(
         classData_recs,
         columns=["numCars", "opt1", "opt2", "opt3", "opt4", "opt5"],
@@ -77,18 +76,47 @@ def main(mip=False):
     )
 
     # Sets
-    p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
-    o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
-    c = Set(m, name="c", records=[f"class{i}" for i in range(1, 7)])
+    p = Set(
+        m,
+        name="p",
+        records=[f"pos{i}" for i in range(1, 11)],
+        description="position",
+    )
+    o = Set(
+        m,
+        name="o",
+        records=[f"opt{i}" for i in range(1, 6)],
+        description="options",
+    )
+    c = Set(
+        m,
+        name="c",
+        records=[f"class{i}" for i in range(1, 7)],
+        description="classes",
+    )
 
     # Parameter
     maxc = Parameter(
-        m, name="maxc", domain=[o], records=np.array([1, 2, 1, 2, 1])
+        m,
+        name="maxc",
+        domain=o,
+        records=np.array([1, 2, 1, 2, 1]),
+        description="maximum number of cars with that option in a block",
     )
-    bs = Parameter(m, name="bs", domain=[o], records=np.array([2, 3, 3, 5, 5]))
+    bs = Parameter(
+        m,
+        name="bs",
+        domain=o,
+        records=np.array([2, 3, 3, 5, 5]),
+        description="block size to which the maximum number maxc refers",
+    )
 
     classData = Parameter(
-        m, name="classData", domain=[c, "*"], records=classData_recs
+        m,
+        name="classData",
+        domain=[c, "*"],
+        records=classData_recs,
+        description="class data",
     )
 
     if len(p) != no_of_cars:
@@ -97,8 +125,18 @@ def main(mip=False):
     pp = Alias(m, name="pp", alias_with=p)
 
     # Sets
-    blk = Set(m, name="blk", domain=[o, p])
-    blkc = Set(m, name="blkc", domain=[o, p, pp])
+    blk = Set(
+        m,
+        name="blk",
+        domain=[o, p],
+        description="blocks of positions to monitor",
+    )
+    blkc = Set(
+        m,
+        name="blkc",
+        domain=[o, p, pp],
+        description="positions in the blocks",
+    )
 
     blkc[o, p, pp].where[Ord(p) <= Card(p) - bs[o] + 1] = (
         Ord(pp) >= Ord(p)
@@ -107,23 +145,63 @@ def main(mip=False):
 
     # Variables
     sumc = Variable(m, name="sumc", type="free", domain=[o, p])
-    cp = Variable(m, name="cp", type="binary", domain=[c, p])
-    op = Variable(m, name="op", type="free", domain=[o, p])
-    v = Variable(m, name="v", type="free", domain=[o, p])
-    obj = Variable(m, name="obj", type="free")
+    cp = Variable(
+        m,
+        name="cp",
+        type="binary",
+        domain=[c, p],
+        description="class k is scheduled at position p",
+    )
+    op = Variable(
+        m,
+        name="op",
+        type="free",
+        domain=[o, p],
+        description="option o appears at position p",
+    )
+    v = Variable(
+        m,
+        name="v",
+        type="free",
+        domain=[o, p],
+        description="violations in a block",
+    )
 
     if mip:
         v.type = "positive"
         op.type = "binary"
 
     # Equations
-    defnumCars = Equation(m, name="defnumCars", domain=[c])
-    defoneCar = Equation(m, name="defoneCar", domain=[p])
-    defop = Equation(m, name="defop", domain=[o, p])
-    defopLS = Equation(m, name="defopLS", domain=[o, p])
-    defviol = Equation(m, name="defviol", domain=[o, p])
-    defviolLS = Equation(m, name="defviolLS", domain=[o, p])
-    defobj = Equation(m, name="defobj")
+    defnumCars = Equation(
+        m,
+        name="defnumCars",
+        domain=c,
+        description="exactly numCars of class c assigned to positions",
+    )
+    defoneCar = Equation(
+        m,
+        name="defoneCar",
+        domain=p,
+        description="one car assigned to each position p",
+    )
+    defop = Equation(
+        m,
+        name="defop",
+        domain=[o, p],
+        description="option o appears at position p",
+    )
+    defopLS = Equation(
+        m,
+        name="defopLS",
+        domain=[o, p],
+        description="option o appears at position p",
+    )
+    defviol = Equation(
+        m, name="defviol", domain=[o, p], description="violations in a block"
+    )
+    defviolLS = Equation(
+        m, name="defviolLS", domain=[o, p], description="violations in a block"
+    )
     defsumc = Equation(m, name="defsumc", domain=[o, p])
 
     defnumCars[c] = Sum(p, cp[c, p]) == classData[c, "numCars"]
@@ -136,7 +214,7 @@ def main(mip=False):
         Sum(blkc[blk, pp], op[o, pp]) - maxc[o], 0
     )
 
-    defobj[...] = obj == Sum(blk[o, p], v[o, p])
+    obj = Sum(blk[o, p], v[o, p])
 
     # Model
     carseqMIP = Model(
@@ -147,7 +225,6 @@ def main(mip=False):
             defoneCar,
             defop,
             defviol,
-            defobj,
         ],
         problem="mip",
         sense=Sense.MIN,
@@ -162,7 +239,6 @@ def main(mip=False):
             defsumc,
             defopLS,
             defviolLS,
-            defobj,
         ],
         problem="minlp",
         sense=Sense.MIN,
@@ -179,7 +255,7 @@ def main(mip=False):
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]
 
-    print("Objective Function Value: ", obj.records.level[0])
+    print("Objective Function Value: ", carseqLS.objective_value)
 
 
 if __name__ == "__main__":

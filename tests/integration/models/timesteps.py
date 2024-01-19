@@ -25,6 +25,7 @@ data by using method 3.
 Keywords: mixed integer linear programming, GAMS language features, dynamic
           modelling, time steps, power generation
 """
+
 from __future__ import annotations
 
 import os
@@ -90,7 +91,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     tt = Set(
         m,
         name="tt",
-        domain=[t],
+        domain=t,
         records=[f"t{i}" for i in range(1, maxdt + 1)],
         description="max downtime hours",
     )

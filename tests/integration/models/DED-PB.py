@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -120,7 +121,6 @@ def main():
     )
 
     # VARIABLES #
-    OF = Variable(m, name="OF", type="free", description="objective (revenue)")
     costThermal = Variable(
         m, name="costThermal", type="free", description="cost of thermal units"
     )
@@ -142,10 +142,9 @@ def main():
     Genconst3 = Equation(m, name="Genconst3", type="regular", domain=[i, t])
     Genconst4 = Equation(m, name="Genconst4", type="regular", domain=[i, t])
     costThermalcalc = Equation(m, name="costThermalcalc", type="regular")
-    balance = Equation(m, name="balance", type="regular", domain=[t])
+    balance = Equation(m, name="balance", type="regular", domain=t)
     EMcalc = Equation(m, name="EMcalc", type="regular")
     EMlim = Equation(m, name="EMlim", type="regular")
-    benefitcalc = Equation(m, name="benefitcalc", type="regular")
 
     costThermalcalc[...] = costThermal == Sum(
         [t, i],
@@ -169,9 +168,8 @@ def main():
 
     EMlim[...] = EM <= lim
 
-    benefitcalc[...] = (
-        OF == Sum([i, t], 1 * data[t, "lamda"] * p[i, t]) - costThermal
-    )
+    # Objective Function
+    OF = Sum([i, t], 1 * data[t, "lamda"] * p[i, t]) - costThermal
 
     DEDPB = Model(
         m,
