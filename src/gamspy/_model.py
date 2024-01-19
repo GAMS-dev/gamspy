@@ -32,7 +32,6 @@ from typing import Iterable
 from typing import Literal
 from typing import TYPE_CHECKING
 
-import gams.transfer as gt
 from gams import GamsOptions
 
 import gamspy as gp
@@ -438,10 +437,7 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = gt.Container(
-            system_directory=self.container.system_directory
-        )
-
+        temp_container = self.container.temp_container
         temp_container.read(
             self.container._gdx_out,
             [
@@ -465,6 +461,8 @@ class Model:
                     python_attr,
                     temp_container[symbol_name].toValue(),
                 )
+
+        self.container.temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
         if (

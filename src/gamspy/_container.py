@@ -39,6 +39,7 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsWorkspace
 from gams.core import gdx
+from gams.core.opt import optResetStr
 
 import gamspy as gp
 import gamspy.utils as utils
@@ -108,7 +109,6 @@ class Container(gt.Container):
             )
 
         self._unsaved_statements: list = []
-        self._is_first_run = True
 
         # import symbols from arbitrary gams code
         self._import_symbols: list[str] = []
@@ -129,7 +129,16 @@ class Container(gt.Container):
         ) = self._setup_paths()
 
         self._job: GamsJob | None = None
+        self._is_first_run = True
+        self.temp_container = gt.Container(
+            system_directory=self.system_directory
+        )
         self._options = options
+        self._gams_options = _map_options(
+            self.workspace,
+            global_options=options,
+            is_seedable=True,
+        )
 
     def _addGamsCode(self, gams_code: str, import_symbols: list[str] = []):
         if import_symbols is not None and (
@@ -300,15 +309,13 @@ class Container(gt.Container):
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
-        options = _map_options(
-            self.workspace,
-            global_options=self._options,
-            is_seedable=self._is_first_run,
-        )
-
-        runner = backend_factory(self, options)
+        runner = backend_factory(self, self._gams_options)
 
         summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
+
+        if not self._is_first_run:
+            # Required for correct seeding
+            optResetStr(self._gams_options._opt, "seed")
 
         self._is_first_run = False
 
@@ -860,12 +867,11 @@ class Container(gt.Container):
     ):
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
-        temp_container = gt.Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names)
+        self.temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
-                updated_records = temp_container[name].records
+                updated_records = self.temp_container[name].records
 
                 self[name]._records = updated_records
 
@@ -876,6 +882,8 @@ class Container(gt.Container):
 
             if user_invoked:
                 self[name].modified = True
+
+        self.temp_container.data = {}
 
         if user_invoked:
             self._run()
