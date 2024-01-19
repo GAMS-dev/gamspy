@@ -453,12 +453,67 @@ class ContainerSuite(unittest.TestCase):
     def test_debugging_level(self):
         from gamspy.math import sqrt
 
-        m = Container(debugging_level="keep_on_error")
-        e = Equation(m, "e")
-        with self.assertRaises(GamspyException):
-            e[:] = sqrt(e) == 5
+        global working_directory
 
-        self.assertTrue(os.path.exists(m.working_directory))
+        def test_delete_success():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_delete_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_delete_err():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_delete_err()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_success():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_success()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_err():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_err()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_on_error_success():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_on_error_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_on_error_err():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_on_error_err()
+        self.assertTrue(os.path.exists(working_directory))
 
 
 def container_suite():
