@@ -99,7 +99,7 @@ class NeosClient:
         bool
         """
         response = self.neos.ping()
-        return True if response != "NeosServer is alive\n" else False
+        return True if response.startswith("NeosServer is alive") else False
 
     def get_job_status(self, job_number: int, job_password: str) -> str:
         """
