@@ -33,6 +33,8 @@ import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
+from gams import DebugLevel
+
 import gamspy._backend.backend as backend
 from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
@@ -365,7 +367,7 @@ class NeosClient:
             xml = file.read()
 
         if not self.is_alive():
-            GamspyException("NeosServer is not alive. Try again later.")
+            raise GamspyException("NeosServer is not alive. Try again later.")
 
         if self.username is not None and self.password is not None:
             job_number, job_password = self.neos.authenticatedSubmitJob(
@@ -443,10 +445,17 @@ class NEOSServer(backend.Backend):
             options=self.options,
             working_directory=self.container.working_directory,
         )
-        job_number, job_password = self.client.submit_job(
-            is_blocking=self.client.is_blocking,
-            working_directory=self.container.working_directory,
-        )
+
+        try:
+            job_number, job_password = self.client.submit_job(
+                is_blocking=self.client.is_blocking,
+                working_directory=self.container.working_directory,
+            )
+        except GamspyException as e:
+            if self.container._debugging_level == "keep_on_error":
+                self.container.workspace._debug = DebugLevel.KeepFiles
+
+            raise e
 
         if self.client.is_blocking:
             self.client.download_output(

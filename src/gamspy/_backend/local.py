@@ -28,6 +28,7 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
+from gams import DebugLevel
 from gams import GamsJob
 from gams import GamsOptions
 from gams.control.workspace import GamsExceptionExecution
@@ -96,6 +97,9 @@ class Local(backend.Backend):
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
         except GamsExceptionExecution as exception:
+            if self.container._debugging_level == "keep_on_error":
+                self.container.workspace._debug = DebugLevel.KeepFiles
+
             message = customize_exception(
                 self.container.workspace, self.options, job, exception
             )

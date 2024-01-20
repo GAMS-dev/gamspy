@@ -122,9 +122,12 @@ def _transform_given_indices(
     domain: list[Set | Alias | str],
     indices: Set | Alias | str | tuple | ImplicitSet,
 ):
-    new_domain = []
+    new_domain: list = []
     given_domain = utils._to_list(indices)
     validate_type(given_domain)
+
+    if len(domain) == 0:
+        return new_domain
 
     if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
         raise ValidationError(

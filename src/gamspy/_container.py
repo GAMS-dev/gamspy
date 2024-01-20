@@ -61,6 +61,13 @@ if TYPE_CHECKING:
     from gamspy._options import Options
 
 
+debugging_map = {
+    "delete": DebugLevel.Off,
+    "keep_on_error": DebugLevel.Off,
+    "keep": DebugLevel.KeepFiles,
+}
+
+
 class Container(gt.Container):
     """
     A container is an object that holds all symbols and operates on them.
@@ -74,6 +81,8 @@ class Container(gt.Container):
     working_directory : str, optional
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
+    debugging_level : str, optional
+        Decides on keeping the temporary files generate by GAMS, by default "delete"
     delayed_execution : bool, optional
         Delayed execution mode, by default False
     options : Options
@@ -92,6 +101,7 @@ class Container(gt.Container):
         load_from: str | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
+        debugging_level: str = "delete",
         delayed_execution: bool = False,
         options: Options | None = None,
     ):
@@ -108,6 +118,8 @@ class Container(gt.Container):
                 "Delayed execution mode will be deprecated in 0.12.0."
             )
 
+        self._debugging_level = self._get_debugging_level(debugging_level)
+
         self._unsaved_statements: list = []
 
         # import symbols from arbitrary gams code
@@ -116,7 +128,9 @@ class Container(gt.Container):
         super().__init__(load_from, system_directory)
 
         self.workspace = GamsWorkspace(
-            working_directory, self.system_directory, DebugLevel.KeepFiles
+            working_directory,
+            self.system_directory,
+            debugging_map[debugging_level],
         )
 
         self.working_directory = self.workspace.working_directory
@@ -139,6 +153,18 @@ class Container(gt.Container):
             global_options=options,
             is_seedable=True,
         )
+
+    def _get_debugging_level(self, debugging_level: str):
+        if (
+            not isinstance(debugging_level, str)
+            or debugging_level not in debugging_map.keys()
+        ):
+            raise ValidationError(
+                "Debugging level must be one of 'delete', 'keep',"
+                " 'keep_on_error'"
+            )
+
+        return debugging_level
 
     def _addGamsCode(self, gams_code: str, import_symbols: list[str] = []):
         if import_symbols is not None and (
