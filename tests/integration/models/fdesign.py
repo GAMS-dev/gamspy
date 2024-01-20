@@ -22,6 +22,7 @@ Processing. 284 (November, 1998).
 Keywords: quadratic constraint programming, second order cone programming,
           engineering, finite impulse response filter designment
 """
+
 from __future__ import annotations
 
 import math
@@ -52,13 +53,13 @@ def main():
     omega_stop = Set(
         m,
         name="omega_stop",
-        domain=[i],
+        domain=i,
         records=[str(idx) for idx in range(120, 181)],
     )
     omega_pass = Set(
         m,
         name="omega_pass",
-        domain=[i],
+        domain=i,
         records=[str(idx) for idx in range(0, 91)],
     )
     k = Set(m, name="k", records=[str(idx) for idx in range(0, 11)])
@@ -67,25 +68,27 @@ def main():
     beta = Parameter(m, name="beta", records=0.01)
     step = Parameter(m, name="step", records=math.pi / 180)
     n = Parameter(m, name="n", records=20)
-    omega = Parameter(m, name="omega", domain=[i])
+    omega = Parameter(m, name="omega", domain=i)
     omega[i] = (Ord(i) - 1) * step
 
     # Variable
-    h = Variable(m, name="h", domain=[k])
+    h = Variable(m, name="h", domain=k)
     t = Variable(m, name="t")
-    v2 = Variable(m, name="v2")
-    v3 = Variable(m, name="v3", type="Positive")
+    v2 = Variable(m, name="v2", description="for conic variable u - t")
+    v3 = Variable(
+        m, name="v3", type="Positive", description="for conic variable u + t"
+    )
     u = Variable(m, name="u", type="Positive")
     v = Variable(m, name="v", type="Positive")
 
     # Equation
-    passband_up_bnds = Equation(m, name="passband_up_bnds", domain=[i])
+    passband_up_bnds = Equation(m, name="passband_up_bnds", domain=i)
     cone_lhs = Equation(m, name="cone_lhs")
     cone_rhs = Equation(m, name="cone_rhs")
     so = Equation(m, name="so")
-    passband_lo_bnds = Equation(m, name="passband_lo_bnds", domain=[i])
-    stopband_bnds = Equation(m, name="stopband_bnds", domain=[i])
-    stopband_bnds2 = Equation(m, name="stopband_bnds2", domain=[i])
+    passband_lo_bnds = Equation(m, name="passband_lo_bnds", domain=i)
+    stopband_bnds = Equation(m, name="stopband_bnds", domain=i)
+    stopband_bnds2 = Equation(m, name="stopband_bnds2", domain=i)
 
     passband_up_bnds[i].where[omega_pass[i]] = (
         2

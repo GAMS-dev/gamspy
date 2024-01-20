@@ -76,6 +76,7 @@ Original version programmed by Sherman Robinson and Andrea Cattaneo.
 Keywords: nonlinear programming, micro economics, cross entropy, social
 accounting matrix
 """
+
 from __future__ import annotations
 
 import os
@@ -108,53 +109,51 @@ def main(is_centropy=False):
         delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
-    SAM_recs = np.array(
+    SAM_recs = np.array([
+        [0, 14827.424, 0, 0, 2101.049, -0.327, 0, 0, 1488.157, 18416.303],
         [
-            [0, 14827.424, 0, 0, 2101.049, -0.327, 0, 0, 1488.157, 18416.303],
-            [
-                7917.504,
-                0,
-                0,
-                0,
-                6953.332,
-                1564.500,
-                2518.500,
-                2597.798,
-                0,
-                20751.634,
-            ],
-            [9805.414, 0, 0, 0, 0, 0, 0, 0, 0, 9805.414],
-            [0, 0, 3699.706, 0, 0, 33.000, 0, 0, 0, 3732.706],
-            [0, 0, 6000.000, 3300.000, 0, 29.600, 0, 0, 200.000, 9687.915],
-            [733.600, 357.400, 74.400, 165.200, 139.500, 0, 0, 0, 0, 1470.100],
-            [0, 0, 0, 0, 0, 0, 0, 0, 1712.300, 1712.300],
-            [
-                0,
-                0,
-                0,
-                150.000,
-                649.156,
-                -356.673,
-                -406.200,
-                0,
-                2163.857,
-                2200.140,
-            ],
-            [0, 5573.815, 0, 0, 0, 0, 0, 0, 0, 5573.815],
-            [
-                18456.518,
-                20758.639,
-                9805.414,
-                3732.706,
-                9643.037,
-                1470.100,
-                1712.300,
-                2197.798,
-                5573.815,
-                0,
-            ],
-        ]
-    )
+            7917.504,
+            0,
+            0,
+            0,
+            6953.332,
+            1564.500,
+            2518.500,
+            2597.798,
+            0,
+            20751.634,
+        ],
+        [9805.414, 0, 0, 0, 0, 0, 0, 0, 0, 9805.414],
+        [0, 0, 3699.706, 0, 0, 33.000, 0, 0, 0, 3732.706],
+        [0, 0, 6000.000, 3300.000, 0, 29.600, 0, 0, 200.000, 9687.915],
+        [733.600, 357.400, 74.400, 165.200, 139.500, 0, 0, 0, 0, 1470.100],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1712.300, 1712.300],
+        [
+            0,
+            0,
+            0,
+            150.000,
+            649.156,
+            -356.673,
+            -406.200,
+            0,
+            2163.857,
+            2200.140,
+        ],
+        [0, 5573.815, 0, 0, 0, 0, 0, 0, 0, 5573.815],
+        [
+            18456.518,
+            20758.639,
+            9805.414,
+            3732.706,
+            9643.037,
+            1470.100,
+            1712.300,
+            2197.798,
+            5573.815,
+            0,
+        ],
+    ])
 
     # Set
     i = Set(
@@ -193,7 +192,7 @@ def main(is_centropy=False):
         description="SAM elements that can be nonzero and hence estimated",
     )
     ii = Set(
-        m, name="ii", domain=[i], description="all accounts in i except total"
+        m, name="ii", domain=i, description="all accounts in i except total"
     )
     macro = Set(
         m,
@@ -216,21 +215,21 @@ def main(is_centropy=False):
     jwt1 = Set(
         m,
         name="jwt1",
-        domain=[jwt],
+        domain=jwt,
         records=[str(ss) for ss in range(1, 8)],
         description="set of weights for errors in column sums",
     )
     jwt2 = Set(
         m,
         name="jwt2",
-        domain=[jwt],
+        domain=jwt,
         records=[str(ss) for ss in range(1, 6)],
         description="set of weights for errors in macro totals",
     )
     jwt3 = Set(
         m,
         name="jwt3",
-        domain=[jwt],
+        domain=jwt,
         records=[str(ss) for ss in range(1, 4)],
         description="set of weights for errors in cell elements",
     )
@@ -293,7 +292,7 @@ def main(is_centropy=False):
     SAMBALCHK = Parameter(
         m,
         name="SAMBALCHK",
-        domain=[i],
+        domain=i,
         description="column sums minus row sums in the SAM",
     )
     Abar0 = Parameter(
@@ -305,13 +304,13 @@ def main(is_centropy=False):
     ColSum0 = Parameter(
         m,
         name="ColSum0",
-        domain=[i],
+        domain=i,
         description="targets for macro SAM column totals",
     )
     macrov0 = Parameter(
         m,
         name="macrov0",
-        domain=[macro],
+        domain=macro,
         description="target values for macro aggregates",
     )
     vbar1 = Parameter(
@@ -353,13 +352,13 @@ def main(is_centropy=False):
     sigmay1 = Parameter(
         m,
         name="sigmay1",
-        domain=[i],
+        domain=i,
         description="prior standard error of column sums",
     )
     sigmay2 = Parameter(
         m,
         name="sigmay2",
-        domain=[macro],
+        domain=macro,
         description="prior standard error of macro aggregates",
     )
     sigmay3 = Parameter(
@@ -509,16 +508,16 @@ def main(is_centropy=False):
         description="posterior matrix of SAM transactions",
     )
     MACROV = Variable(
-        m, name="MACROV", domain=[macro], description="macro aggregates"
+        m, name="MACROV", domain=macro, description="macro aggregates"
     )
-    Y = Variable(m, name="Y", domain=[i], description="row Sum of SAM")
+    Y = Variable(m, name="Y", domain=i, description="row Sum of SAM")
     ERR1 = Variable(
-        m, name="ERR1", domain=[i], description="error value on column sums"
+        m, name="ERR1", domain=i, description="error value on column sums"
     )
     ERR2 = Variable(
         m,
         name="ERR2",
-        domain=[macro],
+        domain=macro,
         description="error value for macro aggregates",
     )
     ERR3 = Variable(
@@ -567,11 +566,11 @@ def main(is_centropy=False):
     ROWSUMEQ = Equation(
         m,
         name="ROWSUMEQ",
-        domain=[i],
+        domain=i,
         description="rowsum with error",
     )
-    ROWSUM = Equation(m, name="ROWSUM", domain=[i], description="row sums")
-    COLSUM = Equation(m, name="COLSUM", domain=[j], description="column sums")
+    ROWSUM = Equation(m, name="ROWSUM", domain=i, description="row sums")
+    COLSUM = Equation(m, name="COLSUM", domain=j, description="column sums")
     SAMCOEF = Equation(
         m,
         name="SAMCOEF",
@@ -603,19 +602,19 @@ def main(is_centropy=False):
     MACROEQ = Equation(
         m,
         name="MACROEQ",
-        domain=[macro],
+        domain=macro,
         description="macro aggregates with error",
     )
     ERROR1EQ = Equation(
         m,
         name="ERROR1EQ",
-        domain=[i],
+        domain=i,
         description="definition of error term 1",
     )
     ERROR2EQ = Equation(
         m,
         name="ERROR2EQ",
-        domain=[macro],
+        domain=macro,
         description="definition of error term 2",
     )
     ERROR3EQ = Equation(
@@ -627,13 +626,13 @@ def main(is_centropy=False):
     SUMW1 = Equation(
         m,
         name="SUMW1",
-        domain=[i],
+        domain=i,
         description="Sum of weights 1",
     )
     SUMW2 = Equation(
         m,
         name="SUMW2",
-        domain=[macro],
+        domain=macro,
         description="Sum of weights 2",
     )
     SUMW3 = Equation(

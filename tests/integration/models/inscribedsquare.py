@@ -21,6 +21,7 @@ with gnuplot (if available and a feasible solution has been found).
 
 Contributor: Benjamin Mueller and Felipe Serrano
 """
+
 from __future__ import annotations
 
 import math
@@ -53,29 +54,83 @@ def main():
     )
 
     # Set
-    i = Set(m, name="i", records=["1", "2", "3", "4"])
+    i = Set(
+        m,
+        name="i",
+        records=["1", "2", "3", "4"],
+        description="corner points of square",
+    )
 
     # Variable
-    z = Variable(m, name="z")
-    t = Variable(m, name="t", domain=[i])
-    x = Variable(m, name="x")
-    y = Variable(m, name="y")
-    a = Variable(m, name="a", type="Positive")
-    b = Variable(m, name="b", type="Positive")
+    z = Variable(m, name="z", description="area of square to be maximized")
+    t = Variable(
+        m,
+        name="t",
+        domain=i,
+        description="position of square corner points on curve",
+    )
+    x = Variable(
+        m,
+        name="x",
+        description=(
+            "x-coordinate of lower-left corner of square (=fx(t('1')))"
+        ),
+    )
+    y = Variable(
+        m,
+        name="y",
+        description=(
+            "y-coordinate of lower-left corner of square (=fy(t('1')))"
+        ),
+    )
+    a = Variable(
+        m,
+        name="a",
+        type="Positive",
+        description=(
+            "horizontal distance between lower-left and lower-right corner of"
+            " square"
+        ),
+    )
+    b = Variable(
+        m,
+        name="b",
+        type="Positive",
+        description=(
+            "vertical distance between lower-left and lower-right corner of"
+            " square"
+        ),
+    )
 
     t.lo[i] = -math.pi
     t.up[i] = math.pi
 
     # Equation
-    obj = Equation(m, name="obj")
-    e1x = Equation(m, name="e1x")
-    e1y = Equation(m, name="e1y")
-    e2x = Equation(m, name="e2x")
-    e2y = Equation(m, name="e2y")
-    e3x = Equation(m, name="e3x")
-    e3y = Equation(m, name="e3y")
-    e4x = Equation(m, name="e4x")
-    e4y = Equation(m, name="e4y")
+    obj = Equation(m, name="obj", description="area of square, squared")
+    e1x = Equation(
+        m, name="e1x", description="define x-coordinate of lower-left corner"
+    )
+    e1y = Equation(
+        m, name="e1y", description="define y-coordinate of lower-left corner"
+    )
+    e2x = Equation(
+        m, name="e2x", description="define x-coordinate of lower-right corner"
+    )
+    e2y = Equation(
+        m, name="e2y", description="define y-coordinate of lower-right corner"
+    )
+    e3x = Equation(
+        m, name="e3x", description="define x-coordinate of upper-left corner"
+    )
+    e3y = Equation(
+        m, name="e3y", description="define y-coordinate of upper-left corner"
+    )
+    e4x = Equation(
+        m, name="e4x", description="define x-coordinate of upper-right corner"
+    )
+    e4y = Equation(
+        m, name="e4y", description="define y-coordinate of upper-right corner"
+    )
 
     obj[...] = z == a**2 + b**2
     e1x[...] = fx(t["1"]) == x

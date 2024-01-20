@@ -21,6 +21,7 @@ Keywords: constrained nonlinear system, general equilibrium model, economic
 growth,
           industrialization, economic policy, Korean economy
 """
+
 from __future__ import annotations
 
 import os
@@ -144,33 +145,110 @@ def main():
     )
 
     # Sets
-    i = Set(cont, name="i", records=["agricult", "industry", "services"])
-    hh = Set(cont, name="hh", records=["lab_hh", "cap_hh"])
-    lc = Set(cont, name="lc", records=["labor1", "labor2", "labor3"])
-    it = Set(cont, name="it", domain=[i])
-    inn = Set(cont, name="inn", domain=[i])
+    i = Set(
+        cont,
+        name="i",
+        records=["agricult", "industry", "services"],
+        description="sectors",
+    )
+    hh = Set(
+        cont,
+        name="hh",
+        records=["lab_hh", "cap_hh"],
+        description="household type",
+    )
+    lc = Set(
+        cont,
+        name="lc",
+        records=["labor1", "labor2", "labor3"],
+        description="labor categories",
+    )
+    it = Set(cont, name="it", domain=i, description="traded sectors")
+    inn = Set(cont, name="inn", domain=i, description="nontraded sectors")
 
     j = Alias(cont, name="j", alias_with=i)
 
     # Parameters
-    delta = Parameter(cont, name="delta", domain=[i])
-    ac = Parameter(cont, name="ac", domain=[i])
-    rhoc = Parameter(cont, name="rhoc", domain=[i])
-    rhot = Parameter(cont, name="rhot", domain=[i])
-    at = Parameter(cont, name="at", domain=[i])
-    gamma = Parameter(cont, name="gamma", domain=[i])
-    ad = Parameter(cont, name="ad", domain=[i])
-    gles = Parameter(cont, name="gles", domain=[i])
-    depr = Parameter(cont, name="depr", domain=[i])
-    dstr = Parameter(cont, name="dstr", domain=[i])
-    kio = Parameter(cont, name="kio", domain=[i])
-    te = Parameter(cont, name="te", domain=[i])
-    itax = Parameter(cont, name="itax", domain=[i])
-    htax = Parameter(cont, name="htax", domain=[hh])
-    pwm = Parameter(cont, name="pwm", domain=[i])
-    pwe = Parameter(cont, name="pwe", domain=[i])
-    tm = Parameter(cont, name="tm", domain=[i])
-    pwts = Parameter(cont, name="pwts", domain=[i])
+    delta = Parameter(
+        cont,
+        name="delta",
+        domain=i,
+        description="Armington function share parameter",
+    )
+    ac = Parameter(
+        cont,
+        name="ac",
+        domain=i,
+        description="Armington function shift parameter",
+    )
+    rhoc = Parameter(
+        cont, name="rhoc", domain=i, description="Armington function exponent"
+    )
+    rhot = Parameter(
+        cont, name="rhot", domain=i, description="cet function exponent"
+    )
+    at = Parameter(
+        cont, name="at", domain=i, description="cet function shift parameter"
+    )
+    gamma = Parameter(
+        cont,
+        name="gamma",
+        domain=i,
+        description="cet function share parameter",
+    )
+    ad = Parameter(
+        cont,
+        name="ad",
+        domain=i,
+        description="production function shift parameter",
+    )
+    gles = Parameter(
+        cont,
+        name="gles",
+        domain=i,
+        description="government consumption shares",
+    )
+    depr = Parameter(
+        cont, name="depr", domain=i, description="depreciation rates"
+    )
+    dstr = Parameter(
+        cont,
+        name="dstr",
+        domain=i,
+        description="ratio of inventory investment to gross output",
+    )
+    kio = Parameter(
+        cont,
+        name="kio",
+        domain=i,
+        description="shares of investment by sector of destination",
+    )
+    te = Parameter(cont, name="te", domain=i, description="export duty rates")
+    itax = Parameter(
+        cont, name="itax", domain=i, description="indirect tax rates"
+    )
+    htax = Parameter(
+        cont,
+        name="htax",
+        domain=hh,
+        description="income tax rate by household type",
+    )
+    pwm = Parameter(
+        cont,
+        name="pwm",
+        domain=i,
+        description="world market price of imports    (in dollars)",
+    )
+    pwe = Parameter(
+        cont,
+        name="pwe",
+        domain=i,
+        description="world market price of exports    (in dollars)",
+    )
+    tm = Parameter(
+        cont, name="tm", domain=i, description="tariff rates on imports"
+    )
+    pwts = Parameter(cont, name="pwts", domain=i, description="cpi weights")
 
     htax["lab_hh"] = 0.08910
     htax["cap_hh"] = 0.08910
@@ -179,52 +257,48 @@ def main():
         cont,
         name="alphl",
         domain=[i, lc],
-        records=np.array(
-            [
-                [0.38258, 0.06740, 0.00000],
-                [0.00000, 0.53476, 0.00000],
-                [0.00000, 0.16234, 0.42326],
-            ]
-        ),
+        records=np.array([
+            [0.38258, 0.06740, 0.00000],
+            [0.00000, 0.53476, 0.00000],
+            [0.00000, 0.16234, 0.42326],
+        ]),
+        description="labor share parameter in production function",
     )
 
     io = Parameter(
         cont,
         name="io",
         domain=[i, j],
-        records=np.array(
-            [
-                [0.12591, 0.19834, 0.01407],
-                [0.10353, 0.35524, 0.18954],
-                [0.02358, 0.11608, 0.08390],
-            ]
-        ),
+        records=np.array([
+            [0.12591, 0.19834, 0.01407],
+            [0.10353, 0.35524, 0.18954],
+            [0.02358, 0.11608, 0.08390],
+        ]),
+        description="input-output coefficients",
     )
 
     imat = Parameter(
         cont,
         name="imat",
         domain=[i, j],
-        records=np.array(
-            [
-                [0.00000, 0.00000, 0.00000],
-                [0.93076, 0.93774, 0.93080],
-                [0.06924, 0.06226, 0.06920],
-            ]
-        ),
+        records=np.array([
+            [0.00000, 0.00000, 0.00000],
+            [0.93076, 0.93774, 0.93080],
+            [0.06924, 0.06226, 0.06920],
+        ]),
+        description="capital composition matrix",
     )
 
     wdist = Parameter(
         cont,
         name="wdist",
         domain=[i, lc],
-        records=np.array(
-            [
-                [1.00000, 0.52780, 0.00000],
-                [0.00000, 1.21879, 0.00000],
-                [0.00000, 1.11541, 1.00000],
-            ]
-        ),
+        records=np.array([
+            [1.00000, 0.52780, 0.00000],
+            [0.00000, 1.21879, 0.00000],
+            [0.00000, 1.11541, 1.00000],
+        ]),
+        description="wage proportionality factors",
     )
 
     cles = Parameter(
@@ -234,9 +308,16 @@ def main():
         records=np.array(
             [[0.47000, 0.47000], [0.31999, 0.31999], [0.21001, 0.21001]]
         ),
+        description="private consumption shares",
     )
 
-    zz = Parameter(cont, name="zz", domain=["*", i], records=zz_df)
+    zz = Parameter(
+        cont,
+        name="zz",
+        domain=["*", i],
+        records=zz_df,
+        description="miscellaneous parameters",
+    )
 
     depr[i] = zz["depr", i]
     itax[i] = zz["itax", i]
@@ -259,58 +340,358 @@ def main():
     # Model Definition
     # Variables
     # prices block
-    er = Variable(cont, name="er", type="free")
-    pd1 = Variable(cont, name="pd1", type="free", domain=[i])
-    pm = Variable(cont, name="pm", type="free", domain=[i])
-    pe = Variable(cont, name="pe", type="free", domain=[i])
-    pk = Variable(cont, name="pk", type="free", domain=[i])
-    px = Variable(cont, name="px", type="free", domain=[i])
-    p = Variable(cont, name="p", type="free", domain=[i])
-    pva = Variable(cont, name="pva", type="free", domain=[i])
-    pr = Variable(cont, name="pr", type="free")
-    pindex = Variable(cont, name="pindex", type="free")
+    er = Variable(
+        cont,
+        name="er",
+        type="free",
+        description=(
+            "real exchange rate                          (won per dollar)"
+        ),
+    )
+    pd1 = Variable(
+        cont, name="pd1", type="free", domain=i, description="domestic prices"
+    )
+    pm = Variable(
+        cont,
+        name="pm",
+        type="free",
+        domain=i,
+        description="domestic price of imports",
+    )
+    pe = Variable(
+        cont,
+        name="pe",
+        type="free",
+        domain=i,
+        description="domestic price of exports",
+    )
+    pk = Variable(
+        cont,
+        name="pk",
+        type="free",
+        domain=i,
+        description="rate of capital rent by sector",
+    )
+    px = Variable(
+        cont,
+        name="px",
+        type="free",
+        domain=i,
+        description="average output price by sector",
+    )
+    p = Variable(
+        cont,
+        name="p",
+        type="free",
+        domain=i,
+        description="price of composite goods",
+    )
+    pva = Variable(
+        cont,
+        name="pva",
+        type="free",
+        domain=i,
+        description="value added price by sector",
+    )
+    pr = Variable(cont, name="pr", type="free", description="import premium")
+    pindex = Variable(
+        cont, name="pindex", type="free", description="general price level"
+    )
 
     # production block
-    x = Variable(cont, name="x", type="free", domain=[i])
-    xd = Variable(cont, name="xd", type="free", domain=[i])
-    xxd = Variable(cont, name="xxd", type="free", domain=[i])
-    e = Variable(cont, name="e", type="free", domain=[i])
-    m = Variable(cont, name="m", type="free", domain=[i])
+    x = Variable(
+        cont,
+        name="x",
+        type="free",
+        domain=i,
+        description=(
+            "composite goods supply                        ('68 bill won)"
+        ),
+    )
+    xd = Variable(
+        cont,
+        name="xd",
+        type="free",
+        domain=i,
+        description=(
+            "domestic output by sector                     ('68 bill won)"
+        ),
+    )
+    xxd = Variable(
+        cont,
+        name="xxd",
+        type="free",
+        domain=i,
+        description=(
+            "domestic sales                                ('68 bill won)"
+        ),
+    )
+    e = Variable(
+        cont,
+        name="e",
+        type="free",
+        domain=i,
+        description=(
+            "exports by sector                             ('68 bill won)"
+        ),
+    )
+    m = Variable(
+        cont,
+        name="m",
+        type="free",
+        domain=i,
+        description=(
+            "imports                                       ('68 bill won)"
+        ),
+    )
 
     # factors block
-    k = Variable(cont, name="k", type="free", domain=[i])
-    wa = Variable(cont, name="wa", type="free", domain=[lc])
-    ls = Variable(cont, name="ls", type="free", domain=[lc])
-    l = Variable(cont, name="l", type="free", domain=[i, lc])
+    k = Variable(
+        cont,
+        name="k",
+        type="free",
+        domain=i,
+        description=(
+            "capital stock by sector                       ('68 bill won)"
+        ),
+    )
+    wa = Variable(
+        cont,
+        name="wa",
+        type="free",
+        domain=lc,
+        description=(
+            "average wage rate by labor category     (mill won pr person)"
+        ),
+    )
+    ls = Variable(
+        cont,
+        name="ls",
+        type="free",
+        domain=lc,
+        description=(
+            "labor supply by labor category                (1000 persons)"
+        ),
+    )
+    l = Variable(
+        cont,
+        name="l",
+        type="free",
+        domain=[i, lc],
+        description=(
+            "employment by sector and labor category       (1000 persons)"
+        ),
+    )
 
     # demand block
-    intr = Variable(cont, name="intr", type="free", domain=[i])
-    cd = Variable(cont, name="cd", type="free", domain=[i])
-    gd = Variable(cont, name="gd", type="free", domain=[i])
-    id = Variable(cont, name="id", type="free", domain=[i])
-    dst = Variable(cont, name="dst", type="free", domain=[i])
-    y = Variable(cont, name="y", type="free")
-    gr = Variable(cont, name="gr", type="free")
-    tariff = Variable(cont, name="tariff", type="free")
-    indtax = Variable(cont, name="indtax", type="free")
-    netsub = Variable(cont, name="netsub", type="free")
-    gdtot = Variable(cont, name="gdtot", type="free")
-    hhsav = Variable(cont, name="hhsav", type="free")
-    govsav = Variable(cont, name="govsav", type="free")
-    deprecia = Variable(cont, name="deprecia", type="free")
-    invest = Variable(cont, name="invest", type="free")
-    savings = Variable(cont, name="savings", type="free")
-    mps = Variable(cont, name="mps", type="free", domain=[hh])
-    fsav = Variable(cont, name="fsav", type="free")
-    dk = Variable(cont, name="dk", type="free", domain=[i])
-    ypr = Variable(cont, name="ypr", type="free")
-    remit = Variable(cont, name="remit", type="free")
-    fbor = Variable(cont, name="fbor", type="free")
-    yh = Variable(cont, name="yh", type="free", domain=[hh])
-    tothhtax = Variable(cont, name="tothhtax", type="free")
+    intr = Variable(
+        cont,
+        name="intr",
+        type="free",
+        domain=i,
+        description=(
+            "intermediates uses                            ('68 bill won)"
+        ),
+    )
+    cd = Variable(
+        cont,
+        name="cd",
+        type="free",
+        domain=i,
+        description=(
+            "final demand for private consumption          ('68 bill won)"
+        ),
+    )
+    gd = Variable(
+        cont,
+        name="gd",
+        type="free",
+        domain=i,
+        description=(
+            "final demand for government consumption       ('68 bill won)"
+        ),
+    )
+    id = Variable(
+        cont,
+        name="id",
+        type="free",
+        domain=i,
+        description=(
+            "final demand for productive investment        ('68 bill won)"
+        ),
+    )
+    dst = Variable(
+        cont,
+        name="dst",
+        type="free",
+        domain=i,
+        description=(
+            "inventory investment by sector                ('68 bill won)"
+        ),
+    )
+    y = Variable(
+        cont,
+        name="y",
+        type="free",
+        description=(
+            "private gdp                                       (bill won)"
+        ),
+    )
+    gr = Variable(
+        cont,
+        name="gr",
+        type="free",
+        description=(
+            "government revenue                                (bill won)"
+        ),
+    )
+    tariff = Variable(
+        cont,
+        name="tariff",
+        type="free",
+        description=(
+            "tariff revenue                                    (bill won)"
+        ),
+    )
+    indtax = Variable(
+        cont,
+        name="indtax",
+        type="free",
+        description=(
+            "indirect tax revenue                              (bill won)"
+        ),
+    )
+    netsub = Variable(
+        cont,
+        name="netsub",
+        type="free",
+        description=(
+            "export duty revenue                               (bill won)"
+        ),
+    )
+    gdtot = Variable(
+        cont,
+        name="gdtot",
+        type="free",
+        description=(
+            "total volume of government consumption        ('68 bill won)"
+        ),
+    )
+    hhsav = Variable(
+        cont,
+        name="hhsav",
+        type="free",
+        description=(
+            "total household savings                           (bill won)"
+        ),
+    )
+    govsav = Variable(
+        cont,
+        name="govsav",
+        type="free",
+        description=(
+            "government savings                                (bill won)"
+        ),
+    )
+    deprecia = Variable(
+        cont,
+        name="deprecia",
+        type="free",
+        description=(
+            "total depreciation expenditure                    (bill won)"
+        ),
+    )
+    invest = Variable(
+        cont,
+        name="invest",
+        type="free",
+        description=(
+            "total investment                                  (bill won)"
+        ),
+    )
+    savings = Variable(
+        cont,
+        name="savings",
+        type="free",
+        description=(
+            "total savings                                     (bill won)"
+        ),
+    )
+    mps = Variable(
+        cont,
+        name="mps",
+        type="free",
+        domain=hh,
+        description="marginal propensity to save by household type",
+    )
+    fsav = Variable(
+        cont,
+        name="fsav",
+        type="free",
+        description=(
+            "foreign savings                               (bill dollars)"
+        ),
+    )
+    dk = Variable(
+        cont,
+        name="dk",
+        type="free",
+        domain=i,
+        description=(
+            "volume of investment by sector of destination ('68 bill won)"
+        ),
+    )
+    ypr = Variable(
+        cont,
+        name="ypr",
+        type="free",
+        description=(
+            "total premium income accruing to capitalists      (bill won)"
+        ),
+    )
+    remit = Variable(
+        cont,
+        name="remit",
+        type="free",
+        description=(
+            "net remittances from abroad                   (bill dollars)"
+        ),
+    )
+    fbor = Variable(
+        cont,
+        name="fbor",
+        type="free",
+        description=(
+            "net flow of foreign borrowing                 (bill dollars)"
+        ),
+    )
+    yh = Variable(
+        cont,
+        name="yh",
+        type="free",
+        domain=hh,
+        description=(
+            "total income by household type                    (bill won)"
+        ),
+    )
+    tothhtax = Variable(
+        cont,
+        name="tothhtax",
+        type="free",
+        description=(
+            "household tax revenue                             (bill won)"
+        ),
+    )
 
     # welfare indicator for objective function
-    omega = Variable(cont, name="omega", type="free")
+    omega = Variable(
+        cont,
+        name="omega",
+        type="free",
+        description=(
+            "objective function variable                   ('68 bill won)"
+        ),
+    )
 
     er.l[...] = 1.0000
     pr.l[...] = 0.0000
@@ -335,43 +716,40 @@ def main():
         cont,
         name="labres1",
         domain=[i, lc],
-        records=np.array(
-            [
-                [2515.900, 442.643, 0.000],
-                [0.000, 767.776, 0.000],
-                [0.000, 355.568, 948.100],
-            ]
-        ),
+        records=np.array([
+            [2515.900, 442.643, 0.000],
+            [0.000, 767.776, 0.000],
+            [0.000, 355.568, 948.100],
+        ]),
+        description="summary matrix with sectoral employment results",
     )
 
     labres2 = Parameter(
         cont,
         name="labres2",
         domain=["*", lc],
-        records=pd.DataFrame(
-            [
-                ["wa", "labor1", 0.074],
-                ["ls", "labor1", 2515.9],
-                ["wa", "labor2", 0.14],
-                ["ls", "labor2", 1565.987],
-                ["wa", "labor3", 0.152],
-                ["ls", "labor3", 948.1],
-            ]
-        ),
+        records=pd.DataFrame([
+            ["wa", "labor1", 0.074],
+            ["ls", "labor1", 2515.9],
+            ["wa", "labor2", 0.14],
+            ["ls", "labor2", 1565.987],
+            ["wa", "labor3", 0.152],
+            ["ls", "labor3", 948.1],
+        ]),
+        description="summary matrix with aggregate employment results",
     )
 
     hhres = Parameter(
         cont,
         name="hhres",
         domain=["*", hh],
-        records=pd.DataFrame(
-            [
-                ["yh", "lab_hh", 548.7478],
-                ["mps", "lab_hh", 0.06],
-                ["yh", "cap_hh", 574.8463],
-                ["mps", "cap_hh", 0.06],
-            ]
-        ),
+        records=pd.DataFrame([
+            ["yh", "lab_hh", 548.7478],
+            ["mps", "lab_hh", 0.06],
+            ["yh", "cap_hh", 574.8463],
+            ["mps", "cap_hh", 0.06],
+        ]),
+        description="summary matrix with household results",
     )
 
     l.l[i, lc] = labres1[i, lc]
@@ -381,7 +759,11 @@ def main():
     yh.l[hh] = hhres["yh", hh]
 
     sectres = Parameter(
-        cont, name="sectres", domain=["*", i], records=sectres_df
+        cont,
+        name="sectres",
+        domain=["*", i],
+        records=sectres_df,
+        description="summary matrix with sectoral results",
     )
 
     pd1.l[i] = sectres["pd1", i]
@@ -427,56 +809,157 @@ def main():
 
     # Equation Definitions
     # price block
-    pmdef = Equation(cont, name="pmdef", domain=[i])
-    pedef = Equation(cont, name="pedef", domain=[i])
-    absorption = Equation(cont, name="absorption", domain=[i])
-    sales = Equation(cont, name="sales", domain=[i])
-    actp = Equation(cont, name="actp", domain=[i])
-    pkdef = Equation(cont, name="pkdef", domain=[i])
-    pindexdef = Equation(cont, name="pindexdef")
+    pmdef = Equation(
+        cont,
+        name="pmdef",
+        domain=i,
+        description="definition of domestic import prices",
+    )
+    pedef = Equation(
+        cont,
+        name="pedef",
+        domain=i,
+        description="definition of domestic export prices",
+    )
+    absorption = Equation(
+        cont,
+        name="absorption",
+        domain=i,
+        description="value of domestic sales",
+    )
+    sales = Equation(
+        cont, name="sales", domain=i, description="value of domestic output"
+    )
+    actp = Equation(
+        cont,
+        name="actp",
+        domain=i,
+        description="definition of activity prices",
+    )
+    pkdef = Equation(
+        cont,
+        name="pkdef",
+        domain=i,
+        description="definition of capital goods price",
+    )
+    pindexdef = Equation(
+        cont, name="pindexdef", description="definition of general price level"
+    )
 
     # output block
-    activity = Equation(cont, name="activity", domain=[i])
-    profitmax = Equation(cont, name="profitmax", domain=[i, lc])
-    lmequil = Equation(cont, name="lmequil", domain=[lc])
-    cet = Equation(cont, name="cet", domain=[i])
-    esupply = Equation(cont, name="esupply", domain=[i])
-    armington = Equation(cont, name="armington", domain=[i])
-    costmin = Equation(cont, name="costmin", domain=[i])
-    xxdsn = Equation(cont, name="xxdsn", domain=[i])
-    xsn = Equation(cont, name="xsn", domain=[i])
+    activity = Equation(
+        cont, name="activity", domain=i, description="production function"
+    )
+    profitmax = Equation(
+        cont,
+        name="profitmax",
+        domain=[i, lc],
+        description="first order condition for profit maximum",
+    )
+    lmequil = Equation(
+        cont, name="lmequil", domain=lc, description="labor market equilibrium"
+    )
+    cet = Equation(cont, name="cet", domain=i, description="cet function")
+    esupply = Equation(
+        cont, name="esupply", domain=i, description="export supply"
+    )
+    armington = Equation(
+        cont,
+        name="armington",
+        domain=i,
+        description="composite good aggregation function",
+    )
+    costmin = Equation(
+        cont,
+        name="costmin",
+        domain=i,
+        description="f.o.c. for cost minimization of composite good",
+    )
+    xxdsn = Equation(
+        cont,
+        name="xxdsn",
+        domain=i,
+        description="domestic sales for nontraded sectors",
+    )
+    xsn = Equation(
+        cont,
+        name="xsn",
+        domain=i,
+        description="composite good agg. for nontraded sectors",
+    )
 
     # demand block
-    inteq = Equation(cont, name="inteq", domain=[i])
-    cdeq = Equation(cont, name="cdeq", domain=[i])
-    dsteq = Equation(cont, name="dsteq", domain=[i])
-    gdp = Equation(cont, name="gdp")
-    labory = Equation(cont, name="labory")
-    capitaly = Equation(cont, name="capitaly")
-    hhtaxdef = Equation(cont, name="hhtaxdef")
-    gdeq = Equation(cont, name="gdeq", domain=[i])
-    greq = Equation(cont, name="greq")
-    tariffdef = Equation(cont, name="tariffdef")
-    premium = Equation(cont, name="premium")
-    indtaxdef = Equation(cont, name="indtaxdef")
-    netsubdef = Equation(cont, name="netsubdef")
+    inteq = Equation(
+        cont, name="inteq", domain=i, description="total intermediate uses"
+    )
+    cdeq = Equation(
+        cont, name="cdeq", domain=i, description="private consumption behavior"
+    )
+    dsteq = Equation(
+        cont, name="dsteq", domain=i, description="inventory investment"
+    )
+    gdp = Equation(cont, name="gdp", description="private gdp")
+    labory = Equation(
+        cont, name="labory", description="total income accruing to labor"
+    )
+    capitaly = Equation(
+        cont, name="capitaly", description="total income accruing to capital"
+    )
+    hhtaxdef = Equation(
+        cont,
+        name="hhtaxdef",
+        description="total household taxes collected by govt.",
+    )
+    gdeq = Equation(
+        cont,
+        name="gdeq",
+        domain=i,
+        description="government consumption shares",
+    )
+    greq = Equation(cont, name="greq", description="government revenue")
+    tariffdef = Equation(cont, name="tariffdef", description="tariff revenue")
+    premium = Equation(
+        cont, name="premium", description="total import premium income"
+    )
+    indtaxdef = Equation(
+        cont,
+        name="indtaxdef",
+        description="indirect taxes on domestic production",
+    )
+    netsubdef = Equation(cont, name="netsubdef", description="export duties")
 
     # savings-investment block
-    hhsaveq = Equation(cont, name="hhsaveq")
-    gruse = Equation(cont, name="gruse")
-    depreq = Equation(cont, name="depreq")
-    totsav = Equation(cont, name="totsav")
-    prodinv = Equation(cont, name="prodinv", domain=[i])
-    ieq = Equation(cont, name="ieq", domain=[i])
+    hhsaveq = Equation(cont, name="hhsaveq", description="household savings")
+    gruse = Equation(cont, name="gruse", description="government savings")
+    depreq = Equation(
+        cont, name="depreq", description="depreciation expenditure"
+    )
+    totsav = Equation(cont, name="totsav", description="total savings")
+    prodinv = Equation(
+        cont,
+        name="prodinv",
+        domain=i,
+        description="investment by sector of destination",
+    )
+    ieq = Equation(
+        cont,
+        name="ieq",
+        domain=i,
+        description="investment by sector of origin",
+    )
 
     # balance of payments
-    caeq = Equation(cont, name="caeq")
+    caeq = Equation(
+        cont, name="caeq", description="current account balance (bill dollars)"
+    )
 
     # market clearing
-    equil = Equation(cont, name="equil", domain=[i])
+    equil = Equation(
+        cont, name="equil", domain=i, description="goods market equilibrium"
+    )
 
     # objective function
-    obj = Equation(cont, name="obj")
+    obj = Equation(cont, name="obj", description="objective function")
 
     # price block
     pmdef[it] = pm[it] == pwm[it] * er * (1 + tm[it] + pr)

@@ -25,6 +25,7 @@ Contributed by: Phan Sy Hieu, November 2010
 Keywords: linear programming, nonlinear programming, mixed complementarity
           problem, spatial equilibrium model
 """
+
 from __future__ import annotations
 
 import os
@@ -57,17 +58,15 @@ def main():
         BetaS,
         BetasSq,
         TCost,
-    ) = m.getSymbols(
-        [
-            "AlphaD",
-            "BetaD",
-            "BetadSq",
-            "AlphaS",
-            "BetaS",
-            "BetasSq",
-            "TCost",
-        ]
-    )
+    ) = m.getSymbols([
+        "AlphaD",
+        "BetaD",
+        "BetadSq",
+        "AlphaS",
+        "BetaS",
+        "BetasSq",
+        "TCost",
+    ])
 
     # Variables
     DINT, SINT, TC, Qd, Qs, X, P, OBJ = m.getSymbols(
@@ -90,24 +89,22 @@ def main():
         OBJECT,
         IN_OUT,
         DOM_TRAD,
-    ) = m.getSymbols(
-        [
-            "DEM",
-            "DEMLOG",
-            "DEMINT",
-            "SUP",
-            "SUPLOG",
-            "SUPINT",
-            "SDBAL",
-            "PDIF",
-            "TRANSCOST",
-            "SX",
-            "DX",
-            "OBJECT",
-            "IN_OUT",
-            "DOM_TRAD",
-        ]
-    )
+    ) = m.getSymbols([
+        "DEM",
+        "DEMLOG",
+        "DEMINT",
+        "SUP",
+        "SUPLOG",
+        "SUPINT",
+        "SDBAL",
+        "PDIF",
+        "TRANSCOST",
+        "SX",
+        "DX",
+        "OBJECT",
+        "IN_OUT",
+        "DOM_TRAD",
+    ])
 
     DEM[r, c] = AlphaD[r, c] + Sum(cc, (BetaD[r, c, cc] * P[r, c])) == Qd[r, c]
 

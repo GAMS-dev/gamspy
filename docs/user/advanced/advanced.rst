@@ -16,3 +16,4 @@ fundamental GAMSPy ideas and philosophy.
    ./assignments
    ./special_features
    ./debugging
+   ./model_instance

@@ -17,6 +17,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 from gamspy.math import sqr
 
@@ -203,16 +204,14 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_definition(self):
         # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
+        distances = pd.DataFrame([
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ])
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
@@ -321,18 +320,19 @@ class EquationSuite(unittest.TestCase):
         )
 
         # eq[bla] with different domain
-        bla3 = Equation(
-            self.m,
-            name="bla3",
-            domain=[i, j],
-            description="observe supply limit at plant i",
-            definition=Sum((i, j), x[i, j]) <= a[i],
-            definition_domain=[i, "bla"],
-        )
-        self.assertEqual(
-            bla3._definition.getStatement(),
-            'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
-        )
+        with self.assertRaises(GamspyException):
+            bla3 = Equation(
+                self.m,
+                name="bla3",
+                domain=[i, j],
+                description="observe supply limit at plant i",
+                definition=Sum((i, j), x[i, j]) <= a[i],
+                definition_domain=[i, "bla"],
+            )
+            self.assertEqual(
+                bla3._definition.getStatement(),
+                'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
+            )
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
@@ -428,6 +428,36 @@ class EquationSuite(unittest.TestCase):
             and isinstance(pi.infeas, implicits.ImplicitParameter)
         )
         self.assertEqual(pi.infeas.gamsRepr(), "pi.infeas")
+
+    def test_scalar_attr_assignment(self):
+        a = Equation(self.m, "a")
+        a.l = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
+
+        a.m = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.m._assignment.getStatement(), "a.m = 5;")
+
+        a.lo = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.lo._assignment.getStatement(), "a.lo = 5;")
+
+        a.up = 5
+        if self.m.delayed_execution:
+            self.assertEqual(a.up._assignment.getStatement(), "a.up = 5;")
+
+        a.scale = 5
+        if self.m.delayed_execution:
+            self.assertEqual(
+                a.scale._assignment.getStatement(), "a.scale = 5;"
+            )
+
+        a.stage = 5
+        if self.m.delayed_execution:
+            self.assertEqual(
+                a.stage._assignment.getStatement(), "a.stage = 5;"
+            )
 
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

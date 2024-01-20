@@ -32,7 +32,6 @@ from typing import Iterable
 from typing import Literal
 from typing import TYPE_CHECKING
 
-import gams.transfer as gt
 from gams import GamsOptions
 
 import gamspy as gp
@@ -249,6 +248,8 @@ class Model:
         self.solver_status = None
         self.solver_version = None
 
+        self.container._run()
+
     def __repr__(self) -> str:
         return f"<Model `{self.name}` ({hex(id(self))})>"
 
@@ -429,16 +430,14 @@ class Model:
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map.keys():
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
-            _ = gp.Parameter(self.container, symbol_name)
+            _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
             self.container._unsaved_statements.append(
                 f"{symbol_name} = {self.name}.{attr_name};"
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = gt.Container(
-            system_directory=self.container.system_directory
-        )
+        temp_container = self.container.temp_container
         temp_container.read(
             self.container._gdx_out,
             [
@@ -462,6 +461,8 @@ class Model:
                     python_attr,
                     temp_container[symbol_name].toValue(),
                 )
+
+        self.container.temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
         if (
@@ -599,12 +600,10 @@ class Model:
             backend,
             engine_config,
             neos_client,
+            self,
         )
 
         summary = runner.solve()
-
-        if not runner.is_async():
-            self._update_model_attributes()
 
         return summary
 
@@ -627,12 +626,10 @@ class Model:
         equations_str = ",".join(equations)
 
         if self._matches:
-            matches_str = ",".join(
-                [
-                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
-                    for equation, variable in self._matches.items()
-                ]
-            )
+            matches_str = ",".join([
+                f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                for equation, variable in self._matches.items()
+            ])
 
             equations_str = (
                 ",".join([equations_str, matches_str])

@@ -22,13 +22,13 @@ class SetSuite(unittest.TestCase):
 
     def test_set_creation(self):
         # no name
-        self.assertRaises(TypeError, Set, self.m)
+        self.assertRaises((ValidationError, TypeError), Set, self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)
 
         # no container
-        self.assertRaises(TypeError, Set)
+        self.assertRaises((ValidationError, TypeError), Set)
 
         # non-container type container
         self.assertRaises(TypeError, Set, 5, "j")

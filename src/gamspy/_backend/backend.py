@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from gamspy._backend.local import Local
     from gams import GamsOptions
     from gamspy import Container
+    from gamspy import Model
 
 SOLVE_STATUS = [
     "",
@@ -53,19 +54,20 @@ def backend_factory(
     backend: Literal["local", "engine", "neos"] = "local",
     engine_config: EngineConfig | None = None,
     neos_client: NeosClient | None = None,
+    model: Model | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, neos_client)
+        return NEOSServer(container, options, neos_client, model)
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, engine_config, options, output)
+        return GAMSEngine(container, engine_config, options, output, model)
     elif backend == "local":
         from gamspy._backend.local import Local
 
-        return Local(container, options, output)
+        return Local(container, options, output, model)
     else:
         raise ValidationError(
             f"`{backend}` is not a valid backend. Possible backends:"
@@ -80,12 +82,10 @@ class Backend(ABC):
         self.gdx_out = gdx_out
 
     @abstractmethod
-    def is_async(self):
-        ...
+    def is_async(self): ...
 
     @abstractmethod
-    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
-        ...
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False): ...
 
     def preprocess(self, keep_flags: bool = False):
         dirty_names, modified_names = (
@@ -93,6 +93,7 @@ class Backend(ABC):
         )
         self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
+        # print(f"{modified_names=}")
         self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
@@ -135,18 +136,16 @@ class Backend(ABC):
             ) = line.split(",")
 
         dataframe = pd.DataFrame(
-            [
-                [
-                    SOLVE_STATUS[int(solver_status)],
-                    ModelStatus(int(model_status)).name,
-                    objective_value,
-                    num_equations,
-                    num_variables,
-                    model_type,
-                    solver_name,
-                    solver_time,
-                ]
-            ],
+            [[
+                SOLVE_STATUS[int(solver_status)],
+                ModelStatus(int(model_status)).name,
+                objective_value,
+                num_equations,
+                num_variables,
+                model_type,
+                solver_name,
+                solver_time,
+            ]],
             columns=HEADER,
         )
         return dataframe

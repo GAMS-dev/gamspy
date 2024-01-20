@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -50,13 +51,11 @@ def data_records():
     data_recs = reformat_df(pd.DataFrame(data, columns=cols, index=inds))
 
     # c records list
-    c_recs = np.array(
-        [
-            [0.0755, 0.0655, 0.0498, 0.0585],
-            [0.0276, 0.0163, 0.096, 0.0224],
-            [0.068, 0.0119, 0.034, 0.0751],
-        ]
-    )
+    c_recs = np.array([
+        [0.0755, 0.0655, 0.0498, 0.0585],
+        [0.0276, 0.0163, 0.096, 0.0224],
+        [0.068, 0.0119, 0.034, 0.0751],
+    ])
 
     return c_recs, data_recs
 
@@ -73,7 +72,7 @@ def main():
 
     # PARAMETERS #
     demand = Parameter(
-        m, name="demand", domain=[j], records=np.array([217, 150, 145, 244])
+        m, name="demand", domain=j, records=np.array([217, 150, 145, 244])
     )
     c = Parameter(m, name="c", domain=[i, j], records=data_records()[0])
     data = Parameter(
@@ -83,15 +82,15 @@ def main():
     # VARIABLES #
     of = Variable(m, name="of", type="free")
     x = Variable(m, name="x", type="free", domain=[i, j])
-    P = Variable(m, name="P", type="free", domain=[i])
-    U = Variable(m, name="U", type="binary", domain=[i])
+    P = Variable(m, name="P", type="free", domain=i)
+    U = Variable(m, name="U", type="binary", domain=i)
 
     # EQUATIONS #
     eq1 = Equation(m, name="eq1", type="regular")
-    eq2 = Equation(m, name="eq2", type="regular", domain=[i])
-    eq3 = Equation(m, name="eq3", type="regular", domain=[i])
-    eq4 = Equation(m, name="eq4", type="regular", domain=[j])
-    eq5 = Equation(m, name="eq5", type="regular", domain=[i])
+    eq2 = Equation(m, name="eq2", type="regular", domain=i)
+    eq3 = Equation(m, name="eq3", type="regular", domain=i)
+    eq4 = Equation(m, name="eq4", type="regular", domain=j)
+    eq5 = Equation(m, name="eq5", type="regular", domain=i)
 
     eq1[...] = of == Sum([i, j], c[i, j] * sqr(x[i, j]))
     eq2[i] = P[i] <= data[i, "Pmax"] * U[i]

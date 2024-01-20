@@ -28,6 +28,7 @@ from __future__ import annotations
 from gams.transfer import SpecialValues
 
 import gamspy.math as math
+import gamspy.utils as utils
 from .version import __version__
 from gamspy._algebra import Card
 from gamspy._algebra import Domain
@@ -44,6 +45,7 @@ from gamspy._model import Model
 from gamspy._model import ModelStatus
 from gamspy._model import Problem
 from gamspy._model import Sense
+from gamspy._options import ModelInstanceOptions
 from gamspy._options import Options
 from gamspy._symbols import Alias
 from gamspy._symbols import Equation
@@ -79,6 +81,7 @@ __all__ = [
     "Ord",
     "Card",
     "Options",
+    "ModelInstanceOptions",
     "EngineConfig",
     "NeosClient",
     "SpecialValues",

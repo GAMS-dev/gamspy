@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -72,11 +73,11 @@ def main():
 
     # VARIABLES #
     OF = Variable(m, name="OF")
-    PMU = Variable(m, name="PMU", type="binary", domain=[bus])
+    PMU = Variable(m, name="PMU", type="binary", domain=bus)
 
     # EQUATIONS #
     const1 = Equation(m, name="const1", type="regular")
-    const2 = Equation(m, name="const2", type="regular", domain=[bus])
+    const2 = Equation(m, name="const2", type="regular", domain=bus)
 
     const1[...] = OF == Sum(bus, PMU[bus])
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1

@@ -92,6 +92,7 @@ class OptionsSuite(unittest.TestCase):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            debugging_level="keep",
             options=options,
         )
 
@@ -150,7 +151,7 @@ class OptionsSuite(unittest.TestCase):
             allow_suffix_in_limited_variables=False,
             merge_strategy="replace",
         )
-        gams_options = options._getGamsCompatibleOptions()
+        gams_options = options._get_gams_compatible_options()
         self.assertTrue(gams_options["suffixalgebravars"] == "off")
         self.assertTrue(gams_options["suffixdlvars"] == "off")
         self.assertTrue(gams_options["solveopt"] == 0)

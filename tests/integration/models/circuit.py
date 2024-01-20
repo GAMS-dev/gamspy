@@ -8,6 +8,7 @@ Neculai Andrei, "Models, Test Problems and Applications for
 Mathematical Programming". Technical Press, Bucharest, 2003.
 Application A34, pp.397.
 """
+
 from __future__ import annotations
 
 import os
@@ -38,15 +39,13 @@ def main():
         cont,
         name="g",
         domain=[m, n],
-        records=np.array(
-            [
-                [0.4850, 0.7520, 0.8690, 0.9820],
-                [0.3690, 1.2540, 0.7030, 1.4550],
-                [5.2095, 10.0677, 22.9274, 20.2153],
-                [23.3037, 101.7790, 111.4610, 191.2670],
-                [28.5132, 111.8467, 134.3884, 211.4823],
-            ]
-        ),
+        records=np.array([
+            [0.4850, 0.7520, 0.8690, 0.9820],
+            [0.3690, 1.2540, 0.7030, 1.4550],
+            [5.2095, 10.0677, 22.9274, 20.2153],
+            [23.3037, 101.7790, 111.4610, 191.2670],
+            [28.5132, 111.8467, 134.3884, 211.4823],
+        ]),
     )
 
     # VARIABLES #
@@ -60,15 +59,13 @@ def main():
     x8 = Variable(cont, name="x8")
     x9 = Variable(cont, name="x9")
     x10 = Variable(cont, name="x10")
-    obj = Variable(cont, name="obj")
 
     # EQUATIONS #
-    e1 = Equation(cont, name="e1", type="regular", domain=[n])
-    e2 = Equation(cont, name="e2", type="regular", domain=[n])
-    e3 = Equation(cont, name="e3", type="regular", domain=[n])
-    e4 = Equation(cont, name="e4", type="regular", domain=[n])
+    e1 = Equation(cont, name="e1", type="regular", domain=n)
+    e2 = Equation(cont, name="e2", type="regular", domain=n)
+    e3 = Equation(cont, name="e3", type="regular", domain=n)
+    e4 = Equation(cont, name="e4", type="regular", domain=n)
     e = Equation(cont, name="e", type="regular")
-    eobj = Equation(cont, name="eobj", type="regular")
 
     e1[n] = (
         g["r4", n] * x2
@@ -150,7 +147,7 @@ def main():
 
     e[...] = x1 * x3 - x2 * x4 == 0
 
-    eobj[...] = obj == x10
+    obj = x10
 
     # Bounds on variables
     x1.lo[...] = 0

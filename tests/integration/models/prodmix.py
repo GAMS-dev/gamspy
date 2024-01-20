@@ -11,6 +11,7 @@ Princeton University Press, Princeton, New Jersey, 1963.
 Keywords: linear programming, production planning, manufacturing, furniture
 production
 """
+
 from __future__ import annotations
 
 import os
@@ -43,21 +44,43 @@ def main():
         name="labor",
         domain=[shop, desk],
         records=np.array([[4, 9, 7, 10], [1, 1, 3, 40]]),
+        description="labor requirements (man-hours)",
     )
     caplim = Parameter(
-        m, name="caplim", domain=[shop], records=np.array([6000, 4000])
+        m,
+        name="caplim",
+        domain=shop,
+        records=np.array([6000, 4000]),
+        description="capacity (man hours)",
     )
     price = Parameter(
-        m, name="price", domain=[desk], records=np.array([12, 20, 18, 40])
+        m,
+        name="price",
+        domain=desk,
+        records=np.array([12, 20, 18, 40]),
+        description="per unit sold ($)",
     )
 
     # Variable
-    mix = Variable(m, name="mix", domain=[desk], type="Positive")
-    profit = Variable(m, name="profit")
+    mix = Variable(
+        m,
+        name="mix",
+        domain=desk,
+        type="Positive",
+        description="mix of desks produced (number of desks)",
+    )
+    profit = Variable(
+        m, name="profit", description="total profit                        ($)"
+    )
 
     # Equation
-    cap = Equation(m, name="cap", domain=[shop])
-    ap = Equation(m, name="ap")
+    cap = Equation(
+        m,
+        name="cap",
+        domain=shop,
+        description="capacity constraint (man-hours)",
+    )
+    ap = Equation(m, name="ap", description="accounting: total profit    ($)")
 
     cap[shop] = Sum(desk, labor[shop, desk] * mix[desk]) <= caplim[shop]
     ap[...] = profit == Sum(desk, price[desk] * mix[desk])

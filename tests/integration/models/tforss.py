@@ -11,6 +11,7 @@ Programs in the Paper Industry. Tech. rep., The World Bank, 1980.
 Keywords: linear programming, forestry, scenario analysis, investment planning,
           forest management planning
 """
+
 from __future__ import annotations
 
 import os
@@ -44,29 +45,25 @@ def main():
     )
 
     # Parameters
-    scd, land, ymf, a, b, pc, pd, nu, age = cont.getSymbols(
-        [
-            "scd",
-            "land",
-            "ymf",
-            "a",
-            "b",
-            "pc",
-            "pd",
-            "nu",
-            "age",
-        ]
-    )
+    scd, land, ymf, a, b, pc, pd, nu, age = cont.getSymbols([
+        "scd",
+        "land",
+        "ymf",
+        "a",
+        "b",
+        "pc",
+        "pd",
+        "nu",
+        "age",
+    ])
 
     # Scalar
-    mup, muc, life, rho = cont.getSymbols(
-        [
-            "mup",
-            "muc",
-            "life",
-            "rho",
-        ]
-    )
+    mup, muc, life, rho = cont.getSymbols([
+        "mup",
+        "muc",
+        "life",
+        "rho",
+    ])
 
     age[at] = 10 * Ord(at)
 
@@ -76,19 +73,19 @@ def main():
     lbal = Equation(
         cont,
         name="lbal",
-        domain=[cl],
+        domain=cl,
         description="log balances",
     )
     bal = Equation(
         cont,
         name="bal",
-        domain=[c],
+        domain=c,
         description="material balances of wood processing",
     )
     cap = Equation(
         cont,
         name="cap",
-        domain=[m],
+        domain=m,
         description="wood processing capacities",
     )
     landc = Equation(
@@ -115,27 +112,27 @@ def main():
     r = Variable(
         cont,
         name="r",
-        domain=[c],
+        domain=c,
         description="supply of logs to industry (1000m3 per year)",
     )
     z = Variable(
         cont,
         name="z",
         type="positive",
-        domain=[p],
+        domain=p,
         description="process level        (1000m3 input per year)",
     )
     h = Variable(
         cont,
         name="h",
-        domain=[m],
+        domain=m,
         description="capacity             (1000m3 input per year)",
     )
     x = Variable(
         cont,
         name="x",
         type="positive",
-        domain=[c],
+        domain=c,
         description="final shipments        (1000 units per year)",
     )
     phik = Variable(
@@ -232,7 +229,7 @@ def main():
     rhoval = Parameter(
         cont,
         name="rhoval",
-        domain=[rhoset],
+        domain=rhoset,
         records=np.array([0.03, 0.05, 0.07, 0.1]),
     )
 

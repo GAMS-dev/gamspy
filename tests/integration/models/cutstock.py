@@ -15,6 +15,7 @@ cutting stock problem, Part II, Operations Research 11 (1963), 863-888.
 Keywords: mixed integer linear programming, cutting stock, column generation,
           paper industry
 """
+
 from __future__ import annotations
 
 import os
@@ -40,34 +41,58 @@ def main():
     )
 
     # Sets
-    i = Set(m, "i", records=[f"w{idx}" for idx in range(1, 5)])
-    p = Set(m, "p", records=[f"p{idx}" for idx in range(1, 1001)])
-    pp = Set(m, "pp", domain=[p])
+    i = Set(
+        m,
+        "i",
+        records=[f"w{idx}" for idx in range(1, 5)],
+        description="widths",
+    )
+    p = Set(
+        m,
+        "p",
+        records=[f"p{idx}" for idx in range(1, 1001)],
+        description="possible patterns",
+    )
+    pp = Set(m, "pp", domain=p, description="dynamic subset of p")
 
     # Parameters
-    r = Parameter(m, "r", records=100)
+    r = Parameter(m, "r", records=100, description="raw width")
     w = Parameter(
         m,
         "w",
-        domain=[i],
+        domain=i,
         records=[["w1", 45], ["w2", 36], ["w3", 31], ["w4", 14]],
+        description="width",
     )
     d = Parameter(
         m,
         "d",
-        domain=[i],
+        domain=i,
         records=[["w1", 97], ["w2", 610], ["w3", 395], ["w4", 211]],
+        description="demand",
     )
-    aip = Parameter(m, "aip", domain=[i, p])
+    aip = Parameter(
+        m,
+        "aip",
+        domain=[i, p],
+        description="number of width i in pattern growing in p",
+    )
 
     # Master model variables
-    xp = Variable(m, "xp", domain=[p], type="integer")
-    z = Variable(m, "z")
+    xp = Variable(
+        m, "xp", domain=p, type="integer", description="patterns used"
+    )
+    z = Variable(m, "z", description="objective variable")
     xp.up[p] = Sum(i, d[i])
 
     # Master model equations
-    numpat = Equation(m, "numpat", definition=z == Sum(pp, xp[pp]))
-    demand = Equation(m, "demand", domain=[i])
+    numpat = Equation(
+        m,
+        "numpat",
+        definition=z == Sum(pp, xp[pp]),
+        description="number of patterns used",
+    )
+    demand = Equation(m, "demand", domain=i, description="meet demand")
     demand[i] = Sum(pp, aip[i, pp] * xp[pp]) >= d[i]
 
     master = Model(
@@ -80,15 +105,18 @@ def main():
     )
 
     # Pricing model variables
-    y = Variable(m, "y", domain=[i], type="integer")
+    y = Variable(m, "y", domain=i, type="integer", description="new pattern")
     y.up[i] = gams_math.ceil(r / w[i])
 
     defobj = Equation(
-        m,
-        "defobj",
-        definition=z == (1 - Sum(i, demand.m[i] * y[i])),
+        m, "defobj", definition=z == (1 - Sum(i, demand.m[i] * y[i]))
     )
-    knapsack = Equation(m, "knapsack", definition=Sum(i, w[i] * y[i]) <= r)
+    knapsack = Equation(
+        m,
+        "knapsack",
+        description="knapsack constraint",
+        definition=Sum(i, w[i] * y[i]) <= r,
+    )
 
     pricing = Model(
         m,
@@ -102,7 +130,7 @@ def main():
     pp[p] = Ord(p) <= Card(i)
     aip[i, pp[p]].where[Ord(i) == Ord(p)] = gams_math.floor(r / w[i])
 
-    pi = Set(m, "pi", domain=[p])
+    pi = Set(m, "pi", domain=p, description="set of the last pattern")
     pi[p] = Ord(p) == Card(pp) + 1
 
     while len(pp) < len(p):
@@ -123,8 +151,15 @@ def main():
 
     assert math.isclose(master.objective_value, 453.0000, rel_tol=0.001)
 
-    patrep = Parameter(m, "patrep", domain=["*", "*"])
-    demrep = Parameter(m, "demrep", domain=["*", "*"])
+    patrep = Parameter(
+        m, "patrep", domain=["*", "*"], description="solution pattern report"
+    )
+    demrep = Parameter(
+        m,
+        "demrep",
+        domain=["*", "*"],
+        description="solution demand supply report",
+    )
 
     patrep["# produced", p] = gams_math.Round(xp.l[p])
     patrep[i, p].where[patrep["# produced", p]] = aip[i, p]

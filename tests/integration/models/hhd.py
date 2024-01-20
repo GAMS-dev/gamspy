@@ -14,6 +14,7 @@ Neculai Andrei, "Models, Test Problems and Applications for
 Mathematical Programming". Technical Press, Bucharest, 2003.
 Application U84, page 65. Application A13, page 360.
 """
+
 from __future__ import annotations
 
 import os

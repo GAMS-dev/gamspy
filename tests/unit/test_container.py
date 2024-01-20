@@ -17,6 +17,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import UniverseAlias
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 
 
@@ -113,7 +114,7 @@ class ContainerSuite(unittest.TestCase):
         v2 = m.addVariable("v", description="blabla", records=pd.DataFrame())
         self.assertTrue(id(v1) == id(v2))
         self.assertRaises(ValueError, m.addVariable, "v", "free", ["*"])
-        self.assertRaises(ValueError, m.addVariable, "v", "dayum")
+        self.assertRaises(TypeError, m.addVariable, "v", "dayum")
 
         e1 = m.addEquation("e")
         self.assertRaises(ValueError, m.addEquation, "e", "regular", i1)
@@ -201,9 +202,6 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(Sense.values(), ["MIN", "MAX", "FEASIBILITY"])
 
     def test_arbitrary_gams_code(self):
-        self.m._addGamsCode("Set i / i1*i3 /;")
-        self.assertEqual(self.m._unsaved_statements[-1], "Set i / i1*i3 /;")
-
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
@@ -211,7 +209,6 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        m._run()
         self.assertTrue("piHalf" in m.data.keys())
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
@@ -373,11 +370,6 @@ class ContainerSuite(unittest.TestCase):
             m.generateGamsString(),
             "$onMultiR\n$onUNDF\n$gdxIn"
             f" {m._gdx_in}\n"
-            "Set i(*);\n$load i\n"
-            "Alias(i,a);\n"
-            "Parameter p;\n$load p\n"
-            "free Variable v;\n$load v\n"
-            "Equation e;\n$load e\n"
             "$offUNDF\n$gdxIn\n"
             f"execute_unload '{m._gdx_out}' \n",
         )
@@ -457,6 +449,71 @@ class ContainerSuite(unittest.TestCase):
         )
         m.read("test.gdx", load_records=False)
         self.assertIsNone(m["a"].records, None)
+
+    def test_debugging_level(self):
+        from gamspy.math import sqrt
+
+        global working_directory
+
+        def test_delete_success():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_delete_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_delete_err():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_delete_err()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_success():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_success()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_err():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_err()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_on_error_success():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_on_error_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_on_error_err():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_on_error_err()
+        self.assertTrue(os.path.exists(working_directory))
 
 
 def container_suite():

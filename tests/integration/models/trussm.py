@@ -46,6 +46,7 @@ Second-order Cone Programming", Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image Processing.
 284 (1998) 193-228.
 """
+
 from __future__ import annotations
 
 import os
@@ -71,72 +72,137 @@ def main():
     )
 
     # Prepare data
-    forces = pd.DataFrame(
-        [
-            ["j1", "k1", 0.0008],
-            ["j1", "k2", 1.0668],
-            ["j1", "k3", 0.2944],
-            ["j2", "k1", 0.0003],
-            ["j2", "k2", 0.0593],
-            ["j2", "k3", -1.3362],
-            ["j3", "k1", -0.0006],
-            ["j3", "k2", -0.0956],
-            ["j3", "k3", 0.7143],
-            ["j4", "k1", -1.0003],
-            ["j4", "k2", -0.8323],
-            ["j4", "k3", 1.6236],
-        ]
-    )
+    forces = pd.DataFrame([
+        ["j1", "k1", 0.0008],
+        ["j1", "k2", 1.0668],
+        ["j1", "k3", 0.2944],
+        ["j2", "k1", 0.0003],
+        ["j2", "k2", 0.0593],
+        ["j2", "k3", -1.3362],
+        ["j3", "k1", -0.0006],
+        ["j3", "k2", -0.0956],
+        ["j3", "k3", 0.7143],
+        ["j4", "k1", -1.0003],
+        ["j4", "k2", -0.8323],
+        ["j4", "k3", 1.6236],
+    ])
 
-    stiff_data = pd.DataFrame(
-        [
-            ["j1", "i1", 1.0],
-            ["j1", "i2", 0],
-            ["j1", "i3", 0.5],
-            ["j1", "i4", 0],
-            ["j1", "i5", 0],
-            ["j2", "i1", 0],
-            ["j2", "i2", 0],
-            ["j2", "i3", -0.5],
-            ["j2", "i4", -1.0],
-            ["j2", "i5", 0],
-            ["j3", "i1", 0],
-            ["j3", "i2", 0.5],
-            ["j3", "i3", 0],
-            ["j3", "i4", 0],
-            ["j3", "i5", 1.0],
-            ["j4", "i1", 0],
-            ["j4", "i2", 0.5],
-            ["j4", "i3", 0],
-            ["j4", "i4", 1.0],
-            ["j4", "i5", 0],
-        ]
-    )
+    stiff_data = pd.DataFrame([
+        ["j1", "i1", 1.0],
+        ["j1", "i2", 0],
+        ["j1", "i3", 0.5],
+        ["j1", "i4", 0],
+        ["j1", "i5", 0],
+        ["j2", "i1", 0],
+        ["j2", "i2", 0],
+        ["j2", "i3", -0.5],
+        ["j2", "i4", -1.0],
+        ["j2", "i5", 0],
+        ["j3", "i1", 0],
+        ["j3", "i2", 0.5],
+        ["j3", "i3", 0],
+        ["j3", "i4", 0],
+        ["j3", "i5", 1.0],
+        ["j4", "i1", 0],
+        ["j4", "i2", 0.5],
+        ["j4", "i3", 0],
+        ["j4", "i4", 1.0],
+        ["j4", "i5", 0],
+    ])
 
     # Set
-    i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 6)])
-    j = Set(m, name="j", records=[f"j{idx}" for idx in range(1, 5)])
-    k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
+    i = Set(
+        m,
+        name="i",
+        records=[f"i{idx}" for idx in range(1, 6)],
+        description="bars",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=[f"j{idx}" for idx in range(1, 5)],
+        description="nodes",
+    )
+    k = Set(
+        m,
+        name="k",
+        records=[f"k{idx}" for idx in range(1, 4)],
+        description="load scenarios",
+    )
 
     # Data
-    f = Parameter(m, name="f", domain=[j, k], records=forces)
-    b = Parameter(m, name="b", domain=[j, i], records=stiff_data)
+    f = Parameter(
+        m,
+        name="f",
+        domain=[j, k],
+        records=forces,
+        description="nodal force for scenario k on node j",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=[j, i],
+        records=stiff_data,
+        description="stiffness parameter for bar i",
+    )
 
     max_volume = 10
 
     # Variable
-    tau = Variable(m, name="tau")
-    s = Variable(m, name="s", domain=[i, k])
-    tk = Variable(m, name="tk", domain=[i, k], type="Positive")
-    t = Variable(m, name="t", domain=[i], type="Positive")
-    sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
+    tau = Variable(m, name="tau", description="objective")
+    s = Variable(
+        m,
+        name="s",
+        domain=[i, k],
+        description=(
+            "stress on bar i under load scenario k, which is elongation times"
+            " cross-sectional area of bar"
+        ),
+    )
+    tk = Variable(
+        m,
+        name="tk",
+        domain=[i, k],
+        type="Positive",
+        description="volume of truss bar i under load scenario k",
+    )
+    t = Variable(
+        m,
+        name="t",
+        domain=i,
+        type="Positive",
+        description="volume of truss bar i",
+    )
+    sigma = Variable(
+        m,
+        name="sigma",
+        domain=[i, k],
+        type="Positive",
+        description="required cross-sectional area of bar i under load k",
+    )
 
     # Equation
-    volumeeq = Equation(m, name="volumeeq", domain=[i, k])
-    deftk = Equation(m, name="deftk", domain=[i, k])
-    reseq = Equation(m, name="reseq", domain=[k])
-    trusscomp = Equation(m, name="trusscomp")
-    stiffness = Equation(m, name="stifness", domain=[j, k])
+    volumeeq = Equation(
+        m, name="volumeeq", domain=[i, k], description="compute volume t"
+    )
+    deftk = Equation(
+        m,
+        name="deftk",
+        domain=[i, k],
+        description="assignment of tk to keep cones disjoint",
+    )
+    reseq = Equation(
+        m, name="reseq", domain=k, description="resource restriction on truss"
+    )
+    trusscomp = Equation(
+        m, name="trusscomp", description="compliance of truss"
+    )
+    stiffness = Equation(
+        m,
+        name="stifness",
+        domain=[j, k],
+        description="stiffness requirement for bar j under load k",
+    )
 
     volumeeq[i, k] = 2 * tk[i, k] * sigma[i, k] >= s[i, k] ** 2
     deftk[i, k] = tk[i, k] == t[i]
