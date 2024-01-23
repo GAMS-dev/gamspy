@@ -252,10 +252,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 name,
                 type,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
@@ -270,7 +269,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = validation.validate_domain(self, indices)

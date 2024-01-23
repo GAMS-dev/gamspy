@@ -272,10 +272,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 name,
                 type,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
@@ -296,7 +295,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._slack = self._create_attr("slack")
             self._infeas = self._create_attr("infeas")
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
 
     def __hash__(self):
         return id(self)
