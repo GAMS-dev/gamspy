@@ -122,7 +122,7 @@ class ContainerSuite(unittest.TestCase):
         e2 = m.addEquation("e")
         self.assertTrue(id(e1) == id(e2))
         self.assertRaises(ValueError, m.addEquation, "e", "bla")
-        self.assertRaises(ValueError, m.addEquation, "e", "leq")
+        self.assertRaises(TypeError, m.addEquation, "e", "leq")
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
