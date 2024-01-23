@@ -6,6 +6,7 @@ GAMSPy 0.11.8
 -------------------------------------------------------------------------------
 - General
   - Allow assigning VariableType enum or EquationType enum as an attribute after object creation for Equation and Variable.
+  - Fix running twice on symbol declaration with records
 - Testing
   - Add tests for assigning type to Variable and Equation after creation.
 

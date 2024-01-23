@@ -491,17 +491,19 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 name,
                 domain,
                 is_singleton,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
             self.container._add_statement(self)
             self._current_index = 0
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
 
     def __len__(self):
         if self.records is not None:

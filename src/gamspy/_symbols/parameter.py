@@ -209,17 +209,19 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 container,
                 name,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
 
     def __getitem__(
         self, indices: Union[tuple, str]
