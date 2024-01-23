@@ -465,6 +465,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         super().setRecords(records, uels_on_axes)
         self.container._run()
 
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, var_type: str | VariableType):
+        """
+        The type of variable; [binary, integer, positive, negative, free, sos1, sos2, semicont, semiint]
+
+        Parameters
+        ----------
+        var_type : str
+            The type of variable
+        """
+        given_type = cast_type(var_type)
+        gt.Variable.type.fset(self, given_type)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Variable in GAMS language.

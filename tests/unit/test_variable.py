@@ -404,6 +404,31 @@ class VariableSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             e1[j1, j2] = j3[j1, j2, j4] * 5 <= 5
 
+    def test_type(self):
+        gamma = Variable(self.m, "gamma")
+        gamma.type = VariableType.BINARY
+        self.assertEqual(gamma.type, "binary")
+
+        var1 = Variable(self.m, "var1")
+        var1.type = VariableType.FREE
+        self.assertEqual(var1.type, "free")
+
+        var2 = Variable(self.m, "var2")
+        var2.type = VariableType.POSITIVE
+        self.assertEqual(var2.type, "positive")
+
+        var3 = Variable(self.m, "var3")
+        var3.type = VariableType.NEGATIVE
+        self.assertEqual(var3.type, "negative")
+
+        var4 = Variable(self.m, "var4")
+        var4.type = VariableType.NEGATIVE
+        self.assertEqual(var4.type, "negative")
+
+        var5 = Variable(self.m, "var5")
+        var5.type = VariableType.SEMICONT
+        self.assertEqual(var5.type, "semicont")
+
 
 def variable_suite():
     suite = unittest.TestSuite()

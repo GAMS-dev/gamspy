@@ -563,6 +563,28 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         super().setRecords(records, uels_on_axes)
         self.container._run()
 
+    @property
+    def type(self):
+        """
+        The type of equation;
+        3. 'regular' -- equal, less than or greater than
+        4. 'nonbinding', 'N', or '=N='  -- nonbinding relationship
+        5. 'cone', 'C', or '=C=' -- cone equation
+        6. 'external', 'X', or '=X=' -- external equation
+        7. 'boolean', 'B', or '=B=' -- boolean equation
+
+        Returns
+        -------
+        str
+            The type of equation
+        """
+        return self._type
+
+    @type.setter
+    def type(self, eq_type: str | EquationType):
+        given_type = cast_type(eq_type)
+        gt.Equation.type.fset(self, given_type)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Equation in GAMS language.
@@ -595,7 +617,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
 def cast_type(type: str | EquationType) -> str:
     if isinstance(type, str):
-        if type.upper() not in EquationType.values():
+        if type.lower() not in [
+            "eq",
+            "geq",
+            "leq",
+            "regular",
+            "nonbinding",
+            "external",
+            "cone",
+            "boolean",
+        ]:
             raise ValueError(
                 "Allowed equation types:"
                 f" {EquationType.values()} but found {type}."
@@ -607,6 +638,6 @@ def cast_type(type: str | EquationType) -> str:
 
     elif isinstance(type, EquationType):
         # assign eq by default
-        type = "eq" if EquationType.REGULAR else str(type)
+        type = "eq" if type == EquationType.REGULAR else str(type)
 
     return type

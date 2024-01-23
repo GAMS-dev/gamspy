@@ -647,6 +647,19 @@ class EquationSuite(unittest.TestCase):
                 TSAM[ii, jj] == A[ii, jj] * Y[jj]
             )
 
+    def test_type(self):
+        eq1 = Equation(self.m, "eq1")
+        eq1.type = EquationType.REGULAR
+        self.assertEqual(eq1.type, "eq")
+
+        eq2 = Equation(self.m, "eq2")
+        eq2.type = EquationType.BOOLEAN
+        self.assertEqual(eq2.type, "boolean")
+
+        eq3 = Equation(self.m, "eq3")
+        eq3.type = EquationType.NONBINDING
+        self.assertEqual(eq3.type, "nonbinding")
+
 
 def equation_suite():
     suite = unittest.TestSuite()
