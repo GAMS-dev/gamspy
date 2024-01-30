@@ -1,5 +1,9 @@
 .. _parameter:
 
+.. meta::
+   :description: Documentation of GAMSPy Parameter (gamspy.Parameter)
+   :keywords: Parameter, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 *********
 Parameter
 *********

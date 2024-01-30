@@ -1,6 +1,10 @@
 Model
 =====
 
+.. meta::
+   :description: Reference page for GAMSPy Model (gamspy.Model)
+   :keywords: Reference, Model, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 .. autoclass:: gamspy.Model
    :members:
    :undoc-members:

@@ -1,5 +1,9 @@
 .. _variable:
 
+.. meta::
+   :description: Documentation of GAMSPy Variable (gamspy.Variable)
+   :keywords: Variable, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ********
 Variable
 ********

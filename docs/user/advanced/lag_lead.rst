@@ -1,5 +1,9 @@
 .. _lag_lead:
 
+.. meta::
+   :description: Documentation of lead and lag operations on sets
+   :keywords: Lag, Lead, Set, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ************
 Lag and Lead
 ************
