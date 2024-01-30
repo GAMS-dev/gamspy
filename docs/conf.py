@@ -4,9 +4,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 from __future__ import annotations
 
+import gamspy
 import os
 import sys
-import gamspy
 from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../src"))
@@ -20,8 +20,16 @@ copyright = f"{datetime.now().year}, GAMS Development Corporation"
 author = "GAMS"
 release = gamspy.__version__
 language = "en"
-html_last_updated_fmt = "" # to reveal the build date in the pages meta
+html_last_updated_fmt = ""  # to reveal the build date in the pages meta
 autodoc_typehints = "description"
+
+# -- Switcher ----------------------------------------------------------------
+# Define the json_url for our version switcher.
+json_url = "https://gamspy.readthedocs.io/en/latest/_static/switcher.json"
+
+is_readthedocs = os.environ.get("READTHEDOCS_VERSION", "dev")
+if is_readthedocs == "dev":
+    json_url = "_static/switcher.json"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -85,6 +93,11 @@ html_theme_options = {
         "image_light": "_static/gamspy_logo.png",
         "image_dark": "_static/gamspy_logo_dark.png",
     },
+    "switcher": {
+        "json_url": json_url,
+        "version_match": f"v{release}",
+    },
+    "navbar_center": ["version-switcher", "navbar-nav"],
     "show_nav_level": 2,
     "show_toc_level": 2,
 }
