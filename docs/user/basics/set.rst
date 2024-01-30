@@ -1,5 +1,9 @@
 .. _set:
 
+.. meta::
+   :description: Documentation of GAMSPy Set (gamspy.Set)
+   :keywords: Set, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ***
 Set
 ***

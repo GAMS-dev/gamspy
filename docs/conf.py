@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import os
 import sys
+import gamspy
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("../src"))
 
@@ -14,9 +16,12 @@ sys.path.insert(0, os.path.abspath("../src"))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "GAMSpy"
-copyright = "2023, GAMS Development Corporation"
+copyright = f"{datetime.now().year}, GAMS Development Corporation"
 author = "GAMS"
-release = "0.11.7"
+release = gamspy.__version__
+language = "en"
+html_last_updated_fmt = "" # to reveal the build date in the pages meta
+autodoc_typehints = "description"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

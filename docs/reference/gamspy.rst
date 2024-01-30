@@ -1,6 +1,10 @@
 gamspy
 ======
 
+.. meta::
+   :description: GAMSPy Reference
+   :keywords: Reference, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 .. toctree::
    :maxdepth: 1
 
