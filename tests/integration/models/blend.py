@@ -9,6 +9,7 @@ Dantzig, G B, Chapter 3.4. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
 
 Keywords: linear programming, blending problem, manufacturing, alloy blending
+
 """
 
 from __future__ import annotations

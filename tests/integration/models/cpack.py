@@ -13,6 +13,7 @@ Pinter, J D, Nonlinear optimization with GAMS/LGO.
 Journal of Global Optimization 38 (2007), 79-101.
 
 Keywords: quadratic constraint programming, circle packing problem, mathematics
+
 """
 
 from __future__ import annotations

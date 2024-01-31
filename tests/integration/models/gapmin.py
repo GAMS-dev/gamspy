@@ -23,6 +23,7 @@ the Generalized Assignment Problem. Operations Research 37 (1989), 658-663.
 
 Keywords: mixed integer linear programming, relaxed mixed integer linear
           programming, general assignment problem, lagrangian relaxation, knapsack
+
 """
 
 from __future__ import annotations

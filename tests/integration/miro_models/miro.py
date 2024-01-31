@@ -17,6 +17,7 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
+
 from __future__ import annotations
 
 from gamspy import Container

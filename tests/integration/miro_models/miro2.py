@@ -17,6 +17,7 @@ comments.
 
 Keywords: linear programming, transportation problem, scheduling
 """
+
 from __future__ import annotations
 
 import sys
@@ -171,13 +172,11 @@ def main():
     c[i, j] = f * d[i, j] / 1000
 
     with open("miro.log", "w") as f:
-        f.writelines(
-            [
-                "------------------------------------\n",
-                "        Validating data\n",
-                "------------------------------------\n",
-            ]
-        )
+        f.writelines([
+            "------------------------------------\n",
+            "        Validating data\n",
+            "------------------------------------\n",
+        ])
         if a.records.value.sum() < b.records.value.sum():
             f.writelines(["a:: Capacity insufficient to meet demand"])
         else:
