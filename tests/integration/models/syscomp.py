@@ -5,6 +5,7 @@ References
 Kalvelagen, E., (2002) Solving systems of linear equations with GAMS.
 http://www.gams.com/~erwin/lineq.pdf
 """
+
 from __future__ import annotations
 
 import os
@@ -56,10 +57,10 @@ def main():
 
     # VARIABLES #
     rx = Variable(
-        m, name="rx", domain=[i], description="real part of the solution"
+        m, name="rx", domain=i, description="real part of the solution"
     )
     ix = Variable(
-        m, name="ix", domain=[i], description="imaginary part of the solution"
+        m, name="ix", domain=i, description="imaginary part of the solution"
     )
     obj = Variable(
         m, name="obj", description="variable of a virtual objective"
@@ -70,14 +71,14 @@ def main():
         m,
         name="real",
         type="regular",
-        domain=[i],
+        domain=i,
         description="real part of the system",
     )
     imag = Equation(
         m,
         name="imag",
         type="regular",
-        domain=[i],
+        domain=i,
         description="imaginary part of the system",
     )
     eobj = Equation(

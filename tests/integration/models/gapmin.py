@@ -24,6 +24,7 @@ the Generalized Assignment Problem. Operations Research 37 (1989), 658-663.
 Keywords: mixed integer linear programming, relaxed mixed integer linear
           programming, general assignment problem, lagrangian relaxation, knapsack
 """
+
 from __future__ import annotations
 
 import os
@@ -48,25 +49,21 @@ from gamspy.math import sqr
 
 
 def table_records():
-    a_recs = np.array(
-        [
-            [12, 8, 25, 17, 19, 22, 6, 22, 20, 25],
-            [5, 15, 15, 14, 7, 11, 14, 16, 17, 15],
-            [21, 24, 13, 24, 12, 16, 23, 20, 15, 5],
-            [23, 17, 10, 6, 24, 20, 15, 10, 19, 9],
-            [17, 20, 15, 16, 5, 13, 7, 16, 8, 5],
-        ]
-    )
+    a_recs = np.array([
+        [12, 8, 25, 17, 19, 22, 6, 22, 20, 25],
+        [5, 15, 15, 14, 7, 11, 14, 16, 17, 15],
+        [21, 24, 13, 24, 12, 16, 23, 20, 15, 5],
+        [23, 17, 10, 6, 24, 20, 15, 10, 19, 9],
+        [17, 20, 15, 16, 5, 13, 7, 16, 8, 5],
+    ])
 
-    f_recs = np.array(
-        [
-            [16, 26, 30, 47, 18, 19, 33, 37, 42, 31],
-            [38, 42, 15, 21, 26, 11, 11, 50, 24, 19],
-            [48, 17, 14, 22, 14, 18, 47, 32, 17, 42],
-            [22, 32, 28, 39, 37, 23, 25, 12, 44, 17],
-            [31, 42, 31, 40, 16, 15, 29, 31, 44, 41],
-        ]
-    )
+    f_recs = np.array([
+        [16, 26, 30, 47, 18, 19, 33, 37, 42, 31],
+        [38, 42, 15, 21, 26, 11, 11, 50, 24, 19],
+        [48, 17, 14, 22, 14, 18, 47, 32, 17, 42],
+        [22, 32, 28, 39, 37, 23, 25, 12, 44, 17],
+        [31, 42, 31, 40, 16, 15, 29, 31, 44, 41],
+    ])
 
     return a_recs, f_recs
 
@@ -101,12 +98,12 @@ def main():
 
     # EQUATIONS ##
     capacity = Equation(
-        m, name="capacity", domain=[i], description="resource availability"
+        m, name="capacity", domain=i, description="resource availability"
     )
     choice = Equation(
         m,
         name="choice",
-        domain=[j],
+        domain=j,
         description="assignment constraint.. one resource per item",
     )
     defz = Equation(m, name="defz", description="definition of total cost")
@@ -124,7 +121,12 @@ def main():
         domain=[i, j],
         description="cost of assigning item j to resource i",
     )
-    b = Parameter(m, name="b", domain=[i], description="available resources")
+    b = Parameter(m, name="b", domain=i, description="available resources")
+
+    # PARAMETERS
+    a.setRecords(table_records()[0])
+    f.setRecords(table_records()[1])
+    b.setRecords(np.array([28, 20, 27, 24, 19]))
 
     # PARAMETERS
     a.setRecords(table_records()[0])
@@ -195,7 +197,7 @@ def main():
     id = Set(
         m,
         name="id",
-        domain=[i],
+        domain=i,
         description="dynamic version of i used to define a subset of i",
     )
     iter = Set(
@@ -209,9 +211,7 @@ def main():
     ii = Alias(m, name="ii", alias_with=i)
 
     # Parameters
-    w = Parameter(
-        m, name="w", domain=[j], description="Lagrangian multipliers"
-    )
+    w = Parameter(m, name="w", domain=j, description="Lagrangian multipliers")
     improv = Parameter(
         m,
         name="improv",
@@ -227,7 +227,7 @@ def main():
     knapsack = Equation(
         m,
         name="knapsack",
-        domain=[i],
+        domain=i,
         description="capacity with dynamic sets",
     )
     defzlrx = Equation(m, name="defzlrx", description="definition of zlrx")
@@ -280,7 +280,7 @@ def main():
     )
 
     # Parameter
-    s = Parameter(m, name="s", domain=[j], description="slack variable")
+    s = Parameter(m, name="s", domain=j, description="slack variable")
     report = Parameter(
         m, name="report", domain=[iter, "*"], description="iteration log"
     )
@@ -328,7 +328,7 @@ def main():
     _ = Parameter(
         m,
         name="wopt",
-        domain=[j],
+        domain=j,
         records=np.array([35, 40, 60, 69, 21, 49, 42, 47, 64, 46]),
         description="an optimal set of multipliers",
     )

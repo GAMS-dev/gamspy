@@ -260,6 +260,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._is_frozen = False
             name = validation.validate_name(name)
 
+            if is_miro_output:
+                name = name.lower()
+
             previous_state = container.miro_protect
             container.miro_protect = False
             super().__init__(
@@ -267,10 +270,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 name,
                 type,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             if is_miro_output:
@@ -288,7 +290,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
+
             container.miro_protect = True
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
@@ -483,6 +489,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
         self.container._run()
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, var_type: str | VariableType):
+        """
+        The type of variable; [binary, integer, positive, negative, free, sos1, sos2, semicont, semiint]
+
+        Parameters
+        ----------
+        var_type : str
+            The type of variable
+        """
+        given_type = cast_type(var_type)
+        gt.Variable.type.fset(self, given_type)
 
     def gamsRepr(self) -> str:
         """

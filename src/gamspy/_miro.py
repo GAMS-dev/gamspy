@@ -50,13 +50,13 @@ class MiroJSONEncoder:
             symbol = self.container[name]
 
             if isinstance(symbol, (gp.Set, gp.Parameter)):
-                sp_names.append(name.lower())
+                sp_names.append(name)
                 sp_texts.append(
                     symbol.description if symbol.description else symbol.name
                 )
                 sp_types.append(type(symbol).__name__.lower())
             elif isinstance(symbol, (gp.Variable, gp.Equation)):
-                ve_names.append(name.lower())
+                ve_names.append(name)
                 ve_texts.append(
                     symbol.description if symbol.description else symbol.name
                 )
@@ -203,17 +203,13 @@ class MiroJSONEncoder:
 
             headers_dict = self.prepare_headers_dict(symbol)
 
-            info.append(
-                {
-                    "alias": (
-                        symbol.description
-                        if symbol.description
-                        else symbol.name.lower()
-                    ),
-                    "symtype": type_map[type(symbol)],
-                    "headers": headers_dict,
-                }
-            )
+            info.append({
+                "alias": (
+                    symbol.description if symbol.description else symbol.name
+                ),
+                "symtype": type_map[type(symbol)],
+                "headers": headers_dict,
+            })
 
         return info
 
@@ -230,7 +226,7 @@ class MiroJSONEncoder:
         )
         symbol_dicts = self.prepare_symbols(non_scalars)
 
-        non_scalars = [name.lower() for name in non_scalars]
+        non_scalars = [name for name in non_scalars]
 
         keys = non_scalars
         values = symbol_dicts

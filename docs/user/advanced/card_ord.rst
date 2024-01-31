@@ -1,5 +1,9 @@
 .. _card_ord:
 
+.. meta::
+   :description: Documentation of gamspy.Card and gamspy.Ord operations.
+   :keywords: Card, Ord, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ************
 Card and Ord
 ************

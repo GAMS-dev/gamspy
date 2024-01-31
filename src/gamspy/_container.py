@@ -40,6 +40,7 @@ from gams import GamsCheckpoint
 from gams import GamsJob
 from gams import GamsWorkspace
 from gams.core import gdx
+from gams.core.opt import optResetStr
 
 import gamspy as gp
 import gamspy.utils as utils
@@ -72,6 +73,13 @@ MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
 MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
 
 
+debugging_map = {
+    "delete": DebugLevel.Off,
+    "keep_on_error": DebugLevel.Off,
+    "keep": DebugLevel.KeepFiles,
+}
+
+
 class Container(gt.Container):
     """
     A container is an object that holds all symbols and operates on them.
@@ -85,6 +93,8 @@ class Container(gt.Container):
     working_directory : str, optional
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
+    debugging_level : str, optional
+        Decides on keeping the temporary files generate by GAMS, by default "delete"
     delayed_execution : bool, optional
         Delayed execution mode, by default False
     options : Options
@@ -105,6 +115,7 @@ class Container(gt.Container):
         load_from: str | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
+        debugging_level: str = "delete",
         delayed_execution: bool = False,
         miro_protect: bool = True,
         options: Options | None = None,
@@ -122,6 +133,8 @@ class Container(gt.Container):
                 "Delayed execution mode will be deprecated in 0.12.0."
             )
 
+        self._debugging_level = self._get_debugging_level(debugging_level)
+
         self._unsaved_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
@@ -132,7 +145,9 @@ class Container(gt.Container):
         super().__init__(load_from, system_directory)
 
         self.workspace = GamsWorkspace(
-            working_directory, self.system_directory, DebugLevel.KeepFiles
+            working_directory,
+            self.system_directory,
+            debugging_map[debugging_level],
         )
 
         self.working_directory = self.workspace.working_directory
@@ -145,12 +160,33 @@ class Container(gt.Container):
         ) = self._setup_paths()
 
         self._job: GamsJob | None = None
+        self._is_first_run = True
+        self.temp_container = gt.Container(
+            system_directory=self.system_directory
+        )
         self._options = options
+        self._gams_options = _map_options(
+            self.workspace,
+            global_options=options,
+            is_seedable=True,
+        )
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
         self._first_destruct = True
+
+    def _get_debugging_level(self, debugging_level: str):
+        if (
+            not isinstance(debugging_level, str)
+            or debugging_level not in debugging_map.keys()
+        ):
+            raise ValidationError(
+                "Debugging level must be one of 'delete', 'keep',"
+                " 'keep_on_error'"
+            )
+
+        return debugging_level
 
     def __del__(self):
         if (
@@ -380,15 +416,13 @@ class Container(gt.Container):
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
-        options = _map_options(
-            self.workspace,
-            global_options=self._options,
-            is_seedable=self._is_first_run,
-        )
-
-        runner = backend_factory(self, options)
+        runner = backend_factory(self, self._gams_options)
 
         summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
+
+        if not self._is_first_run:
+            # Required for correct seeding
+            optResetStr(self._gams_options._opt, "seed")
 
         self._is_first_run = False
 
@@ -979,12 +1013,11 @@ class Container(gt.Container):
     ):
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
-        temp_container = gt.Container(system_directory=self.system_directory)
-        temp_container.read(load_from, symbol_names)
+        self.temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
-                updated_records = temp_container[name].records
+                updated_records = self.temp_container[name].records
 
                 self[name]._records = updated_records
 
@@ -995,6 +1028,8 @@ class Container(gt.Container):
 
             if user_invoked:
                 self[name].modified = True
+
+        self.temp_container.data = {}
 
         if user_invoked:
             self._run()

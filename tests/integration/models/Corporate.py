@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 8.3
 Last modified: May 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -32,14 +33,12 @@ def main():
 
     # SETS #
     BroadAssetClassOne, BroadAssetClassTwo, BroadAssetClassThree, ACTIVE = (
-        m.getSymbols(
-            [
-                "BroadAssetClassOne",
-                "BroadAssetClassTwo",
-                "BroadAssetClassThree",
-                "ACTIVE",
-            ]
-        )
+        m.getSymbols([
+            "BroadAssetClassOne",
+            "BroadAssetClassTwo",
+            "BroadAssetClassThree",
+            "ACTIVE",
+        ])
     )
 
     # ALIASES
@@ -52,13 +51,13 @@ def main():
     BroadWeights = Parameter(
         m,
         name="BroadWeights",
-        domain=[j],
+        domain=j,
         description="Weights of the broad asset classes",
     )
     AssetWeights = Parameter(
         m,
         name="AssetWeights",
-        domain=[i],
+        domain=i,
         description="Weights of each asset in the index",
     )
 
@@ -82,7 +81,7 @@ def main():
     IndexReturns = Parameter(
         m,
         name="IndexReturns",
-        domain=[l],
+        domain=l,
         description="Index return scenarios",
     )
     BroadAssetReturns = Parameter(
@@ -94,7 +93,7 @@ def main():
     Benchmark = Parameter(
         m,
         name="Benchmark",
-        domain=[l],
+        domain=l,
         description="Current benchmark scenario returns",
     )
 
@@ -116,9 +115,7 @@ def main():
         description="Current weight for tactcal allocation",
     )
     EpsTolerance = Parameter(m, name="EpsTolerance", description="Tolerance")
-    pr = Parameter(
-        m, name="pr", domain=[l], description="Scenario probability"
-    )
+    pr = Parameter(m, name="pr", domain=l, description="Scenario probability")
 
     pr[l] = 1.0 / Card(l)
 
@@ -127,41 +124,31 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Percentage invested in each security",
     )
     z = Variable(
         m,
         name="z",
         type="positive",
-        domain=[j],
+        domain=j,
         description="Percentages invested in each broad asset class",
     )
     PortRet = Variable(
-        m, name="PortRet", domain=[l], description="Portfolio returns"
-    )
-    ObjValue = Variable(
-        m, name="ObjValue", description="Objective function value"
+        m, name="PortRet", domain=l, description="Portfolio returns"
     )
 
     # EQUATIONS #
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        description=(
-            "Objective function for the strategic model (Expected return)"
-        ),
-    )
     BroadPortRetDef = Equation(
         m,
         name="BroadPortRetDef",
-        domain=[l],
+        domain=l,
         description="Portfolio return definition for broad asset classes",
     )
     PortRetDef = Equation(
         m,
         name="PortRetDef",
-        domain=[l],
+        domain=l,
         description="Portfolio return definition",
     )
     BroadNormalCon = Equation(
@@ -180,11 +167,11 @@ def main():
     MADCon = Equation(
         m,
         name="MADCon",
-        domain=[l],
+        domain=l,
         description="MAD constraints",
     )
 
-    ObjDef[...] = ObjValue == Sum(l, pr[l] * PortRet[l])
+    ObjValue = Sum(l, pr[l] * PortRet[l])
 
     BroadPortRetDef[l] = PortRet[l] == Sum(j, z[j] * BroadAssetReturns[j, l])
 
@@ -200,7 +187,7 @@ def main():
     StrategicModel = Model(
         m,
         name="StrategicModel",
-        equations=[ObjDef, BroadPortRetDef, MADCon, BroadNormalCon],
+        equations=[BroadPortRetDef, MADCon, BroadNormalCon],
         problem="LP",
         sense=Sense.MAX,
         objective=ObjValue,
@@ -208,7 +195,7 @@ def main():
     TacticalModel = Model(
         m,
         name="TacticalModel",
-        equations=[ObjDef, PortRetDef, MADCon, NormalCon],
+        equations=[PortRetDef, MADCon, NormalCon],
         problem="LP",
         sense=Sense.MAX,
         objective=ObjValue,
@@ -287,7 +274,9 @@ def main():
     print("\n## Model Integrated ##")
     print("x: \n", x.records.level.tolist())
 
-    print("\nObjective Function Value: ", round(ObjValue.records.level[0], 3))
+    print(
+        "\nObjective Function Value: ", round(TacticalModel.objective_value, 3)
+    )
 
 
 if __name__ == "__main__":

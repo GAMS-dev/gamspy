@@ -17,6 +17,7 @@ from gamspy import Set
 from gamspy import Sum
 from gamspy import UniverseAlias
 from gamspy import Variable
+from gamspy.exceptions import GamspyException
 from gamspy.exceptions import ValidationError
 
 
@@ -121,7 +122,7 @@ class ContainerSuite(unittest.TestCase):
         e2 = m.addEquation("e")
         self.assertTrue(id(e1) == id(e2))
         self.assertRaises(ValueError, m.addEquation, "e", "bla")
-        self.assertRaises(ValueError, m.addEquation, "e", "leq")
+        self.assertRaises(TypeError, m.addEquation, "e", "leq")
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
@@ -448,6 +449,71 @@ class ContainerSuite(unittest.TestCase):
         )
         m.read("test.gdx", load_records=False)
         self.assertIsNone(m["a"].records, None)
+
+    def test_debugging_level(self):
+        from gamspy.math import sqrt
+
+        global working_directory
+
+        def test_delete_success():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_delete_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_delete_err():
+            global working_directory
+            m = Container(debugging_level="delete")
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_delete_err()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_success():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_success()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_err():
+            m = Container(debugging_level="keep")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_err()
+        self.assertTrue(os.path.exists(working_directory))
+
+        def test_keep_on_error_success():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            _ = Equation(m, "e")
+
+        test_keep_on_error_success()
+        self.assertFalse(os.path.exists(working_directory))
+
+        def test_keep_on_error_err():
+            m = Container(debugging_level="keep_on_error")
+            global working_directory
+            working_directory = m.working_directory
+            e = Equation(m, "e")
+            with self.assertRaises(GamspyException):
+                e[:] = sqrt(e) == 5
+
+        test_keep_on_error_err()
+        self.assertTrue(os.path.exists(working_directory))
 
 
 def container_suite():

@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 4.3.1
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -29,20 +30,18 @@ from gamspy import Variable
 def BondDataTable():
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
-        np.array(
-            [
-                [112.35, 2006, 8],
-                [105.33, 2003, 8],
-                [111.25, 2007, 7],
-                [107.30, 2004, 7],
-                [107.62, 2011, 6],
-                [106.68, 2009, 6],
-                [101.93, 2002, 6],
-                [101.30, 2005, 5],
-                [101.61, 2003, 5],
-                [100.06, 2002, 4],
-            ]
-        ),
+        np.array([
+            [112.35, 2006, 8],
+            [105.33, 2003, 8],
+            [111.25, 2007, 7],
+            [107.30, 2004, 7],
+            [107.62, 2011, 6],
+            [106.68, 2009, 6],
+            [101.93, 2002, 6],
+            [101.30, 2005, 5],
+            [101.61, 2003, 5],
+            [100.06, 2002, 4],
+        ]),
         columns=["Price", "Maturity", "Coupon"],
         index=[
             "DS-8-06",
@@ -88,7 +87,7 @@ def main():
 
     # PARAMETER #
 
-    tau = Parameter(m, name="tau", domain=[t], description="Time in years")
+    tau = Parameter(m, name="tau", domain=t, description="Time in years")
 
     # Note: time starts from 0
 
@@ -124,21 +123,25 @@ def main():
     Budget = Parameter(m, name="Budget", description="Initial budget")
 
     # PARAMETERS #
-    Price = Parameter(m, name="Price", domain=[i], description="Bond prices")
-    Coupon = Parameter(m, name="Coupon", domain=[i], description="Coupons")
+    Price = Parameter(m, name="Price", domain=i, description="Bond prices")
+    Coupon = Parameter(m, name="Coupon", domain=i, description="Coupons")
     Maturity = Parameter(
-        m, name="Maturity", domain=[i], description="Maturities"
+        m, name="Maturity", domain=i, description="Maturities"
     )
     Liability = Parameter(
-        m, name="Liability", domain=[t], description="Stream of liabilities"
+        m, name="Liability", domain=t, description="Stream of liabilities"
     )
-    rf = Parameter(m, name="rf", domain=[t], description="Reinvestment rates")
+    rf = Parameter(m, name="rf", domain=t, description="Reinvestment rates")
     F = Parameter(m, name="F", domain=[t, i], description="Cashflows")
 
     # Bond data. Prices, coupons and maturities from the Danish market
 
     BondData = Parameter(
-        m, name="BondData", domain=[i, "*"], records=BondDataTable()
+        m,
+        name="BondData",
+        domain=[i, "*"],
+        records=BondDataTable(),
+        description="Bonds data",
     )
 
     # Copy/transform data. Note division by 100 to get unit data, and
@@ -168,21 +171,19 @@ def main():
 
     # PARAMETER #
     Liability.setRecords(
-        np.array(
-            [
-                0,
-                80000,
-                100000,
-                110000,
-                120000,
-                140000,
-                120000,
-                90000,
-                50000,
-                75000,
-                150000,
-            ]
-        )
+        np.array([
+            0,
+            80000,
+            100000,
+            110000,
+            120000,
+            140000,
+            120000,
+            90000,
+            50000,
+            75000,
+            150000,
+        ])
     )
 
     # VARIABLES #
@@ -190,21 +191,21 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Face value purchased",
     )
     surplus = Variable(
         m,
         name="surplus",
         type="positive",
-        domain=[t],
+        domain=t,
         description="Amount of money reinvested",
     )
     borrow = Variable(
         m,
         name="borrow",
         type="positive",
-        domain=[t],
+        domain=t,
         description="Amount of money borrowed",
     )
     HorizonRet = Variable(m, name="HorizonRet", description="Horizon Return")
@@ -214,7 +215,7 @@ def main():
         m,
         name="CashFlowCon",
         type="regular",
-        domain=[t],
+        domain=t,
         description="Equations defining the cashflow balance",
     )
 

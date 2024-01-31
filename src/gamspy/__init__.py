@@ -28,6 +28,7 @@ from __future__ import annotations
 from gams.transfer import SpecialValues
 
 import gamspy.math as math
+import gamspy.utils as utils
 from .version import __version__
 from gamspy._algebra import Card
 from gamspy._algebra import Domain

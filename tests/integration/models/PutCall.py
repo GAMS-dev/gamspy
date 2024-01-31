@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 5.7
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -29,164 +30,162 @@ from gamspy import Variable
 
 
 def index_data():
-    data = np.array(
-        [
-            1.034769211,
-            1.024362083,
-            1.005721076,
-            1.014359531,
-            1.008024402,
-            1.015164086,
-            1.011776948,
-            0.999367312,
-            1.022337255,
-            1.014084294,
-            1.002478561,
-            1.004830772,
-            1.022048865,
-            1.001584376,
-            1.014789245,
-            1.018465908,
-            1.02023507,
-            1.001142139,
-            1.028357519,
-            1.012274672,
-            1.005320247,
-            0.991451365,
-            1.007344745,
-            1.017165464,
-            0.997931432,
-            0.990041853,
-            0.9933217,
-            0.991912481,
-            1.036980768,
-            0.994451813,
-            1.007412617,
-            0.955150659,
-            0.958840232,
-            1.033624988,
-            1.018079311,
-            1.010736753,
-            1.016700717,
-            1.048121923,
-            1.015146812,
-            1.0074283,
-            1.025778693,
-            0.983151788,
-            1.022476292,
-            1.004850227,
-            1.0091122,
-            0.995361207,
-            0.992432266,
-            1.024212556,
-            1.022181138,
-            1.006772127,
-            0.990354861,
-            1.0067649,
-            1.008943286,
-            0.983974563,
-            1.000347655,
-            1.001230771,
-            1.020880921,
-            1.019415483,
-            1.008638044,
-            1.017173042,
-            1.011831605,
-            1.018260066,
-            1.014054495,
-            1.011841085,
-            0.988155751,
-            1.009224769,
-            1.010321982,
-            1.033008126,
-            0.999626315,
-            1.022733809,
-            1.00083866,
-            1.039925522,
-            1.0144168,
-            0.974402144,
-            0.971108237,
-            1.002198078,
-            1.001221179,
-            0.988342113,
-            1.01750901,
-            1.019968377,
-            0.992895551,
-            1.000905761,
-            0.997333999,
-            0.994982525,
-            0.987972315,
-            1.000443735,
-            1.01583315,
-            1.018338346,
-            1.026183302,
-            0.999209138,
-            1.018809687,
-            1.009775599,
-            1.01722367,
-            0.999752239,
-            1.015986198,
-            1.019400469,
-            1.017624299,
-            0.996067065,
-            1.00947457,
-            1.0164916,
-            0.997929107,
-            1.008892447,
-            0.990498799,
-            1.011843222,
-            1.023338977,
-            1.001536085,
-            1.023978065,
-            0.994238826,
-            1.022819962,
-            1.012142345,
-            0.989862601,
-            1.021050206,
-            1.019165002,
-            1.023260624,
-            1.027413626,
-            0.971346297,
-            1.026087902,
-            0.959990261,
-            1.008484984,
-            1.014365951,
-            1.010347985,
-            1.029266037,
-            1.01989954,
-            0.999383722,
-            0.992191473,
-            0.993782093,
-            1.010730888,
-            0.918149916,
-            1.008729179,
-            1.031641438,
-            1.032632304,
-            1.004115995,
-            1.007398109,
-            0.99859111,
-            1.032604061,
-            1.027883261,
-            0.979268923,
-            1.024656356,
-            0.989556024,
-            1.001926578,
-            0.991713793,
-            1.020697126,
-            1.022268183,
-            1.031273723,
-            0.992301368,
-            1.011547524,
-            1.02121809,
-            0.988701862,
-            0.991540642,
-            1.014546705,
-            0.997009882,
-            1.01168258,
-            0.982543898,
-            0.992197467,
-        ]
-    )
+    data = np.array([
+        1.034769211,
+        1.024362083,
+        1.005721076,
+        1.014359531,
+        1.008024402,
+        1.015164086,
+        1.011776948,
+        0.999367312,
+        1.022337255,
+        1.014084294,
+        1.002478561,
+        1.004830772,
+        1.022048865,
+        1.001584376,
+        1.014789245,
+        1.018465908,
+        1.02023507,
+        1.001142139,
+        1.028357519,
+        1.012274672,
+        1.005320247,
+        0.991451365,
+        1.007344745,
+        1.017165464,
+        0.997931432,
+        0.990041853,
+        0.9933217,
+        0.991912481,
+        1.036980768,
+        0.994451813,
+        1.007412617,
+        0.955150659,
+        0.958840232,
+        1.033624988,
+        1.018079311,
+        1.010736753,
+        1.016700717,
+        1.048121923,
+        1.015146812,
+        1.0074283,
+        1.025778693,
+        0.983151788,
+        1.022476292,
+        1.004850227,
+        1.0091122,
+        0.995361207,
+        0.992432266,
+        1.024212556,
+        1.022181138,
+        1.006772127,
+        0.990354861,
+        1.0067649,
+        1.008943286,
+        0.983974563,
+        1.000347655,
+        1.001230771,
+        1.020880921,
+        1.019415483,
+        1.008638044,
+        1.017173042,
+        1.011831605,
+        1.018260066,
+        1.014054495,
+        1.011841085,
+        0.988155751,
+        1.009224769,
+        1.010321982,
+        1.033008126,
+        0.999626315,
+        1.022733809,
+        1.00083866,
+        1.039925522,
+        1.0144168,
+        0.974402144,
+        0.971108237,
+        1.002198078,
+        1.001221179,
+        0.988342113,
+        1.01750901,
+        1.019968377,
+        0.992895551,
+        1.000905761,
+        0.997333999,
+        0.994982525,
+        0.987972315,
+        1.000443735,
+        1.01583315,
+        1.018338346,
+        1.026183302,
+        0.999209138,
+        1.018809687,
+        1.009775599,
+        1.01722367,
+        0.999752239,
+        1.015986198,
+        1.019400469,
+        1.017624299,
+        0.996067065,
+        1.00947457,
+        1.0164916,
+        0.997929107,
+        1.008892447,
+        0.990498799,
+        1.011843222,
+        1.023338977,
+        1.001536085,
+        1.023978065,
+        0.994238826,
+        1.022819962,
+        1.012142345,
+        0.989862601,
+        1.021050206,
+        1.019165002,
+        1.023260624,
+        1.027413626,
+        0.971346297,
+        1.026087902,
+        0.959990261,
+        1.008484984,
+        1.014365951,
+        1.010347985,
+        1.029266037,
+        1.01989954,
+        0.999383722,
+        0.992191473,
+        0.993782093,
+        1.010730888,
+        0.918149916,
+        1.008729179,
+        1.031641438,
+        1.032632304,
+        1.004115995,
+        1.007398109,
+        0.99859111,
+        1.032604061,
+        1.027883261,
+        0.979268923,
+        1.024656356,
+        0.989556024,
+        1.001926578,
+        0.991713793,
+        1.020697126,
+        1.022268183,
+        1.031273723,
+        0.992301368,
+        1.011547524,
+        1.02121809,
+        0.988701862,
+        0.991540642,
+        1.014546705,
+        0.997009882,
+        1.01168258,
+        0.982543898,
+        0.992197467,
+    ])
     return data
 
 
@@ -214,15 +213,11 @@ def main():
     Budget[...] = 100.0
 
     # PARAMETERS #
-    pr = Parameter(
-        m, name="pr", domain=[l], description="Scenario probability"
-    )
+    pr = Parameter(m, name="pr", domain=l, description="Scenario probability")
     P = Parameter(m, name="P", domain=[i, l], description="Final values")
-    EP = Parameter(
-        m, name="EP", domain=[i], description="Expected final values"
-    )
+    EP = Parameter(m, name="EP", domain=i, description="Expected final values")
     TargetIndex = Parameter(
-        m, name="TargetIndex", domain=[l], description="Target index returns"
+        m, name="TargetIndex", domain=l, description="Target index returns"
     )
     AssetReturns = m.getSymbols(["AssetReturns"])[0]
 
@@ -237,7 +232,7 @@ def main():
     Index = Parameter(
         m,
         name="Index",
-        domain=[l],
+        domain=l,
         records=index_data(),
         description="Index returns",
     )
@@ -248,21 +243,21 @@ def main():
         m,
         name="yPos",
         type="positive",
-        domain=[l],
+        domain=l,
         description="Positive deviations",
     )
     yNeg = Variable(
         m,
         name="yNeg",
         type="positive",
-        domain=[l],
+        domain=l,
         description="Negative deviations",
     )
     x = Variable(
         m,
         name="x",
         type="free",
-        domain=[i],
+        domain=i,
         description="Holdings of assets in monetary units (not proportions)",
     )
     z = Variable(
@@ -286,7 +281,7 @@ def main():
         m,
         name="TargetDevDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Equations defining the positive and negative deviations",
     )
     PutCon = Equation(
@@ -331,15 +326,15 @@ def main():
     # Dual of the UnConstrained Put/Call model
 
     # VARIABLES #
-    Pi = Variable(m, name="Pi", type="positive", domain=[l])
+    Pi = Variable(m, name="Pi", type="positive", domain=l)
     PiOmega = Variable(m, name="PiOmega", type="positive")
 
     # EQUATIONS #
     DualObjDef = Equation(m, name="DualObjDef", type="regular")
     DualTrackingDef = Equation(
-        m, name="DualTrackingDef", type="regular", domain=[i]
+        m, name="DualTrackingDef", type="regular", domain=i
     )
-    MeasureDef = Equation(m, name="MeasureDef", type="regular", domain=[l])
+    MeasureDef = Equation(m, name="MeasureDef", type="regular", domain=l)
 
     DualObjDef[...] = z == Omega * PiOmega
 
@@ -415,7 +410,7 @@ def main():
         m, name="PutCall", domain=[j, "*"], description="Put and Call values"
     )
     OmegaLevels = Parameter(
-        m, name="OmegaLevels", domain=[j], description="Risk levels (Omega)"
+        m, name="OmegaLevels", domain=j, description="Risk levels (Omega)"
     )
 
     # We assign to each point a risk level Omega
@@ -497,13 +492,13 @@ def main():
     Df = Parameter(m, name="Df")
 
     # PARAMETERS
-    Price = Parameter(m, name="Price", domain=[i])
-    Discount = Parameter(m, name="Discount", domain=[i])
-    Premium = Parameter(m, name="Premium", domain=[i])
+    Price = Parameter(m, name="Price", domain=i)
+    Discount = Parameter(m, name="Discount", domain=i)
+    Premium = Parameter(m, name="Premium", domain=i)
     BenchMarkNeutralPrice = Parameter(
-        m, name="BenchMarkNeutralPrice", domain=[i]
+        m, name="BenchMarkNeutralPrice", domain=i
     )
-    Psi = Parameter(m, name="Psi", domain=[l])
+    Psi = Parameter(m, name="Psi", domain=l)
     liquidity = Parameter(
         m, name="liquidity", domain=[i, "*"], description="Liquidity report"
     )

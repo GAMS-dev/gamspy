@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 3.3
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -47,7 +48,7 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[ii],
+        domain=ii,
         description="Holdings of assets",
     )
     PortVariance = Variable(
@@ -117,13 +118,11 @@ def main():
 
     # Also plot the tangent portfolio
     theta = 1
-    results.append(
-        [
-            np.sqrt(PortVariance.records.level[0]),
-            RiskFreeRate.records.value[0] + theta * d_bar.records.level[0],
-            theta,
-        ]
-    )
+    results.append([
+        np.sqrt(PortVariance.records.level[0]),
+        RiskFreeRate.records.value[0] + theta * d_bar.records.level[0],
+        theta,
+    ])
     SharpeFrontier = pd.DataFrame(
         results, columns=["Standard Deviations", "Expected Return", "Theta"]
     )

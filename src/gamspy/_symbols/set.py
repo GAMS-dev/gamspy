@@ -507,15 +507,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             previous_state = container.miro_protect
             container.miro_protect = False
 
+            if is_miro_input or is_miro_output:
+                name = name.lower()
+
             super().__init__(
                 container,
                 name,
                 domain,
                 is_singleton,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             if is_miro_input:
@@ -528,7 +530,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
             self._current_index = 0
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
+
             container.miro_protect = previous_state
 
     def __len__(self):

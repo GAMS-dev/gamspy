@@ -228,16 +228,18 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self._is_frozen = False
             name = validation.validate_name(name)
 
+            if is_miro_input or is_miro_output:
+                name = name.lower()
+
             previous_state = container.miro_protect
             container.miro_protect = False
             super().__init__(
                 container,
                 name,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             if is_miro_input:
@@ -250,7 +252,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records)
+            else:
+                self.container._run()
+
             container.miro_protect = previous_state
 
     def __getitem__(

@@ -21,6 +21,7 @@ Local and Global Optimization". Kluwer Academic Publishers, Dordrecht,
 1999.
 Problem 7.3.6. Test problem 16, page 103.
 """
+
 from __future__ import annotations
 
 import os

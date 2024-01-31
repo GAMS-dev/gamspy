@@ -2,6 +2,10 @@
 Advanced
 ********
 
+.. meta::
+   :description: GAMSPy Advanced User Guide
+   :keywords: Advanced, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 These documents clarify concepts, design decisions, and technical
 constraints in GAMSPy. This is a great place to understand the
 fundamental GAMSPy ideas and philosophy. 

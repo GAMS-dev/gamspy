@@ -13,6 +13,7 @@ Aguirre, A.H., Munoz Zavala, A.E., Villa Diharce, E., Botello Rionada, S.,
 COPSO: Constrained optimization via PSO algorithm. Comunicacion Tecnica
 No I-07-04/22-02-2007. Center for Research in Mathematics (CIMAT), Mexico.
 """
+
 from __future__ import annotations
 
 import os

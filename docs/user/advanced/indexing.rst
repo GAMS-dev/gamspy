@@ -1,5 +1,9 @@
 .. _indexing:
 
+.. meta::
+   :description: Documentation of different types of indexing in GAMSPy
+   :keywords: Indexing, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ********
 Indexing
 ********

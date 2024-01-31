@@ -7,6 +7,7 @@ constraints on the boundary of the domain of f.
 Boyd, S., Vandenberghe, L., Convex Optimization, Cambridge University Press,
 Cambridge, 2004.
 """
+
 from __future__ import annotations
 
 import os

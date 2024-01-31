@@ -11,6 +11,7 @@ Princeton University Press, Princeton, New Jersey, 1963.
 
 Keywords: linear programming, warehouse management, inventory
 """
+
 from __future__ import annotations
 
 import os
@@ -34,29 +35,74 @@ def main():
     )
 
     # Sets
-    t = Set(m, name="t", records=[f"q-{i}" for i in range(1, 5)])
+    t = Set(
+        m,
+        name="t",
+        records=[f"q-{i}" for i in range(1, 5)],
+        description="time in quarters",
+    )
 
     # Parameters
     price = Parameter(
-        m, name="price", domain=[t], records=np.array([10, 12, 8, 9])
+        m,
+        name="price",
+        domain=t,
+        records=np.array([10, 12, 8, 9]),
+        description="selling price ($ per unit)",
     )
     istock = Parameter(
-        m, name="istock", domain=[t], records=np.array([50, 0, 0, 0])
+        m,
+        name="istock",
+        domain=t,
+        records=np.array([50, 0, 0, 0]),
+        description="initial stock      (units)",
     )  # OR records=pd.DataFrame([["q-1", 50]])
 
     # Scalars
-    storecost = Parameter(m, name="storecost", records=1)
-    storecap = Parameter(m, name="storecap", records=100)
+    storecost = Parameter(
+        m,
+        name="storecost",
+        records=1,
+        description="storage cost  ($ per quarter per unit)",
+    )
+    storecap = Parameter(
+        m,
+        name="storecap",
+        records=100,
+        description="stocking capacity of warehouse (units)",
+    )
 
     # Variables
-    stock = Variable(m, name="stock", domain=[t], type="Positive")
-    sell = Variable(m, name="sell", domain=[t], type="Positive")
-    buy = Variable(m, name="buy", domain=[t], type="Positive")
-    cost = Variable(m, name="cost")
+    stock = Variable(
+        m,
+        name="stock",
+        domain=t,
+        type="Positive",
+        description="stock stored at time t (units)",
+    )
+    sell = Variable(
+        m,
+        name="sell",
+        domain=t,
+        type="Positive",
+        description="stock sold at time t   (units)",
+    )
+    buy = Variable(
+        m,
+        name="buy",
+        domain=t,
+        type="Positive",
+        description="stock bought at time t (units)",
+    )
+    cost = Variable(
+        m, name="cost", description="total cost                 ($)"
+    )
 
     # Equations
-    sb = Equation(m, name="sb", domain=[t])
-    at = Equation(m, name="at")
+    sb = Equation(
+        m, name="sb", domain=t, description="stock balance at time t (units)"
+    )
+    at = Equation(m, name="at", description="accounting: total cost      ($)")
 
     sb[t] = (
         stock[t] == stock[t.lag(1, "linear")] + buy[t] - sell[t] + istock[t]

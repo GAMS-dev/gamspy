@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 5.4
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -67,13 +68,9 @@ def main():
     Budget[...] = 100.0
 
     # PARAMETERS #
-    pr = Parameter(
-        m, name="pr", domain=[l], description="Scenario probability"
-    )
+    pr = Parameter(m, name="pr", domain=l, description="Scenario probability")
     P = Parameter(m, name="P", domain=[i, l], description="Final values")
-    EP = Parameter(
-        m, name="EP", domain=[i], description="Expected final values"
-    )
+    EP = Parameter(m, name="EP", domain=i, description="Expected final values")
 
     pr[l] = 1.0 / Card(l)
     P[i, l] = 1 + AssetReturns[i, l]
@@ -88,7 +85,7 @@ def main():
     MU_STEP[...] = (MAX_MU - MIN_MU) / 20
 
     TargetIndex = Parameter(
-        m, name="TargetIndex", domain=[l], description="Target index returns"
+        m, name="TargetIndex", domain=l, description="Target index returns"
     )
 
     # To test the model with a market index, uncomment the following two lines.
@@ -99,14 +96,14 @@ def main():
         m,
         name="x",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings of assets in monetary units (not proportions)",
     )
     Regrets = Variable(
         m,
         name="Regrets",
         type="positive",
-        domain=[l],
+        domain=l,
         description="Measures of the negative deviations or regrets",
     )
     z = Variable(m, name="z", description="Objective function value")
@@ -140,13 +137,13 @@ def main():
     RegretCon = Equation(
         m,
         name="RegretCon",
-        domain=[l],
+        domain=l,
         description="Equations defining the regret constraints",
     )
     EpsRegretCon = Equation(
         m,
         name="EpsRegretCon",
-        domain=[l],
+        domain=l,
         description=(
             "Equations defining the regret constraints with tolerance"
             " threshold"
@@ -198,12 +195,10 @@ def main():
         MU_TARGET[...] = mu_iter
         MinRegret.solve()
 
-        result.append(
-            [
-                z.records.level[0],
-                (MU_TARGET.records.value[0] * Budget.records.value[0]),
-            ]
-        )
+        result.append([
+            z.records.level[0],
+            (MU_TARGET.records.value[0] * Budget.records.value[0]),
+        ])
         result[-1] += x.records.level.tolist()
 
         RISK_TARGET[...] = z.l

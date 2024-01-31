@@ -6,8 +6,29 @@ GAMSPy 0.12.0
 -------------------------------------------------------------------------------
 - General
   - Implement GAMS MIRO integration.
+- Testing
+  - Add tests for GAMS MIRO.
+- Documentation
+  - Add documentation of GAMS MIRO integration.
+
+-------------------------------------------------------------------------------
+GAMSPy 0.11.8
+-------------------------------------------------------------------------------
+- General
+  - Allow assigning VariableType enum or EquationType enum as an attribute after object creation for Equation and Variable.
+  - Fix running twice on symbol declaration with records
+- Testing
+  - Add tests for assigning type to Variable and Equation after creation.
+
+-------------------------------------------------------------------------------
+GAMSPy 0.11.7
+-------------------------------------------------------------------------------
+- General
+  - Implement GAMS MIRO integration.
   - Allow variable/equation attribute assignment without any index.
   - Run GAMS on symbol declaration and setRecords.
+  - Add debugging_level argument to Container.
+  - Performance improvements (~25-30%).
 - Testing
   - Add tests for GAMS MIRO.
   - Test scalar variable/equation assignment without any index.
@@ -16,6 +37,7 @@ GAMSPy 0.12.0
   - Add documentation of GAMS MIRO integration.
   - Document assigning to scalar variable/equation.
   - Update documentation of frozen solve (model instance in GAMS). 
+  - Add documentation for debugging levels.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.6

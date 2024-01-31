@@ -1,5 +1,9 @@
 .. _equation:
 
+.. meta::
+   :description: Documentation of GAMSPy Equation (gamspy.Equation)
+   :keywords: Equation, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ********
 Equation
 ********

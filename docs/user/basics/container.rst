@@ -1,5 +1,9 @@
 .. _container:
 
+.. meta::
+   :description: Documentation of GAMSPy Container (gamspy.Container)
+   :keywords: Container, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 *********
 Container
 *********

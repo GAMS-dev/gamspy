@@ -4,6 +4,7 @@ Optimal production of secreted protein in a fed-batch reactor.
 Park, S., Ramirez, W.F., Optimal production of secreted protein in fed-batch
 reactors. A.I.Ch.E. Journal, 34, 1988, pp.1550-1558.
 """
+
 from __future__ import annotations
 
 import os
@@ -59,15 +60,15 @@ def main():
     h[...] = tf / n
 
     # VARIABLES #
-    x1 = Variable(m, name="x1", domain=[nh])
-    x2 = Variable(m, name="x2", domain=[nh])
-    x3 = Variable(m, name="x3", domain=[nh])
-    x4 = Variable(m, name="x4", domain=[nh])
-    x5 = Variable(m, name="x5", domain=[nh])
-    u = Variable(m, name="u", domain=[nh], description="control variable")
-    a1 = Variable(m, name="a1", domain=[nh])
-    a2 = Variable(m, name="a2", domain=[nh])
-    a3 = Variable(m, name="a3", domain=[nh])
+    x1 = Variable(m, name="x1", domain=nh)
+    x2 = Variable(m, name="x2", domain=nh)
+    x3 = Variable(m, name="x3", domain=nh)
+    x4 = Variable(m, name="x4", domain=nh)
+    x5 = Variable(m, name="x5", domain=nh)
+    u = Variable(m, name="u", domain=nh, description="control variable")
+    a1 = Variable(m, name="a1", domain=nh)
+    a2 = Variable(m, name="a2", domain=nh)
+    a3 = Variable(m, name="a3", domain=nh)
     obj = Variable(m, name="obj", description="criterion")
 
     # EQUATIONS #
@@ -78,40 +79,40 @@ def main():
         m,
         name="state1",
         type="regular",
-        domain=[nh],
+        domain=nh,
         description="state equation 1",
     )
     state2 = Equation(
         m,
         name="state2",
         type="regular",
-        domain=[nh],
+        domain=nh,
         description="state equation 2",
     )
     state3 = Equation(
         m,
         name="state3",
         type="regular",
-        domain=[nh],
+        domain=nh,
         description="state equation 3",
     )
     state4 = Equation(
         m,
         name="state4",
         type="regular",
-        domain=[nh],
+        domain=nh,
         description="state equation 4",
     )
     state5 = Equation(
         m,
         name="state5",
         type="regular",
-        domain=[nh],
+        domain=nh,
         description="state equation 5",
     )
-    ea1 = Equation(m, name="ea1", type="regular", domain=[nh])
-    ea2 = Equation(m, name="ea2", type="regular", domain=[nh])
-    ea3 = Equation(m, name="ea3", type="regular", domain=[nh])
+    ea1 = Equation(m, name="ea1", type="regular", domain=nh)
+    ea2 = Equation(m, name="ea2", type="regular", domain=nh)
+    ea3 = Equation(m, name="ea3", type="regular", domain=nh)
 
     eobj[...] = obj == x4[str(n)] * x5[str(n)]
 

@@ -15,6 +15,7 @@ explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
 DOI: doi.org/10.1007/978-3-319-62350-4
 """
+
 from __future__ import annotations
 
 import os
@@ -81,7 +82,7 @@ def main():
     # REPORTING PARAMETERS #
     E = Parameter(m, name="E")
     report = Parameter(m, name="report", domain=[counter, "*"])
-    ranges = Parameter(m, name="ranges", domain=["*"])
+    ranges = Parameter(m, name="ranges", domain="*")
 
     pareto1.solve()
     ranges["OF1max"] = of1.l

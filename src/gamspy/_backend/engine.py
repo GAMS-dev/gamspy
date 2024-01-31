@@ -31,6 +31,7 @@ from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
+from gams import DebugLevel
 from gams import GamsEngineConfiguration
 from gams import GamsJob
 from gams import GamsOptions
@@ -143,6 +144,9 @@ class GAMSEngine(backend.Backend):
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
         except (GamsException, GamsExceptionExecution) as e:
+            if self.container._debugging_level == "keep_on_error":
+                self.container.workspace._debug = DebugLevel.KeepFiles
+
             raise GamspyException(str(e))
         finally:
             self.container._unsaved_statements = []

@@ -8,6 +8,7 @@ i=1,...,n.
 The second one determine the inverse by solving the linear system AX=I, where
 X is the inverse of A.
 """
+
 from __future__ import annotations
 
 import os
@@ -26,15 +27,13 @@ from gamspy import Variable
 
 def data_records():
     # a records
-    a_recs = np.array(
-        [
-            [1, 2, 3, 4, 4],
-            [1, 3, 4, 3, 1],
-            [1, 4, 1, 2, 6],
-            [2, 4, 1, 1, 1],
-            [3, 1, 5, 2, 7],
-        ]
-    )
+    a_recs = np.array([
+        [1, 2, 3, 4, 4],
+        [1, 3, 4, 3, 1],
+        [1, 4, 1, 2, 6],
+        [2, 4, 1, 1, 1],
+        [3, 1, 5, 2, 7],
+    ])
 
     return a_recs
 
@@ -78,7 +77,7 @@ def main():
     col = Variable(
         m,
         name="col",
-        domain=[j],
+        domain=j,
         description="the columns of the inverse matrix",
     )
 
@@ -93,12 +92,12 @@ def main():
         m,
         name="lin",
         type="regular",
-        domain=[i],
+        domain=i,
         description="name of the equations of the systems to be solved",
     )
 
     # PARAMETERS #
-    b = Parameter(m, name="b", domain=[i], description="Righ-hand Side term")
+    b = Parameter(m, name="b", domain=i, description="Righ-hand Side term")
     ainv = Parameter(
         m, name="ainv", domain=[i, j], description="inverse matrix of A"
     )

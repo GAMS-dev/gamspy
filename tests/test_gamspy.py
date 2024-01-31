@@ -44,7 +44,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.11.6")
+        self.assertEqual(gamspy.__version__, "0.11.7")
 
 
 class DocsSuite(unittest.TestCase):
@@ -207,7 +207,8 @@ def main():
 
     gams_paths = glob.glob("_*")
     for gams_path in gams_paths:
-        os.remove(gams_path)
+        if os.path.isfile(gams_path):
+            os.remove(gams_path)
 
     miro_paths = ["conf_miro", "data_miro"]
     for path in miro_paths:

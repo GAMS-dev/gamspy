@@ -6,6 +6,7 @@ A three stage stochastic programming model for SPDA
 * See also Zenios: Practical Financial Optimization, Section 6.4.
 * Last modified: Nov. 2005.
 """
+
 from __future__ import annotations
 
 import os
@@ -40,18 +41,16 @@ def prepare_yield():
         ("IO90", "T1"),
     ]
 
-    data = np.array(
-        [
-            [1.104439, 1.104439, 0.959238, 0.959238],
-            [1.110009, 0.975907, 0.935106, 1.167817],
-            [0.938159, 0.938159, 1.166825, 1.166825],
-            [0.933668, 1.154590, 1.156536, 0.903233],
-            [0.924840, 0.924840, 1.167546, 1.167546],
-            [0.891527, 1.200802, 1.141917, 0.907837],
-            [1.107461, 1.107461, 0.908728, 0.908728],
-            [1.105168, 0.925925, 0.877669, 1.187143],
-        ]
-    )
+    data = np.array([
+        [1.104439, 1.104439, 0.959238, 0.959238],
+        [1.110009, 0.975907, 0.935106, 1.167817],
+        [0.938159, 0.938159, 1.166825, 1.166825],
+        [0.933668, 1.154590, 1.156536, 0.903233],
+        [0.924840, 0.924840, 1.167546, 1.167546],
+        [0.891527, 1.200802, 1.141917, 0.907837],
+        [1.107461, 1.107461, 0.908728, 0.908728],
+        [1.105168, 0.925925, 0.877669, 1.187143],
+    ])
 
     idxs = pd.MultiIndex.from_tuples(idxs, names=["Index1", "Index2"])
     data = pd.DataFrame(data, columns=cols, index=idxs)
@@ -102,32 +101,28 @@ def main():
         m,
         name="CashYield",
         domain=[t, l],
-        records=np.array(
-            [
-                [1.030414, 1.030414, 1.012735, 1.012735],
-                [1.032623, 1.014298, 1.009788, 1.030481],
-                [0, 0, 0, 0],
-            ]
-        ),
+        records=np.array([
+            [1.030414, 1.030414, 1.012735, 1.012735],
+            [1.032623, 1.014298, 1.009788, 1.030481],
+            [0, 0, 0, 0],
+        ]),
         description="Risk free (cash) yield",
     )
     Liability = Parameter(
         m,
         name="Liability",
         domain=[t, l],
-        records=np.array(
-            [
-                [0, 0, 0, 0],
-                [26.474340, 26.474340, 10.953843, 10.953843],
-                [31.264791, 26.044541, 10.757200, 13.608207],
-            ]
-        ),
+        records=np.array([
+            [0, 0, 0, 0],
+            [26.474340, 26.474340, 10.953843, 10.953843],
+            [31.264791, 26.044541, 10.757200, 13.608207],
+        ]),
         description="Liabilities due to annuitant lapses",
     )
     FinalLiability = Parameter(
         m,
         name="FinalLiability",
-        domain=[l],
+        domain=l,
         records=np.array([47.284751, 49.094838, 86.111238, 83.290085]),
         description="Final liabilities",
     )
@@ -172,7 +167,7 @@ def main():
         domain=[t, l],
         description="Holding in cash",
     )
-    wealth = Variable(m, name="wealth", domain=[l], description="Final wealth")
+    wealth = Variable(m, name="wealth", domain=l, description="Final wealth")
     z = Variable(m, name="z", description="Objective function value")
 
     # EQUATIONS #
@@ -194,7 +189,7 @@ def main():
         m,
         name="WealthRatioDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Equations defining the final asset-liability ratio",
     )
     NonAnticConOne = Equation(
@@ -296,7 +291,7 @@ def main():
         m,
         name="WorstCaseDef",
         type="regular",
-        domain=[l],
+        domain=l,
         description="Equations defining the worst case outcome",
     )
 
@@ -375,7 +370,7 @@ def main():
         m,
         name="MADCon",
         type="regular",
-        domain=[l],
+        domain=l,
         description="MAD contraints",
     )
 

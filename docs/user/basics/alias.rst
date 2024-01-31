@@ -1,5 +1,9 @@
 .. _alias:
 
+.. meta::
+   :description: Documentation of GAMSPy alias (gamspy.Alias)
+   :keywords: Alias, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 ***********************************
 Alias: Multiple Names for a Set
 ***********************************

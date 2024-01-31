@@ -12,6 +12,7 @@ Keywords: mixed integer linear programming, robust optimization, capacity
 expansion,
           time-dependent knapsack problem
 """
+
 from __future__ import annotations
 
 import os
@@ -65,8 +66,8 @@ def main():
     # Parameter
     di = Parameter(m, name="di", domain=[s, t], description="increment")
     d = Parameter(m, name="D", domain=[t, s], description="demand")
-    c = Parameter(m, name="c", domain=[j], description="capacity size")
-    p = Parameter(m, name="p", domain=[j], description="capacity cost")
+    c = Parameter(m, name="c", domain=j, description="capacity size")
+    p = Parameter(m, name="p", domain=j, description="capacity cost")
     mu = Parameter(m, name="mu", description="mean capacity parameter")
     sigma = Parameter(m, name="sigma", description="std capacity parameter")
 
@@ -87,7 +88,7 @@ def main():
     d[t, s] = Sum(tt.where[Ord(tt) <= Ord(t)], di[s, tt])
 
     # Parameter
-    dis = Parameter(m, name="dis", domain=[t], description="discount factor")
+    dis = Parameter(m, name="dis", domain=t, description="discount factor")
     w = Parameter(m, name="w", description="shortage penalty")
 
     dis[t] = power(0.86, Ord(t) - 1)
@@ -101,14 +102,14 @@ def main():
         m,
         name="z",
         type="positive",
-        domain=[s],
+        domain=s,
         description="max capacity shortage",
     )
     cap = Variable(
         m,
         name="cap",
         type="free",
-        domain=[t],
+        domain=t,
         description="installed capacity",
     )
     obj = Variable(m, name="obj", type="free")
@@ -117,7 +118,7 @@ def main():
     capbal = Equation(
         m,
         name="capbal",
-        domain=[t],
+        domain=t,
         description="capacity balance",
     )
     dembal = Equation(

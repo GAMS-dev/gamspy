@@ -6,6 +6,7 @@ Consiglio, Nielsen and Zenios.
 PRACTICAL FINANCIAL OPTIMIZATION: A Library of GAMS Models, Section 3.4
 Last modified: Apr 2008.
 """
+
 from __future__ import annotations
 
 import os
@@ -60,17 +61,17 @@ def main():
     xlow = Parameter(
         m,
         name="xlow",
-        domain=[i],
+        domain=i,
         description="lower bound for active variables",
     )
 
     # VARIABLES #
-    x = Variable(m, name="x", domain=[i], description="Holdings of assets")
+    x = Variable(m, name="x", domain=i, description="Holdings of assets")
     Y = Variable(
         m,
         name="Y",
         type="binary",
-        domain=[i],
+        domain=i,
         description="Indicator variable for assets included in the portfolio",
     )
     PortVariance = Variable(
@@ -112,14 +113,14 @@ def main():
         m,
         name="UpBounds",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Upper bounds for each variable",
     )
     LoBounds = Equation(
         m,
         name="LoBounds",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Lower bounds for each variable",
     )
     ObjDef = Equation(
@@ -201,14 +202,14 @@ def main():
         m,
         name="x_0",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings for the flat cost regime",
     )
     x_1 = Variable(
         m,
         name="x_1",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Holdings for the linear cost regime",
     )
 
@@ -220,7 +221,7 @@ def main():
         m,
         name="HoldingCon",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Constraint defining the holdings",
     )
     ReturnDefWithCost = Equation(
@@ -233,14 +234,14 @@ def main():
         m,
         name="FlatCostBounds",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Upper bounds for flat transaction fee",
     )
     LinCostBounds = Equation(
         m,
         name="LinCostBounds",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Upper bonds for linear transaction fee",
     )
 
@@ -308,7 +309,7 @@ def main():
     BuyLimits = Parameter(m, name="BuyLimits", domain=[Bound, i])
     SellLimits = Parameter(m, name="SellLimits", domain=[Bound, i])
     InitHold = Parameter(
-        m, name="InitHold", domain=[i], description="Current holdings"
+        m, name="InitHold", domain=i, description="Current holdings"
     )
 
     # We set the curret holding to the optimal unconstrained mean-variance portfolio
@@ -332,45 +333,43 @@ def main():
         m,
         name="buy",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Amount to be purchased",
     )
     sell = Variable(
         m,
         name="sell",
         type="positive",
-        domain=[i],
+        domain=i,
         description="Amount to be sold",
     )
     Yb = Variable(
         m,
         name="Yb",
         type="binary",
-        domain=[i],
+        domain=i,
         description="Indicator variable for assets to be purchased",
     )
     Ys = Variable(
         m,
         name="Ys",
         type="binary",
-        domain=[i],
+        domain=i,
         description="Indicator variable for assets to be sold",
     )
 
     BuyTurnover = Equation(m, name="BuyTurnover", type="regular")
-    LoBuyLimits = Equation(m, name="LoBuyLimits", type="regular", domain=[i])
-    UpBuyLimits = Equation(m, name="UpBuyLimits", type="regular", domain=[i])
-    UpSellLimits = Equation(m, name="UpSellLimits", type="regular", domain=[i])
-    LoSellLimits = Equation(m, name="LoSellLimits", type="regular", domain=[i])
-    BinBuyLimits = Equation(m, name="BinBuyLimits", type="regular", domain=[i])
-    BinSellLimits = Equation(
-        m, name="BinSellLimits", type="regular", domain=[i]
-    )
+    LoBuyLimits = Equation(m, name="LoBuyLimits", type="regular", domain=i)
+    UpBuyLimits = Equation(m, name="UpBuyLimits", type="regular", domain=i)
+    UpSellLimits = Equation(m, name="UpSellLimits", type="regular", domain=i)
+    LoSellLimits = Equation(m, name="LoSellLimits", type="regular", domain=i)
+    BinBuyLimits = Equation(m, name="BinBuyLimits", type="regular", domain=i)
+    BinSellLimits = Equation(m, name="BinSellLimits", type="regular", domain=i)
     InventoryCon = Equation(
         m,
         name="InventoryCon",
         type="regular",
-        domain=[i],
+        domain=i,
         description="Inventory constraints",
     )
 

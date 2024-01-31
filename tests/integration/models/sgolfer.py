@@ -17,6 +17,7 @@ Keywords: mixed integer linear programming, mixed integer nonlinear
 programming,
           social golfer problem, combinatorial optimization
 """
+
 from __future__ import annotations
 
 import os
@@ -42,31 +43,96 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     gf_c = gr_c * gg_c
 
     # Set
-    gf = Set(cont, name="gf", records=[str(i) for i in range(1, gf_c + 1)])
-    gr = Set(cont, name="gr", records=[str(i) for i in range(1, gr_c + 1)])
-    w = Set(cont, name="w", records=[str(i) for i in range(1, nw_c + 1)])
+    gf = Set(
+        cont,
+        name="gf",
+        records=[str(i) for i in range(1, gf_c + 1)],
+        description="golfers",
+    )
+    gr = Set(
+        cont,
+        name="gr",
+        records=[str(i) for i in range(1, gr_c + 1)],
+        description="groups",
+    )
+    w = Set(
+        cont,
+        name="w",
+        records=[str(i) for i in range(1, nw_c + 1)],
+        description="weeks",
+    )
 
     # Alias
     gf1 = Alias(cont, name="gf1", alias_with=gf)
     gf2 = Alias(cont, name="gf2", alias_with=gf)
 
-    mgf = Set(cont, name="mgf", domain=[gf1, gf2])
+    mgf = Set(
+        cont, name="mgf", domain=[gf1, gf2], description="possible meeting"
+    )
     mgf[gf1, gf2] = Ord(gf2) > Ord(gf1)
 
     # Variable
-    x = Variable(cont, name="x", type="binary", domain=[w, gr, gf])
-    m = Variable(cont, name="m", type="free", domain=[w, gr, gf, gf])
-    numm = Variable(cont, name="numm", type="free", domain=[gf, gf])
-    redm = Variable(cont, name="redm", type="free", domain=[gf, gf])
-    obj = Variable(cont, name="obj", type="free")
+    x = Variable(
+        cont,
+        name="x",
+        type="binary",
+        domain=[w, gr, gf],
+        description="golfer gf is in group gr on week w",
+    )
+    m = Variable(
+        cont,
+        name="m",
+        type="free",
+        domain=[w, gr, gf, gf],
+        description="golfers meet in week w in some group",
+    )
+    numm = Variable(
+        cont,
+        name="numm",
+        type="free",
+        domain=[gf, gf],
+        description="number of meetings",
+    )
+    redm = Variable(
+        cont,
+        name="redm",
+        type="free",
+        domain=[gf, gf],
+        description="number of redundant meetings",
+    )
+    obj = Variable(cont, name="obj", type="free", description="objective")
 
     # Equation
-    defx = Equation(cont, name="defx", domain=[w, gf])
-    defgr = Equation(cont, name="defgr", domain=[w, gr])
-    defm = Equation(cont, name="defm", domain=[w, gr, gf, gf])
-    defnumm = Equation(cont, name="defnumm", domain=[gf, gf])
-    defredm = Equation(cont, name="defredm", domain=[gf, gf])
-    defobj = Equation(cont, name="defobj")
+    defx = Equation(
+        cont,
+        name="defx",
+        domain=[w, gf],
+        description="each golfer is assigned to exactly one group",
+    )
+    defgr = Equation(
+        cont,
+        name="defgr",
+        domain=[w, gr],
+        description="each group contains exactly |gg| golfers",
+    )
+    defm = Equation(
+        cont,
+        name="defm",
+        domain=[w, gr, gf, gf],
+        description="meet in group gr on week w",
+    )
+    defnumm = Equation(
+        cont, name="defnumm", domain=[gf, gf], description="number of meetings"
+    )
+    defredm = Equation(
+        cont,
+        name="defredm",
+        domain=[gf, gf],
+        description="number of redundant meetings",
+    )
+    defobj = Equation(
+        cont, name="defobj", description="minimize redundant meetings"
+    )
 
     if not isinstance(mip, bool):
         raise Exception(
@@ -77,8 +143,18 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         m.type = "binary"
         redm.type = "positive"
 
-        defm2 = Equation(cont, name="defm2", domain=[w, gr, gf, gf])
-        defm3 = Equation(cont, name="defm3", domain=[w, gr, gf, gf])
+        defm2 = Equation(
+            cont,
+            name="defm2",
+            domain=[w, gr, gf, gf],
+            description="meet in group gr on week w",
+        )
+        defm3 = Equation(
+            cont,
+            name="defm3",
+            domain=[w, gr, gf, gf],
+            description="meet in group gr on week w",
+        )
 
         defm[w, gr, mgf[gf1, gf2]] = m[w, gr, mgf] <= x[w, gr, gf1]
 

@@ -1,5 +1,9 @@
 .. _model:
 
+.. meta::
+   :description: Documentation of GAMSPy Model (gamspy.Model)
+   :keywords: Model, solve, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 *****
 Model
 *****

@@ -9,6 +9,7 @@ finite-horizon and infinite-horizon optimal control problems using a
 Radau pseudospectral method. Computational optimization and Applications,
 vol.49, nr. 2, June 2011, pp. 335-358.
 """
+
 from __future__ import annotations
 
 import os
@@ -35,9 +36,9 @@ def main():
     # SETS #
     n = Set(m, name="n", records=["state1"], description="states")
     k = Set(m, name="k", records=[f"t{t}" for t in range(1, 101)])
-    ku = Set(m, name="ku", domain=[k], description="control horizon")
-    ki = Set(m, name="ki", domain=[k], description="initial ")
-    kt = Set(m, name="kt", domain=[k], description="terminal period")
+    ku = Set(m, name="ku", domain=k, description="control horizon")
+    ki = Set(m, name="ki", domain=k, description="initial ")
+    kt = Set(m, name="kt", domain=k, description="terminal period")
 
     ku[k] = Number(1).where[Ord(k) < Card(k)]
     ki[k] = Number(1).where[Ord(k) == 1]
@@ -48,20 +49,16 @@ def main():
     _ = Parameter(
         m,
         name="xinit",
-        domain=[n],
+        domain=n,
         records=[("state1", 2)],
         description="initial value",
     )
 
     # VARIABLES #
     x = Variable(m, name="x", domain=[n, k], description="state variable")
-    u = Variable(m, name="u", domain=[k], description="control variable")
-    j = Variable(m, name="j", description="criterion")
+    u = Variable(m, name="u", domain=k, description="control variable")
 
     # EQUATIONS #
-    cost = Equation(
-        m, name="cost", type="regular", description="criterion definition"
-    )
     stateq = Equation(
         m,
         name="stateq",
@@ -69,14 +66,12 @@ def main():
         domain=[n, k],
         description="state equation",
     )
-
-    cost[...] = j == 0.5 * Sum(
-        [k, n], (x[n, k]) + 0.5 * Sum(ku, (u[ku]) * rk * (u[ku]))
-    )
-
     stateq[n, k.lead(1)] = x[n, k.lead(1)] == 2 * x[n, k] + 2 * u[
         k
     ] * gams_math.sqrt(x[n, k])
+
+    # OBJECTIVE #
+    j = 0.5 * Sum([k, n], (x[n, k]) + 0.5 * Sum(ku, (u[ku]) * rk * (u[ku])))
 
     control3 = Model(
         m,

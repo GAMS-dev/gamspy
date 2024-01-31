@@ -204,16 +204,14 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_definition(self):
         # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
+        distances = pd.DataFrame([
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ])
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
@@ -648,6 +646,19 @@ class EquationSuite(unittest.TestCase):
             SAMCOEF[ii, jj, kk].where[NONZERO[ii, jj]] = (
                 TSAM[ii, jj] == A[ii, jj] * Y[jj]
             )
+
+    def test_type(self):
+        eq1 = Equation(self.m, "eq1")
+        eq1.type = EquationType.REGULAR
+        self.assertEqual(eq1.type, "eq")
+
+        eq2 = Equation(self.m, "eq2")
+        eq2.type = EquationType.BOOLEAN
+        self.assertEqual(eq2.type, "boolean")
+
+        eq3 = Equation(self.m, "eq3")
+        eq3.type = EquationType.NONBINDING
+        self.assertEqual(eq3.type, "nonbinding")
 
 
 def equation_suite():

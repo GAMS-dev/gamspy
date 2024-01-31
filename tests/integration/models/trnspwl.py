@@ -65,6 +65,7 @@ Keywords: non linear programming, mixed integer linear programming,
           transportation problem, scheduling, economies of scale, non-convex
           objective, special ordered sets
 """
+
 from __future__ import annotations
 
 import os
@@ -110,7 +111,7 @@ def main():
     a = Parameter(
         m,
         name="a",
-        domain=[i],
+        domain=i,
         records=np.array([350, 600]),
         description="capacity of plant i in cases",
     )
@@ -118,7 +119,7 @@ def main():
     b = Parameter(
         m,
         name="b",
-        domain=[j],
+        domain=j,
         records=np.array([325, 300, 275]),
         description="demand at market j in cases",
     )
@@ -166,13 +167,13 @@ def main():
     supply = Equation(
         m,
         name="supply",
-        domain=[i],
+        domain=i,
         description="observe supply limit at plant i",
     )
     demand = Equation(
         m,
         name="demand",
-        domain=[j],
+        domain=j,
         description="satisfy demand at market j",
     )
 
@@ -223,17 +224,17 @@ def main():
     ss = Set(
         m,
         name="ss",
-        domain=[s],
+        domain=s,
         records=[f"s{i}" for i in range(1, 7)],
         description="sample points",
     )
 
     # Parameters
     p = Parameter(
-        m, name="p", domain=[s], description="x coordinate of sample point"
+        m, name="p", domain=s, description="x coordinate of sample point"
     )
     sqrtp = Parameter(
-        m, name="sqrtp", domain=[s], description="y coordinate of sample point"
+        m, name="sqrtp", domain=s, description="y coordinate of sample point"
     )
     xlow = Parameter(m, name="xlow", records=50)
     xhigh = Parameter(m, name="xhigh", records=400)
@@ -307,7 +308,7 @@ def main():
     g = Set(
         m,
         name="g",
-        domain=[s],
+        domain=s,
         records=["slope0"] + [f"s{i}" for i in range(1, 7)],
         description="Segments",
     )
@@ -316,13 +317,13 @@ def main():
     nseg = Parameter(
         m,
         name="nseg",
-        domain=[s],
+        domain=s,
         description="relative increase of x in segment",
     )
     ninc = Parameter(
         m,
         name="ninc",
-        domain=[s],
+        domain=s,
         description="relative increase of sqrtx in segment",
     )
 

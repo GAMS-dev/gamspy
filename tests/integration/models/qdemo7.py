@@ -17,6 +17,7 @@ Policy Models. The World Bank, 1988.
 Keywords: quadratic constraint programming, farming, agricultural economics,
           partial equilibrium, market behavior
 """
+
 from __future__ import annotations
 
 import os
@@ -52,34 +53,94 @@ def main():
     a, lc, lio, demdat = m.getSymbols(["a", "lc", "lio", "demdat"])
 
     # Scalar
-    fnum = Parameter(m, name="fnum", records=1000)
-    land = Parameter(m, name="land", records=4)
-    famlab = Parameter(m, name="famlab", records=25)
-    rwage = Parameter(m, name="rwage", records=3)
-    twage = Parameter(m, name="twage", records=4)
-    llab = Parameter(m, name="llab", records=2)
-    trent = Parameter(m, name="trent", records=40)
-    hpa = Parameter(m, name="hpa", records=2)
-    straw = Parameter(m, name="straw", records=1.75)
+    fnum = Parameter(
+        m, name="fnum", records=1000, description="number  of  farms in sector"
+    )
+    land = Parameter(
+        m,
+        name="land",
+        records=4,
+        description="farmsize                           (hectares)",
+    )
+    famlab = Parameter(
+        m,
+        name="famlab",
+        records=25,
+        description="family labor available       (days per month)",
+    )
+    rwage = Parameter(
+        m,
+        name="rwage",
+        records=3,
+        description="reservation wage rate       (dollars per day)",
+    )
+    twage = Parameter(
+        m,
+        name="twage",
+        records=4,
+        description="temporary labor wage        (dollars per day)",
+    )
+    llab = Parameter(
+        m,
+        name="llab",
+        records=2,
+        description="livestock labor requirements (days per month)",
+    )
+    trent = Parameter(
+        m,
+        name="trent",
+        records=40,
+        description="tractor rental cost      (dollar per hectare)",
+    )
+    hpa = Parameter(
+        m,
+        name="hpa",
+        records=2,
+        description="land plowed by animals  (hectares per animal)",
+    )
+    straw = Parameter(
+        m, name="straw", records=1.75, description="straw yield from wheat"
+    )
 
     # Parameter
     yields = Parameter(
         m,
         name="yields",
-        domain=[c],
+        domain=c,
         records=np.array([1.5, 6, 1, 3, 1.5, 2, 3]),
+        description="crop yield         (tons per hectare)",
     )
     miscost = Parameter(
         m,
         name="miscost",
-        domain=[c],
+        domain=c,
         records=np.array([10, 0, 5, 50, 80, 5, 50]),
+        description="misc cash costs (dollars per hectare)",
     )
-    price = Parameter(m, name="price", domain=[c])
-    pe = Parameter(m, name="pe", domain=[c])
-    pm = Parameter(m, name="pm", domain=[c])
-    alpha = Parameter(m, name="alpha", domain=[c])
-    beta = Parameter(m, name="beta", domain=[c])
+    price = Parameter(
+        m,
+        name="price",
+        domain=c,
+        description="reference (observed) price  (dollars)",
+    )
+    pe = Parameter(
+        m,
+        name="pe",
+        domain=c,
+        description="commodity export prices     (dollars)",
+    )
+    pm = Parameter(
+        m,
+        name="pm",
+        domain=c,
+        description="commodity import prices     (dollars)",
+    )
+    alpha = Parameter(
+        m, name="alpha", domain=c, description="demand curve intercept"
+    )
+    beta = Parameter(
+        m, name="beta", domain=c, description="demand curve gradient"
+    )
 
     cn[c] = Number(1).where[demdat[c, "ref-p"]]
     ce[c] = Number(1).where[demdat[c, "exp-p"]]
@@ -97,36 +158,137 @@ def main():
     demdat[cn, "dem-b"] = beta[cn]
 
     # Variables
-    xcrop = Variable(m, name="xcrop", type="positive", domain=[c])
-    mcost = Variable(m, name="mcost")
-    pcost = Variable(m, name="pcost")
-    labcost = Variable(m, name="labcost")
-    rescost = Variable(m, name="rescost")
-    tcost = Variable(m, name="tcost")
-    flab = Variable(m, name="flab", type="positive", domain=[t])
-    tlab = Variable(m, name="tlab", type="positive", domain=[t])
-    xlive = Variable(m, name="xlive", type="positive", domain=[r])
-    natprod = Variable(m, name="natprod", type="positive", domain=[c])
-    thire = Variable(m, name="thire", type="positive", domain=[s])
-    natcon = Variable(m, name="natcon", type="positive", domain=[c])
-    exports = Variable(m, name="exports", type="positive", domain=[c])
-    imports = Variable(m, name="imports", type="positive", domain=[c])
-    cps = Variable(m, name="cps")
+    xcrop = Variable(
+        m,
+        name="xcrop",
+        type="positive",
+        domain=c,
+        description="cropping activity                 (hectares)",
+    )
+    mcost = Variable(
+        m,
+        name="mcost",
+        description="misc cash cost                     (dollars)",
+    )
+    pcost = Variable(m, name="pcost", description="tractor plowing cost")
+    labcost = Variable(
+        m,
+        name="labcost",
+        description="labor cost                         (dollars)",
+    )
+    rescost = Variable(
+        m,
+        name="rescost",
+        description="family labor reservation wage cost (dollars)",
+    )
+    tcost = Variable(
+        m, name="tcost", description="total farm cost including rescost"
+    )
+    flab = Variable(
+        m,
+        name="flab",
+        type="positive",
+        domain=t,
+        description="family labor use                      (days)",
+    )
+    tlab = Variable(
+        m,
+        name="tlab",
+        type="positive",
+        domain=t,
+        description="temporary labor                       (days)",
+    )
+    xlive = Variable(
+        m,
+        name="xlive",
+        type="positive",
+        domain=r,
+        description="livestock activity                   (units)",
+    )
+    natprod = Variable(
+        m,
+        name="natprod",
+        type="positive",
+        domain=c,
+        description="net production                        (tons)",
+    )
+    thire = Variable(
+        m,
+        name="thire",
+        type="positive",
+        domain=s,
+        description="tractor rental             (hectares plowes)",
+    )
+    natcon = Variable(
+        m,
+        name="natcon",
+        type="positive",
+        domain=c,
+        description="domestic consumption             (1000 tons)",
+    )
+    exports = Variable(
+        m,
+        name="exports",
+        type="positive",
+        domain=c,
+        description="national exports                 (1000 tons)",
+    )
+    imports = Variable(
+        m,
+        name="imports",
+        type="positive",
+        domain=c,
+        description="national imports                 (1000 tons)",
+    )
+    cps = Variable(
+        m, name="cps", description="consumers and producers surplus"
+    )
 
     # Equation
-    landbal = Equation(m, name="landbal", domain=[t])
-    laborbal = Equation(m, name="laborbal", domain=[t])
-    plow = Equation(m, name="plow", domain=[s])
-    ares = Equation(m, name="ares")
-    acost = Equation(m, name="acost")
-    amisc = Equation(m, name="amisc")
+    landbal = Equation(
+        m,
+        name="landbal",
+        domain=t,
+        description="land balance             (hectares)",
+    )
+    laborbal = Equation(
+        m,
+        name="laborbal",
+        domain=t,
+        description="labor balance                (days)",
+    )
+    plow = Equation(
+        m,
+        name="plow",
+        domain=s,
+        description="land plowed   (hectares per season)",
+    )
+    ares = Equation(
+        m, name="ares", description="reservation labor cost    (dollars)"
+    )
+    acost = Equation(
+        m, name="acost", description="total cost accounting     (dollars)"
+    )
+    amisc = Equation(m, name="amisc", description="misc cost accounting")
     aplow = Equation(m, name="aplow")
-    alab = Equation(m, name="alab")
-    lclover = Equation(m, name="lclover")
-    lstraw = Equation(m, name="lstraw")
-    proc = Equation(m, name="proc", domain=[c])
-    dem = Equation(m, name="dem", domain=[c])
-    objn = Equation(m, name="objn")
+    alab = Equation(
+        m, name="alab", description="labor cost accounting     (dollars)"
+    )
+    lclover = Equation(m, name="lclover", description="clover balance")
+    lstraw = Equation(m, name="lstraw", description="straw balance")
+    proc = Equation(
+        m,
+        name="proc",
+        domain=c,
+        description="net production definition    (tons)",
+    )
+    dem = Equation(
+        m,
+        name="dem",
+        domain=c,
+        description="national demand balance (1000 tons)",
+    )
+    objn = Equation(m, name="objn", description="objective function")
 
     landbal[t] = Sum(c, xcrop[c] * a[t, c]) <= land * fnum
 
