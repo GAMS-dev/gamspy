@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_partssupply.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, contract theory, principal-agent problem, adverse selection, parts supply problem
+
+
 Parts Supply Problem (PARTSSUPPLY)
 
 This model is based on the ps2_f_s.358 .. ps10_s_mn.396 models by
@@ -26,9 +32,6 @@ ps10_s_mn          : --nsupplier=10 --uselicd=1 --nsamples=1000
 
 Alternatively, the corresponding original model files can be found in
 the GAMS model library.
-
-Keywords: nonlinear programming, contract theory, principal-agent problem,
-          adverse selection, parts supply problem
 """
 
 from __future__ import annotations

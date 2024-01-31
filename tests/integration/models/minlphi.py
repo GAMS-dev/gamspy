@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphi.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, NLP
+## KEYWORDS: mixed integer linear programming, nonlinear programming, chemical engineering, distillation sequences, heat integrated distillation
+
+
 Heat Integrated Distillation Sequences (MINLPHI)
 
 This problem describes a formulation and algorithmic procedure
@@ -97,9 +103,6 @@ _______________________
 
   C.A. Floudas and G.E. Paules IV,  1988.
   Computers and Chemical Engineering vol. 12 no. 6 pp. 531-546
-
-Keywords: mixed integer linear programming, nonlinear programming, chemical engineering,
-          distillation sequences, heat integrated distillation
 """
 
 from __future__ import annotations

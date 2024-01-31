@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_flowshop.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, relaxed mixed integer programming, scenario analysis, GUSS, flow shop scheduling, production planning
+
+
 Flow Shop Scheduling - (FLOWSHOP)
 
 A workshop that produces metal pipes on demand for automotive industry
@@ -18,9 +24,6 @@ items (makespan)?
 Gueret, C, Prins, C, and Sevaux, M, Applications of Optimization with
 Xpress-MP, Translated and revised by Susanne Heipcke. Dash
 Optimization, 2002.
-
-Keywords: mixed integer linear programming, relaxed mixed integer programming,
-          scenario analysis, GUSS, flow shop scheduling, production planning
 """
 
 from __future__ import annotations

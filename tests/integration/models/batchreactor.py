@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_batchreactor.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Optimal control of a batch reactor.
 Find the optimal temperature profile which gives maximum intermediate product
 concentration in a batch reactor with two consecutive reactions. The first

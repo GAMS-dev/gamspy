@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, production problem, distribution problem, scheduling, micro economics, steel industry
+
+
 Mexico Steel - Small Static (MEXSS)
 
 A simplified representation of the Mexican steel sector is used
@@ -12,10 +18,6 @@ Baltimore and London, 1984.
 
 A scanned version of this out-of-print book is accessible at
 http://www.gams.com/docs/pdf/steel_investment.pdf
-
-Keywords: linear programming, production problem, distribution problem,
-scheduling,
-          micro economics, steel industry
 """
 
 from __future__ import annotations

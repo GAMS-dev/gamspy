@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spatequ.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, MCP, NLP
+## DATAFILES: spatequ.gdx
+## KEYWORDS: linear programming, nonlinear programming, mixed complementarity problem, spatial equilibrium model
+
+
 Spatial Equilibrium (SPATEQU)
 
 This program is written for the spatial equilibrium model with linear supply
@@ -21,9 +28,6 @@ Takayama, T, and Judge, G G, Spatial Equilibrium and Quadratic
 Programming. Journal of Farm Economics 46, 1 (1964), 67-93
 
 Contributed by: Phan Sy Hieu, November 2010
-
-Keywords: linear programming, nonlinear programming, mixed complementarity
-          problem, spatial equilibrium model
 """
 
 from __future__ import annotations

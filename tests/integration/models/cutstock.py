@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cutstock.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, RMIP
+## KEYWORDS: mixed integer linear programming, cutting stock, column generation, paper industry
+
+
 Cutting Stock - A Column Generation Approach (CUTSTOCK)
 
 The task is to cut out some paper products of different sizes from a
@@ -11,9 +17,6 @@ cutting stock problem, Part I, Operations Research 9 (1961), 849-859.
 
 P. C. Gilmore and R. E. Gomory, A linear programming approach to the
 cutting stock problem, Part II, Operations Research 11 (1963), 863-888.
-
-Keywords: mixed integer linear programming, cutting stock, column generation,
-          paper industry
 """
 
 from __future__ import annotations

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MOED.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Multi-objective Economic-Environmental Load Dispatch
 
 For more details please refer to Chapter 3 (Gcode3.4), of the following book:

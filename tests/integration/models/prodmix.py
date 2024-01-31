@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodmix.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, production planning, manufacturing, furniture production
+
+
 A Production Mix Problem (PRODMIX)
 
 A furniture company wants to maximize its profits from the
@@ -7,9 +13,6 @@ manufacture of different types of desks.
 
 Dantzig, G B, Chapter 3.5. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: linear programming, production planning, manufacturing, furniture
-production
 """
 
 from __future__ import annotations

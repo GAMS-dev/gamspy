@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Immunization.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Immunization models
 
 Immunization.gms: Immunization models.

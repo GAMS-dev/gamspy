@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 PMU allocation for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.1), of the following book:

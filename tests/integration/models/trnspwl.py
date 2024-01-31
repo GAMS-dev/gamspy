@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, NLP
+## KEYWORDS: non linear programming, mixed integer linear programming, transportation problem, scheduling, economies of scale, non-convex objective, special ordered sets
+
+
 A Transportation Problem with discretized Economies of Scale (TRNSPWL)
 
 This problem finds a least cost shipping schedule that meets
@@ -60,10 +66,6 @@ The model is organized as follows:
 
 Dantzig, G B, Chapter 3.3. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: non linear programming, mixed integer linear programming,
-          transportation problem, scheduling, economies of scale, non-convex
-          objective, special ordered sets
 """
 
 from __future__ import annotations

@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Time dependent temperature field in a rectangular area.
 
 Determination of the time dependent temperature field in a rectangular area

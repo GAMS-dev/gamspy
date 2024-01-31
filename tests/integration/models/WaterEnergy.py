@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_WaterEnergy.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+
+
 Water-Energy Nexus
 
 For more details please refer to Chapter 10 (Gcode10.1), of the following book:

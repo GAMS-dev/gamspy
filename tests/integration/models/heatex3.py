@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Optimal Design of Network of Heat Exchangers in Parallel (with Recirculation) with Two Hot Streams and One Cold Stream
 
 Design of a network of heat exchangers in parallel (with recirculation)

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_surface.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Minimal surface problem
 
 Find a function f that minimizes the array of its graph subject to some

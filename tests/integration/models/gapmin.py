@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, RMIP
+## KEYWORDS: mixed integer linear programming, relaxed mixed integer linear programming, general assignment problem, lagrangian relaxation, knapsack
+
+
 Lagrangian Relaxation for Generalized Assignment (GAPMIN,SEQ=182)
 
 A general assignment problem is solved via Lagrangian Relaxation
@@ -20,9 +26,6 @@ the Generalized Assignment Problem. Operations Research 37 (1989), 658-663.
 
 
  --- original model definition
-
-Keywords: mixed integer linear programming, relaxed mixed integer linear
-          programming, general assignment problem, lagrangian relaxation, knapsack
 """
 
 from __future__ import annotations

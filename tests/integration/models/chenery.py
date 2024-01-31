@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chenery.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## DATAFILES: chenery.gdx
+## KEYWORDS: nonlinear programming, econometrics, economic development
+
+
 Substitution and Structural Change (CHENERY)
 
 This model follows conventional input-output formulations for production
@@ -9,8 +16,6 @@ functions for direct factor use.
 Chenery, H B, and Raduchel, W J, Substitution and Structural Change.
 In Chenery, H B, Ed, Structural Change and Development Policy. Oxford
 University Press, New York and Oxford, 1979.
-
-Keywords: nonlinear programming, econometrics, economic development
 """
 
 from __future__ import annotations

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_weapons.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, assignment problem, military application, nlp test problem
+
+
 Weapons Assignment (WEAPONS)
 
 This model determines an assignment of weapons to targets in order
@@ -8,9 +14,6 @@ NLP test problem.
 
 Bracken, J, and McCormick, G P, Chapter 2. In Selected Applications of
 Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
-
-Keywords: nonlinear programming, assignment problem, military application,
-          nlp test problem
 """
 
 from __future__ import annotations

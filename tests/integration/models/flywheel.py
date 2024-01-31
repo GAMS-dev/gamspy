@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Design of a disc flywheel
 
 Schittkowski, K., More test examples for nonlinear programming codes.

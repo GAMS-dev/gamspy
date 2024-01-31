@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EmergencyCentreAllocation.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Mixed integer linear programming model for optimal allocation of Emergency Centres
 
 For more details please refer to Chapter 2 (Gcode2.5), of the following book:

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_refrigeration.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Optimal design of industrial refrigeration system
 
 Paul H and Tay, Optimal design of an industrial refrigeration system.

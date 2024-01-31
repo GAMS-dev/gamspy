@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_carseq.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, MINLP
+## KEYWORDS: mixed integer linear programming, mixed integer nonlinear programming, production planning, car manufacturing, line problem
+
+
 Car Sequencing (CARSEQ)
 
 A number of cars are to be produced; they are not identical, because
@@ -22,10 +28,6 @@ Dincbas et al., Dincbas, M., Simonis, H., and Van Hentenryck, P.
 Solving the car-sequencing problem in constraint logic programming.
 In 8th European Conference on Artificial Intelligence (ECAI 88) ,
 Y. Kodratoff, Ed. Pitmann Publishing, London, Munich, Germany, 290-295, 1988
-
-Keywords: mixed integer linear programming, mixed integer nonlinear
-programming,
-          production planning, car manufacturing, line problem
 """
 
 from __future__ import annotations

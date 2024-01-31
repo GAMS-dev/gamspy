@@ -1,11 +1,15 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html
+## LICENSETYPE: Demo
+## MODELTYPE: MCP
+## DATAFILES: hansmge.gdx
+## KEYWORDS:  mixed complementarity problem, general equilibrium model, activity analysis, social accounting matrix, European regional policy
+
+
 Hansen's Activity Analysis Example - MPSGE.
 
 Scarf, H, and Hansen, T, The Computation of Economic Equilibria.
 Yale University Press, 1973.
-
-Keywords: mixed complementarity problem, general equilibrium model, activity analysis,
-          social accounting matrix, European regional policy
 """
 
 from __future__ import annotations

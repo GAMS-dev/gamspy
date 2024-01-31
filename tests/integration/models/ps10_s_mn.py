@@ -1,13 +1,16 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s_mn.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, contract theory, principal-agent problem, adverse selection, parts supply problem
+
+
 Parts Supply Problem w/ 10 Types w/ Random p(i) (PS10_S_MN)
 
 Hideo Hashimoto, Kojun Hamada, and Nobuhiro Hosoe, "A Numerical Approach
 to the Contract Theory: the Case of Adverse Selection", GRIPS Discussion
 Paper 11-27, National Graduate Institute for Policy Studies, Tokyo, Japan,
 March 2012.
-
-Keywords: nonlinear programming, contract theory, principal-agent problem,
-          adverse selection, parts supply problem
 """
 
 from __future__ import annotations

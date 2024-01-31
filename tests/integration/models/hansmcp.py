@@ -1,3 +1,18 @@
+"""
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html
+## LICENSETYPE: Demo
+## MODELTYPE: MCP
+## DATAFILES: hansmcp.gdx
+## KEYWORDS: mixed complementarity problem, activity analysis, general equilibrium model, social accounting matrix, european regional policy, impact analysis
+
+
+Hansen's Activity Analysis Example.
+
+
+Scarf, H, and Hansen, T, The Computation of Economic Equilibria.
+Yale University Press, 1973.
+"""
+
 from __future__ import annotations
 
 import math

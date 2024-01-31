@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ramsey.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 An elementary Ramsey growth model
 
 References:

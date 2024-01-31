@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, transportation problem, scheduling
+
+
 A Transportation Problem (TRNSPORT)
 
 This problem finds a least cost shipping schedule that meets
@@ -14,8 +20,6 @@ The Scientific Press, Redwood City, California, 1988.
 
 The line numbers will not match those in the book because of these
 comments.
-
-Keywords: linear programming, transportation problem, scheduling
 """
 
 from __future__ import annotations

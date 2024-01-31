@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_MeanVarMip.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+## DATAFILES: MeanVarMip.gdx
+
+
 Mean-variance model with diversification constraints
 
 MeanVarMip.gms:  Mean-variance model with diversification constraints.
