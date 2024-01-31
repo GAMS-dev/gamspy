@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_whouse.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, warehouse management, inventory
+
+
 Simple Warehouse Problem (WHOUSE)
 
 A warehouse can store limited units of a commodity. Given an
@@ -8,8 +14,6 @@ order to minimize total cost.
 
 Dantzig, G B, Chapter 3.6. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: linear programming, warehouse management, inventory
 """
 
 from __future__ import annotations

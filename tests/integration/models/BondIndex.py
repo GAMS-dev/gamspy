@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_BondIndex.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: BondIndex.gdx
+
+
 Tracking international bond index - GDX input
 
 * BondIndexGDX.gms: Tracking international bond index - GDX input.

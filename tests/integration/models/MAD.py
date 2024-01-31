@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_MAD.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, NLP
+## DATAFILES: WorldIndices.gdx
+
+
 Mean absolute deviation model
 
 MAD.gms: Mean absolute deviation model.

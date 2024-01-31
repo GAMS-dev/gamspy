@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_thai.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## DATAFILES: thai.gdx
+## KEYWORDS: mixed integer linear programming, routing, naval recruitment, scheduling
+
+
 Thai Navy Problem (THAI)
 
 This model is used to allocate ships to transport personnel from
@@ -8,9 +15,6 @@ different port to a training center.
 Choypeng, P, Puakpong, P, and Rosenthal, R E, Optimal Ship Routing
 and Personnel Assignment for Naval Recruitment in Thailand.
 Interfaces 16, 4 (1986), 356-366.
-
-Keywords: mixed integer linear programming, routing, naval recruitment,
-          scheduling
 """
 
 from __future__ import annotations

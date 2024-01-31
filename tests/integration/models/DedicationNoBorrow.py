@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_DedicationNoBorrow.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Dedication model without borrowing
 
 Dedication.gms:  Dedication model without borrowing.

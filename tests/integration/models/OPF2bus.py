@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF2bus.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Optimal power flow for a simple two-bus system
 
 For more details please refer to Chapter 6 (Gcode6.1), of the following book:

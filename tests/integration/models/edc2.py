@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_edc2.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Economic Dispatch Calculation of a Total Power of 1,980 MW Using 15 Power Generating Units
 
 Economic load dispatch for 15 generator systems with transmission losses

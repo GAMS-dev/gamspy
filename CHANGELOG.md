@@ -9,6 +9,7 @@ GAMSPy 0.11.8
   - Fix running twice on symbol declaration with records
 - Testing
   - Add tests for assigning type to Variable and Equation after creation.
+  - Add models information at the top of each model's docstring.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.7

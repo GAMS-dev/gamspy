@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_ParetoOptimalFront.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Pareto optimal front determination
 
 For more details please refer to Chapter 2 (Gcode2.16), of the following book:

@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Optimal management of a river system which includes water resources,
 reservoirs, consumers and an estuary.
 

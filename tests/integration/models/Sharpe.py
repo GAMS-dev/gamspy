@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Sharpe.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## DATAFILES: Sharpe.gdx
+
+
 Sharpe model
 
 Sharpe.gms: Sharpe model.

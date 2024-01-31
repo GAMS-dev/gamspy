@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleLP.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Simple linear programming model
 
 For more details please refer to Chapter 2 (Gcode2.1), of the following book:

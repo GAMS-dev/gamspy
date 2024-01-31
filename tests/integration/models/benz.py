@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_benz.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Stability of a wire guided Daimler-Benz 0305 bus.
 
 References:

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_process.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, alkylation process, chemical engineering
+
+
 Alkylation Process Optimization (PROCESS)
 
 Optimization of a alkylation process.
@@ -6,8 +12,6 @@ Optimization of a alkylation process.
 
 Bracken, J, and McCormick, G P, Chapter 4. In Selected Applications
 of Nonlinear Programming. John Wiley and Sons, New York, 1968.
-
-Keywords: nonlinear programming, alkylation process, chemical engineering
 """
 
 from __future__ import annotations

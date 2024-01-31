@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qdemo7.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+## DATAFILES: qdemo7.gdx
+## KEYWORDS: quadratic constraint programming, farming, agricultural economics, partial equilibrium, market behavior
+
+
 Nonlinear Simple Agricultural Sector Model (QDEMO7)
 
 This is a QCP version of the gamslib model DEMO7. The original NLP
@@ -13,9 +20,6 @@ the maximization of consumers and producers surplus.
 
 Kutcher, G P, Meeraus, A, and O'Mara, G T, Agriculture Sector and
 Policy Models. The World Bank, 1988.
-
-Keywords: quadratic constraint programming, farming, agricultural economics,
-          partial equilibrium, market behavior
 """
 
 from __future__ import annotations

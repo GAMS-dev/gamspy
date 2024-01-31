@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_food.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, food manufacturing, blending problem
+
+
 Food Manufacturing Problem - Blending of Oils (FOOD)
 
 The problem is to plan the blending of five kinds of oil, organized in two
@@ -41,9 +47,6 @@ This example is taken from the Cplex 12 User's Manual
 
 Williams, H P, Model Building in Mathematical Programming. John Wiley
 and Sons, 1978.
-
-Keywords: mixed integer linear programming, food manufacturing, blending
-problem
 """
 
 from __future__ import annotations

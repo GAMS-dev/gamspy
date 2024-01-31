@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF5bus.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Optimal power flow for a Five-bus system
 
 For more details please refer to Chapter 6 (Gcode6.3), of the following book:

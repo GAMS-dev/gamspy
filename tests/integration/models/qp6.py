@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp6.html
+## LICENSETYPE: Demo
+## MODELTYPE: MCP
+## DATAFILES: qp6.gdx
+## KEYWORDS: mixed complementarity problem, quadratic programming, finance
+
+
 Standard QP Model - QP4 expressed as MCP (QP6)
 
 Formulate the QP as an LCP, ie write down the first order
@@ -7,8 +14,6 @@ conditions of QP4 and solve.
 
 Kalvelagen, E, Model Building with GAMS. forthcoming
 de Wetering, A V, private communication.
-
-Keywords: mixed complementarity problem, quadratic programming, finance
 """
 
 from __future__ import annotations

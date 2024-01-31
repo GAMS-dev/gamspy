@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_springchain.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Equilibrium of System with Piecewise Linear Springs (SPRINGCHAIN)
 
 This model finds the shape of a hanging chain consisting of

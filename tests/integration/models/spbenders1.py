@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders1.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, stochastic Benders algorithm, transportation problem
+
+
 Stochastic Benders - Sequential GAMS Loop (SPBENDERS1)
 
 This example demonstrates a stochastic Benders implementation for the
@@ -10,9 +16,6 @@ subproblem.
 
 This first example implements the stochastic Benders algorithm using
 sequential solves of the master and subproblems in a GAMS loop.
-
-Keywords: linear programming, stochastic Benders algorithm, transportation
-          problem
 """
 
 from __future__ import annotations

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_SelectiveHedging.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: SelectiveHedging.gdx
+
+
 Indexation model with selective hedging
 
 * SelectiveHedging.gms: Indexation model with selective hedging

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_speed.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Minimization of the weight of a speed reducer
 
 The weight of the speed reducer is to be minimized subject to constraints

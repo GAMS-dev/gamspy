@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleMIP.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Simple Mixed Integer Linear Programming model
 
 For more details please refer to Chapter 2 (Gcode2.3), of the following book:

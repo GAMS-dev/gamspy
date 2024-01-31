@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_cpa.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Combustion of propan in air
 
 Hiebert's (1983) reduced variant.

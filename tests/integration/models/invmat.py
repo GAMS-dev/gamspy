@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Inverse of a given matrix A of order (n,n).
 
 Two methods are considered.

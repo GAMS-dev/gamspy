@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_reservoir.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Onstream and offstream optimal reservoir management
 
 Adapted from:

@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Solving complex linear algebraic systems of equations
 
 References

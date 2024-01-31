@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_PutCall.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: WorldIndices.gdx
+
+
 Put/Call efficient frontier model
 
 MAD.gms: Put/Call efficient frontier model.

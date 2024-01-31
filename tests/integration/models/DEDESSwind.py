@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DEDESSwind.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Cost based Dynamic Economic Dispatch integrated with Energy Storage and Wind
 
 

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_poutil.html
+## LICENSETYPE: Community
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, energy economics, portfolio optimization, unit commitment, economic dispatch, power plant control, day-ahead market
+
+
 Portfolio Optimization for Electric Utilities (POUTIL)
 
 We discuss a portfolio optimization problem occurring in the energy
@@ -19,11 +25,6 @@ Rebennack, S, Kallrath, J, and Pardalos, P M, Energy Portfolio
 Optimization for Electric Utilities: Case Study for Germany. In
 Bj�rndal, E, Bj�rndal, M, Pardalos, P.M. and R�nnqvist, M Eds,.
 Springer, pp. 221-246, 2010.
-
-Keywords: mixed integer linear programming, energy economics, portfolio
-optimization,
-          unit commitment, economic dispatch, power plant control,
-          day-ahead market
 """
 
 from __future__ import annotations
