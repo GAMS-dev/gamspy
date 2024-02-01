@@ -125,19 +125,39 @@ class Operable:
         """Validates the dimensions for the matrix multiplication"""
         left_len = len(self.domain)
         right_len = len(other.domain)
+
+        left_repeat_err = (
+            "Left matrix domains were repeated use an alias instead"
+        )
+        right_repeat_err = (
+            "Right matrix domains were repeated use an alias instead"
+        )
+        dim_no_match_err = "Matrix multiplication dimensions do not match"
+
         if left_len == 0:
             raise ValidationError(
                 "Matrix multiplication requires at least 1 domain, left side"
-                " is scalar"
+                " is a scalar"
             )
 
         if right_len == 0:
             raise ValidationError(
                 "Matrix multiplication requires at least 1 domain, right side"
-                " is scalar"
+                " is a scalar"
             )
 
         lr = (left_len, right_len)
+
+        matrix_dim_left = self.domain[-2:]
+        if len(matrix_dim_left) == 2:
+            if matrix_dim_left[0] == matrix_dim_left[1]:
+                raise ValidationError(left_repeat_err)
+
+        matrix_dim_right = other.domain[-2:]
+        if len(matrix_dim_right) == 2:
+            if matrix_dim_right[0] == matrix_dim_right[1]:
+                raise ValidationError(right_repeat_err)
+
         if lr == (1, 1):
             # Dot product
             if self.domain[0] != other.domain[0]:
@@ -147,53 +167,41 @@ class Operable:
         elif lr == (2, 2):
             # Matrix multiplication
             if self.domain[1] != other.domain[0]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[1]
         elif lr == (1, 2):
             # Vector matrix, vector 1-prepended
             if self.domain[0] != other.domain[0]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[0]
         elif lr == (2, 1):
             # Matrix vector, ordinary
             if self.domain[1] != other.domain[0]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[1]
         elif left_len == 1 and right_len > 2:
             # Vector batched-matrix, vector 1-prepended
             if self.domain[0] != other.domain[-2]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[0]
         elif left_len > 2 and right_len == 1:
             # batched-matrix vector, ordinary
             if self.domain[-1] != other.domain[0]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[-1]
-        elif left_len > 2 and right_len > 2:
+        elif left_len >= 2 and right_len >= 2:
             # batched-matrix batched-matrix
             if self.domain[-1] != other.domain[-2]:
-                raise ValidationError(
-                    "Matrix multiplication dimensions do not match"
-                )
+                raise ValidationError(dim_no_match_err)
 
             return self.domain[-1]
         else:
             raise ValidationError(
                 f"Matrix multiplication for left dim: {left_len},"
-                " right dim: {right_len} not implemented"
+                f" right dim: {right_len} not implemented"
             )
