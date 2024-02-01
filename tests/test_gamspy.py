@@ -32,6 +32,7 @@ from unit.test_set import set_suite
 from unit.test_special_values import special_values_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
+from unit.test_matrix import matrix_suite
 
 try:
     from dotenv import load_dotenv
@@ -164,6 +165,7 @@ def main():
         gamspy_suite,
         container_suite,
         math_suite,
+        matrix_suite,
         utils_suite,
         set_suite,
         alias_suite,
