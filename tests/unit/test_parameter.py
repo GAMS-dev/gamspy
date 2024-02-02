@@ -266,6 +266,11 @@ class ParameterSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             a1["i3"] = a1["i3"] * 5
 
+    def test_uels_on_axes(self):
+        s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
+        i = Parameter(self.m, "i", ["*"], records=s, uels_on_axes=True)
+        self.assertEqual(i.records.value.tolist(), [1, 2, 3])
+
 
 def parameter_suite():
     suite = unittest.TestSuite()

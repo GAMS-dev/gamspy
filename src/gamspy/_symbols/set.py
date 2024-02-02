@@ -497,7 +497,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self._current_index = 0
 
             if records is not None:
-                self.setRecords(records)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
 

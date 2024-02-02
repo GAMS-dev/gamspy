@@ -296,7 +296,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._infeas = self._create_attr("infeas")
 
             if records is not None:
-                self.setRecords(records)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
 
