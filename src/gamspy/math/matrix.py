@@ -24,14 +24,35 @@
 #
 from __future__ import annotations
 
-from typing import List
-from typing import Union
+from typing import List, Union
 
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.parameter import Parameter
+from gamspy._symbols.set import Set
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
+
+
+def _search_or_create_set(m, x: int):
+    if not isinstance(x, int):
+        raise ValidationError("Dimensions must be integers")
+
+    expected_name = f"DenseDim{x}"
+    find_x = m.data.get(expected_name, None)
+    if not find_x:
+        print(expected_name, "not found")
+        find_x = Set(m, name=expected_name, records=range(x))
+
+    return find_x
+
+
+def dim(m, dims: List[int]):
+    """Returns an array where each element
+    corresponds to a set where the dimension of the
+    set is equal to the element in dims"""
+
+    return [_search_or_create_set(m, x) for x in dims]
 
 
 # TODO add documentation for these!

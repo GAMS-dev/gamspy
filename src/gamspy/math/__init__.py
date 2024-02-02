@@ -91,7 +91,7 @@ from gamspy.math.trigonometric import (
     tanh,
 )
 
-from gamspy.math.matrix import permute
+from gamspy.math.matrix import dim, permute
 
 __all__ = [
     "cos",
@@ -115,6 +115,7 @@ __all__ = [
     "log_gamma",
     "logit",
     "permute",
+    "dim",
     "abs",
     "ceil",
     "dist",
