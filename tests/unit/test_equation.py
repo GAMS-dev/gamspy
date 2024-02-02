@@ -660,6 +660,13 @@ class EquationSuite(unittest.TestCase):
         eq3.type = EquationType.NONBINDING
         self.assertEqual(eq3.type, "nonbinding")
 
+    def test_uels_on_axes(self):
+        s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
+        e = Equation(
+            self.m, "e", "eq", domain=["*"], records=s, uels_on_axes=True
+        )
+        self.assertEqual(e.records.level.tolist(), [1, 2, 3])
+
 
 def equation_suite():
     suite = unittest.TestSuite()

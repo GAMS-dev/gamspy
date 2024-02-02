@@ -219,7 +219,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container._add_statement(self)
 
             if records is not None:
-                self.setRecords(records)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
 
