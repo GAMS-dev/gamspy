@@ -66,9 +66,6 @@ class Local(backend.Backend):
         # Run the model
         self.run(gams_string)
 
-        if self.is_async():
-            return None
-
         # Synchronize GAMSPy with checkpoint and return a summary
         summary = self.postprocess(dirty_names, is_implicit)
 

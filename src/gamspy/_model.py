@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from gamspy._options import Options
     from gamspy._backend.engine import EngineConfig
     from gamspy._backend.neos import NeosClient
+    from gamspy._options import ModelInstanceOptions
     import pandas as pd
 
 
@@ -194,9 +195,9 @@ class Model:
         self,
         container: Container,
         name: str,
-        problem: Problem,
+        problem: Problem | str,
         equations: list[Equation] = [],
-        sense: Sense | None = None,
+        sense: Sense | str | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,
         limited_variables: Iterable[Variable] | None = None,
@@ -535,7 +536,7 @@ class Model:
         solver: str | None = None,
         options: Options | None = None,
         solver_options: dict | None = None,
-        model_instance_options: dict | None = None,
+        model_instance_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         engine_config: EngineConfig | None = None,
@@ -576,6 +577,8 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
+        validation.validate_solver_args(solver, options, output)
+
         if self._is_frozen:
             self.instance.solve(model_instance_options, output)
             return None

@@ -44,7 +44,7 @@ from gams.core.opt import optResetStr
 import gamspy as gp
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
-from gamspy._options import _map_options
+from gamspy._options import _map_options, Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -58,7 +58,7 @@ if TYPE_CHECKING:
         Model,
     )
     from gamspy._algebra.expression import Expression
-    from gamspy._options import Options
+    from gamspy._model import Sense
 
 
 debugging_map = {
@@ -147,6 +147,11 @@ class Container(gt.Container):
         self.temp_container = gt.Container(
             system_directory=self.system_directory
         )
+
+        if options is not None and not isinstance(options, Options):
+            raise TypeError(
+                f"`options` must be of type Option but found {type(options)}"
+            )
         self._options = options
         self._gams_options = _map_options(
             self.workspace,
@@ -687,7 +692,7 @@ class Container(gt.Container):
         name: str,
         problem: str,
         equations: list[Equation] = [],
-        sense: Literal["MIN", "MAX"] | None = None,
+        sense: Literal["MIN", "MAX"] | Sense | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,
         limited_variables: list | None = None,
