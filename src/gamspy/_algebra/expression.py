@@ -226,6 +226,6 @@ class Expression(operable.Operable):
 
                 current = current.right if hasattr(current, "right") else None
             else:
-                break
+                break  # pragma: no cover
 
         return list(set(variables))

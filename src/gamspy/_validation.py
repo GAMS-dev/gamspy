@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import io
+
 from typing import List
 from typing import TYPE_CHECKING
 from typing import Union
+from typing import Any
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -305,3 +309,39 @@ def validate_name(word: str) -> str:
         )
 
     return word
+
+
+def validate_solver_args(solver: Any, options: Any, output: Any):
+    # Check validity of solver
+    if solver is not None:
+        if not isinstance(solver, str):
+            raise TypeError("`solver` argument must be a string.")
+
+        installed_solvers = utils.getInstalledSolvers()
+        if solver not in installed_solvers:
+            available_solvers = utils.getAvailableSolvers()
+            if solver not in available_solvers:
+                raise ValidationError(
+                    f"`{solver}` is not a valid solver option. All possible"
+                    f" solvers: {available_solvers}. You can install a new"
+                    " solver with `gamspy install solver <solver_name>`"
+                )
+
+            raise ValidationError(
+                f"Provided solver name `{solver}` is not installed on your"
+                f" machine. Install `{solver}` with `gamspy install solver"
+                f" {solver}`"
+            )
+
+    # Check validity of options
+    if options is not None and not isinstance(options, Options):
+        raise TypeError(
+            f"`options` must be of type Option but found {type(options)}"
+        )
+
+    # Check validity of output
+    if output is not None and not isinstance(output, io.TextIOWrapper):
+        raise TypeError(
+            "`output` must be of type io.TextIOWrapper but found"
+            f" {type(output)}"
+        )

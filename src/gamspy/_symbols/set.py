@@ -359,12 +359,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj._is_singleton = is_singleton
 
         # typing
-        if obj.is_singleton:
-            obj._gams_type = GMS_DT_SET
-            obj._gams_subtype = 1
-        else:
-            obj._gams_type = GMS_DT_SET
-            obj._gams_subtype = 0
+        obj._gams_type = GMS_DT_SET
+        obj._gams_subtype = 1 if obj.is_singleton else 0
 
         # add to container
         container.data.update({name: obj})

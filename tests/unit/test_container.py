@@ -31,6 +31,9 @@ class ContainerSuite(unittest.TestCase):
     def test_container(self):
         import gams.transfer as gt
 
+        with self.assertRaises(TypeError):
+            m = Container(options={"bla": "bla"})
+
         i = gt.Set(self.m, "i")
         self.m._cast_symbols()
         self.assertTrue(isinstance(self.m["i"], Set))
@@ -452,6 +455,9 @@ class ContainerSuite(unittest.TestCase):
 
     def test_debugging_level(self):
         from gamspy.math import sqrt
+
+        with self.assertRaises(ValidationError):
+            _ = Container(debugging_level="wrong_level")
 
         global working_directory
 
