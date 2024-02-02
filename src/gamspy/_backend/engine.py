@@ -27,9 +27,16 @@ from __future__ import annotations
 import os
 import shutil
 import uuid
+import time
+import copy
+
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
+
+import urllib3
+import urllib.parse
+import certifi
 
 from gams import DebugLevel
 from gams import GamsEngineConfiguration
@@ -47,6 +54,118 @@ if TYPE_CHECKING:
     import io
     from gamspy import Container
     from gamspy import Model
+
+
+MAX_REQUEST_ATTEMPS = 3
+
+
+class EngineClient:
+    def __init__(
+        self,
+        host: str,
+        username: str | None = None,
+        password: str | None = None,
+        jwt: str | None = None,
+        namespace: str = "global",
+        extra_model_files: List[str] = [],
+        engine_options: Optional[dict] = None,
+        remove_results: bool = False,
+    ):
+        self.host = host
+        self.username = username
+        self.password = password
+        self.jwt = jwt
+        self.namespace = namespace
+        self.extra_model_files = extra_model_files
+        self.engine_options = engine_options
+        self.remove_results = remove_results
+
+        self._http = urllib3.PoolManager(
+            cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
+        )
+
+        self._engine_config = self._get_engine_config()
+        self._request_headers = {
+            "Authorization": self._engine_config._get_auth_header(),
+            "User-Agent": "GAMS Python API",
+            "Accept": "application/json",
+        }
+
+    def _get_engine_config(self):
+        return GamsEngineConfiguration(
+            self.host,
+            self.username,
+            self.password,
+            self.jwt,
+            self.namespace,
+        )
+
+    def _get_params(self):
+        query_params = (
+            copy.deepcopy(self.engine_options) if self.engine_options else {}
+        )
+        query_params["namespace"] = self._engine_config.namespace
+
+    def job_post(self):
+        query_params, file_params = self._get_params()
+
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
+            r = self._http.request(
+                "POST",
+                self._engine_config.host
+                + "/jobs/?"
+                + urllib.parse.urlencode(query_params, doseq=True),
+                fields=file_params,
+                headers=self._request_headers,
+            )
+            response_data = r.data.decode("utf-8", errors="replace")
+            if r.status == 201:
+                break
+            elif r.status == 429:
+                # retry
+                time.sleep(2**attempt_number)
+                continue
+            raise GamspyException(
+                "Creating job on GAMS Engine failed with status code: "
+                + str(r.status)
+                + ". Message: "
+                + response_data
+            )
+        else:
+            raise GamspyException(
+                "Creating job on GAMS Engine failed after: "
+                + str(MAX_REQUEST_ATTEMPS)
+                + " attempts. Message: "
+                + response_data
+            )
+
+    def job_delete(self, token):
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
+            r = self._http.request(
+                "DELETE",
+                self._engine_config.host + "/jobs/" + token + "/result",
+                headers=self._request_headers,
+            )
+            response_data = r.data.decode("utf-8", errors="replace")
+            if r.status in [200, 403]:
+                return
+            elif r.status == 429:
+                # retry
+                time.sleep(2**attempt_number)
+                continue
+            raise GamspyException(
+                "Removing job result failed with status code: "
+                + str(r.status)
+                + ". Message: "
+                + response_data
+            )
+        else:
+            raise GamspyException(
+                "Removing job result failed after: "
+                + str(MAX_REQUEST_ATTEMPS)
+                + " attempts. Message: "
+                + response_data
+            )
 
 
 class EngineConfig(BaseModel):
@@ -76,7 +195,7 @@ class GAMSEngine(backend.Backend):
     def __init__(
         self,
         container: "Container",
-        config: "EngineConfig" | None,
+        config: "EngineClient" | None,
         options: "GamsOptions",
         output: Optional[io.TextIOWrapper] = None,
         model: Model | None = None,
@@ -92,7 +211,7 @@ class GAMSEngine(backend.Backend):
             os.path.basename(container._gdx_out),
         )
 
-        self.config = config
+        self.client = config
         self.options = options
         self.output = output
         self.model = model
@@ -129,14 +248,14 @@ class GAMSEngine(backend.Backend):
         try:
             self.container._job = job
             job.run_engine(  # type: ignore
-                engine_configuration=self.config._get_engine_config(),
+                engine_configuration=self.client._get_engine_config(),
                 extra_model_files=extra_model_files,
                 gams_options=self.options,
                 checkpoint=self.container._save_to,
                 output=self.output,
                 create_out_db=False,
-                engine_options=self.config.engine_options,
-                remove_results=self.config.remove_results,
+                engine_options=self.client.engine_options,
+                remove_results=self.client.remove_results,
             )
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
@@ -157,7 +276,7 @@ class GAMSEngine(backend.Backend):
         self.container._swap_checkpoints()
 
         if (
-            self.config.remove_results
+            self.client.remove_results
             or self.options.traceopt != 3
             or is_implicit
         ):
@@ -168,7 +287,7 @@ class GAMSEngine(backend.Backend):
         )
 
     def _preprocess_extra_model_files(self) -> List[str]:
-        for extra_file in self.config.extra_model_files:
+        for extra_file in self.client.extra_model_files:
             try:
                 shutil.copy(
                     extra_file, self.container.workspace.working_directory
@@ -179,7 +298,7 @@ class GAMSEngine(backend.Backend):
 
         extra_model_files = [
             os.path.basename(extra_file)
-            for extra_file in self.config.extra_model_files
+            for extra_file in self.client.extra_model_files
         ]
 
         extra_model_files.append(self.gdx_in)
