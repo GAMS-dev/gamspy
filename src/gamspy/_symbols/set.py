@@ -223,7 +223,8 @@ class SetMixin:
 
         if type == "circular":
             return implicits.ImplicitSet(self, name=f"{self.name} -- {jump}")
-        elif type == "linear":
+
+        if type == "linear":
             return implicits.ImplicitSet(self, name=f"{self.name} - {jump}")
 
         raise ValueError("Lag type must be linear or circular")
@@ -273,7 +274,8 @@ class SetMixin:
 
         if type == "circular":
             return implicits.ImplicitSet(self, name=f"{self.name} ++ {jump}")
-        elif type == "linear":
+
+        if type == "linear":
             return implicits.ImplicitSet(self, name=f"{self.name} + {jump}")
 
         raise ValueError("Lead type must be linear or circular")
@@ -397,11 +399,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not a Set object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not a Set object)"
+            )
         except KeyError:
             return object.__new__(cls)
 
@@ -429,39 +431,32 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             has_symbol = True
 
         if has_symbol:
-            try:
-                if not isinstance(self, Set):
-                    raise TypeError(
-                        f"Cannot overwrite symbol {self.name} in container"
-                        " because it is not a Set object)"
-                    )
+            if not isinstance(self, Set):
+                raise TypeError(
+                    f"Cannot overwrite symbol {self.name} in container"
+                    " because it is not a Set object)"
+                )
 
-                if any(
-                    d1 != d2
-                    for d1, d2 in itertools.zip_longest(self.domain, domain)
-                ):
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless symbol"
-                        " domains are equal"
-                    )
+            if any(
+                d1 != d2
+                for d1, d2 in itertools.zip_longest(self.domain, domain)
+            ):
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless symbol"
+                    " domains are equal"
+                )
 
-                if self.is_singleton != is_singleton:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'is_singleton' is left unchanged"
-                    )
+            if self.is_singleton != is_singleton:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'is_singleton' is left unchanged"
+                )
 
-                if self.domain_forwarding != domain_forwarding:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'domain_forwarding' is left unchanged"
-                    )
-
-            except ValueError as err:
-                raise ValueError(err)
-
-            except TypeError as err:
-                raise TypeError(err)
+            if self.domain_forwarding != domain_forwarding:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'domain_forwarding' is left unchanged"
+                )
 
             # reset some properties
             self._requires_state_check = True

@@ -148,7 +148,8 @@ class Expression(operable.Operable):
 
         if self.data in ["..", "="]:
             return f"{out_str};"
-        elif self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
+
+        if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
             return out_str
 
         return f"({out_str})"

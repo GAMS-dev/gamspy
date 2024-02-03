@@ -105,11 +105,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             symobj = container[name]
             if isinstance(symobj, cls):
                 return symobj
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not an Alias object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not an Alias object)"
+            )
         except KeyError:
             return object.__new__(Alias)
 
