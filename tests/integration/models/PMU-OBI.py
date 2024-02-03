@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-OBI.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Maximizing the network observability using a limited number of PMU for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.4), of the following book:

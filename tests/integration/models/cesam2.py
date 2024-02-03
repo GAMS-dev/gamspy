@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cesam2.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, micro economics, cross entropy, social accounting matrix
+
+
 Cross Entropy SAM Estimation (CESAM2)
 
 CESAM2 illustrates a cross entropy technique for estimating the cells of a
@@ -72,9 +78,6 @@ Email: S.Robinson@CGIAR.ORG
 Earlier version, CESAM, programmed by Sherman Robinson and Moataz El-Said,
 November 2000.
 Original version programmed by Sherman Robinson and Andrea Cattaneo.
-
-Keywords: nonlinear programming, micro economics, cross entropy, social
-accounting matrix
 """
 
 from __future__ import annotations

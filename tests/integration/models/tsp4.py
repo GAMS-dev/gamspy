@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tsp4.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## DATAFILES: tsp4.gdx
+## KEYWORDS: mixed integer linear programming, traveling salesman problem, iterative subtour elimination
+
+
 Traveling Salesman Problem - Four (TSP4,SEQ=180)
 
 This is the fourth problem in a series of traveling salesman
@@ -9,9 +16,6 @@ The first relaxation is the same as in TSP1.
 Kalvelagen, E, Model Building with GAMS. forthcoming
 
 de Wetering, A V, private communication.
-
-Keywords: mixed integer linear programming, traveling salesman problem, iterative
-          subtour elimination
 """
 
 from __future__ import annotations

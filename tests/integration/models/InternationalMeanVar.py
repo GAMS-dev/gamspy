@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_InternationalMeanVar.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## DATAFILES: InternationalMeanVar.gdx
+
+
 International asset allocation model
 
 InternationalMeanVar.gms:  International asset allocation model.

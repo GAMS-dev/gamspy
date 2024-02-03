@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_ThreeStageSPDA.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, NLP
+
+
 A three stage stochastic programming model for SPDA
 
 * ThreeStageSPDA.gms: A three stage stochastic programming model for SPDA

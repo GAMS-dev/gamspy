@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_protein.html
+## LICENSETYPE: Requires license
+## MODELTYPE: NLP
+
+
 Optimal production of secreted protein in a fed-batch reactor.
 
 Park, S., Ramirez, W.F., Optimal production of secreted protein in fed-batch

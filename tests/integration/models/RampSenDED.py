@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_RampSenDED.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Ramp rate sensitivity analysis for Dynamic Economic Load Dispatch
 
 For more details please refer to Chapter 4 (Gcode4.2), of the following book:

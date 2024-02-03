@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EDsensitivity.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Sensitivity Analysis in Economic Load Dispatch
 
 For more details please refer to Chapter 3 (Gcode3.2), of the following book:

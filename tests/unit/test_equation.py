@@ -647,6 +647,26 @@ class EquationSuite(unittest.TestCase):
                 TSAM[ii, jj] == A[ii, jj] * Y[jj]
             )
 
+    def test_type(self):
+        eq1 = Equation(self.m, "eq1")
+        eq1.type = EquationType.REGULAR
+        self.assertEqual(eq1.type, "eq")
+
+        eq2 = Equation(self.m, "eq2")
+        eq2.type = EquationType.BOOLEAN
+        self.assertEqual(eq2.type, "boolean")
+
+        eq3 = Equation(self.m, "eq3")
+        eq3.type = EquationType.NONBINDING
+        self.assertEqual(eq3.type, "nonbinding")
+
+    def test_uels_on_axes(self):
+        s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
+        e = Equation(
+            self.m, "e", "eq", domain=["*"], records=s, uels_on_axes=True
+        )
+        self.assertEqual(e.records.level.tolist(), [1, 2, 3])
+
 
 def equation_suite():
     suite = unittest.TestSuite()

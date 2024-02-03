@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+## KEYWORDS: quadratic constraint programming, second order cone programming, engineering, finite impulse response filter designment
+
+
 Linear Phase Lowpass Filter Design (FDESIGN)
 
 This model finds the filter weights for a finite impulse response
@@ -18,9 +24,6 @@ Lobo, M S, Vandenberghe, L, Boyd, S, and Lebret, H, Applications of
 Second Order Cone Programming. Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image
 Processing. 284 (November, 1998).
-
-Keywords: quadratic constraint programming, second order cone programming,
-          engineering, finite impulse response filter designment
 """
 
 from __future__ import annotations

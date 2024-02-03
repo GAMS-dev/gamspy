@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-cost.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Min Cost PMU allocation for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.2), of the following book:

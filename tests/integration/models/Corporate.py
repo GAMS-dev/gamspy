@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Corporate.html
+## LICENSETYPE: Requires license
+## MODELTYPE: LP
+## DATAFILES: Corporate.gdx
+
+
 Corporate bond indexation model
 
 Corporate.gms: Corporate bond indexation model

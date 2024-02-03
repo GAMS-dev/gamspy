@@ -68,6 +68,7 @@ class EquationType(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -185,11 +186,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not an Equation object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not an Equation object)"
+            )
         except KeyError:
             return object.__new__(cls)
 
@@ -219,35 +220,28 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             has_symbol = True
 
         if has_symbol:
-            try:
-                type = cast_type(type)
-                if self.type != type.casefold():
-                    raise TypeError(
-                        "Cannot overwrite symbol in container unless equation"
-                        f" types are equal: `{self.type}` !="
-                        f" `{type.casefold()}`"
-                    )
+            type = cast_type(type)
+            if self.type != type.casefold():
+                raise TypeError(
+                    "Cannot overwrite symbol in container unless equation"
+                    f" types are equal: `{self.type}` !="
+                    f" `{type.casefold()}`"
+                )
 
-                if any(
-                    d1 != d2
-                    for d1, d2 in itertools.zip_longest(self.domain, domain)
-                ):
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless symbol"
-                        " domains are equal"
-                    )
+            if any(
+                d1 != d2
+                for d1, d2 in itertools.zip_longest(self.domain, domain)
+            ):
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless symbol"
+                    " domains are equal"
+                )
 
-                if self.domain_forwarding != domain_forwarding:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'domain_forwarding' is left unchanged"
-                    )
-
-            except ValueError as err:
-                raise ValueError(err)
-
-            except TypeError as err:
-                raise TypeError(err)
+            if self.domain_forwarding != domain_forwarding:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'domain_forwarding' is left unchanged"
+                )
 
             # reset some properties
             self._requires_state_check = True
@@ -272,10 +266,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 name,
                 type,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
@@ -296,7 +289,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._slack = self._create_attr("slack")
             self._infeas = self._create_attr("infeas")
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+            else:
+                self.container._run()
 
     def __hash__(self):
         return id(self)
@@ -358,7 +354,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
 
-        if self.type in non_regular_map.keys():
+        if self.type in non_regular_map:
             assignment.replace_operator(non_regular_map[self.type])
 
         statement = expression.Expression(
@@ -563,6 +559,28 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         super().setRecords(records, uels_on_axes)
         self.container._run()
 
+    @property
+    def type(self):
+        """
+        The type of equation;
+        3. 'regular' -- equal, less than or greater than
+        4. 'nonbinding', 'N', or '=N='  -- nonbinding relationship
+        5. 'cone', 'C', or '=C=' -- cone equation
+        6. 'external', 'X', or '=X=' -- external equation
+        7. 'boolean', 'B', or '=B=' -- boolean equation
+
+        Returns
+        -------
+        str
+            The type of equation
+        """
+        return self._type
+
+    @type.setter
+    def type(self, eq_type: str | EquationType):
+        given_type = cast_type(eq_type)
+        gt.Equation.type.fset(self, given_type)
+
     def gamsRepr(self) -> str:
         """
         Representation of this Equation in GAMS language.
@@ -595,7 +613,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
 def cast_type(type: str | EquationType) -> str:
     if isinstance(type, str):
-        if type.upper() not in EquationType.values():
+        if type.lower() not in [
+            "eq",
+            "geq",
+            "leq",
+            "regular",
+            "nonbinding",
+            "external",
+            "cone",
+            "boolean",
+        ]:
             raise ValueError(
                 "Allowed equation types:"
                 f" {EquationType.values()} but found {type}."
@@ -607,6 +634,6 @@ def cast_type(type: str | EquationType) -> str:
 
     elif isinstance(type, EquationType):
         # assign eq by default
-        type = "eq" if EquationType.REGULAR else str(type)
+        type = "eq" if type == EquationType.REGULAR else str(type)
 
     return type

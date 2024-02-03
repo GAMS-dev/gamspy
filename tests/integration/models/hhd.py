@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Human Heart Dipole
 The human heart dipole problem consists of the experimental electrolytic
 determination of the resultant dipole moment in the human heart.

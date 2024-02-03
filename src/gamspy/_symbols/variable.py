@@ -62,6 +62,7 @@ class VariableType(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -168,11 +169,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{symbol.name}` in container"
-                    " because it is not a Variable object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{symbol.name}` in container"
+                " because it is not a Variable object)"
+            )
         except KeyError:
             return object.__new__(cls)
 
@@ -200,34 +201,27 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             has_symbol = True
 
         if has_symbol:
-            try:
-                if self.type != type.casefold():
-                    raise TypeError(
-                        "Cannot overwrite symbol in container unless variable"
-                        f" types are equal: `{self.type}` !="
-                        f" `{type.casefold()}`"
-                    )
+            if self.type != type.casefold():
+                raise TypeError(
+                    "Cannot overwrite symbol in container unless variable"
+                    f" types are equal: `{self.type}` !="
+                    f" `{type.casefold()}`"
+                )
 
-                if any(
-                    d1 != d2
-                    for d1, d2 in itertools.zip_longest(self.domain, domain)
-                ):
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless symbol"
-                        " domains are equal"
-                    )
+            if any(
+                d1 != d2
+                for d1, d2 in itertools.zip_longest(self.domain, domain)
+            ):
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless symbol"
+                    " domains are equal"
+                )
 
-                if self.domain_forwarding != domain_forwarding:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'domain_forwarding' is left unchanged"
-                    )
-
-            except ValueError as err:
-                raise ValueError(err)
-
-            except TypeError as err:
-                raise TypeError(err)
+            if self.domain_forwarding != domain_forwarding:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'domain_forwarding' is left unchanged"
+                )
 
             # reset some properties
             self._requires_state_check = True
@@ -252,10 +246,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 name,
                 type,
                 domain,
-                records,
-                domain_forwarding,
-                description,
-                uels_on_axes,
+                domain_forwarding=domain_forwarding,
+                description=description,
+                uels_on_axes=uels_on_axes,
             )
 
             validation.validate_container(self, self.domain)
@@ -270,7 +263,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
 
-            self.container._run()
+            if records is not None:
+                self.setRecords(records, uels_on_axes=uels_on_axes)
+            else:
+                self.container._run()
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
         domain = validation.validate_domain(self, indices)
@@ -464,6 +460,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
         self.container._run()
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, var_type: str | VariableType):
+        """
+        The type of variable; [binary, integer, positive, negative, free, sos1, sos2, semicont, semiint]
+
+        Parameters
+        ----------
+        var_type : str
+            The type of variable
+        """
+        given_type = cast_type(var_type)
+        gt.Variable.type.fset(self, given_type)
 
     def gamsRepr(self) -> str:
         """

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Portfolio horizon returns model
 
 Horizon.gms:  Portfolio horizon returns model.

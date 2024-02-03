@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_StochDedicationBL.html
+## LICENSETYPE: Community
+## MODELTYPE: LP
+## DATAFILES: StochDedicationBL.gdx
+
+
 Stochastic Dedication model with borrowing and lending variables
 
 * StochDedicationBL.gms: Stochastic Dedication model with borrowing

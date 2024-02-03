@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Regret.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: Regret.gdx
+
+
 Regret models
 
 Regret.gms: Regret models.

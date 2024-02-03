@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robustlp.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, QCP
+## KEYWORDS: linear programming, quadratic constraint programming, robust optimization, second order cone programming
+
+
 Robust linear programming as an SOCP (ROBUSTLP)
 
 Consider a linear optimization problem of the form
@@ -31,9 +37,6 @@ Lobo, M S, Vandenberghe, L, Boyd, S, and Lebret, H, Applications of
 Second Order Cone Programming. Linear Algebra and its Applications,
 Special Issue on Linear Algebra in Control, Signals and Image
 Processing. 284 (November, 1998).
-
-Keywords: linear programming, quadratic constraint programming, robust
-optimization, second order cone programming
 """
 
 from __future__ import annotations
@@ -99,8 +102,8 @@ def main():
     results["lp", j] = x.l[j]
     results["lp", "obj"] = obj.l
 
-    lmbda = Variable(m, name="lambda", domain=j)
-    gamma = Variable(m, name="gamma", domain=j)
+    lmbda = Variable(m, name="lambda", type="positive", domain=j)
+    gamma = Variable(m, name="gamma", type="positive", domain=j)
 
     lpcons = Equation(m, name="lpcons", domain=i)
     defdual = Equation(m, name="defdual", domain=j)
@@ -119,7 +122,6 @@ def main():
         objective=obj,
     )
     lproblp.solve()
-
     results["roblp", j] = x.l[j]
     results["roblp", "obj"] = obj.l
 

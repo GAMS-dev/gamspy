@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+## KEYWORDS: mixed integer nonlinear programming, scheduling, engineering, power generation, unit commitment problem
+
+
 Fuel Scheduling and Unit Commitment Problem (FUEL)
 
 
@@ -13,9 +19,6 @@ etc. There are limits on the generation levels for both the units.
 
 Wood, A J, and Wollenberg, B F, Example Problem 4e. In Power Generation,
 Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
-
-Keywords: mixed integer nonlinear programming, scheduling, engineering, power
-          generation, unit commitment problem
 """
 
 from __future__ import annotations

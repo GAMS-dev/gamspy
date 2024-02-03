@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rcpsp.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MIP
+## DATAFILES: rcpsp.sm
+
+
 Resource-Constrained Project Scheduling Problem (RCPSP)
 
 Resource-constrained project scheduling problem (RCPSP) in a formulation

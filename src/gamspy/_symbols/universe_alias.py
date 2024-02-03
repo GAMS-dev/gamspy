@@ -58,11 +58,11 @@ class UniverseAlias(gt.UniverseAlias):
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not a UniverseAlias object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not a UniverseAlias object)"
+            )
         except KeyError:
             return object.__new__(cls)
 

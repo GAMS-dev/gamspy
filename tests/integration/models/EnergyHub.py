@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnergyHub.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Optimal operation of energy hub
 
 For more details please refer to Chapter 10 (Gcode10.3), of the following book:
@@ -13,7 +18,7 @@ email: alireza.soroudi@gmail.com
 We do request that publications derived from the use of the developed GAMS code
 explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
-DOI: doi.org/10.1007/978-3-319-62350-4
+DOI: doi.org/10.1007/978-3-319-62350-
 """
 
 from __future__ import annotations

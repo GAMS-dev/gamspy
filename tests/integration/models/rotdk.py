@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rotdk.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, robust optimization, capacity expansion, time-dependent knapsack problem
+
+
 Robust Optimization (ROTDK)
 
 Robust Optimization.
@@ -7,10 +13,6 @@ Robust Optimization.
 Laguna, M, Applying Robust Optimization to Capacity Expansion of
 One Location in Telecommunications with Demand Uncertainty.
 Management Science 44, 11 (1998), 101-110.
-
-Keywords: mixed integer linear programming, robust optimization, capacity
-expansion,
-          time-dependent knapsack problem
 """
 
 from __future__ import annotations

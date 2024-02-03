@@ -303,7 +303,9 @@ class NeosClient:
             pass
 
         options.export(os.path.join(working_directory, "parameters"))
-        with open(os.path.join(working_directory, "parameters")) as file:
+        with open(
+            os.path.join(working_directory, "parameters"), encoding="utf-8"
+        ) as file:
             parameters = [line.rstrip() for line in file.readlines()]
 
         parameter_string = "\n".join(
@@ -328,13 +330,15 @@ class NeosClient:
             </document>
         """
 
-        with open(os.path.join(working_directory, xml_path), "w") as neos_xml:
+        with open(
+            os.path.join(working_directory, xml_path), "w", encoding="utf-8"
+        ) as neos_xml:
             neos_xml.write(template)
 
     def print_queue(self):
         """Prints NEOS Server queue"""
         if not self.is_alive():
-            GamspyException("NeosServer is not alive. Try again later.")
+            raise GamspyException("NeosServer is not alive. Try again later.")
 
         msg = self.neos.printQueue()
         print(msg)
@@ -363,7 +367,9 @@ class NeosClient:
         GamspyException
             In case there was an error on NeosServer
         """
-        with open(os.path.join(working_directory, xml_path)) as file:
+        with open(
+            os.path.join(working_directory, xml_path), encoding="utf-8"
+        ) as file:
             xml = file.read()
 
         if not self.is_alive():

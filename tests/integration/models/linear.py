@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_linear.html
+## LICENSETYPE: Demo
+## MODELTYPE: DNLP, LP, NLP
+## KEYWORDS: linear programming, nonlinear programming, discontinuous derivatives, linear regression, econometrics
+
+
 Linear Regression with Various Criteria (LINEAR)
 
 This example solves linear models with differing objective functions.
@@ -9,9 +15,6 @@ negative and positive deviations (models ending with the letter a).
 
 Bracken, J, and McCormick, G P, Chapter 8.2. In Selected Applications of
 Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 86-88.
-
-Keywords: linear programming, nonlinear programming, discontinuous derivatives,
-          linear regression, econometrics
 """
 
 from __future__ import annotations

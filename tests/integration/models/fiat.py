@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_fiat.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Fiat - Analysis of Stability Margin of Spark Ignition Engine Fiat Dedra
 
 Analysis of the stability margin of the spark ignition engine

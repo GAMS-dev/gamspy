@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_inscribedsquare.html
+## LICENSETYPE: Demo
+## MODELTYPE: DNLP
+
+
 Inscribed Square Problem (INSCRIBEDSQUARE)
 
 The inscribed square problem, also known as the square peg problem or

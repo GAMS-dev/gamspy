@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TEP.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Transmission Expansion Planning
 
 For more details please refer to Chapter 9 (Gcode9.1), of the following book:

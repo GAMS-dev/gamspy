@@ -68,7 +68,7 @@ class Condition:
         sign_map = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         if (
             isinstance(condition, expression.Expression)
-            and condition.data in sign_map.keys()
+            and condition.data in sign_map
         ):
             condition.data = sign_map[condition.data]
             condition.representation = condition._create_representation()

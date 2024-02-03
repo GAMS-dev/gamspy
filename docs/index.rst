@@ -1,5 +1,9 @@
 .. _gamspy_docs_mainpage:
 
+.. meta::
+   :description: What is GAMSPy?
+   :keywords: GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+
 .. toctree::
    :maxdepth: 1
    :hidden:

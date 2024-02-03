@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_DedicationMIP.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, MIP
+
+
 Dedication model with tradeability constraints
 
 DedicationMIP.gms:  Dedication model with tradeability constraints.

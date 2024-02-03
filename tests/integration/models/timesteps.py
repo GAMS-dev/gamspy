@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_timesteps.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, GAMS language features, dynamic modelling, time steps, power generation
+
+
 Accessing previous (or next) Time Steps in an Equation fast (TIMESTEPS)
 
 In dynamic models one often needs access to previous or next time steps. Access
@@ -21,9 +27,6 @@ Solution 2 is actually the fastest, but it consumes a lot of memory. We will
 eventually require this much memory in the model generation (we have many
 non-zero entires in the equation) but we can safe the extra amount inside GAMS
 data by using method 3.
-
-Keywords: mixed integer linear programming, GAMS language features, dynamic
-          modelling, time steps, power generation
 """
 
 from __future__ import annotations

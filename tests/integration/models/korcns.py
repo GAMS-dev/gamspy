@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_korcns.html
+## LICENSETYPE: Demo
+## MODELTYPE: CNS
+## KEYWORDS: constrained nonlinear system, general equilibrium model, economic growth, industrialization, economic policy, Korean economy
+
+
 General Equilibrium Model for Korea (KORCNS)
 
 This mini equilibrium model of Korea for the year 1963 is used to
@@ -16,10 +22,6 @@ An MCP version exist under the name (KORMCP).
 Lewis, J, and Robinson, S, Chapter 11. In Chenery, H B, Robinson, S,
 and Syrquin, S, Eds, Industrialization and Growth: A Comparative
 Study. Oxford University Press, London, 1986.
-
-Keywords: constrained nonlinear system, general equilibrium model, economic
-growth,
-          industrialization, economic policy, Korean economy
 """
 
 from __future__ import annotations

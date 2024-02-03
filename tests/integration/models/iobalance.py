@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iobalance.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, NLP, QCP
+## KEYWORDS: linear programming, nonlinear programming, quadratic constraints, statistics, RAS approach
+
+
 Updating and Projecting Coefficients: The RAS Approach (IOBALANCE)
 
 The RAS procedure (named after Richard A. Stone) is an iterative procedure to
@@ -9,10 +15,6 @@ this toy problem.
 
 Miller R E, and Blair P D, Input-Output Analysis: Foundations and Extensions,
 Cambridge University Press, New York, 2009.
-
-Keywords: linear programming, nonlinear programming, quadratic constraints,
-statistics,
-          RAS approach
 """
 
 from __future__ import annotations

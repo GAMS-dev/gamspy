@@ -1,13 +1,16 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dyncge.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, general equilibrium model, social accounting matrix
+
+
 A Recursive-Dynamic Standard CGE Model (DYNCGE)
 
 This model is featured in the following book.
 Hosoe, N., Gasawa, K., Hashimoto, H. Textbook of Computable General
 Equilibrium Modeling: Programming and Simulations, 2nd Edition,
 University of Tokyo Press. (in Japanese)
-
-Keywords: nonlinear programming, general equilibrium model, social accounting
-          matrix
 """
 
 from __future__ import annotations

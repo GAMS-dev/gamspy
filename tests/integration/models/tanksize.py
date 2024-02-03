@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tanksize.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+## DATAFILES: tanksize.gdx
+## KEYWORDS: mixed integer nonlinear programming, storage design, global optimization continuous-time model, chemical engineering
+
+
 Tank Size Design Problem - (TANKSIZE)
 
 We discuss a tank design problem for a multi product plant, in which the
@@ -15,10 +22,6 @@ Rebennack, S, Kallrath, J, and Pardalos, P M, Optimal Storage Design
 for a Multi-Product Plant: A Non-Convex MINLP Formulation. Tech. rep.,
 University of Florida, 2009. Submitted to Computers and Chemical
 Engineering
-
-Keywords: mixed integer nonlinear programming, storage design, global
-optimization
-          continuous-time model, chemical engineering
 """
 
 from __future__ import annotations
@@ -131,9 +134,9 @@ def main():
     TIMECAP[...] = Sum(n, d[n] + Sum(p, TS[p] * omega[p, n])) == T
     UNIQUE[n] = Sum(p, omega[p, n]) <= 1
     NONIDLE[n] = Sum(p, DUB[p] * omega[p, n]) >= d[n]
-    MATBAL[p, n] = s[p, n.lead(1)] == s[p, n] + pC[p, n] - DPD[p] * (
-        d[n] + Sum(pp, TS[pp] * omega[pp, n])
-    )
+    MATBAL[p, n] = s[p, n.lead(1, "circular")] == s[p, n] + pC[p, n] - DPD[
+        p
+    ] * (d[n] + Sum(pp, TS[pp] * omega[pp, n]))
     TANKCAP[p, n] = s[p, n] <= sM[p]
     PPN1[p, n] = pC[p, n] <= PRMAX[p] * d[n] * omega[p, n]
     PPN2[p, n] = pC[p, n] >= PRMIN[p] * d[n] * omega[p, n]
@@ -145,7 +148,9 @@ def main():
     DEFcS[...] = cS == Sum(
         [p, n], CSTI[p] * sH[p, n] * (d[n] + Sum(pp, TS[pp] * omega[pp, n]))
     )
-    DefsH[p, n] = sH[p, n] == 0.5 * (s[p, n.lead(1)] + s[p, n]) - SLB[p]
+    DefsH[p, n] = (
+        sH[p, n] == 0.5 * (s[p, n.lead(1, "circular")] + s[p, n]) - SLB[p]
+    )
     SEQUENCE[p, n] = 1 - omega[p, n] >= omega[p, n.lead(1, "linear")]
     SYMMETRY[n] = Sum(p, omega[p, n]) >= Sum(p, omega[p, n.lead(1, "linear")])
 
@@ -169,6 +174,12 @@ def main():
     omega.l[p, n] = gams_math.uniform(0, 1)
 
     Sequenz.solve()
+
+    import math
+
+    assert math.isclose(
+        Sequenz.objective_value, 1.2686437535008857, rel_tol=0.001
+    )
 
 
 if __name__ == "__main__":

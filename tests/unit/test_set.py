@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import unittest
 
+import pandas as pd
+
 from gamspy import Alias
 from gamspy import Card
 from gamspy import Container
@@ -353,6 +355,11 @@ class SetSuite(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             i2["i3"] = True
+
+    def test_uels_on_axes(self):
+        s = pd.Series(index=["a", "b"])
+        i = Set(self.m, "i", records=s, uels_on_axes=True)
+        self.assertEqual(i.records["uni"].tolist(), ["a", "b"])
 
 
 def set_suite():

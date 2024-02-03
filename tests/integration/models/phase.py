@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Floudas, C.A., Pardalos, P.M., et al. Handbook of test problems in local and global
 optimization. Kluwer Academic Publishers, Dordrecht, 1999
 Chapter 8. Section: Phase and Chemical Equilibrium Problems-Equations of State

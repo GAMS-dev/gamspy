@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TransportationOn-Off.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+
+
 Transportation model with On/off state modeling of production side
 
 For more details please refer to Chapter 2 (Gcode2.12), of the following book:

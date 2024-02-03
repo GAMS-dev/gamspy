@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnvironmentalED.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Environmental Load Dispatch
 
 For more details please refer to Chapter 3 (Gcode3.3), of the following book:

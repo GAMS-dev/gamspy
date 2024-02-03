@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphix.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+## KEYWORDS: mixed integer nonlinear programming, chemical engineering, distillation sequences, heat integrated distillation
+
+
 Heat Integrated Distillation Sequences - MINLP (MINLPHIX)
 
 This is a direct MINLP formulation of the model MINLPHI.
@@ -71,10 +77,6 @@ Associated Reference:
 
  C.A. Floudas and G.E. Paules IV,  1988.
  Computers and Chemical Engineering vol. 12 no. 6 pp. 531-546
-
-Keywords: mixed integer nonlinear programming, chemical engineering,
-distillation
-          sequences, heat integrated distillation
 """
 
 from __future__ import annotations

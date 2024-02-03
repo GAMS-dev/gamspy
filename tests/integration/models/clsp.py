@@ -1,3 +1,11 @@
+"""
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
+Capacitated Lot-Sizing Problem (CLSP)
+"""
+
 from __future__ import annotations
 
 import os

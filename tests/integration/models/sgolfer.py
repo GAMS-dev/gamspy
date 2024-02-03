@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sgolfer.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MINLP, MIP
+## KEYWORDS: mixed integer linear programming, mixed integer nonlinear programming, social golfer problem, combinatorial optimization
+
+
 Social Golfer Problem (SGOLFER)
 
 In a golf club, there are 32 social golfers, each of whom play golf once a
@@ -12,10 +18,6 @@ p weeks, with maximum socialisation.
 Warwick, H, The Fully Social Golfer Problem. In Smith, B, and Warwick, H, Eds,
 Proceedings of the Third International Workshop on Symmetry in Constraint
 Satisfaction Problems (SymCon 2003). 2003, pp. 75-85.
-
-Keywords: mixed integer linear programming, mixed integer nonlinear
-programming,
-          social golfer problem, combinatorial optimization
 """
 
 from __future__ import annotations

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_BoundaryLP.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Simple linear programming model for determination of boundary values of an objective function
 
 For more details please refer to Chapter 2 (Gcode2.2), of the following book:
