@@ -200,3 +200,35 @@ GAMSPy:
 GAMS: ::
     
     error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);
+
+
+Translating GAMS Macros
+-----------------------
+
+`Macros in GAMS <https://www.gams.com/45/docs/UG_DollarControlOptions.html#UG_DollarControl_MacrosInGAMS>`_ can be translated to GAMSPy as functions.
+The following example shows how GAMS Macro `reciprocal` can be defined as a function in Python to be used in GAMSPy:
+
+.. tab-set-code::
+
+    .. code-block:: GAMS
+
+        $macro reciprocal(y) 1/y
+
+        scalar z, x1 /2/, x2 /3/;
+
+        z = reciprocal(x1) + reciprocal(x2);
+        display z;
+
+    .. code-block:: python
+
+        import gamspy as gp
+
+        def reciprocal(y):
+            return 1/y
+
+        m = gp.Container()
+        z = gp.Parameter(m, "z")
+        x1 = gp.Parameter(m, "x1", records=2)
+        x2 = gp.Parameter(m, "x2", records=3)
+        z[:] = reciprocal(x1) + reciprocal(x2)
+        print(z.records)

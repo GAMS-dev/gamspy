@@ -14,6 +14,8 @@ GAMSPy 0.11.8
   - Add tests for assigning type to Variable and Equation after creation.
   - Add models information at the top of each model's docstring.
   - Add tests for setRecords with uels on axes.
+- Documentation
+  - Add docs for translating GAMS Macros to GAMSPy.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.7
