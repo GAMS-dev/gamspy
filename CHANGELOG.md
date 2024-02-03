@@ -9,6 +9,7 @@ GAMSPy 0.11.8
   - Fix running twice on symbol declaration with records
   - Return better error messages for incorrectly provided solver, options, and output arguments.
   - Fix missing uels_on_axes argument in setRecords.
+  - Start using pylint to improve code quality.
 - Testing
   - Add tests for assigning type to Variable and Equation after creation.
   - Add models information at the top of each model's docstring.

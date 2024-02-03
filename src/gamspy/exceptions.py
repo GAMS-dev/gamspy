@@ -125,7 +125,7 @@ def customize_exception(
 
     lst_path = workspace._working_directory + os.path.sep + lst_filename
 
-    with open(lst_path) as lst_file:
+    with open(lst_path, encoding="utf-8") as lst_file:
         all_lines = lst_file.readlines()
         num_lines = len(all_lines)
 

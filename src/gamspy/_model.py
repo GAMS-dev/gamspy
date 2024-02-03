@@ -77,6 +77,7 @@ class Problem(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -92,6 +93,7 @@ class Sense(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -373,7 +375,7 @@ class Model:
                 + f"{solver.lower()}.123"
             )
 
-            with open(solver_file_name, "w") as solver_file:
+            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
@@ -388,8 +390,8 @@ class Model:
                     f"Allowed problem types: {gp.Problem.values()} but found"
                     f" {problem}."
                 )
-            else:
-                problem = gp.Problem(problem.upper())
+
+            problem = gp.Problem(problem.upper())
 
         if isinstance(sense, str):
             if sense.upper() not in gp.Sense.values():
@@ -429,7 +431,7 @@ class Model:
         self.container._unsaved_statements.append(solve_string + ";\n")
 
     def _create_model_attributes(self) -> None:
-        for attr_name in attribute_map.keys():
+        for attr_name in attribute_map:
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
@@ -443,7 +445,7 @@ class Model:
             self.container._gdx_out,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
-                for gams_attr in attribute_map.keys()
+                for gams_attr in attribute_map
             ],
         )
 
