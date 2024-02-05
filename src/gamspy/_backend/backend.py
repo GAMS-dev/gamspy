@@ -12,7 +12,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
-    from gamspy._backend.engine import EngineConfig, GAMSEngine
+    from gamspy._backend.engine import GAMSEngine, EngineClient
     from gamspy._backend.neos import NeosClient, NEOSServer
     from gamspy._backend.local import Local
     from gams import GamsOptions
@@ -52,7 +52,7 @@ def backend_factory(
     options: GamsOptions | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
-    engine_config: EngineConfig | None = None,
+    engine_client: EngineClient | None = None,
     neos_client: NeosClient | None = None,
     model: Model | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
@@ -63,7 +63,7 @@ def backend_factory(
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, engine_config, options, output, model)
+        return GAMSEngine(container, engine_client, options, output, model)
     elif backend == "local":
         from gamspy._backend.local import Local
 
@@ -93,7 +93,6 @@ class Backend(ABC):
         )
         self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
-        # print(f"{modified_names=}")
         self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(

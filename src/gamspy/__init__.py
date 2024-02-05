@@ -38,7 +38,7 @@ from gamspy._algebra import Product
 from gamspy._algebra import Smax
 from gamspy._algebra import Smin
 from gamspy._algebra import Sum
-from gamspy._backend.engine import EngineConfig
+from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
 from gamspy._container import Container
 from gamspy._model import Model
@@ -82,7 +82,7 @@ __all__ = [
     "Card",
     "Options",
     "ModelInstanceOptions",
-    "EngineConfig",
+    "EngineClient",
     "NeosClient",
     "SpecialValues",
 ]
