@@ -8,7 +8,7 @@ import pandas as pd
 from gams import GamsEngineConfiguration
 
 from gamspy import Container
-from gamspy import EngineConfig
+from gamspy import EngineClient
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Parameter
@@ -82,7 +82,7 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        engine_config = EngineConfig(
+        client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
@@ -90,17 +90,15 @@ class EngineSuite(unittest.TestCase):
         )
 
         self.assertTrue(
-            isinstance(
-                engine_config._get_engine_config(), GamsEngineConfiguration
-            )
+            isinstance(client._get_engine_config(), GamsEngineConfiguration)
         )
 
-        transport.solve(backend="engine", engine_config=engine_config)
+        transport.solve(backend="engine", client=client)
 
         self.assertEqual(transport.objective_value, 153.675)
 
         # invalid configuration
-        engine_config = EngineConfig(
+        client = EngineClient(
             host="localhost",
             username="bla",
             password="bla",
@@ -232,7 +230,7 @@ class EngineSuite(unittest.TestCase):
             m.working_directory + os.sep + "test.txt", "w"
         )
 
-        engine_config = EngineConfig(
+        client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
@@ -240,7 +238,7 @@ class EngineSuite(unittest.TestCase):
             extra_model_files=[file.name, same_directory_file.name],
         )
 
-        transport.solve(backend="engine", engine_config=engine_config)
+        transport.solve(backend="engine", client=client)
         file.close()
         same_directory_file.close()
         os.unlink(file.name)
@@ -295,15 +293,15 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        engine_config = EngineConfig(
+        client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
         )
 
-        transport.solve(backend="engine", engine_config=engine_config)
-        transport.solve(backend="engine", engine_config=engine_config)
+        transport.solve(backend="engine", client=client)
+        transport.solve(backend="engine", client=client)
 
     def test_summary(self):
         m = Container(

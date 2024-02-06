@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._options import Options
-    from gamspy._backend.engine import EngineConfig
+    from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
     from gamspy._options import ModelInstanceOptions
     import pandas as pd
@@ -539,8 +539,7 @@ class Model:
         model_instance_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
-        engine_config: EngineConfig | None = None,
-        neos_client: NeosClient | None = None,
+        client: EngineClient | NeosClient | None = None,
         create_log_file: bool = False,
     ) -> pd.DataFrame | None:
         """
@@ -560,10 +559,8 @@ class Model:
             Output redirection target
         backend : str, optional
             Backend to run on
-        engine_config : EngineConfig, optional
-            GAMS Engine configuration
-        neos_client : NeosClient, optional
-            NEOS Client to communicate with NEOS Server
+        client : EngineClient, NeosClient, optional
+            EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
         create_log_file : bool
             Allows creating a log file
 
@@ -601,8 +598,7 @@ class Model:
             gams_options,
             output,
             backend,
-            engine_config,
-            neos_client,
+            client,
             self,
         )
 

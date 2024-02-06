@@ -52,18 +52,17 @@ def backend_factory(
     options: GamsOptions | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
-    engine_client: EngineClient | None = None,
-    neos_client: NeosClient | None = None,
+    client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, neos_client, model)
+        return NEOSServer(container, options, client, model)
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, engine_client, options, output, model)
+        return GAMSEngine(container, client, options, output, model)
     elif backend == "local":
         from gamspy._backend.local import Local
 

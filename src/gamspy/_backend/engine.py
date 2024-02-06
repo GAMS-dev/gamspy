@@ -93,14 +93,13 @@ class Job(Endpoint):
 
     def get(self, token: str):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
-            print(f"/jobs/{token}")
             r = self._http.request(
                 "GET",
                 self._engine_config.host + f"/jobs/{token}",
                 headers=self._request_headers,
             )
             response_data = r.data.decode("utf-8", errors="replace")
-            print(f"{response_data=}")
+
             if r.status == 200:
                 return int(json.loads(response_data)["status"])
             elif r.status == 429:
@@ -144,6 +143,7 @@ class Job(Endpoint):
                 fields=file_params,
                 headers=self._request_headers,
             )
+            print(r.status)
             response_data = r.data.decode("utf-8", errors="replace")
             if r.status == 201:
                 break
@@ -180,7 +180,6 @@ class Job(Endpoint):
         )
 
         fd, path = tempfile.mkstemp()
-        print(path)
 
         try:
             with open(path, "wb") as out:
@@ -195,9 +194,8 @@ class Job(Endpoint):
             with zipfile.ZipFile(path, "r") as zip_ref:
                 zip_ref.extractall(working_directory)
         finally:
-            ...
-            # os.close(fd)
-            # os.remove(path)
+            os.close(fd)
+            os.remove(path)
 
     def delete_results(self, token: str):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -227,6 +225,44 @@ class Job(Endpoint):
                 + response_data
             )
 
+    def get_logs(self, token: str) -> int:
+        poll_logs_sleep_time = 1
+
+        while True:
+            r = self._http.request(
+                "DELETE",
+                self._engine_config.host + f"/jobs/{token}/unread-logs",
+                headers=self._request_headers,
+            )
+            response_data = r.data.decode("utf-8", errors="replace")
+            if r.status == 429:
+                # too many requests, slow down
+                poll_logs_sleep_time = min(poll_logs_sleep_time + 1, 5)
+                time.sleep(poll_logs_sleep_time)
+                continue
+            elif r.status == 403:
+                # job still in queue
+                time.sleep(poll_logs_sleep_time)
+                continue
+            elif r.status != 200:
+                raise GamspyException(
+                    "Getting logs failed with status code: "
+                    + str(r.status)
+                    + ". Message: "
+                    + response_data
+                )
+            response_data = json.loads(response_data)
+            stdout_data = response_data["message"]
+            if stdout_data != "":
+                print(stdout_data, end="")
+
+            if response_data["queue_finished"] is True:
+                exitcode = response_data["gams_return_code"]
+                break
+            time.sleep(poll_logs_sleep_time)
+
+        return exitcode
+
     def _create_zip_file(
         self,
         working_directory: str,
@@ -246,10 +282,13 @@ class Job(Endpoint):
             }
             model_files.update(extra_model_files_cleaned)
 
+        print(model_files)
+
         with zipfile.ZipFile(
             model_data_zip, "w", zipfile.ZIP_DEFLATED
         ) as model_data:
             for model_file in model_files:
+                print(f"{model_file} = {os.path.exists(model_file)}")
                 model_data.write(
                     model_file,
                     arcname=(
@@ -336,6 +375,7 @@ class EngineClient:
         extra_model_files: List[str] = [],
         engine_options: Optional[dict] = None,
         remove_results: bool = False,
+        is_blocking: bool = True,
     ):
         self.host = host
         self.username = username
@@ -345,6 +385,8 @@ class EngineClient:
         self.extra_model_files = extra_model_files
         self.engine_options = engine_options
         self.remove_results = remove_results
+        self.is_blocking = is_blocking
+        self.tokens: list[tuple] = []
 
         self._http = urllib3.PoolManager(
             cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
@@ -367,13 +409,17 @@ class EngineClient:
         )
 
     def _get_engine_config(self):
-        return GamsEngineConfiguration(
-            self.host,
-            self.username,
-            self.password,
-            self.jwt,
-            self.namespace,
-        )
+        try:
+            return GamsEngineConfiguration(
+                self.host,
+                self.username,
+                self.password,
+                self.jwt,
+                self.namespace,
+            )
+
+        except GamsException as e:
+            raise ValidationError(e) from e
 
 
 class GAMSEngine(backend.Backend):
@@ -403,11 +449,11 @@ class GAMSEngine(backend.Backend):
         self.job_name = os.path.join(
             self.container.working_directory, f"_job_{uuid.uuid4()}"
         )
-        self.gms_path = self.job_name + ".gms"
+        self.gms_file = self.job_name + ".gms"
         self.pf_path = self.job_name + ".pf"
 
     def is_async(self):
-        return False
+        return False if self.client.is_blocking else True
 
     def preprocess(self, keep_flags: bool = False):
         gams_string, dirty_names = super().preprocess(keep_flags)
@@ -444,7 +490,7 @@ class GAMSEngine(backend.Backend):
         self.options.export(os.path.basename(self.pf_path))
 
         # Export gms file
-        with open(self.gms_path, "w", encoding="utf-8") as file:
+        with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
         return dirty_names
@@ -453,6 +499,9 @@ class GAMSEngine(backend.Backend):
         dirty_names = self.preprocess(keep_flags)
 
         self.run()
+
+        if self.is_async():
+            return None
 
         # Synchronize GAMSPy with checkpoint and return a summary
         summary = self.postprocess(dirty_names, is_implicit)
@@ -467,12 +516,22 @@ class GAMSEngine(backend.Backend):
                 self.container._restart_from,
                 self.options,
             )
-            print(job.token)
+            self.client.tokens.append(job.token)
 
             if not self.is_async() and self.model:
                 job_status = self.client.job.get(job.token)
+
                 while job_status != 10:
                     job_status = self.client.job.get(job.token)
+
+                exit_code = self.client.job.get_logs(job.token)
+
+                if exit_code != 0:
+                    raise GamspyException(
+                        f"Return code for the job is {exit_code}. Check"
+                        f" `{os.path.join(self.container.working_directory, self.job_name + '.lst')}`"
+                        " for further details."
+                    )
 
                 self.client.job.get_results(
                     job.token, self.container.working_directory
