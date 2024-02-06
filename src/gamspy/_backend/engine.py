@@ -30,6 +30,7 @@ import uuid
 import json
 import time
 import copy
+import logging
 import tempfile
 
 from typing import List
@@ -63,7 +64,26 @@ if TYPE_CHECKING:
     from gamspy import Model
 
 
+logger = logging.getLogger("ENGINE")
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
+
 MAX_REQUEST_ATTEMPS = 3
+STATUS_MAP = {
+    -10: "waiting",
+    -3: "cancelled",
+    -2: "cancelling",
+    -1: "corrupted",
+    0: "queued",
+    1: "running",
+    2: "outputting",
+    10: "finished",
+}
 
 
 @dataclass
@@ -101,7 +121,8 @@ class Job(Endpoint):
             response_data = r.data.decode("utf-8", errors="replace")
 
             if r.status == 200:
-                return int(json.loads(response_data)["status"])
+                job_status = int(json.loads(response_data)["status"])
+                return job_status, STATUS_MAP[job_status]
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
@@ -269,7 +290,7 @@ class Job(Endpoint):
         job_name: str,
         restart_file: GamsCheckpoint,
     ) -> io.BytesIO:
-        model_data_zip = io.BytesIO()
+        model_data_zip = tempfile.NamedTemporaryFile(delete=False)
         model_files = {job_name + ".gms", job_name + ".pf"}
 
         if os.path.exists(restart_file._checkpoint_file_name):
@@ -282,13 +303,10 @@ class Job(Endpoint):
             }
             model_files.update(extra_model_files_cleaned)
 
-        print(model_files)
-
         with zipfile.ZipFile(
             model_data_zip, "w", zipfile.ZIP_DEFLATED
         ) as model_data:
             for model_file in model_files:
-                print(f"{model_file} = {os.path.exists(model_file)}")
                 model_data.write(
                     model_file,
                     arcname=(
@@ -516,19 +534,28 @@ class GAMSEngine(backend.Backend):
                 self.container._restart_from,
                 self.options,
             )
+            print(f"{job.token=}")
             self.client.tokens.append(job.token)
 
             if not self.is_async() and self.model:
-                job_status = self.client.job.get(job.token)
+                job_status, message = self.client.job.get(job.token)
 
-                while job_status != 10:
+                if job_status < 0:
+                    raise GamspyException(
+                        "Could not get job results because the job is"
+                        f" {message}."
+                    )
+
+                while job_status in [0, 1, 2]:
+                    logger.info(f"Job status is {message}...")
                     job_status = self.client.job.get(job.token)
 
                 exit_code = self.client.job.get_logs(job.token)
 
                 if exit_code != 0:
                     raise GamspyException(
-                        f"Return code for the job is {exit_code}. Check"
+                        "Could not get the job logs. Return code is"
+                        f" {exit_code}. Check"
                         f" `{os.path.join(self.container.working_directory, self.job_name + '.lst')}`"
                         " for further details."
                     )
