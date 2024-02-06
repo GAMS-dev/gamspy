@@ -2,6 +2,16 @@ GAMSPy CHANGELOG
 ================
 
 -------------------------------------------------------------------------------
+GAMSPy 0.11.9
+-------------------------------------------------------------------------------
+- General
+  - Fix relative path issue of GAMS Engine backend.
+- Testing
+  - Add test for GAMS Engine extra model files with incorrect relative path.
+- Documentation
+  - Add docs for translating GAMS Macros to GAMSPy.
+
+-------------------------------------------------------------------------------
 GAMSPy 0.11.8
 -------------------------------------------------------------------------------
 - General
