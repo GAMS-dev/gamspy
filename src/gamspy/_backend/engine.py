@@ -48,7 +48,6 @@ import zipfile
 from gams import DebugLevel
 from gams import GamsEngineConfiguration
 from gams import GamsOptions
-from gams import GamsCheckpoint
 from gams.control.workspace import GamsException
 from gams.control.workspace import GamsExceptionExecution
 from gams.core.gmo import gmoProc_nrofmodeltypes
@@ -145,12 +144,9 @@ class Job(Endpoint):
         self,
         working_directory: str,
         job_name: str,
-        restart_file: GamsCheckpoint,
         options: GamsOptions,
     ):
-        model_data_zip = self._create_zip_file(
-            working_directory, job_name, restart_file
-        )
+        model_data_zip = self._create_zip_file(working_directory, job_name)
         query_params, file_params = self._get_params(
             model_data_zip, options, job_name
         )
@@ -164,7 +160,6 @@ class Job(Endpoint):
                 fields=file_params,
                 headers=self._request_headers,
             )
-            print(r.status)
             response_data = r.data.decode("utf-8", errors="replace")
             if r.status == 201:
                 break
@@ -288,32 +283,22 @@ class Job(Endpoint):
         self,
         working_directory: str,
         job_name: str,
-        restart_file: GamsCheckpoint,
     ) -> io.BytesIO:
-        model_data_zip = tempfile.NamedTemporaryFile(delete=False)
-        model_files = {job_name + ".gms", job_name + ".pf"}
+        model_data_zip = io.BytesIO()
+        model_files = [
+            os.path.basename(job_name) + ".gms",
+            os.path.basename(job_name) + ".pf",
+        ]
 
-        if os.path.exists(restart_file._checkpoint_file_name):
-            model_files.add(restart_file._checkpoint_file_name)
-
-        if self.extra_model_files:
-            extra_model_files_cleaned = {
-                (x if os.path.isabs(x) else os.path.join(working_directory, x))
-                for x in self.extra_model_files
-            }
-            model_files.update(extra_model_files_cleaned)
+        model_files += self.extra_model_files
 
         with zipfile.ZipFile(
             model_data_zip, "w", zipfile.ZIP_DEFLATED
         ) as model_data:
             for model_file in model_files:
                 model_data.write(
-                    model_file,
-                    arcname=(
-                        os.path.relpath(model_file, working_directory)
-                        if os.path.isabs(model_file)
-                        else model_file
-                    ),
+                    os.path.join(working_directory, model_file),
+                    arcname=model_file,
                 )
 
         model_data_zip.seek(0)
@@ -476,7 +461,7 @@ class GAMSEngine(backend.Backend):
     def preprocess(self, keep_flags: bool = False):
         gams_string, dirty_names = super().preprocess(keep_flags)
 
-        self.client.extra_model_files.append(self.gdx_in)
+        self.client.job.extra_model_files = self._validate_extra_model_files()
 
         # Set selected solvers
         for i in range(1, gmoProc_nrofmodeltypes):
@@ -492,10 +477,9 @@ class GAMSEngine(backend.Backend):
         )
 
         # Set restart file path
-        if os.path.exists(self.container._restart_from._checkpoint_file_name):
-            self.options._restart = os.path.basename(
-                self.container._restart_from._checkpoint_file_name
-            )
+        self.options._restart = os.path.basename(
+            self.container._restart_from._checkpoint_file_name
+        )
 
         # Set input file path
         self.options._input = os.path.basename(self.job_name) + ".gms"
@@ -531,10 +515,8 @@ class GAMSEngine(backend.Backend):
             job = self.client.job.post(
                 self.container.working_directory,
                 self.job_name,
-                self.container._restart_from,
                 self.options,
             )
-            print(f"{job.token=}")
             self.client.tokens.append(job.token)
 
             if not self.is_async() and self.model:
@@ -591,3 +573,28 @@ class GAMSEngine(backend.Backend):
         return self.prepare_summary(
             self.container.working_directory, self.options.trace
         )
+
+    def _validate_extra_model_files(self) -> List[str]:
+        extra_model_files = []
+        for extra_file in self.client.extra_model_files:
+            relative_path = os.path.relpath(
+                extra_file, self.container.working_directory
+            )
+            if relative_path.startswith("."):
+                raise ValidationError(
+                    "Extra model file path must be relative to the working"
+                    f" directory.The given path: {extra_file}, the working"
+                    f" directory: {self.container.working_directory}, the"
+                    f" relative path: {relative_path}"
+                )
+
+            extra_model_files.append(relative_path)
+
+        extra_model_files.append(self.gdx_in)
+        extra_model_files.append(
+            os.path.basename(
+                self.container._restart_from._checkpoint_file_name
+            )
+        )
+
+        return extra_model_files

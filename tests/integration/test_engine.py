@@ -99,7 +99,7 @@ class EngineSuite(unittest.TestCase):
 
         # invalid configuration
         client = EngineClient(
-            host="localhost",
+            host="http://localhost",
             username="bla",
             password="bla",
             namespace="bla",
@@ -225,7 +225,6 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        file = tempfile.NamedTemporaryFile(delete=False)
         same_directory_file = open(
             m.working_directory + os.sep + "test.txt", "w"
         )
@@ -235,14 +234,27 @@ class EngineSuite(unittest.TestCase):
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
-            extra_model_files=[file.name, same_directory_file.name],
+            extra_model_files=[same_directory_file.name],
         )
 
         transport.solve(backend="engine", client=client)
-        file.close()
         same_directory_file.close()
-        os.unlink(file.name)
         os.unlink(same_directory_file.name)
+
+        file = tempfile.NamedTemporaryFile(delete=False)
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            extra_model_files=[file.name],
+        )
+
+        with self.assertRaises(ValidationError):
+            transport.solve(backend="engine", client=client)
+
+        file.close()
+        os.unlink(file.name)
 
     def test_solve_twice(self):
         m = Container(
