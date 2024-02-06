@@ -9,7 +9,7 @@ GAMSPy 0.11.9
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
 - Documentation
-  - Add docs for translating GAMS Macros to GAMSPy.
+  - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.8
