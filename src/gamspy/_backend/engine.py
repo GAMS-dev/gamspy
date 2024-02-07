@@ -25,7 +25,6 @@
 from __future__ import annotations
 
 import os
-import shutil
 import uuid
 from typing import List
 from typing import Optional
@@ -113,7 +112,7 @@ class GAMSEngine(backend.Backend):
         return summary
 
     def run(self, gams_string: str):
-        extra_model_files = self._preprocess_extra_model_files()
+        extra_model_files = self._validate_extra_model_files()
 
         checkpoint = None
         if os.path.exists(self.container._restart_from._checkpoint_file_name):
@@ -167,21 +166,24 @@ class GAMSEngine(backend.Backend):
             self.container.working_directory, self.options.trace
         )
 
-    def _preprocess_extra_model_files(self) -> List[str]:
+    def _validate_extra_model_files(self) -> List[str]:
+        extra_model_files = []
         for extra_file in self.config.extra_model_files:
-            try:
-                shutil.copy(
-                    extra_file, self.container.workspace.working_directory
+            relative_path = os.path.relpath(
+                extra_file, self.container.working_directory
+            )
+            if relative_path.startswith("."):
+                raise ValidationError(
+                    "Extra model file path must be relative to the working"
+                    f" directory.The given path: {extra_file}, the working"
+                    f" directory: {self.container.working_directory}, the"
+                    f" relative path: {relative_path}"
                 )
-            except shutil.SameFileError:
-                # extra file might already be in the working directory
-                pass
 
-        extra_model_files = [
-            os.path.basename(extra_file)
-            for extra_file in self.config.extra_model_files
-        ]
+            extra_model_files.append(relative_path)
 
-        extra_model_files.append(self.gdx_in)
+        extra_model_files.append(
+            os.path.join(self.container.working_directory, self.gdx_in)
+        )
 
         return extra_model_files
