@@ -34,14 +34,29 @@ from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
 
 
+def next_alias(symbol):
+    from gamspy._symbols.alias import Alias
+
+    current = symbol
+    prefix, num = symbol.name.split("_")
+    num = int(num) + 1
+    expected_name = f"{prefix}_{num}"
+    find_x = symbol.container.data.get(expected_name, None)
+    if not find_x:
+        find_x = Alias(
+            symbol.container, name=expected_name, alias_with=current
+        )
+
+    return find_x
+
+
 def _search_or_create_set(m, x: int):
     if not isinstance(x, int):
         raise ValidationError("Dimensions must be integers")
 
-    expected_name = f"DenseDim{x}"
+    expected_name = f"DenseDim{x}_1"
     find_x = m.data.get(expected_name, None)
     if not find_x:
-        print(expected_name, "not found")
         find_x = Set(m, name=expected_name, records=range(x))
 
     return find_x
