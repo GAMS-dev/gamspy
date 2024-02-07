@@ -162,7 +162,7 @@ class Container(gt.Container):
     def _get_debugging_level(self, debugging_level: str):
         if (
             not isinstance(debugging_level, str)
-            or debugging_level not in debugging_map.keys()
+            or debugging_level not in debugging_map
         ):
             raise ValidationError(
                 "Debugging level must be one of 'delete', 'keep',"

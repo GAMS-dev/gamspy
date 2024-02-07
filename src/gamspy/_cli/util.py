@@ -74,7 +74,7 @@ class SolverInfo:
 def check_solver_exists(
     capabilities_file: str, solver_name: str
 ) -> Union[Tuple[int, int], None]:
-    with open(capabilities_file) as capabilities:
+    with open(capabilities_file, encoding="utf-8") as capabilities:
         lines = capabilities.readlines()
         lines = [line for line in lines if line != "\n" and line[0] != "*"]
         idx = 0
@@ -119,13 +119,13 @@ def add_solver_entry(
             print("Solver already exists in the capabilities file, skipping")
             return
 
-    with open(capabilities_file) as f:
+    with open(capabilities_file, encoding="utf-8") as f:
         string = f.read()
 
     for verbatim in verbatims:
         string = f"{verbatim}\n\n{string}"
 
-        with open(capabilities_file, "w") as f:
+        with open(capabilities_file, "w", encoding="utf-8") as f:
             f.write(string)
 
 
@@ -140,11 +140,11 @@ def remove_solver_entry(gamspy_base_location: str, solver_name: str):
         return
 
     line_num, line_count = solver_tuple
-    with open(capabilities_file) as f:
+    with open(capabilities_file, encoding="utf-8") as f:
         lines = f.readlines()
 
     for _ in range(line_count + 1):
         lines.pop(line_num)
 
-    with open(capabilities_file, "w") as f:
+    with open(capabilities_file, "w", encoding="utf-8") as f:
         f.writelines(lines)

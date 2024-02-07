@@ -429,6 +429,11 @@ class VariableSuite(unittest.TestCase):
         var5.type = VariableType.SEMICONT
         self.assertEqual(var5.type, "semicont")
 
+    def test_uels_on_axes(self):
+        s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
+        v = Variable(self.m, "v", domain=["*"], records=s, uels_on_axes=True)
+        self.assertEqual(v.records.level.tolist(), [1, 2, 3])
+
 
 def variable_suite():
     suite = unittest.TestSuite()

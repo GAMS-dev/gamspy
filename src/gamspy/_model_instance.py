@@ -34,6 +34,7 @@ from gams import GamsOptions
 from gams import SymbolUpdateType
 from gams import UpdateAction
 from gams import VarType
+from gams import GamsException
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
@@ -267,7 +268,7 @@ class ModelInstance:
                     sync_db_symbol = self.instance.sync_db[
                         modifiable.parent.name
                     ]
-                except Exception:
+                except GamsException:
                     if isinstance(modifiable.parent, gp.Variable):
                         sync_db_symbol = self.instance.sync_db.add_variable(
                             modifiable.parent.name,

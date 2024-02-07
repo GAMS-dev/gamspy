@@ -371,6 +371,13 @@ This can be done by importing ``EngineConfig`` and creating an instance. Then, t
     )
     model.solve(solver="CONOPT", backend="engine", engine_config=config)
 
+
+.. note::
+
+    Extra model file paths that are provided through extra_model_files argument of EngineConfig must be
+    relative to the working directory. For example, if your working directory is "/foo/bar", your extra
+    model file path cannot be "/foo". 
+
 Solving with NEOS Server
 ------------------------
 

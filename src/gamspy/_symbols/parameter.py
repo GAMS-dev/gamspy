@@ -136,11 +136,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not a Parameter object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not a Parameter object)"
+            )
         except KeyError:
             return object.__new__(cls)
 
@@ -167,27 +167,20 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             has_symbol = True
 
         if has_symbol:
-            try:
-                if any(
-                    d1 != d2
-                    for d1, d2 in itertools.zip_longest(self.domain, domain)
-                ):
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless symbol"
-                        " domains are equal"
-                    )
+            if any(
+                d1 != d2
+                for d1, d2 in itertools.zip_longest(self.domain, domain)
+            ):
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless symbol"
+                    " domains are equal"
+                )
 
-                if self.domain_forwarding != domain_forwarding:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'domain_forwarding' is left unchanged"
-                    )
-
-            except ValueError as err:
-                raise ValueError(err)
-
-            except TypeError as err:
-                raise TypeError(err)
+            if self.domain_forwarding != domain_forwarding:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'domain_forwarding' is left unchanged"
+                )
 
             # reset some properties
             self._requires_state_check = True
@@ -219,7 +212,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container._add_statement(self)
 
             if records is not None:
-                self.setRecords(records)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
 

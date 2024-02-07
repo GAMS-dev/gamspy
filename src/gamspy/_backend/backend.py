@@ -67,11 +67,11 @@ def backend_factory(
         from gamspy._backend.local import Local
 
         return Local(container, options, output, model)
-    else:
-        raise ValidationError(
-            f"`{backend}` is not a valid backend. Possible backends:"
-            " local, engine, and neos"
-        )
+
+    raise ValidationError(
+        f"`{backend}` is not a valid backend. Possible backends:"
+        " local, engine, and neos"
+    )
 
 
 class Backend(ABC):
@@ -106,7 +106,9 @@ class Backend(ABC):
     def prepare_summary(self, working_directory: str, trace_file: str):
         from gamspy._model import ModelStatus
 
-        with open(os.path.join(working_directory, trace_file)) as file:
+        with open(
+            os.path.join(working_directory, trace_file), encoding="utf-8"
+        ) as file:
             line = file.readlines()[-1]
             (
                 _,
