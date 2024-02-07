@@ -339,6 +339,32 @@ Solver Options
 In addition to solve options, user can specify solver options to be used by the solver as a dictionary. For all possible
 solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
+Redirecting Output
+------------------
+
+The output of GAMS after solving the model can be redirected to a file or to standard input by
+specifying the output parameter of the ``solve``.::
+    
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+    import sys
+
+    m = Container()
+    
+    z = Variable(m, "z") # objective variable
+    e1 = Equation(m, "e1")
+    e1[...] = <definition_of_the_equation>
+    e2 = Equation(m, "e2")
+    e2[...] = <definition_of_the_equation>
+    
+    model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+    
+    # redirect output to stdout
+    model.solve(output=sys.stdout)
+
+    # redirect output to a file
+    with open("my_out_file", "w") as file:
+        model.solve(output=file)
+
 Solving Locally
 ---------------
 
@@ -347,11 +373,14 @@ Models are solved locally (on your machine) by default.
 Solving with GAMS Engine
 ------------------------
 
+Synchronous Solve
+~~~~~~~~~~~~~~~~~
+
 In order to send your model to be solved to GAMS Engine, you need to define the configuration of GAMS Engine.
-This can be done by importing ``EngineConfig`` and creating an instance. Then, the user can pass it to the 
+This can be done by importing ``EngineClient`` and creating an instance. Then, the user can pass it to the 
 ``solve`` method and specify the backend as ``engine``. ::
 
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineConfig
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineClient
 
     m = Container()
     
@@ -363,26 +392,73 @@ This can be done by importing ``EngineConfig`` and creating an instance. Then, t
     
     model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
 
-    config = EngineConfig(
+    config = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
     )
-    model.solve(solver="CONOPT", backend="engine", engine_config=config)
+    model.solve(solver="CONOPT", backend="engine", client=config)
 
 
 .. note::
 
-    Extra model file paths that are provided through extra_model_files argument of EngineConfig must be
+    Extra model file paths that are provided through extra_model_files argument of EngineClient must be
     relative to the working directory. For example, if your working directory is "/foo/bar", your extra
     model file path cannot be "/foo". 
+
+Asynchronous Solve
+~~~~~~~~~~~~~~~~~~
+
+If you just want to send your jobs to GAMS Engine without blocking until the results are received,
+`is_blocking` parameter can be set to `False` in `EngineClient`.
+
+Tokens of the submitted jobs are stored in `client.tokens` ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineClient
+    m = Container()
+    ...
+    ...
+    <define_your_model>
+    ...
+    ...
+    config = EngineClient(
+        host=os.environ["ENGINE_URL"],
+        username=os.environ["ENGINE_USER"],
+        password=os.environ["ENGINE_PASSWORD"],
+        namespace=os.environ["ENGINE_NAMESPACE"],
+    )
+
+    for _ in range(3):
+        ...
+        ...
+        <changes_in_your_model>
+        ...
+        ...
+        model.solve(backend="engine", client=client)
+
+    print(client.tokens) # This prints all tokens for the submitted jobs
+
+The results of the non-blocking jobs can be retrieved later. For example if want to retrieve the results of the 
+last submitted job, we can do that following: ::
+
+    token = client.tokens[-1]
+    client.job.get_results(token, working_directory="out_dir")
+
+The results would be downloaded to the given working directory. The downloaded gdx file will have the same name with m.gdxOutputPath(). 
+Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
+file: ::
+
+    container = Container(load_from=f"out_dir/{os.path.basename(m.gdxOutputPath())}")
+    # or
+    container = Container()
+    container.read(f"out_dir/out_dir/{os.path.basename(m.gdxOutputPath())}")
 
 Solving with NEOS Server
 ------------------------
 
 Synchronous Solve
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 In order to send your model to be solved to NEOS Server, you need to create a NeosClient.
 This can be done by importing ``NeosClient`` and creating an instance. Then, the user can pass it to the 
@@ -405,7 +481,7 @@ This can be done by importing ``NeosClient`` and creating an instance. Then, the
         username=os.environ["NEOS_USER"],
         password=os.environ["NEOS_PASSWORD"],
     )
-    model.solve(backend="neos", neos_client=client)
+    model.solve(backend="neos", client=client)
 
 Defining your username and password is optional for NEOS Server backend but it is recommended since
 it allows you to investigate your models on `NEOS web client <https://neos-server.org/neos/>`_. The
@@ -447,7 +523,7 @@ you already sent to the server. ::
         <changes_in_your_model>
         ...
         ...
-        model.solve(backend="neos", neos_client=client)
+        model.solve(backend="neos", client=client)
 
     print(client.jobs) # This prints all job numbers and jon passwords as a list of tuples
 
@@ -471,31 +547,5 @@ file: ::
 
 
 Terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
-
-Redirecting Output
-------------------
-
-The output of GAMS after solving the model can be redirected to a file or to standard input by
-specifying the output parameter of the ``solve``.::
-    
-    from gamspy import Container, Variable, Equation, Model, Sense, Problem
-    import sys
-
-    m = Container()
-    
-    z = Variable(m, "z") # objective variable
-    e1 = Equation(m, "e1")
-    e1[...] = <definition_of_the_equation>
-    e2 = Equation(m, "e2")
-    e2[...] = <definition_of_the_equation>
-    
-    model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
-    
-    # redirect output to stdout
-    model.solve(output=sys.stdout)
-
-    # redirect output to a file
-    with open("my_out_file", "w") as file:
-        model.solve(output=file)
 
 
