@@ -37,7 +37,6 @@ from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
-from dataclasses import dataclass
 from abc import ABC
 
 import urllib3
@@ -49,7 +48,6 @@ from gams import DebugLevel
 from gams import GamsEngineConfiguration
 from gams import GamsOptions
 from gams.control.workspace import GamsException
-from gams.control.workspace import GamsExceptionExecution
 from gams.core.gmo import gmoProc_nrofmodeltypes
 from gams.core.cfg import cfgModelTypeName
 from gams.core.opt import optSetStrStr
@@ -73,6 +71,8 @@ logger.addHandler(stream_handler)
 
 
 MAX_REQUEST_ATTEMPS = 3
+ZIP_NAME = "data.zip"
+INEX_FILE_NAME = "inex.json"
 STATUS_MAP = {
     -10: "waiting",
     -3: "cancelled",
@@ -83,13 +83,6 @@ STATUS_MAP = {
     2: "outputting",
     10: "finished",
 }
-
-
-@dataclass
-class GamsEngineJob:
-    token: str
-    configuration: GamsEngineConfiguration
-    request_headers: dict
 
 
 class Endpoint(ABC): ...
@@ -110,7 +103,26 @@ class Job(Endpoint):
         self._engine_config = engine_config
         self._request_headers = request_headers
 
-    def get(self, token: str):
+    def get(self, token: str) -> tuple[int, str]:
+        """
+        Get request to /jobs/{token} which returns the details of a job.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+
+        Returns
+        -------
+        tuple[int, str]
+            Job status and its message
+
+        Raises
+        ------
+        GamspyException
+            If get request has failed.
+        """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "GET",
@@ -132,20 +144,43 @@ class Job(Endpoint):
                 + ". Message: "
                 + response_data
             )
-        else:
-            raise GamspyException(
-                "Creating job on GAMS Engine failed after: "
-                + str(MAX_REQUEST_ATTEMPS)
-                + " attempts. Message: "
-                + response_data
-            )
+
+        raise GamspyException(
+            "Creating job on GAMS Engine failed after: "
+            + str(MAX_REQUEST_ATTEMPS)
+            + " attempts. Message: "
+            + response_data
+        )
 
     def post(
         self,
         working_directory: str,
         job_name: str,
         options: GamsOptions,
-    ):
+    ) -> str:
+        """
+        Post request to /jobs which submits a new job to be solved.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        working_directory : str
+            Working directory
+        job_name : str
+            Name of the job
+        options : GamsOptions
+            Options for GAMS.
+
+        Returns
+        -------
+        str
+            Token
+
+        Raises
+        ------
+        GamspyException
+            If post request has failed.
+        """
         model_data_zip = self._create_zip_file(working_directory, job_name)
         query_params, file_params = self._get_params(
             model_data_zip, options, job_name
@@ -162,7 +197,7 @@ class Job(Endpoint):
             )
             response_data = r.data.decode("utf-8", errors="replace")
             if r.status == 201:
-                break
+                return json.loads(response_data)["token"]
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
@@ -173,21 +208,32 @@ class Job(Endpoint):
                 + ". Message: "
                 + response_data
             )
-        else:
-            raise GamspyException(
-                "Creating job on GAMS Engine failed after: "
-                + str(MAX_REQUEST_ATTEMPS)
-                + " attempts. Message: "
-                + response_data
-            )
 
-        return GamsEngineJob(  # type: ignore
-            json.loads(response_data)["token"],
-            self._engine_config,
-            self._request_headers,
+        raise GamspyException(
+            "Creating job on GAMS Engine failed after: "
+            + str(MAX_REQUEST_ATTEMPS)
+            + " attempts. Message: "
+            + response_data
         )
 
     def get_results(self, token: str, working_directory: str):
+        """
+        Get request to /jobs/{token}/result which downloads the job results.
+        Downloaded results are unpacked to working directory.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+        working_directory : str
+            Working directory
+
+        Raises
+        ------
+        GamspyException
+            If get request has failed.
+        """
         r = self._http.request(
             "GET",
             self._engine_config.host + f"/jobs/{token}/result",
@@ -195,25 +241,49 @@ class Job(Endpoint):
             preload_content=False,
         )
 
-        fd, path = tempfile.mkstemp()
+        if r.status == 200:
+            fd, path = tempfile.mkstemp()
 
-        try:
-            with open(path, "wb") as out:
-                while True:
-                    data = r.read(6000)
-                    if not data:
-                        break
-                    out.write(data)
+            try:
+                with open(path, "wb") as out:
+                    while True:
+                        data = r.read(6000)
+                        if not data:
+                            break
+                        out.write(data)
 
-            r.release_conn()
+                r.release_conn()
 
-            with zipfile.ZipFile(path, "r") as zip_ref:
-                zip_ref.extractall(working_directory)
-        finally:
-            os.close(fd)
-            os.remove(path)
+                with zipfile.ZipFile(path, "r") as zip_ref:
+                    zip_ref.extractall(working_directory)
+            finally:
+                os.close(fd)
+                os.remove(path)
+        else:
+            response_data = r.data.decode("utf-8", errors="replace")
+            raise GamspyException(
+                "Fatal error while getting the results back from engine. GAMS"
+                f" Engine return code: {r.status}. Error message:"
+                f" {response_data['message']}"
+            )
 
     def delete_results(self, token: str):
+        """
+        Delete request to /jobs/{token} which deletes the job results.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+
+        Raises
+        ------
+        GamspyException
+            If job data does not exist in GAMS Engine.
+        GamspyException
+            If delete request has failed.
+        """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "DELETE",
@@ -221,8 +291,13 @@ class Job(Endpoint):
                 headers=self._request_headers,
             )
             response_data = r.data.decode("utf-8", errors="replace")
-            if r.status in [200, 403]:
+
+            if r.status == 200:
                 return
+            elif r.status == 403:
+                raise GamspyException(
+                    "Job data does not exist in GAMS Engine!"
+                )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
@@ -233,15 +308,34 @@ class Job(Endpoint):
                 + ". Message: "
                 + response_data
             )
-        else:
-            raise GamspyException(
-                "Removing job result failed after: "
-                + str(MAX_REQUEST_ATTEMPS)
-                + " attempts. Message: "
-                + response_data
-            )
+
+        raise GamspyException(
+            "Removing job result failed after: "
+            + str(MAX_REQUEST_ATTEMPS)
+            + " attempts. Message: "
+            + response_data
+        )
 
     def get_logs(self, token: str) -> int:
+        """
+        Get request to /jobs/{token}/unread-logs which returns stdout of a job.
+        Refer to https://engine.gams.com/api/ for more details.
+
+        Parameters
+        ----------
+        token : str
+            Job token
+
+        Returns
+        -------
+        int
+            Return code
+
+        Raises
+        ------
+        GamspyException
+            If get request has failed.
+        """
         poll_logs_sleep_time = 1
 
         while True:
@@ -285,10 +379,7 @@ class Job(Endpoint):
         job_name: str,
     ) -> io.BytesIO:
         model_data_zip = io.BytesIO()
-        model_files = [
-            os.path.basename(job_name) + ".gms",
-            os.path.basename(job_name) + ".pf",
-        ]
+        model_files = [job_name + ".gms", job_name + ".pf"]
 
         model_files += self.extra_model_files
 
@@ -323,14 +414,14 @@ class Job(Endpoint):
         if "inex_file" in query_params:
             if isinstance(query_params["inex_file"], io.IOBase):
                 file_params["inex_file"] = (
-                    "inex.json",
+                    INEX_FILE_NAME,
                     query_params["inex_file"].read(),
                     "application/json",
                 )
             else:
                 with open(query_params["inex_file"], "rb") as f:
                     file_params["inex_file"] = (
-                        "inex.json",
+                        INEX_FILE_NAME,
                         f.read(),
                         "application/json",
                     )
@@ -338,7 +429,7 @@ class Job(Endpoint):
 
         if "model" in query_params:
             file_params["data"] = (
-                "data.zip",
+                ZIP_NAME,
                 model_data_zip.read(),
                 "application/zip",
             )
@@ -346,7 +437,7 @@ class Job(Endpoint):
             query_params["run"] = options._input
             query_params["model"] = os.path.splitext(options._input)[0]
             file_params["model_data"] = (
-                "data.zip",
+                ZIP_NAME,
                 model_data_zip.read(),
                 "application/zip",
             )
@@ -356,13 +447,9 @@ class Job(Endpoint):
         if "arguments" in query_params:
             if not isinstance(query_params["arguments"], list):
                 query_params["arguments"] = [query_params["arguments"]]
-            query_params["arguments"].append(
-                f"pf={os.path.basename(job_name)}.pf"
-            )
+            query_params["arguments"].append(f"pf={job_name}.pf")
         else:
-            query_params["arguments"] = [
-                "pf=" + os.path.basename(job_name) + ".pf"
-            ]
+            query_params["arguments"] = [f"pf={job_name}.pf"]
 
         return query_params, file_params
 
@@ -449,9 +536,7 @@ class GAMSEngine(backend.Backend):
         self.options = options
         self.output = output
         self.model = model
-        self.job_name = os.path.join(
-            self.container.working_directory, f"_job_{uuid.uuid4()}"
-        )
+        self.job_name = f"_job_{uuid.uuid4()}"
         self.gms_file = self.job_name + ".gms"
         self.pf_path = self.job_name + ".pf"
 
@@ -472,27 +557,26 @@ class GAMSEngine(backend.Backend):
             )
 
         # Set save file path
-        self.options._save = os.path.basename(
-            self.container._save_to._checkpoint_file_name
-        )
+        self.options._save = self.container._save_to.name
 
         # Set restart file path
-        self.options._restart = os.path.basename(
-            self.container._restart_from._checkpoint_file_name
-        )
+        self.options._restart = self.container._restart_from.name
 
         # Set input file path
-        self.options._input = os.path.basename(self.job_name) + ".gms"
+        self.options._input = self.job_name + ".gms"
 
         # Set output file path
         if not self.options.output:
-            self.options.output = os.path.basename(self.job_name) + ".lst"
+            self.options.output = self.job_name + ".lst"
 
         # Export pf file
-        self.options.export(os.path.basename(self.pf_path))
+        self.options.export(self.pf_path)
 
         # Export gms file
-        with open(self.gms_file, "w", encoding="utf-8") as file:
+        gms_path = os.path.join(
+            self.container.working_directory, self.gms_file
+        )
+        with open(gms_path, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
         return dirty_names
@@ -512,15 +596,15 @@ class GAMSEngine(backend.Backend):
 
     def run(self):
         try:
-            job = self.client.job.post(
+            token = self.client.job.post(
                 self.container.working_directory,
                 self.job_name,
                 self.options,
             )
-            self.client.tokens.append(job.token)
+            self.client.tokens.append(token)
 
-            if not self.is_async() and self.model:
-                job_status, message = self.client.job.get(job.token)
+            if not self.is_async():
+                job_status, message = self.client.job.get(token)
 
                 if job_status < 0:
                     raise GamspyException(
@@ -530,28 +614,31 @@ class GAMSEngine(backend.Backend):
 
                 while job_status in [0, 1, 2]:
                     logger.info(f"Job status is {message}...")
-                    job_status = self.client.job.get(job.token)
+                    job_status = self.client.job.get(token)
 
-                exit_code = self.client.job.get_logs(job.token)
+                exit_code = self.client.job.get_logs(token)
 
                 if exit_code != 0:
+                    lst_path = os.path.join(
+                        self.container.working_directory,
+                        self.job_name + ".lst",
+                    )
                     raise GamspyException(
                         "Could not get the job logs. Return code is"
-                        f" {exit_code}. Check"
-                        f" `{os.path.join(self.container.working_directory, self.job_name + '.lst')}`"
+                        f" {exit_code}. Check `{lst_path}`"
                         " for further details."
                     )
 
                 self.client.job.get_results(
-                    job.token, self.container.working_directory
+                    token, self.container.working_directory
                 )
 
                 self.model._update_model_attributes()
-        except (GamsException, GamsExceptionExecution) as e:
+        except GamspyException as e:
             if self.container._debugging_level == "keep_on_error":
                 self.container.workspace._debug = DebugLevel.KeepFiles
 
-            raise GamspyException(str(e))
+            raise e
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
@@ -591,10 +678,6 @@ class GAMSEngine(backend.Backend):
             extra_model_files.append(relative_path)
 
         extra_model_files.append(self.gdx_in)
-        extra_model_files.append(
-            os.path.basename(
-                self.container._restart_from._checkpoint_file_name
-            )
-        )
+        extra_model_files.append(self.container._restart_from.name)
 
         return extra_model_files
