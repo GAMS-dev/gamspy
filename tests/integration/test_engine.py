@@ -366,6 +366,78 @@ class EngineSuite(unittest.TestCase):
         summary = transport.solve()
         self.assertTrue(isinstance(summary, pd.DataFrame))
 
+    def test_non_blocking(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            working_directory=".",
+        )
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        # Data
+        a = Parameter(m, name="a", domain=[i], records=capacities)
+        b = Parameter(m, name="b", domain=[j], records=demands)
+        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+        # Equation
+        supply = Equation(m, name="supply", domain=[i])
+        demand = Equation(m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+        transport.solve(backend="engine", client=client)
+
+        token = client.tokens[-1]
+
+        job_status, _ = client.job.get(token)
+        while job_status != 10:
+            job_status, _ = client.job.get(token)
+
+        client.job.get_results(token, "out_dir")
+
+        container = Container(
+            load_from=f"out_dir/{os.path.basename(m.gdxOutputPath())}"
+        )
+        self.assertTrue("x" in container.data.keys())
+        x.setRecords(container["x"].records)
+        self.assertTrue(x.records.equals(container["x"].records))
+
 
 def engine_suite():
     suite = unittest.TestSuite()

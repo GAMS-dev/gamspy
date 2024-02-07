@@ -53,7 +53,7 @@ from gams.core.cfg import cfgModelTypeName
 from gams.core.opt import optSetStrStr
 
 import gamspy._backend.backend as backend
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import GamsEngineException
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -120,7 +120,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamspyException
+        GamsEngineException
             If get request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -138,18 +138,20 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamspyException(
+            raise GamsEngineException(
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data
+                + response_data,
+                r.status,
             )
 
-        raise GamspyException(
+        raise GamsEngineException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data
+            + response_data,
+            r.status,
         )
 
     def post(
@@ -178,7 +180,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamspyException
+        GamsEngineException
             If post request has failed.
         """
         model_data_zip = self._create_zip_file(working_directory, job_name)
@@ -202,18 +204,20 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamspyException(
+            raise GamsEngineException(
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data
+                + response_data,
+                r.status,
             )
 
-        raise GamspyException(
+        raise GamsEngineException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data
+            + response_data,
+            r.status,
         )
 
     def get_results(self, token: str, working_directory: str):
@@ -231,9 +235,12 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamspyException
+        GamsEngineException
             If get request has failed.
         """
+        if not os.path.exists(working_directory):
+            os.makedirs(working_directory, exist_ok=True)
+
         r = self._http.request(
             "GET",
             self._engine_config.host + f"/jobs/{token}/result",
@@ -261,10 +268,11 @@ class Job(Endpoint):
                 os.remove(path)
         else:
             response_data = r.data.decode("utf-8", errors="replace")
-            raise GamspyException(
+            raise GamsEngineException(
                 "Fatal error while getting the results back from engine. GAMS"
                 f" Engine return code: {r.status}. Error message:"
-                f" {response_data['message']}"
+                f" {response_data['message']}",
+                r.status,
             )
 
     def delete_results(self, token: str):
@@ -279,9 +287,9 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamspyException
+        GamsEngineException
             If job data does not exist in GAMS Engine.
-        GamspyException
+        GamsEngineException
             If delete request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -295,25 +303,27 @@ class Job(Endpoint):
             if r.status == 200:
                 return
             elif r.status == 403:
-                raise GamspyException(
-                    "Job data does not exist in GAMS Engine!"
+                raise GamsEngineException(
+                    "Job data does not exist in GAMS Engine!", r.status
                 )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamspyException(
+            raise GamsEngineException(
                 "Removing job result failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data
+                + response_data,
+                r.status,
             )
 
-        raise GamspyException(
+        raise GamsEngineException(
             "Removing job result failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data
+            + response_data,
+            r.status,
         )
 
     def get_logs(self, token: str) -> int:
@@ -333,7 +343,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamspyException
+        GamsEngineException
             If get request has failed.
         """
         poll_logs_sleep_time = 1
@@ -355,11 +365,12 @@ class Job(Endpoint):
                 time.sleep(poll_logs_sleep_time)
                 continue
             elif r.status != 200:
-                raise GamspyException(
+                raise GamsEngineException(
                     "Getting logs failed with status code: "
                     + str(r.status)
                     + ". Message: "
-                    + response_data
+                    + response_data,
+                    r.status,
                 )
             response_data = json.loads(response_data)
             stdout_data = response_data["message"]
@@ -405,10 +416,10 @@ class Job(Endpoint):
         query_params["namespace"] = self._engine_config.namespace
 
         if "data" in query_params or "model_data" in query_params:
-            raise GamspyException(
+            raise ValidationError(
                 "`engine_options` must not include keys `data` or "
                 "`model_data`. Please use `extra_model_files` to "
-                "provide additional files to send to GAMS Engine."
+                "provide additional files to send to GAMS Engine.",
             )
 
         if "inex_file" in query_params:
@@ -606,13 +617,21 @@ class GAMSEngine(backend.Backend):
             if not self.is_async():
                 job_status, message = self.client.job.get(token)
 
-                if job_status < 0:
-                    raise GamspyException(
-                        "Could not get job results because the job is"
-                        f" {message}."
+                if job_status not in STATUS_MAP.keys():
+                    raise GamsEngineException(
+                        "Unknown job status code! Currently supported job"
+                        f" status codes: {STATUS_MAP.keys()}",
+                        status_code=job_status,
                     )
 
-                while job_status in [0, 1, 2]:
+                if job_status in [-1, -3]:
+                    raise GamsEngineException(
+                        "Could not get job results because the job is"
+                        f" {message}.",
+                        status_code=job_status,
+                    )
+
+                while job_status in [-10, -2, 0, 1, 2]:
                     logger.info(f"Job status is {message}...")
                     job_status = self.client.job.get(token)
 
@@ -623,10 +642,11 @@ class GAMSEngine(backend.Backend):
                         self.container.working_directory,
                         self.job_name + ".lst",
                     )
-                    raise GamspyException(
+                    raise GamsEngineException(
                         "Could not get the job logs. Return code is"
                         f" {exit_code}. Check `{lst_path}`"
-                        " for further details."
+                        " for further details.",
+                        gams_exit_code=exit_code,
                     )
 
                 self.client.job.get_results(
@@ -634,7 +654,7 @@ class GAMSEngine(backend.Backend):
                 )
 
                 self.model._update_model_attributes()
-        except GamspyException as e:
+        except GamsEngineException as e:
             if self.container._debugging_level == "keep_on_error":
                 self.container.workspace._debug = DebugLevel.KeepFiles
 
