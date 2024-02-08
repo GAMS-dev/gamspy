@@ -95,11 +95,6 @@ class MatrixSuite(unittest.TestCase):
 
         a = Parameter(self.m, name="a", domain=[i, i])
         b = Parameter(self.m, name="b", domain=[i, i])
-        self.assertRaises(ValidationError, lambda: a @ b)
-
-        # TODO what to do here?
-        # c = a[i, j] @ b[j, i]
-        # self.assertEqual(c.domain, [i, i])
 
         c2 = a[i, j] @ b[j, k]
         self.assertEqual(c2.domain, [i, k])
@@ -112,14 +107,21 @@ class MatrixSuite(unittest.TestCase):
 
         a = Parameter(self.m, name="a", domain=[n, i, i])
         b = Parameter(self.m, name="b", domain=[n, i, i])
-        self.assertRaises(ValidationError, lambda: a @ b)
-
-        # TODO what to do here?
-        # c = a[n, i, j] @ b[n, j, i]
-        # self.assertEqual(c.domain, [n, i, i])
 
         c2 = a[n, i, j] @ b[n, j, k]
         self.assertEqual(c2.domain, [n, i, k])
+
+    def test_batch_size_matches(self):
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        m = Set(self.m, name="n", records=["m1", "m2", "m3"])
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Alias(self.m, name="j", alias_with=i)
+        k = Alias(self.m, name="k", alias_with=j)
+
+        a = Parameter(self.m, name="a", domain=[n, i, j])
+        b = Parameter(self.m, name="b", domain=[m, j, k])
+
+        self.assertRaises(ValidationError, lambda: a @ b)
 
 
 def matrix_suite():
