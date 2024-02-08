@@ -88,6 +88,18 @@ class MatrixSuite(unittest.TestCase):
 
         self.assertEqual(c.domain, [n, i, k])
 
+    def test_vector_batched_matrix(self):
+        """Test vector x batched_matrix"""
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+
+        a = Parameter(self.m, name="a", domain=[n, i, j])
+        b = Parameter(self.m, name="b", domain=[i])
+        c = b @ a
+
+        self.assertEqual(c.domain, [n, j])
+
     def test_square_matrix_mult(self):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Alias(self.m, name="j", alias_with=i)

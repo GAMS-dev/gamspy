@@ -204,7 +204,10 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[0]
-            if other.domain[-2] == other.domain[-1]:
+            while (
+                sum_domain in other.domain[:-2]
+                or sum_domain == other.domain[-1]
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return (
@@ -218,11 +221,11 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[-1]
-            if self.domain[-1] == self.domain[-2]:
+            while sum_domain in self.domain[:-1]:
                 sum_domain = next_alias(sum_domain)
 
             return (
-                [*self.domain[:-2], sum_domain, self.domain[-1]],
+                [*self.domain[:-1], sum_domain],
                 [sum_domain],
                 sum_domain,
             )
@@ -242,7 +245,11 @@ class Operable:
                     raise ValidationError("Batch dimensions do not match")
 
             sum_domain = self.domain[-1]
-            while sum_domain in unique_check_list:
+            while (
+                sum_domain in self.domain[:-1]
+                or sum_domain in other.domain[:-2]
+                or sum_domain == other.domain[-1]
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return (
