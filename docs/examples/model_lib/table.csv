@@ -1,111 +1,111 @@
-Model,GAMSPy,GAMS,Data
-aircraft,:ref:`GAMSPy <aircraft>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_aircraft.html>`__,
-batchreactor,:ref:`GAMSPy <batchreactor>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_batchreactor.html>`__,
-benz,:ref:`GAMSPy <benz>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_benz.html>`__,
-blend,:ref:`GAMSPy <blend>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_blend.html>`__,
-BondIndex,:ref:`GAMSPy <BondIndex>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_BondIndex.html>`__,:download:`BondIndex.gdx <../../tests/integration/models/BondIndex.gdx>`
-BoundaryLP,:ref:`GAMSPy <BoundaryLP>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_BoundaryLP.html>`__,
-carseq,:ref:`GAMSPy <carseq>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_carseq.html>`__,
-cesam2,:ref:`GAMSPy <cesam2>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cesam2.html>`__,
-chain,:ref:`GAMSPy <chain>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chain.html>`__,
-chenery,:ref:`GAMSPy <chenery>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chenery.html>`__,:download:`chenery.gdx <../../tests/integration/models/chenery.gdx>`
-circuit,:ref:`GAMSPy <circuit>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_circuit.html>`__,
-clsp,:ref:`GAMSPy <clsp>`,,
-control3,:ref:`GAMSPy <control3>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_control3.html>`__,
-Corporate,:ref:`GAMSPy <Corporate>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Corporate.html>`__,:download:`Corporate.gdx <../../tests/integration/models/Corporate.gdx>`
-cpa,:ref:`GAMSPy <cpa>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_cpa.html>`__,
-cpack,:ref:`GAMSPy <cpack>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cpack.html>`__,
-cta,:ref:`GAMSPy <cta>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cta.html>`__,:download:`cta.xlsx <../../tests/integration/models/cta.xlsx>`
-cutstock,:ref:`GAMSPy <cutstock>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cutstock.html>`__,
-CVaR,:ref:`GAMSPy <CVaR>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_CVaR.html>`__,
-DED,:ref:`GAMSPy <DED>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DED.html>`__,
-DED-PB,:ref:`GAMSPy <DED-PB>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DED-PB.html>`__,
-DEDESSwind,:ref:`GAMSPy <DEDESSwind>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DEDESSwind.html>`__,
-DedicationMip,:ref:`GAMSPy <DedicationMip>`,,
-DedicationNoBorrow,:ref:`GAMSPy <DedicationNoBorrow>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_DedicationNoBorrow.html>`__,
-diffusion2,:ref:`GAMSPy <diffusion2>`,,
-dyncge,:ref:`GAMSPy <dyncge>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dyncge.html>`__,
-edc2,:ref:`GAMSPy <edc2>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_edc2.html>`__,
-EDsensitivity,:ref:`GAMSPy <EDsensitivity>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EDsensitivity.html>`__,
-EmergencyCentreAllocation,:ref:`GAMSPy <EmergencyCentreAllocation>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EmergencyCentreAllocation.html>`__,
-EnergyHub,:ref:`GAMSPy <EnergyHub>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnergyHub.html>`__,
-EnvironmentalED,:ref:`GAMSPy <EnvironmentalED>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnvironmentalED.html>`__,
-fdesign,:ref:`GAMSPy <fdesign>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html>`__,
-fiat,:ref:`GAMSPy <fiat>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_fiat.html>`__,
-flowshop,:ref:`GAMSPy <flowshop>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_flowshop.html>`__,
-flywheel,:ref:`GAMSPy <flywheel>`,,
-food,:ref:`GAMSPy <food>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_food.html>`__,
-fuel,:ref:`GAMSPy <fuel>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html>`__,
-gapmin,:ref:`GAMSPy <gapmin>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html>`__,
-hansmcp,:ref:`GAMSPy <hansmcp>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html>`__,:download:`hansmcp.gdx <../../tests/integration/models/hansmcp.gdx>`
-hansmge,:ref:`GAMSPy <hansmge>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html>`__,:download:`hansmge.gdx <../../tests/integration/models/hansmge.gdx>`
-heatex3,:ref:`GAMSPy <heatex3>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html>`__,
-hhd,:ref:`GAMSPy <hhd>`,,
-Horizon,:ref:`GAMSPy <Horizon>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html>`__,
-Immunization,:ref:`GAMSPy <Immunization>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Immunization.html>`__,
-inscribedsquare,:ref:`GAMSPy <inscribedsquare>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_inscribedsquare.html>`__,
-InternationalMeanVar,:ref:`GAMSPy <InternationalMeanVar>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_InternationalMeanVar.html>`__,:download:`InternationalMeanVar.gdx <../../tests/integration/models/InternationalMeanVar.gdx>`
-invmat,:ref:`GAMSPy <invmat>`,,
-iobalance,:ref:`GAMSPy <iobalance>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iobalance.html>`__,
-korcns,:ref:`GAMSPy <korcns>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_korcns.html>`__,
-linear,:ref:`GAMSPy <linear>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_linear.html>`__,
-lop,:ref:`GAMSPy <lop>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html>`__,:download:`lop.gdx <../../tests/integration/models/lop.gdx>`
-macro,:ref:`GAMSPy <macro>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_macro.html>`__,
-MAD,:ref:`GAMSPy <MAD>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_MAD.html>`__,
-MeanVarMip,:ref:`GAMSPy <MeanVarMip>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_MeanVarMip.html>`__,:download:`MeanVarMip.gdx <../../tests/integration/models/MeanVarMip.gdx>`
-mexss,:ref:`GAMSPy <mexss>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html>`__,
-minlphi,:ref:`GAMSPy <minlphi>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphi.html>`__,
-minlphix,:ref:`GAMSPy <minlphix>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphix.html>`__,
-MOED,:ref:`GAMSPy <MOED>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MOED.html>`__,
-MultiperiodACOPF24bus,:ref:`GAMSPy <MultiperiodACOPF24bus>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MultiperiodACOPF24bus.html>`__,
-OPF2bus,:ref:`GAMSPy <OPF2bus>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF2bus.html>`__,
-OPF5bus,:ref:`GAMSPy <OPF5bus>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF5bus.html>`__,
-ParetoOptimalFront,:ref:`GAMSPy <ParetoOptimalFront>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_ParetoOptimalFront.html>`__,
-partssupply,:ref:`GAMSPy <partssupply>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_partssupply.html>`__,
-phase,:ref:`GAMSPy <phase>`,,
-PMU,:ref:`GAMSPy <PMU>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU.html>`__,
-PMU-cost,:ref:`GAMSPy <PMU-cost>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-cost.html>`__,
-PMU-OBI,:ref:`GAMSPy <PMU-OBI>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-OBI.html>`__,
-poutil,:ref:`GAMSPy <poutil>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_poutil.html>`__,
-process,:ref:`GAMSPy <process>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_process.html>`__,
-prodmix,:ref:`GAMSPy <prodmix>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodmix.html>`__,
-protein,:ref:`GAMSPy <protein>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_protein.html>`__,
-ps10_s_mn,:ref:`GAMSPy <ps10_s_mn>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s_mn.html>`__,
-PutCall,:ref:`GAMSPy <PutCall>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_PutCall.html>`__,
-qdemo7,:ref:`GAMSPy <qdemo7>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qdemo7.html>`__,:download:`qdemo7.gdx <../../tests/integration/models/qdemo7.gdx>`
-qp6,:ref:`GAMSPy <qp6>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp6.html>`__,:download:`qp6.gdx <../../tests/integration/models/qp6.gdx>`
-RampSenDED,:ref:`GAMSPy <RampSenDED>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_RampSenDED.html>`__,
-ramsey,:ref:`GAMSPy <ramsey>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ramsey.html>`__,
-rcpsp,:ref:`GAMSPy <rcpsp>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rcpsp.html>`__,:download:`rcpsp.sm <../../tests/integration/models/rcpsp.sm>`
-refrigeration,:ref:`GAMSPy <refrigeration>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_refrigeration.html>`__,
-Regret,:ref:`GAMSPy <Regret>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Regret.html>`__,:download:`Regret.gdx <../../tests/integration/models/Regret.gdx>`
-reservoir,:ref:`GAMSPy <reservoir>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_reservoir.html>`__,
-riversys,:ref:`GAMSPy <riversys>`,,
-robustlp,:ref:`GAMSPy <robustlp>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robustlp.html>`__,
-rotdk,:ref:`GAMSPy <rotdk>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rotdk.html>`__,
-SelectiveHedging,:ref:`GAMSPy <SelectiveHedging>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_SelectiveHedging.html>`__,:download:`SelectiveHedging.gdx <../../tests/integration/models/SelectiveHedging.gdx>`
-sgolfer,:ref:`GAMSPy <sgolfer>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sgolfer.html>`__,
-Sharpe,:ref:`GAMSPy <Sharpe>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Sharpe.html>`__,:download:`Sharpe.gdx <../../tests/integration/models/Sharpe.gdx>`
-SimpleLP,:ref:`GAMSPy <SimpleLP>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleLP.html>`__,
-SimpleMIP,:ref:`GAMSPy <SimpleMIP>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleMIP.html>`__,
-spatequ,:ref:`GAMSPy <spatequ>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spatequ.html>`__,:download:`spatequ.gdx <../../tests/integration/models/spatequ.gdx>`
-spbenders1,:ref:`GAMSPy <spbenders1>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders1.html>`__,
-speed,:ref:`GAMSPy <speed>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_speed.html>`__,
-springchain,:ref:`GAMSPy <springchain>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_springchain.html>`__,
-StochDedicationBL,:ref:`GAMSPy <StochDedicationBL>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_StochDedicationBL.html>`__,:download:`StochDedicationBL.gdx <../../tests/integration/models/StochDedicationBL.gdx>`
-surface,:ref:`GAMSPy <surface>`,`GAMS <https://www.gams.com/latest/noalib_ml/libhtml/noalib_surface.html>`__,
-syscomp,:ref:`GAMSPy <syscomp>`,,
-tanksize,:ref:`GAMSPy <tanksize>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tanksize.html>`__,:download:`tanksize.gdx <../../tests/integration/models/tanksize.gdx>`
-TEP,:ref:`GAMSPy <TEP>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TEP.html>`__,
-tforss,:ref:`GAMSPy <tforss>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tforss.html>`__,:download:`tforss.gdx <../../tests/integration/models/tforss.gdx>`
-thai,:ref:`GAMSPy <thai>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_thai.html>`__,:download:`thai.gdx <../../tests/integration/models/thai.gdx>`
-ThreeStageSPDA,:ref:`GAMSPy <ThreeStageSPDA>`,`GAMS <https://www.gams.com/latest/finlib_ml/libhtml/finlib_ThreeStageSPDA.html>`__,
-timesteps,:ref:`GAMSPy <timesteps>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_timesteps.html>`__,
-TransportationOn-Off,:ref:`GAMSPy <TransportationOn-Off>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TransportationOn-Off.html>`__,
-trnsport,:ref:`GAMSPy <trnsport>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html>`__,
-trnspwl,:ref:`GAMSPy <trnspwl>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html>`__,
-trussm,:ref:`GAMSPy <trussm>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html>`__,
-tsp4,:ref:`GAMSPy <tsp4>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tsp4.html>`__,:download:`tsp4.gdx <../../tests/integration/models/tsp4.gdx>`
-WaterEnergy,:ref:`GAMSPy <WaterEnergy>`,`GAMS <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_WaterEnergy.html>`__,
-weapons,:ref:`GAMSPy <weapons>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_weapons.html>`__,
-whouse,:ref:`GAMSPy <whouse>`,`GAMS <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_whouse.html>`__,
+Model,Data,Model Type,License
+:ref:`aircraft <aircraft>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_aircraft.html>`__,,LP,Demo
+:ref:`batchreactor <batchreactor>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_batchreactor.html>`__,,NLP,Demo
+:ref:`benz <benz>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_benz.html>`__,,NLP,Demo
+:ref:`blend <blend>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_blend.html>`__,,LP,Demo
+:ref:`BondIndex <BondIndex>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_BondIndex.html>`__,:download:`BondIndex.gdx <../../tests/integration/models/BondIndex.gdx>`,LP,Demo
+:ref:`BoundaryLP <BoundaryLP>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_BoundaryLP.html>`__,,LP,Demo
+:ref:`carseq <carseq>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_carseq.html>`__,,"MIP, MINLP",Demo
+:ref:`cesam2 <cesam2>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cesam2.html>`__,,NLP,Demo
+:ref:`chain <chain>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chain.html>`__,,NLP,Demo
+:ref:`chenery <chenery>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chenery.html>`__,:download:`chenery.gdx <../../tests/integration/models/chenery.gdx>`,NLP,Demo
+:ref:`circuit <circuit>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_circuit.html>`__,,NLP,Demo
+:ref:`clsp <clsp>`   ,,MIP,Demo
+:ref:`control3 <control3>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_control3.html>`__,,NLP,Demo
+:ref:`Corporate <Corporate>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Corporate.html>`__,:download:`Corporate.gdx <../../tests/integration/models/Corporate.gdx>`,LP,Requires license
+:ref:`cpa <cpa>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_cpa.html>`__,,NLP,Demo
+:ref:`cpack <cpack>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cpack.html>`__,,QCP,Demo
+:ref:`cta <cta>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cta.html>`__,:download:`cta.xlsx <../../tests/integration/models/cta.xlsx>`,MIP,Demo
+:ref:`cutstock <cutstock>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cutstock.html>`__,,"MIP, RMIP",Demo
+:ref:`CVaR <CVaR>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_CVaR.html>`__,:download:`WorldIndices.gdx <../../tests/integration/models/WorldIndices.gdx>`,LP,Demo
+:ref:`DED <DED>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DED.html>`__,,QCP,Demo
+:ref:`DED-PB <DED-PB>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DED-PB.html>`__,,QCP,Demo
+:ref:`DEDESSwind <DEDESSwind>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DEDESSwind.html>`__,,QCP,Demo
+:ref:`DedicationMip <DedicationMip>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_DedicationMIP.html>`__,,"LP, MIP",Demo
+:ref:`DedicationNoBorrow <DedicationNoBorrow>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_DedicationNoBorrow.html>`__,,LP,Demo
+:ref:`diffusion2 <diffusion2>`   ,,NLP,Demo
+:ref:`dyncge <dyncge>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_dyncge.html>`__,,NLP,Demo
+:ref:`edc2 <edc2>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_edc2.html>`__,,NLP,Demo
+:ref:`EDsensitivity <EDsensitivity>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EDsensitivity.html>`__,,QCP,Demo
+:ref:`EmergencyCentreAllocation <EmergencyCentreAllocation>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EmergencyCentreAllocation.html>`__,,MIP,Demo
+:ref:`EnergyHub <EnergyHub>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnergyHub.html>`__,,LP,Demo
+:ref:`EnvironmentalED <EnvironmentalED>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnvironmentalED.html>`__,,QCP,Demo
+:ref:`fdesign <fdesign>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html>`__,,QCP,Demo
+:ref:`fiat <fiat>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_fiat.html>`__,,NLP,Demo
+:ref:`flowshop <flowshop>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_flowshop.html>`__,,MIP,Demo
+:ref:`flywheel <flywheel>`   ,,NLP,Demo
+:ref:`food <food>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_food.html>`__,,MIP,Demo
+:ref:`fuel <fuel>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html>`__,,MINLP,Demo
+:ref:`gapmin <gapmin>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html>`__,,"MIP, RMIP",Demo
+:ref:`hansmcp <hansmcp>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html>`__,:download:`hansmcp.gdx <../../tests/integration/models/hansmcp.gdx>`,MCP,Demo
+:ref:`hansmge <hansmge>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html>`__,:download:`hansmge.gdx <../../tests/integration/models/hansmge.gdx>`,MCP,Demo
+:ref:`heatex3 <heatex3>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html>`__,,NLP,Demo
+:ref:`hhd <hhd>`   ,,NLP,Demo
+:ref:`Horizon <Horizon>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html>`__,,LP,Demo
+:ref:`Immunization <Immunization>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Immunization.html>`__,,LP,Demo
+:ref:`inscribedsquare <inscribedsquare>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_inscribedsquare.html>`__,,DNLP,Demo
+:ref:`InternationalMeanVar <InternationalMeanVar>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_InternationalMeanVar.html>`__,:download:`InternationalMeanVar.gdx <../../tests/integration/models/InternationalMeanVar.gdx>`,NLP,Demo
+:ref:`invmat <invmat>`   ,,LP,Demo
+:ref:`iobalance <iobalance>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iobalance.html>`__,,"LP, NLP, QCP",Demo
+:ref:`korcns <korcns>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_korcns.html>`__,,CNS,Demo
+:ref:`linear <linear>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_linear.html>`__,,"DNLP, LP, NLP",Demo
+:ref:`lop <lop>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html>`__,:download:`lop.gdx <../../tests/integration/models/lop.gdx>`,"LP, MIP",Demo
+:ref:`macro <macro>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_macro.html>`__,,NLP,Demo
+:ref:`MAD <MAD>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_MAD.html>`__,:download:`WorldIndices.gdx <../../tests/integration/models/WorldIndices.gdx>`,"LP, NLP",Demo
+:ref:`MeanVarMip <MeanVarMip>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_MeanVarMip.html>`__,:download:`MeanVarMip.gdx <../../tests/integration/models/MeanVarMip.gdx>`,MINLP,Demo
+:ref:`mexss <mexss>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html>`__,,LP,Demo
+:ref:`minlphi <minlphi>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphi.html>`__,,"MIP, NLP",Demo
+:ref:`minlphix <minlphix>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphix.html>`__,,MINLP,Demo
+:ref:`MOED <MOED>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MOED.html>`__,,QCP,Demo
+:ref:`MultiperiodACOPF24bus <MultiperiodACOPF24bus>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MultiperiodACOPF24bus.html>`__,,NLP,Requires license
+:ref:`OPF2bus <OPF2bus>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF2bus.html>`__,,QCP,Demo
+:ref:`OPF5bus <OPF5bus>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF5bus.html>`__,,LP,Demo
+:ref:`ParetoOptimalFront <ParetoOptimalFront>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_ParetoOptimalFront.html>`__,,NLP,Demo
+:ref:`partssupply <partssupply>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_partssupply.html>`__,,NLP,Demo
+:ref:`phase <phase>`   ,,NLP,Demo
+:ref:`PMU <PMU>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU.html>`__,,MIP,Demo
+:ref:`PMU-cost <PMU-cost>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-cost.html>`__,,MIP,Demo
+:ref:`PMU-OBI <PMU-OBI>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-OBI.html>`__,,MIP,Demo
+:ref:`poutil <poutil>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_poutil.html>`__,,MIP,Community
+:ref:`process <process>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_process.html>`__,,NLP,Demo
+:ref:`prodmix <prodmix>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_prodmix.html>`__,,LP,Demo
+:ref:`protein <protein>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_protein.html>`__,,NLP,Requires license
+:ref:`ps10_s_mn <ps10_s_mn>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s_mn.html>`__,,NLP,Demo
+:ref:`PutCall <PutCall>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_PutCall.html>`__,:download:`WorldIndices.gdx <../../tests/integration/models/WorldIndices.gdx>`,LP,Demo
+:ref:`qdemo7 <qdemo7>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qdemo7.html>`__,:download:`qdemo7.gdx <../../tests/integration/models/qdemo7.gdx>`,QCP,Demo
+:ref:`qp6 <qp6>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp6.html>`__,:download:`qp6.gdx <../../tests/integration/models/qp6.gdx>`,MCP,Demo
+:ref:`RampSenDED <RampSenDED>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_RampSenDED.html>`__,,QCP,Demo
+:ref:`ramsey <ramsey>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ramsey.html>`__,,NLP,Demo
+:ref:`rcpsp <rcpsp>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rcpsp.html>`__,:download:`rcpsp.sm <../../tests/integration/models/rcpsp.sm>`,MIP,Requires license
+:ref:`refrigeration <refrigeration>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_refrigeration.html>`__,,NLP,Demo
+:ref:`Regret <Regret>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Regret.html>`__,:download:`Regret.gdx <../../tests/integration/models/Regret.gdx>`,LP,Demo
+:ref:`reservoir <reservoir>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_reservoir.html>`__,,NLP,Demo
+:ref:`riversys <riversys>`   ,,NLP,Demo
+:ref:`robustlp <robustlp>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robustlp.html>`__,,"LP, QCP",Demo
+:ref:`rotdk <rotdk>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rotdk.html>`__,,MIP,Requires license
+:ref:`SelectiveHedging <SelectiveHedging>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_SelectiveHedging.html>`__,:download:`SelectiveHedging.gdx <../../tests/integration/models/SelectiveHedging.gdx>`,LP,Demo
+:ref:`sgolfer <sgolfer>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sgolfer.html>`__,,"MINLP, MIP",Requires license
+:ref:`Sharpe <Sharpe>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Sharpe.html>`__,:download:`Sharpe.gdx <../../tests/integration/models/Sharpe.gdx>`,NLP,Demo
+:ref:`SimpleLP <SimpleLP>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleLP.html>`__,,LP,Demo
+:ref:`SimpleMIP <SimpleMIP>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleMIP.html>`__,,MIP,Demo
+:ref:`spatequ <spatequ>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spatequ.html>`__,:download:`spatequ.gdx <../../tests/integration/models/spatequ.gdx>`,"LP, MCP, NLP",Demo
+:ref:`spbenders1 <spbenders1>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_spbenders1.html>`__,,LP,Demo
+:ref:`speed <speed>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_speed.html>`__,,NLP,Demo
+:ref:`springchain <springchain>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_springchain.html>`__,,QCP,Demo
+:ref:`StochDedicationBL <StochDedicationBL>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_StochDedicationBL.html>`__,:download:`StochDedicationBL.gdx <../../tests/integration/models/StochDedicationBL.gdx>`,LP,Community
+:ref:`surface <surface>`   `GAMSSOURCE <https://www.gams.com/latest/noalib_ml/libhtml/noalib_surface.html>`__,,NLP,Demo
+:ref:`syscomp <syscomp>`   ,,LP,Demo
+:ref:`tanksize <tanksize>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tanksize.html>`__,:download:`tanksize.gdx <../../tests/integration/models/tanksize.gdx>`,MINLP,Demo
+:ref:`TEP <TEP>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TEP.html>`__,,MIP,Demo
+:ref:`tforss <tforss>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tforss.html>`__,:download:`tforss.gdx <../../tests/integration/models/tforss.gdx>`,LP,Demo
+:ref:`thai <thai>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_thai.html>`__,:download:`thai.gdx <../../tests/integration/models/thai.gdx>`,MIP,Demo
+:ref:`ThreeStageSPDA <ThreeStageSPDA>`   `GAMSSOURCE <https://www.gams.com/latest/finlib_ml/libhtml/finlib_ThreeStageSPDA.html>`__,,"LP, NLP",Demo
+:ref:`timesteps <timesteps>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_timesteps.html>`__,,MIP,Requires license
+:ref:`TransportationOn-Off <TransportationOn-Off>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TransportationOn-Off.html>`__,,MINLP,Demo
+:ref:`trnsport <trnsport>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnsport.html>`__,,LP,Demo
+:ref:`trnspwl <trnspwl>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html>`__,,"MIP, NLP",Demo
+:ref:`trussm <trussm>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html>`__,,QCP,Demo
+:ref:`tsp4 <tsp4>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tsp4.html>`__,:download:`tsp4.gdx <../../tests/integration/models/tsp4.gdx>`,MIP,Demo
+:ref:`WaterEnergy <WaterEnergy>`   `GAMSSOURCE <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_WaterEnergy.html>`__,,MINLP,Demo
+:ref:`weapons <weapons>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_weapons.html>`__,,NLP,Demo
+:ref:`whouse <whouse>`   `GAMSSOURCE <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_whouse.html>`__,,LP,Demo

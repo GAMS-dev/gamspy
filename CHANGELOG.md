@@ -10,6 +10,7 @@ GAMSPy 0.11.9
   - Add test for GAMS Engine extra model files with incorrect relative path.
 - Documentation
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
+  - Modify model library table generation script to add more information and better table styling.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.8
