@@ -114,7 +114,6 @@ def main():
         domain=t,
         description="installed capacity",
     )
-    obj = Variable(m, name="obj", type="free")
 
     # Equation
     capbal = Equation(
@@ -129,11 +128,9 @@ def main():
         domain=[t, s],
         description="demand balance",
     )
-    objdef = Equation(m, name="objdef")
 
-    objdef[...] = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
-        s
-    ) * Sum(s, z[s])
+    # Objective Function
+    objdef = Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(s) * Sum(s, z[s])
 
     capbal[t] = cap[t] == cap[t.lag(1)] + Sum(j, c[j] * x[j, t])
 
@@ -145,7 +142,7 @@ def main():
         equations=m.getEquations(),
         problem="mip",
         sense=Sense.MIN,
-        objective=obj,
+        objective=objdef,
     )
 
     rotdk.solve(
@@ -154,7 +151,7 @@ def main():
         )
     )
 
-    print("Objective Function Value: ", round(obj.records.level[0], 2))
+    print("Objective Function Value: ", round(rotdk.objective_value, 2))
 
 
 if __name__ == "__main__":

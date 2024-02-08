@@ -48,7 +48,6 @@ def main():
     x12 = Variable(m, name="x12")
     x13 = Variable(m, name="x13")
     x14 = Variable(m, name="x14")
-    obj = Variable(m, name="obj")
 
     # EQUATIONS #
     e1 = Equation(m, name="e1", type="regular")
@@ -66,10 +65,9 @@ def main():
     e13 = Equation(m, name="e13", type="regular")
     e14 = Equation(m, name="e14", type="regular")
     e15 = Equation(m, name="e15", type="regular")
-    eobj = Equation(m, name="eobj", type="regular")
 
     # Objective function to be minimized:
-    eobj[...] = obj == (
+    eobj = (
         63098.88 * x2 * x4 * x12
         + 5441.5 * x12 * x2**2
         + 115055.5 * x6 * (x2**1.664)
@@ -151,7 +149,7 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="MIN",
-        objective=obj,
+        objective=eobj,
     )
     refrigeration.solve()
 
@@ -172,7 +170,11 @@ def main():
     rep["x13", "value"] = x13.l
     rep["x14", "value"] = x14.l
 
-    print("Objective Function Value: ", round(obj.toValue(), 4), "\n")
+    print(
+        "Objective Function Value: ",
+        round(refrigeration.objective_value, 4),
+        "\n",
+    )
     print("Solution Summary:\n", rep.pivot().round(3))
 
     # End refrigeration

@@ -77,7 +77,6 @@ def main():
     )
 
     # Variable
-    obj = Variable(cont, name="obj")
     x = Variable(
         cont, name="x", domain=n, description="x-coordinates of nodes"
     )
@@ -98,17 +97,14 @@ def main():
     v = Variable(cont, name="v", type="Positive")
 
     # Equation
-    pot_energy = Equation(cont, name="pot_energy")
     delta_x_eq = Equation(cont, name="delta_x_eq", domain=n)
     delta_y_eq = Equation(cont, name="delta_y_eq", domain=n)
     link_L0 = Equation(cont, name="link_L0", domain=n)
     link_up = Equation(cont, name="link_up", domain=n)
     cone_eq = Equation(cont, name="cone_eq")
 
-    pot_energy[...] = (
-        obj
-        == Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n])
-        + k * v
+    pot_energy = (
+        Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n]) + k * v
     )
     delta_x_eq[n] = delta_x[n] == x[n] - x[n.lag(1)]
     delta_y_eq[n] = delta_y[n] == y[n] - y[n.lag(1)]
@@ -126,7 +122,7 @@ def main():
         equations=cont.getEquations(),
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective=obj,
+        objective=pot_energy,
     )
 
     x.l[n] = ((Ord(n) - 1) / N) * b_x + (Ord(n) / N) * a_x

@@ -8,6 +8,7 @@ GAMSPy 0.11.9
   - Fix relative path issue of GAMS Engine backend.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
+  - Remove declaration of objective variables and functions and add the equations into Python variables. 
 - Documentation
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
   - Modify model library table generation script to add more information and better table styling.

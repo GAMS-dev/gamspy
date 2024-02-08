@@ -111,7 +111,10 @@ def main():
     )
 
     StochDedicationBL.solve()
-    print("Objective Function Value: ", round(v0.records.level[0], 3))
+    print(
+        "Objective Function Value: ",
+        round(StochDedicationBL.objective_value, 3),
+    )
 
     print(x.description, ": \n", x.records.loc[:, ["i", "level"]])
 

@@ -62,10 +62,8 @@ def main():
         domain=[ii, jj],
         description="decision variables - leg of trip",
     )
-    z = Variable(m, name="z", type="free", description="objective variable")
 
     # EQUATIONS
-    objective = Equation(m, name="objective", description="total cost")
     rowsum = Equation(
         m, name="rowsum", domain=ii, description="leave each city only once"
     )
@@ -77,9 +75,11 @@ def main():
     )
 
     # the assignment problem is a relaxation of the TSP
-    objective[...] = z == Sum([i, j], c[i, j] * x[i, j])
     rowsum[i] = Sum(j, x[i, j]) == 1
     colsum[j] = Sum(i, x[i, j]) == 1
+
+    # Objective Function
+    objective = Sum([i, j], c[i, j] * x[i, j])
 
     # exclude diagonal
     x.fx[ii, ii] = 0
@@ -92,10 +92,10 @@ def main():
     assign = Model(
         m,
         name="assign",
-        equations=[objective, rowsum, colsum],
+        equations=[rowsum, colsum],
         problem="mip",
         sense="min",
-        objective=z,
+        objective=objective,
     )
     assign.solve(options=Options(relative_optimality_gap=0))
 
@@ -182,10 +182,10 @@ def main():
     tspcut = Model(
         m,
         name="tspcut",
-        equations=[objective, rowsum, colsum, cut],
+        equations=[rowsum, colsum, cut],
         problem="mip",
         sense="MIN",
-        objective=z,
+        objective=objective,
     )
 
     curcut[cc].where[Ord(cc) == 1] = True

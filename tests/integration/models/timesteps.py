@@ -118,7 +118,6 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
         raise Exception("sets are different")
 
     vStart = Variable(m, name="vStart", type="binary", domain=[g, t])
-    z = Variable(m, name="z")
 
     # Slow, fast, and fastest (but memory intensive way because we need to
     # store sMinDownFast) way to write the equation
@@ -131,7 +130,6 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     eStartNaive = Equation(m, name="eStartNaive", domain=[g, t])
     eStartFast = Equation(m, name="eStartFast", domain=[g, t])
     eStartFaster = Equation(m, name="eStartFaster", domain=[g, t])
-    defobj = Equation(m, name="defobj")
 
     eStartNaive[g, t1] = (
         Sum(
@@ -153,7 +151,8 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
 
     eStartFaster[g, t1] = Sum(sMinDownFast[g, t1, t2], vStart[g, t2]) <= 1
 
-    defobj[...] = z == Sum([g, t], vStart[g, t])
+    # Objective Function
+    defobj = Sum([g, t], vStart[g, t])
 
     maxStarts = Model(
         m,
@@ -161,11 +160,11 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
         equations=m.getEquations(),
         problem="mip",
         sense=Sense.MAX,
-        objective=z,
+        objective=defobj,
     )
 
     maxStarts.solve()
-    print("Objective Function Value: ", z.records.level[0])
+    print("Objective Function Value: ", maxStarts.objective_value)
 
 
 if __name__ == "__main__":

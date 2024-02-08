@@ -103,7 +103,6 @@ def main():
     asales = Equation(cont, name="asales", description="sales revenue")
     acutc = Equation(cont, name="acutc", description="cutting cost")
     aplnt = Equation(cont, name="aplnt", description="planting cost")
-    benefit = Equation(cont, name="benefit")
 
     # Variable
     v = Variable(
@@ -164,11 +163,6 @@ def main():
         name="phip",
         description="planting cost             (1000us$ per year)",
     )
-    phi = Variable(
-        cont,
-        name="phi",
-        description="total benefits             (discounted cost)",
-    )
 
     lbal[cl] = r[cl] == Sum([s, k, at], ymf[at, k, s, cl] * v[s, k, at])
 
@@ -192,7 +186,8 @@ def main():
         [s, k, at], v[s, k, at] * (1 + rho) ** age[at]
     )
 
-    benefit[...] = phi == phix - phik - phir - phil - phip
+    # Objective Function; total benefits             (discounted cost)
+    benefit = phix - phik - phir - phil - phip
 
     # Model definition
     forest = Model(
@@ -201,7 +196,7 @@ def main():
         equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective=phi,
+        objective=benefit,
     )
 
     # Case Selection and Report Definitions

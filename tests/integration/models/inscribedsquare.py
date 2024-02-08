@@ -67,7 +67,6 @@ def main():
     )
 
     # Variable
-    z = Variable(m, name="z", description="area of square to be maximized")
     t = Variable(
         m,
         name="t",
@@ -111,7 +110,6 @@ def main():
     t.up[i] = math.pi
 
     # Equation
-    obj = Equation(m, name="obj", description="area of square, squared")
     e1x = Equation(
         m, name="e1x", description="define x-coordinate of lower-left corner"
     )
@@ -137,7 +135,8 @@ def main():
         m, name="e4y", description="define y-coordinate of upper-right corner"
     )
 
-    obj[...] = z == a**2 + b**2
+    obj = a**2 + b**2  # Area of square to be maximized
+
     e1x[...] = fx(t["1"]) == x
     e1y[...] = fy(t["1"]) == y
     e2x[...] = fx(t["2"]) == x + a
@@ -153,7 +152,7 @@ def main():
         equations=m.getEquations(),
         problem="DNLP",
         sense=Sense.MAX,
-        objective=z,
+        objective=obj,
     )
 
     t.l[i] = -math.pi + (Ord(i) - 1) * 2 * math.pi / Card(i)

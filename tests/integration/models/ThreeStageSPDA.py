@@ -173,7 +173,6 @@ def main():
         description="Holding in cash",
     )
     wealth = Variable(m, name="wealth", domain=l, description="Final wealth")
-    z = Variable(m, name="z", description="Objective function value")
 
     # EQUATIONS #
     AssetInventoryCon = Equation(
@@ -211,12 +210,6 @@ def main():
         domain=[i, l],
         description="Constraints defining the second nonanticipativity set",
     )
-    ExpWealthObjDef = Equation(
-        m,
-        name="ExpWealthObjDef",
-        type="regular",
-        description="Expected wealth objective function definition",
-    )
 
     AssetInventoryCon[t, i, l] = (
         buy[t, i, l].where[Ord(t) < Card(t)]
@@ -244,7 +237,8 @@ def main():
 
     WealthRatioDef[l] = wealth[l] == cash["t2", l] / FinalLiability[l]
 
-    ExpWealthObjDef[...] = z == Sum(l, wealth[l]) / Card(l)
+    # Expected wealth objective function definition
+    ExpWealthObjDef = Sum(l, wealth[l]) / Card(l)
 
     ThreeStageExpWealth = Model(
         m,
@@ -253,13 +247,12 @@ def main():
             AssetInventoryCon,
             CashInventoryCon,
             WealthRatioDef,
-            ExpWealthObjDef,
             NonAnticConOne,
             NonAnticConTwo,
         ],
         problem="LP",
         sense="MAX",
-        objective=z,
+        objective=ExpWealthObjDef,
     )
 
     # Model 1: Maximize the expected wealth, without transaction cost
@@ -331,14 +324,8 @@ def main():
 
     # Model 4: Maximize expected utility:
 
-    UtilityObjDef = Equation(
-        m,
-        name="UtilityObjDef",
-        type="regular",
-        description="Utility objective function definition",
-    )
-
-    UtilityObjDef[...] = z == Sum(l, gams_math.log(wealth[l])) / Card(l)
+    # Utility objective function definition
+    UtilityObjDef = Sum(l, gams_math.log(wealth[l])) / Card(l)
 
     ThreeStageUtility = Model(
         m,
@@ -347,13 +334,12 @@ def main():
             AssetInventoryCon,
             CashInventoryCon,
             WealthRatioDef,
-            UtilityObjDef,
             NonAnticConOne,
             NonAnticConTwo,
         ],
         problem="NLP",
         sense="MAX",
-        objective=z,
+        objective=UtilityObjDef,
     )
 
     ThreeStageUtility.solve()
@@ -363,7 +349,7 @@ def main():
     print("\nsell: \n", sell.pivot().round(3))
     print("\nhold: \n", hold.pivot().round(3))
     print("\nwealth: \n", wealth.records.iloc[:, :2].round(3))
-    print("\nz: \n", round(z.records.level[0], 3))
+    print("\nz: \n", round(ThreeStageUtility.objective_value, 3))
 
     Output["Utility", i] = hold.l["t0", i, "uu"]
 
@@ -389,13 +375,12 @@ def main():
             CashInventoryCon,
             WealthRatioDef,
             MADCon,
-            ExpWealthObjDef,
             NonAnticConOne,
             NonAnticConTwo,
         ],
         problem="LP",
         sense="MAX",
-        objective=z,
+        objective=ExpWealthObjDef,
     )
 
     EpsTolerance[...] = 0.09
@@ -407,7 +392,7 @@ def main():
     print("\nsell: \n", sell.pivot().round(3))
     print("\nhold: \n", hold.pivot().round(3))
     print("\nwealth: \n", wealth.records.iloc[:, :2].round(3))
-    print("\nz: \n", round(z.records.level[0], 3))
+    print("\nz: \n", round(ThreeStageMAD.objective_value, 3))
 
     Output["MAD", i] = hold.l["t0", i, "uu"]
 

@@ -181,6 +181,8 @@ def main():
         Sequenz.objective_value, 1.2686437535008857, rel_tol=0.001
     )
 
+    print("Objective Function Value: ", Sequenz.objective_value)
+
 
 if __name__ == "__main__":
     main()

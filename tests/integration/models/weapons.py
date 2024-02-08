@@ -201,7 +201,6 @@ def main():
     prob = Variable(
         m, name="prob", domain=t, description="probability for each target"
     )
-    tetd = Variable(m, name="tetd", description="total expected damage")
 
     # Equations
     maxw = Equation(m, name="maxw", domain=w, description="weapons balance")
@@ -214,30 +213,25 @@ def main():
     probe = Equation(
         m, name="probe", domain=t, description="probability definition"
     )
-    etdp = Equation(
-        m,
-        name="etdp",
-        description="total expected damage alternate formulation",
-    )
-    etd = Equation(m, name="etd", description="total expected damage")
 
     maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
     minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
     probe[t] = prob[t] == 1 - Product(
         w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
     )
-    etdp[...] = tetd == Sum(t, mv[t] * prob[t])
-    etd[...] = tetd == Sum(
+
+    etdp = Sum(t, mv[t] * prob[t])
+    etd = Sum(
         t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))
     )
 
     war = Model(
         m,
         name="war",
-        equations=[maxw, minw, etd],
+        equations=[maxw, minw],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=tetd,
+        objective=etd,
     )
 
     x.l[w, t].where[td[w, t]] = wa[w] / Card(t)

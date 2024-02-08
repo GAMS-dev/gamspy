@@ -77,19 +77,16 @@ def main():
 
     # VARIABLES #
     P = Variable(m, name="P", domain=gen)
-    OF = Variable(m, name="OF")
 
     # EQUATIONS #
-    eq1 = Equation(m, name="eq1", type="regular")
-    eq2 = Equation(m, name="eq2", type="regular")
-
-    eq1[...] = OF == Sum(
+    eq1 = Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
         + data[gen, "c"],
     )
 
+    eq2 = Equation(m, name="eq2", type="regular")
     eq2[...] = Sum(gen, P[gen]) >= load
 
     P.lo[gen] = data[gen, "Pmin"]
@@ -98,10 +95,10 @@ def main():
     ECD = Model(
         m,
         name="ECD",
-        equations=[eq1, eq2],
+        equations=[eq2],
         problem="qcp",
         sense="min",
-        objective=OF,
+        objective=eq1,
     )
 
     for idx, cc in enumerate(counter.toList()):
@@ -110,7 +107,7 @@ def main():
         ) * Sum(gen, data[gen, "Pmax"] - data[gen, "Pmin"])
         ECD.solve()
         repGen[cc, gen] = P.l[gen]
-        report[cc, "OF"] = OF.l
+        report[cc, "OF"] = ECD.objective_value
         report[cc, "load"] = load
 
     import math

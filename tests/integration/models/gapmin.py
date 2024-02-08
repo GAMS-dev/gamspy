@@ -95,9 +95,6 @@ def main():
         domain=[i, j],
         description="assignment of i to j",
     )
-    z = Variable(
-        m, name="z", type="free", description="total cost of assignment"
-    )
 
     # EQUATIONS ##
     capacity = Equation(
@@ -109,7 +106,6 @@ def main():
         domain=j,
         description="assignment constraint.. one resource per item",
     )
-    defz = Equation(m, name="defz", description="definition of total cost")
 
     # PARAMETERS ##
     a = Parameter(
@@ -140,23 +136,24 @@ def main():
 
     choice[j] = Sum(i, x[i, j]) == 1
 
-    defz[...] = z == Sum([i, j], f[i, j] * x[i, j])
+    # Objective Function; Total cost of assignment
+    defz = Sum([i, j], f[i, j] * x[i, j])
 
     _ = Model(
         m,
         name="assign_mip",
-        equations=[capacity, choice, defz],
+        equations=[capacity, choice],
         problem="mip",
         sense="MIN",
-        objective=z,
+        objective=defz,
     )
     assign_rmip = Model(
         m,
         name="assign_rmip",
-        equations=[capacity, choice, defz],
+        equations=[capacity, choice],
         problem="rmip",
         sense="MIN",
-        objective=z,
+        objective=defz,
     )
 
     xopt = Set(
@@ -223,9 +220,6 @@ def main():
         ),
     )
 
-    # Variable
-    zlrx = Variable(m, name="zlrx", description="relaxed objective")
-
     # Equations
     knapsack = Equation(
         m,
@@ -233,19 +227,19 @@ def main():
         domain=i,
         description="capacity with dynamic sets",
     )
-    defzlrx = Equation(m, name="defzlrx", description="definition of zlrx")
 
     knapsack[id] = Sum(j, a[id, j] * x[id, j]) <= b[id]
 
-    defzlrx[...] = zlrx == Sum([id, j], (f[id, j] - w[j]) * x[id, j])
+    # Relaxed Objective Function
+    defzlrx = Sum([id, j], (f[id, j] - w[j]) * x[id, j])
 
     pknap = Model(
         m,
         name="pknap",
-        equations=[knapsack, defzlrx],
+        equations=[knapsack],
         problem="mip",
         sense="MIN",
-        objective=zlrx,
+        objective=defzlrx,
     )
 
     # Scalar
@@ -315,7 +309,9 @@ def main():
     # which are not as good as a zero set of initial multipliers.
 
     assign_rmip.solve()
-    results.write(f"\nRMIP objective value = {round(z.toValue(), 3)}\n")
+    results.write(
+        f"\nRMIP objective value = {round(assign_rmip.objective_value, 3)}\n"
+    )
 
     if assign_rmip.status == ModelStatus.OptimalGlobal:
         status[...] = 1  # everything is ok
@@ -336,7 +332,7 @@ def main():
         description="an optimal set of multipliers",
     )
 
-    zlbest[...] = z.l
+    zlbest[...] = assign_rmip.objective_value
 
     # use RMIP duals
     w[j] = choice.m[j]
@@ -414,7 +410,7 @@ def main():
         for ii_loop in ii.toList():
             id[ii_loop] = True  # assume id was empty
             pknap.solve(options=Options(relative_optimality_gap=0))
-            zlr[...] = zlr + zlrx.l
+            zlr[...] = zlr + pknap.objective_value
             id[ii_loop] = False  # make set empty again
 
         improv[...] = 0
@@ -505,7 +501,7 @@ def main():
 
     import math
 
-    assert math.isclose(z.records["level"][0], 175.3883, rel_tol=0.001)
+    assert math.isclose(assign_rmip.objective_value, 175.3883, rel_tol=0.001)
 
     results.write("\n\nDual values on assignment constraint\n")
     for idx, j_loop in enumerate(j.toList()):

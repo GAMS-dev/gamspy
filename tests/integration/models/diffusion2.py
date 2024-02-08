@@ -529,7 +529,6 @@ def main():
 
     # VARIABLES #
     # Model description
-    obj = Variable(m, name="obj", description="objective variable")
     t = Variable(
         m, name="t", domain=[x, y], description="field of temperature"
     )
@@ -607,9 +606,6 @@ def main():
         domain=[x, y],
         description="boundary computation t",
     )
-    eobj = Equation(
-        m, name="eobj", type="regular", description="objective equation"
-    )
 
     temp[x, y].where[inside[x, y]] = t[x, y] - past_T[x, y] == (
         dt
@@ -642,15 +638,13 @@ def main():
     fp3[x, y].where[(Ord(y) == 1)] = t[x, y] == Q
     fp4[x, y].where[(Ord(y) == Card(y))] = t[x, y] == Q
 
-    eobj[...] = obj == Q
-
     Diffusion2 = Model(
         m,
         name="Diffusion2",
         equations=m.getEquations(),
         problem="nlp",
         sense="min",
-        objective=obj,
+        objective=Q,
     )
 
     for tu in time.toList():

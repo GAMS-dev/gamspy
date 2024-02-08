@@ -244,9 +244,6 @@ def main():
         domain=c,
         description="national imports                 (1000 tons)",
     )
-    cps = Variable(
-        m, name="cps", description="consumers and producers surplus"
-    )
 
     # Equation
     landbal = Equation(
@@ -292,7 +289,6 @@ def main():
         domain=c,
         description="national demand balance (1000 tons)",
     )
-    objn = Equation(m, name="objn", description="objective function")
 
     landbal[t] = Sum(c, xcrop[c] * a[t, c]) <= land * fnum
 
@@ -328,7 +324,8 @@ def main():
         == natprod[cn] + imports[cn].where[cm[cn]] - exports[cn].where[ce[cn]]
     )
 
-    objn[...] = cps == (
+    # Objective Function; consumers and producers surplus
+    objn = (
         Sum(cn, alpha[cn] * natcon[cn] + 0.5 * beta[cn] * sqr(natcon[cn]))
         + Sum(ce, exports[ce] * pe[ce])
         - Sum(cm, imports[cm] * pm[cm])
@@ -353,16 +350,15 @@ def main():
             aplow,
             lclover,
             lstraw,
-            objn,
         ],
         problem=Problem.QCP,
         sense=Sense.MAX,
-        objective=cps,
+        objective=objn,
     )
 
     demo7n.solve()
 
-    print("Value of objective:  ", round(cps.records.level[0], 3))
+    print("Value of objective:  ", round(demo7n.objective_value, 3))
 
 
 if __name__ == "__main__":

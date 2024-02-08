@@ -266,9 +266,6 @@ def main():
         domain=i,
         description="Holdings of assets in monetary units (not proportions)",
     )
-    z = Variable(
-        m, name="z", type="free", description="Objective function value"
-    )
 
     # EQUATIONS #
     BudgetCon = Equation(
@@ -276,12 +273,6 @@ def main():
         name="BudgetCon",
         type="regular",
         description="Equation defining the budget contraint",
-    )
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        type="regular",
-        description="Objective function definition for MAD",
     )
     TargetDevDef = Equation(
         m,
@@ -307,15 +298,16 @@ def main():
         Sum(i, (P[i, l] - TargetIndex[l]) * x[i]) == yPos[l] - yNeg[l]
     )
 
-    ObjDef[...] = z == Sum(l, pr[l] * yPos[l])
+    # Objective function definition for MAD
+    ObjDef = Sum(l, pr[l] * yPos[l])
 
     UnConPutCallModel = Model(
         m,
         name="UnConPutCallModel",
-        equations=[PutCon, TargetDevDef, ObjDef],
+        equations=[PutCon, TargetDevDef],
         problem="LP",
         sense="MAX",
-        objective=z,
+        objective=ObjDef,
     )
 
     # Set the average level of downside (risk) allowed
@@ -336,27 +328,26 @@ def main():
     PiOmega = Variable(m, name="PiOmega", type="positive")
 
     # EQUATIONS #
-    DualObjDef = Equation(m, name="DualObjDef", type="regular")
     DualTrackingDef = Equation(
         m, name="DualTrackingDef", type="regular", domain=i
     )
     MeasureDef = Equation(m, name="MeasureDef", type="regular", domain=l)
 
-    DualObjDef[...] = z == Omega * PiOmega
-
     DualTrackingDef[i] = Sum(l, (P[i, l] - TargetIndex[l]) * Pi[l]) == 0.0
 
     MeasureDef[l] = pr[l] * PiOmega - Pi[l] >= 0
+
+    DualObjDef = Omega * PiOmega  # Objective function definition Dual
 
     Pi.lo[l] = pr[l]
 
     UnConDualPutCallModel = Model(
         m,
         name="UnConDualPutCallModel",
-        equations=[DualObjDef, DualTrackingDef, MeasureDef],
+        equations=[DualTrackingDef, MeasureDef],
         problem="LP",
         sense="MIN",
-        objective=z,
+        objective=DualObjDef,
     )
 
     UnConDualPutCallModel.solve(
@@ -384,7 +375,7 @@ def main():
     PrimalDual[l, "TargetDevDef.m"] = TargetDevDef.m[l]
     PrimalDual[l, "Difference"] = TargetDevDef.m[l] + Pi.l[l]
 
-    # DISPLAY z.l,PiOmega.l,PutCon.m,PrimalDual
+    # DISPLAY UnConDualPutCallModel.objective_value,PiOmega.l,PutCon.m,PrimalDual
 
     # We propose an alternative way to build a frontier using
     # the loop statement. Such a structure is suitable for the
@@ -451,7 +442,7 @@ def main():
         )
 
         FrontierPortfolios[jj, i] = x.l[i]
-        CallValues[jj, "Mild Constraint"] = z.l
+        CallValues[jj, "Mild Constraint"] = UnConPutCallModel.objective_value
         DualPrices[jj, "Mild Constraint"] = PutCon.m
 
     # EXPORT RESULT SUMMARY TO EXCEL SHEET #
@@ -474,7 +465,7 @@ def main():
         )
 
         FrontierPortfolios[jj, i] = x.l[i]
-        CallValues[jj, "Tight Constraint"] = z.l
+        CallValues[jj, "Tight Constraint"] = UnConPutCallModel.objective_value
         DualPrices[jj, "Tight Constraint"] = PutCon.m
 
     DualPrices.pivot().to_excel(writer, sheet_name="DualPrices")
@@ -541,10 +532,10 @@ def main():
     PutCallModel = Model(
         m,
         name="PutCallModel",
-        equations=[BudgetCon, PutCon, TargetDevDef, ObjDef],
+        equations=[BudgetCon, PutCon, TargetDevDef],
         problem="LP",
         sense="MAX",
-        objective=z,
+        objective=ObjDef,
     )
 
     for jj in j.toList():
@@ -558,7 +549,7 @@ def main():
         )
         FrontierPortfolios[jj, i] = x.l[i]
         PutCall[jj, "Put side"] = PutCon.l
-        PutCall[jj, "Call side"] = z.l
+        PutCall[jj, "Call side"] = PutCallModel.objective_value
 
     PutCall.pivot().to_excel(writer, sheet_name="Frontiers")
     FrontierPortfolios.pivot().to_excel(writer, sheet_name="Portfolios")
