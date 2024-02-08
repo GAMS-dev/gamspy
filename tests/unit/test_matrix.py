@@ -113,7 +113,7 @@ class MatrixSuite(unittest.TestCase):
 
     def test_batch_size_matches(self):
         n = Set(self.m, name="n", records=["n1", "n2", "n3"])
-        m = Set(self.m, name="n", records=["m1", "m2", "m3"])
+        m = Set(self.m, name="m", records=["m1", "m2", "m3"])
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Alias(self.m, name="j", alias_with=i)
         k = Alias(self.m, name="k", alias_with=j)

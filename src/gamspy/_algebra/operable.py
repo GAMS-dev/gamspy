@@ -234,11 +234,12 @@ class Operable:
             batch_dim_1 = self.domain[:-2]
             batch_dim_2 = other.domain[:-2]
 
-            if len(batch_dim_1) != len(batch_dim_2):
-                raise ValidationError("Batch dimensions do not match")
+            if len(batch_dim_1) > 0 and len(batch_dim_2) > 0:
+                if len(batch_dim_1) != len(batch_dim_2):
+                    raise ValidationError("Batch dimensions do not match")
 
-            if any([x != y for x, y in zip(batch_dim_1, batch_dim_2)]):
-                raise ValidationError("Batch dimensions do not match")
+                if any([x != y for x, y in zip(batch_dim_1, batch_dim_2)]):
+                    raise ValidationError("Batch dimensions do not match")
 
             sum_domain = self.domain[-1]
             while sum_domain in unique_check_list:
