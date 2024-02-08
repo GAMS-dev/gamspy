@@ -348,11 +348,6 @@ def main():
         description="upper bound for integer logical",
     )
 
-    # Variable
-    zoau = Variable(
-        cont, name="zoau", type="free", description="objective function value"
-    )
-
     # Positive Variables
     f = Variable(
         cont,
@@ -491,9 +486,6 @@ def main():
     )
 
     # Equation
-    nlpobj = Equation(
-        cont, name="nlpobj", description="nlp subproblems objective"
-    )
     tctrlo = Equation(
         cont,
         name="tctrlo",
@@ -640,31 +632,27 @@ def main():
         cont, name="heat", domain=i, description="logical integer constraint"
     )
 
-    nlpobj[...] = zoau == (
-        alpha
-        * (
-            Sum(i, fc[i] * ycol[i] + vc[i] * (tc[i] - tcmin[i]) * f[i])
-            + Sum(
-                zcrhx[i, j],
-                fchx * yhx[i, j]
-                + (vchx / htc) * (qcr[i, j] / (tc[i] - tr[j] + 1 - ycol[i])),
-            )
-            + Sum(
-                [i, cu],
-                fchx * ycu[i, cu]
-                + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
-            )
-            + Sum(
-                [hu, j],
-                fchx * yhu[hu, j]
-                + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
-            )
+    # nlp subproblems objective
+    zoau = alpha * (
+        Sum(i, fc[i] * ycol[i] + vc[i] * (tc[i] - tcmin[i]) * f[i])
+        + Sum(
+            zcrhx[i, j],
+            fchx * yhx[i, j]
+            + (vchx / htc) * (qcr[i, j] / (tc[i] - tr[j] + 1 - ycol[i])),
         )
-        + beta
-        * (
-            Sum([i, cu], costcw * qcu[i, cu])
-            + Sum([hu, j], costhu[hu] * qhu[hu, j])
+        + Sum(
+            [i, cu],
+            fchx * ycu[i, cu]
+            + (vchx / htc) * (qcu[i, cu] / (lmtd[i] + 1 - ycol[i])),
         )
+        + Sum(
+            [hu, j],
+            fchx * yhu[hu, j]
+            + (vchx / htc) * (qhu[hu, j] / (thu[hu] - tr[j])),
+        )
+    ) + beta * (
+        Sum([i, cu], costcw * qcu[i, cu])
+        + Sum([hu, j], costhu[hu] * qhu[hu, j])
     )
 
     # limit the denominator in the second line of the objective away from zero

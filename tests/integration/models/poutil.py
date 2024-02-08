@@ -382,7 +382,6 @@ def main():
     )
 
     # Variables
-    c = Variable(cont, name="c", type="free", description="total cost")
     cPP = Variable(
         cont, name="cPP", type="positive", description="cost of PP usage"
     )
@@ -475,7 +474,6 @@ def main():
     pLFC.up[t] = pLFCref
 
     # Equations
-    obj = Equation(cont, name="obj", description="objective function")
     demand = Equation(
         cont,
         name="demand",
@@ -565,7 +563,7 @@ def main():
     )
 
     # the objective function: total cost eq. (6)
-    obj[...] = c == cPP + cSM + cLFC
+    obj = cPP + cSM + cLFC
 
     # meet the power demand for each time period exactly eq. (23)
     demand[t] = pPP[t] + pSM[t] + pLFC[t] == PowerForecast[t]
@@ -645,7 +643,7 @@ def main():
         equations=cont.getEquations(),
         problem="MIP",
         sense=Sense.MIN,
-        objective=c,
+        objective=obj,
     )
 
     # relative termination criterion for MIP (relative gap)

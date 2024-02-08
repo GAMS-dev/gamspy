@@ -107,12 +107,8 @@ def main():
     Y = Variable(m, name="Y", domain=t, description="production")
     K = Variable(m, name="K", domain=t, description="capital")
     I = Variable(m, name="I", domain=t, description="investment")
-    W = Variable(m, name="W", description="total utility")
 
     # EQUATIONS #
-    utility = Equation(
-        m, name="utility", type="regular", description="discounted utility"
-    )
     production = Equation(
         m,
         name="production",
@@ -142,7 +138,8 @@ def main():
         description="minimal investment in final period",
     )
 
-    utility[...] = W == Sum(t, beta[t] * gams_math.log(C[t]))
+    # Objective function; total utility
+    utility = Sum(t, beta[t] * gams_math.log(C[t]))
     production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
     allocation[t] = Y[t] == C[t] + I[t]
     accumulation[tnotlast[t]] = K[t.lead(1)] == (1 - delta) * K[t] + I[t]
@@ -163,12 +160,12 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="MAX",
-        objective=W,
+        objective=utility,
     )
 
     ramsey.solve()
 
-    print("Objective Function Value:  ", round(W.toValue(), 4))
+    print("Objective Function Value:  ", round(ramsey.objective_value, 4))
 
     # Solution visualization
     # ----------------------

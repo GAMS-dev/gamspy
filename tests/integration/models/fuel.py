@@ -98,7 +98,6 @@ def main():
         type="Positive",
         description="the volume of oil in the storage tank",
     )
-    cost = Variable(m, name="cost", description="total operating cost")
 
     volume.up[t] = 4000
     volume.lo[t].where[Ord(t) == Card(t)] = 2000
@@ -107,11 +106,6 @@ def main():
     others.up[t] = 700
 
     # Equation
-    costfn = Equation(
-        m,
-        name="costfn",
-        description="total operating cost of unit 2 -- the objective fn",
-    )
     lowoil = Equation(
         m,
         name="lowoil",
@@ -140,9 +134,7 @@ def main():
         m, name="oileq", domain=t, description="calculation of oil consumption"
     )
 
-    costfn[...] = cost == Sum(
-        t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2)
-    )
+    cost = Sum(t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2))
     lowoil[t] = poil[t] >= 100 * status[t]
     maxoil[t] = poil[t] <= 500 * status[t]
     floweq[t] = volume[t] == volume[t.lag(1)] + 500 - oil[t] + initlev[t]

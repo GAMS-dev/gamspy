@@ -79,28 +79,26 @@ def main():
 
     # Variable
     x = Variable(m, name="x", domain=j)
-    obj = Variable(m, name="obj")
 
     # Equation
-    defobj = Equation(m, name="defobj")
     cons = Equation(m, name="cons", domain=i)
 
-    defobj[...] = obj == Sum(j, c[j] * x[j])
+    defobj = Sum(j, c[j] * x[j])
     cons[i] = Sum(j, a[i, j] * x[j]) <= b[i]
 
     lpmod = Model(
         m,
         name="lpmod",
-        equations=[defobj, cons],
+        equations=[cons],
         problem="LP",
         sense=Sense.MIN,
-        objective=obj,
+        objective=defobj,
     )
     lpmod.solve()
 
     results = Parameter(m, name="results", domain=["*", "*"])
     results["lp", j] = x.l[j]
-    results["lp", "obj"] = obj.l
+    results["lp", "obj"] = lpmod.objective_value
 
     lmbda = Variable(m, name="lambda", type="positive", domain=j)
     gamma = Variable(m, name="gamma", type="positive", domain=j)
@@ -116,14 +114,14 @@ def main():
     lproblp = Model(
         m,
         name="lproblp",
-        equations=[defobj, lpcons, defdual],
+        equations=[lpcons, defdual],
         problem="LP",
         sense=Sense.MIN,
-        objective=obj,
+        objective=defobj,
     )
     lproblp.solve()
     results["roblp", j] = x.l[j]
-    results["roblp", "obj"] = obj.l
+    results["roblp", "obj"] = lproblp.objective_value
 
     k = Alias(m, name="k", alias_with=j)
     p = Parameter(m, name="p", domain=[i, j, k])
@@ -143,17 +141,17 @@ def main():
     roblpqcp = Model(
         m,
         name="roblpqcp",
-        equations=[defobj, socpqcpcons, defrhs, defv],
+        equations=[socpqcpcons, defrhs, defv],
         problem=Problem.QCP,
         sense=Sense.MIN,
-        objective=obj,
+        objective=defobj,
     )
 
     y.lo[i] = 0
 
     roblpqcp.solve()
     results["qcp", j] = x.l[j]
-    results["qcp", "obj"] = obj.l
+    results["qcp", "obj"] = roblpqcp.objective_value
 
     print(results.records)
 

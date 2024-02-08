@@ -98,22 +98,18 @@ def main():
         type="Positive",
         description="stock bought at time t (units)",
     )
-    cost = Variable(
-        m, name="cost", description="total cost                 ($)"
-    )
 
     # Equations
     sb = Equation(
         m, name="sb", domain=t, description="stock balance at time t (units)"
     )
-    at = Equation(m, name="at", description="accounting: total cost      ($)")
 
     sb[t] = (
         stock[t] == stock[t.lag(1, "linear")] + buy[t] - sell[t] + istock[t]
     )
-    at[...] = cost == Sum(
-        t, price[t] * (buy[t] - sell[t]) + storecost * stock[t]
-    )
+
+    # ObjectFunction; accounting: total cost      ($)
+    at = Sum(t, price[t] * (buy[t] - sell[t]) + storecost * stock[t])
 
     stock.up[t] = storecap
 
@@ -123,7 +119,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective=cost,
+        objective=at,
     )
     swp.solve()
 

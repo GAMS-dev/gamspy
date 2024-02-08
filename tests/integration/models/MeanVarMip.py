@@ -84,7 +84,6 @@ def main():
         m, name="PortVariance", description="Portfolio variance"
     )
     PortReturn = Variable(m, name="PortReturn", description="Portfolio return")
-    z = Variable(m, name="z", description="Objective function value")
 
     # In case short sales are allowed these bounds must be set properly.
     xlow[i] = 0.0
@@ -129,12 +128,6 @@ def main():
         domain=i,
         description="Lower bounds for each variable",
     )
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        type="regular",
-        description="Objective function definition",
-    )
 
     ReturnDef[...] = PortReturn == Sum(i, ExpectedReturns[i] * x[i])
 
@@ -148,7 +141,8 @@ def main():
 
     NormalCon[...] = Sum(i, x[i]) == 1
 
-    ObjDef[...] = z == (1 - lamda) * PortReturn - lamda * PortVariance
+    # Objective Function
+    ObjDef = (1 - lamda) * PortReturn - lamda * PortVariance
 
     MeanVarMip = Model(
         m,
@@ -160,11 +154,10 @@ def main():
             UpBounds,
             LoBounds,
             NormalCon,
-            ObjDef,
         ],
         problem="MINLP",
         sense="MAX",
-        objective=z,
+        objective=ObjDef,
     )
 
     MeanVarianceMIP = '"Lambda","z","Variance","ExpReturn",'
@@ -180,7 +173,7 @@ def main():
         MeanVarMip.solve(
             options=Options(minlp="SBB", relative_optimality_gap=0)
         )
-        MeanVarianceMIP += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceMIP += f"{round(lamda_loop,1)},{round(MeanVarMip.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         MeanVarianceMIP += ",".join(x_recs)
         MeanVarianceMIP += "\n"
@@ -271,11 +264,10 @@ def main():
             NormalCon,
             FlatCostBounds,
             LinCostBounds,
-            ObjDef,
         ],
         problem="MINLP",
         sense="MAX",
-        objective=z,
+        objective=ObjDef,
     )
 
     MeanVarianceWithCost = '"Lambda","z","Variance","ExpReturn",'
@@ -291,7 +283,7 @@ def main():
         MeanVarWithCost.solve(
             options=Options(minlp="SBB", relative_optimality_gap=0)
         )
-        MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(MeanVarWithCost.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x0_recs = [
             str(round(x_rec, 4)) for x_rec in x_0.records.level.tolist()
         ]
@@ -411,11 +403,10 @@ def main():
             BinSellLimits,
             BuyTurnover,
             VarDef,
-            ObjDef,
         ],
         problem="MINLP",
         sense="MAX",
-        objective=z,
+        objective=ObjDef,
     )
 
     MeanVarianceRevision = (
@@ -434,7 +425,7 @@ def main():
         MeanVarRevision.solve(
             options=Options(minlp="SBB", relative_optimality_gap=0)
         )
-        MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(z.records.level[0],4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(MeanVarRevision.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         buy_recs = [
             str(round(x_rec, 4)) for x_rec in buy.records.level.tolist()

@@ -72,21 +72,18 @@ def main():
         type="Positive",
         description="mix of desks produced (number of desks)",
     )
-    profit = Variable(
-        m, name="profit", description="total profit                        ($)"
-    )
 
-    # Equation
+    # Equations
     cap = Equation(
         m,
         name="cap",
         domain=shop,
         description="capacity constraint (man-hours)",
     )
-    ap = Equation(m, name="ap", description="accounting: total profit    ($)")
 
     cap[shop] = Sum(desk, labor[shop, desk] * mix[desk]) <= caplim[shop]
-    ap[...] = profit == Sum(desk, price[desk] * mix[desk])
+
+    ap = Sum(desk, price[desk] * mix[desk])  # accounting: total profit    ($)
 
     pmp = Model(
         m,
@@ -94,10 +91,16 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective=profit,
+        objective=ap,
     )
 
     pmp.solve()
+
+    import math
+
+    assert math.isclose(pmp.objective_value, 18666, rel_tol=0.0001)
+
+    print("Total Profit: ", pmp.objective_value)
 
 
 if __name__ == "__main__":
