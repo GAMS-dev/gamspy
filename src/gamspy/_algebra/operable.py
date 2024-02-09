@@ -126,6 +126,12 @@ class Operable:
             [sum_domain], self[left_domain] * other[right_domain]
         )
 
+    # TODO find a better place
+    def set_eq(self, set_a, set_b):
+        set_a = getattr(set_a, "alias_with", set_a)
+        set_b = getattr(set_b, "alias_with", set_b)
+        return set_a == set_b
+
     def _validate_matrix_mult_dims(self, other):
         """Validates the dimensions for the matrix multiplication"""
         from gamspy.math import next_alias
@@ -148,39 +154,34 @@ class Operable:
             )
 
         lr = (left_len, right_len)
-
-        unique_check_list = []
-        matrix_dim_left = self.domain[-2:]
-        if len(matrix_dim_left) == 2:
-            unique_check_list.append(self.domain[-2])
-
-        matrix_dim_right = other.domain[-2:]
-        if len(matrix_dim_right) == 2:
-            unique_check_list.append(other.domain[-1])
-
         if lr == (1, 1):
             # Dot product
-            if self.domain[0] != other.domain[0]:
+            if not self.set_eq(self.domain[0], other.domain[0]):
                 raise ValidationError("Dot product requires same domain")
 
-            return ..., ..., self.domain[0]
+            return [self.domain[0]], [self.domain[0]], self.domain[0]
         elif lr == (2, 2):
             # Matrix multiplication
-            if self.domain[1] != other.domain[0]:
+            if not self.set_eq(self.domain[1], other.domain[0]):
                 raise ValidationError(dim_no_match_err)
 
+            left_domain = self.domain[0]
+            right_domain = other.domain[1]
+            if left_domain == right_domain:
+                left_domain = next_alias(left_domain)
+
             sum_domain = self.domain[1]
-            while sum_domain in unique_check_list:
+            while sum_domain in [left_domain, right_domain]:
                 sum_domain = next_alias(sum_domain)
 
             return (
-                [self.domain[0], sum_domain],
-                [sum_domain, other.domain[1]],
+                [left_domain, sum_domain],
+                [sum_domain, right_domain],
                 sum_domain,
             )
         elif lr == (1, 2):
             # Vector matrix, vector 1-prepended
-            if self.domain[0] != other.domain[0]:
+            if not self.set_eq(self.domain[0], other.domain[0]):
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[0]
@@ -190,7 +191,7 @@ class Operable:
             return [sum_domain], [sum_domain, other.domain[1]], sum_domain
         elif lr == (2, 1):
             # Matrix vector, ordinary
-            if self.domain[1] != other.domain[0]:
+            if not self.set_eq(self.domain[1], other.domain[0]):
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[1]
@@ -200,7 +201,7 @@ class Operable:
             return [self.domain[0], sum_domain], [sum_domain], sum_domain
         elif left_len == 1 and right_len > 2:
             # Vector batched-matrix, vector 1-prepended
-            if self.domain[0] != other.domain[-2]:
+            if not self.set_eq(self.domain[0], other.domain[-2]):
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[0]
@@ -217,7 +218,7 @@ class Operable:
             )
         elif left_len > 2 and right_len == 1:
             # batched-matrix vector, ordinary
-            if self.domain[-1] != other.domain[0]:
+            if not self.set_eq(self.domain[-1], other.domain[0]):
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[-1]
@@ -231,7 +232,7 @@ class Operable:
             )
         elif left_len >= 2 and right_len >= 2:
             # batched-matrix batched-matrix
-            if self.domain[-1] != other.domain[-2]:
+            if not self.set_eq(self.domain[-1], other.domain[-2]):
                 raise ValidationError(dim_no_match_err)
 
             batch_dim_1 = self.domain[:-2]

@@ -50,24 +50,27 @@ def next_alias(symbol):
     return find_x
 
 
-def _search_or_create_set(m, x: int):
-    if not isinstance(x, int):
-        raise ValidationError("Dimensions must be integers")
-
-    expected_name = f"DenseDim{x}_1"
-    find_x = m.data.get(expected_name, None)
-    if not find_x:
-        find_x = Set(m, name=expected_name, records=range(x))
-
-    return find_x
-
-
 def dim(m, dims: List[int]):
     """Returns an array where each element
     corresponds to a set where the dimension of the
     set is equal to the element in dims"""
+    for x in dims:
+        if not isinstance(x, int):
+            raise ValidationError("Dimensions must be integers")
 
-    return [_search_or_create_set(m, x) for x in dims]
+    sets_so_far = []
+    for x in dims:
+        expected_name = f"DenseDim{x}_1"
+        find_x = m.data.get(expected_name, None)
+        if not find_x:
+            find_x = Set(m, name=expected_name, records=range(x))
+
+        while find_x in sets_so_far:
+            find_x = next_alias(find_x)
+
+        sets_so_far.append(find_x)
+
+    return sets_so_far
 
 
 # TODO add documentation for these!
