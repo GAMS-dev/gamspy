@@ -39,6 +39,10 @@ class Operation(operable.Operable):
         self.where = condition.Condition(self)
         self.domain: List[Union[Set, Alias]] = []
 
+        controlled_domain = [*self.op_domain]
+        controlled_domain.extend(getattr(expression, "controlled_domain", []))
+        self.controlled_domain = list(set(controlled_domain))
+
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):
             return self.expression._find_variables()

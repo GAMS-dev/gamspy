@@ -32,6 +32,8 @@ if TYPE_CHECKING:
             MathOp,
         ]
     ]
+    from gamspy import Alias
+    from gamspy import Set
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -73,6 +75,11 @@ class Expression(operable.Operable):
         self.representation = self._create_representation()
         self.where = condition.Condition(self)
         self.domain = self._create_domain()
+        left_control = getattr(left, "controlled_domain", [])
+        right_control = getattr(right, "controlled_domain", [])
+        self.controlled_domain: list[Union[Set, Alias]] = list(
+            set([*left_control, *right_control])
+        )
 
     def _create_domain(self):
         if self.left is None or isinstance(self.left, (int, float, str)):
