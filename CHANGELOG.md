@@ -6,8 +6,10 @@ GAMSPy 0.11.9
 -------------------------------------------------------------------------------
 - General
   - Fix relative path issue of GAMS Engine backend.
+  - Use $loadDC instead of $load to better catch domain violations.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
+  - Add a test to catch domain violation.
   - Remove declaration of objective variables and functions and add the equations into Python variables. 
 - Documentation
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
