@@ -125,7 +125,7 @@ class Container(gt.Container):
         # import symbols from arbitrary gams code
         self._import_symbols: list[str] = []
 
-        super().__init__(load_from, system_directory)
+        super().__init__(system_directory=system_directory)
 
         self.workspace = GamsWorkspace(
             working_directory,
@@ -144,7 +144,7 @@ class Container(gt.Container):
 
         self._job: GamsJob | None = None
         self._is_first_run = True
-        self.temp_container = gt.Container(
+        self._temp_container = gt.Container(
             system_directory=self.system_directory
         )
 
@@ -158,6 +158,10 @@ class Container(gt.Container):
             global_options=options,
             is_seedable=True,
         )
+
+        if load_from is not None:
+            self.read(load_from)
+            self._run()
 
     def _get_debugging_level(self, debugging_level: str):
         if (
@@ -372,8 +376,6 @@ class Container(gt.Container):
         dirty_names: list[str],
         modified_names: list[str],
     ) -> str:
-        LOAD_SYMBOL_TYPES = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
@@ -383,17 +385,11 @@ class Container(gt.Container):
             else:
                 string += statement.getStatement() + "\n"
 
-                if (
-                    isinstance(statement, LOAD_SYMBOL_TYPES)
-                    and statement.modified
-                ):
-                    string += f"$load {statement.name}\n"
-
         for symbol_name in modified_names:
             if not isinstance(
                 self[symbol_name], gp.Alias
             ) and not symbol_name.startswith(gp.Model._generate_prefix):
-                string += f"$load {symbol_name}\n"
+                string += f"$loadDC {symbol_name}\n"
 
         string += "$offUNDF\n$gdxIn\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
@@ -898,11 +894,11 @@ class Container(gt.Container):
     ):
         symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
 
-        self.temp_container.read(load_from, symbol_names)
+        self._temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
             if name in self.data.keys():
-                updated_records = self.temp_container[name].records
+                updated_records = self._temp_container[name].records
 
                 self[name]._records = updated_records
 
@@ -914,7 +910,7 @@ class Container(gt.Container):
             if user_invoked:
                 self[name].modified = True
 
-        self.temp_container.data = {}
+        self._temp_container.data = {}
 
         if user_invoked:
             self._run()

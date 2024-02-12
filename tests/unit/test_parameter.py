@@ -13,7 +13,7 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import ValidationError, GamspyException
 
 
 class ParameterSuite(unittest.TestCase):
@@ -270,6 +270,40 @@ class ParameterSuite(unittest.TestCase):
         s = pd.Series(index=["a", "b", "c"], data=[i + 1 for i in range(3)])
         i = Parameter(self.m, "i", ["*"], records=s, uels_on_axes=True)
         self.assertEqual(i.records.value.tolist(), [1, 2, 3])
+
+    def test_domain_violation(self):
+        col = Set(
+            self.m, "col", records=[("col" + str(i), i) for i in range(1, 10)]
+        )
+        row = Set(
+            self.m, "row", records=[("row" + str(i), i) for i in range(1, 10)]
+        )
+
+        # Data
+        initial_state_data = pd.DataFrame(
+            [
+                [0, 0, 0, 0, 8, 6, 0, 0, 0],
+                [0, 7, 0, 9, 0, 2, 0, 0, 0],
+                [6, 9, 0, 0, 0, 0, 2, 0, 8],
+                [8, 0, 0, 0, 9, 0, 7, 0, 2],
+                [4, 0, 0, 0, 0, 0, 0, 0, 3],
+                [2, 0, 9, 0, 1, 0, 0, 0, 4],
+                [5, 0, 3, 0, 0, 0, 0, 7, 6],
+                [0, 0, 0, 5, 0, 8, 0, 2, 0],
+                [0, 0, 0, 3, 7, 0, 0, 0, 0],
+            ],
+            index=["roj" + str(i) for i in range(1, 10)],
+            columns=["col" + str(i) for i in range(1, 10)],
+        )
+
+        with self.assertRaises(GamspyException):
+            _ = Parameter(
+                self.m,
+                "initial_state",
+                domain=[row, col],
+                records=initial_state_data,
+                uels_on_axes=True,
+            )
 
 
 def parameter_suite():
