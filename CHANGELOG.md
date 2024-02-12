@@ -7,6 +7,7 @@ GAMSPy 0.11.9
 - General
   - Fix relative path issue of GAMS Engine backend.
   - Use $loadDC instead of $load to better catch domain violations.
+  - Bypass constructor while creating a Container copy.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
   - Add a test to catch domain violation.

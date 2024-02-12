@@ -190,15 +190,6 @@ class Container(gt.Container):
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
 
-    def _assign_symbol_attributes(
-        self,
-        gp_symbol: Set | Parameter | Variable | Equation,
-        gtp_symbol: gt.Set | gt.Parameter | gt.Variable | gt.Equation,
-    ):
-        gp_symbol._records = gtp_symbol._records
-        gp_symbol._domain_forwarding = gtp_symbol._domain_forwarding
-        gp_symbol._description = gtp_symbol._description
-
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""
         symbol_names = symbol_names if symbol_names else list(self.data.keys())
@@ -334,7 +325,7 @@ class Container(gt.Container):
 
             if symbol.modified:
                 if (
-                    isinstance(symbol, gt.Alias)
+                    isinstance(symbol, gp.Alias)
                     and symbol.alias_with.name not in modified_names
                 ):
                     modified_names.append(symbol.alias_with.name)
@@ -768,79 +759,74 @@ class Container(gt.Container):
 
         for name, symbol in self:
             new_domain = []
-            for set in symbol.domain:
-                if not isinstance(set, str):
-                    new_set = gp.Set(
+            for elem in symbol.domain:
+                if not isinstance(elem, str):
+                    new_set = gp.Set._constructor_bypass(
                         m,
-                        set.name,
-                        set.domain,
-                        set.is_singleton,
-                        set.records,
-                        set.domain_forwarding,
-                        set.description,
+                        elem.name,
+                        elem.domain,
+                        elem.is_singleton,
+                        elem.records,
+                        elem.description,
                     )
                     new_domain.append(new_set)
                 else:
-                    new_domain.append(set)
+                    new_domain.append(elem)
 
-            if isinstance(symbol, gt.Alias):
-                alias_with = gp.Set(
+            if isinstance(symbol, gp.Alias):
+                alias_with = gp.Set._constructor_bypass(
                     m,
                     symbol.alias_with.name,
                     symbol.alias_with.domain,
                     symbol.alias_with.is_singleton,
                     symbol.alias_with.records,
                 )
-                _ = gp.Alias(
+                _ = gp.Alias._constructor_bypass(
                     m,
                     name,
                     alias_with,
                 )
-            elif isinstance(symbol, gt.UniverseAlias):
-                _ = gp.UniverseAlias(
+            elif isinstance(symbol, gp.UniverseAlias):
+                _ = gp.UniverseAlias._constructor_bypass(
                     m,
                     name,
                 )
-            elif isinstance(symbol, gt.Set):
-                _ = gp.Set(
+            elif isinstance(symbol, gp.Set):
+                _ = gp.Set._constructor_bypass(
                     m,
                     name,
                     new_domain,
                     symbol.is_singleton,
                     symbol._records,
-                    symbol.domain_forwarding,
                     symbol.description,
                 )
-            elif isinstance(symbol, gt.Parameter):
-                _ = gp.Parameter(
+            elif isinstance(symbol, gp.Parameter):
+                _ = gp.Parameter._constructor_bypass(
                     m,
                     name,
                     new_domain,
                     symbol._records,
-                    symbol.domain_forwarding,
                     symbol.description,
                 )
-            elif isinstance(symbol, gt.Variable):
-                _ = gp.Variable(
+            elif isinstance(symbol, gp.Variable):
+                _ = gp.Variable._constructor_bypass(
                     m,
                     name,
                     symbol.type,
                     new_domain,
                     symbol._records,
-                    symbol.domain_forwarding,
                     symbol.description,
                 )
-            elif isinstance(symbol, gt.Equation):
+            elif isinstance(symbol, gp.Equation):
                 symbol_type = symbol.type
                 if symbol.type in ["eq", "leq", "geq"]:
                     symbol_type = "regular"
-                _ = gp.Equation(
+                _ = gp.Equation._constructor_bypass(
                     container=m,
                     name=name,
                     type=symbol_type,
                     domain=new_domain,
                     records=symbol._records,
-                    domain_forwarding=symbol.domain_forwarding,
                     description=symbol.description,
                 )
 
