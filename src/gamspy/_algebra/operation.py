@@ -9,6 +9,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+import gamspy._validation as validation
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -47,11 +48,20 @@ class Operation(operable.Operable):
 
         self.expression = expression
         self._op_name = op_name
+        self.container = self.op_domain[0].container
 
         # allow conditions
         self.where = condition.Condition(self)
         self.domain: List[Union[Set, Alias]] = []
 
+        if isinstance(expression, (int, bool)):
+            self.domain = []
+        else:
+            self.domain = [
+                x for x in expression.domain if x not in self.op_domain
+            ]
+
+        self.dimension = validation.get_dimension(self.domain)
         controlled_domain = get_set(self.op_domain)
         controlled_domain.extend(getattr(expression, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
@@ -159,12 +169,6 @@ class Sum(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "sum")
-        if isinstance(expression, (int, bool)):
-            self.domain = []
-        else:
-            self.domain = [
-                x for x in expression.domain if x not in self.op_domain
-            ]
 
 
 class Product(Operation):
@@ -191,12 +195,6 @@ class Product(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
-        if isinstance(expression, (int, bool)):
-            self.domain = []
-        else:
-            self.domain = [
-                x for x in expression.domain if x not in self.op_domain
-            ]
 
 
 class Smin(Operation):
@@ -223,12 +221,6 @@ class Smin(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smin")
-        if isinstance(expression, (int, bool)):
-            self.domain = []
-        else:
-            self.domain = [
-                x for x in expression.domain if x not in self.op_domain
-            ]
 
 
 class Smax(Operation):
@@ -255,12 +247,6 @@ class Smax(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
-        if isinstance(expression, (int, bool)):
-            self.domain = []
-        else:
-            self.domain = [
-                x for x in expression.domain if x not in self.op_domain
-            ]
 
 
 class Ord(operable.Operable):
