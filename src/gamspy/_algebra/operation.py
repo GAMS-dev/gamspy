@@ -19,6 +19,19 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
 
 
+def get_set(domain: List[Set | Alias | Domain | Expression]):
+    res = []
+    for el in domain:
+        if hasattr(el, "left"):
+            res.append(getattr(el.left, "sets", el.left))
+        elif hasattr(el, "sets"):
+            res.extend(el.sets)
+        else:
+            res.append(el)
+
+    return res
+
+
 class Operation(operable.Operable):
     def __init__(
         self,
@@ -39,7 +52,7 @@ class Operation(operable.Operable):
         self.where = condition.Condition(self)
         self.domain: List[Union[Set, Alias]] = []
 
-        controlled_domain = [*self.op_domain]
+        controlled_domain = get_set(self.op_domain)
         controlled_domain.extend(getattr(expression, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
