@@ -392,13 +392,13 @@ This can be done by importing ``EngineClient`` and creating an instance. Then, t
     
     model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
 
-    config = EngineClient(
+    client = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
     )
-    model.solve(solver="CONOPT", backend="engine", client=config)
+    model.solve(solver="CONOPT", backend="engine", client=client)
 
 
 .. note::
@@ -422,7 +422,7 @@ Tokens of the submitted jobs are stored in `client.tokens` ::
     <define_your_model>
     ...
     ...
-    config = EngineClient(
+    client = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
         password=os.environ["ENGINE_PASSWORD"],
