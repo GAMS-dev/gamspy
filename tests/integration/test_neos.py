@@ -74,8 +74,6 @@ class NeosSuite(unittest.TestCase):
         )
         client = NeosClient(
             email=os.environ["NEOS_EMAIL"],
-            username=os.environ["NEOS_USERNAME"],
-            password=os.environ["NEOS_PASSWORD"],
         )
         transport.solve(backend="neos", client=client)
 
@@ -187,8 +185,6 @@ class NeosSuite(unittest.TestCase):
         )
         client = NeosClient(
             email=os.environ["NEOS_EMAIL"],
-            username=os.environ["NEOS_USERNAME"],
-            password=os.environ["NEOS_PASSWORD"],
         )
         transport.solve(backend="neos", client=client, solver="CONOPT")
 

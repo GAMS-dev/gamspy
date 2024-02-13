@@ -25,11 +25,11 @@
 from __future__ import annotations
 
 import os
+import copy
 import io
 import uuid
 import json
 import time
-import copy
 import logging
 import tempfile
 
@@ -83,6 +83,23 @@ STATUS_MAP = {
     2: "outputting",
     10: "finished",
 }
+
+
+def get_relative_paths(paths: List[str], start: str) -> List[str]:
+    relative_paths = []
+    for path in paths:
+        relative_path = os.path.relpath(path, start)
+        if relative_path.startswith("."):
+            raise ValidationError(
+                "Extra model file path must be relative to the working"
+                f" directory. The given path: {path}, the working"
+                f" directory: {start}, the"
+                f" relative path: {relative_path}"
+            )
+
+        relative_paths.append(relative_path)
+
+    return relative_paths
 
 
 class Endpoint(ABC): ...
@@ -157,8 +174,8 @@ class Job(Endpoint):
     def post(
         self,
         working_directory: str,
-        job_name: str,
-        options: GamsOptions,
+        gms_file: str,
+        pf_file: str | None = None,
     ) -> str:
         """
         Post request to /jobs which submits a new job to be solved.
@@ -168,10 +185,10 @@ class Job(Endpoint):
         ----------
         working_directory : str
             Working directory
-        job_name : str
-            Name of the job
-        options : GamsOptions
-            Options for GAMS.
+        gms_file : str
+            Name of the gms file
+        pf_file: str | None
+            Name of the pf file
 
         Returns
         -------
@@ -183,9 +200,17 @@ class Job(Endpoint):
         GamsEngineException
             If post request has failed.
         """
-        model_data_zip = self._create_zip_file(working_directory, job_name)
+        model_data_zip = self._create_zip_file(
+            working_directory, gms_file, pf_file
+        )
+        gms_file = os.path.relpath(gms_file, working_directory)
+        pf_file = (
+            os.path.relpath(pf_file, working_directory)
+            if pf_file is not None
+            else None
+        )
         query_params, file_params = self._get_params(
-            model_data_zip, options, job_name
+            model_data_zip, gms_file, pf_file
         )
 
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -387,12 +412,16 @@ class Job(Endpoint):
     def _create_zip_file(
         self,
         working_directory: str,
-        job_name: str,
+        gms_file: str,
+        pf_file: str | None,
     ) -> io.BytesIO:
         model_data_zip = io.BytesIO()
-        model_files = [job_name + ".gms", job_name + ".pf"]
+        model_files = [gms_file]
+        if pf_file is not None:
+            model_files.append(pf_file)
 
         model_files += self.extra_model_files
+        model_files = get_relative_paths(model_files, working_directory)
 
         with zipfile.ZipFile(
             model_data_zip, "w", zipfile.ZIP_DEFLATED
@@ -407,7 +436,7 @@ class Job(Endpoint):
 
         return model_data_zip
 
-    def _get_params(self, model_data_zip, options, job_name):
+    def _get_params(self, model_data_zip, gms_file, pf_file: str | None):
         file_params = {}
         query_params = (
             copy.deepcopy(self.engine_options) if self.engine_options else {}
@@ -445,8 +474,8 @@ class Job(Endpoint):
                 "application/zip",
             )
         else:
-            query_params["run"] = options._input
-            query_params["model"] = os.path.splitext(options._input)[0]
+            query_params["run"] = gms_file
+            query_params["model"] = os.path.splitext(gms_file)[0]
             file_params["model_data"] = (
                 ZIP_NAME,
                 model_data_zip.read(),
@@ -458,9 +487,12 @@ class Job(Endpoint):
         if "arguments" in query_params:
             if not isinstance(query_params["arguments"], list):
                 query_params["arguments"] = [query_params["arguments"]]
-            query_params["arguments"].append(f"pf={job_name}.pf")
+
+            if pf_file is not None:
+                query_params["arguments"].append(f"pf={pf_file}")
         else:
-            query_params["arguments"] = [f"pf={job_name}.pf"]
+            if pf_file is not None:
+                query_params["arguments"] = [f"pf={pf_file}"]
 
         return query_params, file_params
 
@@ -549,15 +581,13 @@ class GAMSEngine(backend.Backend):
         self.model = model
         self.job_name = f"_job_{uuid.uuid4()}"
         self.gms_file = self.job_name + ".gms"
-        self.pf_path = self.job_name + ".pf"
+        self.pf_file = self.job_name + ".pf"
 
     def is_async(self):
         return False if self.client.is_blocking else True
 
     def preprocess(self, keep_flags: bool = False):
         gams_string, dirty_names = super().preprocess(keep_flags)
-
-        self.client.job.extra_model_files = self._validate_extra_model_files()
 
         # Set selected solvers
         for i in range(1, gmoProc_nrofmodeltypes):
@@ -581,7 +611,7 @@ class GAMSEngine(backend.Backend):
             self.options.output = self.job_name + ".lst"
 
         # Export pf file
-        self.options.export(self.pf_path)
+        self.options.export(self.pf_file)
 
         # Export gms file
         gms_path = os.path.join(
@@ -607,11 +637,16 @@ class GAMSEngine(backend.Backend):
 
     def run(self):
         try:
+            original_extra_files = copy.deepcopy(
+                self.client.job.extra_model_files
+            )
+            self.client.job.extra_model_files = self._append_gamspy_files()
             token = self.client.job.post(
                 self.container.working_directory,
-                self.job_name,
-                self.options,
+                os.path.join(self.container.working_directory, self.gms_file),
+                os.path.join(self.container.working_directory, self.pf_file),
             )
+            self.client.job.extra_model_files = original_extra_files
             self.client.tokens.append(token)
 
             if not self.is_async():
@@ -681,23 +716,10 @@ class GAMSEngine(backend.Backend):
             self.container.working_directory, self.options.trace
         )
 
-    def _validate_extra_model_files(self) -> List[str]:
-        extra_model_files = []
-        for extra_file in self.client.extra_model_files:
-            relative_path = os.path.relpath(
-                extra_file, self.container.working_directory
-            )
-            if relative_path.startswith("."):
-                raise ValidationError(
-                    "Extra model file path must be relative to the working"
-                    f" directory.The given path: {extra_file}, the working"
-                    f" directory: {self.container.working_directory}, the"
-                    f" relative path: {relative_path}"
-                )
-
-            extra_model_files.append(relative_path)
-
-        extra_model_files.append(self.gdx_in)
-        extra_model_files.append(self.container._restart_from.name)
+    def _append_gamspy_files(self) -> List[str]:
+        extra_model_files = self.client.job.extra_model_files + [
+            self.container._gdx_in,
+            self.container._restart_from._checkpoint_file_name,
+        ]
 
         return extra_model_files

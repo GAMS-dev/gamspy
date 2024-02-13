@@ -438,6 +438,22 @@ class EngineSuite(unittest.TestCase):
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 
+    def test_api(self):
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            is_blocking=False,
+        )
+
+        gms_path = os.path.join(os.getcwd(), "dummy.gms")
+        with open(gms_path, "w") as file:
+            file.write("Set i / i1*i3 /;")
+
+        token = client.job.post(os.getcwd(), gms_path)
+        client.job.get_logs(token)
+
 
 def engine_suite():
     suite = unittest.TestSuite()
