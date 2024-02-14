@@ -46,9 +46,10 @@ class Operation(operable.Operable):
         if len(self.op_domain) == 0:
             raise ValidationError("Operation requires at least one index")
 
+        self._bare_op_domain = get_set(self.op_domain)
         self.expression = expression
         self._op_name = op_name
-        self.container = self.op_domain[0].container
+        self.container = self._bare_op_domain[0].container
 
         # allow conditions
         self.where = condition.Condition(self)
@@ -58,20 +59,20 @@ class Operation(operable.Operable):
         if not isinstance(expression, (int, bool)):
             for i, x in enumerate(expression.domain):
                 try:
-                    sum_index = self.op_domain.index(x)
+                    sum_index = self._bare_op_domain.index(x)
                     self._operation_indices.append((i, sum_index))
                 except ValueError:
                     self.domain.append(x)
 
         self.dimension = validation.get_dimension(self.domain)
-        controlled_domain = get_set(self.op_domain)
+        controlled_domain = [d for d in self._bare_op_domain]
         controlled_domain.extend(getattr(expression, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
     def __getitem__(self, indices: tuple):
         domain = validation.validate_domain(self, indices)
         for index, sum_index in self._operation_indices:
-            domain.insert(index, self.op_domain[sum_index])
+            domain.insert(index, self._bare_op_domain[sum_index])
 
         if isinstance(self.expression, (bool, int)):
             return Operation(self.op_domain, self.expression, self._op_name)
