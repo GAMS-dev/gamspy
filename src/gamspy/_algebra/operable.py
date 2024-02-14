@@ -197,8 +197,8 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[0]
-            if (
-                other.domain[0] == other.domain[1]
+            while (
+                sum_domain == other.domain[1]
                 or sum_domain in controlled_domain
             ):
                 sum_domain = next_alias(sum_domain)
@@ -210,9 +210,8 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[1]
-            if (
-                self.domain[0] == self.domain[1]
-                or sum_domain in controlled_domain
+            while (
+                self.domain[0] == sum_domain or sum_domain in controlled_domain
             ):
                 sum_domain = next_alias(sum_domain)
 
@@ -267,18 +266,23 @@ class Operable:
                 if any([x != y for x, y in zip(batch_dim_1, batch_dim_2)]):
                     raise ValidationError("Batch dimensions do not match")
 
+            left_domain = self.domain[-2]
+            right_domain = other.domain[-1]
+            if left_domain == right_domain:
+                left_domain = next_alias(left_domain)
+
             sum_domain = self.domain[-1]
             while (
                 sum_domain in self.domain[:-1]
                 or sum_domain in other.domain[:-2]
-                or sum_domain == other.domain[-1]
+                or sum_domain in [right_domain, left_domain]
                 or sum_domain in controlled_domain
             ):
                 sum_domain = next_alias(sum_domain)
 
             return (
-                [*self.domain[:-1], sum_domain],
-                [*other.domain[:-2], sum_domain, other.domain[-1]],
+                [*self.domain[:-2], left_domain, sum_domain],
+                [*other.domain[:-2], sum_domain, right_domain],
                 sum_domain,
             )
         else:

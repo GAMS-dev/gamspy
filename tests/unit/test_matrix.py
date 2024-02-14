@@ -247,6 +247,45 @@ class MatrixSuite(unittest.TestCase):
 
         self.assertRaises(ValidationError, lambda: a @ b)
 
+    def test_domain_conflict_resolution(self):
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+
+        vec = Parameter(self.m, name="vec", domain=[i])
+        mat = Parameter(self.m, name="mat", domain=[i, i])
+        batched_mat = Parameter(self.m, name="batched_mat", domain=[n, i, i])
+
+        r1 = vec @ vec
+        self.assertEqual(r1.domain, [])
+
+        r2 = mat @ mat
+        self.assertEqual(len(r2.domain), 2)
+        self.assertEqual(len(r2.controlled_domain), 1)
+        self.assertNotEqual(r2.domain[0], r2.domain[1])
+
+        r3 = vec @ mat
+        self.assertEqual(len(r3.domain), 1)
+        self.assertEqual(len(r3.controlled_domain), 1)
+
+        r4 = mat @ vec
+        self.assertEqual(len(r4.domain), 1)
+        self.assertEqual(len(r4.controlled_domain), 1)
+
+        r5 = vec @ batched_mat
+        self.assertEqual(len(r5.domain), 2)
+        self.assertEqual(len(r5.controlled_domain), 1)
+        self.assertEqual(r5.domain[0], batched_mat.domain[0])
+
+        r6 = batched_mat @ vec
+        self.assertEqual(len(r6.domain), 2)
+        self.assertEqual(len(r6.controlled_domain), 1)
+        self.assertEqual(r6.domain[0], batched_mat.domain[0])
+
+        r7 = batched_mat @ batched_mat
+        self.assertEqual(len(r7.domain), 3)
+        self.assertEqual(len(r7.controlled_domain), 1)
+        self.assertNotEqual(r7.domain[-1], r7.domain[-2])
+
 
 def matrix_suite():
     suite = unittest.TestSuite()
