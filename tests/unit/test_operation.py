@@ -61,8 +61,8 @@ class OperationSuite(unittest.TestCase):
         sum_op = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(sum_op.gamsRepr(), "sum(j,x(i,j)) =l= a(i)")
 
-        expression = Sum(a[i], True)
-        self.assertEqual(expression.gamsRepr(), "sum(a(i),yes)")
+        expression = Sum(i, True)
+        self.assertEqual(expression.gamsRepr(), "sum(i,yes)")
 
         # Operation with two indices
         sum_op = Sum((i, j), c[i, j] * x[i, j]) == z
