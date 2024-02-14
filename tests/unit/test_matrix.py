@@ -3,10 +3,8 @@ from __future__ import annotations
 import os
 import unittest
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Parameter
-from gamspy import Set
+import numpy as np
+from gamspy import Alias, Container, Parameter, Set
 from gamspy.exceptions import ValidationError
 
 
@@ -24,10 +22,21 @@ class MatrixSuite(unittest.TestCase):
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
         k = Set(self.m, name="k", records=["k1", "k2", "k3"])
 
-        a = Parameter(self.m, name="a", domain=[i, j])
-        b = Parameter(self.m, name="b", domain=[j, k])
+        a_recs = np.random.randint(1, 11, size=(3, 3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True
+        )
         c = a @ b
         self.assertEqual(c.domain, [i, k])
+
+        c = Parameter(self.m, name="c", domain=[i, k])
+        c[i, k] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_simple_matrix_vector(self):
         """Test simple case where domain calculation is trivial
@@ -35,20 +44,40 @@ class MatrixSuite(unittest.TestCase):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
 
-        a = Parameter(self.m, name="a", domain=[i, j])
-        b = Parameter(self.m, name="b", domain=[j])
+        a_recs = np.random.randint(1, 11, size=(3, 3))
+        b_recs = np.random.randint(1, 11, size=(3))
+        a = Parameter(
+            self.m, name="a", domain=[i, j], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[j], records=b_recs, uels_on_axes=True
+        )
         c = a @ b
         self.assertEqual(c.domain, [i])
+        c = Parameter(self.m, name="c", domain=[i])
+        c[i] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_simple_vector_vector(self):
         """Test simple case where domain calculation is trivial
         vector x vector, aka inner product"""
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
 
-        a = Parameter(self.m, name="a", domain=[i])
-        b = Parameter(self.m, name="b", domain=[i])
+        a_recs = np.random.randint(1, 11, size=(3))
+        b_recs = np.random.randint(1, 11, size=(3))
+        a = Parameter(
+            self.m, name="a", domain=[i], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[i], records=b_recs, uels_on_axes=True
+        )
         c = a @ b
         self.assertEqual(c.domain, [])
+        c = Parameter(self.m, name="c", domain=[])
+        c[...] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_simple_vector_matrix(self):
         """Test simple case where domain calculation is trivial
@@ -56,72 +85,155 @@ class MatrixSuite(unittest.TestCase):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
 
-        a = Parameter(self.m, name="a", domain=[i])
-        b = Parameter(self.m, name="b", domain=[i, j])
+        a_recs = np.random.randint(1, 11, size=(3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m, name="a", domain=[i], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[i, j], records=b_recs, uels_on_axes=True
+        )
         c = a @ b
         self.assertEqual(c.domain, [j])
+        c = Parameter(self.m, name="c", domain=[j])
+        c[...] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_batched_matrix_matrix(self):
         """Test batched matrix multiplication,
         batched matrix x batched matrix"""
-        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
         k = Set(self.m, name="k", records=["k1", "k2", "k3"])
 
-        a = Parameter(self.m, name="a", domain=[n, i, j])
-        b = Parameter(self.m, name="b", domain=[n, j, k])
+        a_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        b_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[n, i, j],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[n, j, k],
+            records=b_recs,
+            uels_on_axes=True,
+        )
         c = a @ b
         self.assertEqual(c.domain, [n, i, k])
+        c = Parameter(self.m, name="c", domain=[n, i, k])
+        c[...] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_batched_matrix_matrix_2(self):
         """Test batched matrix multiplication,
         batched matrix x matrix"""
-        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
         k = Set(self.m, name="k", records=["k1", "k2", "k3"])
 
-        a = Parameter(self.m, name="a", domain=[n, i, j])
-        b = Parameter(self.m, name="b", domain=[j, k])
+        a_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[n, i, j],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m, name="b", domain=[j, k], records=b_recs, uels_on_axes=True
+        )
         c = a @ b
-
         self.assertEqual(c.domain, [n, i, k])
+        c = Parameter(self.m, name="c", domain=[n, i, k])
+        c[...] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_vector_batched_matrix(self):
         """Test vector x batched_matrix"""
-        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
 
-        a = Parameter(self.m, name="a", domain=[n, i, j])
-        b = Parameter(self.m, name="b", domain=[i])
+        a_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        b_recs = np.random.randint(1, 11, size=(3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[n, i, j],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m, name="b", domain=[i], records=b_recs, uels_on_axes=True
+        )
         c = b @ a
 
         self.assertEqual(c.domain, [n, j])
+        c = Parameter(self.m, name="c", domain=[n, j])
+        c[...] = b @ a
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, b_recs @ a_recs))
 
     def test_square_matrix_mult(self):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Alias(self.m, name="j", alias_with=i)
         k = Alias(self.m, name="k", alias_with=j)
 
-        a = Parameter(self.m, name="a", domain=[i, i])
-        b = Parameter(self.m, name="b", domain=[i, i])
+        a_recs = np.random.randint(1, 11, size=(3, 3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m, name="a", domain=[i, i], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[i, i], records=b_recs, uels_on_axes=True
+        )
 
         c2 = a[i, j] @ b[j, k]
         self.assertEqual(c2.domain, [i, k])
+        c = Parameter(self.m, name="c", domain=[i, k])
+        c[...] = (a @ b)[i, k]  # TODO check this, this would not work o.w
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_square_matrix_mult_2(self):
-        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Alias(self.m, name="j", alias_with=i)
         k = Alias(self.m, name="k", alias_with=j)
 
-        a = Parameter(self.m, name="a", domain=[n, i, i])
-        b = Parameter(self.m, name="b", domain=[n, i, i])
+        a_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        b_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[n, i, i],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[n, i, i],
+            records=b_recs,
+            uels_on_axes=True,
+        )
 
         c2 = a[n, i, j] @ b[n, j, k]
         self.assertEqual(c2.domain, [n, i, k])
+        c = Parameter(self.m, name="c", domain=[n, i, k])
+        c[...] = (a[n, i, j] @ b[n, j, k])[n, i, k]
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
     def test_batch_size_matches(self):
         n = Set(self.m, name="n", records=["n1", "n2", "n3"])

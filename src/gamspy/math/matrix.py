@@ -38,7 +38,11 @@ def next_alias(symbol):
     from gamspy._symbols.alias import Alias
 
     current = symbol
-    prefix, num = symbol.name.split("_")
+    if symbol.name.startswith("DenseDim"):
+        prefix, num = symbol.name.split("_")
+    else:
+        prefix, num = f"AliasOf{symbol.name}", 1
+
     num = int(num) + 1
     expected_name = f"{prefix}_{num}"
     find_x = symbol.container.data.get(expected_name, None)
