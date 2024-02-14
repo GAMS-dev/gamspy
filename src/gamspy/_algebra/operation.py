@@ -54,17 +54,31 @@ class Operation(operable.Operable):
         self.where = condition.Condition(self)
         self.domain: List[Union[Set, Alias]] = []
 
-        if isinstance(expression, (int, bool)):
-            self.domain = []
-        else:
-            self.domain = [
-                x for x in expression.domain if x not in self.op_domain
-            ]
+        self._operation_indices = []
+        if not isinstance(expression, (int, bool)):
+            for i, x in enumerate(expression.domain):
+                try:
+                    sum_index = self.op_domain.index(x)
+                    self._operation_indices.append((i, sum_index))
+                except ValueError:
+                    self.domain.append(x)
 
         self.dimension = validation.get_dimension(self.domain)
         controlled_domain = get_set(self.op_domain)
         controlled_domain.extend(getattr(expression, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
+
+    def __getitem__(self, indices: tuple):
+        domain = validation.validate_domain(self, indices)
+        for index, sum_index in self._operation_indices:
+            domain.insert(index, self.op_domain[sum_index])
+
+        if isinstance(self.expression, (bool, int)):
+            return Operation(self.op_domain, self.expression, self._op_name)
+        else:
+            return Operation(
+                self.op_domain, self.expression[domain], self._op_name
+            )
 
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):

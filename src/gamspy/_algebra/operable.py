@@ -154,12 +154,21 @@ class Operable:
             )
 
         lr = (left_len, right_len)
+
+        left_controlled = getattr(self, "controlled_domain", [])
+        right_controlled = getattr(other, "controlled_domain", [])
+        controlled_domain = [*left_controlled, *right_controlled]
+
         if lr == (1, 1):
             # Dot product
             if not self.set_eq(self.domain[0], other.domain[0]):
                 raise ValidationError("Dot product requires same domain")
 
-            return [self.domain[0]], [self.domain[0]], self.domain[0]
+            sum_domain = self.domain[0]
+            while sum_domain in controlled_domain:
+                sum_domain = next_alias(sum_domain)
+
+            return [sum_domain], [sum_domain], sum_domain
         elif lr == (2, 2):
             # Matrix multiplication
             if not self.set_eq(self.domain[1], other.domain[0]):
@@ -171,7 +180,10 @@ class Operable:
                 left_domain = next_alias(left_domain)
 
             sum_domain = self.domain[1]
-            while sum_domain in [left_domain, right_domain]:
+            while (
+                sum_domain in [left_domain, right_domain]
+                or sum_domain in controlled_domain
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return (
@@ -185,7 +197,10 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[0]
-            if other.domain[0] == other.domain[1]:
+            if (
+                other.domain[0] == other.domain[1]
+                or sum_domain in controlled_domain
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return [sum_domain], [sum_domain, other.domain[1]], sum_domain
@@ -195,7 +210,10 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[1]
-            if self.domain[0] == self.domain[1]:
+            if (
+                self.domain[0] == self.domain[1]
+                or sum_domain in controlled_domain
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return [self.domain[0], sum_domain], [sum_domain], sum_domain
@@ -208,6 +226,7 @@ class Operable:
             while (
                 sum_domain in other.domain[:-2]
                 or sum_domain == other.domain[-1]
+                or sum_domain in controlled_domain
             ):
                 sum_domain = next_alias(sum_domain)
 
@@ -222,7 +241,10 @@ class Operable:
                 raise ValidationError(dim_no_match_err)
 
             sum_domain = self.domain[-1]
-            while sum_domain in self.domain[:-1]:
+            while (
+                sum_domain in self.domain[:-1]
+                or sum_domain in controlled_domain
+            ):
                 sum_domain = next_alias(sum_domain)
 
             return (
@@ -250,6 +272,7 @@ class Operable:
                 sum_domain in self.domain[:-1]
                 or sum_domain in other.domain[:-2]
                 or sum_domain == other.domain[-1]
+                or sum_domain in controlled_domain
             ):
                 sum_domain = next_alias(sum_domain)
 
