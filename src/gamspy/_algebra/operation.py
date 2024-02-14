@@ -24,7 +24,10 @@ def get_set(domain: List[Set | Alias | Domain | Expression]):
     res = []
     for el in domain:
         if hasattr(el, "left"):
-            res.append(getattr(el.left, "sets", el.left))
+            if hasattr(el.left, "sets"):
+                res.extend(el.left.sets)
+            else:
+                res.append(el.left)
         elif hasattr(el, "sets"):
             res.extend(el.sets)
         else:
