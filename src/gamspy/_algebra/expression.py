@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Union, List, Tuple
+from dataclasses import dataclass
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -39,6 +40,11 @@ GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
 
 
+@dataclass
+class DomainPlaceHolder:
+    indices: List[Tuple[str, int]]
+
+
 class Expression(operable.Operable):
     """
     Expression of two operands and an operation.
@@ -74,7 +80,7 @@ class Expression(operable.Operable):
             right._fix_equalities()
         self.representation = self._create_representation()
         self.where = condition.Condition(self)
-        self.domain = self._create_domain()
+        self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
         self.controlled_domain: list[Union[Set, Alias]] = list(
@@ -89,6 +95,8 @@ class Expression(operable.Operable):
         else:
             left_domain = self.left.domain
 
+        self._left_domain = left_domain
+
         if self.right is None or isinstance(self.right, (int, float, str)):
             right_domain = []  # right is a scalar
         elif isinstance(self.right, domain.Domain):
@@ -96,6 +104,27 @@ class Expression(operable.Operable):
         else:
             right_domain = self.right.domain
 
+        self._right_domain = right_domain
+        set_to_index = {}
+        for i, d in enumerate(left_domain):
+            if isinstance(d, str):
+                continue  # string domains are fixed and they do not count
+
+            if d not in set_to_index:
+                set_to_index[d] = []
+
+            set_to_index[d].append(("l", i))
+
+        for i, d in enumerate(right_domain):
+            if isinstance(d, str):
+                continue  # string domains are fixed and they do not count
+
+            if d not in set_to_index:
+                set_to_index[d] = []
+
+            set_to_index[d].append(("r", i))
+
+        shadow_domain = []
         result_domain = []
         for d in [*left_domain, *right_domain]:
             if isinstance(d, str):
@@ -103,8 +132,27 @@ class Expression(operable.Operable):
 
             if d not in result_domain:
                 result_domain.append(d)
+                indices = set_to_index[d]
+                shadow_domain.append(DomainPlaceHolder(indices=indices))
 
-        return result_domain
+        self._shadow_domain = shadow_domain
+        self.domain = result_domain
+
+    def __getitem__(self, indices):
+        # TODO check indices
+        left_domain = [d for d in self._left_domain]
+        right_domain = [d for d in self._right_domain]
+        for i, s in enumerate(indices):
+            for lr, pos in self._shadow_domain[i].indices:
+                if lr == "l":
+                    left_domain[pos] = s
+                else:
+                    right_domain[pos] = s
+
+        left = self.left[left_domain] if left_domain else self.left
+        right = self.right[right_domain] if right_domain else self.right
+
+        return Expression(left, self.data, right)
 
     def _create_representation(self):
         left_str, right_str = self._get_operand_representations()
