@@ -449,10 +449,11 @@ The results would be downloaded to the given working directory. The downloaded g
 Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
 file: ::
 
-    container = Container(load_from=f"out_dir/{os.path.basename(m.gdxOutputPath())}")
+    gdx_out_path = os.path.join("out_dir", os.path.basename(m.gdxOutputPath()))
+    container = Container(load_from=gdx_out_path)
     # or
     container = Container()
-    container.read(f"out_dir/out_dir/{os.path.basename(m.gdxOutputPath())}")
+    container.read(gdx_out_path)
 
 Solving with NEOS Server
 ------------------------

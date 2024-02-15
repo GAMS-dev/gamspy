@@ -425,15 +425,18 @@ class EngineSuite(unittest.TestCase):
 
         token = client.tokens[-1]
 
-        job_status, _ = client.job.get(token)
+        job_status, _, exit_code = client.job.get(token)
         while job_status != 10:
-            job_status, _ = client.job.get(token)
+            job_status, _, exit_code = client.job.get(token)
+
+        self.assertEqual(exit_code, 0)
 
         client.job.get_results(token, "out_dir")
 
-        container = Container(
-            load_from=f"out_dir/{os.path.basename(m.gdxOutputPath())}"
+        gdx_out_path = os.path.join(
+            "out_dir", os.path.basename(m.gdxOutputPath())
         )
+        container = Container(load_from=gdx_out_path)
         self.assertTrue("x" in container.data.keys())
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))

@@ -89,7 +89,7 @@ def get_relative_paths(paths: List[str], start: str) -> List[str]:
     relative_paths = []
     for path in paths:
         relative_path = os.path.relpath(path, start)
-        if relative_path.startswith("."):
+        if relative_path.startswith(f"..{os.sep}"):
             raise ValidationError(
                 "Extra model file path must be relative to the working"
                 f" directory. The given path: {path}, the working"
@@ -120,7 +120,7 @@ class Job(Endpoint):
         self._engine_config = engine_config
         self._request_headers = request_headers
 
-    def get(self, token: str) -> tuple[int, str]:
+    def get(self, token: str) -> tuple[int, str, int]:
         """
         Get request to /jobs/{token} which returns the details of a job.
         Refer to https://engine.gams.com/api/ for more details.
@@ -132,8 +132,8 @@ class Job(Endpoint):
 
         Returns
         -------
-        tuple[int, str]
-            Job status and its message
+        tuple[int, str, int]
+            Job status, job status message, and gams exit code
 
         Raises
         ------
@@ -149,8 +149,13 @@ class Job(Endpoint):
             response_data = r.data.decode("utf-8", errors="replace")
 
             if r.status == 200:
-                job_status = int(json.loads(response_data)["status"])
-                return job_status, STATUS_MAP[job_status]
+                info = json.loads(response_data)
+                job_status = int(info["status"])
+                return (
+                    job_status,
+                    STATUS_MAP[job_status],
+                    info["process_status"],
+                )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
@@ -351,7 +356,7 @@ class Job(Endpoint):
             r.status,
         )
 
-    def get_logs(self, token: str) -> int:
+    def get_logs(self, token: str) -> str:
         """
         Get request to /jobs/{token}/unread-logs which returns stdout of a job.
         Refer to https://engine.gams.com/api/ for more details.
@@ -363,8 +368,8 @@ class Job(Endpoint):
 
         Returns
         -------
-        int
-            Return code
+        str
+            Current output buffer
 
         Raises
         ------
@@ -385,10 +390,6 @@ class Job(Endpoint):
                 poll_logs_sleep_time = min(poll_logs_sleep_time + 1, 5)
                 time.sleep(poll_logs_sleep_time)
                 continue
-            elif r.status == 403:
-                # job still in queue
-                time.sleep(poll_logs_sleep_time)
-                continue
             elif r.status != 200:
                 raise GamsEngineException(
                     "Getting logs failed with status code: "
@@ -399,15 +400,11 @@ class Job(Endpoint):
                 )
             response_data = json.loads(response_data)
             stdout_data = response_data["message"]
-            if stdout_data != "":
-                print(stdout_data, end="")
 
             if response_data["queue_finished"] is True:
-                exitcode = response_data["gams_return_code"]
                 break
-            time.sleep(poll_logs_sleep_time)
 
-        return exitcode
+        return stdout_data
 
     def _create_zip_file(
         self,
@@ -528,7 +525,7 @@ class EngineClient:
         self._engine_config = self._get_engine_config()
         self._request_headers = {
             "Authorization": self._engine_config._get_auth_header(),
-            "User-Agent": "GAMS Python API",
+            "User-Agent": "GAMSPy EngineClient",
             "Accept": "application/json",
         }
 
@@ -650,7 +647,7 @@ class GAMSEngine(backend.Backend):
             self.client.tokens.append(token)
 
             if not self.is_async():
-                job_status, message = self.client.job.get(token)
+                job_status, message, _ = self.client.job.get(token)
 
                 if job_status not in STATUS_MAP.keys():
                     raise GamsEngineException(
@@ -670,19 +667,9 @@ class GAMSEngine(backend.Backend):
                     logger.info(f"Job status is {message}...")
                     job_status = self.client.job.get(token)
 
-                exit_code = self.client.job.get_logs(token)
-
-                if exit_code != 0:
-                    lst_path = os.path.join(
-                        self.container.working_directory,
-                        self.job_name + ".lst",
-                    )
-                    raise GamsEngineException(
-                        "Could not get the job logs. Return code is"
-                        f" {exit_code}. Check `{lst_path}`"
-                        " for further details.",
-                        gams_exit_code=exit_code,
-                    )
+                if self.output is not None:
+                    message = self.client.job.get_logs(token)
+                    self.output.write(message)
 
                 self.client.job.get_results(
                     token, self.container.working_directory
