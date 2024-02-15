@@ -38,7 +38,7 @@ def next_alias(symbol):
     from gamspy._symbols.alias import Alias
 
     current = symbol
-    if symbol.name.startswith("DenseDim"):
+    if symbol.name.startswith("DenseDim") or symbol.name.startswith("AliasOf"):
         prefix, num = symbol.name.split("_")
     else:
         prefix, num = f"AliasOf{symbol.name}", 1
