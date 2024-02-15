@@ -6,10 +6,13 @@ GAMSPy 0.11.9
 -------------------------------------------------------------------------------
 - General
   - Fix relative path issue of GAMS Engine backend.
+  - Implement GAMS Engine Client and consolidate NeosClient and EngineClient into one argument in solve.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
+  - Add tests for new GAMS Engine Client.
 - Documentation
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
+  - Add documentation for solving models asynchronously with GAMS Engine.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.8
