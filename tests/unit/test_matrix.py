@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 from gamspy import Alias, Container, Parameter, Set
 from gamspy.exceptions import ValidationError
+from gamspy.math import dim
 
 
 class MatrixSuite(unittest.TestCase):
@@ -235,6 +236,59 @@ class MatrixSuite(unittest.TestCase):
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
+    def test_square_matrix_mult_3(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Alias(self.m, name="j", alias_with=i)
+
+        a_recs = np.random.randint(1, 11, size=(3, 3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[i, i],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[i, i],
+            records=b_recs,
+            uels_on_axes=True,
+        )
+
+        c2 = (a @ b) @ (a @ b)
+        c = Parameter(self.m, name="c", domain=[i, i])
+        c[i, j] = c2[i, j]
+        c_recs = c.toDense()
+        self.assertTrue(
+            np.allclose(c_recs, (a_recs @ b_recs) @ (a_recs @ b_recs))
+        )
+
+    def test_square_matrix_mult_4(self):
+        a_recs = np.random.randint(1, 11, size=(3, 3))
+        b_recs = np.random.randint(1, 11, size=(3, 3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=dim(self.m, [3, 3]),
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=dim(self.m, [3, 3]),
+            records=b_recs,
+            uels_on_axes=True,
+        )
+
+        c2 = (a @ b) + a
+        c = Parameter(self.m, name="c", domain=dim(self.m, [3, 3]))
+        c[...] = c2
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, (a_recs @ b_recs) + (a_recs)))
+
     def test_batch_size_matches(self):
         n = Set(self.m, name="n", records=["n1", "n2", "n3"])
         m = Set(self.m, name="m", records=["m1", "m2", "m3"])
@@ -285,6 +339,47 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(len(r7.domain), 3)
         self.assertEqual(len(r7.controlled_domain), 1)
         self.assertNotEqual(r7.domain[-1], r7.domain[-2])
+
+    def test_domain_conflict_resolution_2(self):
+        m = self.m
+
+        vec = Parameter(self.m, name="vec", domain=dim(m, [3]))
+        mat = Parameter(self.m, name="mat", domain=dim(m, [3, 3]))
+        batched_mat = Parameter(
+            self.m, name="batched_mat", domain=dim(m, [3, 3, 3])
+        )
+
+        r2 = mat @ mat
+        self.assertEqual(len(r2.domain), 2)
+        self.assertEqual(r2.domain[0], mat.domain[0])
+        self.assertEqual(r2.domain[1], mat.domain[1])
+
+        # Add an exception to make this one work
+        # r3 = (vec @ mat)
+        # self.assertEqual(len(r3.domain), 1)
+        # self.assertEqual(r3.domain[0], vec.domain[0])
+
+        r4 = mat @ vec
+        self.assertEqual(len(r4.domain), 1)
+        self.assertEqual(r4.domain[0], vec.domain[0])
+
+        # This one is already bit weird
+        # r5 = vec @ batched_mat
+        # self.assertEqual(len(r5.domain), 2)
+        # self.assertEqual(len(r5.controlled_domain), 1)
+        # self.assertEqual(r5.domain[0], batched_mat.domain[0])
+
+        # This one does not work
+        # r6 = batched_mat @ vec
+        # self.assertEqual(len(r6.domain), 2)
+        # self.assertEqual(len(r6.controlled_domain), 1)
+        # self.assertEqual(r6.domain[0], batched_mat.domain[0])
+
+        r7 = batched_mat @ batched_mat
+        self.assertEqual(len(r7.domain), 3)
+        self.assertEqual(r7.domain[0], batched_mat.domain[0])
+        self.assertEqual(r7.domain[1], batched_mat.domain[1])
+        self.assertEqual(r7.domain[2], batched_mat.domain[2])
 
 
 def matrix_suite():
