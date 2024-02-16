@@ -49,7 +49,7 @@ class CmdSuite(unittest.TestCase):
                 check=True,
             )
 
-        if os.path.exists(license_path):
+        if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
             subprocess.run([
                 "gamspy",
                 "install",
@@ -77,7 +77,7 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
-        if os.path.exists(license_path):
+        if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
             subprocess.run([
                 "gamspy",
                 "install",
