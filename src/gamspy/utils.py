@@ -219,6 +219,14 @@ def _get_gamspy_base_directory() -> str:
     return gamspy_base_directory
 
 
+def _get_license_path(system_directory: str) -> str:
+    user_license_path = os.path.join(system_directory, "user_license.txt")
+    if os.path.exists(user_license_path):
+        return user_license_path
+
+    return os.path.join(system_directory, "gamslice.txt")
+
+
 def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.

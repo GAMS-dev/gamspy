@@ -53,6 +53,7 @@ class Local(backend.Backend):
     ) -> None:
         super().__init__(container, container._gdx_in, container._gdx_out)
         self.options = options
+        self.options.license = container._license_path
         self.output = output
         self.model = model
 
