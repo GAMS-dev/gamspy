@@ -74,10 +74,8 @@ class NeosSuite(unittest.TestCase):
         )
         client = NeosClient(
             email=os.environ["NEOS_EMAIL"],
-            username=os.environ["NEOS_USERNAME"],
-            password=os.environ["NEOS_PASSWORD"],
         )
-        transport.solve(backend="neos", neos_client=client)
+        transport.solve(backend="neos", client=client)
 
         import math
 
@@ -187,10 +185,8 @@ class NeosSuite(unittest.TestCase):
         )
         client = NeosClient(
             email=os.environ["NEOS_EMAIL"],
-            username=os.environ["NEOS_USERNAME"],
-            password=os.environ["NEOS_PASSWORD"],
         )
-        transport.solve(backend="neos", neos_client=client, solver="CONOPT")
+        transport.solve(backend="neos", client=client, solver="CONOPT")
 
         import math
 
@@ -251,7 +247,7 @@ class NeosSuite(unittest.TestCase):
             email=os.environ["NEOS_EMAIL"],
             is_blocking=False,
         )
-        transport.solve(backend="neos", neos_client=client)
+        transport.solve(backend="neos", client=client)
 
         job_number, job_password = client.jobs[-1]
         client.get_final_results(job_number, job_password)

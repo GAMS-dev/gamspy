@@ -163,7 +163,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             )
 
         if not isinstance(name, str):
-            raise TypeError(f"Name must of type `str` but found {type(name)}")
+            raise TypeError(f"Name must of type `str` but found {name}")
 
         try:
             symbol = container[name]
