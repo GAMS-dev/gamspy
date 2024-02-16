@@ -497,3 +497,12 @@ def _permute_domain(domain, dims):
     """
     new_domain = [domain[dim] for dim in dims]
     return new_domain
+
+
+def set_base_eq(set_a, set_b):
+    """
+    Checks if two sets are equal considering aliases as equal as well
+    """
+    set_a = getattr(set_a, "alias_with", set_a)
+    set_b = getattr(set_b, "alias_with", set_b)
+    return set_a == set_b
