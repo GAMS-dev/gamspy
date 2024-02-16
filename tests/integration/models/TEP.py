@@ -273,7 +273,7 @@ def main():
 
     loadflow.solve(options=Options(relative_optimality_gap=0, mip="CPLEX"))
 
-    print("Objective Function Value:  ", round(OF.toValue(), 3))
+    print("Objective Function Value:  ", round(loadflow.objective_value, 3))
 
 
 if __name__ == "__main__":

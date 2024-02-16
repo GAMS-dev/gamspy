@@ -118,9 +118,6 @@ def main():
     demand = Parameter(m, name="demand", domain=t, records=data_records()[1])
 
     # VARIABLES #
-    costThermal = Variable(
-        m, name="costThermal", description="cost of thermal units"
-    )
     p = Variable(
         m,
         name="p",
@@ -135,16 +132,17 @@ def main():
     # EQUATIONS #
     Genconst3 = Equation(m, name="Genconst3", type="regular", domain=[i, t])
     Genconst4 = Equation(m, name="Genconst4", type="regular", domain=[i, t])
-    costThermalcalc = Equation(m, name="costThermalcalc", type="regular")
     balance = Equation(m, name="balance", type="regular", domain=t)
     EMcalc = Equation(m, name="EMcalc", type="regular")
 
-    costThermalcalc[...] = costThermal == Sum(
+    # Objective Function; cost of thermal units
+    costThermalcalc = Sum(
         [t, i],
         gendata[i, "a"] * sqr(p[i, t])
         + gendata[i, "b"] * p[i, t]
         + gendata[i, "c"],
     )
+
     Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU"]
     Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD"]
     balance[t] = Sum(i, p[i, t]) >= demand[t]
@@ -161,7 +159,7 @@ def main():
         equations=m.getEquations(),
         problem="qcp",
         sense="min",
-        objective=costThermal,
+        objective=costThermalcalc,
     )
 
     # COUNTER SET
@@ -179,7 +177,7 @@ def main():
         gendata[i, "RD"] = gendata[i, "RD0"] * Rscale
         DEDcostbased.solve()
         report1[c, "Scale"] = Rscale
-        report1[c, "TC"] = costThermal.l
+        report1[c, "TC"] = DEDcostbased.objective_value
         report1[c, "EM"] = EM.l
 
     print("report1:  \n", report1.pivot().round(4))

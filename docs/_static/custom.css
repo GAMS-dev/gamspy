@@ -9,3 +9,10 @@
 .navbar-icon-links img.icon-link-image {
     height: 1.25em;
 }
+
+.icon-link-table {
+  width: 14px;
+  height: auto;
+  margin-left: 15px;
+  vertical-align: middle;
+}

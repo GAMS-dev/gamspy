@@ -88,6 +88,8 @@ def main():
     z.up[j, k].where[vc[j, k]] = n[k]
     thainavy.solve()
 
+    print("Objective Function: ", round(thainavy.objective_value, 3))
+
 
 if __name__ == "__main__":
     main()

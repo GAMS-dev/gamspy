@@ -183,7 +183,6 @@ def main():
     )
 
     # FREE VARIABLES #
-    of = Variable(m, name="of")
     TC = Variable(m, name="TC")
     CC = Variable(m, name="CC")
     WaterCost = Variable(m, name="WaterCost")
@@ -209,7 +208,6 @@ def main():
     balanceP = Equation(m, name="balanceP", type="regular", domain=t)
     balanceW = Equation(m, name="balanceW", type="regular", domain=t)
     costCoprodcalc = Equation(m, name="costCoprodcalc", type="regular")
-    Objective = Equation(m, name="Objective", type="regular")
     costwatercalc = Equation(m, name="costwatercalc", type="regular")
     ratio1 = Equation(m, name="ratio1", type="regular", domain=[c, t])
     ratio2 = Equation(m, name="ratio2", type="regular", domain=[c, t])
@@ -247,7 +245,6 @@ def main():
         + waterdata[w, "b"] * Water[w, t]
         + waterdata[w, "c"] * Uw[w, t],
     )
-    Objective[...] = of == TC + CC + WaterCost
     ratio1[c, t] = Pc[c, t] <= Wc[c, t] * Coproduct[c, "Rmax"]
     ratio2[c, t] = Pc[c, t] >= Wc[c, t] * Coproduct[c, "Rmin"]
     eq1[w, t] = Water[w, t] <= Uw[w, t] * waterdata[w, "Wmax"]
@@ -265,11 +262,13 @@ def main():
         equations=m.getEquations(),
         problem="minlp",
         sense="min",
-        objective=of,
+        objective=TC + CC + WaterCost,
     )
     DEDcostbased.solve()
 
-    print("Objective Function Value:  ", round(of.toValue(), 4))
+    print(
+        "Objective Function Value:  ", round(DEDcostbased.objective_value, 4)
+    )
 
 
 if __name__ == "__main__":

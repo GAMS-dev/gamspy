@@ -440,7 +440,7 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = self.container.temp_container
+        temp_container = self.container._temp_container
         temp_container.read(
             self.container._gdx_out,
             [
@@ -465,7 +465,7 @@ class Model:
                     temp_container[symbol_name].toValue(),
                 )
 
-        self.container.temp_container.data = {}
+        self.container._temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
         if (

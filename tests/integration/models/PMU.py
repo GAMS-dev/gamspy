@@ -77,23 +77,21 @@ def main():
     conex[bus, node].where[conex[node, bus]] = 1
 
     # VARIABLES #
-    OF = Variable(m, name="OF")
     PMU = Variable(m, name="PMU", type="binary", domain=bus)
 
     # EQUATIONS #
-    const1 = Equation(m, name="const1", type="regular")
-    const2 = Equation(m, name="const2", type="regular", domain=bus)
+    const1 = Sum(bus, PMU[bus])
 
-    const1[...] = OF == Sum(bus, PMU[bus])
+    const2 = Equation(m, name="const2", type="regular", domain=bus)
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
     placement = Model(
         m,
         name="placement",
-        equations=[const1, const2],
+        equations=[const2],
         problem="mip",
         sense="min",
-        objective=OF,
+        objective=const1,
     )
     placement.solve()
     print("PMU:  \n", PMU.toDict())
