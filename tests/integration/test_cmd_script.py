@@ -16,11 +16,15 @@ class CmdSuite(unittest.TestCase):
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
 
         if os.path.exists(license_path):
-            shutil.copy(license_path, os.path.join(os.getcwd(), "old_license.txt"))
+            shutil.copy(
+                license_path, os.path.join(os.getcwd(), "old_license.txt")
+            )
 
         license = "dummy license"
 
-        with open(os.path.join(this_folder, "my_license.txt"), "w") as license_file:
+        with open(
+            os.path.join(this_folder, "my_license.txt"), "w"
+        ) as license_file:
             license_file.write(license)
 
         _ = subprocess.run(
@@ -34,7 +38,9 @@ class CmdSuite(unittest.TestCase):
         )
 
         self.assertTrue(
-            os.path.exists(os.path.join(gamspy_base_directory, "user_license.txt"))
+            os.path.exists(
+                os.path.join(gamspy_base_directory, "user_license.txt")
+            )
         )
 
         with self.assertRaises(subprocess.CalledProcessError):
@@ -44,21 +50,21 @@ class CmdSuite(unittest.TestCase):
             )
 
         if os.path.exists(license_path):
-            subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    os.path.join(os.getcwd(), "old_license.txt"),
-                ]
-            )
+            subprocess.run([
+                "gamspy",
+                "install",
+                "license",
+                os.path.join(os.getcwd(), "old_license.txt"),
+            ])
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
 
         if os.path.exists(license_path):
-            shutil.copy(license_path, os.path.join(os.getcwd(), "old_license.txt"))
+            shutil.copy(
+                license_path, os.path.join(os.getcwd(), "old_license.txt")
+            )
 
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
@@ -66,18 +72,18 @@ class CmdSuite(unittest.TestCase):
         )
 
         self.assertFalse(
-            os.path.exists(os.path.join(gamspy_base_directory, "user_license.txt"))
+            os.path.exists(
+                os.path.join(gamspy_base_directory, "user_license.txt")
+            )
         )
 
         if os.path.exists(license_path):
-            subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    os.path.join(os.getcwd(), "old_license.txt"),
-                ]
-            )
+            subprocess.run([
+                "gamspy",
+                "install",
+                "license",
+                os.path.join(os.getcwd(), "old_license.txt"),
+            ])
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):
@@ -96,7 +102,9 @@ class CmdSuite(unittest.TestCase):
 
 def cmd_suite():
     suite = unittest.TestSuite()
-    tests = [CmdSuite(name) for name in dir(CmdSuite) if name.startswith("test_")]
+    tests = [
+        CmdSuite(name) for name in dir(CmdSuite) if name.startswith("test_")
+    ]
     suite.addTests(tests)
 
     return suite
