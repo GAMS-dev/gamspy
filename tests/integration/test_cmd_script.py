@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import unittest
 from pathlib import Path
@@ -12,6 +13,8 @@ class CmdSuite(unittest.TestCase):
     def test_install_license(self):
         this_folder = str(Path(__file__).parent)
         gamspy_base_directory = utils._get_gamspy_base_directory()
+        license_path = os.path.join(gamspy_base_directory, "user_license.txt")
+        shutil.copy(license_path, os.getcwd() + os.sep + "old_license.txt")
 
         license = "dummy license"
 
@@ -42,8 +45,18 @@ class CmdSuite(unittest.TestCase):
                 check=True,
             )
 
+        subprocess.run([
+            "gamspy",
+            "install",
+            "license",
+            os.getcwd() + os.sep + "old_license.txt",
+        ])
+
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
+        license_path = os.path.join(gamspy_base_directory, "user_license.txt")
+
+        shutil.copy(license_path, os.getcwd() + os.sep + "old_license.txt")
 
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
@@ -55,6 +68,13 @@ class CmdSuite(unittest.TestCase):
                 os.path.join(gamspy_base_directory, "user_license.txt")
             )
         )
+
+        subprocess.run([
+            "gamspy",
+            "install",
+            "license",
+            os.getcwd() + os.sep + "old_license.txt",
+        ])
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):
