@@ -455,7 +455,11 @@ class EngineSuite(unittest.TestCase):
             file.write("Set i / i1*i3 /;")
 
         token = client.job.post(os.getcwd(), gms_path)
-        client.job.get_logs(token)
+
+        status, _, _ = client.job.get(token)
+        while status != 10:
+            status, _, _ = client.job.get(token)
+            print(client.job.get_logs(token))
 
 
 def engine_suite():

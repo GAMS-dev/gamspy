@@ -356,7 +356,7 @@ class Job(Endpoint):
             r.status,
         )
 
-    def get_logs(self, token: str) -> str:
+    def get_logs(self, token: str) -> tuple[str, bool]:
         """
         Get request to /jobs/{token}/unread-logs which returns stdout of a job.
         Refer to https://engine.gams.com/api/ for more details.
@@ -376,35 +376,31 @@ class Job(Endpoint):
         GamsEngineException
             If get request has failed.
         """
-        poll_logs_sleep_time = 1
-
-        while True:
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "DELETE",
                 self._engine_config.host + f"/jobs/{token}/unread-logs",
                 headers=self._request_headers,
             )
             response_data = r.data.decode("utf-8", errors="replace")
+            response_data = json.loads(response_data)
+
             if r.status == 429:
-                # too many requests, slow down
-                poll_logs_sleep_time = min(poll_logs_sleep_time + 1, 5)
-                time.sleep(poll_logs_sleep_time)
+                time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
             elif r.status != 200:
                 raise GamsEngineException(
                     "Getting logs failed with status code: "
                     + str(r.status)
-                    + ". Message: "
-                    + response_data,
+                    + ". "
+                    + response_data["message"]
+                    + ".",
                     r.status,
                 )
-            response_data = json.loads(response_data)
             stdout_data = response_data["message"]
+            break
 
-            if response_data["queue_finished"] is True:
-                break
-
-        return stdout_data
+        return stdout_data, response_data["queue_finished"]
 
     def _create_zip_file(
         self,
@@ -663,13 +659,18 @@ class GAMSEngine(backend.Backend):
                         status_code=job_status,
                     )
 
-                while job_status in [-10, -2, 0, 1, 2]:
+                while job_status in [-10, -2, 0]:
                     logger.info(f"Job status is {message}...")
                     job_status = self.client.job.get(token)
 
-                if self.output is not None:
-                    message = self.client.job.get_logs(token)
-                    self.output.write(message)
+                while job_status in [1, 2]:
+                    message, is_finished = self.client.job.get_logs(token)
+
+                    if self.output is not None:
+                        self.output.write(message)
+
+                    if is_finished:
+                        job_status = 10
 
                 self.client.job.get_results(
                     token, self.container.working_directory
