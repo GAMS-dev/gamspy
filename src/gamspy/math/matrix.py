@@ -84,9 +84,22 @@ def trace(
         implicits.ImplicitParameter,
         Variable,
         implicits.ImplicitVariable,
-    ]
+    ],
+    axis1=0,
+    axis2=1,
 ):
-    raise NotImplementedError()
+    import gamspy._algebra.operation as operation
+
+    if len(x.domain) < 2:
+        raise ValidationError("Trace requires at least 2 dimensions")
+
+    if not utils.set_base_eq(x.domain[axis1], x.domain[axis2]):
+        raise ValidationError("Matrix dimensions are not equal")
+
+    domain = [i for i in x.domain]
+    domain[axis1] = domain[axis2]
+
+    return operation.Sum(domain[axis2], x[domain])
 
 
 def permute(

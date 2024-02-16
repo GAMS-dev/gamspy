@@ -7,6 +7,7 @@ import numpy as np
 from gamspy import Alias, Container, Parameter, Set
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
+from gamspy.math import trace
 
 
 class MatrixSuite(unittest.TestCase):
@@ -380,6 +381,66 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(r7.domain[0], batched_mat.domain[0])
         self.assertEqual(r7.domain[1], batched_mat.domain[1])
         self.assertEqual(r7.domain[2], batched_mat.domain[2])
+
+    def test_trace_on_matrix(self):
+        m = self.m
+
+        identity = np.eye(3, 3)
+        mat = Parameter(
+            self.m,
+            name="mat",
+            domain=dim(m, [3, 3]),
+            records=identity,
+            uels_on_axes=True,
+        )
+
+        trace_expr = trace(mat)
+        self.assertEqual(trace_expr.domain, [])
+        sc = Parameter(self.m, name="sc", domain=[])
+        sc[...] = trace(mat)
+        self.assertEqual(np.trace(identity), sc.toDense())
+
+        rand_recs = np.random.randint(1, 11, size=(3, 3))
+        mat.setRecords(rand_recs, uels_on_axes=True)
+        sc[...] = trace(mat)
+        self.assertEqual(np.trace(rand_recs), sc.toDense())
+
+        recs = np.ones((3, 5))
+        rect = Parameter(
+            self.m,
+            name="rect",
+            domain=dim(m, [3, 5]),
+            records=recs,
+            uels_on_axes=True,
+        )
+
+        self.assertRaises(ValidationError, lambda: trace(rect))
+
+    def test_trace_on_vector(self):
+        m = self.m
+        vec = Parameter(self.m, name="vec", domain=dim(m, [3]))
+        self.assertRaises(ValidationError, lambda: trace(vec))
+
+    def test_trace_on_batched_matrix(self):
+        m = self.m
+        recs = np.random.randint((128, 3, 3))
+        bm1 = Parameter(
+            self.m,
+            name="vec",
+            domain=dim(m, [128, 3, 3]),
+            records=recs,
+            uels_on_axes=True,
+        )
+
+        sc1 = Parameter(self.m, name="sc1", domain=dim(m, [128]))
+        expr1 = trace(bm1, axis1=1, axis2=2)
+        self.assertEqual(expr1.domain, dim(m, [128]))
+
+        sc1[...] = expr1
+        sc1_dens = sc1.toDense()
+        self.assertTrue(
+            np.allclose(sc1_dens, np.trace(recs, axis1=1, axis2=2))
+        )
 
 
 def matrix_suite():
