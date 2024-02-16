@@ -120,7 +120,7 @@ class Job(Endpoint):
         self._engine_config = engine_config
         self._request_headers = request_headers
 
-    def get(self, token: str) -> tuple[int, str, int]:
+    def get(self, token: str) -> tuple[int, str, int | None]:
         """
         Get request to /jobs/{token} which returns the details of a job.
         Refer to https://engine.gams.com/api/ for more details.
