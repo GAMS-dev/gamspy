@@ -355,20 +355,20 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(r2.domain[0], mat.domain[0])
         self.assertEqual(r2.domain[1], mat.domain[1])
 
-        # Add an exception to make this one work
-        # r3 = (vec @ mat)
-        # self.assertEqual(len(r3.domain), 1)
-        # self.assertEqual(r3.domain[0], vec.domain[0])
+        # Added an exception to make this one work
+        r3 = vec @ mat
+        self.assertEqual(len(r3.domain), 1)
+        self.assertEqual(r3.domain[0], vec.domain[0])
 
         r4 = mat @ vec
         self.assertEqual(len(r4.domain), 1)
         self.assertEqual(r4.domain[0], vec.domain[0])
 
-        # This one is already bit weird
-        # r5 = vec @ batched_mat
-        # self.assertEqual(len(r5.domain), 2)
-        # self.assertEqual(len(r5.controlled_domain), 1)
-        # self.assertEqual(r5.domain[0], batched_mat.domain[0])
+        # Added an exception to make this one work
+        r5 = vec @ batched_mat
+        self.assertEqual(len(r5.domain), 2)
+        self.assertEqual(len(r5.controlled_domain), 1)
+        self.assertEqual(r5.domain[0], batched_mat.domain[0])
 
         # This one does not work
         # r6 = batched_mat @ vec
@@ -423,7 +423,7 @@ class MatrixSuite(unittest.TestCase):
 
     def test_trace_on_batched_matrix(self):
         m = self.m
-        recs = np.random.randint((128, 3, 3))
+        recs = np.random.randint(1, 11, size=(128, 3, 3))
         bm1 = Parameter(
             self.m,
             name="vec",

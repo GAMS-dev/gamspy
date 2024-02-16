@@ -221,11 +221,17 @@ def _validate_matrix_mult_dims(left, right):
         if not utils.set_base_eq(left.domain[0], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
-        sum_domain = left.domain[0]
+        if utils.set_base_eq(right.domain[0], right.domain[1]):
+            sum_domain = right.domain[1]
+            right_domain = right.domain[0]
+        else:
+            sum_domain = right.domain[0]
+            right_domain = right.domain[1]
+
         while sum_domain == right.domain[1] or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
-        return [sum_domain], [sum_domain, right.domain[1]], sum_domain
+        return [sum_domain], [sum_domain, right_domain], sum_domain
     elif lr == (2, 1):
         # Matrix vector, ordinary
         if not utils.set_base_eq(left.domain[1], right.domain[0]):
