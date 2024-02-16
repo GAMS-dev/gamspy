@@ -12,8 +12,6 @@ test-leg-3.9:
     - conda activate gamspy-env-3.9
     - pip install wheel build
     - python scripts/reinstall.py
-    - echo $GAMS_LICENSE > gamspy_gams_license
-    - gamspy install license gamspy_gams_license
     - gamspy install solver mpsge
     - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
@@ -43,8 +41,6 @@ test-deg-3.9:
     - conda install -c anaconda freetds
     - pip install wheel build
     - python scripts/reinstall.py
-    - echo $GAMS_LICENSE > gamspy_gams_license
-    - gamspy install license gamspy_gams_license
     - gamspy install solver mpsge
     - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
@@ -69,8 +65,6 @@ test-dac-3.9:
     - conda install -c anaconda freetds
     - pip install wheel build
     - python scripts/reinstall.py
-    - echo $GAMS_LICENSE > gamspy_gams_license
-    - gamspy install license gamspy_gams_license
     - gamspy install solver mpsge
     - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
@@ -99,8 +93,6 @@ test-wei-3.9:
     - python --version
     - python -m pip install wheel build
     - python scripts/reinstall.py
-    - $env:gamspy_gams_license | Out-File gamspy_gams_license.txt
-    - gamspy install license gamspy_gams_license.txt
     - gamspy install solver mpsge
     - $env:DELAYED_EXECUTION = '1'; coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
     - coverage report -m --data-file=".coverage"
