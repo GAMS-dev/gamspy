@@ -99,6 +99,7 @@ test-wei-3.8:
     - python -m pip install wheel build
     - python scripts/reinstall.py
     - $env:GAMS_LICENSE | Out-File gamspy_gams_license.txt
+    - type C:\Miniconda\envs\gamspy-env-3.8\Lib\site-packages\gamspy_base\user_license.txt
     - gamspy install license gamspy_gams_license.txt
     - gamspy install solver mpsge
     - $env:DELAYED_EXECUTION = '0'; coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
