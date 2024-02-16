@@ -14,12 +14,12 @@ class CmdSuite(unittest.TestCase):
         this_folder = str(Path(__file__).parent)
         gamspy_base_directory = utils._get_gamspy_base_directory()
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
-        shutil.copy(license_path, os.getcwd() + os.sep + "old_license.txt")
+        shutil.copy(license_path, os.path.join(os.getcwd(), "old_license.txt"))
 
         license = "dummy license"
 
         with open(
-            this_folder + os.sep + "my_license.txt", "w"
+            os.path.join(this_folder, "my_license.txt"), "w"
         ) as license_file:
             license_file.write(license)
 
@@ -28,7 +28,7 @@ class CmdSuite(unittest.TestCase):
                 "gamspy",
                 "install",
                 "license",
-                this_folder + os.sep + "my_license.txt",
+                os.path.join(this_folder, "my_license.txt"),
             ],
             check=True,
         )
@@ -49,14 +49,14 @@ class CmdSuite(unittest.TestCase):
             "gamspy",
             "install",
             "license",
-            os.getcwd() + os.sep + "old_license.txt",
+            os.path.join(os.getcwd(), "old_license.txt"),
         ])
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
 
-        shutil.copy(license_path, os.getcwd() + os.sep + "old_license.txt")
+        shutil.copy(license_path, os.path.join(os.getcwd(), "old_license.txt"))
 
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
@@ -73,7 +73,7 @@ class CmdSuite(unittest.TestCase):
             "gamspy",
             "install",
             "license",
-            os.getcwd() + os.sep + "old_license.txt",
+            os.path.join(os.getcwd(), "old_license.txt"),
         ])
 
     def test_install_solver(self):
