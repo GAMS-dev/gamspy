@@ -127,6 +127,8 @@ class Container(gt.Container):
 
         super().__init__(system_directory=system_directory)
 
+        self._license_path = utils._get_license_path(self.system_directory)
+
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
