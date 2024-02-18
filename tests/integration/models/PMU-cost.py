@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_PMU-cost.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Min Cost PMU allocation for IEEE 14 network without considering zero injection nodes
 
 For more details please refer to Chapter 8 (Gcode8.2), of the following book:
@@ -78,23 +83,21 @@ def main():
     cost[bus] = 1 + 0.1 * Sum(node.where[conex[bus, node]], 1)
 
     # VARIABLES #
-    OFc = Variable(m, name="OFc")
     PMU = Variable(m, name="PMU", type="binary", domain=bus)
 
     # EQUATIONS #
-    const1 = Equation(m, name="const1", type="regular")
-    const2 = Equation(m, name="const2", type="regular", domain=bus)
+    const1 = Sum(bus, cost[bus] * PMU[bus])
 
-    const1[...] = OFc == Sum(bus, cost[bus] * PMU[bus])
+    const2 = Equation(m, name="const2", type="regular", domain=bus)
     const2[bus] = PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= 1
 
     placement0 = Model(
         m,
         name="placement0",
-        equations=[const1, const2],
+        equations=[const2],
         problem="mip",
         sense="min",
-        objective=OFc,
+        objective=const1,
     )
     placement0.solve(options=Options(relative_optimality_gap=0))
     print("PMU:  \n", PMU.toDict())

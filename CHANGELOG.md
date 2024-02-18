@@ -1,14 +1,27 @@
 GAMSPy CHANGELOG
 ================
 
--------------------------------------------------------------------------------
-GAMSPy 0.12.0
+GAMSPy 0.11.9
 -------------------------------------------------------------------------------
 - General
+  - Fix relative path issue of GAMS Engine backend.
+  - Use $loadDC instead of $load to better catch domain violations.
+  - Bypass constructor while creating a Container copy.
+  - Do not execute_unload in case there is no dirty symbols to unload.
+  - Update the behavior of `gamspy install/uninstall license`.
+  - Implement GAMS Engine Client and consolidate NeosClient and EngineClient into one argument in solve.
   - Implement GAMS MIRO integration.
 - Testing
+  - Add test for GAMS Engine extra model files with incorrect relative path.
+  - Add tests for new GAMS Engine Client.
+  - Add a test to catch domain violation.
   - Add tests for GAMS MIRO.
+  - Remove declaration of objective variables and functions and add the equations into Python variables.
+  - Add a new test to verify the license installation/uninstallation behavior.
 - Documentation
+  - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
+  - Add documentation for solving models asynchronously with GAMS Engine.
+  - Modify model library table generation script to add more information and better table styling.
   - Add documentation of GAMS MIRO integration.
 
 -------------------------------------------------------------------------------
@@ -17,8 +30,15 @@ GAMSPy 0.11.8
 - General
   - Allow assigning VariableType enum or EquationType enum as an attribute after object creation for Equation and Variable.
   - Fix running twice on symbol declaration with records
+  - Return better error messages for incorrectly provided solver, options, and output arguments.
+  - Fix missing uels_on_axes argument in setRecords.
+  - Start using pylint to improve code quality.
 - Testing
   - Add tests for assigning type to Variable and Equation after creation.
+  - Add models information at the top of each model's docstring.
+  - Add tests for setRecords with uels on axes.
+- Documentation
+  - Add docs for translating GAMS Macros to GAMSPy.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.7

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF2bus.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Optimal power flow for a simple two-bus system
 
 For more details please refer to Chapter 6 (Gcode6.1), of the following book:
@@ -70,17 +75,15 @@ def main():
 
     # VARIABLES #
     P = Variable(m, name="P", domain=gen)
-    OF = Variable(m, name="OF")
     delta = Variable(m, name="delta", domain=bus)
     P12 = Variable(m, name="P12")
 
     # EQUATIONS #
-    eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1[...] = OF == Sum(
+    eq1 = Sum(
         gen,
         data[gen, "a"] * P[gen] * P[gen]
         + data[gen, "b"] * P[gen]
@@ -102,7 +105,7 @@ def main():
         equations=m.getEquations(),
         problem="qcp",
         sense="min",
-        objective=OF,
+        objective=eq1,
     )
     OPF.solve()
 

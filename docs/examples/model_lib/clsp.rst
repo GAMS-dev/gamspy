@@ -2,8 +2,8 @@
 
 .. _clsp:
 
-from gamspy import Container
-============================
+Capacitated Lot-Sizing Problem (CLSP)
+=====================================
 
 :download:`clsp.py <../../../tests/integration/models/clsp.py>` 
 

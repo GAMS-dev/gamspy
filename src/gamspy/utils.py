@@ -80,7 +80,8 @@ def getInstalledSolvers() -> list[str]:
     user_platform = "Windows" if platform.system() == "Windows" else "rest"
 
     with open(
-        gamspy_base.directory + os.sep + capabilities_file[user_platform]
+        gamspy_base.directory + os.sep + capabilities_file[user_platform],
+        encoding="utf-8",
     ) as capabilities:
         for line in capabilities:
             if line == "DEFAULTS\n":
@@ -218,6 +219,14 @@ def _get_gamspy_base_directory() -> str:
     return gamspy_base_directory
 
 
+def _get_license_path(system_directory: str) -> str:
+    user_license_path = os.path.join(system_directory, "user_license.txt")
+    if os.path.exists(user_license_path):
+        return user_license_path
+
+    return os.path.join(system_directory, "gamslice.txt")
+
+
 def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.
@@ -260,14 +269,16 @@ def _open_gdx_file(system_directory: str, load_from: str):
         gdxHandle = gdx.new_gdxHandle_tp()
         rc = gdx.gdxCreateD(gdxHandle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
-    except AssertionError:
-        raise GamspyException("GAMSPy could not create gdx handle.")
+    except AssertionError as e:
+        raise GamspyException("GAMSPy could not create gdx handle.") from e
 
     try:
         rc = gdx.gdxOpenRead(gdxHandle, load_from)
         assert rc[0]
-    except AssertionError:
-        raise GamspyException("GAMSPy could not open gdx file to read from.")
+    except AssertionError as e:
+        raise GamspyException(
+            "GAMSPy could not open gdx file to read from."
+        ) from e
 
     return gdxHandle
 
@@ -294,7 +305,7 @@ def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
 
 
 def _map_special_values(value: float):
-    if value in SPECIAL_VALUE_MAP.keys():
+    if value in SPECIAL_VALUE_MAP:
         return SPECIAL_VALUE_MAP[value]
 
     return value
@@ -362,8 +373,8 @@ def _get_matching_paranthesis_indices(string: str) -> dict:
         if character == ")":
             try:
                 matching_indices[stack.pop()] = index
-            except IndexError:
-                raise AssertionError("Too many closing parentheses!")
+            except IndexError as e:
+                raise AssertionError("Too many closing parentheses!") from e
 
     if stack:
         raise AssertionError("Too many opening parentheses!")

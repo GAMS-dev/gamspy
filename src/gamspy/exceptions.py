@@ -37,6 +37,23 @@ class GamspyException(Exception):
     """Plain Gamspy exception."""
 
 
+class GamsEngineException(GamspyException):
+    def __init__(
+        self,
+        message: str,
+        return_code: int,
+        status_code: int | None = None,
+        gams_exit_code: int | None = None,
+    ) -> None:
+        self.message = message
+        self.return_code = return_code
+        self.status_code = status_code
+        self.gams_exit_code = gams_exit_code
+
+    def __str__(self) -> str:
+        return self.message
+
+
 class ValidationError(Exception):
     """An error while validating data."""
 
@@ -125,7 +142,7 @@ def customize_exception(
 
     lst_path = workspace._working_directory + os.path.sep + lst_filename
 
-    with open(lst_path) as lst_file:
+    with open(lst_path, encoding="utf-8") as lst_file:
         all_lines = lst_file.readlines()
         num_lines = len(all_lines)
 

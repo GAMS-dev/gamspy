@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EnergyHub.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Optimal operation of energy hub
 
 For more details please refer to Chapter 10 (Gcode10.3), of the following book:
@@ -13,7 +18,7 @@ email: alireza.soroudi@gmail.com
 We do request that publications derived from the use of the developed GAMS code
 explicitly acknowledge that fact by citing
 Soroudi, Alireza. Power System Optimization Modeling in GAMS. Springer, 2017.
-DOI: doi.org/10.1007/978-3-319-62350-4
+DOI: doi.org/10.1007/978-3-319-62350-
 """
 
 from __future__ import annotations
@@ -96,8 +101,6 @@ def main():
     eta_hc = Parameter(m, name="eta_hc", records=0.95)
 
     # VARIABLES #
-    cost = Variable(m, name="cost", type="free")
-
     E = Variable(m, name="E", type="positive", domain=t)
     G = Variable(m, name="G", type="positive", domain=t)
     H1 = Variable(m, name="H1", type="positive", domain=t)
@@ -106,13 +109,13 @@ def main():
     H2.up[t] = CBmax
 
     # EQUATIONS #
-    eq1 = Equation(m, name="eq1", type="regular")
+    eq1 = Sum(t, data[t, "lamda"] * E[t] + 12 * G[t])
+
     eq2 = Equation(m, name="eq2", type="regular", domain=t)
     eq3 = Equation(m, name="eq3", type="regular", domain=t)
     eq4 = Equation(m, name="eq4", type="regular", domain=t)
     eq5 = Equation(m, name="eq5", type="regular", domain=t)
 
-    eq1[...] = cost == Sum(t, data[t, "lamda"] * E[t] + 12 * G[t])
     eq2[t] = eta_ee * E[t] == data[t, "De"]
     eq3[t] = H1[t] == data[t, "Dh"]
     eq4[t] = eta_ghf * G[t] == H1[t] + H2[t]
@@ -124,7 +127,7 @@ def main():
         equations=m.getEquations(),
         problem="lp",
         sense="min",
-        objective=cost,
+        objective=eq1,
     )
     hub.solve()
 

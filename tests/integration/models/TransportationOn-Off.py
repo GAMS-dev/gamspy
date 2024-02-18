@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TransportationOn-Off.html
+## LICENSETYPE: Demo
+## MODELTYPE: MINLP
+
+
 Transportation model with On/off state modeling of production side
 
 For more details please refer to Chapter 2 (Gcode2.12), of the following book:
@@ -80,19 +85,21 @@ def main():
     )
 
     # VARIABLES #
-    of = Variable(m, name="of", type="free")
     x = Variable(m, name="x", type="free", domain=[i, j])
     P = Variable(m, name="P", type="free", domain=i)
     U = Variable(m, name="U", type="binary", domain=i)
 
     # EQUATIONS #
-    eq1 = Equation(m, name="eq1", type="regular")
+
+    # Objective Function
+    eq1 = Sum([i, j], c[i, j] * sqr(x[i, j]))
+
+    # Constraints
     eq2 = Equation(m, name="eq2", type="regular", domain=i)
     eq3 = Equation(m, name="eq3", type="regular", domain=i)
     eq4 = Equation(m, name="eq4", type="regular", domain=j)
     eq5 = Equation(m, name="eq5", type="regular", domain=i)
 
-    eq1[...] = of == Sum([i, j], c[i, j] * sqr(x[i, j]))
     eq2[i] = P[i] <= data[i, "Pmax"] * U[i]
     eq3[i] = P[i] >= data[i, "Pmin"] * U[i]
     eq4[j] = Sum(i, x[i, j]) >= demand[j]
@@ -109,11 +116,11 @@ def main():
         equations=m.getEquations(),
         problem="minlp",
         sense="min",
-        objective=of,
+        objective=eq1,
     )
     minlp1.solve()
 
-    print("Objective Function Value:  ", round(of.toValue(), 4))
+    print("Objective Function Value:  ", round(minlp1.objective_value, 4))
 
 
 if __name__ == "__main__":

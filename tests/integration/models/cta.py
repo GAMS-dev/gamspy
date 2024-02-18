@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cta.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## DATAFILES: cta.xlsx
+## KEYWORDS: mixed integer linear programming, statistical disclosure limitations
+
+
 Controlled Tabular Adjustments (CTA)
 
 Statistical agencies publish data which contains items that need to be
@@ -16,9 +23,6 @@ Lawrence H Cox, James P Kelly and Rahul J Patil, Computational Aspects
 of Controlled Tabular Adjustments: Algorithms and Analysis, in The Next
 Wave in Computing, Optimization, and Decision Technologies, Eds Bruce L Golden,
 S Raghavan and Edward A Wasil, Springer, 2005, pp 45-59.
-
-Keywords: mixed integer linear programming, statistical disclosure limitations
-
 """
 
 from __future__ import annotations

@@ -68,6 +68,7 @@ class EquationType(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -184,17 +185,17 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             )
 
         if not isinstance(name, str):
-            raise TypeError(f"Name must of type `str` but found {type(name)}")
+            raise TypeError(f"Name must of type `str` but found {name}")
 
         try:
             symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
-            else:
-                raise TypeError(
-                    f"Cannot overwrite symbol `{name}` in container"
-                    " because it is not an Equation object)"
-                )
+
+            raise TypeError(
+                f"Cannot overwrite symbol `{name}` in container"
+                " because it is not an Equation object)"
+            )
         except KeyError:
             return object.__new__(cls)
 
@@ -228,35 +229,28 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             has_symbol = True
 
         if has_symbol:
-            try:
-                type = cast_type(type)
-                if self.type != type.casefold():
-                    raise TypeError(
-                        "Cannot overwrite symbol in container unless equation"
-                        f" types are equal: `{self.type}` !="
-                        f" `{type.casefold()}`"
-                    )
+            type = cast_type(type)
+            if self.type != type.casefold():
+                raise TypeError(
+                    "Cannot overwrite symbol in container unless equation"
+                    f" types are equal: `{self.type}` !="
+                    f" `{type.casefold()}`"
+                )
 
-                if any(
-                    d1 != d2
-                    for d1, d2 in itertools.zip_longest(self.domain, domain)
-                ):
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless symbol"
-                        " domains are equal"
-                    )
+            if any(
+                d1 != d2
+                for d1, d2 in itertools.zip_longest(self.domain, domain)
+            ):
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless symbol"
+                    " domains are equal"
+                )
 
-                if self.domain_forwarding != domain_forwarding:
-                    raise ValueError(
-                        "Cannot overwrite symbol in container unless"
-                        " 'domain_forwarding' is left unchanged"
-                    )
-
-            except ValueError as err:
-                raise ValueError(err)
-
-            except TypeError as err:
-                raise TypeError(err)
+            if self.domain_forwarding != domain_forwarding:
+                raise ValueError(
+                    "Cannot overwrite symbol in container unless"
+                    " 'domain_forwarding' is left unchanged"
+                )
 
             # reset some properties
             self._requires_state_check = True
@@ -317,7 +311,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._infeas = self._create_attr("infeas")
 
             if records is not None:
-                self.setRecords(records)
+                self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
 
@@ -383,7 +377,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
             assignment = assignment == 0
 
-        if self.type in non_regular_map.keys():
+        if self.type in non_regular_map:
             assignment.replace_operator(non_regular_map[self.type])
 
         statement = expression.Expression(

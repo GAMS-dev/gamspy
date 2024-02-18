@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_food.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, food manufacturing, blending problem
+
+
 Food Manufacturing Problem - Blending of Oils (FOOD)
 
 The problem is to plan the blending of five kinds of oil, organized in two
@@ -41,9 +47,6 @@ This example is taken from the Cplex 12 User's Manual
 
 Williams, H P, Model Building in Mathematical Programming. John Wiley
 and Sons, 1978.
-
-Keywords: mixed integer linear programming, food manufacturing, blending
-problem
 """
 
 from __future__ import annotations
@@ -236,10 +239,8 @@ def main():
         domain=[m, p],
         type="positive",
     )
-    profit = gp.Variable(c, name="profit", description="objective variable")
 
     # Equation
-    defObj = gp.Equation(c, name="defObj", description="objective")
     defUsePv = gp.Equation(
         c,
         name="defUsePv",
@@ -289,9 +290,11 @@ def main():
         description="if some vegetable raw oil is use we also need to use o1",
     )
 
-    defObj[...] = profit == gp.Sum(m, sp * produce[m]) - gp.Sum(
-        (m, p), cost[m, p] * buy[m, p]
-    ) - gp.Sum((m, p), sc * store[m, p])
+    profit = (
+        gp.Sum(m, sp * produce[m])
+        - gp.Sum((m, p), cost[m, p] * buy[m, p])
+        - gp.Sum((m, p), sc * store[m, p])
+    )
     defUsePv[m] = gp.Sum(pv, use[m, pv]) <= maxusepv
     defUsePnv[m] = gp.Sum(pnv, use[m, pnv]) <= maxusepnv
     defProduce[m] = produce[m] == gp.Sum(p, use[m, p])

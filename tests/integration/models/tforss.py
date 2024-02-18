@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_tforss.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: tforss.gdx
+## KEYWORDS: linear programming, forestry, scenario analysis, investment planning, forest management planning
+
+
 Antalya Forestry Model - Steady State (TFORSS)
 
 This model finds the best management plan for new forests in a steady state
@@ -7,9 +14,6 @@ condition.
 
 Bergendorff, H, Glenshaw, P, and Meeraus, A, The Planning of Investment
 Programs in the Paper Industry. Tech. rep., The World Bank, 1980.
-
-Keywords: linear programming, forestry, scenario analysis, investment planning,
-          forest management planning
 """
 
 from __future__ import annotations
@@ -99,7 +103,6 @@ def main():
     asales = Equation(cont, name="asales", description="sales revenue")
     acutc = Equation(cont, name="acutc", description="cutting cost")
     aplnt = Equation(cont, name="aplnt", description="planting cost")
-    benefit = Equation(cont, name="benefit")
 
     # Variable
     v = Variable(
@@ -160,11 +163,6 @@ def main():
         name="phip",
         description="planting cost             (1000us$ per year)",
     )
-    phi = Variable(
-        cont,
-        name="phi",
-        description="total benefits             (discounted cost)",
-    )
 
     lbal[cl] = r[cl] == Sum([s, k, at], ymf[at, k, s, cl] * v[s, k, at])
 
@@ -188,7 +186,8 @@ def main():
         [s, k, at], v[s, k, at] * (1 + rho) ** age[at]
     )
 
-    benefit[...] = phi == phix - phik - phir - phil - phip
+    # Objective Function; total benefits             (discounted cost)
+    benefit = phix - phik - phir - phil - phip
 
     # Model definition
     forest = Model(
@@ -197,7 +196,7 @@ def main():
         equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MAX,
-        objective=phi,
+        objective=benefit,
     )
 
     # Case Selection and Report Definitions

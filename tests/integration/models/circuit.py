@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_circuit.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Optimal design of an electrical circuit.
 
 Ratschek, H., Rokne, J., A circuit design problem. J. Global Opt., 3,

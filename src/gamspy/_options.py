@@ -36,8 +36,6 @@ from gams import GamsWorkspace
 from gams import SymbolUpdateType
 from pydantic import BaseModel
 
-from gamspy.exceptions import ValidationError
-
 logger = logging.getLogger("Options")
 logger.setLevel(logging.INFO)
 
@@ -307,11 +305,6 @@ def _map_options(
         )
 
     if options is not None:
-        if not isinstance(options, Options):
-            raise ValidationError(
-                f"options must be of type Option but found {type(options)}"
-            )
-
         gams_options = _set_options(gams_options, options, is_seedable)
 
     gams_options = _set_trace_options(

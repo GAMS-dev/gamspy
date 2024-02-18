@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Floudas, C.A., Pardalos, P.M., et al. Handbook of test problems in local and global
 optimization. Kluwer Academic Publishers, Dordrecht, 1999
 Chapter 8. Section: Phase and Chemical Equilibrium Problems-Equations of State
@@ -89,7 +93,6 @@ def main():
     a["3", "3"] = 0.63263
 
     # VARIABLES #
-    dist = Variable(m, name="dist", description="tangent plane distance")
     x = Variable(
         m,
         name="x",
@@ -109,12 +112,6 @@ def main():
     )
 
     # EQUATIONS #
-    obj = Equation(
-        m,
-        name="obj",
-        type="regular",
-        description="objective (tangent plane distance)",
-    )
     eos = Equation(
         m,
         name="eos",
@@ -134,8 +131,8 @@ def main():
         description="mole fractions sum to 1",
     )
 
-    # Objective function to be minimized:
-    obj[...] = dist == (
+    # Objective function to be minimized: tangent plane distance
+    dist = (
         Sum(i, x[i] * gams_math.log(x[i]))
         + bmix / (z - bmix)
         - gams_math.log(z - bmix)

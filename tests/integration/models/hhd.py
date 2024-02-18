@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Human Heart Dipole
 The human heart dipole problem consists of the experimental electrolytic
 determination of the resultant dipole moment in the human heart.
@@ -75,7 +79,6 @@ def main():
     x6 = Variable(m, name="x6")
     x7 = Variable(m, name="x7")
     x8 = Variable(m, name="x8")
-    obj = Variable(m, name="obj")
 
     # EQUATIONS #
     e1 = Equation(m, name="e1", type="regular")
@@ -86,7 +89,6 @@ def main():
     e6 = Equation(m, name="e6", type="regular")
     e7 = Equation(m, name="e7", type="regular")
     e8 = Equation(m, name="e8", type="regular")
-    e = Equation(m, name="e", type="regular")
 
     e1[...] = x1 + x2 - summx == 0
     e2[...] = x3 + x4 - summy == 0
@@ -125,8 +127,6 @@ def main():
         == 0
     )
 
-    e[...] = obj == 1
-
     # Initial point (Variant 1)
     # x1.l[...] = 0.299
     # x2.l[...] = 0.186
@@ -162,12 +162,11 @@ def main():
         name="hhd",
         equations=m.getEquations(),
         problem="nlp",
-        sense="MIN",
-        objective=obj,
+        sense="FEASIBILITY",
     )
     hhd.solve()
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
+    print("Objective Function Value:  ", round(hhd.objective_value, 4))
 
     # End hhd
 

@@ -148,7 +148,8 @@ class Expression(operable.Operable):
 
         if self.data in ["..", "="]:
             return f"{out_str};"
-        elif self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
+
+        if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
             return out_str
 
         return f"({out_str})"
@@ -226,6 +227,6 @@ class Expression(operable.Operable):
 
                 current = current.right if hasattr(current, "right") else None
             else:
-                break
+                break  # pragma: no cover
 
         return list(set(variables))

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Sharpe.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## DATAFILES: Sharpe.gdx
+
+
 Sharpe model
 
 Sharpe.gms: Sharpe model.
@@ -57,7 +63,6 @@ def main():
     d_bar = Variable(
         m, name="d_bar", description="Portfolio expected excess return"
     )
-    z = Variable(m, name="z", description="Objective function value")
 
     # EQUATIONS #
     ReturnDef = Equation(
@@ -75,11 +80,6 @@ def main():
         name="NormalCon",
         description="Equation defining the normalization contraint",
     )
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        description="Objective function definition",
-    )
 
     ReturnDef[...] = d_bar == Sum(ii, ExExpectedReturns[ii] * x[ii])
 
@@ -87,7 +87,8 @@ def main():
 
     NormalCon[...] = Sum(ii, x[ii]) == 1
 
-    ObjDef[...] = z == d_bar / gams_math.sqrt(PortVariance)
+    # Objective Function
+    ObjDef = d_bar / gams_math.sqrt(PortVariance)
 
     # Put strictly positive bound on Variance to keep the model out of trouble:
     PortVariance.lo[...] = 0.001
@@ -95,14 +96,14 @@ def main():
     Sharpe = Model(
         m,
         name="Sharpe",
-        equations=[ReturnDef, VarDef, NormalCon, ObjDef],
+        equations=[ReturnDef, VarDef, NormalCon],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=z,
+        objective=ObjDef,
     )
     Sharpe.solve()
 
-    print("Objective Function Variable: ", round(z.records.level[0], 3))
+    print("Objective Function Variable: ", round(Sharpe.objective_value, 3))
 
     current_port_variance = 0
     results = []

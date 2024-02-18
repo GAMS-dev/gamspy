@@ -12,7 +12,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
-    from gamspy._backend.engine import EngineConfig, GAMSEngine
+    from gamspy._backend.engine import GAMSEngine, EngineClient
     from gamspy._backend.neos import NeosClient, NEOSServer
     from gamspy._backend.local import Local
     from gams import GamsOptions
@@ -52,27 +52,26 @@ def backend_factory(
     options: GamsOptions | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
-    engine_config: EngineConfig | None = None,
-    neos_client: NeosClient | None = None,
+    client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, neos_client, model)
+        return NEOSServer(container, options, client, model)
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, engine_config, options, output, model)
+        return GAMSEngine(container, client, options, output, model)
     elif backend == "local":
         from gamspy._backend.local import Local
 
         return Local(container, options, output, model)
-    else:
-        raise ValidationError(
-            f"`{backend}` is not a valid backend. Possible backends:"
-            " local, engine, and neos"
-        )
+
+    raise ValidationError(
+        f"`{backend}` is not a valid backend. Possible backends:"
+        " local, engine, and neos"
+    )
 
 
 class Backend(ABC):
@@ -93,7 +92,6 @@ class Backend(ABC):
         )
         self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
-        # print(f"{modified_names=}")
         self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
@@ -108,7 +106,9 @@ class Backend(ABC):
     def prepare_summary(self, working_directory: str, trace_file: str):
         from gamspy._model import ModelStatus
 
-        with open(os.path.join(working_directory, trace_file)) as file:
+        with open(
+            os.path.join(working_directory, trace_file), encoding="utf-8"
+        ) as file:
             line = file.readlines()[-1]
             (
                 _,

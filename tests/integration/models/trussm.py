@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Truss Toplogy Design with Multiple Loads (TRUSSM)
 
 A structure of n linear elastic bars connects a set of m nodes.

@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Solving complex linear algebraic systems of equations
 
 References
@@ -62,9 +66,6 @@ def main():
     ix = Variable(
         m, name="ix", domain=i, description="imaginary part of the solution"
     )
-    obj = Variable(
-        m, name="obj", description="variable of a virtual objective"
-    )
 
     # EQUATIONS #
     real = Equation(
@@ -81,11 +82,7 @@ def main():
         domain=i,
         description="imaginary part of the system",
     )
-    eobj = Equation(
-        m, name="eobj", type="regular", description="name of the objective"
-    )
 
-    eobj[...] = obj == 0
     real[i] = (
         Sum(j, data["real", i, j] * rx[j] - data["imag", i, j] * ix[j])
         == data["real", i, "rhs"]
@@ -100,8 +97,7 @@ def main():
         name="syscomp",
         equations=m.getEquations(),
         problem="lp",
-        sense="MIN",
-        objective=obj,
+        sense="FEASIBILITY",
     )
     syscomp.solve()
 
@@ -111,7 +107,9 @@ def main():
     rep["rx", i] = rx.l[i]
     rep["ix", i] = ix.l[i]
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4), "\n")
+    print(
+        "Objective Function Value:  ", round(syscomp.objective_value, 4), "\n"
+    )
     print("Solution Summary:\n", rep.pivot().round(3))
 
     # End of SysComp

@@ -49,8 +49,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._options import Options
-    from gamspy._backend.engine import EngineConfig
+    from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
+    from gamspy._options import ModelInstanceOptions
     import pandas as pd
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
@@ -78,6 +79,7 @@ class Problem(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -93,6 +95,7 @@ class Sense(Enum):
 
     @classmethod
     def values(cls):
+        """Convenience function to return all values of enum"""
         return list(cls._value2member_map_.keys())
 
     def __str__(self) -> str:
@@ -196,9 +199,9 @@ class Model:
         self,
         container: Container,
         name: str,
-        problem: Problem,
+        problem: Problem | str,
         equations: list[Equation] = [],
-        sense: Sense | None = None,
+        sense: Sense | str | None = None,
         objective: Variable | Expression | None = None,
         matches: dict | None = None,
         limited_variables: Iterable[Variable] | None = None,
@@ -374,7 +377,7 @@ class Model:
                 + f"{solver.lower()}.123"
             )
 
-            with open(solver_file_name, "w") as solver_file:
+            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
@@ -389,8 +392,8 @@ class Model:
                     f"Allowed problem types: {gp.Problem.values()} but found"
                     f" {problem}."
                 )
-            else:
-                problem = gp.Problem(problem.upper())
+
+            problem = gp.Problem(problem.upper())
 
         if isinstance(sense, str):
             if sense.upper() not in gp.Sense.values():
@@ -430,7 +433,7 @@ class Model:
         self.container._unsaved_statements.append(solve_string + ";\n")
 
     def _create_model_attributes(self) -> None:
-        for attr_name in attribute_map.keys():
+        for attr_name in attribute_map:
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
@@ -439,12 +442,12 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = self.container.temp_container
+        temp_container = self.container._temp_container
         temp_container.read(
             self.container._gdx_out,
             [
                 f"{self._generate_prefix}{self.name}_{gams_attr}"
-                for gams_attr in attribute_map.keys()
+                for gams_attr in attribute_map
             ],
         )
 
@@ -464,7 +467,7 @@ class Model:
                     temp_container[symbol_name].toValue(),
                 )
 
-        self.container.temp_container.data = {}
+        self.container._temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
         if (
@@ -537,11 +540,10 @@ class Model:
         solver: str | None = None,
         options: Options | None = None,
         solver_options: dict | None = None,
-        model_instance_options: dict | None = None,
+        model_instance_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
-        engine_config: EngineConfig | None = None,
-        neos_client: NeosClient | None = None,
+        client: EngineClient | NeosClient | None = None,
         create_log_file: bool = False,
     ) -> pd.DataFrame | None:
         """
@@ -561,10 +563,8 @@ class Model:
             Output redirection target
         backend : str, optional
             Backend to run on
-        engine_config : EngineConfig, optional
-            GAMS Engine configuration
-        neos_client : NeosClient, optional
-            NEOS Client to communicate with NEOS Server
+        client : EngineClient, NeosClient, optional
+            EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
         create_log_file : bool
             Allows creating a log file
 
@@ -578,6 +578,8 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
+        validation.validate_solver_args(solver, options, output)
+
         if self._is_frozen:
             self.instance.solve(model_instance_options, output)
             return None
@@ -600,8 +602,7 @@ class Model:
             gams_options,
             output,
             backend,
-            engine_config,
-            neos_client,
+            client,
             self,
         )
 

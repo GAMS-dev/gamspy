@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qdemo7.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+## DATAFILES: qdemo7.gdx
+## KEYWORDS: quadratic constraint programming, farming, agricultural economics, partial equilibrium, market behavior
+
+
 Nonlinear Simple Agricultural Sector Model (QDEMO7)
 
 This is a QCP version of the gamslib model DEMO7. The original NLP
@@ -13,9 +20,6 @@ the maximization of consumers and producers surplus.
 
 Kutcher, G P, Meeraus, A, and O'Mara, G T, Agriculture Sector and
 Policy Models. The World Bank, 1988.
-
-Keywords: quadratic constraint programming, farming, agricultural economics,
-          partial equilibrium, market behavior
 """
 
 from __future__ import annotations
@@ -240,9 +244,6 @@ def main():
         domain=c,
         description="national imports                 (1000 tons)",
     )
-    cps = Variable(
-        m, name="cps", description="consumers and producers surplus"
-    )
 
     # Equation
     landbal = Equation(
@@ -288,7 +289,6 @@ def main():
         domain=c,
         description="national demand balance (1000 tons)",
     )
-    objn = Equation(m, name="objn", description="objective function")
 
     landbal[t] = Sum(c, xcrop[c] * a[t, c]) <= land * fnum
 
@@ -324,7 +324,8 @@ def main():
         == natprod[cn] + imports[cn].where[cm[cn]] - exports[cn].where[ce[cn]]
     )
 
-    objn[...] = cps == (
+    # Objective Function; consumers and producers surplus
+    objn = (
         Sum(cn, alpha[cn] * natcon[cn] + 0.5 * beta[cn] * sqr(natcon[cn]))
         + Sum(ce, exports[ce] * pe[ce])
         - Sum(cm, imports[cm] * pm[cm])
@@ -349,16 +350,15 @@ def main():
             aplow,
             lclover,
             lstraw,
-            objn,
         ],
         problem=Problem.QCP,
         sense=Sense.MAX,
-        objective=cps,
+        objective=objn,
     )
 
     demo7n.solve()
 
-    print("Value of objective:  ", round(cps.records.level[0], 3))
+    print("Value of objective:  ", round(demo7n.objective_value, 3))
 
 
 if __name__ == "__main__":

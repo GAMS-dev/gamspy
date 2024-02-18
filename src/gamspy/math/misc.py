@@ -166,7 +166,7 @@ def dist(
         In case both x1 and x2 are not a tuple or none.
     """
     if isinstance(x1, tuple) or isinstance(x2, tuple):
-        raise Exception("Both should be a tuple or none")
+        raise ValidationError("Both should be a tuple or none")
 
     return expression.Expression(None, MathOp("eDist", (x1, x2)), None)
 

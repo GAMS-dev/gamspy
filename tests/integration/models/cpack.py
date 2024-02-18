@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_cpack.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+## KEYWORDS: quadratic constraint programming, circle packing problem, mathematics
+
+
 Packing identical size circles in the unit circle (CPACK)
 
 Given the unit circle (of radius 1), find a set of identical
@@ -11,9 +17,6 @@ A test example from  the LGO library
 
 Pinter, J D, Nonlinear optimization with GAMS/LGO.
 Journal of Global Optimization 38 (2007), 79-101.
-
-Keywords: quadratic constraint programming, circle packing problem, mathematics
-
 """
 
 from __future__ import annotations

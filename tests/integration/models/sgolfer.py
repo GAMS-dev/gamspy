@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_sgolfer.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MINLP, MIP
+## KEYWORDS: mixed integer linear programming, mixed integer nonlinear programming, social golfer problem, combinatorial optimization
+
+
 Social Golfer Problem (SGOLFER)
 
 In a golf club, there are 32 social golfers, each of whom play golf once a
@@ -12,10 +18,6 @@ p weeks, with maximum socialisation.
 Warwick, H, The Fully Social Golfer Problem. In Smith, B, and Warwick, H, Eds,
 Proceedings of the Third International Workshop on Symmetry in Constraint
 Satisfaction Problems (SymCon 2003). 2003, pp. 75-85.
-
-Keywords: mixed integer linear programming, mixed integer nonlinear
-programming,
-          social golfer problem, combinatorial optimization
 """
 
 from __future__ import annotations
@@ -100,7 +102,6 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         domain=[gf, gf],
         description="number of redundant meetings",
     )
-    obj = Variable(cont, name="obj", type="free", description="objective")
 
     # Equation
     defx = Equation(
@@ -129,9 +130,6 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         name="defredm",
         domain=[gf, gf],
         description="number of redundant meetings",
-    )
-    defobj = Equation(
-        cont, name="defobj", description="minimize redundant meetings"
     )
 
     if not isinstance(mip, bool):
@@ -179,11 +177,11 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
 
     defnumm[mgf] = numm[mgf] == Sum((w, gr), m[w, gr, mgf])
 
-    defobj[...] = obj == Sum(mgf, redm[mgf])
-
     x.l[w, gr, gf].where[
         ((Ord(gr) - 1) * gg_c + 1 <= Ord(gf)) & (Ord(gf) <= (Ord(gr)) * gg_c)
     ] = 1
+
+    defobj = Sum(mgf, redm[mgf])  # minimize redundant meetings
 
     social_golfer_mip = Model(
         cont,
@@ -191,7 +189,7 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         equations=cont.getEquations(),
         problem="mip",
         sense=Sense.MIN,
-        objective=obj,
+        objective=defobj,
     )
 
     social_golfer_minlp = Model(
@@ -200,15 +198,17 @@ def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
         equations=cont.getEquations(),
         problem="minlp",
         sense=Sense.MIN,
-        objective=obj,
+        objective=defobj,
     )
 
     if mip:
         social_golfer_mip.solve()
+        obj_val = social_golfer_mip.objective_value
     else:
         social_golfer_minlp.solve()
+        obj_val = social_golfer_minlp.objective_value
 
-    print("Objective Function Variable: ", obj.records.level[0])
+    print("Objective Function Variable: ", obj_val)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trnspwl.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP, NLP
+## KEYWORDS: non linear programming, mixed integer linear programming, transportation problem, scheduling, economies of scale, non-convex objective, special ordered sets
+
+
 A Transportation Problem with discretized Economies of Scale (TRNSPWL)
 
 This problem finds a least cost shipping schedule that meets
@@ -60,10 +66,6 @@ The model is organized as follows:
 
 Dantzig, G B, Chapter 3.3. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: non linear programming, mixed integer linear programming,
-          transportation problem, scheduling, economies of scale, non-convex
-          objective, special ordered sets
 """
 
 from __future__ import annotations
@@ -155,15 +157,12 @@ def main():
         domain=[i, j],
         description="shipment quantities in cases",
     )
-    z = Variable(
-        m,
-        name="z",
-        type="free",
-        description="total transportation costs in thousands of dollars",
-    )
 
     # Equation
-    cost = Equation(m, name="cost", description="define objective function")
+
+    # Objective Function; total transportation costs in thousands of dollars
+    cost = Sum([i, j], c[i, j] * sqrt(x[i, j]))
+
     supply = Equation(
         m,
         name="supply",
@@ -177,8 +176,6 @@ def main():
         description="satisfy demand at market j",
     )
 
-    cost[...] = z == Sum([i, j], c[i, j] * sqrt(x[i, j]))
-
     supply[i] = Sum(j, x[i, j]) <= a[i]
 
     demand[j] = Sum(i, x[i, j]) >= b[j]
@@ -189,7 +186,7 @@ def main():
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective=z,
+        objective=cost,
     )
 
     # Start the local NLP solver in a local solution that is not globally
@@ -206,9 +203,12 @@ def main():
     )
 
     transport.solve(options=Options(nlp="conopt"))
-    print("Initial Objective Function Value: ", round(z.records.level[0], 3))
+    print(
+        "Initial Objective Function Value: ",
+        round(transport.objective_value, 3),
+    )
 
-    localopt[...] = z.l
+    localopt[...] = transport.objective_value
 
     # The first model (formulation a) implements a piecewise linear
     # approximation based on the convex combination of neighboring points
@@ -265,7 +265,6 @@ def main():
     defsos1 = Equation(m, name="defsos1", domain=[i, j])
     defsos2 = Equation(m, name="defsos2", domain=[i, j])
     defsos3 = Equation(m, name="defsos3", domain=[i, j])
-    defobjdisc = Equation(m, name="defobjdisc")
 
     defsos1[i, j] = x[i, j] == Sum(s, p[s] * xs[i, j, s])
 
@@ -273,15 +272,15 @@ def main():
 
     defsos3[i, j] = Sum(ss, xs[i, j, ss]) == 1
 
-    defobjdisc[...] = z == Sum([i, j], c[i, j] * sqrtx[i, j])
+    defobjdisc = Sum([i, j], c[i, j] * sqrtx[i, j])
 
     trnsdiscA = Model(
         m,
         name="trnsdiscA",
-        equations=[supply, demand, defsos1, defsos2, defsos3, defobjdisc],
+        equations=[supply, demand, defsos1, defsos2, defsos3],
         problem="mip",
         sense=Sense.MIN,
-        objective=z,
+        objective=defobjdisc,
     )
 
     trnsdiscA.solve(options=Options(relative_optimality_gap=0))
@@ -385,10 +384,10 @@ def main():
     trnsdiscB = Model(
         m,
         name="trnsdiscB",
-        equations=[supply, demand, defx, defsqrt, defseg, defgs, defobjdisc],
+        equations=[supply, demand, defx, defsqrt, defseg, defgs],
         problem="mip",
         sense=Sense.MIN,
-        objective=z,
+        objective=defobjdisc,
     )
 
     trnsdiscB.solve()
@@ -396,11 +395,14 @@ def main():
     # Now restart the local solver from this approximate point
     transport.solve()
 
-    print("Improved Objective Function Value: ", round(z.records.level[0], 3))
+    print(
+        "Improved Objective Function Value: ",
+        round(transport.objective_value, 3),
+    )
 
-    # Ensure that we are better off than before
-    if z.records.level[0] - localopt.records.value[0] > 1e-6:
-        raise Exception("we should get an improved solution")
+    # Ensure that we are better off transport.objective_value
+    if transport.objective_value - localopt.records.value[0] > 1e-6:
+        raise Exception("we should get an improved transport.objective_value")
 
 
 if __name__ == "__main__":

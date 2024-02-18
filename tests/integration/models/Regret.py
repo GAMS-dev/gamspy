@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Regret.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: Regret.gdx
+
+
 Regret models
 
 Regret.gms: Regret models.
@@ -106,7 +112,6 @@ def main():
         domain=l,
         description="Measures of the negative deviations or regrets",
     )
-    z = Variable(m, name="z", description="Objective function value")
 
     # EQUATIONS #
     BudgetCon = Equation(
@@ -123,16 +128,6 @@ def main():
         m,
         name="ExpRegretCon",
         description="Equation defining the expected regret allowed",
-    )
-    ObjDefRegret = Equation(
-        m,
-        name="ObjDefRegret",
-        description="Objective function definition for regret minimization",
-    )
-    ObjDefReturn = Equation(
-        m,
-        name="ObjDefReturn",
-        description="Objective function definition for return mazimization",
     )
     RegretCon = Equation(
         m,
@@ -164,25 +159,27 @@ def main():
         TargetIndex[l] - EpsRegret
     ) * Budget - Sum(i, P[i, l] * x[i])
 
-    ObjDefRegret[...] = z == Sum(l, pr[l] * Regrets[l])
+    # Objective function definition for regret minimization
+    ObjDefRegret = Sum(l, pr[l] * Regrets[l])
 
-    ObjDefReturn[...] = z == Sum(i, EP[i] * x[i])
+    # Objective function definition for return mazimization
+    ObjDefReturn = Sum(i, EP[i] * x[i])
 
     MinRegret = Model(
         m,
         name="MinRegret",
-        equations=[BudgetCon, ReturnCon, RegretCon, ObjDefRegret],
+        equations=[BudgetCon, ReturnCon, RegretCon],
         problem="LP",
         sense=Sense.MIN,
-        objective=z,
+        objective=ObjDefRegret,
     )
     MaxReturn = Model(
         m,
         name="MaxReturn",
-        equations=[BudgetCon, ExpRegretCon, EpsRegretCon, ObjDefReturn],
+        equations=[BudgetCon, ExpRegretCon, EpsRegretCon],
         problem="LP",
         sense=Sense.MAX,
-        objective=z,
+        objective=ObjDefReturn,
     )
 
     TargetIndex[l] = 1.01
@@ -196,18 +193,18 @@ def main():
         MinRegret.solve()
 
         result.append([
-            z.records.level[0],
+            MinRegret.objective_value,
             (MU_TARGET.records.value[0] * Budget.records.value[0]),
         ])
         result[-1] += x.records.level.tolist()
 
-        RISK_TARGET[...] = z.l
+        RISK_TARGET[...] = MinRegret.objective_value
 
         result[-1].append("")
 
         MaxReturn.solve()
 
-        result[-1] += [RISK_TARGET.records.value[0], z.records.level[0]]
+        result[-1] += [RISK_TARGET.records.value[0], MaxReturn.objective_value]
         result[-1] += x.records.level.tolist()
 
         mu_iter += MU_STEP.records.value[0]

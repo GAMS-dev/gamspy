@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_chain.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Hanging Chain COPS 2.0 #3
 
 Find the chain (of uniform density) of length L suspended between two

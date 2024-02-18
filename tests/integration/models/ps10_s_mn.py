@@ -1,13 +1,16 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_ps10_s_mn.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+## KEYWORDS: nonlinear programming, contract theory, principal-agent problem, adverse selection, parts supply problem
+
+
 Parts Supply Problem w/ 10 Types w/ Random p(i) (PS10_S_MN)
 
 Hideo Hashimoto, Kojun Hamada, and Nobuhiro Hosoe, "A Numerical Approach
 to the Contract Theory: the Case of Adverse Selection", GRIPS Discussion
 Paper 11-27, National Graduate Institute for Policy Studies, Tokyo, Japan,
 March 2012.
-
-Keywords: nonlinear programming, contract theory, principal-agent problem,
-          adverse selection, parts supply problem
 """
 
 from __future__ import annotations
@@ -108,10 +111,8 @@ def main():
         m, name="b", type="positive", domain=i, description="maker's revenue"
     )
     w = Variable(m, name="w", type="positive", domain=i, description="price")
-    Util = Variable(m, name="Util", type="free", description="maker's utility")
 
     # Equations
-    obj = Equation(m, name="obj", description="maker's utility function")
     rev = Equation(
         m,
         name="rev",
@@ -149,7 +150,7 @@ def main():
         description="monotonicity constraint",
     )
 
-    obj[...] = Util == Sum(i, p[i] * (b[i] - w[i]))
+    obj = Sum(i, p[i] * (b[i] - w[i]))  # Objective Function; maker's utility
 
     rev[i] = b[i] == x[i] ** (0.5)
 
@@ -170,18 +171,18 @@ def main():
     SB_lic = Model(
         m,
         name="SB_lic",
-        equations=[obj, rev, pc, licd],
+        equations=[rev, pc, licd],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=Util,
+        objective=obj,
     )
     SB_lic2 = Model(
         m,
         name="SB_lic2",
-        equations=[obj, rev, pc, licd, mn],
+        equations=[rev, pc, licd, mn],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=Util,
+        objective=obj,
     )
 
     # Parameters
@@ -222,7 +223,7 @@ def main():
         #  Solving the model w/o MN
         SB_lic.solve(options=Options(solver_link_type=5))
 
-        Util_lic[tt] = Util.l
+        Util_lic[tt] = SB_lic.objective_value
         x_lic[i, tt] = x.l[i]
         MN_lic[tt] = Sum(
             i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i.lead(1)], 10)]
@@ -231,7 +232,7 @@ def main():
         #  Solving the model w/ MN
         SB_lic2.solve(options=Options(solver_link_type=5))
 
-        Util_lic2[tt] = Util.l
+        Util_lic2[tt] = SB_lic2.objective_value
         x_lic2[i, tt] = x.l[i]
         MN_lic2[tt] = Sum(
             i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i.lead(1)], 10)]

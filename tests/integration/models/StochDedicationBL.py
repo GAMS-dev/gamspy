@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_StochDedicationBL.html
+## LICENSETYPE: Community
+## MODELTYPE: LP
+## DATAFILES: StochDedicationBL.gdx
+
+
 Stochastic Dedication model with borrowing and lending variables
 
 * StochDedicationBL.gms: Stochastic Dedication model with borrowing
@@ -105,7 +111,10 @@ def main():
     )
 
     StochDedicationBL.solve()
-    print("Objective Function Value: ", round(v0.records.level[0], 3))
+    print(
+        "Objective Function Value: ",
+        round(StochDedicationBL.objective_value, 3),
+    )
 
     print(x.description, ": \n", x.records.loc[:, ["i", "level"]])
 

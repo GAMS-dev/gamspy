@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_SimpleMIP.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Simple Mixed Integer Linear Programming model
 
 For more details please refer to Chapter 2 (Gcode2.3), of the following book:
@@ -34,17 +39,15 @@ def main():
 
     # VARIABLES #
     x = Variable(m, name="x", type="free")
-    of = Variable(m, name="of", type="free")
     y = Variable(m, name="y", type="binary")
 
     # EQUATIONS #
     eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
-    eq3 = Equation(m, name="eq3", type="regular")
 
     eq1[...] = -3 * x + 2 * y >= 1
     eq2[...] = -8 * x + 10 * y <= 10
-    eq3[...] = x + y == of
+    eq3 = x + y  # Objective Function
 
     MIP1 = Model(
         m,
@@ -52,13 +55,13 @@ def main():
         equations=m.getEquations(),
         problem="mip",
         sense="max",
-        objective=of,
+        objective=eq3,
     )
 
     x.up[...] = 0.3
     MIP1.solve()
 
-    print("Objective Function Value:  ", round(of.toValue(), 4))
+    print("Objective Function Value:  ", round(MIP1.objective_value, 4))
     print("y:  ", round(y.toValue(), 4))
     print("x:  ", round(x.toValue(), 4))
 

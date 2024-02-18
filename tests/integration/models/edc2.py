@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_edc2.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Economic Dispatch Calculation of a Total Power of 1,980 MW Using 15 Power Generating Units
 
 Economic load dispatch for 15 generator systems with transmission losses
@@ -374,25 +379,20 @@ def main():
     P = Variable(
         m, name="P", domain=i, description="optimal generation level of i"
     )
-    obj = Variable(m, name="obj", description="minimum cost")
 
-    # EQUATIONS #
-    cost = Equation(
-        m, name="cost", type="regular", description="total generation cost"
-    )
-    bal = Equation(
-        m, name="bal", type="regular", description="demand-supply balance"
-    )
-
-    # Objective function:
-    cost[...] = obj == Sum(
+    # Objective function #
+    cost = Sum(
         i,
         data[i, "a"] * gams_math.power(P[i], 2)
         + data[i, "b"] * P[i]
         + data[i, "c"],
     )
 
-    # Constraints:
+    # Constraints #
+    bal = Equation(
+        m, name="bal", type="regular", description="demand-supply balance"
+    )
+
     bal[...] = (
         Sum(i, P[i]) - Sum([i, j], P[i] * Losscoef[i, j] * P[j] / 10000)
         == Load
@@ -410,7 +410,7 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="MIN",
-        objective=obj,
+        objective=cost,
     )
 
     edc2.solve()

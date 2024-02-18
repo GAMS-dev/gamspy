@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_CVaR.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: WorldIndices.gdx
+
+
 Conditional Value at Risk models
 
 CVaR.gms: Conditional Value at Risk models.

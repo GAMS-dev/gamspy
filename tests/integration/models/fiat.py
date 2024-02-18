@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_fiat.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Fiat - Analysis of Stability Margin of Spark Ignition Engine Fiat Dedra
 
 Analysis of the stability margin of the spark ignition engine
@@ -55,14 +60,11 @@ def main():
     a5 = Variable(m, name="a5")
     a6 = Variable(m, name="a6")
     a7 = Variable(m, name="a7")
-    objval = Variable(
-        m, name="objval", description="objective function variable"
-    )
+
     w = Variable(m, name="w", description="frequency")
     k = Variable(m, name="k", description="stability margin")
 
     # EQUATIONS #
-    f = Equation(m, name="f", type="regular", description="Objective function")
     g1 = Equation(m, name="g1", type="regular")
     g2 = Equation(m, name="g2", type="regular")
     b1l = Equation(m, name="b1l", type="regular")
@@ -87,8 +89,6 @@ def main():
     ga5 = Equation(m, name="ga5", type="regular")
     ga6 = Equation(m, name="ga6", type="regular")
     ga7 = Equation(m, name="ga7", type="regular")
-
-    f[...] = objval == k
 
     g1[...] = (
         -a6 * gams_math.power(w, 6)
@@ -309,7 +309,7 @@ def main():
         equations=m.getEquations(),
         problem="NLP",
         sense="MIN",
-        objective=objval,
+        objective=k,
     )
 
     fiat.solve()

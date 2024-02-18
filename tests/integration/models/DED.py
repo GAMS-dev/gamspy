@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_DED.html
+## LICENSETYPE: Demo
+## MODELTYPE: QCP
+
+
 Dynamic Economic Load Dispatch
 
 For more details please refer to Chapter 4 (Gcode4.1), of the following book:

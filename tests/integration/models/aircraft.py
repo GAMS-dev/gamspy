@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_aircraft.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, aircraft managing, allocation problem
+
+
 Aircraft Allocation under uncertain Demand (AIRCRAF)
 
 The objective of this model is to allocate aircrafts to routes to maximize
@@ -8,8 +14,6 @@ formulations are used, the delta and the lambda formulation.
 
 Dantzig, G B, Chapter 28. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: linear programming, aircraft managing, allocation problem
 """
 
 from __future__ import annotations

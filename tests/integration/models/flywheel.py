@@ -1,4 +1,8 @@
 """
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Design of a disc flywheel
 
 Schittkowski, K., More test examples for nonlinear programming codes.
@@ -26,15 +30,13 @@ def main():
     x1 = Variable(m, name="x1")
     x2 = Variable(m, name="x2")
     x3 = Variable(m, name="x3")
-    obj = Variable(m, name="obj")
 
     # EQUATIONS #
     e1 = Equation(m, name="e1", type="regular")
     e2 = Equation(m, name="e2", type="regular")
-    eobj = Equation(m, name="eobj", type="regular")
 
     # Objective function:
-    eobj[...] = obj == -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
+    obj = -0.0201 * (x1**4) * x2 * (x3**2) / 10000000
 
     # Constraints:
     e1[...] = 675 - (x1**2) * x2 >= 0
@@ -64,7 +66,7 @@ def main():
 
     flywheel.solve()
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
+    print("Objective Function Value:  ", round(flywheel.objective_value, 4))
     print("x1:  ", round(x1.toValue(), 3))
     print("x2:  ", round(x2.toValue(), 3))
     print("x3:  ", round(x3.toValue(), 3))

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_TEP.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Transmission Expansion Planning
 
 For more details please refer to Chapter 9 (Gcode9.1), of the following book:
@@ -268,7 +273,7 @@ def main():
 
     loadflow.solve(options=Options(relative_optimality_gap=0, mip="CPLEX"))
 
-    print("Objective Function Value:  ", round(OF.toValue(), 3))
+    print("Objective Function Value:  ", round(loadflow.objective_value, 3))
 
 
 if __name__ == "__main__":

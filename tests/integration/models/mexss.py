@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_mexss.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, production problem, distribution problem, scheduling, micro economics, steel industry
+
+
 Mexico Steel - Small Static (MEXSS)
 
 A simplified representation of the Mexican steel sector is used
@@ -12,10 +18,6 @@ Baltimore and London, 1984.
 
 A scanned version of this out-of-print book is accessible at
 http://www.gams.com/docs/pdf/steel_investment.pdf
-
-Keywords: linear programming, production problem, distribution problem,
-scheduling,
-          micro economics, steel industry
 """
 
 from __future__ import annotations
@@ -304,7 +306,6 @@ def main():
     e = Variable(
         cont, name="e", domain=[c, i], type="Positive", description="exports"
     )
-    phi = Variable(cont, name="phi", description="total cost")
     phipsi = Variable(cont, name="phipsi", description="raw material cost")
     philam = Variable(cont, name="philam", description="transport cost")
     phipi = Variable(cont, name="phipi", description="import cost")
@@ -347,7 +348,6 @@ def main():
         domain=c,
         description="maximum export",
     )
-    obj = Equation(cont, name="obj", description="accounting: total cost")
     apsi = Equation(
         cont,
         name="apsi",
@@ -366,13 +366,14 @@ def main():
     )
 
     # Equation definition
+    obj = phipsi + philam + phipi - phieps  # Total Cost
+
     mbf[cf, i] = Sum(p, a[cf, p] * z[p, i]) >= Sum(j, x[cf, i, j]) + e[cf, i]
     mbi[ci, i] = Sum(p, a[ci, p] * z[p, i]) >= 0
     mbr[cr, i] = Sum(p, a[cr, p] * z[p, i]) + u[cr, i] >= 0
     cc[m, i] = Sum(p, b[m, p] * z[p, i]) <= k[m, i]
     mr[cf, j] = Sum(i, x[cf, i, j]) + v[cf, j] >= d[cf, j]
     me[cf] = Sum(i, e[cf, i]) <= eb
-    obj[...] = phi == phipsi + philam + phipi - phieps
     apsi[...] = phipsi == Sum((cr, i), pd[cr] * u[cr, i])
     alam[...] = philam == Sum((cf, i, j), muf[i, j] * x[cf, i, j]) + Sum(
         (cf, j), muv[j] * v[cf, j]
@@ -386,7 +387,7 @@ def main():
         equations=cont.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective=phi,
+        objective=obj,
     )
 
     mexss.solve()

@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_Immunization.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+
+
 Immunization models
 
 Immunization.gms: Immunization models.
@@ -263,7 +268,6 @@ def main():
         domain=i,
         description="Holdings of bonds (amount of face value)",
     )
-    z = Variable(m, name="z", description="Objective function value")
 
     # EQUATIONS #
     PresentValueMatch = Equation(
@@ -283,15 +287,8 @@ def main():
         name="ConvexityMatch",
         description="Equation matching the convexity of asset and liability",
     )
-    ObjDef = Equation(
-        m,
-        name="ObjDef",
-        description="Objective function definition",
-    )
 
-    ObjDef[...] = z == Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (
-        PV_Liab * Dur_Liab
-    )
+    z = Sum(i, Dur[i] * PV[i] * y[i] * x[i]) / (PV_Liab * Dur_Liab)
 
     PresentValueMatch[...] = Sum(i, PV[i] * x[i]) == PV_Liab
 
@@ -302,7 +299,7 @@ def main():
     ImmunizationOne = Model(
         m,
         name="ImmunizationOne",
-        equations=[ObjDef, PresentValueMatch, DurationMatch],
+        equations=[PresentValueMatch, DurationMatch],
         problem="LP",
         sense=Sense.MAX,
         objective=z,
@@ -320,7 +317,7 @@ def main():
     ImmunizationTwo = Model(
         m,
         name="ImmunizationTwo",
-        equations=[ObjDef, PresentValueMatch, DurationMatch, ConvexityMatch],
+        equations=[PresentValueMatch, DurationMatch, ConvexityMatch],
         problem="LP",
         sense=Sense.MAX,
         objective=z,
@@ -336,14 +333,12 @@ def main():
     print("DurationMatch: ", DurationMatch.records.level[0])
     print("ConvexityMatch: ", ConvexityMatch.records.level[0])
 
-    ConvexityObj = Equation(m, name="ConvexityObj")
-
-    ConvexityObj[...] = z == (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x[i])
+    z = (1.0 / PV_Liab) * Sum(i, Conv[i] * PV[i] * x[i])
 
     ImmunizationThree = Model(
         m,
         name="ImmunizationThree",
-        equations=[ConvexityObj, PresentValueMatch, DurationMatch],
+        equations=[PresentValueMatch, DurationMatch],
         problem="LP",
         sense=Sense.MIN,
         objective=z,
@@ -356,7 +351,7 @@ def main():
         columns=["Model1", "Model2", "Model3"],
         index=Bonds.records.uni,
     )
-    print("Objective Function Value: ", z.records.level[0])
+    print("Objective Function Value: ", ImmunizationThree.objective_value)
 
     print(x_results)
 

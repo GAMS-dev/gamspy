@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import time
 import unittest
 
@@ -351,13 +352,13 @@ class SolveSuite(unittest.TestCase):
 
         # Test invalid commandline options
         self.assertRaises(
-            ValidationError,
+            TypeError,
             transport.solve,
             None,
             {"bla": 100},
         )
 
-        self.assertRaises(ValidationError, transport.solve, None, 5)
+        self.assertRaises(TypeError, transport.solve, None, 5)
 
         # Try to solve invalid model
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
@@ -1288,6 +1289,116 @@ class SolveSuite(unittest.TestCase):
         
         e = Equation(self.m, "e", definition=x+5)
         self.assertTrue('x' in e._definition.find_variables())
+        
+    def test_invalid_arguments(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+        )
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m, name="demand", domain=j, description="satisfy demand at market j"
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        
+        with self.assertRaises(TypeError):
+            transport.solve(solver=sys.stdout)
+            
+        with self.assertRaises(ValidationError):
+            transport.solve(solver="sadwqeq")
+            
+        with self.assertRaises(ValidationError):
+            transport.solve(solver="SNOPT")
+            
+        with self.assertRaises(TypeError):
+            transport.solve(options={"bla": "bla"})
+            
+        with self.assertRaises(TypeError):
+            transport.solve(output={"bla": "bla"})
     
 
 def solve_suite():

@@ -137,12 +137,12 @@ def install_license(args: argparse.Namespace):
             f'Given license path ("{args.name}") is not valid.'
         )
 
-    shutil.copy(args.name, gamspy_base_dir + os.sep + "gamslice.txt")
+    shutil.copy(args.name, gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def uninstall_license():
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
+    os.unlink(gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def install_solver(args: argparse.Namespace):
@@ -175,7 +175,7 @@ def install_solver(args: argparse.Namespace):
         except subprocess.CalledProcessError as e:
             raise GamspyException(
                 f"Could not install gamspy-{solver_name}: {e.output}"
-            )
+            ) from e
     else:
         try:
             solver_lib = importlib.import_module(f"gamspy_{solver_name}")
@@ -220,7 +220,9 @@ def append_dist_info(files, gamspy_base_dir: str):
     gamspy_path: str = gp.__path__[0]
     dist_info_path = f"{gamspy_path}-{gp.__version__}.dist-info"
 
-    with open(dist_info_path + os.sep + "RECORD", "a") as record:
+    with open(
+        dist_info_path + os.sep + "RECORD", "a", encoding="utf-8"
+    ) as record:
         gamspy_base_relative_path = os.sep.join(
             gamspy_base_dir.split(os.sep)[-3:]
         )
@@ -252,7 +254,7 @@ def uninstall_solver(args: argparse.Namespace):
         except subprocess.CalledProcessError as e:
             raise GamspyException(
                 f"Could not uninstall gamspy-{solver_name}: {e.output}"
-            )
+            ) from e
 
     # do not delete files from gamspy_base as other solvers might depend on it
     gamspy_base_dir = utils._get_gamspy_base_directory()
@@ -280,7 +282,9 @@ def update():
             check=True,
         )
     except subprocess.CalledProcessError as e:
-        raise GamspyException(f"Could not uninstall gamspy-base: {e.output}")
+        raise GamspyException(
+            f"Could not uninstall gamspy-base: {e.output}"
+        ) from e
 
     import gamspy_base
 
@@ -295,10 +299,10 @@ def update():
         try:
             _ = subprocess.run(
                 [
-                    "pip",
+                    "gamspy",
                     "install",
-                    f"gamspy-{solver.lower()}=={gamspy_base.version}",
-                    "--force-reinstall",
+                    "solver",
+                    solver.lower(),
                 ],
                 check=True,
             )
@@ -306,7 +310,7 @@ def update():
             raise GamspyException(
                 "Could not uninstall"
                 f" gamspy-{solver.lower()}=={gamspy_base.version}: {e.output}"
-            )
+            ) from e
 
 
 def list_solvers(args: argparse.Namespace):

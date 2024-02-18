@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_speed.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Minimization of the weight of a speed reducer
 
 The weight of the speed reducer is to be minimized subject to constraints
@@ -39,7 +44,6 @@ def main():
     x5 = Variable(m, name="x5")
     x6 = Variable(m, name="x6")
     x7 = Variable(m, name="x7")
-    obj = Variable(m, name="obj")
 
     # EQUATION #
     g1 = Equation(m, name="g1", type="regular")
@@ -53,10 +57,9 @@ def main():
     g9 = Equation(m, name="g9", type="regular")
     g10 = Equation(m, name="g10", type="regular")
     g11 = Equation(m, name="g11", type="regular")
-    g = Equation(m, name="g", type="regular")
 
     # Objective function to be minimized:
-    g[...] = obj == (
+    g = (
         0.7854
         * x1
         * gams_math.power(x2, 2)
@@ -121,11 +124,11 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="MIN",
-        objective=obj,
+        objective=g,
     )
     speed.solve()
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
+    print("Objective Function Value:  ", round(speed.objective_value, 4))
 
     # End speed
 

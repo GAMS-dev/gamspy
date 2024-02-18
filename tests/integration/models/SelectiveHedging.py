@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/finlib_ml/libhtml/finlib_SelectiveHedging.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## DATAFILES: SelectiveHedging.gdx
+
+
 Indexation model with selective hedging
 
 * SelectiveHedging.gms: Indexation model with selective hedging
@@ -114,19 +120,18 @@ def main(output=None):
     pr[l] = 1.0 / Card(l)
 
     # VARIABLES #
-    z = Variable(m, name="z")
     h = Variable(m, name="h", type="positive", domain=i)
     u = Variable(m, name="u", type="positive", domain=i)
     y = Variable(m, name="y", type="positive", domain=l)
 
     # EQUATIONS #
-    ObjDef = Equation(m, name="ObjDef")
     ReturnCon = Equation(m, name="ReturnCon")
     NormalCon = Equation(m, name="NormalCon")
     yPosDef = Equation(m, name="yPosDef", domain=l)
     yNegDef = Equation(m, name="yNegDef", domain=l)
 
-    ObjDef[...] = z == Sum(l, pr[l] * y[l])
+    # Objective Function
+    ObjDef = Sum(l, pr[l] * y[l])
 
     yPosDef[l] = y[l] >= Sum(
         i, UnhedgedBondReturns[l, i] * u[i] + HedgedBondReturns[l, i] * h[i]
@@ -171,7 +176,7 @@ def main(output=None):
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective=z,
+        objective=ObjDef,
     )
 
     FrontierPoints = Set(
@@ -205,13 +210,13 @@ def main(output=None):
         mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
-        print("Objective: ", round(z.records.level[0], 3))
+        print("Objective: ", round(IndexFund.objective_value, 3))
 
         if IndexFund.status in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
-            Frontiers[pp, "Partial Hedge"] = z.l
+            Frontiers[pp, "Partial Hedge"] = IndexFund.objective_value
 
     # Fully hedged model
     u.fx[i] = 0.0
@@ -227,13 +232,13 @@ def main(output=None):
         mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
-        print("Objective: ", round(z.records.level[0], 3))
+        print("Objective: ", round(IndexFund.objective_value, 3))
 
         if IndexFund.status in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
-            Frontiers[pp, "Fully Hedged"] = z.l
+            Frontiers[pp, "Fully Hedged"] = IndexFund.objective_value
 
     # Unhedged model
     u.lo[i] = 0.0
@@ -251,13 +256,13 @@ def main(output=None):
         mu[...] = Frontiers[pp, "mu"]
 
         IndexFund.solve()
-        print("Objective: ", round(z.records.level[0], 3))
+        print("Objective: ", round(IndexFund.objective_value, 3))
 
         if IndexFund.status in [
             ModelStatus.OptimalGlobal,
             ModelStatus.OptimalLocal,
         ]:
-            Frontiers[pp, "Unhedged"] = z.l
+            Frontiers[pp, "Unhedged"] = IndexFund.objective_value
 
     # Create an excel file with the information stored in Frontiers
     # To activate it, add the name of the output file to "main" function below

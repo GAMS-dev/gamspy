@@ -1,4 +1,11 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP, MIP
+## DATAFILES: lop.gdx
+## KEYWORDS: linear programming, mixed integer linear programming, passenger railway optimization, shortest path, dutch railway, public rail transport, network optimization
+
+
 Line Optimization (LOP)
 
 The problem finds line plans for a given rail network and origin
@@ -17,10 +24,6 @@ Railway Systems. European Journal of Operation Research 96, 1 (1996),
 Claessens, M T, van Dijk, N M, and Zwaneveld, P J, Cost Optimal
 Allocation of Rail Passenger Lines. European Journal Operation
 Research 110, 3 (1998), 474-489.
-
-Keywords: linear programming, mixed integer linear programming, passenger railway optimization,
-          shortest path, dutch railway, public rail transport, network optimization
-
 """
 
 # flake8: noqa

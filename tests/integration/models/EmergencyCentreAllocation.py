@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_EmergencyCentreAllocation.html
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
 Mixed integer linear programming model for optimal allocation of Emergency Centres
 
 For more details please refer to Chapter 2 (Gcode2.5), of the following book:
@@ -40,9 +45,6 @@ def main():
     x5 = Variable(m, name="x5", type="binary")
     x6 = Variable(m, name="x6", type="binary")
 
-    # Free Variable
-    of = Variable(m, name="of", type="free")
-
     # Equations
     eq1 = Equation(m, name="eq1", type="regular")
     eq2 = Equation(m, name="eq2", type="regular")
@@ -50,7 +52,6 @@ def main():
     eq4 = Equation(m, name="eq4", type="regular")
     eq5 = Equation(m, name="eq5", type="regular")
     eq6 = Equation(m, name="eq6", type="regular")
-    eq7 = Equation(m, name="eq7", type="regular")
 
     eq1[...] = x1 + x6 >= 1
     eq2[...] = x2 >= 1
@@ -58,7 +59,7 @@ def main():
     eq4[...] = x4 + x5 >= 1
     eq5[...] = x3 + x4 + x5 + x6 >= 1
     eq6[...] = x1 + x5 + x6 >= 1
-    eq7[...] = x1 + x2 + x3 + x4 + x5 + x6 == of
+    of = x1 + x2 + x3 + x4 + x5 + x6
 
     emergency = Model(
         m,

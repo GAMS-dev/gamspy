@@ -1,4 +1,9 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/noalib_ml/libhtml/noalib_reservoir.html
+## LICENSETYPE: Demo
+## MODELTYPE: NLP
+
+
 Onstream and offstream optimal reservoir management
 
 Adapted from:
@@ -107,7 +112,6 @@ def main():
     q2 = Variable(m, name="q2", domain=t)
     r2 = Variable(m, name="r2", domain=t)
     s = Variable(m, name="s", domain=[n, t])
-    obj = Variable(m, name="obj")
 
     # Equation
     bal1 = Equation(
@@ -128,7 +132,6 @@ def main():
         name="dec",
         description="decisions of filling the reservoirs",
     )
-    objf = Equation(m, name="objf", description="objective function")
 
     bal1[n, t].where[~tt[t]] = (
         s["res1", t] - s["res1", t.lag(1, "linear")]
@@ -140,7 +143,9 @@ def main():
     dec[n, t].where[~tt[t]] = (s["res2", t] - s["res1", t]) - (
         s["res2", t] - s["res1", t]
     ) * (1.0 - q2[t] / (q2[t] + 0.000001)) == 0.0
-    objf[...] = obj == Sum(t.where[~tt[t]], r2[t])
+
+    # Objective Function
+    objf = Sum(t.where[~tt[t]], r2[t])
 
     s.lo["res1", t] = 1150
     s.up["res1", t] = 4590
@@ -160,9 +165,15 @@ def main():
         equations=m.getEquations(),
         problem=Problem.NLP,
         sense=Sense.MIN,
-        objective=obj,
+        objective=objf,
     )
     reservoir.solve()
+
+    import math
+
+    assert math.isclose(reservoir.objective_value, 81.0, abs_tol=1e-1)
+
+    print("Objective Function Value: ", reservoir.objective_value)
 
 
 if __name__ == "__main__":

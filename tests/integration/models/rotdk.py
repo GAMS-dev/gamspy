@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_rotdk.html
+## LICENSETYPE: Requires license
+## MODELTYPE: MIP
+## KEYWORDS: mixed integer linear programming, robust optimization, capacity expansion, time-dependent knapsack problem
+
+
 Robust Optimization (ROTDK)
 
 Robust Optimization.
@@ -7,10 +13,6 @@ Robust Optimization.
 Laguna, M, Applying Robust Optimization to Capacity Expansion of
 One Location in Telecommunications with Demand Uncertainty.
 Management Science 44, 11 (1998), 101-110.
-
-Keywords: mixed integer linear programming, robust optimization, capacity
-expansion,
-          time-dependent knapsack problem
 """
 
 from __future__ import annotations
@@ -112,7 +114,6 @@ def main():
         domain=t,
         description="installed capacity",
     )
-    obj = Variable(m, name="obj", type="free")
 
     # Equation
     capbal = Equation(
@@ -127,11 +128,9 @@ def main():
         domain=[t, s],
         description="demand balance",
     )
-    objdef = Equation(m, name="objdef")
 
-    objdef[...] = obj == Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(
-        s
-    ) * Sum(s, z[s])
+    # Objective Function
+    objdef = Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(s) * Sum(s, z[s])
 
     capbal[t] = cap[t] == cap[t.lag(1)] + Sum(j, c[j] * x[j, t])
 
@@ -143,7 +142,7 @@ def main():
         equations=m.getEquations(),
         problem="mip",
         sense=Sense.MIN,
-        objective=obj,
+        objective=objdef,
     )
 
     rotdk.solve(
@@ -152,7 +151,7 @@ def main():
         )
     )
 
-    print("Objective Function Value: ", round(obj.records.level[0], 2))
+    print("Objective Function Value: ", round(rotdk.objective_value, 2))
 
 
 if __name__ == "__main__":

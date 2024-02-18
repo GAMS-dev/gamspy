@@ -14,12 +14,10 @@ test-leg-3.8:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - DELAYED_EXECUTION=1 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
-    - if [ "$?" == "0" ]; then echo "All tests for delayed execution passed!"; else exit 1; fi
+    - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-    - DELAYED_EXECUTION=0 python tests/test_gamspy.py --integration --doc --engine --model-library
-    - if [ "$?" == "0" ]; then echo "All tests for immediate execution passed!"; else exit 1; fi
 
   artifacts:
     reports:
@@ -43,12 +41,10 @@ test-deg-3.8:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - DELAYED_EXECUTION=1 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-    - DELAYED_EXECUTION=0 python tests/test_gamspy.py --integration --doc --engine --model-library
-    - if [ "$?" == "0" ]; then echo "All tests for immediate execution passed!"; else exit 1; fi
   artifacts:
     name: macos_x86_64_3.8
     expire_in: 2 hours
@@ -70,12 +66,10 @@ test-dac-3.8:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - DELAYED_EXECUTION=1 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-    - DELAYED_EXECUTION=0 python tests/test_gamspy.py --integration --doc --engine --model-library
-    - if [ "$?" == "0" ]; then echo "All tests for immediate execution passed!"; else exit 1; fi
   artifacts:
     name: macos_arm64_3.8
     expire_in: 2 hours
@@ -97,10 +91,9 @@ test-wei-3.8:
     - python -m pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - $env:DELAYED_EXECUTION = '1'; coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
+    - $env:DELAYED_EXECUTION = '0'; coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-    - $env:DELAYED_EXECUTION = '0'; python tests\test_gamspy.py --integration --doc --engine --model-library
   artifacts:
     name: windows_3.8
     expire_in: 2 hours

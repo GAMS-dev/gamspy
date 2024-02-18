@@ -1,4 +1,10 @@
 """
+## GAMSSOURCE: https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_whouse.html
+## LICENSETYPE: Demo
+## MODELTYPE: LP
+## KEYWORDS: linear programming, warehouse management, inventory
+
+
 Simple Warehouse Problem (WHOUSE)
 
 A warehouse can store limited units of a commodity. Given an
@@ -8,8 +14,6 @@ order to minimize total cost.
 
 Dantzig, G B, Chapter 3.6. In Linear Programming and Extensions.
 Princeton University Press, Princeton, New Jersey, 1963.
-
-Keywords: linear programming, warehouse management, inventory
 """
 
 from __future__ import annotations
@@ -94,22 +98,18 @@ def main():
         type="Positive",
         description="stock bought at time t (units)",
     )
-    cost = Variable(
-        m, name="cost", description="total cost                 ($)"
-    )
 
     # Equations
     sb = Equation(
         m, name="sb", domain=t, description="stock balance at time t (units)"
     )
-    at = Equation(m, name="at", description="accounting: total cost      ($)")
 
     sb[t] = (
         stock[t] == stock[t.lag(1, "linear")] + buy[t] - sell[t] + istock[t]
     )
-    at[...] = cost == Sum(
-        t, price[t] * (buy[t] - sell[t]) + storecost * stock[t]
-    )
+
+    # ObjectFunction; accounting: total cost      ($)
+    at = Sum(t, price[t] * (buy[t] - sell[t]) + storecost * stock[t])
 
     stock.up[t] = storecap
 
@@ -119,7 +119,7 @@ def main():
         equations=m.getEquations(),
         problem="LP",
         sense=Sense.MIN,
-        objective=cost,
+        objective=at,
     )
     swp.solve()
 
