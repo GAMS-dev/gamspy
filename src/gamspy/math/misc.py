@@ -37,6 +37,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.symbol import Symbol
+    from gamspy import Set, Alias
     from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 
@@ -72,19 +73,15 @@ class MathOp:
         return len(self.gamsRepr())
 
 
-def _stringify(x: Union[int, float, Symbol, ImplicitSymbol]):
-    if isinstance(x, float):
-        x = utils._map_special_values(
-            x,
-        )
+def _stringify(x: Union[str, int, float, Symbol, ImplicitSymbol]):
+    if isinstance(x, (int, float)):
+        x = utils._map_special_values(x)
 
-    return (
-        str(
-            x,
-        )
-        if isinstance(x, (str, int, float))
-        else x.gamsRepr()
-    )
+        return str(x)
+    elif isinstance(x, str):
+        return f'"{x}"'
+
+    return x.gamsRepr()
 
 
 def abs(x: Union[int, float, Symbol]) -> Expression:
@@ -613,6 +610,21 @@ def rand_triangle(
     )
 
 
+def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
+    """
+    Evaluates to true if this set is identical to the given set or alias, false otherwise.
+
+    Parameters
+    ----------
+    other : Set | Alias
+
+    Returns
+    -------
+    Expression
+    """
+    return expression.Expression(None, MathOp("sameAs", (self, other)), None)
+
+
 def slrec(
     x: Union[int, float, Symbol], S: Union[int, float] = 1e-10
 ) -> Expression:
@@ -708,11 +720,12 @@ def ifthen(
     >>> x = ifthen(tt == 2, 3, 4 + y)
 
     """
-    condition_str = condition.gamsRepr()
-    condition_str = utils._replace_equality_signs(condition_str)
+    condition.representation = utils._replace_equality_signs(
+        condition.gamsRepr()
+    )
 
     return expression.Expression(
-        None, MathOp("ifthen", (condition_str, yes_return, no_return)), None
+        None, MathOp("ifthen", (condition, yes_return, no_return)), None
     )
 
 

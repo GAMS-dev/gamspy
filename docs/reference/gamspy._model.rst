@@ -14,3 +14,8 @@ Model
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. autoclass:: gamspy.SolveStatus
+   :members:
+   :undoc-members:
+   :show-inheritance:

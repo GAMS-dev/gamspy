@@ -43,7 +43,6 @@ if TYPE_CHECKING:
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
-    gt.SpecialValues.EPS: "EPS",
     gt.SpecialValues.UNDEF: "UNDF",
     gt.SpecialValues.POSINF: "INF",
     gt.SpecialValues.NEGINF: "-INF",
@@ -305,6 +304,9 @@ def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
 
 
 def _map_special_values(value: float):
+    if gt.SpecialValues.isEps(value):
+        return "EPS"
+
     if value in SPECIAL_VALUE_MAP:
         return SPECIAL_VALUE_MAP[value]
 

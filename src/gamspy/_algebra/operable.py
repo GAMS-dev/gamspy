@@ -25,6 +25,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Union
 
+import gamspy.math as math
 import gamspy._algebra.expression as expression
 
 if TYPE_CHECKING:
@@ -89,10 +90,9 @@ class Operable:
 
     def __pow__(self: OperableType, other: OperableType):
         if isinstance(other, int) and other == 2:
-            return expression.Expression(
-                "sqr(", self.gamsRepr(), ")"  # pylint: disable=E1101
-            )
-        return expression.Expression(self, "**", other)
+            return math.sqr(self)
+
+        return math.rpower(self, other)
 
     # not, and, or, xor
     def __and__(self: OperableType, other: OperableType):
