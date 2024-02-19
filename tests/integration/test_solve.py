@@ -16,6 +16,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import ModelStatus
+from gamspy import SolveStatus
 from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
@@ -314,6 +315,7 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+        self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
         self.assertRaises(
             ValidationError,
@@ -1399,6 +1401,91 @@ class SolveSuite(unittest.TestCase):
             
         with self.assertRaises(TypeError):
             transport.solve(output={"bla": "bla"})
+            
+    def test_marking_updated_symbols(self):
+        import gamspy as gp
+        import numpy as np
+
+        height_data = [
+            1.47,
+            1.50,
+            1.52,
+            1.55,
+            1.57,
+            1.60,
+            1.63,
+            1.65,
+            1.68,
+            1.70,
+            1.73,
+            1.75,
+            1.78,
+            1.80,
+            1.83,
+        ]
+
+        weight_data = [
+            52.21,
+            53.12,
+            54.48,
+            55.84,
+            57.20,
+            58.57,
+            59.93,
+            61.29,
+            63.11,
+            64.47,
+            66.28,
+            68.10,
+            69.92,
+            72.19,
+            74.46,
+        ]
+
+        m = gp.Container()
+
+        num_recs = len(height_data)
+
+        x_recs = np.ones((num_recs, 2))
+        x_recs[:, 0] = height_data
+
+
+        set_15 = gp.Set(m, name="set15", records=range(15))
+        set_2 = gp.Set(m, name="set2", records=range(2))
+
+        X = gp.Parameter(
+            m, name="X", domain=[set_15, set_2], records=x_recs, uels_on_axes=True
+        )
+
+        y_recs = np.array(weight_data)
+
+        y = gp.Parameter(
+            m, name="y", domain=[set_15], records=y_recs, uels_on_axes=True
+        )
+
+        w = gp.Variable(m, name="w", domain=[set_2])
+
+        loss = gp.Variable(m, name="loss", domain=[])
+
+        loss_eq = gp.Equation(m, name="set_loss", domain=[])
+
+        loss_eq[...] = loss == gp.Sum(
+            set_15, (y[set_15] - gp.Sum(set_2, X[set_15, set_2] * w[set_2])) ** 2
+        )
+
+        model = gp.Model(
+            m,
+            name="OLS",
+            problem="QCP",
+            equations=m.getEquations(),
+            sense="MIN",
+            objective=loss,
+        )
+
+        model.solve()
+        self.assertIsNotNone(w.records)
+        self.assertIsNotNone(loss.records)
+
     
 
 def solve_suite():
