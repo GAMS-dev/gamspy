@@ -292,14 +292,7 @@ class SetMixin:
         -------
         Expression
         """
-        other_str = (
-            f"'{str(other)}'"
-            if isinstance(other, (str, int, float))
-            else other.gamsRepr()
-        )
-        return expression.Expression(
-            "sameAs(", ",".join([self.gamsRepr(), other_str]), ")"
-        )
+        return gp.math.same_as(self, other)
 
 
 class Set(gt.Set, operable.Operable, Symbol, SetMixin):

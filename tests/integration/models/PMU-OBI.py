@@ -80,17 +80,16 @@ def main():
     NPMU = Parameter(m, name="NPMU", records=10)
 
     # Variable
-    OF = Variable(m, name="OF")
     PMU = Variable(m, name="PMU", domain=bus, type="Binary")
     alpha = Variable(m, name="alpha", domain=bus, type="Binary")
 
     # Equation
     eq1 = Equation(m, name="eq1")
-    eq2 = Equation(m, name="eq2")
-    eq3 = Equation(m, name="eq3", domain=bus)
-
     eq1[...] = Sum(bus, PMU[bus]) <= NPMU
-    eq2[...] = OF == Sum(node, alpha[node])
+
+    eq2 = Sum(node, alpha[node])
+
+    eq3 = Equation(m, name="eq3", domain=bus)
     eq3[bus] = (
         PMU[bus] + Sum(node.where[conex[bus, node]], PMU[node]) >= alpha[bus]
     )
@@ -101,7 +100,7 @@ def main():
         equations=m.getEquations(),
         problem="MIP",
         sense=Sense.MAX,
-        objective=OF,
+        objective=eq2,
     )
 
     counter = Set(m, "counter", records=[f"c{idx}" for idx in range(1, 5)])
@@ -112,7 +111,9 @@ def main():
         NPMU[...] = idx + 1
         placement3.solve(options=Options(relative_optimality_gap=0))
         report[bus, iter] = PMU.l[bus]
-        OBIrep[iter] = OF.l
+        OBIrep[iter] = placement3.objective_value
+
+    print("Report:\n", report.pivot())
 
 
 if __name__ == "__main__":

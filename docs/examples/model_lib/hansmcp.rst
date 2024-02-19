@@ -2,8 +2,8 @@
 
 .. _hansmcp:
 
-
-
+Hansen's Activity Analysis Example.
+===================================
 
 :download:`hansmcp.py <../../../tests/integration/models/hansmcp.py>` |hansmcp.gdx|
 

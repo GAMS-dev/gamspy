@@ -79,9 +79,6 @@ def main():
     t2i = Variable(m, name="t2i")
     t1o = Variable(m, name="t1o")
     t2o = Variable(m, name="t2o")
-    objval = Variable(
-        m, name="objval", description="objective function variable"
-    )
 
     # EQUATIONS #
     g1 = Equation(m, name="g1", type="regular")
@@ -97,12 +94,10 @@ def main():
     g11 = Equation(m, name="g11", type="regular")
     g12 = Equation(m, name="g12", type="regular")
     g13 = Equation(m, name="g13", type="regular")
-    f = Equation(m, name="f", type="regular", description="objective function")
 
     # Objective function:
-    f[...] = (
-        objval
-        == 1300
+    objval = (
+        1300
         * (1000 / ((1 / 30) * (dT11 * dT12) + (1 / 6) * (dT11 + dT12))) ** 0.6
         + 1300
         * (600 / ((1 / 30) * (dT21 * dT22) + (1 / 6) * (dT21 + dT22))) ** 0.6

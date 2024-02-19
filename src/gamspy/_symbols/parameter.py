@@ -139,7 +139,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             raise TypeError(
                 f"Cannot overwrite symbol `{name}` in container"
-                " because it is not a Parameter object)"
+                " because it is not a Parameter object"
             )
         except KeyError:
             return object.__new__(cls)

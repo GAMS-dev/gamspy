@@ -43,7 +43,6 @@ if TYPE_CHECKING:
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
-    gt.SpecialValues.EPS: "EPS",
     gt.SpecialValues.UNDEF: "UNDF",
     gt.SpecialValues.POSINF: "INF",
     gt.SpecialValues.NEGINF: "-INF",
@@ -219,6 +218,14 @@ def _get_gamspy_base_directory() -> str:
     return gamspy_base_directory
 
 
+def _get_license_path(system_directory: str) -> str:
+    user_license_path = os.path.join(system_directory, "user_license.txt")
+    if os.path.exists(user_license_path):
+        return user_license_path
+
+    return os.path.join(system_directory, "gamslice.txt")
+
+
 def _close_gdx_handle(handle):
     """
     Closes the handle and unloads the gdx library.
@@ -297,6 +304,9 @@ def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
 
 
 def _map_special_values(value: float):
+    if gt.SpecialValues.isEps(value):
+        return "EPS"
+
     if value in SPECIAL_VALUE_MAP:
         return SPECIAL_VALUE_MAP[value]
 

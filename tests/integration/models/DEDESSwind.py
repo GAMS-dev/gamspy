@@ -124,9 +124,6 @@ def main():
     )
 
     # VARIABLES #
-    cost = Variable(
-        m, name="cost", type="free", description="cost of thermal units"
-    )
     p = Variable(
         m,
         name="p",
@@ -166,12 +163,11 @@ def main():
     # EQUATIONS #
     Genconst3 = Equation(m, name="Genconst3", type="regular", domain=[g, t])
     Genconst4 = Equation(m, name="Genconst4", type="regular", domain=[g, t])
-    costThermalcalc = Equation(m, name="costThermalcalc", type="regular")
     constESS = Equation(m, name="constESS", type="regular", domain=t)
     balance = Equation(m, name="balance", type="regular", domain=t)
     wind = Equation(m, name="wind", type="regular", domain=t)
 
-    costThermalcalc[...] = cost == Sum(t, VWC * PWC[t]) + Sum(
+    costThermalcalc = Sum(t, VWC * PWC[t]) + Sum(
         [t, g],
         gendata[g, "a"] * gams_math.power(p[g, t], 2)
         + gendata[g, "b"] * p[g, t]
@@ -200,7 +196,7 @@ def main():
         equations=m.getEquations(),
         problem="qcp",
         sense="min",
-        objective=cost,
+        objective=costThermalcalc,
     )
     DEDESScostbased.solve()
 

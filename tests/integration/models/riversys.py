@@ -264,8 +264,6 @@ def main():
         description="Storages of water in node n in period t (m3)",
     )
 
-    obj = Variable(m, name="obj")
-
     # Upper bounds on users.
     U.up[n, t] = Demand[n, t]
 
@@ -301,9 +299,6 @@ def main():
     R_nn = Equation(
         m, name="R_nn", type="regular", domain=[n, t], description="Node"
     )
-    Objective = Equation(
-        m, name="Objective", type="regular", description="Objective function"
-    )
 
     R_no[n, t].where[nn[n]] = r[n, t] == q[n, t]
 
@@ -323,7 +318,8 @@ def main():
         n1.where[n_to_nr[n, n1]], U[n1, t]
     )
 
-    Objective[...] = obj == Sum(
+    # Objective Function
+    Objective = Sum(
         t, Sum(n.where[nr[n]], gams_math.power((U[n, t] - Demand[n, t]), 2))
     )
 
@@ -333,12 +329,12 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="min",
-        objective=obj,
+        objective=Objective,
     )
 
     riversys.solve()
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4))
+    print("Objective Function Value:  ", round(riversys.objective_value, 4))
 
     # Show the solution
 
