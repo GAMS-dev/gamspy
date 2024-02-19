@@ -84,17 +84,17 @@ class MagicsSuite(unittest.TestCase):
         # POW
         # Parameter ** Variable, Variable ** Parameter
         op1 = b[i] ** x[i]
-        self.assertEqual(op1.gamsRepr(), "(b(i) ** x(i))")
+        self.assertEqual(op1.gamsRepr(), "( rPower(b(i),x(i)) )")
         op2 = x[i] ** b[i]
-        self.assertEqual(op2.gamsRepr(), "(x(i) ** b(i))")
+        self.assertEqual(op2.gamsRepr(), "( rPower(x(i),b(i)) )")
 
         # Set/Parameter/Variable ** 2
         op1 = i**2
-        self.assertEqual(op1.gamsRepr(), "(sqr( i ))")
+        self.assertEqual(op1.gamsRepr(), "( sqr(i) )")
         op2 = b[i] ** 2
-        self.assertEqual(op2.gamsRepr(), "(sqr( b(i) ))")
+        self.assertEqual(op2.gamsRepr(), "( sqr(b(i)) )")
         op3 = x[i] ** 2
-        self.assertEqual(op3.gamsRepr(), "(sqr( x(i) ))")
+        self.assertEqual(op3.gamsRepr(), "( sqr(x(i)) )")
 
         # AND
         # Parameter and Variable, Variable and Parameter

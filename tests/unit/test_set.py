@@ -311,8 +311,8 @@ class SetSuite(unittest.TestCase):
     def test_sameas(self):
         i = Set(self.m, "i")
         j = Alias(self.m, "j", i)
-        self.assertEqual(i.sameAs(j).gamsRepr(), "(sameAs( i,j ))")
-        self.assertEqual(j.sameAs(i).gamsRepr(), "(sameAs( j,i ))")
+        self.assertEqual(i.sameAs(j).gamsRepr(), "( sameAs(i,j) )")
+        self.assertEqual(j.sameAs(i).gamsRepr(), "( sameAs(j,i) )")
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),

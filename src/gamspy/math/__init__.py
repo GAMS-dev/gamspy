@@ -82,6 +82,7 @@ from gamspy.math.misc import rel_le
 from gamspy.math.misc import rel_lt
 from gamspy.math.misc import rel_ne
 from gamspy.math.misc import Round
+from gamspy.math.misc import same_as
 from gamspy.math.misc import sigmoid
 from gamspy.math.misc import sign
 from gamspy.math.misc import slexp
@@ -175,6 +176,7 @@ __all__ = [
     "slrec",
     "sqrec",
     "errorf",
+    "same_as",
     "sigmoid",
     "bool_and",
     "bool_eqv",
