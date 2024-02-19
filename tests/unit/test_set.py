@@ -325,7 +325,7 @@ class SetSuite(unittest.TestCase):
         if m.delayed_execution:
             self.assertEqual(
                 m._unsaved_statements[-1].getStatement(),
-                "p(i) = (sameAs( i,'2' ));",
+                'p(i) = ( sameAs(i,"2") );',
             )
 
     def test_assignment_dimensionality(self):
