@@ -101,12 +101,12 @@ def install_license(args: argparse.Namespace):
             f'Given license path ("{args.name}") is not valid.'
         )
 
-    shutil.copy(args.name, gamspy_base_dir + os.sep + "gamslice.txt")
+    shutil.copy(args.name, gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def uninstall_license():
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    os.unlink(gamspy_base_dir + os.sep + "gamslice.txt")
+    os.unlink(gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def install_solver(args: argparse.Namespace):
@@ -263,10 +263,10 @@ def update():
         try:
             _ = subprocess.run(
                 [
-                    "pip",
+                    "gamspy",
                     "install",
-                    f"gamspy-{solver.lower()}=={gamspy_base.version}",
-                    "--force-reinstall",
+                    "solver",
+                    solver.lower(),
                 ],
                 check=True,
             )

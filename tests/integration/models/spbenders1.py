@@ -314,6 +314,12 @@ def main():
         upperBound.setRecords(zmaster.records["level"])
         objMaster.setRecords(zmaster.records["level"] - theta.records["level"])
 
+    print(
+        "Master problem Objective Function Value: ",
+        masterproblem.objective_value,
+    )
+    print("Subproblem Objective Function Value: ", subproblem.objective_value)
+
 
 if __name__ == "__main__":
     main()

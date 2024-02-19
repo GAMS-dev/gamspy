@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._options import Options
-    from gamspy._backend.engine import EngineConfig
+    from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
     from gamspy._options import ModelInstanceOptions
     import pandas as pd
@@ -124,6 +124,24 @@ class ModelStatus(Enum):
     InfeasibleNoSolution = 19
 
 
+class SolveStatus(Enum):
+    """An enumeration for solve status types"""
+
+    NormalCompletion = 1
+    IterationInterrupt = 2
+    ResourceInterrupt = 3
+    TerminatedBySolver = 4
+    EvalError = 5
+    CapabilityError = 6
+    LicenseError = 7
+    UserInterrupt = 8
+    SetupError = 9
+    SolverError = 10
+    InternalError = 11
+    Skipped = 12
+    SystemError = 13
+
+
 # GAMS name -> GAMSPy name
 attribute_map = {
     "domUsd": "num_domain_violations",
@@ -152,7 +170,7 @@ attribute_map = {
     "procUsed": "used_model_type",
     "resGen": "model_generation_time",
     "resUsd": "solve_model_time",
-    "solveStat": "solver_status",
+    "solveStat": "solve_status",
     "sumInfes": "sum_infeasibilities",
     "sysVer": "solver_version",
 }
@@ -248,7 +266,7 @@ class Model:
         self.model_generation_time = None
         self.solve_model_time = None
         self.sum_infeasibilities = None
-        self.solver_status = None
+        self.solve_status: SolveStatus | None = None
         self.solver_version = None
 
         self.container._run()
@@ -440,7 +458,7 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = self.container.temp_container
+        temp_container = self.container._temp_container
         temp_container.read(
             self.container._gdx_out,
             [
@@ -458,6 +476,12 @@ class Model:
                     python_attr,
                     ModelStatus(temp_container[symbol_name].toValue()),
                 )
+            elif python_attr == "solve_status":
+                setattr(
+                    self,
+                    python_attr,
+                    SolveStatus(temp_container[symbol_name].toValue()),
+                )
             else:
                 setattr(
                     self,
@@ -465,7 +489,7 @@ class Model:
                     temp_container[symbol_name].toValue(),
                 )
 
-        self.container.temp_container.data = {}
+        self.container._temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
         if (
@@ -541,8 +565,7 @@ class Model:
         model_instance_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
-        engine_config: EngineConfig | None = None,
-        neos_client: NeosClient | None = None,
+        client: EngineClient | NeosClient | None = None,
         create_log_file: bool = False,
     ) -> pd.DataFrame | None:
         """
@@ -562,10 +585,8 @@ class Model:
             Output redirection target
         backend : str, optional
             Backend to run on
-        engine_config : EngineConfig, optional
-            GAMS Engine configuration
-        neos_client : NeosClient, optional
-            NEOS Client to communicate with NEOS Server
+        client : EngineClient, NeosClient, optional
+            EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
         create_log_file : bool
             Allows creating a log file
 
@@ -603,8 +624,7 @@ class Model:
             gams_options,
             output,
             backend,
-            engine_config,
-            neos_client,
+            client,
             self,
         )
 

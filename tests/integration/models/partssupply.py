@@ -107,10 +107,8 @@ def main():
     w = Variable(
         cont, name="w", domain=i, type="Positive", description="price"
     )
-    util = Variable(cont, name="util", description="maker's utility")
 
     # Equation
-    obj = Equation(cont, name="obj", description="maker's utility function")
     rev = Equation(
         cont, name="rev", domain=i, description="maker's revenue function"
     )
@@ -139,7 +137,9 @@ def main():
         cont, name="mn", domain=i, description="monotonicity constraint"
     )
 
-    obj[...] = util == Sum(i, p[i] * (b[i] - w[i]))
+    # maker's utility function
+    obj = Sum(i, p[i] * (b[i] - w[i]))
+
     rev[i] = b[i] == gams_math.sqrt(x[i])
     pc[i] = w[i] - theta[i] * x[i] >= ru
     ic[i, j] = w[i] - icweight[i] * x[i] >= w[j] - icweight[i] * x[j]
@@ -158,18 +158,18 @@ def main():
     m = Model(
         cont,
         name="m",
-        equations=[obj, rev, pc, licu],
+        equations=[rev, pc, licu],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=util,
+        objective=obj,
     )
     m_mn = Model(
         cont,
         name="m_mn",
-        equations=[obj, rev, pc, licu, mn],
+        equations=[rev, pc, licu, mn],
         problem=Problem.NLP,
         sense=Sense.MAX,
-        objective=util,
+        objective=obj,
     )
 
     for iter, _ in t.records.itertuples(index=False):

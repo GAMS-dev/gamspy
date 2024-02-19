@@ -74,12 +74,8 @@ def main():
     a1 = Variable(m, name="a1", domain=nh)
     a2 = Variable(m, name="a2", domain=nh)
     a3 = Variable(m, name="a3", domain=nh)
-    obj = Variable(m, name="obj", description="criterion")
 
     # EQUATIONS #
-    eobj = Equation(
-        m, name="eobj", type="regular", description="criterion definition"
-    )
     state1 = Equation(
         m,
         name="state1",
@@ -119,7 +115,7 @@ def main():
     ea2 = Equation(m, name="ea2", type="regular", domain=nh)
     ea3 = Equation(m, name="ea3", type="regular", domain=nh)
 
-    eobj[...] = obj == x4[str(n)] * x5[str(n)]
+    eobj = x4[str(n)] * x5[str(n)]  # Objective function
 
     state1[nh[k.lead(1)]] = x1[k.lead(1)] == (
         x1[k]
@@ -197,12 +193,14 @@ def main():
         equations=m.getEquations(),
         problem="nlp",
         sense="max",
-        objective=obj,
+        objective=eobj,
     )
 
     protein.solve(options=Options(time_limit=60000, iteration_limit=80000))
 
-    print("Objective Function Value:  ", round(obj.toValue(), 4), "\n")
+    print(
+        "Objective Function Value:  ", round(protein.objective_value, 4), "\n"
+    )
 
     # REPORTING PARAMETER #
     rep = Parameter(m, name="rep", domain=[nh, "*"])

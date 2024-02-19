@@ -340,7 +340,7 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
         )
 
     # Check validity of output
-    if output is not None and not isinstance(output, io.TextIOWrapper):
+    if output is not None and not isinstance(output, io.TextIOBase):
         raise TypeError(
             "`output` must be of type io.TextIOWrapper but found"
             f" {type(output)}"

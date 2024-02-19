@@ -788,9 +788,6 @@ def main():
     PRICE = Variable(
         m, name="PRICE", type="free", description="numeraire price"
     )
-    CC = Variable(
-        m, name="CC", type="free", description="composite consumption"
-    )
 
     # Equations
     eqpy = Equation(
@@ -887,9 +884,6 @@ def main():
         name="eqII",
         domain=j,
         description="evolution of target capital stocks",
-    )
-    eqCC = Equation(
-        m, name="eqCC", description="composite consumption production func."
     )
     eqPRICE = Equation(m, name="eqPRICE", description="numeraire price")
 
@@ -1013,7 +1007,7 @@ def main():
     ) * (Sp + epsilon * Sf)
 
     # felicity function
-    eqCC[...] = CC == a * Product(i, Xp[i] ** alpha[i])
+    CC = a * Product(i, Xp[i] ** alpha[i])
 
     # Price level [numeraire]
     eqPRICE[...] = PRICE == Sum(j, pq[j] * Q00[j] / Sum(i, Q00[i]))
@@ -1101,7 +1095,7 @@ def main():
         II1[j, iteration] = II.l[j]
         III1[iteration] = III.l
         KK1[j, iteration] = KK.l[j]
-        CC1[iteration] = CC.l
+        CC1[iteration] = dyncge.objective_value
         tauz1[i, iteration] = tauz[i]
         taum1[i, iteration] = taum[i]
         pf1[h, j, iteration] = pf.l[h, j]

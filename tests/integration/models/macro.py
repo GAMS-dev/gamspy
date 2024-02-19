@@ -149,16 +149,8 @@ def main():
     # VARIABLES #
     x = Variable(cont, name="x", domain=[n, k], description="state variable")
     u = Variable(cont, name="u", domain=[m, k], description="control variable")
-    j = Variable(cont, name="j", description="criterion")
 
     # EQUATIONS #
-
-    criterion = Equation(
-        cont,
-        name="criterion",
-        type="regular",
-        description="criterion definition",
-    )
     stateq = Equation(
         cont,
         name="stateq",
@@ -167,7 +159,7 @@ def main():
         description="state equation",
     )
 
-    criterion[...] = j == 0.5 * Sum(
+    criterion = 0.5 * Sum(
         [k, n, nn],
         (x[n, k] - xtilde[n, k]) * w[n, nn, k] * (x[nn, k] - xtilde[nn, k]),
     ) + 0.5 * Sum(
@@ -186,7 +178,7 @@ def main():
         equations=cont.getEquations(),
         problem="nlp",
         sense="MIN",
-        objective=j,
+        objective=criterion,
     )
 
     x.l[n, k] = xinit[n]
@@ -211,7 +203,7 @@ def main():
     rep["u_gov-expend", k] = u.l["gov-expend", k]
     rep["u_money", k] = u.l["money", k]
 
-    print("Objective Function Value: ", round(j.toValue(), 4))
+    print("Objective Function Value: ", round(macro.objective_value, 4))
     print("Solution Summary:\n", rep.pivot().round(3))
 
     # End Macro
