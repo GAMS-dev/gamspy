@@ -16,6 +16,7 @@ from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
 from gamspy import ModelStatus
+from gamspy import SolveStatus
 from gamspy import Options
 from gamspy import Ord
 from gamspy import Parameter
@@ -314,6 +315,7 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(os.path.exists("test.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
+        self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
         self.assertRaises(
             ValidationError,

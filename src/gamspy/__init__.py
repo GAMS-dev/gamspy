@@ -43,6 +43,7 @@ from gamspy._backend.neos import NeosClient
 from gamspy._container import Container
 from gamspy._model import Model
 from gamspy._model import ModelStatus
+from gamspy._model import SolveStatus
 from gamspy._model import Problem
 from gamspy._model import Sense
 from gamspy._options import ModelInstanceOptions
@@ -72,6 +73,7 @@ __all__ = [
     "VariableType",
     "EquationType",
     "ModelStatus",
+    "SolveStatus",
     "Sum",
     "Product",
     "Smax",
