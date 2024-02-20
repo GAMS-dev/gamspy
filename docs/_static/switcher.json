@@ -1,6 +1,7 @@
 [
     {
-        "version": "dev",
+        "name": "latest",
+        "version": "latest",
         "url": "https://gamspy.readthedocs.io/en/latest/"
     },
     {
