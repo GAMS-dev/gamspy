@@ -1,7 +1,6 @@
 [
     {
-        "name": "master (unstable)",
-        "version": "v0.11.9",
+        "version": "dev",
         "url": "https://gamspy.readthedocs.io/en/latest/"
     },
     {
