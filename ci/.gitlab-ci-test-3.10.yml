@@ -1,15 +1,12 @@
 test-leg-3.10:
   stage: test
+  when: on_success
   tags: [linux]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
+  image: python:3.10
   script:
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-    - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
-    - source anaconda3/bin/activate
-    - conda create -y -n gamspy-env-3.10 python=3.10
-    - conda activate gamspy-env-3.10
+    - pip install virtualenv
+    - virtualenv venv310
+    - source venv310/bin/activate
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
@@ -17,6 +14,7 @@ test-leg-3.10:
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
+
   artifacts:
     reports:
       coverage_report:
@@ -30,6 +28,8 @@ test-leg-3.10:
     - if: $CI_COMMIT_BRANCH != "master"
       when: never
     - when: on_success
+
+
 
 test-deg-3.10:
   stage: test
