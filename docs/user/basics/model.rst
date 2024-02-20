@@ -136,7 +136,7 @@ used_model_type        Integer number that indicates the used model type
 model_generation_time  Time GAMS took to generate the model in wall-clock seconds
 solve_model_time       Time the solver used to solve the model in seconds
 sum_infeasibilities    Sum of infeasibilities
-solver_status          Indicates the solver termination condition
+solve_status           Indicates the solver termination condition
 solver_version         Solver version
 ====================== ===========================
 
