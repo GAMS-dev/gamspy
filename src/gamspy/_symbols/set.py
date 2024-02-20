@@ -310,6 +310,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes : bool
+    is_miro_input : bool
+    is_miro_output : bool
+
 
     Examples
     --------
@@ -366,6 +369,10 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj.container._add_statement(obj)
         obj._current_index = 0
 
+        # miro support
+        obj._is_miro_input = False
+        obj._is_miro_output = False
+
         return obj
 
     def __new__(
@@ -378,6 +385,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -410,7 +419,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
     ):
+        self._is_miro_input = is_miro_input
+        self._is_miro_output = is_miro_output
+
         # domain handling
         if domain is None:
             domain = ["*"]
@@ -456,12 +470,16 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._requires_state_check = True
             if description != "":
                 self.description = description
+
+            previous_state = self.container.miro_protect
+            self.container.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
+            self.container.miro_protect = previous_state
 
         else:
             self._is_dirty = False
@@ -469,6 +487,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             name = validation.validate_name(name)
 
             singleton_check(is_singleton, records)
+
+            previous_state = container.miro_protect
+            container.miro_protect = False
+
+            if is_miro_input or is_miro_output:
+                name = name.lower()
 
             super().__init__(
                 container,
@@ -480,6 +504,12 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 uels_on_axes=uels_on_axes,
             )
 
+            if is_miro_input:
+                container._miro_input_symbols.append(self.name)
+
+            if is_miro_output:
+                container._miro_output_symbols.append(self.name)
+
             validation.validate_container(self, self.domain)
             self.container._add_statement(self)
             self._current_index = 0
@@ -488,6 +518,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
+
+            container.miro_protect = previous_state
 
     def __len__(self):
         if self.records is not None:
@@ -558,6 +590,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     @records.setter
     def records(self, records):
+        if (
+            hasattr(self, "_is_miro_input")
+            and self._is_miro_input
+            and self.container.miro_protect
+        ):
+            raise ValidationError(
+                "Cannot assign to protected miro input symbols. `miro_protect`"
+                " attribute of the container can be set to False to allow"
+                " assigning to MIRO input symbols"
+            )
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")

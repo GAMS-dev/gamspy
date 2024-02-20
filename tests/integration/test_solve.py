@@ -1095,6 +1095,17 @@ class SolveSuite(unittest.TestCase):
         supply.l[:] = 5
         self.assertEqual(supply.l[:].gamsRepr(), "supply.l(i)")
         
+        date = Set(m, "date", description="trading date")
+        ntd = Set(m, "ntd", domain=[date], description="none-training days")
+        error = Parameter(m, "error", domain=[date], description="Absolute error")
+        error_test = Parameter(
+            m,
+            "error_test",
+            description="Absolute error in entire testing phase",
+            is_miro_output=True,
+        )
+        error_test[:] = Sum(ntd, error[ntd])
+        
     def test_max_line_length(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
 

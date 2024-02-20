@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 import uuid
 import warnings
 from typing import Any
@@ -44,6 +45,7 @@ from gams.core.opt import optResetStr
 import gamspy as gp
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._miro import MiroJSONEncoder
 from gamspy._options import _map_options, Options
 from gamspy.exceptions import ValidationError
 
@@ -59,6 +61,14 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._model import Sense
+
+IS_MIRO_INIT = os.getenv("MIRO", False)
+MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
+MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+
+LOAD_SYMBOL_TYPES = (gt.Set, gt.Parameter, gt.Variable, gt.Equation)
+MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
+MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
 
 
 debugging_map = {
@@ -87,6 +97,8 @@ class Container(gt.Container):
         Delayed execution mode, by default False
     options : Options
         Global options for the overall execution
+    miro_protect : bool
+        Protects MIRO input symbol records from being re-assigned
 
     Examples
     --------
@@ -103,6 +115,7 @@ class Container(gt.Container):
         working_directory: str | None = None,
         debugging_level: str = "delete",
         delayed_execution: bool = False,
+        miro_protect: bool = True,
         options: Options | None = None,
     ):
         system_directory = (
@@ -121,6 +134,8 @@ class Container(gt.Container):
         self._debugging_level = self._get_debugging_level(debugging_level)
 
         self._unsaved_statements: list = []
+        self._is_first_run = True
+        self.miro_protect = miro_protect
 
         # import symbols from arbitrary gams code
         self._import_symbols: list[str] = []
@@ -161,6 +176,10 @@ class Container(gt.Container):
             is_seedable=True,
         )
 
+        # needed for miro
+        self._miro_input_symbols: list[str] = []
+        self._miro_output_symbols: list[str] = []
+        self._first_destruct = True
         if load_from is not None:
             self.read(load_from)
             self._run()
@@ -177,7 +196,58 @@ class Container(gt.Container):
 
         return debugging_level
 
-    def _addGamsCode(self, gams_code: str, import_symbols: list[str] = []):
+    def __del__(self):
+        if (
+            not IS_MIRO_INIT
+            or not self._first_destruct
+            or len(self._miro_input_symbols) + len(self._miro_output_symbols)
+            == 0
+        ):
+            return
+
+        self._first_destruct = False
+        # create conf_<model>/<model>_io.json
+        encoder = MiroJSONEncoder(
+            self,
+            self._miro_input_symbols,
+            self._miro_output_symbols,
+        )
+
+        encoder.writeJson()
+
+    def _write_default_gdx_miro(self):
+        # create data_<model>/default.gdx
+        symbols = list(
+            set(self._miro_input_symbols + self._miro_output_symbols)
+        )
+
+        filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+        directory = os.path.dirname(sys.argv[0])
+        data_path = os.path.join(directory, f"data_{filename}")
+        try:
+            os.mkdir(data_path)
+        except FileExistsError:
+            pass
+
+        for name in symbols:
+            self[name]._is_dirty = False
+
+        super().write(
+            os.path.join(data_path, "default.gdx"),
+            symbols,
+        )
+
+    def _addGamsCode(
+        self, gams_code: str, import_symbols: list[str] = []
+    ) -> None:
+        """
+        Adds an arbitrary GAMS code to the generate .gms file
+
+        Parameters
+        ----------
+        gams_code : str
+        import_symbols : List[str], optional
+        """
         if import_symbols is not None and (
             not isinstance(import_symbols, list)
             or any(not isinstance(symbol, str) for symbol in import_symbols)
@@ -334,6 +404,14 @@ class Container(gt.Container):
 
                 modified_names.append(name)
 
+            # miro input symbols should always be assigned to catch domain violations
+            if (
+                isinstance(symbol, (gp.Set, gp.Parameter))
+                and symbol._is_miro_input
+                and name not in modified_names
+            ):
+                modified_names.append(name)
+
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
@@ -346,6 +424,9 @@ class Container(gt.Container):
             optResetStr(self._gams_options._opt, "seed")
 
         self._is_first_run = False
+
+        if IS_MIRO_INIT:
+            self._write_default_gdx_miro()
 
         return summary
 
@@ -365,6 +446,19 @@ class Container(gt.Container):
         unload_str = ",".join(unload_names)
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
+    def _get_load_miro_input_str(self, statement, gdx_in):
+        string = "$gdxIn\n"  # close the old one
+        string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
+        string += f"$loadDC {statement.name}\n"
+        string += "$gdxIn\n"  # close the new one
+        string += f"$gdxIn {gdx_in}\n"
+
+        return string
+
+    def _get_unload_miro_symbols_str(self):
+        unload_str = ",".join(self._miro_output_symbols)
+        return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
+
     def _generate_gams_string(
         self,
         gdx_in: str,
@@ -381,14 +475,33 @@ class Container(gt.Container):
             else:
                 string += statement.getStatement() + "\n"
 
+                if (
+                    isinstance(statement, MIRO_INPUT_TYPES)
+                    and statement._is_miro_input
+                ):
+                    if not IS_MIRO_INIT and MIRO_GDX_IN:
+                        string += self._get_load_miro_input_str(
+                            statement, gdx_in
+                        )
+                    else:
+                        string += f"$loadDC {statement.name}\n"
+
         for symbol_name in modified_names:
-            if not isinstance(
-                self[symbol_name], gp.Alias
-            ) and not symbol_name.startswith(gp.Model._generate_prefix):
+            if (
+                not isinstance(self[symbol_name], gp.Alias)
+                and not symbol_name.startswith(gp.Model._generate_prefix)
+                and (
+                    not hasattr(self[symbol_name], "_is_miro_input")
+                    or not self[symbol_name]._is_miro_input
+                )
+            ):
                 string += f"$loadDC {symbol_name}\n"
 
         string += "$offUNDF\n$gdxIn\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
+
+        if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
+            string += self._get_unload_miro_symbols_str()
 
         return string
 

@@ -1,0 +1,206 @@
+{
+    "modelTitle": "GAMSPy App",
+    "inputSymbols": {
+        "b": {
+            "alias": "demand at market j in cases",
+            "symtype": "parameter",
+            "headers": {
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
+        "jlocdata": {
+            "alias": "Market location information",
+            "symtype": "parameter",
+            "headers": {
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
+                }
+            }
+        },
+        "ilocdata": {
+            "alias": "Plant location information",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
+                }
+            }
+        },
+        "a": {
+            "alias": "capacity of plant i in cases",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
+        "k": {
+            "alias": "k",
+            "symtype": "set",
+            "headers": {
+                "uni": {
+                    "type": "string",
+                    "alias": "uni"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        },
+        "d": {
+            "alias": "distance in thousands of miles",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        },
+        "_scalars": {
+            "alias": "Input Scalars",
+            "symnames": [
+                "type",
+                "f",
+                "mins",
+                "beta"
+            ],
+            "symtext": [
+                "selected model type",
+                "freight in dollars per case per thousand miles",
+                "minimum shipment (MIP- and MINLP-only)",
+                "beta (MINLP-only)"
+            ],
+            "symtypes": [
+                "set",
+                "parameter",
+                "parameter",
+                "parameter"
+            ],
+            "headers": {
+                "scalar": {
+                    "type": "string",
+                    "alias": "Scalar Name"
+                },
+                "description": {
+                    "type": "string",
+                    "alias": "Scalar Description"
+                },
+                "value": {
+                    "type": "string",
+                    "alias": "Scalar Value"
+                }
+            }
+        }
+    },
+    "outputSymbols": {
+        "schedule": {
+            "alias": "shipment quantities in cases",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "lngP": {
+                    "type": "numeric",
+                    "alias": "lngP"
+                },
+                "latP": {
+                    "type": "numeric",
+                    "alias": "latP"
+                },
+                "lngM": {
+                    "type": "numeric",
+                    "alias": "lngM"
+                },
+                "latM": {
+                    "type": "numeric",
+                    "alias": "latM"
+                },
+                "cap": {
+                    "type": "numeric",
+                    "alias": "cap"
+                },
+                "demand": {
+                    "type": "numeric",
+                    "alias": "demand"
+                },
+                "quantities": {
+                    "type": "numeric",
+                    "alias": "quantities"
+                }
+            }
+        },
+        "_scalars_out": {
+            "alias": "Output Scalars",
+            "symnames": [
+                "total_cost"
+            ],
+            "symtext": [
+                "total transportation costs in thousands of dollars"
+            ],
+            "symtypes": [
+                "parameter"
+            ],
+            "headers": {
+                "scalar": {
+                    "type": "string",
+                    "alias": "Scalar Name"
+                },
+                "description": {
+                    "type": "string",
+                    "alias": "Scalar Description"
+                },
+                "value": {
+                    "type": "string",
+                    "alias": "Scalar Value"
+                }
+            }
+        }
+    }
+}

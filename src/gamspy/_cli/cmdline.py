@@ -27,8 +27,10 @@ from __future__ import annotations
 import argparse
 import importlib
 import os
+import platform
 import shutil
 import subprocess
+import sys
 
 import gamspy.utils as utils
 from .util import add_solver_entry
@@ -42,17 +44,51 @@ def get_args():
 
     parser.add_argument(
         "command",
-        choices=["install", "list", "update", "uninstall", "version"],
+        choices=["install", "list", "run", "update", "uninstall", "version"],
         type=str,
-        default=None,
     )
     parser.add_argument(
         "component",
-        choices=["license", "solver", "solvers"],
+        choices=["license", "miro", "solver", "solvers"],
         type=str,
         nargs="?",
         default=None,
     )
+
+    miro_group = parser.add_argument_group(
+        "run miro", description="`gamspy run miro` options"
+    )
+    miro_group.add_argument(
+        "-g",
+        "--model",
+        type=str,
+        help="Path to the gamspy model",
+        default=None,
+    )
+    miro_group.add_argument(
+        "-m",
+        "--mode",
+        type=str,
+        choices=["config", "base", "deploy"],
+        help="Execution mode of MIRO",
+        default="base",
+    )
+    miro_group.add_argument(
+        "-p",
+        "--path",
+        type=str,
+        help=(
+            "Path to the MIRO executable (.exe on Windows, .app on macOS or"
+            " .AppImage on Linux)"
+        ),
+        default=None,
+    )
+    miro_group.add_argument(
+        "--skip-execution",
+        help="Whether to skip model execution",
+        action="store_true",
+    )
+    parser.add_argument("--version", action="store_true")
 
     _ = parser.add_argument_group(
         "gamspy install|uninstall license",
@@ -284,7 +320,52 @@ def list_solvers(args: argparse.Namespace):
         if args.all:
             return utils.getAvailableSolvers()
 
-        return utils.getInstalledSolvers()
+        print(utils.getInstalledSolvers())
+
+
+def run(args: argparse.Namespace):
+    component = args.component
+
+    if component == "miro":
+        model = os.path.abspath(args.model)
+        mode = args.mode
+        path = os.getenv("MIRO_PATH", None)
+
+        if args.path is not None:
+            path = args.path
+
+        if model is None or path is None:
+            raise GamspyException(
+                "--model and --path must be provided to run MIRO"
+            )
+
+        if (
+            platform.system() == "Darwin"
+            and os.path.splitext(path)[1] == ".app"
+        ):
+            path = os.path.join(path, "Contents", "MacOS", "GAMS MIRO")
+
+        # Initialize MIRO
+        if not args.skip_execution:
+            subprocess_env = os.environ.copy()
+            subprocess_env["MIRO"] = "1"
+            subprocess.run(
+                [sys.executable, model], env=subprocess_env, check=True
+            )
+
+        # Run MIRO
+        subprocess_env = os.environ.copy()
+        if mode == "deploy":
+            subprocess_env["MIRO_BUILD"] = "true"
+            mode = "base"
+
+        subprocess_env["MIRO_MODEL_PATH"] = model
+        subprocess_env["MIRO_MODE"] = mode
+        subprocess_env["MIRO_DEV_MODE"] = "true"
+        subprocess_env["MIRO_USE_TMP"] = "false"
+        subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
+
+        subprocess.run([path], env=subprocess_env, check=True)
 
     return None
 
@@ -307,6 +388,8 @@ def main():
         print(f"GAMSPy version: {gamspy.__version__}")
     elif args.command == "install":
         install(args)
+    elif args.command == "run":
+        run(args)
     elif args.command == "update":
         update()
     elif args.command == "list":

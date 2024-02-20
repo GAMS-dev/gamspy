@@ -4,10 +4,12 @@ import argparse
 import doctest
 import glob
 import os
+import shutil
 import unittest
 
 from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
+from integration.test_miro import miro_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
 from integration.test_neos import neos_suite
@@ -105,6 +107,7 @@ def run_integration_tests(
         solve_suite,
         model_instance_suite,
         cmd_suite,
+        miro_suite,
     ]
 
     if args.engine:
@@ -192,8 +195,6 @@ def main():
 
     txt_paths = glob.glob("*.txt")
     for txt_path in txt_paths:
-        if txt_path.endswith("dev_requirements.txt"):
-            continue
         os.remove(txt_path)
 
     gdx_paths = glob.glob("*.gdx")
@@ -208,6 +209,11 @@ def main():
     for gams_path in gams_paths:
         if os.path.isfile(gams_path):
             os.remove(gams_path)
+
+    miro_paths = ["conf_miro", "data_miro"]
+    for path in miro_paths:
+        if os.path.exists(path):
+            shutil.rmtree(path)
 
     return 0
 

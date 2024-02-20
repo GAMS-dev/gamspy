@@ -43,6 +43,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import GamspyException
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -63,6 +64,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     domain_forwarding : bool, optional
     description : str, optional
     uels_on_axes : bool
+    is_miro_input : bool
+    is_miro_output : bool
 
     Examples
     --------
@@ -111,6 +114,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
 
+        # miro support
+        obj._is_miro_input = False
+        obj._is_miro_output = False
+        obj._is_miro_table = False
+
         return obj
 
     def __new__(
@@ -122,6 +130,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
+        is_miro_table: bool = False,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -153,7 +164,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
+        is_miro_table: bool = False,
     ):
+        # miro support
+        self._is_miro_input = is_miro_input
+        self._is_miro_output = is_miro_output
+        self._is_miro_table = is_miro_table
+
         # domain handling
         if domain is None:
             domain = []
@@ -187,17 +206,26 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container._requires_state_check = True
             if description != "":
                 self.description = description
+
+            previous_state = self.container.miro_protect
+            self.container.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
+            self.container.miro_protect = previous_state
         else:
             self._is_dirty = False
             self._is_frozen = False
             name = validation.validate_name(name)
 
+            if is_miro_input or is_miro_output:
+                name = name.lower()
+
+            previous_state = container.miro_protect
+            container.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -207,6 +235,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 uels_on_axes=uels_on_axes,
             )
 
+            if is_miro_input:
+                container._miro_input_symbols.append(self.name)
+
+            if is_miro_output:
+                container._miro_output_symbols.append(self.name)
+
             validation.validate_container(self, self.domain)
             self.where = condition.Condition(self)
             self.container._add_statement(self)
@@ -215,6 +249,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
+
+            container.miro_protect = previous_state
 
     def __getitem__(
         self, indices: Union[tuple, str]
@@ -229,6 +265,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         assignment: Union[Expression, float, int],
     ) -> None:
         domain = validation.validate_domain(self, indices)
+
+        if self._is_miro_input and self.container.miro_protect:
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols. `miro_protect`"
+                " attribute of the container can be set to False to allow"
+                " assigning to MIRO input symbols"
+            )
 
         if isinstance(assignment, float):
             assignment = utils._map_special_values(assignment)  # type: ignore
@@ -272,6 +315,17 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
+        if (
+            hasattr(self, "_is_miro_input")
+            and self._is_miro_input
+            and self.container.miro_protect
+        ):
+            raise GamspyException(
+                "Cannot assign to protected miro input symbols. `miro_protect`"
+                " attribute of the container can be set to False to allow"
+                " assigning to MIRO input symbols"
+            )
+
         if records is not None:
             if not isinstance(records, pd.DataFrame):
                 raise TypeError("Symbol 'records' must be type DataFrame")

@@ -1,7 +1,6 @@
 GAMSPy CHANGELOG
 ================
 
--------------------------------------------------------------------------------
 GAMSPy 0.11.9
 -------------------------------------------------------------------------------
 - General
@@ -11,11 +10,13 @@ GAMSPy 0.11.9
   - Do not execute_unload in case there is no dirty symbols to unload.
   - Update the behavior of `gamspy install/uninstall license`.
   - Implement GAMS Engine Client and consolidate NeosClient and EngineClient into one argument in solve.
+  - Implement GAMS MIRO integration.
   - Fix finding variables to mark in power and sameAs operations.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
   - Add tests for new GAMS Engine Client.
   - Add a test to catch domain violation.
+  - Add tests for GAMS MIRO.
   - Remove declaration of objective variables and functions and add the equations into Python variables.
   - Add a new test to verify the license installation/uninstallation behavior.
   - Add a test to find variables in power operation.
@@ -23,6 +24,7 @@ GAMSPy 0.11.9
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
   - Add documentation for solving models asynchronously with GAMS Engine.
   - Modify model library table generation script to add more information and better table styling.
+  - Add documentation of GAMS MIRO integration.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.8
@@ -44,14 +46,17 @@ GAMSPy 0.11.8
 GAMSPy 0.11.7
 -------------------------------------------------------------------------------
 - General
+  - Implement GAMS MIRO integration.
   - Allow variable/equation attribute assignment without any index.
   - Run GAMS on symbol declaration and setRecords.
   - Add debugging_level argument to Container.
   - Performance improvements (~25-30%).
 - Testing
+  - Add tests for GAMS MIRO.
   - Test scalar variable/equation assignment without any index.
   - Test uel order.
 - Documentation
+  - Add documentation of GAMS MIRO integration.
   - Document assigning to scalar variable/equation.
   - Update documentation of frozen solve (model instance in GAMS). 
   - Add documentation for debugging levels.
@@ -167,6 +172,7 @@ GAMSPy 0.11.0
 - Documentation
   - Add documentation for NEOS backend.
 - Testing
+  - Add NEOS Server as a backend to solve models.
   - Add tests for NEOS backend.
   - Add tests for equations that were defined in the constructor.
   - Add tests for checking the containers of domain symbols.
