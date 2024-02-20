@@ -11,6 +11,7 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+import gamspy._validation as validation
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
@@ -86,6 +87,11 @@ class Expression(operable.Operable):
         self.controlled_domain: list[Union[Set, Alias]] = list(
             set([*left_control, *right_control])
         )
+        self.container = None
+        if hasattr(left, "container"):
+            self.container = left.container
+        elif hasattr(right, "container"):
+            self.container = right.container
 
     def _create_domain(self):
         if self.left is None or isinstance(self.left, (int, float, str)):
@@ -137,9 +143,10 @@ class Expression(operable.Operable):
 
         self._shadow_domain = shadow_domain
         self.domain = result_domain
+        self.dimension = validation.get_dimension(self.domain)
 
     def __getitem__(self, indices):
-        # TODO check indices
+        indices = validation.validate_domain(self, indices)
         left_domain = [d for d in self._left_domain]
         right_domain = [d for d in self._right_domain]
         for i, s in enumerate(indices):
