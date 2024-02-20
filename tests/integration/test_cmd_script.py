@@ -47,6 +47,8 @@ class CmdSuite(unittest.TestCase):
             _ = subprocess.run(
                 ["gamspy", "install", "license", "blabla"],
                 check=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
             )
 
         if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
@@ -90,6 +92,8 @@ class CmdSuite(unittest.TestCase):
             _ = subprocess.run(
                 ["gamspy", "install", "solver", "bla"],
                 check=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
             )
 
     def test_uninstall_solver(self):
@@ -97,6 +101,8 @@ class CmdSuite(unittest.TestCase):
             _ = subprocess.run(
                 ["gamspy", "uninstall", "solver", "bla"],
                 check=True,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
             )
 
 
