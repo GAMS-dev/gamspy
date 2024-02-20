@@ -56,9 +56,14 @@ def validate_dimension(
 ):
     dimension = get_dimension(domain)
 
+    entity_name = (
+        f"symbol {symbol.name}"
+        if hasattr(symbol, "name")
+        else symbol.__class__.__name__
+    )
     if dimension != symbol.dimension:
         raise ValidationError(
-            f"The symbol {symbol.name} is referenced with"
+            f"The {entity_name} is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"
             f" given dimension is {dimension}"
