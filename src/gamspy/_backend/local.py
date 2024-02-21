@@ -41,6 +41,9 @@ if TYPE_CHECKING:
     from gamspy import Container
     from gamspy import Model
 
+MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
+MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+
 
 class Local(backend.Backend):
     def __init__(
@@ -107,6 +110,15 @@ class Local(backend.Backend):
         if len(symbols) != 0:
             self.container._load_records_from_gdx(
                 self.container._gdx_out, symbols
+            )
+
+        if MIRO_GDX_IN and self.container._miro_input_symbols:
+            self.container._load_records_from_gdx(
+                MIRO_GDX_IN, self.container._miro_input_symbols
+            )
+        if MIRO_GDX_OUT and self.container._miro_output_symbols:
+            self.container._load_records_from_gdx(
+                MIRO_GDX_OUT, self.container._miro_output_symbols
             )
 
         self.container._swap_checkpoints()

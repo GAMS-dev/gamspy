@@ -318,9 +318,9 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
             raise TypeError("`solver` argument must be a string.")
 
         installed_solvers = utils.getInstalledSolvers()
-        if solver not in installed_solvers:
+        if solver.upper() not in installed_solvers:
             available_solvers = utils.getAvailableSolvers()
-            if solver not in available_solvers:
+            if solver.upper() not in available_solvers:
                 raise ValidationError(
                     f"`{solver}` is not a valid solver option. All possible"
                     f" solvers: {available_solvers}. You can install a new"
@@ -330,7 +330,7 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
             raise ValidationError(
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
-                f" {solver}`"
+                f" {solver.lower()}`"
             )
 
     # Check validity of options

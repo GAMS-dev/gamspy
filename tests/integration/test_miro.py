@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from gamspy import Container
+from gamspy import Container, Set, Parameter
 
 
 class MiroSuite(unittest.TestCase):
@@ -16,6 +16,35 @@ class MiroSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
+
+    def test_domain_forwarding(self):
+        # Only the parameter is miro input
+        m = Container()
+        i = Set(m, name="i")
+        p = Parameter(
+            m,
+            name="p",
+            domain=[i],
+            domain_forwarding=True,
+            records=[["i1", 1]],
+            is_miro_input=True,
+        )
+        self.assertEqual(i.records.values.tolist()[0][0], "i1")
+        self.assertEqual(p.records.values[0][1], 1)
+
+        # Both are miro input
+        m2 = Container()
+        i2 = Set(m2, name="i2", is_miro_input=True)
+        p2 = Parameter(
+            m2,
+            name="p2",
+            domain=[i2],
+            domain_forwarding=True,
+            records=[["i2", 1]],
+            is_miro_input=True,
+        )
+        self.assertEqual(i2.records.values.tolist()[0][0], "i2")
+        self.assertEqual(p2.records.values[0][1], 1)
 
     def test_miro(self):
         directory = str(pathlib.Path(__file__).parent.resolve())

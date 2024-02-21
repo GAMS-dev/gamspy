@@ -932,7 +932,7 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test solver change
-        transport.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
+        transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
 
         self.assertTrue(
             os.path.exists(

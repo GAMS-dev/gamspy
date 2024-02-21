@@ -1,24 +1,6 @@
 {
     "modelTitle": "GAMSPy App",
     "inputSymbols": {
-        "jlocdata": {
-            "alias": "Market location information",
-            "symtype": "parameter",
-            "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "lat": {
-                    "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
-                }
-            }
-        },
         "k": {
             "alias": "k",
             "symtype": "set",
@@ -44,24 +26,6 @@
                 "value": {
                     "type": "numeric",
                     "alias": "value"
-                }
-            }
-        },
-        "ilocdata": {
-            "alias": "Plant location information",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "lat": {
-                    "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
                 }
             }
         },
@@ -94,6 +58,42 @@
                 "value": {
                     "type": "numeric",
                     "alias": "value"
+                }
+            }
+        },
+        "ilocdata": {
+            "alias": "Plant location information",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
+                }
+            }
+        },
+        "jlocdata": {
+            "alias": "Market location information",
+            "symtype": "parameter",
+            "headers": {
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
+                "lat": {
+                    "type": "numeric",
+                    "alias": "lat"
+                },
+                "lnG": {
+                    "type": "numeric",
+                    "alias": "lnG"
                 }
             }
         },
