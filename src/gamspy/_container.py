@@ -73,7 +73,7 @@ MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
 
 debugging_map = {
     "delete": DebugLevel.Off,
-    "keep_on_error": DebugLevel.Off,
+    "keep_on_error": DebugLevel.KeepFilesOnError,
     "keep": DebugLevel.KeepFiles,
 }
 

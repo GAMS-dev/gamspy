@@ -89,7 +89,15 @@ def getInstalledSolvers() -> list[str]:
             if line.isupper():
                 solver_names.append(line.split(" ")[0])
 
-    solver_names.remove("SCENSOLVER")
+    try:
+        solver_names.remove("SCENSOLVER")
+    except ValueError:
+        pass
+
+    try:
+        solver_names.remove("GUSS")
+    except ValueError:
+        pass
 
     return sorted(solver_names)
 

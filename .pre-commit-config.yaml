@@ -17,7 +17,7 @@ repos:
     rev: v4.5.0
     hooks:
     -   id: end-of-file-fixer
-        exclude: ^docs/
+        exclude: ^(tests/integration/miro_models|docs)
     -   id: check-added-large-files
         args: ['--maxkb=50000']
     -   id: check-ast

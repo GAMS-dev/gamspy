@@ -1,20 +1,6 @@
 {
     "modelTitle": "GAMSPy App",
     "inputSymbols": {
-        "b": {
-            "alias": "demand at market j in cases",
-            "symtype": "parameter",
-            "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
         "jlocdata": {
             "alias": "Market location information",
             "symtype": "parameter",
@@ -30,6 +16,34 @@
                 "lnG": {
                     "type": "numeric",
                     "alias": "lnG"
+                }
+            }
+        },
+        "k": {
+            "alias": "k",
+            "symtype": "set",
+            "headers": {
+                "uni": {
+                    "type": "string",
+                    "alias": "uni"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        },
+        "a": {
+            "alias": "capacity of plant i in cases",
+            "symtype": "parameter",
+            "headers": {
+                "I": {
+                    "type": "string",
+                    "alias": "canning plants"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
                 }
             }
         },
@@ -51,31 +65,17 @@
                 }
             }
         },
-        "a": {
-            "alias": "capacity of plant i in cases",
+        "b": {
+            "alias": "demand at market j in cases",
             "symtype": "parameter",
             "headers": {
-                "I": {
+                "j": {
                     "type": "string",
-                    "alias": "canning plants"
+                    "alias": "markets"
                 },
                 "value": {
                     "type": "numeric",
                     "alias": "value"
-                }
-            }
-        },
-        "k": {
-            "alias": "k",
-            "symtype": "set",
-            "headers": {
-                "uni": {
-                    "type": "string",
-                    "alias": "uni"
-                },
-                "element_text": {
-                    "type": "string",
-                    "alias": "element_text"
                 }
             }
         },
