@@ -14,7 +14,6 @@ test-leg-3.9:
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-
   artifacts:
     reports:
       coverage_report:

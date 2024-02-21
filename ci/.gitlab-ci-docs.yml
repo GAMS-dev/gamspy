@@ -17,5 +17,5 @@ build-docs:
     - if [ "$?" == "0" ]; then echo "Docs build passed!"; else exit 1; fi
   rules:
     - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
-      when: never
+      when: manual
     - when: on_success

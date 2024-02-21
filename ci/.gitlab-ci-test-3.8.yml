@@ -46,8 +46,8 @@ test-deg-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH != "master"
-      when: never
+    - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
+      when: manual
     - when: on_success
 
 test-dac-3.8:
@@ -94,3 +94,7 @@ test-wei-3.8:
     name: windows_3.8
     expire_in: 2 hours
     paths: [dist/*]
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
+      when: manual
+    - when: on_success
