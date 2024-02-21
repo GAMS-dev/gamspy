@@ -33,10 +33,8 @@ import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
-from gams import DebugLevel
-
 import gamspy._backend.backend as backend
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import GamspyException, NeosClientException
 from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("NEOS")
@@ -264,7 +262,7 @@ class NeosClient:
 
         response = self.neos.getOutputFile(job_number, job_password, filename)
         if str(response) == "Output file does not exist":
-            raise GamspyException(
+            raise NeosClientException(
                 "Couldn't get output file from NEOS Server because:"
                 f" {response}"
             )
@@ -338,7 +336,9 @@ class NeosClient:
     def print_queue(self):
         """Prints NEOS Server queue"""
         if not self.is_alive():
-            raise GamspyException("NeosServer is not alive. Try again later.")
+            raise NeosClientException(
+                "NeosServer is not alive. Try again later."
+            )
 
         msg = self.neos.printQueue()
         print(msg)
@@ -364,7 +364,7 @@ class NeosClient:
 
         Raises
         ------
-        GamspyException
+        NeosClientException
             In case there was an error on NeosServer
         """
         with open(
@@ -373,7 +373,9 @@ class NeosClient:
             xml = file.read()
 
         if not self.is_alive():
-            raise GamspyException("NeosServer is not alive. Try again later.")
+            raise NeosClientException(
+                "NeosServer is not alive. Try again later."
+            )
 
         if self.username is not None and self.password is not None:
             job_number, job_password = self.neos.authenticatedSubmitJob(
@@ -386,7 +388,7 @@ class NeosClient:
         self.jobs.append((job_number, job_password))
 
         if job_number == 0:
-            raise GamspyException(f"NEOS Server error! {job_password}")
+            raise NeosClientException(f"NEOS Server error! {job_password}")
 
         if is_blocking:
             offset = 0
@@ -452,16 +454,10 @@ class NEOSServer(backend.Backend):
             working_directory=self.container.working_directory,
         )
 
-        try:
-            job_number, job_password = self.client.submit_job(
-                is_blocking=self.client.is_blocking,
-                working_directory=self.container.working_directory,
-            )
-        except GamspyException as e:
-            if self.container._debugging_level == "keep_on_error":
-                self.container.workspace._debug = DebugLevel.KeepFiles
-
-            raise e
+        job_number, job_password = self.client.submit_job(
+            is_blocking=self.client.is_blocking,
+            working_directory=self.container.working_directory,
+        )
 
         if self.client.is_blocking:
             self.client.download_output(

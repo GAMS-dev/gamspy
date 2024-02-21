@@ -42,7 +42,6 @@ import urllib.parse
 import certifi
 import zipfile
 
-from gams import DebugLevel
 from gams import GamsEngineConfiguration
 from gams import GamsOptions
 from gams.control.workspace import GamsException
@@ -51,7 +50,7 @@ from gams.core.cfg import cfgModelTypeName
 from gams.core.opt import optSetStrStr
 
 import gamspy._backend.backend as backend
-from gamspy.exceptions import GamsEngineException
+from gamspy.exceptions import EngineException, EngineClientException
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -135,7 +134,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamsEngineException
+        EngineClientException
             If get request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -158,7 +157,7 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamsEngineException(
+            raise EngineClientException(
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
@@ -166,7 +165,7 @@ class Job(Endpoint):
                 r.status,
             )
 
-        raise GamsEngineException(
+        raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
@@ -200,7 +199,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamsEngineException
+        EngineClientException
             If post request has failed.
         """
         model_data_zip = self._create_zip_file(
@@ -232,7 +231,7 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamsEngineException(
+            raise EngineClientException(
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
@@ -240,7 +239,7 @@ class Job(Endpoint):
                 r.status,
             )
 
-        raise GamsEngineException(
+        raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
@@ -263,7 +262,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamsEngineException
+        EngineClientException
             If get request has failed.
         """
         if not os.path.exists(working_directory):
@@ -296,7 +295,7 @@ class Job(Endpoint):
                 os.remove(path)
         else:
             response_data = r.data.decode("utf-8", errors="replace")
-            raise GamsEngineException(
+            raise EngineClientException(
                 "Fatal error while getting the results back from engine. GAMS"
                 f" Engine return code: {r.status}. Error message:"
                 f" {response_data['message']}",
@@ -315,9 +314,9 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamsEngineException
+        EngineClientException
             If job data does not exist in GAMS Engine.
-        GamsEngineException
+        EngineClientException
             If delete request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -331,14 +330,14 @@ class Job(Endpoint):
             if r.status == 200:
                 return
             elif r.status == 403:
-                raise GamsEngineException(
+                raise EngineClientException(
                     "Job data does not exist in GAMS Engine!", r.status
                 )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise GamsEngineException(
+            raise EngineClientException(
                 "Removing job result failed with status code: "
                 + str(r.status)
                 + ". Message: "
@@ -346,7 +345,7 @@ class Job(Endpoint):
                 r.status,
             )
 
-        raise GamsEngineException(
+        raise EngineClientException(
             "Removing job result failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
@@ -371,7 +370,7 @@ class Job(Endpoint):
 
         Raises
         ------
-        GamsEngineException
+        EngineClientException
             If get request has failed.
         """
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
@@ -387,7 +386,7 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
             elif r.status != 200:
-                raise GamsEngineException(
+                raise EngineClientException(
                     "Getting logs failed with status code: "
                     + str(r.status)
                     + ". "
@@ -644,14 +643,14 @@ class GAMSEngine(backend.Backend):
                 job_status, message, _ = self.client.job.get(token)
 
                 if job_status not in STATUS_MAP.keys():
-                    raise GamsEngineException(
+                    raise EngineException(
                         "Unknown job status code! Currently supported job"
                         f" status codes: {STATUS_MAP.keys()}",
                         status_code=job_status,
                     )
 
                 if job_status in [-1, -3]:
-                    raise GamsEngineException(
+                    raise EngineException(
                         "Could not get job results because the job is"
                         f" {message}.",
                         status_code=job_status,
@@ -675,11 +674,6 @@ class GAMSEngine(backend.Backend):
                 )
 
                 self.model._update_model_attributes()
-        except GamsEngineException as e:
-            if self.container._debugging_level == "keep_on_error":
-                self.container.workspace._debug = DebugLevel.KeepFiles
-
-            raise e
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
