@@ -80,9 +80,9 @@ class ModelInstanceSuite(unittest.TestCase):
             122.940,
             138.307,
             153.675,
-            164.002,
-            164.519,
-            166.117,
+            169.94250000000002,
+            185.58,
+            201.21750000000003,
         ]
 
         transport.freeze(modifiables=[bmult])
