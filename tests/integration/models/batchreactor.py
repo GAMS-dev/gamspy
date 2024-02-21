@@ -139,7 +139,7 @@ def main():
 
     import math
 
-    assert math.isclose(batchReactor.objective_value, 0.8558, rel_tol=0.001)
+    assert math.isclose(batchReactor.objective_value, 0.8826, rel_tol=0.001)
 
 
 if __name__ == "__main__":

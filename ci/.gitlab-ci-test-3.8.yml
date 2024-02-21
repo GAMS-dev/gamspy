@@ -2,15 +2,11 @@ test-leg-3.8:
   stage: test
   when: on_success
   tags: [linux]
-  image:
-    name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
-    entrypoint: [""]
+  image: python:3.8
   script:
-    - curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
-    - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
-    - source anaconda3/bin/activate
-    - conda create -y -n gamspy-env-3.8 python=3.8
-    - conda activate gamspy-env-3.8
+    - pip install virtualenv
+    - virtualenv venv38
+    - source venv38/bin/activate
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge

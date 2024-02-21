@@ -92,6 +92,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     description : str, optional
     uels_on_axes: bool
     definition_domain: list, optional
+    is_miro_output : bool
 
     Examples
     --------
@@ -159,6 +160,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         obj._slack = obj._create_attr("slack")
         obj._infeas = obj._create_attr("infeas")
 
+        # miro support
+        obj._is_miro_output = False
+
         return obj
 
     def __new__(
@@ -172,6 +176,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
         if not isinstance(container, gp.Container):
@@ -205,8 +210,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
+        # miro support
+        self._is_miro_output = is_miro_output
+
         # domain handling
         if domain is None:
             domain = []
@@ -248,12 +257,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self.container._requires_state_check = True
             if description != "":
                 self.description = description
+
+            previous_state = self.container.miro_protect
+            self.container.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
+            self.container.miro_protect = previous_state
 
         else:
             type = cast_type(type)
@@ -261,6 +274,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._is_frozen = False
             name = validation.validate_name(name)
 
+            if is_miro_output:
+                name = name.lower()
+
+            previous_state = container.miro_protect
+            container.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -270,6 +288,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 description=description,
                 uels_on_axes=uels_on_axes,
             )
+
+            if is_miro_output:
+                container._miro_output_symbols.append(self.name)
 
             validation.validate_container(self, self.domain)
 
@@ -293,6 +314,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
                 self.container._run()
+
+            container.miro_protect = previous_state
 
     def __hash__(self):
         return id(self)

@@ -70,8 +70,9 @@ class UtilsSuite(unittest.TestCase):
 
         expected = [
             "BARON",
+            "CBC",
             "CONOPT",
-            "CONOPT4",
+            "CONOPT3",
             "CONVERT",
             "COPT",
             "CPLEX",
