@@ -197,18 +197,22 @@ class Container(gt.Container):
         return debugging_level
 
     def __del__(self):
-        if (
-            not IS_MIRO_INIT
-            or not self._first_destruct
-            or len(self._miro_input_symbols) + len(self._miro_output_symbols)
-            == 0
-        ):
-            return
+        try:
+            if (
+                not IS_MIRO_INIT
+                or not self._first_destruct
+                or len(self._miro_input_symbols)
+                + len(self._miro_output_symbols)
+                == 0
+            ):
+                return
 
-        self._first_destruct = False
-        # create conf_<model>/<model>_io.json
-        encoder = MiroJSONEncoder(self)
-        encoder.writeJson()
+            self._first_destruct = False
+            # create conf_<model>/<model>_io.json
+            encoder = MiroJSONEncoder(self)
+            encoder.writeJson()
+        except Exception:
+            pass
 
     def _write_default_gdx_miro(self):
         # create data_<model>/default.gdx
@@ -836,7 +840,7 @@ class Container(gt.Container):
 
         Raises
         ------
-        GamspyException
+        ValidationError
 
         Examples
         --------

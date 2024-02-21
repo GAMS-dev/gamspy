@@ -37,7 +37,19 @@ class GamspyException(Exception):
     """Plain Gamspy exception."""
 
 
-class GamsEngineException(GamspyException):
+class NeosClientException(Exception):
+    """NeosClient exception."""
+
+
+class EngineClientException(Exception):
+    """EngineClient exception"""
+
+
+class NeosException(GamspyException):
+    """NEOS Server execution exception"""
+
+
+class EngineException(GamspyException):
     def __init__(
         self,
         message: str,

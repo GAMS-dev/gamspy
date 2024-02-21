@@ -523,7 +523,7 @@ class Model:
 
         Raises
         ------
-        GamspyException
+        ValidationError
             If the job is not initialized
         """
         if self.container._job is not None:
@@ -594,7 +594,7 @@ class Model:
 
         Raises
         ------
-        GamspyException
+        ValidationError
             In case engine_config is not provided for `engine` backend or
             neos_client is not provided for `neos` backend.
         ValueError
