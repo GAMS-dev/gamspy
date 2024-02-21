@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import os
 import unittest
 
@@ -450,7 +451,7 @@ class ContainerSuite(unittest.TestCase):
         m.read("test.gdx", load_records=False)
         self.assertIsNone(m["a"].records, None)
 
-    def _test_debugging_level(self):
+    def test_debugging_level(self):
         from gamspy.math import sqrt
 
         with self.assertRaises(ValidationError):
@@ -465,6 +466,7 @@ class ContainerSuite(unittest.TestCase):
             _ = Equation(m, "e")
 
         test_delete_success()
+        gc.collect()
         self.assertFalse(os.path.exists(working_directory))
 
         def test_delete_err():
@@ -476,6 +478,7 @@ class ContainerSuite(unittest.TestCase):
                 e[:] = sqrt(e) == 5
 
         test_delete_err()
+        gc.collect()
         self.assertFalse(os.path.exists(working_directory))
 
         def test_keep_success():
@@ -485,6 +488,7 @@ class ContainerSuite(unittest.TestCase):
             _ = Equation(m, "e")
 
         test_keep_success()
+        gc.collect()
         self.assertTrue(os.path.exists(working_directory))
 
         def test_keep_err():
@@ -496,6 +500,7 @@ class ContainerSuite(unittest.TestCase):
                 e[:] = sqrt(e) == 5
 
         test_keep_err()
+        gc.collect()
         self.assertTrue(os.path.exists(working_directory))
 
         def test_keep_on_error_success():
@@ -505,6 +510,7 @@ class ContainerSuite(unittest.TestCase):
             _ = Equation(m, "e")
 
         test_keep_on_error_success()
+        gc.collect()
         self.assertFalse(os.path.exists(working_directory))
 
         def test_keep_on_error_err():
@@ -516,6 +522,7 @@ class ContainerSuite(unittest.TestCase):
                 e[:] = sqrt(e) == 5
 
         test_keep_on_error_err()
+        gc.collect()
         self.assertTrue(os.path.exists(working_directory))
 
 
