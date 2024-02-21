@@ -4,7 +4,7 @@ import os
 import unittest
 
 import numpy as np
-from gamspy import Alias, Container, Parameter, Set
+from gamspy import Alias, Container, Parameter, Set, Variable, Sum
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 from gamspy.math import trace
@@ -440,6 +440,58 @@ class MatrixSuite(unittest.TestCase):
         sc1_dens = sc1.toDense()
         self.assertTrue(
             np.allclose(sc1_dens, np.trace(recs, axis1=1, axis2=2))
+        )
+
+    def test_domain_relabeling(self):
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        i2 = Alias(self.m, name="i2", alias_with=i)
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        k2 = Alias(self.m, name="k2", alias_with=k)
+
+        a = Variable(self.m, name="a", domain=[n, i, j])
+        b = Parameter(self.m, name="b", domain=[j, k])
+
+        expr = a + b
+        expr2 = expr[n, i2, j, k]
+        self.assertEqual(expr.domain, [n, i, j, k])
+        self.assertEqual(expr.gamsRepr(), "(a(n,i,j) + b(j,k))")
+        self.assertEqual(expr2.domain, [n, i2, j, k])
+        self.assertEqual(expr2.gamsRepr(), "(a(n,i2,j) + b(j,k))")
+        self.assertRaises(ValidationError, lambda: expr[n])
+
+        expr3 = (a + a) + (b + b)
+        self.assertEqual(
+            expr3.gamsRepr(), "((a(n,i,j) + a(n,i,j)) + (b(j,k) + b(j,k)))"
+        )
+        expr4 = expr3[n, i2, j, k]
+        self.assertEqual(
+            expr4.gamsRepr(), "((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k)))"
+        )
+
+        expr5 = Sum(n, expr3)
+        self.assertEqual(
+            expr5.gamsRepr(),
+            "sum(n,((a(n,i,j) + a(n,i,j)) + (b(j,k) + b(j,k))))",
+        )
+
+        expr6 = expr5[i2, j, k]
+        self.assertEqual(
+            expr6.gamsRepr(),
+            "sum(n,((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k))))",
+        )
+
+        expr7 = Sum(j, expr6)
+        self.assertEqual(
+            expr7.gamsRepr(),
+            "sum(j,sum(n,((a(n,i2,j) + a(n,i2,j)) + (b(j,k) + b(j,k)))))",
+        )
+
+        expr8 = expr7[i, k2]
+        self.assertEqual(
+            expr8.gamsRepr(),
+            "sum(j,sum(n,((a(n,i,j) + a(n,i,j)) + (b(j,k2) + b(j,k2)))))",
         )
 
 
