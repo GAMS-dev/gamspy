@@ -207,12 +207,7 @@ class Container(gt.Container):
 
         self._first_destruct = False
         # create conf_<model>/<model>_io.json
-        encoder = MiroJSONEncoder(
-            self,
-            self._miro_input_symbols,
-            self._miro_output_symbols,
-        )
-
+        encoder = MiroJSONEncoder(self)
         encoder.writeJson()
 
     def _write_default_gdx_miro(self):
@@ -404,14 +399,6 @@ class Container(gt.Container):
 
                 modified_names.append(name)
 
-            # miro input symbols should always be assigned to catch domain violations
-            if (
-                isinstance(symbol, (gp.Set, gp.Parameter))
-                and symbol._is_miro_input
-                and name not in modified_names
-            ):
-                modified_names.append(name)
-
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
@@ -449,7 +436,7 @@ class Container(gt.Container):
     def _get_load_miro_input_str(self, statement, gdx_in):
         string = "$gdxIn\n"  # close the old one
         string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
-        string += f"$loadDC {statement.name}\n"
+        string += f"$loadDC {statement}\n"
         string += "$gdxIn\n"  # close the new one
         string += f"$gdxIn {gdx_in}\n"
 
@@ -475,27 +462,22 @@ class Container(gt.Container):
             else:
                 string += statement.getStatement() + "\n"
 
+        for symbol_name in modified_names:
+            if not isinstance(
+                self[symbol_name], gp.Alias
+            ) and not symbol_name.startswith(gp.Model._generate_prefix):
                 if (
-                    isinstance(statement, MIRO_INPUT_TYPES)
-                    and statement._is_miro_input
+                    isinstance(self[symbol_name], MIRO_INPUT_TYPES)
+                    and self[symbol_name]._is_miro_input
                 ):
                     if not IS_MIRO_INIT and MIRO_GDX_IN:
                         string += self._get_load_miro_input_str(
-                            statement, gdx_in
+                            symbol_name, gdx_in
                         )
                     else:
-                        string += f"$loadDC {statement.name}\n"
-
-        for symbol_name in modified_names:
-            if (
-                not isinstance(self[symbol_name], gp.Alias)
-                and not symbol_name.startswith(gp.Model._generate_prefix)
-                and (
-                    not hasattr(self[symbol_name], "_is_miro_input")
-                    or not self[symbol_name]._is_miro_input
-                )
-            ):
-                string += f"$loadDC {symbol_name}\n"
+                        string += f"$loadDC {symbol_name}\n"
+                else:
+                    string += f"$loadDC {symbol_name}\n"
 
         string += "$offUNDF\n$gdxIn\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
