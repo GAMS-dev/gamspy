@@ -16,15 +16,13 @@ class MiroJSONEncoder:
     def __init__(
         self,
         container: Container,
-        input_symbols: list[str],
-        output_symbols: list[str],
     ):
         self.container = container
         self.model_title = "GAMSPy App"
-        self.input_symbols = input_symbols
-        self.output_symbols = output_symbols
-        self.input_scalars = self._find_scalars(input_symbols)
-        self.output_scalars = self._find_scalars(output_symbols)
+        self.input_symbols = container._miro_input_symbols
+        self.output_symbols = container._miro_output_symbols
+        self.input_scalars = self._find_scalars(self.input_symbols)
+        self.output_scalars = self._find_scalars(self.output_symbols)
         self.miro_json = self.prepare_json()
 
     def _find_scalars(self, symbols: list[str]) -> list[str]:
@@ -219,11 +217,16 @@ class MiroJSONEncoder:
             alias, self.input_scalars if is_input else self.output_scalars
         )
 
-        non_scalars = (
-            list(set(symbols) - set(self.input_scalars))
-            if is_input
-            else list(set(symbols) - set(self.output_scalars))
-        )
+        non_scalars = []
+
+        for symbol in symbols:
+            if is_input:
+                if symbol not in self.input_scalars:
+                    non_scalars.append(symbol)
+            else:
+                if symbol not in self.output_scalars:
+                    non_scalars.append(symbol)
+
         symbol_dicts = self.prepare_symbols(non_scalars)
 
         non_scalars = [name for name in non_scalars]

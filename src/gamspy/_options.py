@@ -288,12 +288,6 @@ def _map_options(
     -------
     GamsOptions
 
-    Raises
-    ------
-    GamspyException
-        when options is not type Options
-    GamspyException
-        when one of the option names is invalid
     """
     gams_options = GamsOptions(workspace)
 

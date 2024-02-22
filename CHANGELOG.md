@@ -1,6 +1,16 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.0
+-------------
+- General
+  - Implement GAMS MIRO integration.
+  - Update minimum gamsapi and gamspy_base version to 46.1.0.
+- Testing
+  - Add tests for GAMS MIRO.
+- Documentation
+  - Add documentation of GAMS MIRO integration.
+  
 GAMSPy 0.11.10
 -------------------------------------------------------------------------------
 - General
@@ -19,13 +29,11 @@ GAMSPy 0.11.9
   - Do not execute_unload in case there is no dirty symbols to unload.
   - Update the behavior of `gamspy install/uninstall license`.
   - Implement GAMS Engine Client and consolidate NeosClient and EngineClient into one argument in solve.
-  - Implement GAMS MIRO integration.
   - Fix finding variables to mark in power and sameAs operations.
 - Testing
   - Add test for GAMS Engine extra model files with incorrect relative path.
   - Add tests for new GAMS Engine Client.
   - Add a test to catch domain violation.
-  - Add tests for GAMS MIRO.
   - Remove declaration of objective variables and functions and add the equations into Python variables.
   - Add a new test to verify the license installation/uninstallation behavior.
   - Add a test to find variables in power operation.
@@ -33,7 +41,6 @@ GAMSPy 0.11.9
   - Add a note in model documentation to warn about relative path requirement of GAMS Engine.
   - Add documentation for solving models asynchronously with GAMS Engine.
   - Modify model library table generation script to add more information and better table styling.
-  - Add documentation of GAMS MIRO integration.
 
 -------------------------------------------------------------------------------
 GAMSPy 0.11.8

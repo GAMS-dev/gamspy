@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import doctest
 import glob
+import json
 import os
 import shutil
 import unittest
@@ -44,10 +45,20 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.11.10")
+        self.assertEqual(gamspy.__version__, "0.12.0")
 
 
 class DocsSuite(unittest.TestCase):
+    def test_switcher(self):
+        this = os.path.dirname(os.path.abspath(__file__))
+        root = this.rsplit(os.sep, maxsplit=1)[0]
+        with open(
+            f"{root}{os.sep}docs{os.sep}_static{os.sep}switcher.json"
+        ) as file:
+            switcher = json.loads(file.read())
+            versions = [elem["version"] for elem in switcher]
+            self.assertTrue(f"v{gamspy.__version__}" in versions)
+
     def test_docs(self):
         root = gamspy.__path__[0]
 

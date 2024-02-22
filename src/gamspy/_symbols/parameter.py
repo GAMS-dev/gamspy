@@ -43,7 +43,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import GamspyException
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Set, Container
@@ -267,7 +267,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         domain = validation.validate_domain(self, indices)
 
         if self._is_miro_input and self.container.miro_protect:
-            raise GamspyException(
+            raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"
                 " attribute of the container can be set to False to allow"
                 " assigning to MIRO input symbols"
@@ -320,7 +320,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             and self._is_miro_input
             and self.container.miro_protect
         ):
-            raise GamspyException(
+            raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"
                 " attribute of the container can be set to False to allow"
                 " assigning to MIRO input symbols"

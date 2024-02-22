@@ -59,7 +59,7 @@ def getInstalledSolvers() -> list[str]:
 
     Raises
     ------
-    GamspyException
+    ModuleNotFoundError
         In case gamspy_base is not installed.
 
     Examples
@@ -112,7 +112,7 @@ def getAvailableSolvers() -> list[str]:
 
     Raises
     ------
-    GamspyException
+    ModuleNotFoundError
         In case gamspy_base is not installed.
 
     Examples

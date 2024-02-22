@@ -349,9 +349,13 @@ def run(args: argparse.Namespace):
         if not args.skip_execution:
             subprocess_env = os.environ.copy()
             subprocess_env["MIRO"] = "1"
-            subprocess.run(
-                [sys.executable, model], env=subprocess_env, check=True
-            )
+
+            try:
+                subprocess.run(
+                    [sys.executable, model], env=subprocess_env, check=True
+                )
+            except subprocess.CalledProcessError:
+                return
 
         # Run MIRO
         subprocess_env = os.environ.copy()

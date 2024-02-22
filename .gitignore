@@ -19,3 +19,5 @@ tests/integration/*.txt
 tests/integration/models/results.xlsx
 **/ipynb_checkpoints
 /_*
+miro.log
+trace.txt
