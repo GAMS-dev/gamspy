@@ -23,9 +23,11 @@
 # SOFTWARE.
 #
 from __future__ import annotations
+import math
+
 from typing import TYPE_CHECKING, Union
 
-import gamspy.math as math
+import gamspy.math as gamspy_math
 import gamspy._algebra.expression as expression
 
 if TYPE_CHECKING:
@@ -89,10 +91,14 @@ class Operable:
         return expression.Expression(other, "*", self)
 
     def __pow__(self: OperableType, other: OperableType):
-        if isinstance(other, int) and other == 2:
-            return math.sqr(self)
+        if isinstance(other, int):
+            return gamspy_math.power(self, other)
+        elif isinstance(other, float) and math.isclose(
+            other, round(other), rel_tol=1e-4
+        ):
+            return gamspy_math.power(self, other)
 
-        return math.rpower(self, other)
+        return gamspy_math.rpower(self, other)
 
     # not, and, or, xor
     def __and__(self: OperableType, other: OperableType):
