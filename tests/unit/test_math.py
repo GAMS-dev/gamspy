@@ -359,6 +359,16 @@ class MathSuite(unittest.TestCase):
         op2 = gams_math.sigmoid(a[i])
         self.assertEqual(op2.gamsRepr(), "( sigmoid(a(i)) )")
 
+        # power
+        op1 = a[i] ** 3
+        self.assertEqual(op1.gamsRepr(), "( power(a(i),3) )")
+
+        op2 = a[i] ** 2.999999
+        self.assertEqual(op2.gamsRepr(), "( power(a(i),2.999999) )")
+
+        op3 = a[i] ** 2.5
+        self.assertEqual(op3.gamsRepr(), "( rPower(a(i),2.5) )")
+
     def test_logical(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
