@@ -24,14 +24,66 @@
 #
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import List, Union
 
 import gamspy._symbols.implicits as implicits
+import gamspy.math
 import gamspy.utils as utils
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.set import Set
 from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
+
+
+def vector_norm(x, ord=2, dim=None):
+    """
+    Returns the vector norm of the provided vector x.
+    If ord is not an even integer, absolute value is used
+    which requires DNLP.
+    """
+    import gamspy._algebra.operation as operation
+
+    # cases:
+    #            inf norm        max(abs(x))
+    #           -inf norm        min(abs(x))
+    #            0 norm          counting number of non-zeros
+    #            integer norm
+    #            float norm
+
+    # TODO discuss adding an eager option and calculating
+    # not supported norms only for the data that is not dependent
+    # on variables
+
+    if isinstance(ord, float):
+        if ord.is_integer():
+            ord = int(ord)
+        elif ord in [float("inf"), float("-inf")]:
+            raise ValidationError("Infinity norms are not supported")
+
+    if ord == 0:
+        raise ValidationError("0 norm is not supported")
+
+    even = isinstance(ord, int) and ord % 2 == 0
+    domain = x.domain
+    if dim is None:
+        sum_domain = domain
+    else:
+        if not isinstance(dim, Iterable):
+            dim = [dim]
+
+        sum_domain = []
+        for d in dim:
+            sum_domain.append(domain[d])
+
+    if even:
+        return operation.Sum(sum_domain, x[domain] ** ord) ** (1 / ord)
+    elif ord == 1:
+        return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
+    else:
+        return operation.Sum(
+            sum_domain, gamspy.math.abs(x[domain]) ** ord
+        ) ** (1 / ord)
 
 
 def next_alias(symbol):
