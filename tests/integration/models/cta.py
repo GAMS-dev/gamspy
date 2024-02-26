@@ -50,7 +50,6 @@ from gamspy.math import Round
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets
@@ -75,7 +74,7 @@ def main():
     file_dir = os.path.dirname(os.path.abspath(__file__))
     cdb = ConnectDatabase(m.system_directory)
     cdb.exec_task({
-        "PandasExcelReader": {
+        "ExcelReader": {
             "file": os.path.join(file_dir, "cta.xlsx"),
             "symbols": [
                 {
@@ -209,21 +208,18 @@ def main():
 
     cdb = ConnectDatabase(m.system_directory, m)
     cdb.exec_task({
-        "PandasExcelWriter": {
+        "ExcelWriter": {
             "file": os.path.join(file_dir, "results.xlsx"),
-            "excelWriterArguments": {"mode": "w"},
+            "clearSheet": True,
             "symbols": [
                 {
                     "name": "adjrep",
-                    "range": "adjrep!A1",
                 },
                 {
                     "name": "rep",
-                    "range": "rep!A1",
                 },
                 {
                     "name": "adjsum",
-                    "range": "adjsum!A1",
                 },
             ],
         }
@@ -288,12 +284,11 @@ def main():
 
     cdb = ConnectDatabase(m.system_directory, m)
     cdb.exec_task({
-        "PandasExcelWriter": {
+        "ExcelWriter": {
             "file": os.path.join(file_dir, "results.xlsx"),
+            "clearSheet": True,
             "symbols": [{
                 "name": "binrep",
-                "range": "binrep!A1",
-                "toExcelArguments": {"merge_cells": False},
             }],
         }
     })
