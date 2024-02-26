@@ -25,22 +25,62 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import List, Union
+from typing import List, Union, Optional
 
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
-from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.set import Set
-from gamspy._symbols.variable import Variable
 from gamspy.exceptions import ValidationError
+from typing import TYPE_CHECKING
+
+from gamspy._symbols.variable import Variable
+from gamspy._symbols.parameter import Parameter
+
+if TYPE_CHECKING:
+    from gamspy._symbols.alias import Alias
+    from gamspy._algebra.operation import Operation
+    from gamspy._algebra.expression import Expression
+    from gamspy import Container
 
 
-def vector_norm(x, ord=2, dim=None):
+def vector_norm(
+    x: (
+        Parameter
+        | Variable
+        | implicits.ImplicitParameter
+        | implicits.ImplicitVariable
+        | "Expression"
+        | "Operation"
+    ),
+    ord: float | int = 2,
+    dim: Optional[List[int]] = None,
+) -> "Operation" | "Expression":
     """
-    Returns the vector norm of the provided vector x.
-    If ord is not an even integer, absolute value is used
-    which requires DNLP.
+    Returns the vector norm of the provided vector x. If ord is not an even integer, absolute value is used which
+    requires DNLP.
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+    ord: int | float
+    dim: List[int], optional
+
+    Returns
+    -------
+    Expression | Operation
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import math
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, name="i", records=["i1", "i2"])
+    >>> vec = gp.Parameter(m, "vec", domain=[i], records=[("i1", 3), ("i2", 4)])
+    >>> vlen = gp.Parameter(m, "vlen")
+    >>> vlen[...] = vector_norm(vec)
+    >>> math.isclose(vlen.records.iloc[0, 0], 5, rel_tol=1e-4)
+    True
     """
     import gamspy._algebra.operation as operation
 
@@ -80,13 +120,17 @@ def vector_norm(x, ord=2, dim=None):
         return operation.Sum(sum_domain, x[domain] ** ord) ** (1 / ord)
     elif ord == 1:
         return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
+    elif ord == 2:
+        return gamspy.math.sqrt(
+            operation.Sum(sum_domain, gamspy.math.sqr(x[domain]))
+        )
     else:
         return operation.Sum(
             sum_domain, gamspy.math.abs(x[domain]) ** ord
         ) ** (1 / ord)
 
 
-def next_alias(symbol):
+def next_alias(symbol: "Alias" | Set) -> "Alias":
     from gamspy._symbols.alias import Alias
 
     current = symbol
@@ -106,7 +150,7 @@ def next_alias(symbol):
     return find_x
 
 
-def dim(m, dims: List[int]):
+def dim(m: "Container", dims: List[int]):
     """Returns an array where each element
     corresponds to a set where the dimension of the
     set is equal to the element in dims"""
