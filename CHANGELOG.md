@@ -1,6 +1,12 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.1
+-------------
+- Testing
+  - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
+
+
 GAMSPy 0.12.0
 -------------
 - General
