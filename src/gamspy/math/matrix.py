@@ -116,14 +116,15 @@ def vector_norm(
         for d in dim:
             sum_domain.append(domain[d])
 
-    if even:
+    if ord == 2:
+        return gamspy.math.sqrt(
+            operation.Sum(sum_domain, gamspy.math.sqr(x[domain])),
+            safe_cancel=True,
+        )
+    elif even:
         return operation.Sum(sum_domain, x[domain] ** ord) ** (1 / ord)
     elif ord == 1:
         return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
-    elif ord == 2:
-        return gamspy.math.sqrt(
-            operation.Sum(sum_domain, gamspy.math.sqr(x[domain]))
-        )
     else:
         return operation.Sum(
             sum_domain, gamspy.math.abs(x[domain]) ** ord

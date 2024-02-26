@@ -20,9 +20,11 @@ class MathOp:
         self,
         op_name: str,
         elements: tuple,
+        safe_cancel: bool = False,
     ):
         self.op_name = op_name
         self.elements = elements
+        self.safe_cancel = safe_cancel
 
     def gamsRepr(self):
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
@@ -270,7 +272,7 @@ def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     return expression.Expression(None, MathOp("sqexp", (x, S)), None)
 
 
-def sqrt(x: int | float | Symbol) -> Expression:
+def sqrt(x: Union[int, float, Symbol], safe_cancel=False) -> Expression:
     """
     Square root of x
 
@@ -278,7 +280,9 @@ def sqrt(x: int | float | Symbol) -> Expression:
     -------
     Expression
     """
-    return expression.Expression(None, MathOp("sqrt", (x,)), None)
+    return expression.Expression(
+        None, MathOp("sqrt", (x,), safe_cancel=safe_cancel), None
+    )
 
 
 def truncate(x: int | float | Symbol) -> Expression:

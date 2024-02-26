@@ -69,6 +69,15 @@ class Operable:
 
     @typing.no_type_check
     def __pow__(self: OperableType, other: OperableType):
+        if (
+            other == 2
+            and isinstance(self, expression.Expression)
+            and isinstance(self.data, gamspy_math.misc.MathOp)
+            and self.data.op_name == "sqrt"
+            and self.data.safe_cancel
+        ):
+            return self.data.elements[0]
+
         if isinstance(other, int):
             return gamspy_math.power(self, other)
         elif isinstance(other, float):
