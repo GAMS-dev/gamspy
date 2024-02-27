@@ -20,22 +20,6 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
 
 
-def get_set(domain: List[Set | Alias | Domain | Expression]):
-    res = []
-    for el in domain:
-        if hasattr(el, "left"):
-            if hasattr(el.left, "sets"):
-                res.extend(el.left.sets)
-            else:
-                res.append(el.left)
-        elif hasattr(el, "sets"):
-            res.extend(el.sets)
-        else:
-            res.append(el)
-
-    return res
-
-
 class Operation(operable.Operable):
     def __init__(
         self,
@@ -49,7 +33,7 @@ class Operation(operable.Operable):
         if len(self.op_domain) == 0:
             raise ValidationError("Operation requires at least one index")
 
-        self._bare_op_domain = get_set(self.op_domain)
+        self._bare_op_domain = utils.get_set(self.op_domain)
         self.expression = expression
         self._op_name = op_name
         self.container = self._bare_op_domain[0].container

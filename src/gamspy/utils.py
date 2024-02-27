@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
+import platform
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Iterable, List
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
-    from gamspy import Alias, Equation, Set, Variable
+    from gamspy import Alias, Equation, Set, Variable, Domain, Expression
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -506,3 +508,20 @@ def set_base_eq(set_a, set_b):
     set_a = getattr(set_a, "alias_with", set_a)
     set_b = getattr(set_b, "alias_with", set_b)
     return set_a == set_b
+
+
+# TODO either add description or make private
+def get_set(domain: List[Set | Alias | Domain | Expression]):
+    res = []
+    for el in domain:
+        if hasattr(el, "left"):
+            if hasattr(el.left, "sets"):
+                res.extend(el.left.sets)
+            else:
+                res.append(el.left)
+        elif hasattr(el, "sets"):
+            res.extend(el.sets)
+        else:
+            res.append(el)
+
+    return res
