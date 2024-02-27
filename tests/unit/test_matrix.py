@@ -8,6 +8,9 @@ from gamspy import Alias, Container, Parameter, Set, Variable, Sum
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 from gamspy.math import trace
+from gamspy.math import vector_norm
+import gamspy as gp
+import math
 
 
 class MatrixSuite(unittest.TestCase):
@@ -493,6 +496,83 @@ class MatrixSuite(unittest.TestCase):
             expr8.gamsRepr(),
             "sum(j,sum(n,((a(n,i,j) + a(n,i,j)) + (b(j,k2) + b(j,k2)))))",
         )
+
+    def test_vector_norm_not_implemented(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        a = Variable(self.m, name="a", domain=[i])
+        self.assertRaises(ValidationError, lambda: vector_norm(a, ord=0))
+        self.assertRaises(
+            ValidationError, lambda: vector_norm(a, ord=float("inf"))
+        )
+        self.assertRaises(
+            ValidationError, lambda: vector_norm(a, ord=float("-inf"))
+        )
+
+    def test_vector_norm(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        b = Parameter(
+            self.m, name="b", domain=[i], records=[("i1", 3), ("i2", 4)]
+        )
+        c = Parameter(self.m, name="c")
+
+        n_expr = vector_norm(b, ord=2)
+        c[...] = n_expr
+        c_val = c.records.iloc[0, 0]
+        self.assertTrue(math.isclose(c_val, 5, rel_tol=1e-4))
+
+        # this is a special case
+        norm_squared = n_expr**2
+        self.assertTrue(
+            isinstance(norm_squared, gp._algebra.operation.Operation)
+        )
+
+        c[...] = vector_norm(b, ord=3)
+        c_val = c.records.iloc[0, 0]
+        self.assertTrue(math.isclose(c_val, 4.49794, rel_tol=1e-4))
+
+        c[...] = vector_norm(b, ord=4)
+        c_val = c.records.iloc[0, 0]
+        self.assertTrue(math.isclose(c_val, 4.28457, rel_tol=1e-4))
+
+        c[...] = vector_norm(b, ord=1)
+        c_val = c.records.iloc[0, 0]
+        self.assertTrue(math.isclose(c_val, 7.0, rel_tol=1e-4))
+
+    def test_vector_norm_2(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[n, i],
+            records=[
+                ("n1", "i1", 3),
+                ("n1", "i2", 4),
+                ("n2", "i1", 7),
+                ("n2", "i2", 24),
+                ("n3", "i1", 5),
+                ("n3", "i2", 12),
+            ],
+        )
+        c = Parameter(self.m, name="c", domain=[n])
+
+        c[n] = vector_norm(b, dim=[1])
+        self.assertTrue(math.isclose(c.records.iloc[0, 1], 5, rel_tol=1e-5))
+        self.assertTrue(math.isclose(c.records.iloc[1, 1], 25, rel_tol=1e-5))
+        self.assertTrue(math.isclose(c.records.iloc[2, 1], 13, rel_tol=1e-5))
+
+        c[n] = vector_norm(b, dim=[i])
+        self.assertTrue(math.isclose(c.records.iloc[0, 1], 5, rel_tol=1e-5))
+        self.assertTrue(math.isclose(c.records.iloc[1, 1], 25, rel_tol=1e-5))
+        self.assertTrue(math.isclose(c.records.iloc[2, 1], 13, rel_tol=1e-5))
+
+    def test_vector_norm_dim(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        a = Variable(self.m, name="a", domain=[i])
+        self.assertRaises(ValidationError, lambda: vector_norm(a, dim="asd"))
+        self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[]))
+        self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[0, i]))
+        self.assertRaises(ValidationError, lambda: vector_norm(a, dim=["asd"]))
 
 
 def matrix_suite():

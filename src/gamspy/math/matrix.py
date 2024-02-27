@@ -54,7 +54,7 @@ def vector_norm(
         | "Operation"
     ),
     ord: float | int = 2,
-    dim: Optional[List[int]] = None,
+    dim: Optional[List[int] | List[Set | "Alias"]] = None,
 ) -> "Operation" | "Expression":
     """
     Returns the vector norm of the provided vector x. If ord is not an even integer, absolute value is used which
@@ -64,7 +64,7 @@ def vector_norm(
     ----------
     x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
     ord: int | float
-    dim: List[int], optional
+    dim: List[int] | List[Set | Alias], optional
 
     Returns
     -------
@@ -83,6 +83,7 @@ def vector_norm(
     True
     """
     import gamspy._algebra.operation as operation
+    from gamspy._symbols.alias import Alias
 
     # cases:
     #            inf norm        max(abs(x))
@@ -106,15 +107,34 @@ def vector_norm(
 
     even = isinstance(ord, int) and ord % 2 == 0
     domain = x.domain
-    if dim is None:
-        sum_domain = domain
-    else:
+    sum_domain = domain
+    if dim is not None:
         if not isinstance(dim, Iterable):
-            dim = [dim]
+            raise ValidationError("dim must be an Iterable")
 
-        sum_domain = []
-        for d in dim:
-            sum_domain.append(domain[d])
+        if len(dim) == 0:
+            raise ValidationError("If dim is provided, it must contain items")
+
+        if isinstance(dim[0], int):
+            for item in dim:
+                if not isinstance(item, int):
+                    raise ValidationError(
+                        "If dim is provided, either all items must be integers"
+                        " or all items must be Sets"
+                    )
+
+            sum_domain = []
+            for d in dim:
+                sum_domain.append(domain[d])
+        else:
+            for item in dim:
+                if not isinstance(item, (Set, Alias)):
+                    raise ValidationError(
+                        "If dim is provided, either all items must be integers"
+                        " or all items must be Sets"
+                    )
+
+            sum_domain = dim
 
     if ord == 2:
         return gamspy.math.sqrt(
