@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Optional
+from typing import List
+from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -29,11 +31,12 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         parent: Set | Alias,
         name: str,
         domain: Optional[list[Set | str]] = None,
+        scalar_domains: List[Tuple[int, Set]] | None = None,
     ) -> None:
         if domain is None:
             domain = ["*"]
 
-        super().__init__(parent, name, domain)
+        super().__init__(parent, name, domain, scalar_domains)
 
     def __invert__(self) -> Expression:
         return expression.Expression("", "not", self)
@@ -52,6 +55,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         representation = self.name
 
         if self.domain != ["*"]:
-            representation += utils._get_domain_str(self.domain)
+            domain = list(self.domain)
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
+
+            representation += utils._get_domain_str(domain)
 
         return representation
