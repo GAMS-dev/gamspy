@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import List
+from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -22,6 +23,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str],
         permutation: List[int] | None = None,
+        scalar_domains: List[Tuple[int, Set]] | None = None,
     ):
         """
         Implicit Variable
@@ -32,7 +34,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         name : str
         domain : List[Set | str]
         """
-        super().__init__(parent, name, domain)
+        super().__init__(parent, name, domain, scalar_domains)
         self.permutation = permutation
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
         self._fx = self._create_attr("fx")
@@ -54,10 +56,6 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         scale = self._create_attr("scale")
         return level, marginal, lower, upper, scale
 
-    @property
-    def dimension(self):
-        return self.parent.dimension
-
     def __getitem__(self, indices: list | str) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
         return ImplicitVariable(
@@ -65,6 +63,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             name=self.name,
             domain=domain,
             permutation=self.permutation,
+            scalar_domains=self._scalar_domains,
         )
 
     def t(self) -> implicits.ImplicitVariable:
@@ -126,8 +125,11 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def gamsRepr(self) -> str:
         representation = self.name
-        if self.domain:
-            domain = self.domain
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        if domain:
             if self.permutation is not None:
                 domain = utils._permute_domain(domain, self.permutation)
 

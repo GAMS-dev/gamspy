@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any, List, Tuple
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -26,6 +26,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain: list[Set | str] = [],
         records: Any | None = None,
         permutation: List[int] | None = None,
+        scalar_domains: List[Tuple[int, Set]] | None = None,
     ) -> None:
         """Implicit Parameter
 
@@ -36,7 +37,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain : List[Set | str], optional
         records : Any, optional
         """
-        super().__init__(parent, name, domain)
+        super().__init__(parent, name, domain, scalar_domains)
         self._records = records
         self._assignment = None
         self.permutation = permutation
@@ -60,6 +61,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             name=self.name,
             domain=domain,
             permutation=self.permutation,
+            scalar_domains=self._scalar_domains,
         )
 
     def __setitem__(self, indices: list | str, rhs: Expression) -> None:
@@ -85,10 +87,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
         self.parent._is_dirty = True
         self.container._synch_with_gams()
-
-    @property
-    def dimension(self):
-        return self.parent.dimension
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -121,8 +119,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             str: String representation of the parameter in GAMS syntax.
         """
         representation = self.name
-        if self.domain:
-            domain = self.domain
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        if domain:
             if self.permutation is not None:
                 domain = utils._permute_domain(domain, self.permutation)
 
