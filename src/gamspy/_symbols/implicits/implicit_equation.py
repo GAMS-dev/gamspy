@@ -97,9 +97,13 @@ class ImplicitEquation(ImplicitSymbol):
 
     def gamsRepr(self) -> str:
         representation = f"{self.name}"
-        if len(self.domain):
+        domain = list(self.domain)
+        for i, d in self._scalar_domains:
+            domain.insert(i, d)
+
+        if len(domain):
             set_strs = []
-            for set in self.domain:
+            for set in domain:
                 if isinstance(
                     set, (gams_set.Set, alias.Alias, implicits.ImplicitSet)
                 ):
