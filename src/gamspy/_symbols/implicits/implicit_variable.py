@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._validation as validation
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -53,8 +54,12 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         scale = self._create_attr("scale")
         return level, marginal, lower, upper, scale
 
+    @property
+    def dimension(self):
+        return self.parent.dimension
+
     def __getitem__(self, indices: list | str) -> ImplicitVariable:
-        domain = self.domain if indices == ... else utils._to_list(indices)
+        domain = validation.validate_domain(self, indices)
         return ImplicitVariable(
             parent=self.parent,
             name=self.name,
