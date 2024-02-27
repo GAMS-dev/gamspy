@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Optional
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -27,8 +28,11 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | str] = ["*"],
+        domain: Optional[list[Set | str]] = None,
     ) -> None:
+        if domain is None:
+            domain = ["*"]
+
         super().__init__(parent, name, domain)
 
     def __invert__(self) -> Expression:

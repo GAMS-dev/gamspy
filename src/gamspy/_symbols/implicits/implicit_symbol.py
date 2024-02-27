@@ -22,6 +22,10 @@ class ImplicitSymbol(ABC):
         self.fix_domain_scalars(parent_scalar_domains)
 
     def fix_domain_scalars(self, parent_scalar_domains):
+        if len(self.domain) == 1 and self.domain[0] == "*":
+            self._scalar_domains = []
+            return
+
         bare_domain = utils.get_set(self.domain)
         domain = []
         scalars = []
