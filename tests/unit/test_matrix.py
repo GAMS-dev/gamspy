@@ -573,6 +573,60 @@ class MatrixSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[0, i]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=["asd"]))
+        # Todo fix this
+        # vector_norm(a[:, "i1"]) # Fail
+        # vector_norm(a["n1", :]) # Fail
+        # vector_norm(a["n1", "i1"]) # Fail
+
+    def test_literal_indexing(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        a = Variable(self.m, name="a", domain=[n, i])
+        b = Parameter(self.m, name="b", domain=[n, i])
+
+        # try simple case
+        a_1 = a[:, "i1"]
+        self.assertEqual(a_1.domain, [n])
+        self.assertEqual(a_1.gamsRepr(), 'a(n,"i1")')
+
+        # try simple case
+        a_2 = a["n1", :]
+        self.assertEqual(a_2.domain, [i])
+        self.assertEqual(a_2.gamsRepr(), 'a("n1",i)')
+
+        a_3 = a["n1", "i1"]
+        self.assertEqual(a_3.domain, [])
+        self.assertEqual(a_3.gamsRepr(), 'a("n1","i1")')
+
+        a_4 = a[:, "i1"]["n1"]
+        self.assertEqual(a_4.domain, [])
+        self.assertEqual(a_4.gamsRepr(), 'a("n1","i1")')
+
+        a_5 = a["n1", :]["i1"]
+        self.assertEqual(a_5.domain, [])
+        self.assertEqual(a_5.gamsRepr(), 'a("n1","i1")')
+
+        # try simple case
+        b_1 = b[:, "i1"]
+        self.assertEqual(b_1.domain, [n])
+        self.assertEqual(b_1.gamsRepr(), 'b(n,"i1")')
+
+        # try simple case
+        b_2 = b["n1", :]
+        self.assertEqual(b_2.domain, [i])
+        self.assertEqual(b_2.gamsRepr(), 'b("n1",i)')
+
+        b_3 = b["n1", "i1"]
+        self.assertEqual(b_3.domain, [])
+        self.assertEqual(b_3.gamsRepr(), 'b("n1","i1")')
+
+        b_4 = b[:, "i1"]["n1"]
+        self.assertEqual(b_4.domain, [])
+        self.assertEqual(b_4.gamsRepr(), 'b("n1","i1")')
+
+        b_5 = b["n1", :]["i1"]
+        self.assertEqual(b_5.domain, [])
+        self.assertEqual(b_5.gamsRepr(), 'b("n1","i1")')
 
 
 def matrix_suite():
