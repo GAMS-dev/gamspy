@@ -4,7 +4,8 @@ GAMSPy CHANGELOG
 GAMSPy 0.12.1
 -------------
 - Testing
-  - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
+  - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly.
+  - Add an AC optimal power flow (ACOPF) model to the model library.
 
 
 GAMSPy 0.12.0
