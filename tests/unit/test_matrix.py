@@ -606,6 +606,10 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(a_5.domain, [])
         self.assertEqual(a_5.gamsRepr(), 'a("n1","i1")')
 
+        a_6 = -a["n1", :]
+        self.assertEqual(a_6.domain, [i])
+        self.assertEqual(a_6.gamsRepr(), '-a("n1",i)')
+
         # try simple case
         b_1 = b[:, "i1"]
         self.assertEqual(b_1.domain, [n])
@@ -627,6 +631,166 @@ class MatrixSuite(unittest.TestCase):
         b_5 = b["n1", :]["i1"]
         self.assertEqual(b_5.domain, [])
         self.assertEqual(b_5.gamsRepr(), 'b("n1","i1")')
+
+        b_6 = -b["n1", :]
+        self.assertEqual(b_6.domain, [i])
+        self.assertEqual(b_6.gamsRepr(), '-b("n1",i)')
+
+    def test_literal_indexing_mix_permute_variable(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n2 = Set(self.m, name="n2", records=["n1", "n2", "n3"])
+        a = Variable(self.m, name="a", domain=[n, n2, i])
+
+        a_1 = a[:, :, "i1"].t()
+        self.assertEqual(a_1.domain, [n2, n])
+        self.assertEqual(a_1.gamsRepr(), 'a(n,n2,"i1")')
+
+        a_1_2 = a.t()[:, "i1", :]
+        self.assertEqual(a_1_2.domain, [n, n2])
+        self.assertEqual(a_1_2.gamsRepr(), 'a(n,n2,"i1")')
+
+        a_2 = a[:, "n1", :].t()
+        self.assertEqual(a_2.domain, [i, n])
+        self.assertEqual(a_2.gamsRepr(), 'a(n,"n1",i)')
+
+        a_2_2 = a.t()[:, :, "n1"]
+        self.assertEqual(a_2_2.domain, [n, i])
+        self.assertEqual(a_2_2.gamsRepr(), 'a(n,"n1",i)')
+
+        a_3 = a[:, "n1", "i1"]
+        self.assertEqual(a_3.domain, [n])
+        self.assertEqual(a_3.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_3_2 = a.t()[:, "i1", "n1"]
+        self.assertEqual(a_3_2.domain, [n])
+        self.assertEqual(a_3_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4 = a[:, :, "i1"][:, "n1"]
+        self.assertEqual(a_4.domain, [n])
+        self.assertEqual(a_4.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4_2 = a.t()[:, "i1", :][:, "n1"]
+        self.assertEqual(a_4_2.domain, [n])
+        self.assertEqual(a_4_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4_3 = a[:, :, "i1"].t()[:, "n1"]
+        self.assertEqual(a_4_3.domain, [n2])
+        self.assertEqual(a_4_3.gamsRepr(), 'a("n1",n2,"i1")')
+
+        a_5 = a[:, "n1", :][:, "i1"]
+        self.assertEqual(a_5.domain, [n])
+        self.assertEqual(a_5.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_5_2 = a.t()[:, :, "n1"][:, "i1"]
+        self.assertEqual(a_5_2.domain, [n])
+        self.assertEqual(a_5_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_5_3 = a[:, "n1", :].t()["i1", :]
+        self.assertEqual(a_5_3.domain, [n])
+        self.assertEqual(a_5_3.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_6 = (-(a[:, "n1", :])).t()
+        self.assertEqual(a_6.domain, [i, n])
+        self.assertEqual(a_6.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_2 = -((a[:, "n1", :]).t())
+        self.assertEqual(a_6_2.domain, [i, n])
+        self.assertEqual(a_6_2.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_3 = ((-a)[:, "n1", :]).t()
+        self.assertEqual(a_6_3.domain, [i, n])
+        self.assertEqual(a_6_3.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_4 = ((-a).t())[:, :, "n1"]
+        self.assertEqual(a_6_4.domain, [n, i])
+        self.assertEqual(a_6_4.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_5 = (-a.t())[:, :, "n1"]
+        self.assertEqual(a_6_5.domain, [n, i])
+        self.assertEqual(a_6_5.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_6 = -((a.t())[:, :, "n1"])
+        self.assertEqual(a_6_6.domain, [n, i])
+        self.assertEqual(a_6_6.gamsRepr(), '-a(n,"n1",i)')
+
+    def test_literal_indexing_mix_permute_parameter(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        n = Set(self.m, name="n", records=["n1", "n2", "n3"])
+        n2 = Set(self.m, name="n2", records=["n1", "n2", "n3"])
+        a = Parameter(self.m, name="a", domain=[n, n2, i])
+
+        a_1 = a[:, :, "i1"].t()
+        self.assertEqual(a_1.domain, [n2, n])
+        self.assertEqual(a_1.gamsRepr(), 'a(n,n2,"i1")')
+
+        a_1_2 = a.t()[:, "i1", :]
+        self.assertEqual(a_1_2.domain, [n, n2])
+        self.assertEqual(a_1_2.gamsRepr(), 'a(n,n2,"i1")')
+
+        a_2 = a[:, "n1", :].t()
+        self.assertEqual(a_2.domain, [i, n])
+        self.assertEqual(a_2.gamsRepr(), 'a(n,"n1",i)')
+
+        a_2_2 = a.t()[:, :, "n1"]
+        self.assertEqual(a_2_2.domain, [n, i])
+        self.assertEqual(a_2_2.gamsRepr(), 'a(n,"n1",i)')
+
+        a_3 = a[:, "n1", "i1"]
+        self.assertEqual(a_3.domain, [n])
+        self.assertEqual(a_3.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_3_2 = a.t()[:, "i1", "n1"]
+        self.assertEqual(a_3_2.domain, [n])
+        self.assertEqual(a_3_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4 = a[:, :, "i1"][:, "n1"]
+        self.assertEqual(a_4.domain, [n])
+        self.assertEqual(a_4.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4_2 = a.t()[:, "i1", :][:, "n1"]
+        self.assertEqual(a_4_2.domain, [n])
+        self.assertEqual(a_4_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_4_3 = a[:, :, "i1"].t()[:, "n1"]
+        self.assertEqual(a_4_3.domain, [n2])
+        self.assertEqual(a_4_3.gamsRepr(), 'a("n1",n2,"i1")')
+
+        a_5 = a[:, "n1", :][:, "i1"]
+        self.assertEqual(a_5.domain, [n])
+        self.assertEqual(a_5.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_5_2 = a.t()[:, :, "n1"][:, "i1"]
+        self.assertEqual(a_5_2.domain, [n])
+        self.assertEqual(a_5_2.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_5_3 = a[:, "n1", :].t()["i1", :]
+        self.assertEqual(a_5_3.domain, [n])
+        self.assertEqual(a_5_3.gamsRepr(), 'a(n,"n1","i1")')
+
+        a_6 = (-(a[:, "n1", :])).t()
+        self.assertEqual(a_6.domain, [i, n])
+        self.assertEqual(a_6.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_2 = -((a[:, "n1", :]).t())
+        self.assertEqual(a_6_2.domain, [i, n])
+        self.assertEqual(a_6_2.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_3 = ((-a)[:, "n1", :]).t()
+        self.assertEqual(a_6_3.domain, [i, n])
+        self.assertEqual(a_6_3.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_4 = ((-a).t())[:, :, "n1"]
+        self.assertEqual(a_6_4.domain, [n, i])
+        self.assertEqual(a_6_4.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_5 = (-a.t())[:, :, "n1"]
+        self.assertEqual(a_6_5.domain, [n, i])
+        self.assertEqual(a_6_5.gamsRepr(), '-a(n,"n1",i)')
+
+        a_6_6 = -((a.t())[:, :, "n1"])
+        self.assertEqual(a_6_6.domain, [n, i])
+        self.assertEqual(a_6_6.gamsRepr(), '-a(n,"n1",i)')
 
 
 def matrix_suite():
