@@ -34,8 +34,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         name : str
         domain : List[Set | str]
         """
-        super().__init__(parent, name, domain, scalar_domains)
-        self.permutation = permutation
+        super().__init__(parent, name, domain, permutation, scalar_domains)
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
         self._fx = self._create_attr("fx")
         self._prior = self._create_attr("prior")
@@ -46,6 +45,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             self.parent,
             name=f"{self.gamsRepr()}.{attr_name}",
             permutation=self.permutation,
+            scalar_domains=self._scalar_domains,
         )
 
     def _init_attributes(self):
@@ -114,7 +114,11 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     def __neg__(self):
         return implicits.ImplicitVariable(
-            self.parent, name=f"-{self.name}", domain=self.domain
+            self.parent,
+            name=f"-{self.name}",
+            domain=self.domain,
+            permutation=self.permutation,
+            scalar_domains=self._scalar_domains,
         )
 
     def __eq__(self, other):  # type: ignore
@@ -126,13 +130,13 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def gamsRepr(self) -> str:
         representation = self.name
         domain = list(self.domain)
+        if domain and self.permutation is not None:
+            domain = utils._permute_domain(domain, self.permutation)
+
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
         if domain:
-            if self.permutation is not None:
-                domain = utils._permute_domain(domain, self.permutation)
-
             representation += utils._get_domain_str(domain)
 
         return representation

@@ -8,13 +8,19 @@ import gamspy.utils as utils
 
 class ImplicitSymbol(ABC):
     def __init__(
-        self, parent, name, domain, parent_scalar_domains=None
+        self,
+        parent,
+        name,
+        domain,
+        permutation=None,
+        parent_scalar_domains=None,
     ) -> None:
         self.parent = parent
         self.container = parent.container
         self.name = name
         self.domain = domain
         self.where = condition.Condition(self)
+        self.permutation = permutation
 
         if parent_scalar_domains is None:
             parent_scalar_domains = []
@@ -29,17 +35,38 @@ class ImplicitSymbol(ABC):
         bare_domain = utils.get_set(self.domain)
         domain = []
         scalars = []
+        permutation_indices_to_del = []
         for i, d in enumerate(bare_domain):
             if isinstance(d, str):
-                scalars.append((i, d))
+                loc_scalar = (
+                    i if self.permutation is None else self.permutation[i]
+                )
+                scalars.append((loc_scalar, d))
+                permutation_indices_to_del.append(i)
             else:
                 domain.append(d)
+
+        permutation_indices_to_del = reversed(permutation_indices_to_del)
+        if self.permutation is not None:
+            for index in permutation_indices_to_del:
+                del self.permutation[index]
+
+            self.fix_permutation()
 
         self.domain = domain
 
         scalars.extend(parent_scalar_domains)
         scalars = list(sorted(scalars, key=lambda k: k[0]))
         self._scalar_domains = scalars
+
+    def fix_permutation(self):
+        numbers_pos = list(zip(self.permutation, range(len(self.permutation))))
+        numbers_pos = sorted(numbers_pos, key=lambda k: k[0])
+        new_perm = [-1] * len(self.permutation)
+        for i, (_, pos) in enumerate(numbers_pos):
+            new_perm[pos] = i
+
+        self.permutation = new_perm
 
     @property
     def dimension(self):

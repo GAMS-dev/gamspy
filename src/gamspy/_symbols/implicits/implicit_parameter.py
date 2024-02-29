@@ -37,10 +37,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         domain : List[Set | str], optional
         records : Any, optional
         """
-        super().__init__(parent, name, domain, scalar_domains)
+        super().__init__(parent, name, domain, permutation, scalar_domains)
         self._records = records
         self._assignment = None
-        self.permutation = permutation
 
     def __neg__(self) -> ImplicitParameter:
         return ImplicitParameter(
@@ -48,6 +47,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             name=f"-{self.name}",
             domain=self.domain,
             permutation=self.permutation,
+            scalar_domains=self._scalar_domains,
         )
 
     def __invert__(self):
@@ -77,6 +77,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 name=self.name,
                 domain=domain,
                 permutation=self.permutation,
+                scalar_domains=self._scalar_domains,
             ),
             "=",
             rhs,
@@ -120,13 +121,13 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         """
         representation = self.name
         domain = list(self.domain)
+        if domain and self.permutation is not None:
+            domain = utils._permute_domain(domain, self.permutation)
+
         for i, d in self._scalar_domains:
             domain.insert(i, d)
 
         if domain:
-            if self.permutation is not None:
-                domain = utils._permute_domain(domain, self.permutation)
-
             representation += utils._get_domain_str(domain)
 
         return representation

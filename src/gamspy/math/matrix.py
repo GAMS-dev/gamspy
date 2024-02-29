@@ -262,6 +262,7 @@ def permute(
             records=x._records,
             domain=permuted_domain,
             permutation=dims,
+            scalar_domains=x._scalar_domains,
         )
     elif isinstance(x, Variable):
         return implicits.ImplicitVariable(
@@ -272,7 +273,11 @@ def permute(
             dims = utils._permute_domain(x.permutation, dims)
 
         return implicits.ImplicitVariable(
-            x.parent, name=x.name, domain=permuted_domain, permutation=dims
+            x.parent,
+            name=x.name,
+            domain=permuted_domain,
+            permutation=dims,
+            scalar_domains=x._scalar_domains,
         )
 
 
