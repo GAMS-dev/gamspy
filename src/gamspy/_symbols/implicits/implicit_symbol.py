@@ -20,10 +20,16 @@ class ImplicitSymbol(ABC):
         self.name = name
         self.domain = domain
         self.where = condition.Condition(self)
+
+        if permutation is not None:
+            permutation = list(permutation)
+
         self.permutation = permutation
 
         if parent_scalar_domains is None:
             parent_scalar_domains = []
+        else:
+            parent_scalar_domains = list(parent_scalar_domains)
 
         self.fix_domain_scalars(parent_scalar_domains)
 

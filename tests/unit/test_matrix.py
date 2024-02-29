@@ -9,8 +9,10 @@ from gamspy.exceptions import ValidationError
 from gamspy.math import dim
 from gamspy.math import trace
 from gamspy.math import vector_norm
+from gamspy.math import permute
 import gamspy as gp
 import math
+import itertools
 
 
 class MatrixSuite(unittest.TestCase):
@@ -791,6 +793,56 @@ class MatrixSuite(unittest.TestCase):
         a_6_6 = -((a.t())[:, :, "n1"])
         self.assertEqual(a_6_6.domain, [n, i])
         self.assertEqual(a_6_6.gamsRepr(), '-a(n,"n1",i)')
+
+    def test_shift_permute(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        a = Parameter(self.m, name="a", domain=[i, j, k])
+        # same permute
+        a0 = permute(a, [0, 1, 2])
+        self.assertEqual(a0.domain, [i, j, k])
+        self.assertEqual(a0["i1", "j1", "k1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        # left shift
+        a1 = permute(a, [1, 2, 0])
+        self.assertEqual(a1.domain, [j, k, i])
+        self.assertEqual(a1["j1", "k1", "i1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        a2 = permute(a1, [1, 2, 0])
+        self.assertEqual(a2.domain, [k, i, j])
+        self.assertEqual(a2["k1", "i1", "j1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        a3 = permute(a2, [1, 2, 0])
+        self.assertEqual(a3.domain, [i, j, k])
+        self.assertEqual(a3["i1", "j1", "k1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        # right shift
+        a1 = permute(a, [2, 0, 1])
+        self.assertEqual(a1.domain, [k, i, j])
+        self.assertEqual(a1["k1", "i1", "j1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        a2 = permute(a1, [2, 0, 1])
+        self.assertEqual(a2.domain, [j, k, i])
+        self.assertEqual(a2["j1", "k1", "i1"].gamsRepr(), 'a("i1","j1","k1")')
+
+        a3 = permute(a2, [2, 0, 1])
+        self.assertEqual(a3.domain, [i, j, k])
+        self.assertEqual(a3["i1", "j1", "k1"].gamsRepr(), 'a("i1","j1","k1")')
+
+    def test_permute_bruteforce(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        l = Set(self.m, name="l", records=["l1", "l2", "l3"])
+        a = Parameter(self.m, name="a", domain=[i, j, k, l])
+        ax = a
+        # we trust that itertools will give permutations always in same order
+        for perm in itertools.permutations(range(4)):
+            ax = permute(ax, perm)
+
+        # computed via pytorch
+        self.assertEqual(ax.domain, [k, l, i, j])
 
 
 def matrix_suite():
