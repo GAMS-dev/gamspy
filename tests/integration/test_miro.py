@@ -407,6 +407,29 @@ class MiroSuite(unittest.TestCase):
                 },
             )
 
+    def test_table_columns(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(directory, "_test_miro_gdxin_.gdx")
+        miro_gdx_out = os.path.join(directory, "_test_miro_gdxout_.gdx")
+        model_path = os.path.join(directory, "miro_models", "miro3.py")
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO"] = "1"
+        subprocess_env["MIRO_MODEL_PATH"] = model_path
+        subprocess_env["MIRO_MODE"] = "base"
+        subprocess_env["MIRO_DEV_MODE"] = "true"
+        subprocess_env["MIRO_USE_TMP"] = "false"
+        subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+        subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
+
+        try:
+            subprocess.run(
+                ["python", model_path], env=subprocess_env, check=True
+            )
+        except subprocess.CalledProcessError:
+            self.fail("Columns are not as expected.")
+
 
 def miro_suite():
     suite = unittest.TestSuite()
