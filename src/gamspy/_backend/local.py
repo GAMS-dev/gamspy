@@ -32,6 +32,7 @@ from gams import GamsJob
 from gams import GamsOptions
 from gams.control.workspace import GamsExceptionExecution
 
+import gamspy as gp
 import gamspy._backend.backend as backend
 from gamspy.exceptions import customize_exception
 from gamspy.exceptions import GamspyException
@@ -116,6 +117,14 @@ class Local(backend.Backend):
             self.container._load_records_from_gdx(
                 MIRO_GDX_IN, self.container._miro_input_symbols
             )
+            for symbol in self.container._miro_input_symbols:
+                if (
+                    isinstance(self.container[symbol], gp.Parameter)
+                    and self.container[symbol]._is_miro_table
+                ):
+                    self.container[symbol]._records.columns = self.container[
+                        symbol
+                    ].domain_names + ["value"]
         if MIRO_GDX_OUT and self.container._miro_output_symbols:
             self.container._load_records_from_gdx(
                 MIRO_GDX_OUT, self.container._miro_output_symbols
