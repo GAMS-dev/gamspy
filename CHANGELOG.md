@@ -3,6 +3,8 @@ GAMSPy CHANGELOG
 
 GAMSPy 0.12.1
 -------------
+- General
+  - Fix dataframe column names of GAMS MIRO input tables.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.
