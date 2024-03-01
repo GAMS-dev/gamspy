@@ -93,10 +93,11 @@ class Operable:
     def __pow__(self: OperableType, other: OperableType):
         if isinstance(other, int):
             return gamspy_math.power(self, other)
-        elif isinstance(other, float) and math.isclose(
-            other, round(other), rel_tol=1e-4
-        ):
-            return gamspy_math.power(self, other)
+        elif isinstance(other, float):
+            if other == 0.5:
+                return gamspy_math.sqrt(self)
+            elif math.isclose(other, round(other), rel_tol=1e-4):
+                return gamspy_math.power(self, other)
 
         return gamspy_math.rpower(self, other)
 

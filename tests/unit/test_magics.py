@@ -96,6 +96,22 @@ class MagicsSuite(unittest.TestCase):
         op3 = x[i] ** 2
         self.assertEqual(op3.gamsRepr(), "( power(x(i),2) )")
 
+        # Set/Parameter/Variable ** 0.5
+        op1 = i**0.5
+        self.assertEqual(op1.gamsRepr(), "( sqrt(i) )")
+        op2 = b[i] ** 0.5
+        self.assertEqual(op2.gamsRepr(), "( sqrt(b(i)) )")
+        op3 = x[i] ** 0.5
+        self.assertEqual(op3.gamsRepr(), "( sqrt(x(i)) )")
+
+        m = Container()
+        j = Parameter(m, "j", records=5)
+        k = Parameter(m, "k", records=2)
+        l = Parameter(m, "l")
+
+        l[...] = (j**k) ** 0.5
+        self.assertEqual(l.toValue(), 5.0)
+
         # AND
         # Parameter and Variable, Variable and Parameter
         op1 = b[i] & x[i]
