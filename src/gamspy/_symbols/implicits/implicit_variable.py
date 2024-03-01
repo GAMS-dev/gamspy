@@ -43,7 +43,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def _create_attr(self, attr_name: str):
         return implicits.ImplicitParameter(
             self.parent,
-            name=f"{self.gamsRepr()}.{attr_name}",
+            name=f"{self.parent.name}.{attr_name}",
+            domain=self.domain,
             permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
