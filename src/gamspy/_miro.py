@@ -157,7 +157,7 @@ class MiroJSONEncoder:
             return dict(zip(domain_keys, domain_values))
 
         domain_keys = symbol.records.columns.to_list()
-        if isinstance(symbol, gp.Parameter):
+        if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
             domain_keys = symbol.domain_labels + ["value"]
         domain_values = []
 
