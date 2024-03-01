@@ -150,8 +150,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
+            invalid_type = builtins.type(container)
             raise TypeError(
-                f"Container must of type `Container` but found {builtins.type(container)}"
+                f"Container must of type `Container` but found {invalid_type}"
             )
 
         if name is None:
@@ -304,13 +305,40 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    @property
+    def T(self) -> implicits.ImplicitVariable:
+        """See gamspy.Variable.t"""
+        return self.t()
+
     def t(self) -> implicits.ImplicitVariable:
+        """Returns an ImplicitVariable derived from this
+        variable by swapping its last two indices. This operation
+        does not generate a new variable in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v_t = v.t()
+        >>> v_t.domain # doctest: +ELLIPSIS
+        [<Set `j` (0x...)>, <Set `i` (0x...)>]
+        >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        gamspy.exceptions.ValidationError:
+        >>> v_t["j1", "i1"].gamsRepr()
+        'v("i1","j1")'
+
+        """
         from gamspy.math.matrix import permute
-        # If  implicit variable needs to be subscriptable since we can
-        # create it by transpose
+
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise ValidationError("Variable must contain at least 2 dimensions to transpose")
+            raise ValidationError(
+                "Variable must contain at least 2 dimensions to transpose"
+            )
 
         x = dims[-1]
         dims[-1] = dims[-2]

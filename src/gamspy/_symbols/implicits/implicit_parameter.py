@@ -101,7 +101,29 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
 
+    @property
+    def T(self) -> ImplicitParameter:
+        """See gamspy.ImplicitParameter.t"""
+        return self.t()
+
     def t(self) -> ImplicitParameter:
+        """Returns an ImplicitParameter derived from this
+        implicit parameter by swapping its last two indices.
+        This operation does not generate a new parameter in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Parameter(m, "v", domain=[i, j])
+        >>> v_t = v.t() # v_t is an ImplicitParameter
+        >>> v_t_t = v_t.t() # you can get transpose of ImplicitParameter as well
+        >>> v_t_t.domain # doctest: +ELLIPSIS
+        [<Set `i` (0x...)>, <Set `j` (0x...)>]
+
+        """
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
             raise ValidationError(

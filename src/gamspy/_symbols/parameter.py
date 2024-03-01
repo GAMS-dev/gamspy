@@ -299,12 +299,38 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self, name=f"-{self.name}", domain=self._domain
         )
 
+    @property
+    def T(self) -> implicits.ImplicitParameter:
+        """See gamspy.Parameter.t"""
+        return self.t()
+
     def t(self) -> implicits.ImplicitParameter:
+        """Returns an ImplicitParameter derived from this
+        parameter by swapping its last two indices. This operation
+        does not generate a new parameter in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Parameter(m, "v", domain=[i, j])
+        >>> v_t = v.t()
+        >>> v_t.domain # doctest: +ELLIPSIS
+        [<Set `j` (0x...)>, <Set `i` (0x...)>]
+        >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        gamspy.exceptions.ValidationError:
+        >>> v_t["j1", "i1"].gamsRepr()
+        'v("i1","j1")'
+
+        """
         from gamspy.math.matrix import permute
 
         dims = [x for x in range(len(self.domain))]
         if len(dims) < 2:
-            raise GamspyException(
+            raise ValidationError(
                 "Parameter must contain at least 2 dimensions to transpose"
             )
 

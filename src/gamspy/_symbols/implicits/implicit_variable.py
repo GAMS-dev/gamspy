@@ -67,7 +67,29 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             scalar_domains=self._scalar_domains,
         )
 
+    @property
+    def T(self) -> implicits.ImplicitVariable:
+        """See gamspy.ImplicitVariable.t"""
+        return self.t()
+
     def t(self) -> implicits.ImplicitVariable:
+        """Returns an ImplicitVariable derived from this
+        implicit variable by swapping its last two indices.
+        This operation does not generate a new variable in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v_t = v.t() # v_t is an ImplicitVariable
+        >>> v_t_t = v_t.t() # you can get transpose of ImplicitVariable as well
+        >>> v_t_t.domain # doctest: +ELLIPSIS
+        [<Set `i` (0x...)>, <Set `j` (0x...)>]
+
+        """
         from gamspy.math.matrix import permute
 
         dims = [x for x in range(len(self.domain))]
