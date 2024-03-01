@@ -22,6 +22,24 @@ class MatrixSuite(unittest.TestCase):
             delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
+    def test_matrix_mult_bad(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+
+        a_recs = np.random.randint(1, 11, size=(3))
+        b_recs = np.random.randint(1, 11, size=(3))
+        a = Parameter(
+            self.m, name="a", domain=[i], records=a_recs, uels_on_axes=True
+        )
+        b = Parameter(
+            self.m, name="b", domain=[j], records=b_recs, uels_on_axes=True
+        )
+        c = Parameter(self.m, name="c", domain=[], uels_on_axes=True)
+
+        self.assertRaises(ValidationError, lambda: c @ a)
+        self.assertRaises(ValidationError, lambda: a @ c)
+        self.assertRaises(ValidationError, lambda: a @ b)
+
     def test_simple_matrix_matrix(self):
         """Test simple case where domain calculation is trivial
         matrix x matrix"""
@@ -45,6 +63,12 @@ class MatrixSuite(unittest.TestCase):
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
+        a2 = Parameter(
+            self.m, name="a2", domain=[k, k], records=a_recs, uels_on_axes=True
+        )
+        # dims do not match
+        self.assertRaises(ValidationError, lambda: a2 @ b)
+
     def test_simple_matrix_vector(self):
         """Test simple case where domain calculation is trivial
         matrix x vector"""
@@ -66,6 +90,12 @@ class MatrixSuite(unittest.TestCase):
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
+        a2 = Parameter(
+            self.m, name="a2", domain=[j, i], records=a_recs, uels_on_axes=True
+        )
+        # dims do not match
+        self.assertRaises(ValidationError, lambda: a2 @ b)
+
     def test_simple_vector_vector(self):
         """Test simple case where domain calculation is trivial
         vector x vector, aka inner product"""
@@ -85,6 +115,28 @@ class MatrixSuite(unittest.TestCase):
         c[...] = a @ b
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
+
+    def test_vector_vector_with_conflicting_sum_domain(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Alias(self.m, name="j", alias_with=i)
+
+        x_recs = np.random.randint(1, 11, size=(3, 3))
+        y_recs = np.random.randint(1, 11, size=(3))
+        x = Variable(
+            self.m, name="x", domain=[j, i], records=x_recs, uels_on_axes=True
+        )
+        y = Parameter(
+            self.m, name="y", domain=[i], records=y_recs, uels_on_axes=True
+        )
+
+        right_side = x @ y  # has controlled_domain domain of i
+        self.assertEqual(right_side.controlled_domain, [i])
+
+        z = Parameter(self.m, name="z", domain=[i])
+        val = z @ right_side
+        self.assertEqual(val.domain, [])
+        self.assertEqual(len(val.controlled_domain), 2)
+        self.assertEqual(val.op_domain[0].name, "AliasOfi_2")
 
     def test_simple_vector_matrix(self):
         """Test simple case where domain calculation is trivial
@@ -106,6 +158,12 @@ class MatrixSuite(unittest.TestCase):
         c[...] = a @ b
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
+
+        a2 = Parameter(
+            self.m, name="a2", domain=[j], records=a_recs, uels_on_axes=True
+        )
+
+        self.assertRaises(ValidationError, lambda: a2 @ b)
 
     def test_batched_matrix_matrix(self):
         """Test batched matrix multiplication,
@@ -137,6 +195,54 @@ class MatrixSuite(unittest.TestCase):
         c[...] = a @ b
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
+
+        a2 = Parameter(
+            self.m,
+            name="a2",
+            domain=[n, j, i],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        self.assertRaises(ValidationError, lambda: a2 @ b)
+
+    def test_batched_matrix_vector(self):
+        """Test batched matrix - vector multiplication,
+        batched matrix x vector"""
+        n = Set(self.m, name="n", records=["n1", "n2", "n3", "n4"])
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+
+        a_recs = np.random.randint(1, 11, size=(4, 3, 3))
+        b_recs = np.random.randint(1, 11, size=(3))
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=[n, i, j],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=[j],
+            records=b_recs,
+            uels_on_axes=True,
+        )
+        c = a @ b
+        self.assertEqual(c.domain, [n, i])
+        c = Parameter(self.m, name="c", domain=[n, i])
+        c[...] = a @ b
+        c_recs = c.toDense()
+        self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
+
+        a2 = Parameter(
+            self.m,
+            name="a2",
+            domain=[n, j, i],
+            records=a_recs,
+            uels_on_axes=True,
+        )
+        self.assertRaises(ValidationError, lambda: a2 @ b)
 
     def test_batched_matrix_matrix_2(self):
         """Test batched matrix multiplication,
@@ -190,6 +296,11 @@ class MatrixSuite(unittest.TestCase):
         c[...] = b @ a
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, b_recs @ a_recs))
+
+        b2 = Parameter(
+            self.m, name="b2", domain=[j], records=b_recs, uels_on_axes=True
+        )
+        self.assertRaises(ValidationError, lambda: b2 @ a)
 
     def test_square_matrix_mult(self):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
@@ -304,8 +415,10 @@ class MatrixSuite(unittest.TestCase):
 
         a = Parameter(self.m, name="a", domain=[n, i, j])
         b = Parameter(self.m, name="b", domain=[m, j, k])
+        c = Parameter(self.m, name="c", domain=[n, m, j, k])
 
         self.assertRaises(ValidationError, lambda: a @ b)
+        self.assertRaises(ValidationError, lambda: a @ c)
 
     def test_domain_conflict_resolution(self):
         n = Set(self.m, name="n", records=["n1", "n2", "n3"])
@@ -522,6 +635,11 @@ class MatrixSuite(unittest.TestCase):
         c_val = c.records.iloc[0, 0]
         self.assertTrue(math.isclose(c_val, 5, rel_tol=1e-4))
 
+        n_expr = vector_norm(b, ord=2.0)
+        c[...] = n_expr
+        c_val = c.records.iloc[0, 0]
+        self.assertTrue(math.isclose(c_val, 5, rel_tol=1e-4))
+
         # this is a special case
         norm_squared = n_expr**2
         self.assertTrue(
@@ -575,6 +693,8 @@ class MatrixSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[0, i]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=["asd"]))
+        self.assertRaises(ValidationError, lambda: vector_norm(a, dim=2))
+
         # Todo fix this
         # vector_norm(a[:, "i1"]) # Fail
         # vector_norm(a["n1", :]) # Fail
@@ -830,7 +950,20 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(a3.domain, [i, j, k])
         self.assertEqual(a3["i1", "j1", "k1"].gamsRepr(), 'a("i1","j1","k1")')
 
-    def test_permute_bruteforce(self):
+    def test_permute_bruteforce_var(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        l = Set(self.m, name="l", records=["l1", "l2", "l3"])
+        a = Variable(self.m, name="a", domain=[i, j, k, l])
+        ax = a
+        for perm in itertools.permutations(range(4)):
+            ax = permute(ax, perm)
+
+        # computed via pytorch
+        self.assertEqual(ax.domain, [k, l, i, j])
+
+    def test_permute_bruteforce_par(self):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])
         j = Set(self.m, name="j", records=["j1", "j2", "j3"])
         k = Set(self.m, name="k", records=["k1", "k2", "k3"])
@@ -843,6 +976,43 @@ class MatrixSuite(unittest.TestCase):
 
         # computed via pytorch
         self.assertEqual(ax.domain, [k, l, i, j])
+
+    def test_permute_bad(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        l = Set(self.m, name="l", records=["l1", "l2", "l3"])
+        a = Parameter(self.m, name="a", domain=[i, j, k, l])
+        self.assertRaises(ValidationError, lambda: permute(a, [2, 2, 2, 2]))
+        self.assertRaises(ValidationError, lambda: permute(a, [5, 2, 2, 2]))
+        self.assertRaises(ValidationError, lambda: permute(a, [-1, 2, 2, 2]))
+        self.assertRaises(ValidationError, lambda: permute(a, [1, 2, 2, 4]))
+        self.assertRaises(ValidationError, lambda: permute(a, ["1", 2, 3, 4]))
+
+    def test_transpose(self):
+        i = Set(self.m, name="i", records=["i1", "i2", "i3"])
+        j = Set(self.m, name="j", records=["j1", "j2", "j3"])
+        k = Set(self.m, name="k", records=["k1", "k2", "k3"])
+        l = Set(self.m, name="l", records=["l1", "l2", "l3"])
+        a = Parameter(self.m, name="a", domain=[i, j, k, l])
+        a_t = a.t()
+        self.assertEqual(a_t.domain, [i, j, l, k])
+        self.assertEqual(
+            a_t["i1", "j1", "l1", "k1"].gamsRepr(), 'a("i1","j1","k1","l1")'
+        )
+
+        a_t = a.T
+        self.assertEqual(a_t.domain, [i, j, l, k])
+        self.assertEqual(
+            a_t["i1", "j1", "l1", "k1"].gamsRepr(), 'a("i1","j1","k1","l1")'
+        )
+
+        b = Parameter(self.m, name="b", domain=[i])
+        a2 = Variable(self.m, name="a2", domain=[i])
+        self.assertRaises(ValidationError, lambda: b.T)  # par
+        self.assertRaises(ValidationError, lambda: a2.T)  # var
+        self.assertRaises(ValidationError, lambda: b[i].T)  # imp par
+        self.assertRaises(ValidationError, lambda: a2[i].T)  # imp var
 
 
 def matrix_suite():

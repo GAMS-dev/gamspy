@@ -230,6 +230,10 @@ def permute(
 ):
     # TODO Accept permuting expressions!
     # Might be needed in some context
+    for i in dims:
+        if not isinstance(i, int):
+            raise ValidationError("Permute dimensions must be integers")
+
     dims_len = len(dims)
     if min(dims) != 0 or max(dims) != dims_len - 1:
         raise ValidationError(
@@ -238,10 +242,6 @@ def permute(
 
     if len(set(dims)) != dims_len:
         raise ValidationError("Permute dimensions must be unique")
-
-    for i in dims:
-        if not isinstance(i, int):
-            raise ValidationError("Permute dimensions must be integers")
 
     permuted_domain = utils._permute_domain(x.domain, dims)
     if isinstance(x, Parameter):
