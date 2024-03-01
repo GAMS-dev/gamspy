@@ -78,6 +78,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}_symbols{os.sep}set.py",
             f"{root}{os.sep}_symbols{os.sep}universe_alias.py",
             f"{root}{os.sep}_symbols{os.sep}variable.py",
+            f"{root}{os.sep}math{os.sep}matrix.py",
             f"{root}{os.sep}math{os.sep}log_power.py",
             f"{root}{os.sep}math{os.sep}misc.py",
             f"{root}{os.sep}math{os.sep}probability.py",

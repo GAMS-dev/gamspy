@@ -31,7 +31,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
 from gamspy._symbols.set import Set
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import ValidationError, GamspyException
 from typing import TYPE_CHECKING
 
 from gamspy._symbols.variable import Variable
@@ -77,10 +77,11 @@ def vector_norm(
     >>> m = gp.Container()
     >>> i = gp.Set(m, name="i", records=["i1", "i2"])
     >>> vec = gp.Parameter(m, "vec", domain=[i], records=[("i1", 3), ("i2", 4)])
-    >>> vlen = gp.Parameter(m, "vlen")
-    >>> vlen[...] = vector_norm(vec)
+    >>> vlen = gp.Parameter(m, "vlen", domain=[])
+    >>> vlen[...] = gp.math.vector_norm(vec)
     >>> math.isclose(vlen.records.iloc[0, 0], 5, rel_tol=1e-4)
     True
+
     """
     import gamspy._algebra.operation as operation
     from gamspy._symbols.alias import Alias
@@ -152,6 +153,36 @@ def vector_norm(
 
 
 def next_alias(symbol: "Alias" | Set) -> "Alias":
+    """Provided the set or alias, it returns the next alias.
+    If it is not found, it creates the alias. This function is
+    mainly for matrix multiplication conflict resolution but
+    it might be helpful in the cases where you need to generate
+    many aliases from a set.
+
+    Parameters
+    ----------
+    symbol : Set | Alias
+
+    Returns
+    -------
+    Alias
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, name="i", records=["i1", "i2", "i3"])
+    >>> j = gp.math.next_alias(i)
+    >>> j.name
+    'AliasOfi_2'
+    >>> k = gp.math.dim(m, [10])[0]
+    >>> k.name
+    'DenseDim10_1'
+    >>> k2 = gp.math.next_alias(k)
+    >>> k2.name
+    'DenseDim10_2'
+
+    """
     from gamspy._symbols.alias import Alias
 
     current = symbol
@@ -171,10 +202,34 @@ def next_alias(symbol: "Alias" | Set) -> "Alias":
     return find_x
 
 
-def dim(m: "Container", dims: List[int]):
+def dim(m: "Container", dims: List[int]) -> List[Set | "Alias"]:
     """Returns an array where each element
     corresponds to a set where the dimension of the
-    set is equal to the element in dims"""
+    set is equal to the element in dims. If same dimension
+    size used, then next free alias is returned. See examples.
+
+    Parameters
+    ----------
+    m : Container
+    dims: List[int]
+
+    Returns
+    -------
+    List[Set | "Alias"]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import math
+    >>> m = gp.Container()
+    >>> a = gp.math.dim(m, dims=[10, 20])
+    >>> a # doctest: +ELLIPSIS
+    [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
+    >>> b = gp.math.dim(m, dims=[10, 10])
+    >>> b # doctest: +ELLIPSIS
+    [<Set `DenseDim10_1` (0x...)>, <Alias `DenseDim10_2` (0x...)>]
+
+    """
     for x in dims:
         if not isinstance(x, int):
             raise ValidationError("Dimensions must be integers")
@@ -194,7 +249,6 @@ def dim(m: "Container", dims: List[int]):
     return sets_so_far
 
 
-# TODO add documentation for these!
 def trace(
     x: Union[
         Parameter,
@@ -202,9 +256,43 @@ def trace(
         Variable,
         implicits.ImplicitVariable,
     ],
-    axis1=0,
-    axis2=1,
-):
+    axis1: int = 0,
+    axis2: int = 1,
+) -> "Operation":
+    """Returns trace of the given input x.
+    By default trace of zeroth and first axis used. `axis1` and `axis2` parameters
+    control on which axes to get trace. Domains at the axis1 and axis2 must be same
+    or aliases.
+
+
+    Parameters
+    ----------
+    x: Union[
+        Parameter,
+        implicits.ImplicitParameter,
+        Variable,
+        implicits.ImplicitVariable,
+    ]
+    axis1=0
+    axis2=1
+
+    Returns
+    -------
+    "Operation"
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import numpy as np
+    >>> m = gp.Container()
+    >>> identity = np.eye(3, 3)
+    >>> mat = gp.Parameter(m, name="mat", domain=gp.math.dim(m, [3, 3]), records=identity, uels_on_axes=True)
+    >>> sc = gp.Parameter(m, name="sc", domain=[])
+    >>> sc[...] = gp.math.trace(mat)
+    >>> int(sc.toDense())
+    3
+
+    """
     import gamspy._algebra.operation as operation
 
     if len(x.domain) < 2:
@@ -227,7 +315,37 @@ def permute(
         implicits.ImplicitVariable,
     ],
     dims: List[int],
-):
+) -> implicits.ImplicitVariable | implicits.ImplicitParameter:
+    """Permutes the dimensions provided input `x` using `dim`.
+    Similar to PyTorch permute.
+
+    Parameters
+    ----------
+    x: Union[
+        Parameter,
+        implicits.ImplicitParameter,
+        Variable,
+        implicits.ImplicitVariable,
+    ]
+    dims: List[int]
+
+    Returns
+    -------
+    implicits.ImplicitVariable | implicits.ImplicitParameter
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, name="i")
+    >>> j = gp.Set(m, name="j")
+    >>> k = gp.Set(m, name="k")
+    >>> p = gp.Parameter(m, name="p", domain=[i, j, k])
+    >>> p2 = gp.math.permute(p, [2, 0, 1])
+    >>> p2.domain # doctest: +ELLIPSIS
+    [<Set `k` (0x...)>, <Set `i` (0x...)>, <Set `j` (0x...)>]
+
+    """
     # TODO Accept permuting expressions!
     # Might be needed in some context
     for i in dims:
@@ -279,6 +397,8 @@ def permute(
             permutation=dims,
             scalar_domains=x._scalar_domains,
         )
+    else:
+        raise GamspyException(f"permute not implemented for {type(x)}")
 
 
 def _validate_matrix_mult_dims(left, right):

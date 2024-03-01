@@ -986,7 +986,7 @@ class MatrixSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: permute(a, [2, 2, 2, 2]))
         self.assertRaises(ValidationError, lambda: permute(a, [5, 2, 2, 2]))
         self.assertRaises(ValidationError, lambda: permute(a, [-1, 2, 2, 2]))
-        self.assertRaises(ValidationError, lambda: permute(a, [1, 2, 2, 4]))
+        self.assertRaises(ValidationError, lambda: permute(a, [0, 2, 2, 3]))
         self.assertRaises(ValidationError, lambda: permute(a, ["1", 2, 3, 4]))
 
     def test_transpose(self):
