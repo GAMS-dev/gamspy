@@ -22,7 +22,6 @@ class ConditionSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_condition_on_expression(self):
@@ -52,13 +51,9 @@ class ConditionSuite(unittest.TestCase):
             ["import", "guadalaja", 300],
         ])
 
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
 
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
 
         # Set
         i = Set(
@@ -92,12 +87,10 @@ class ConditionSuite(unittest.TestCase):
         # Condition
         muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
 
-        if m.delayed_execution:
-            last_statement = m._unsaved_statements[-1]
-            self.assertEqual(
-                last_statement.getStatement(),
-                "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
-            )
+        self.assertEqual(
+            muf._assignment.getStatement(),
+            "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ (rd(i,j)));",
+        )
 
     def test_condition_on_number(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
@@ -105,7 +98,6 @@ class ConditionSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(
             m,
@@ -138,11 +130,10 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
 
-        if m.delayed_execution:
-            self.assertEqual(
-                defopLS._definition.getStatement(),
-                "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
-            )
+        self.assertEqual(
+            defopLS._definition.getStatement(),
+            "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
+        )
 
         muf = Parameter(
             m,
@@ -157,19 +148,16 @@ class ConditionSuite(unittest.TestCase):
         )
 
         k["ahmsa"] = True
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                'k("ahmsa") = yes;',
-            )
+        self.assertEqual(
+            k._assignment.getStatement(),
+            'k("ahmsa") = yes;',
+        )
 
         k["ahmsa"] = False
-
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                'k("ahmsa") = no;',
-            )
+        self.assertEqual(
+            k._assignment.getStatement(),
+            'k("ahmsa") = no;',
+        )
 
         t = Set(
             m,
@@ -203,12 +191,11 @@ class ConditionSuite(unittest.TestCase):
             != gamspy_math.Round(Util_lic2[t], 10)
         ]
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "Util_gap(t) = (1 $ (( round(Util_lic(t),10) ) ne ( round("
-                "Util_lic2(t),10) )));",
-            )
+        self.assertEqual(
+            Util_gap._assignment.getStatement(),
+            "Util_gap(t) = (1 $ (( round(Util_lic(t),10) ) ne ( round("
+            "Util_lic2(t),10) )));",
+        )
 
     def test_condition_on_equation(self):
         td_data = pd.DataFrame([
@@ -297,13 +284,9 @@ class ConditionSuite(unittest.TestCase):
             ["20", 10],
         ])
 
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
 
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
 
         # Sets
         w = Set(
@@ -328,15 +311,13 @@ class ConditionSuite(unittest.TestCase):
         maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
         minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
-            )
+        self.assertEqual(
+            minw._definition.getStatement(),
+            "minw(t) $ (tm(t)) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
+        )
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
@@ -357,15 +338,13 @@ class ConditionSuite(unittest.TestCase):
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].gamsRepr(),
-                "k(p) $ (k(p)) = yes;",
-            )
+        self.assertEqual(
+            k._assignment.gamsRepr(),
+            "k(p) $ (k(p)) = yes;",
+        )
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
@@ -397,7 +376,6 @@ class ConditionSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
@@ -488,17 +466,15 @@ class ConditionSuite(unittest.TestCase):
     def test_operator_comparison_in_condition(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "c(s) $ (ord(s) <= ord(s)) = 1;",
-            )
+        self.assertEqual(
+            c._assignment.getStatement(),
+            "c(s) $ (ord(s) <= ord(s)) = 1;",
+        )
 
 
 def condition_suite():

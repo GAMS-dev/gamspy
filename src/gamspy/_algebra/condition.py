@@ -105,5 +105,7 @@ class Condition:
 
         self._symbol.container._add_statement(statement)
 
-        if not self._symbol.container.delayed_execution:
-            self._symbol.container._run()
+        if isinstance(self._symbol, ImplicitSymbol):
+            self._symbol.parent._assignment = statement
+
+        self._symbol.container._run()

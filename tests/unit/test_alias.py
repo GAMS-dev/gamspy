@@ -17,7 +17,6 @@ class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_alias_creation(self):
@@ -119,7 +118,6 @@ class AliasSuite(unittest.TestCase):
 
         bla = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         bla.read("test.gdx")
         self.assertEqual(

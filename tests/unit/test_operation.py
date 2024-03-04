@@ -23,7 +23,6 @@ class OperationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_operations(self):
@@ -120,7 +119,6 @@ class OperationSuite(unittest.TestCase):
         # Test operation index
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         mt = 2016
         mg = 17
@@ -167,7 +165,6 @@ class OperationSuite(unittest.TestCase):
     def test_operation_overloads(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         c = Set(m, "c")
         s = Set(m, "s")
@@ -187,11 +184,10 @@ class OperationSuite(unittest.TestCase):
         bla2 = Parameter(m, "bla2", domain=s)
         bla[...] = bla2[...] != 0
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "bla(s) = (bla2(s) ne 0);",
-            )
+        self.assertEqual(
+            bla._assignment.getStatement(),
+            "bla(s) = (bla2(s) ne 0);",
+        )
 
 
 def operation_suite():

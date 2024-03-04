@@ -259,24 +259,12 @@ you want to use the GAMSPy ``Parameter``, as changes to a Python variable are no
 reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, will
 be evaluated by the second solve statement.
 
-Why does `pip install gamspy` on Google Colab not resolve all dependencies?
----------------------------------------------------------------------------
+Why does Windows Defender blocks gamspy.exe executable?
+-------------------------------------------------------
 
-Google Colab is a service that allows you to write and execute Python in your browser.
-It is developed mainly for ML/AI researchers and data scientists. Hence, it comes with many
-pre-installed packages such as TensorFlow, PyTorch etc. One of these packages is 
-tensorflow-probability==0.22.0 which depends on typing-extensions below version 4.6.0.
-Since GAMSPy depends on pydantic which requires typing-extensions above 4.6.0, pip does not
-know how to resolve the issue. This issue has already been resolved by tensorflow-probability in
-version 0.22.1
-(check `this <https://github.com/tensorflow/probability/releases/tag/v0.22.1>`_). Unfortunately,
-Google Colab has not update to this version of tensorflow-probability, hence pip
-complains. This will be fixed as soon as Google Colab updates
-tensorflow-probability. There are also some packages in Google Colab which don't have the necessary dependencies
-in the environment resolved (lida, llmx). To solve all Google Colab related issues run the following: ::
-
-    pip install tensorflow-probability==0.22.1 lida llmx
-    
-Now, you can install GAMSPy without any errors: ::
-    
-    pip install gamspy
+When you execute `pip install gamspy`, it creates an executable on your machine (e.g. gamspy.exe on Windows) 
+which acts like a regular commandline script. This means that it cannot be signed by us. Therefore, Windows Defender 
+sometimes think that it is probably a malware. Because of this issue, when you run commands such as `gamspy install license <license_path>`, 
+Windows Defender blocks the executable. A workaround is to run `python -m gamspy install license <license_path>`. Another way
+is to whitelist gamspy.exe executable on your machine. Since GAMSPy is open source, to make sure about the safety of the executable, 
+one can check the following script which GAMSPy uses: `script <https://github.com/GAMS-dev/gamspy/blob/develop/src/gamspy/_cli/cmdline.py>`_.

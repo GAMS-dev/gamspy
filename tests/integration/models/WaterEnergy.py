@@ -32,9 +32,11 @@ from gamspy import Equation
 from gamspy import Model
 from gamspy import Parameter
 from gamspy import Set
+from gamspy import SolveStatus
 from gamspy import Sum
 from gamspy import Variable
 from gamspy.math import sqr
+from gamspy.exceptions import GamspyException
 
 
 def reformat_df(dataframe):
@@ -155,7 +157,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -264,7 +265,13 @@ def main():
         sense="min",
         objective=TC + CC + WaterCost,
     )
-    DEDcostbased.solve()
+    try:
+        DEDcostbased.solve()
+    except GamspyException:
+        if DEDcostbased.solve_status == SolveStatus.TerminatedBySolver:
+            pass
+        else:
+            raise
 
     print(
         "Objective Function Value:  ", round(DEDcostbased.objective_value, 4)

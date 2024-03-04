@@ -26,7 +26,6 @@ class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_equation_creation(self):
@@ -54,7 +53,6 @@ class EquationSuite(unittest.TestCase):
         # Equation and domain containers are different
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -336,7 +334,6 @@ class EquationSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -432,32 +429,22 @@ class EquationSuite(unittest.TestCase):
     def test_scalar_attr_assignment(self):
         a = Equation(self.m, "a")
         a.l = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.l = 5;")
 
         a.m = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.m._assignment.getStatement(), "a.m = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.m = 5;")
 
         a.lo = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.lo._assignment.getStatement(), "a.lo = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.lo = 5;")
 
         a.up = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.up._assignment.getStatement(), "a.up = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.up = 5;")
 
         a.scale = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.scale._assignment.getStatement(), "a.scale = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.scale = 5;")
 
         a.stage = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.stage._assignment.getStatement(), "a.stage = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.stage = 5;")
 
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
@@ -572,7 +559,6 @@ class EquationSuite(unittest.TestCase):
     def test_changed_domain(self):
         cont = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=False,
         )
 
         s = Set(cont, "s")
@@ -585,7 +571,6 @@ class EquationSuite(unittest.TestCase):
     def test_equation_assignment(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
@@ -597,7 +582,6 @@ class EquationSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)

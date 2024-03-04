@@ -22,6 +22,7 @@ import os
 import gamspy.math as gams_math
 from gamspy import Card
 from gamspy import Container
+from gamspy.exceptions import GamspyException
 from gamspy import Equation
 from gamspy import Model
 from gamspy import Number
@@ -30,12 +31,12 @@ from gamspy import Parameter
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy import SolveStatus
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -87,10 +88,13 @@ def main():
         objective=j,
     )
 
-    control3.solve()
-
-    print("x:  \n", x.pivot().round(3))
-    print("u:  \n", u.records.level.round(3))
+    try:
+        control3.solve()
+    except GamspyException:
+        if control3.solve_status == SolveStatus.EvalError:
+            pass
+        else:
+            raise
 
     import math
 

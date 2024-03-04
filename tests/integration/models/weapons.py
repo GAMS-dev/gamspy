@@ -38,7 +38,6 @@ from gamspy import Variable
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     td_data = pd.DataFrame([
@@ -220,7 +219,7 @@ def main():
         w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]
     )
 
-    etdp = Sum(t, mv[t] * prob[t])
+    _ = Sum(t, mv[t] * prob[t])
     etd = Sum(
         t, mv[t] * (1 - Product(w.where[td[w, t]], (1 - td[w, t]) ** x[w, t]))
     )

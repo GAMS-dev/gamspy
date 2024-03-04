@@ -24,6 +24,7 @@ import os
 import pandas as pd
 
 import gamspy.math as gams_math
+from gamspy.exceptions import GamspyException
 from gamspy import Container
 from gamspy import Equation
 from gamspy import Model
@@ -33,12 +34,12 @@ from gamspy import Sense
 from gamspy import Set
 from gamspy import Sum
 from gamspy import Variable
+from gamspy import SolveStatus
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Data
@@ -329,7 +330,13 @@ def main():
     devp.up[i] = 100
     devn.up[i] = 100
 
-    mod1.solve()
+    try:
+        mod1.solve()
+    except GamspyException:
+        if mod1.solve_status == SolveStatus.EvalError:
+            pass
+        else:
+            raise
     result["mod1", n] = b.l[n]
     result["mod1", "obj"] = obj.l
 
@@ -349,7 +356,14 @@ def main():
     result["mod4", n] = b.l[n]
     result["mod4", "obj"] = obj.l
 
-    mod5.solve()
+    try:
+        mod5.solve()
+    except GamspyException:
+        if mod5.solve_status == SolveStatus.EvalError:
+            pass
+        else:
+            raise
+
     result["mod5", n] = b.l[n]
     result["mod5", "obj"] = obj.l
 

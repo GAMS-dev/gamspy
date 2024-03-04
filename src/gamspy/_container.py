@@ -28,7 +28,6 @@ import os
 import shutil
 import sys
 import uuid
-import warnings
 from typing import Any
 from typing import Literal
 from typing import TYPE_CHECKING
@@ -93,8 +92,6 @@ class Container(gt.Container):
         .gdx, .g00 files.
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default "delete"
-    delayed_execution : bool, optional
-        Delayed execution mode, by default False
     options : Options
         Global options for the overall execution
     miro_protect : bool
@@ -114,7 +111,6 @@ class Container(gt.Container):
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: str = "delete",
-        delayed_execution: bool = False,
         miro_protect: bool = True,
         options: Options | None = None,
     ):
@@ -124,16 +120,10 @@ class Container(gt.Container):
             else utils._get_gamspy_base_directory()
         )
 
-        self._delayed_execution = delayed_execution
-
-        if delayed_execution:
-            warnings.warn(
-                "Delayed execution mode will be deprecated in 0.12.0."
-            )
-
         self._debugging_level = self._get_debugging_level(debugging_level)
 
         self._unsaved_statements: list = []
+        self._all_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
 
@@ -254,12 +244,13 @@ class Container(gt.Container):
             raise ValidationError("import_symbols must be a list of strings")
 
         self._import_symbols = import_symbols
-        self._unsaved_statements.append(gams_code)
+        self._add_statement(gams_code)
 
         self._run()
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
+        self._all_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""
@@ -456,9 +447,13 @@ class Container(gt.Container):
         gdx_out: str,
         dirty_names: list[str],
         modified_names: list[str],
+        user_invoked: bool = False,
     ) -> str:
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
-        for statement in self._unsaved_statements:
+        statements = (
+            self._all_statements if user_invoked else self._unsaved_statements
+        )
+        for statement in statements:
             if isinstance(statement, str):
                 string += statement + "\n"
             elif isinstance(statement, gp.UniverseAlias):
@@ -490,17 +485,6 @@ class Container(gt.Container):
             string += self._get_unload_miro_symbols_str()
 
         return string
-
-    @property
-    def delayed_execution(self) -> bool:
-        """
-        Delayed execution mode.
-
-        Returns
-        -------
-        bool
-        """
-        return self._delayed_execution
 
     def gamsJobName(self) -> str | None:
         """
@@ -969,7 +953,9 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._generate_gams_string(self._gdx_in, self._gdx_out, [], [])
+        return self._generate_gams_string(
+            self._gdx_in, self._gdx_out, [], [], True
+        )
 
     def getEquations(self):
         equations = [

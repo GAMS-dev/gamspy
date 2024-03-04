@@ -91,11 +91,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         )
 
         self.container._add_statement(statement)
-        self._assignment = statement
+        self.parent._assignment = statement
 
         self.parent._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run()
+        self.container._run()
 
     @property
     def dimension(self):

@@ -19,7 +19,6 @@ class MathSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_math(self):
@@ -279,7 +278,6 @@ class MathSuite(unittest.TestCase):
     def test_math_2(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -372,7 +370,6 @@ class MathSuite(unittest.TestCase):
     def test_logical(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
