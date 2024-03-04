@@ -176,7 +176,7 @@ def next_alias(symbol: "Alias" | Set) -> "Alias":
     >>> j = gp.math.next_alias(i)
     >>> j.name
     'AliasOfi_2'
-    >>> k = gp.math.dim(m, [10])[0]
+    >>> k = gp.math._generate_dims(m, [10])[0]
     >>> k.name
     'DenseDim10_1'
     >>> k2 = gp.math.next_alias(k)
@@ -239,7 +239,7 @@ def dim(dims: List[int]) -> Dim:
     >>> par.domain # doctest: +ELLIPSIS
     [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
     >>> par2 = gp.Parameter(m, name="par2", domain=a) # same 2 sets are used
-    >>> par2.domain
+    >>> par2.domain # doctest: +ELLIPSIS
     [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
 
     """
@@ -303,7 +303,7 @@ def trace(
     >>> import numpy as np
     >>> m = gp.Container()
     >>> identity = np.eye(3, 3)
-    >>> mat = gp.Parameter(m, name="mat", domain=gp.math.dim(m, [3, 3]), records=identity, uels_on_axes=True)
+    >>> mat = gp.Parameter(m, name="mat", domain=gp.math.dim([3, 3]), records=identity, uels_on_axes=True)
     >>> sc = gp.Parameter(m, name="sc", domain=[])
     >>> sc[...] = gp.math.trace(mat)
     >>> int(sc.toDense())
