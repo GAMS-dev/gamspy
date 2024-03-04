@@ -17,13 +17,11 @@ class ModelInstanceSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_parameter_change(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -98,7 +96,6 @@ class ModelInstanceSuite(unittest.TestCase):
     def test_variable_change(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -159,7 +156,6 @@ class ModelInstanceSuite(unittest.TestCase):
     def test_fx(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Data

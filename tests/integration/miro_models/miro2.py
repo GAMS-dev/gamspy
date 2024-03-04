@@ -35,7 +35,7 @@ from gamspy.math import Min
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container()
 
     # Prepare data
     distances = [

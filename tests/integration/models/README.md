@@ -7,7 +7,7 @@ You can create a Set, Alias, Parameter, Variable, and Equation in the same way y
 ```Python
 import gamspy as gp
 
-m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv('DELAYED_EXECUTION', False)))
+m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 i = gp.Set(m, "i", records=['i1','i2'])
 a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
 ```
@@ -19,7 +19,7 @@ A model is a list of equations.
 ```Python
 from gamspy import Model
 
-m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv('DELAYED_EXECUTION', False)))
+m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 model1 = Model(m, name="model1", equations=[maxw, minw, etd]) # Defines equations explicitly as a list of equations
 model2 = Model(m, name="model2", equations=m.getEquations())             # This includes all defined equations
 ```
@@ -31,7 +31,7 @@ Frequently used Gams operations which accept an index list and an expression.
 ```Python
 from gamspy import Sum, Product, Smin, Smax
 
-m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv('DELAYED_EXECUTION', False)))
+m = gp.Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 i = gp.Set(m, "i", records=['i1','i2'])
 a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i1','1']])
 
@@ -46,7 +46,7 @@ Python representation of Card and Ord operations.
 ```Python
 from gamspy import Card, Ord
 
-    m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv('DELAYED_EXECUTION', False)))
+    m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
     i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
     step = Parameter(m, name="step", records=math.pi / 180)

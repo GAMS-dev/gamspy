@@ -26,7 +26,6 @@ class NeosSuite(unittest.TestCase):
     def test_neos_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
 
@@ -86,7 +85,6 @@ class NeosSuite(unittest.TestCase):
     def test_no_client(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
 
@@ -138,7 +136,6 @@ class NeosSuite(unittest.TestCase):
     def test_different_solver(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         # Prepare data
@@ -197,7 +194,6 @@ class NeosSuite(unittest.TestCase):
     def test_neos_non_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
 

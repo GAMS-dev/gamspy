@@ -34,7 +34,6 @@ from gamspy import Sum
 def main():
     container = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/chenery.gdx",
     )
 

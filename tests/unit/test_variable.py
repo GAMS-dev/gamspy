@@ -18,7 +18,6 @@ class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_variable_creation(self):
@@ -46,7 +45,6 @@ class VariableSuite(unittest.TestCase):
         # Variable and domain containers are different
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -192,9 +190,7 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(v4.type, "positive")
 
     def test_variable_attributes(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
         pi = Variable(
             m,
             "pi",
@@ -286,55 +282,38 @@ class VariableSuite(unittest.TestCase):
         x = Variable(m, "x", domain=[k])
         x.l[k] = 5
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].gamsRepr(),
-                "x.l(k) = 5;",
-            )
-            self.assertTrue(x._is_dirty)
-        else:
-            self.assertFalse(x._is_dirty)
+        self.assertEqual(
+            x._assignment.gamsRepr(),
+            "x.l(k) = 5;",
+        )
+        self.assertFalse(x._is_dirty)
 
     def test_scalar_attr_assignment(self):
         a = Variable(self.m, "a")
         b = Variable(self.m, "b", "binary")
         a.l = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.l = 5;")
 
         a.m = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.m._assignment.getStatement(), "a.m = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.m = 5;")
 
         a.lo = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.lo._assignment.getStatement(), "a.lo = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.lo = 5;")
 
         a.up = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.up._assignment.getStatement(), "a.up = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.up = 5;")
 
         a.scale = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.scale._assignment.getStatement(), "a.scale = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.scale = 5;")
 
         a.fx = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.fx._assignment.getStatement(), "a.fx = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.fx = 5;")
 
         b.prior = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                b.prior._assignment.getStatement(), "b.prior = 5;"
-            )
+        self.assertEqual(b._assignment.getStatement(), "b.prior = 5;")
 
         a.stage = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.stage._assignment.getStatement(), "a.stage = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.stage = 5;")
 
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

@@ -59,7 +59,6 @@ from gamspy.math import uniform
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     mu = 1e-2

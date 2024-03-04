@@ -286,8 +286,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._assignment = statement
 
         self._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run()
+        self.container._run()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "eq", other)
