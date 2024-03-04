@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import List, Union, Optional
 
 import gamspy._symbols.implicits as implicits
@@ -202,38 +203,54 @@ def next_alias(symbol: "Alias" | Set) -> "Alias":
     return find_x
 
 
-def dim(m: "Container", dims: List[int]) -> List[Set | "Alias"]:
+@dataclass
+class Dim:
+    dims: List[int]
+
+    def __init__(self, dims):
+        self.dims = dims
+
+
+def dim(dims: List[int]) -> Dim:
     """Returns an array where each element
     corresponds to a set where the dimension of the
     set is equal to the element in dims. If same dimension
-    size used, then next free alias is returned. See examples.
+    size used, then next free alias will be returned.
+    Symbols are generated once the Dim object is passed to
+    a constructor that supports it.
 
     Parameters
     ----------
-    m : Container
     dims: List[int]
 
     Returns
     -------
-    List[Set | "Alias"]
+    Dim
 
     Examples
     --------
     >>> import gamspy as gp
     >>> import math
     >>> m = gp.Container()
-    >>> a = gp.math.dim(m, dims=[10, 20])
-    >>> a # doctest: +ELLIPSIS
+    >>> a = gp.math.dim([10, 20]) # nothing generated yet
+    >>> a
+    Dim(dims=[10, 20])
+    >>> par = gp.Parameter(m, name="par", domain=a) # now two sets are generated
+    >>> par.domain # doctest: +ELLIPSIS
     [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
-    >>> b = gp.math.dim(m, dims=[10, 10])
-    >>> b # doctest: +ELLIPSIS
-    [<Set `DenseDim10_1` (0x...)>, <Alias `DenseDim10_2` (0x...)>]
+    >>> par2 = gp.Parameter(m, name="par2", domain=a) # same 2 sets are used
+    >>> par2.domain
+    [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
 
     """
     for x in dims:
         if not isinstance(x, int):
             raise ValidationError("Dimensions must be integers")
 
+    return Dim(dims=dims)
+
+
+def _generate_dims(m: "Container", dims: List[int]) -> List[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 from typing import TYPE_CHECKING
 from typing import Union
+from typing import Sequence
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
@@ -18,14 +19,22 @@ if TYPE_CHECKING:
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
+    from gamspy import Variable
 
 
 class Operation(operable.Operable):
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
+        domain: Set | Alias | Sequence[Set | Alias] | Domain | Expression,
         expression: (
-            Expression | ImplicitVariable | ImplicitParameter | int | bool
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
         ),
         op_name: str,
     ):
@@ -56,7 +65,7 @@ class Operation(operable.Operable):
         controlled_domain.extend(getattr(expression, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
-    def __getitem__(self, indices: tuple):
+    def __getitem__(self, indices: Sequence | str):
         domain = validation.validate_domain(self, indices)
         for index, sum_index in self._operation_indices:
             domain.insert(index, self._bare_op_domain[sum_index])
@@ -153,8 +162,17 @@ class Sum(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    domain : Set | Alias | tuple[Set | Alias], Domain, Expression
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -180,7 +198,16 @@ class Product(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -206,7 +233,16 @@ class Smin(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -232,7 +268,16 @@ class Smax(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------

@@ -388,20 +388,20 @@ class MatrixSuite(unittest.TestCase):
         a = Parameter(
             self.m,
             name="a",
-            domain=dim(self.m, [3, 3]),
+            domain=dim([3, 3]),
             records=a_recs,
             uels_on_axes=True,
         )
         b = Parameter(
             self.m,
             name="b",
-            domain=dim(self.m, [3, 3]),
+            domain=dim([3, 3]),
             records=b_recs,
             uels_on_axes=True,
         )
 
         c2 = (a @ b) + a
-        c = Parameter(self.m, name="c", domain=dim(self.m, [3, 3]))
+        c = Parameter(self.m, name="c", domain=dim([3, 3]))
         c[...] = c2
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, (a_recs @ b_recs) + (a_recs)))
@@ -460,12 +460,10 @@ class MatrixSuite(unittest.TestCase):
         self.assertNotEqual(r7.domain[-1], r7.domain[-2])
 
     def test_domain_conflict_resolution_2(self):
-        m = self.m
-
-        vec = Parameter(self.m, name="vec", domain=dim(m, [3]))
-        mat = Parameter(self.m, name="mat", domain=dim(m, [3, 3]))
+        vec = Parameter(self.m, name="vec", domain=dim([3]))
+        mat = Parameter(self.m, name="mat", domain=dim([3, 3]))
         batched_mat = Parameter(
-            self.m, name="batched_mat", domain=dim(m, [3, 3, 3])
+            self.m, name="batched_mat", domain=dim([3, 3, 3])
         )
 
         r2 = mat @ mat
@@ -501,13 +499,11 @@ class MatrixSuite(unittest.TestCase):
         self.assertEqual(r7.domain[2], batched_mat.domain[2])
 
     def test_trace_on_matrix(self):
-        m = self.m
-
         identity = np.eye(3, 3)
         mat = Parameter(
             self.m,
             name="mat",
-            domain=dim(m, [3, 3]),
+            domain=dim([3, 3]),
             records=identity,
             uels_on_axes=True,
         )
@@ -527,7 +523,7 @@ class MatrixSuite(unittest.TestCase):
         rect = Parameter(
             self.m,
             name="rect",
-            domain=dim(m, [3, 5]),
+            domain=dim([3, 5]),
             records=recs,
             uels_on_axes=True,
         )
@@ -535,24 +531,22 @@ class MatrixSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: trace(rect))
 
     def test_trace_on_vector(self):
-        m = self.m
-        vec = Parameter(self.m, name="vec", domain=dim(m, [3]))
+        vec = Parameter(self.m, name="vec", domain=dim([3]))
         self.assertRaises(ValidationError, lambda: trace(vec))
 
     def test_trace_on_batched_matrix(self):
-        m = self.m
         recs = np.random.randint(1, 11, size=(128, 3, 3))
         bm1 = Parameter(
             self.m,
             name="vec",
-            domain=dim(m, [128, 3, 3]),
+            domain=dim([128, 3, 3]),
             records=recs,
             uels_on_axes=True,
         )
 
-        sc1 = Parameter(self.m, name="sc1", domain=dim(m, [128]))
+        sc1 = Parameter(self.m, name="sc1", domain=dim([128]))
         expr1 = trace(bm1, axis1=1, axis2=2)
-        self.assertEqual(expr1.domain, dim(m, [128]))
+        self.assertEqual(expr1.domain[0].name, "DenseDim128_1")
 
         sc1[...] = expr1
         sc1_dens = sc1.toDense()

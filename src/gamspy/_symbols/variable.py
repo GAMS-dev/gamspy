@@ -4,7 +4,7 @@ import builtins
 import itertools
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import gams.transfer as gt
 import pandas as pd
@@ -198,6 +198,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if isinstance(domain, (gp.Set, gp.Alias, str)):
             domain = [domain]
 
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
+
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
@@ -292,7 +295,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
             container.miro_protect = True
 
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
+    def __getitem__(
+        self, indices: Sequence | str
+    ) -> implicits.ImplicitVariable:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)

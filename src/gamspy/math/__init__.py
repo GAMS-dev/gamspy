@@ -91,7 +91,7 @@ from gamspy.math.trigonometric import (
     tanh,
 )
 
-from gamspy.math.matrix import dim, next_alias, permute, trace, vector_norm
+from gamspy.math.matrix import dim, Dim, next_alias, permute, trace, vector_norm
 
 __all__ = [
     "cos",
@@ -118,6 +118,7 @@ __all__ = [
     "trace",
     "vector_norm",
     "dim",
+    "Dim",
     "next_alias",
     "abs",
     "ceil",
@@ -181,4 +182,5 @@ __all__ = [
     "rel_le",
     "rel_lt",
     "rel_ne",
+    "_generate_dims",
 ]
