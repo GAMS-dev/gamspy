@@ -41,7 +41,12 @@ class ImplicitEquation(ImplicitSymbol):
         self._infeas = self._create_attr("infeas")
 
     def _create_attr(self, attr_name: str):
-        return ImplicitParameter(self.parent, f"{self.gamsRepr()}.{attr_name}")
+        return ImplicitParameter(
+            self.parent,
+            name=f"{self.name}.{attr_name}",
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")

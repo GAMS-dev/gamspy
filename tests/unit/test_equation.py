@@ -482,57 +482,57 @@ class EquationSuite(unittest.TestCase):
             hasattr(a[i], "l")
             and isinstance(a[i].l, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].l.gamsRepr(), "a(i).l")
+        self.assertEqual(a[i].l.gamsRepr(), "a.l(i)")
         self.assertTrue(
             hasattr(a[i], "m")
             and isinstance(a[i].m, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].m.gamsRepr(), "a(i).m")
+        self.assertEqual(a[i].m.gamsRepr(), "a.m(i)")
         self.assertTrue(
             hasattr(a[i], "lo")
             and isinstance(a[i].lo, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].lo.gamsRepr(), "a(i).lo")
+        self.assertEqual(a[i].lo.gamsRepr(), "a.lo(i)")
         self.assertTrue(
             hasattr(a[i], "up")
             and isinstance(a[i].up, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].up.gamsRepr(), "a(i).up")
+        self.assertEqual(a[i].up.gamsRepr(), "a.up(i)")
         self.assertTrue(
             hasattr(a[i], "scale")
             and isinstance(a[i].scale, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].scale.gamsRepr(), "a(i).scale")
+        self.assertEqual(a[i].scale.gamsRepr(), "a.scale(i)")
         self.assertTrue(
             hasattr(a[i], "stage")
             and isinstance(a[i].stage, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
+        self.assertEqual(a[i].stage.gamsRepr(), "a.stage(i)")
         self.assertTrue(
             hasattr(a[i], "range")
             and isinstance(a[i].range, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].range.gamsRepr(), "a(i).range")
+        self.assertEqual(a[i].range.gamsRepr(), "a.range(i)")
         self.assertTrue(
             hasattr(a[i], "slacklo")
             and isinstance(a[i].slacklo, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].slacklo.gamsRepr(), "a(i).slacklo")
+        self.assertEqual(a[i].slacklo.gamsRepr(), "a.slacklo(i)")
         self.assertTrue(
             hasattr(a[i], "slackup")
             and isinstance(a[i].slackup, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].slackup.gamsRepr(), "a(i).slackup")
+        self.assertEqual(a[i].slackup.gamsRepr(), "a.slackup(i)")
         self.assertTrue(
             hasattr(a[i], "slack")
             and isinstance(a[i].slack, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].slack.gamsRepr(), "a(i).slack")
+        self.assertEqual(a[i].slack.gamsRepr(), "a.slack(i)")
         self.assertTrue(
             hasattr(a[i], "infeas")
             and isinstance(a[i].infeas, implicits.ImplicitParameter)
         )
-        self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
+        self.assertEqual(a[i].infeas.gamsRepr(), "a.infeas(i)")
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
