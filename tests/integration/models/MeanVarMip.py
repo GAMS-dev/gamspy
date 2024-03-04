@@ -32,7 +32,6 @@ from gamspy import Variable
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Read from MeanVarMip.gdx the data needed to run the mean-variance model

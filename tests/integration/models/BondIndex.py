@@ -33,7 +33,6 @@ from gamspy import Variable
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
     m.read(
         load_from=str(Path(__file__).parent.absolute()) + "/BondIndex.gdx",

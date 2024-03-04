@@ -567,10 +567,10 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         )
 
         self.container._add_statement(statement)
+        self._assignment = statement
 
         self._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run()
+        self.container._run()
 
     @property
     def records(self):

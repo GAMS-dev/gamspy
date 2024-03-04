@@ -449,14 +449,14 @@ class Model:
         if self._objective_variable:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        self.container._unsaved_statements.append(solve_string + ";\n")
+        self.container._add_statement(solve_string + ";\n")
 
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map:
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
-            self.container._unsaved_statements.append(
+            self.container._add_statement(
                 f"{symbol_name} = {self.name}.{attr_name};"
             )
 

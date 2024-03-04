@@ -38,7 +38,6 @@ import gamspy as gap
 def flow_shop(process_time_df, last_machine, last_item):
     c = gap.Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets
