@@ -11,6 +11,8 @@ GAMSPy 0.12.1
   - Add a new model (Nurses) to the model library and the Notebook examples.
   - Add an AC optimal power flow (ACOPF) model to the model library.
   - Add a test to verify the generated string for power where the exponent is 0.5.
+- Documentation
+  - Remove FAQ about Google Colab (it is resolved) and add FAQ about Windows Defender.
 
 
 GAMSPy 0.12.0
