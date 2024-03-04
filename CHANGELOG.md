@@ -4,6 +4,7 @@ GAMSPy CHANGELOG
 GAMSPy 0.12.1
 -------------
 - General
+  - Catch solve status errors and throw necessary exceptions.
   - __pow__ returns sqrt instead of rPower if the exponent is 0.5.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 

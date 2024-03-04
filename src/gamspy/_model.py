@@ -33,6 +33,7 @@ from typing import Literal
 from typing import TYPE_CHECKING
 
 from gams import GamsOptions
+from gams import GamsExceptionExecution
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -479,11 +480,19 @@ class Model:
                     ModelStatus(temp_container[symbol_name].toValue()),
                 )
             elif python_attr == "solve_status":
+                status = SolveStatus(temp_container[symbol_name].toValue())
                 setattr(
                     self,
                     python_attr,
-                    SolveStatus(temp_container[symbol_name].toValue()),
+                    status,
                 )
+
+                if status != SolveStatus.NormalCompletion:
+                    raise GamsExceptionExecution(
+                        f"The model ({self.name}) was not solved successfully!"
+                        f" Solve status: {status.name}",
+                        status.value,
+                    )
             else:
                 setattr(
                     self,
