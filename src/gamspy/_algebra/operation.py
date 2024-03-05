@@ -53,7 +53,7 @@ class Operation(operable.Operable):
         self.domain: List[Union[Set, Alias]] = []
 
         self._operation_indices = []
-        if not isinstance(expression, (int, bool, float)):
+        if not isinstance(expression, (bool, float, int)):
             for i, x in enumerate(expression.domain):
                 try:
                     sum_index = self._bare_op_domain.index(x)
@@ -71,7 +71,7 @@ class Operation(operable.Operable):
         for index, sum_index in self._operation_indices:
             domain.insert(index, self._bare_op_domain[sum_index])
 
-        if isinstance(self.expression, (bool, int, float)):
+        if isinstance(self.expression, (bool, float, int)):
             return Operation(self.op_domain, self.expression, self._op_name)
         else:
             return Operation(
@@ -150,7 +150,7 @@ class Operation(operable.Operable):
 
         expression_str = (
             str(self.expression)
-            if isinstance(self.expression, (int, str))
+            if isinstance(self.expression, (bool, float, int, str))
             else self.expression.gamsRepr()
         )
 

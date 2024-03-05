@@ -119,6 +119,13 @@ class OperationSuite(unittest.TestCase):
         expression = Card(i) >= 5
         self.assertEqual(expression.gamsRepr(), "(card(i) >= 5)")
 
+        sum_op = Sum((i, j), c[i, j] * x[i, j])
+        expression = sum_op != sum_op
+        self.assertEqual(
+            expression.gamsRepr(),
+            "(sum((i,j),(c(i,j) * x(i,j))) ne sum((i,j),(c(i,j) * x(i,j))))",
+        )
+
     def test_operation_indices(self):
         # Test operation index
         m = Container(
@@ -247,7 +254,8 @@ class OperationSuite(unittest.TestCase):
         s = Set(m, name="s")
         s2 = Alias(m, name="s2", alias_with=s)
         self.assertRaises(ValidationError, lambda: Sum([c], 5.2)[s2])
-        Sum([c], 5.2)[:]  # this should be fine
+        expr1 = Sum([c], 5.2)[:]  # this should be fine
+        self.assertEqual(expr1.gamsRepr(), "sum(c,5.2)")
 
     def test_operation_extract_vars(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
@@ -266,6 +274,9 @@ class OperationSuite(unittest.TestCase):
 
         expr4 = Sum(s, Sum(c, p[s, c]))
         self.assertIn("p", expr4._extract_variables())
+
+        expr5 = Sum(s, 2)
+        self.assertEqual(expr5._extract_variables(), [])
 
 
 def operation_suite():
