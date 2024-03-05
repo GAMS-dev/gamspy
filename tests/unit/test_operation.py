@@ -17,6 +17,8 @@ from gamspy import (
     Sum,
     Variable,
 )
+import pandas as pd
+
 from gamspy.exceptions import ValidationError
 
 
@@ -229,6 +231,41 @@ class OperationSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             if e:
                 ...
+
+    def test_operation_no_index(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        c = Set(m, "c")
+        s = Set(m, "s")
+        a = Parameter(m, "a", domain=[c, s])
+        p = Variable(m, "p", type="Positive", domain=c)
+
+        self.assertRaises(ValidationError, lambda: -Sum([], a[c, s] * p[c]))
+
+    def test_operation_scalar_domain_update(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        c = Set(m, name="c")
+        s = Set(m, name="s")
+        s2 = Alias(m, name="s2", alias_with=s)
+        self.assertRaises(ValidationError, lambda: Sum([c], 5.2)[s2])
+        Sum([c], 5.2)[:]  # this should be fine
+
+    def test_operation_extract_vars(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        s = Set(m, name="s")
+        c = Set(m, name="c")
+        p = Variable(m, "p", type="Positive", domain=[s, c])
+
+        expr1 = Sum(c, p[s, c])
+        self.assertIn("p", expr1._extract_variables())
+
+        expr2 = Sum(c, p)
+        self.assertIn("p", expr2._extract_variables())
+
+        expr3 = Sum(s, Sum(c, p))
+        self.assertIn("p", expr3._extract_variables())
+
+        expr4 = Sum(s, Sum(c, p[s, c]))
+        self.assertIn("p", expr4._extract_variables())
 
 
 def operation_suite():

@@ -32,6 +32,7 @@ class Operation(operable.Operable):
             | ImplicitParameter
             | int
             | bool
+            | float
             | Variable
             | Parameter
             | Operation
@@ -52,7 +53,7 @@ class Operation(operable.Operable):
         self.domain: List[Union[Set, Alias]] = []
 
         self._operation_indices = []
-        if not isinstance(expression, (int, bool)):
+        if not isinstance(expression, (int, bool, float)):
             for i, x in enumerate(expression.domain):
                 try:
                     sum_index = self._bare_op_domain.index(x)
@@ -70,7 +71,7 @@ class Operation(operable.Operable):
         for index, sum_index in self._operation_indices:
             domain.insert(index, self._bare_op_domain[sum_index])
 
-        if isinstance(self.expression, (bool, int)):
+        if isinstance(self.expression, (bool, int, float)):
             return Operation(self.op_domain, self.expression, self._op_name)
         else:
             return Operation(
@@ -78,11 +79,16 @@ class Operation(operable.Operable):
             )
 
     def _extract_variables(self):
+        from gamspy import Variable
+
         if isinstance(self.expression, expression.Expression):
             return self.expression._find_variables()
 
         if isinstance(self.expression, implicits.ImplicitVariable):
             return [self.expression.parent.name]
+
+        if isinstance(self.expression, Variable):
+            return [self.expression.name]
 
         if isinstance(self.expression, Operation):
             return self.expression._extract_variables()

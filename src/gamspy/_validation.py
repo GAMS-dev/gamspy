@@ -140,6 +140,17 @@ def _transform_given_indices(
     validate_type(given_domain)
 
     if len(domain) == 0:
+        # If scalar, only correct indexing is [:] or [...]
+        if len(given_domain) != 1:
+            raise ValidationError(
+                "Scalar values can only be indexed by '[:]' or '[...]'"
+            )
+
+        if not isinstance(given_domain[0], (type(...), slice)):
+            raise ValidationError(
+                "Scalar values can only be indexed by '[:]' or '[...]'"
+            )
+
         return new_domain
 
     if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
