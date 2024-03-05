@@ -475,6 +475,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         if self._records is not None:
             if self.domain_forwarding:  # pragma: no cover
                 self._domainForwarding()
+                self._mark_forwarded_domain_sets()
 
                 # reset state check flags for all symbols in the container
                 for _, symbol in self.container.data.items():

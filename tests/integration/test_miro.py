@@ -45,6 +45,27 @@ class MiroSuite(unittest.TestCase):
         self.assertEqual(i2.records.values.tolist()[0][0], "i2")
         self.assertEqual(p2.records.values[0][1], 1)
 
+    def test_domain_forwarding_2(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro4_gdxin_.gdx"
+        )
+        miro_gdx_out = os.path.join(
+            directory, "miro_models", "_miro4_gdxout_.gdx"
+        )
+        model_path = os.path.join(directory, "miro_models", "miro4.py")
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+        subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
+
+        try:
+            subprocess.run(
+                ["python", model_path], env=subprocess_env, check=True
+            )
+        except subprocess.CalledProcessError:
+            self.fail("Records are not as expected.")
+
     def test_miro(self):
         directory = str(pathlib.Path(__file__).parent.resolve())
         current_environment = os.environ.copy()
@@ -61,7 +82,7 @@ class MiroSuite(unittest.TestCase):
                 capture_output=True,
             )
         except Exception as e:
-            exit(e)
+            self.fail(e)
 
         # Test default.gdx
         new_container = Container()
@@ -408,8 +429,12 @@ class MiroSuite(unittest.TestCase):
 
     def test_table_columns(self):
         directory = str(pathlib.Path(__file__).parent.resolve())
-        miro_gdx_in = os.path.join(directory, "_test_miro_gdxin_.gdx")
-        miro_gdx_out = os.path.join(directory, "_test_miro_gdxout_.gdx")
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro3_gdxin_.gdx"
+        )
+        miro_gdx_out = os.path.join(
+            directory, "miro_models", "_miro3_gdxout_.gdx"
+        )
         model_path = os.path.join(directory, "miro_models", "miro3.py")
 
         subprocess_env = os.environ.copy()

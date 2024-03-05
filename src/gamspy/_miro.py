@@ -11,6 +11,24 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy import Container, Set, Parameter, Variable, Equation
 
+MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
+MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+
+
+def get_load_input_str(statement: str, gdx_in: str) -> str:
+    string = "$gdxIn\n"  # close the old one
+    string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
+    string += f"$loadDC {statement}\n"
+    string += "$gdxIn\n"  # close the new one
+    string += f"$gdxIn {gdx_in}\n"
+
+    return string
+
+
+def get_unload_output_str(container: Container) -> str:
+    unload_str = ",".join(container._miro_output_symbols)
+    return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
+
 
 class MiroJSONEncoder:
     def __init__(

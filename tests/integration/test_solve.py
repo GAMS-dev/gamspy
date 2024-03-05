@@ -298,13 +298,13 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test output redirection
-        with open("test.gms", "w") as file:
+        with open("bla.gms", "w") as file:
             _ = transport.solve(
                 options=Options(time_limit=100),
                 output=file,
             )
 
-        self.assertTrue(os.path.exists("test.gms"))
+        self.assertTrue(os.path.exists("bla.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
