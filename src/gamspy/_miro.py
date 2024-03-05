@@ -30,6 +30,28 @@ def get_unload_output_str(container: Container) -> str:
     return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
 
 
+def load_miro_symbol_records(container: Container):
+    # Load records of miro input symbols
+    if MIRO_GDX_IN and container._miro_input_symbols:
+        container._load_records_from_gdx(
+            MIRO_GDX_IN, container._miro_input_symbols
+        )
+        for symbol in container._miro_input_symbols:
+            if (
+                isinstance(container[symbol], gp.Parameter)
+                and container[symbol]._is_miro_table
+            ):
+                container[symbol]._records.columns = container[
+                    symbol
+                ].domain_names + ["value"]
+
+    # Load records of miro output symbols
+    if MIRO_GDX_OUT and container._miro_output_symbols:
+        container._load_records_from_gdx(
+            MIRO_GDX_OUT, container._miro_output_symbols
+        )
+
+
 class MiroJSONEncoder:
     def __init__(
         self,
