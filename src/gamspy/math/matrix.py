@@ -138,6 +138,7 @@ def vector_norm(
 
             sum_domain = dim
 
+    # TODO: Fix typing issues in lines that contain type: ignore
     if ord == 2:
         return gamspy.math.sqrt(
             operation.Sum(sum_domain, gamspy.math.sqr(x[domain])),
