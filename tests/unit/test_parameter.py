@@ -5,15 +5,8 @@ import unittest
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.exceptions import ValidationError, GamspyException
+from gamspy import Alias, Container, Ord, Parameter, Set, Sum, Variable
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class ParameterSuite(unittest.TestCase):

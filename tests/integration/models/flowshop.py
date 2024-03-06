@@ -30,9 +30,8 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy as gap
+import pandas as pd
 
 
 def flow_shop(process_time_df, last_machine, last_item):

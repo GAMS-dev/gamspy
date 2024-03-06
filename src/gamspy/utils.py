@@ -27,19 +27,17 @@ from __future__ import annotations
 import os
 import platform
 from collections.abc import Sequence
-from typing import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
 from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import ImplicitSet
     from gamspy import Alias, Set
+    from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
@@ -201,10 +199,7 @@ def isin(symbol, sequence: Sequence) -> bool:
     False
 
     """
-    for item in sequence:
-        if symbol is item:
-            return True
-    return False
+    return any(symbol is item for item in sequence)
 
 
 def _get_gamspy_base_directory() -> str:

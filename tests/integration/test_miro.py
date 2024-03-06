@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from gamspy import Container, Set, Parameter
+from gamspy import Container, Parameter, Set
 
 
 class MiroSuite(unittest.TestCase):
@@ -70,7 +70,7 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro input d
-        self.assertTrue("d" in new_container.data.keys())
+        self.assertTrue("d" in new_container.data)
         self.assertEqual(
             new_container["d"].records.values.tolist(),
             [
@@ -84,11 +84,11 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro scalar input f
-        self.assertTrue("f" in new_container.data.keys())
+        self.assertTrue("f" in new_container.data)
         self.assertEqual(new_container["f"].records.value.item(), 90.0)
 
         # Miro output x
-        self.assertTrue("x" in new_container.data.keys())
+        self.assertTrue("x" in new_container.data)
         self.assertEqual(
             new_container["x"].records.values.tolist(),
             [
@@ -118,7 +118,7 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro output z
-        self.assertTrue("z" in new_container.data.keys())
+        self.assertTrue("z" in new_container.data)
         self.assertEqual(new_container["z"].records.level.item(), 153.675)
 
         # Test generated json

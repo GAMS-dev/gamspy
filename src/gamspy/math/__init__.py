@@ -24,88 +24,96 @@
 #
 from __future__ import annotations
 
-from gamspy.math.log_power import cv_power
-from gamspy.math.log_power import exp
-from gamspy.math.log_power import log
-from gamspy.math.log_power import log10
-from gamspy.math.log_power import log2
-from gamspy.math.log_power import log_beta
-from gamspy.math.log_power import log_gamma
-from gamspy.math.log_power import logit
-from gamspy.math.log_power import power
-from gamspy.math.log_power import rpower
-from gamspy.math.log_power import sign_power
-from gamspy.math.log_power import sllog10
-from gamspy.math.log_power import sqlog10
-from gamspy.math.log_power import sqr
-from gamspy.math.log_power import vc_power
-from gamspy.math.misc import abs
-from gamspy.math.misc import beta
-from gamspy.math.misc import bool_and
-from gamspy.math.misc import bool_eqv
-from gamspy.math.misc import bool_imp
-from gamspy.math.misc import bool_not
-from gamspy.math.misc import bool_or
-from gamspy.math.misc import bool_xor
-from gamspy.math.misc import ceil
-from gamspy.math.misc import dist
-from gamspy.math.misc import div
-from gamspy.math.misc import div0
-from gamspy.math.misc import entropy
-from gamspy.math.misc import errorf
-from gamspy.math.misc import factorial
-from gamspy.math.misc import floor
-from gamspy.math.misc import fractional
-from gamspy.math.misc import gamma
-from gamspy.math.misc import ifthen
-from gamspy.math.misc import lse_max
-from gamspy.math.misc import lse_max_sc
-from gamspy.math.misc import lse_min
-from gamspy.math.misc import lse_min_sc
-from gamspy.math.misc import Max
-from gamspy.math.misc import Min
-from gamspy.math.misc import mod
-from gamspy.math.misc import ncp_cm
-from gamspy.math.misc import ncp_f
-from gamspy.math.misc import ncpVUpow
-from gamspy.math.misc import ncpVUsin
-from gamspy.math.misc import poly
-from gamspy.math.misc import rand_binomial
-from gamspy.math.misc import rand_linear
-from gamspy.math.misc import rand_triangle
-from gamspy.math.misc import regularized_beta
-from gamspy.math.misc import regularized_gamma
-from gamspy.math.misc import rel_eq
-from gamspy.math.misc import rel_ge
-from gamspy.math.misc import rel_gt
-from gamspy.math.misc import rel_le
-from gamspy.math.misc import rel_lt
-from gamspy.math.misc import rel_ne
-from gamspy.math.misc import Round
-from gamspy.math.misc import same_as
-from gamspy.math.misc import sigmoid
-from gamspy.math.misc import sign
-from gamspy.math.misc import slexp
-from gamspy.math.misc import slrec
-from gamspy.math.misc import sqexp
-from gamspy.math.misc import sqrec
-from gamspy.math.misc import sqrt
-from gamspy.math.misc import truncate
-from gamspy.math.probability import binomial
-from gamspy.math.probability import centropy
-from gamspy.math.probability import normal
-from gamspy.math.probability import uniform
-from gamspy.math.probability import uniformInt
-from gamspy.math.trigonometric import acos
-from gamspy.math.trigonometric import asin
-from gamspy.math.trigonometric import atan
-from gamspy.math.trigonometric import atan2
-from gamspy.math.trigonometric import cos
-from gamspy.math.trigonometric import cosh
-from gamspy.math.trigonometric import sin
-from gamspy.math.trigonometric import sinh
-from gamspy.math.trigonometric import tan
-from gamspy.math.trigonometric import tanh
+from gamspy.math.log_power import (
+    cv_power,
+    exp,
+    log,
+    log2,
+    log10,
+    log_beta,
+    log_gamma,
+    logit,
+    power,
+    rpower,
+    sign_power,
+    sllog10,
+    sqlog10,
+    sqr,
+    vc_power,
+)
+from gamspy.math.misc import (
+    Max,
+    Min,
+    Round,
+    abs,
+    beta,
+    bool_and,
+    bool_eqv,
+    bool_imp,
+    bool_not,
+    bool_or,
+    bool_xor,
+    ceil,
+    dist,
+    div,
+    div0,
+    entropy,
+    errorf,
+    factorial,
+    floor,
+    fractional,
+    gamma,
+    ifthen,
+    lse_max,
+    lse_max_sc,
+    lse_min,
+    lse_min_sc,
+    mod,
+    ncp_cm,
+    ncp_f,
+    ncpVUpow,
+    ncpVUsin,
+    poly,
+    rand_binomial,
+    rand_linear,
+    rand_triangle,
+    regularized_beta,
+    regularized_gamma,
+    rel_eq,
+    rel_ge,
+    rel_gt,
+    rel_le,
+    rel_lt,
+    rel_ne,
+    same_as,
+    sigmoid,
+    sign,
+    slexp,
+    slrec,
+    sqexp,
+    sqrec,
+    sqrt,
+    truncate,
+)
+from gamspy.math.probability import (
+    binomial,
+    centropy,
+    normal,
+    uniform,
+    uniformInt,
+)
+from gamspy.math.trigonometric import (
+    acos,
+    asin,
+    atan,
+    atan2,
+    cos,
+    cosh,
+    sin,
+    sinh,
+    tan,
+    tanh,
+)
 
 __all__ = [
     "cos",

@@ -12,3 +12,7 @@ run_formatter:
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
     - ruff format tests --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
+    - ruff src/gamspy --check
+    - if [ "$?" == "0" ]; then echo "Linter passed!"; else exit 1; fi
+    - ruff tests --check
+    - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi

@@ -25,11 +25,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
@@ -46,7 +42,7 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Container, Set
     from gamspy._algebra.expression import Expression
 
 
@@ -81,8 +77,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        domain: List[Union[str, Set]] = [],
-        records: Optional[Any] = None,
+        domain: list[str | Set] = [],
+        records: Any | None = None,
         description: str = "",
     ):
         obj = Parameter.__new__(
@@ -125,8 +121,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -159,8 +155,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self,
         container: Container,
         name: str,
-        domain: Optional[List[Union[str, Set]]] = None,
-        records: Optional[Any] = None,
+        domain: list[str | Set] | None = None,
+        records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
@@ -252,17 +248,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             container.miro_protect = previous_state
 
-    def __getitem__(
-        self, indices: Union[tuple, str]
-    ) -> implicits.ImplicitParameter:
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
 
     def __setitem__(
         self,
-        indices: Union[tuple, str, implicits.ImplicitSet],
-        assignment: Union[Expression, float, int],
+        indices: tuple | str | implicits.ImplicitSet,
+        assignment: Expression | float | int,
     ) -> None:
         domain = validation.validate_domain(self, indices)
 
@@ -325,9 +319,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 " assigning to MIRO input symbols"
             )
 
-        if records is not None:
-            if not isinstance(records, pd.DataFrame):
-                raise TypeError("Symbol 'records' must be type DataFrame")
+        if records is not None and not isinstance(records, pd.DataFrame):
+            raise TypeError("Symbol 'records' must be type DataFrame")
 
         # set records
         self._records = records
@@ -338,13 +331,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if self._records is not None:
-            if self.domain_forwarding:  # pragma: no cover
-                self._domainForwarding()
+        if self._records is not None and self.domain_forwarding:
+            self._domainForwarding()
 
-                # reset state check flags for all symbols in the container
-                for symbol in self.container.data.values():
-                    symbol._requires_state_check = True
+            # reset state check flags for all symbols in the container
+            for symbol in self.container.data.values():
+                symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)

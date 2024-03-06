@@ -26,17 +26,18 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import SolveStatus
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.math import sqr
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Set,
+    SolveStatus,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import GamspyException
+from gamspy.math import sqr
 
 
 def reformat_df(dataframe):
@@ -221,15 +222,18 @@ def main():
     eq7 = Equation(m, name="eq7", type="regular", domain=[i, t])
     eq8 = Equation(m, name="eq8", type="regular", domain=[i, t])
 
-    costThermal[...] = TC == Sum(
-        [t, i],
-        gendata[i, "a"] * sqr(p[i, t])
-        + gendata[i, "b"] * p[i, t]
-        + gendata[i, "c"] * Up[i, t],
+    costThermal[...] = (
+        Sum(
+            [t, i],
+            gendata[i, "a"] * sqr(p[i, t])
+            + gendata[i, "b"] * p[i, t]
+            + gendata[i, "c"] * Up[i, t],
+        )
+        == TC
     )
     balanceP[t] = Sum(i, p[i, t]) + Sum(c, Pc[c, t]) == PWdata[t, "Pd"]
     balanceW[t] = Sum(w, Water[w, t]) + Sum(c, Wc[c, t]) == PWdata[t, "water"]
-    costCoprodcalc[...] = CC == (
+    costCoprodcalc[...] = (
         Sum(
             [c, t],
             Coproduct[c, "A11"] * sqr(Pc[c, t])
@@ -239,7 +243,7 @@ def main():
             + Coproduct[c, "B2"] * Wc[c, t]
             + Coproduct[c, "C"] * Uc[c, t],
         )
-    )
+    ) == CC
     costwatercalc[...] = WaterCost == Sum(
         [t, w],
         waterdata[w, "a"] * sqr(Water[w, t])

@@ -24,9 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import Tuple
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -35,10 +33,10 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.symbol import Symbol
-    from gamspy import Set, Alias
     from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+    from gamspy._symbols.symbol import Symbol
 
 
 class MathOp:
@@ -73,7 +71,7 @@ class MathOp:
         return len(self.gamsRepr())
 
 
-def _stringify(x: Union[str, int, float, Symbol, ImplicitSymbol]):
+def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
     if isinstance(x, (int, float)):
         x = utils._map_special_values(x)
 
@@ -84,7 +82,7 @@ def _stringify(x: Union[str, int, float, Symbol, ImplicitSymbol]):
     return x.gamsRepr()
 
 
-def abs(x: Union[int, float, Symbol]) -> Expression:
+def abs(x: int | float | Symbol) -> Expression:
     """
     Absolute value of x (i.e. ``|x|``)
 
@@ -95,7 +93,7 @@ def abs(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("abs", (x,)), None)
 
 
-def ceil(x: Union[int, float, Symbol]) -> Expression:
+def ceil(x: int | float | Symbol) -> Expression:
     """
     The smallest integer greater than or equal to x
 
@@ -107,7 +105,7 @@ def ceil(x: Union[int, float, Symbol]) -> Expression:
 
 
 def div(
-    dividend: Union[int, float, Symbol], divisor: Union[int, float, Symbol]
+    dividend: int | float | Symbol, divisor: int | float | Symbol
 ) -> Expression:
     """
     Dividing operation
@@ -127,7 +125,7 @@ def div(
 
 
 def div0(
-    dividend: Union[int, float, Symbol], divisor: Union[int, float, Symbol]
+    dividend: int | float | Symbol, divisor: int | float | Symbol
 ) -> Expression:
     """
     Dividing operation
@@ -147,8 +145,8 @@ def div0(
 
 
 def dist(
-    x1: Union[Tuple[int, float], Symbol],
-    x2: Union[Tuple[int, float], Symbol],
+    x1: tuple[int, float] | Symbol,
+    x2: tuple[int, float] | Symbol,
 ) -> Expression:
     """
     L2 norm
@@ -168,7 +166,7 @@ def dist(
     return expression.Expression(None, MathOp("eDist", (x1, x2)), None)
 
 
-def factorial(x: Union[int, Symbol]) -> Expression:
+def factorial(x: int | Symbol) -> Expression:
     """
     Factorial of x
 
@@ -179,7 +177,7 @@ def factorial(x: Union[int, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("fact", (x,)), None)
 
 
-def floor(x: Union[int, float, Symbol]) -> Expression:
+def floor(x: int | float | Symbol) -> Expression:
     """
     The greatest integer less than or equal to x
 
@@ -190,7 +188,7 @@ def floor(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("floor", (x,)), None)
 
 
-def fractional(x: Union[int, float, Symbol]) -> Expression:
+def fractional(x: int | float | Symbol) -> Expression:
     """
     Returns the fractional part of x
 
@@ -223,7 +221,7 @@ def Max(*values) -> Expression:
     return expression.Expression(None, MathOp("max", values), None)
 
 
-def mod(x: Union[float, Symbol], y: Union[float, Symbol]) -> Expression:
+def mod(x: float | Symbol, y: float | Symbol) -> Expression:
     """
     Remainder of x divided by y.
 
@@ -234,7 +232,7 @@ def mod(x: Union[float, Symbol], y: Union[float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("mod", (x, y)), None)
 
 
-def Round(x: Union[float, Symbol], num_decimals: int = 0) -> Expression:
+def Round(x: float | Symbol, num_decimals: int = 0) -> Expression:
     """
     Round x to num_decimals decimal places.
 
@@ -267,9 +265,7 @@ def sign(x: Symbol) -> Expression:
     return expression.Expression(None, MathOp("sign", (x,)), None)
 
 
-def slexp(
-    x: Union[int, float, Symbol], S: Union[int, float] = 150
-) -> Expression:
+def slexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     """
     Smooth (linear) exponential
 
@@ -285,9 +281,7 @@ def slexp(
     return expression.Expression(None, MathOp("slexp", (x, S)), None)
 
 
-def sqexp(
-    x: Union[int, float, Symbol], S: Union[int, float] = 150
-) -> Expression:
+def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     """
     Smooth (quadratic) exponential
 
@@ -303,7 +297,7 @@ def sqexp(
     return expression.Expression(None, MathOp("sqexp", (x, S)), None)
 
 
-def sqrt(x: Union[int, float, Symbol]) -> Expression:
+def sqrt(x: int | float | Symbol) -> Expression:
     """
     Square root of x
 
@@ -314,7 +308,7 @@ def sqrt(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("sqrt", (x,)), None)
 
 
-def truncate(x: Union[int, float, Symbol]) -> Expression:
+def truncate(x: int | float | Symbol) -> Expression:
     """
     Returns the integer part of x
 
@@ -325,9 +319,7 @@ def truncate(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("trunc", (x,)), None)
 
 
-def beta(
-    x: Union[int, float, Symbol], y: Union[int, float, Symbol]
-) -> Expression:
+def beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     """
     Beta function
 
@@ -344,7 +336,7 @@ def beta(
 
 
 def regularized_beta(
-    x: Union[int, float], y: Union[int, float], z: Union[int, float]
+    x: int | float, y: int | float, z: int | float
 ) -> Expression:
     """
     Beta function
@@ -362,7 +354,7 @@ def regularized_beta(
     return expression.Expression(None, MathOp("betaReg", (x, y, z)), None)
 
 
-def gamma(x: Union[int, float, Symbol]) -> Expression:
+def gamma(x: int | float | Symbol) -> Expression:
     """
     Gamma function
 
@@ -377,9 +369,7 @@ def gamma(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("gamma", (x,)), None)
 
 
-def regularized_gamma(
-    x: Union[int, float], a: Union[int, float]
-) -> Expression:
+def regularized_gamma(x: int | float, a: int | float) -> Expression:
     """
     Gamma function
 
@@ -451,7 +441,7 @@ def lse_min_sc(t, *xs) -> Expression:
     return expression.Expression(None, MathOp("lseMinSc", (t,) + xs), None)
 
 
-def ncp_cm(x: Symbol, y: Symbol, z: Union[float, int]) -> Expression:
+def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> Expression:
     """
     Chen-Mangasarian smoothing
 
@@ -468,7 +458,7 @@ def ncp_cm(x: Symbol, y: Symbol, z: Union[float, int]) -> Expression:
     return expression.Expression(None, MathOp("ncpCM", (x, y, z)), None)
 
 
-def ncp_f(x: Symbol, y: Symbol, z: Union[int, float] = 0) -> Expression:
+def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> Expression:
     """
     Fisher-Burmeister smoothing
 
@@ -488,7 +478,7 @@ def ncp_f(x: Symbol, y: Symbol, z: Union[int, float] = 0) -> Expression:
 def ncpVUpow(
     r: Symbol,
     s: Symbol,
-    mu: Union[int, float] = 0,
+    mu: int | float = 0,
 ) -> Expression:
     """
     NCP Veelken-Ulbrich: smoothed min(r,s)
@@ -506,7 +496,7 @@ def ncpVUpow(
     return expression.Expression(None, MathOp("ncpVUpow", (r, s, mu)), None)
 
 
-def ncpVUsin(r: Symbol, s: Symbol, mu: Union[int, float] = 0) -> Expression:
+def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
     """
     NCP Veelken-Ulbrich: smoothed min(r,s)
 
@@ -534,7 +524,7 @@ def poly(x, *args) -> Expression:
     return expression.Expression(None, MathOp("poly", (x,) + args), None)
 
 
-def sigmoid(x: Union[int, float, Symbol]) -> Expression:
+def sigmoid(x: int | float | Symbol) -> Expression:
     """
     Sigmoid of x
 
@@ -549,7 +539,7 @@ def sigmoid(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("sigmoid", (x,)), None)
 
 
-def rand_binomial(n: Union[int, float], p: Union[int, float]) -> Expression:
+def rand_binomial(n: int | float, p: int | float) -> Expression:
     """
     Generate a random number from the binomial distribution, where n is the
     number of trials and p the probability of success for each trial
@@ -567,7 +557,7 @@ def rand_binomial(n: Union[int, float], p: Union[int, float]) -> Expression:
 
 
 def rand_linear(
-    low: Union[int, float], slope: Union[int, float], high: Union[int, float]
+    low: int | float, slope: int | float, high: int | float
 ) -> Expression:
     """
     Generate a random number between low and high with linear distribution.
@@ -589,7 +579,7 @@ def rand_linear(
 
 
 def rand_triangle(
-    low: Union[int, float], mid: Union[int, float], high: Union[int, float]
+    low: int | float, mid: int | float, high: int | float
 ) -> Expression:
     """
     Generate a random number between low and high with triangular distribution.
@@ -625,9 +615,7 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
     return expression.Expression(None, MathOp("sameAs", (self, other)), None)
 
 
-def slrec(
-    x: Union[int, float, Symbol], S: Union[int, float] = 1e-10
-) -> Expression:
+def slrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
     """
     Smooth (linear) reciprocal
 
@@ -643,9 +631,7 @@ def slrec(
     return expression.Expression(None, MathOp("slrec", (x, S)), None)
 
 
-def sqrec(
-    x: Union[int, float, Symbol], S: Union[int, float] = 1e-10
-) -> Expression:
+def sqrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
     """
     Smooth (quadratic) reciprocal
 
@@ -661,7 +647,7 @@ def sqrec(
     return expression.Expression(None, MathOp("sqrec", (x, S)), None)
 
 
-def entropy(x: Union[int, float, Symbol]) -> Expression:
+def entropy(x: int | float | Symbol) -> Expression:
     """
     L2 Norm of x
 
@@ -676,7 +662,7 @@ def entropy(x: Union[int, float, Symbol]) -> Expression:
     return expression.Expression(None, MathOp("entropy", (x,)), None)
 
 
-def errorf(x: Union[int, float, Symbol]) -> Expression:
+def errorf(x: int | float | Symbol) -> Expression:
     """
     Integral of the standard normal distribution
 
@@ -693,8 +679,8 @@ def errorf(x: Union[int, float, Symbol]) -> Expression:
 
 def ifthen(
     condition: Expression,
-    yes_return: Union[float, Expression],
-    no_return: Union[float, Expression],
+    yes_return: float | Expression,
+    no_return: float | Expression,
 ) -> Expression:
     """
     If the logical condition is true, the function returns iftrue,
@@ -729,49 +715,49 @@ def ifthen(
     )
 
 
-def bool_and(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def bool_and(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_and", (x, y)), None)
 
 
-def bool_eqv(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def bool_eqv(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_eqv", (x, y)), None)
 
 
-def bool_imp(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def bool_imp(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_imp", (x, y)), None)
 
 
-def bool_not(x: Union[int, Symbol]) -> Expression:
+def bool_not(x: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_not", (x,)), None)
 
 
-def bool_or(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def bool_or(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_or", (x, y)), None)
 
 
-def bool_xor(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def bool_xor(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_xor", (x, y)), None)
 
 
-def rel_eq(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_eq(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_eq", (x, y)), None)
 
 
-def rel_ge(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_ge(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_ge", (x, y)), None)
 
 
-def rel_gt(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_gt(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_gt", (x, y)), None)
 
 
-def rel_le(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_le(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_le", (x, y)), None)
 
 
-def rel_lt(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_lt(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_lt", (x, y)), None)
 
 
-def rel_ne(x: Union[int, Symbol], y: Union[int, Symbol]) -> Expression:
+def rel_ne(x: int | Symbol, y: int | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_ne", (x, y)), None)

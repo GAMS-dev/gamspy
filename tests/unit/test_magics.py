@@ -4,11 +4,7 @@ import os
 import unittest
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+from gamspy import Container, Parameter, Set, Variable
 
 
 class MagicsSuite(unittest.TestCase):

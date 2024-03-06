@@ -38,7 +38,7 @@ from gamspy._symbols.set import SetMixin
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Container, Set
 
 
 class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):

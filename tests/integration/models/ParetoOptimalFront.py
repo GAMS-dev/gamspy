@@ -25,14 +25,16 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Parameter,
+    Set,
+    Variable,
+)
 from gamspy.math import sqr
 
 

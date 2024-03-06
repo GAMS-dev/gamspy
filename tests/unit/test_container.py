@@ -4,22 +4,22 @@ import gc
 import os
 import unittest
 
-import pandas as pd
-
 import gamspy.utils as utils
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import UniverseAlias
-from gamspy import Variable
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+import pandas as pd
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Sum,
+    UniverseAlias,
+    Variable,
+)
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class ContainerSuite(unittest.TestCase):
@@ -206,7 +206,7 @@ class ContainerSuite(unittest.TestCase):
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
         m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
-        self.assertTrue("piHalf" in m.data.keys())
+        self.assertTrue("piHalf" in m.data)
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
         pi = Parameter(m, "pi")

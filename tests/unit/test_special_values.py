@@ -4,10 +4,7 @@ import os
 import unittest
 
 import gamspy as gp
-from gamspy import Container
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+from gamspy import Container, Parameter, Set, Variable
 
 
 class SpecialValuesSuite(unittest.TestCase):

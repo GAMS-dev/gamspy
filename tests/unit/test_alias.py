@@ -4,12 +4,7 @@ import os
 import unittest
 
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Set
-from gamspy import UniverseAlias
+from gamspy import Alias, Container, Equation, Set, UniverseAlias
 from gamspy.exceptions import ValidationError
 
 
