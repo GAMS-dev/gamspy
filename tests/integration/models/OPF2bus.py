@@ -26,14 +26,7 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 
 
 def reformat_df(dataframe):
@@ -90,7 +83,7 @@ def main():
     )
     eq2[...] = P["g1"] == P12
     eq3[...] = P["g2"] + P12 == L2 / Sbase
-    eq4[...] = P12 == (delta["1"] - delta["2"]) / X12
+    eq4[...] = (delta["1"] - delta["2"]) / X12 == P12
 
     P.lo[gen] = data[gen, "Pmin"] / Sbase
     P.up[gen] = data[gen, "Pmax"] / Sbase

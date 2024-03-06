@@ -34,11 +34,11 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 
 if TYPE_CHECKING:
-    from gams.transfer import Set, Alias, Parameter
+    from gams.transfer import Alias, Parameter, Set
+
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits import ImplicitVariable
-    from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
 
 
 class Operation(operable.Operable):
@@ -74,15 +74,15 @@ class Operation(operable.Operable):
         if len(self.domain) == 1:
             index_str = self.domain[0].gamsRepr()
 
-            if isinstance(self.domain[0], expression.Expression):
-                if (
-                    "$" in index_str
-                    and not isinstance(self.domain[0].left, domain.Domain)
-                    and index_str[0] == "("
-                ):
-                    # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
-                    # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
-                    index_str = index_str[1:-1]
+            if (
+                isinstance(self.domain[0], expression.Expression)
+                and "$" in index_str
+                and not isinstance(self.domain[0].left, domain.Domain)
+                and index_str[0] == "("
+            ):
+                # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
+                # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
+                index_str = index_str[1:-1]
 
             return index_str
 

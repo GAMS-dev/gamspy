@@ -26,8 +26,7 @@ from __future__ import annotations
 
 import itertools
 from enum import Enum
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
@@ -45,7 +44,7 @@ import gamspy._validation as validation
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Container, Set
     from gamspy._algebra.expression import Expression
 
 
@@ -277,9 +276,13 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self.container._add_statement(self)
 
             # create attributes
-            self._l, self._m, self._lo, self._up, self._s = (
-                self._init_attributes()
-            )
+            (
+                self._l,
+                self._m,
+                self._lo,
+                self._up,
+                self._s,
+            ) = self._init_attributes()
             self._fx = self._create_attr("fx")
             self._prior = self._create_attr("prior")
             self._stage = self._create_attr("stage")
@@ -459,9 +462,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
-        if records is not None:
-            if not isinstance(records, pd.DataFrame):
-                raise TypeError("Symbol 'records' must be type DataFrame")
+        if records is not None and not isinstance(records, pd.DataFrame):
+            raise TypeError("Symbol 'records' must be type DataFrame")
 
         # set records
         self._records = records
@@ -472,14 +474,13 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if self._records is not None:
-            if self.domain_forwarding:  # pragma: no cover
-                self._domainForwarding()
-                self._mark_forwarded_domain_sets()
+        if self._records is not None and self.domain_forwarding:
+            self._domainForwarding()
+            self._mark_forwarded_domain_sets()
 
-                # reset state check flags for all symbols in the container
-                for _, symbol in self.container.data.items():
-                    symbol._requires_state_check = True
+            # reset state check flags for all symbols in the container
+            for _, symbol in self.container.data.items():
+                symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)

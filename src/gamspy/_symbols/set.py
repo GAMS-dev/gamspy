@@ -25,9 +25,7 @@
 from __future__ import annotations
 
 import itertools
-from typing import Any
-from typing import Literal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
 import pandas as pd
@@ -42,11 +40,10 @@ import gamspy._validation as validation
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
-
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits.implicit_set import ImplicitSet
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits.implicit_set import ImplicitSet
 
 
 class SetMixin:
@@ -601,9 +598,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 " assigning to MIRO input symbols"
             )
 
-        if records is not None:
-            if not isinstance(records, pd.DataFrame):
-                raise TypeError("Symbol 'records' must be type DataFrame")
+        if records is not None and not isinstance(records, pd.DataFrame):
+            raise TypeError("Symbol 'records' must be type DataFrame")
 
         # set records
         self._records = records
@@ -614,14 +610,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if self._records is not None:
-            if self.domain_forwarding:  # pragma: no cover
-                self._domainForwarding()
-                self._mark_forwarded_domain_sets()
+        if self._records is not None and self.domain_forwarding:
+            self._domainForwarding()
+            self._mark_forwarded_domain_sets()
 
-                # reset state check flags for all symbols in the container
-                for symbol in self.container.data.values():
-                    symbol._requires_state_check = True
+            # reset state check flags for all symbols in the container
+            for symbol in self.container.data.values():
+                symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
@@ -661,8 +656,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
 
 def singleton_check(is_singleton: bool, records: Any | None):
-    if is_singleton:
-        if records is not None and len(records) > 1:
-            raise ValidationError(
-                "Singleton set records size cannot be more than one."
-            )
+    if is_singleton and records is not None and len(records) > 1:
+        raise ValidationError(
+            "Singleton set records size cannot be more than one."
+        )

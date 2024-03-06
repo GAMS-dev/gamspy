@@ -4,14 +4,7 @@ import os
 import unittest
 
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import UniverseAlias
+from gamspy import Alias, Card, Container, Ord, Parameter, Set, UniverseAlias
 from gamspy.exceptions import ValidationError
 
 

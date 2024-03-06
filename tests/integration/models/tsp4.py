@@ -24,17 +24,19 @@ import os
 from pathlib import Path
 
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Parameter,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import GamspyException
 
 
@@ -196,7 +198,7 @@ def main():
         tour[i, j, t] = False
         visited[i] = False
 
-        for i_loop in i.toList():
+        for _ in i.toList():
             nextj[j].where[
                 x.l[fromi, j] > 0.5
             ] = True  # check x.l(fromi,j) = 1 would be dangerous

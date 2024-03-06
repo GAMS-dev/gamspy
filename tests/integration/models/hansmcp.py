@@ -19,19 +19,21 @@ import math
 import os
 from pathlib import Path
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
-from gamspy import VariableType
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Problem,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+    VariableType,
+)
 
 
 def main():

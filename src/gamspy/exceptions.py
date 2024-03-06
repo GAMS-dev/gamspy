@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import os
 
-from gams import GamsJob
-from gams import GamsOptions
-from gams import GamsWorkspace
+from gams import GamsJob, GamsOptions, GamsWorkspace
 from gams.control.workspace import GamsExceptionExecution
 
 

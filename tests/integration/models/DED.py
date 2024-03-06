@@ -27,14 +27,7 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy.math import sqr
 
 
@@ -57,32 +50,34 @@ def data_records():
     gen_recs = reformat_df(pd.DataFrame(data, columns=cols, index=inds))
 
     # Demand data
-    demand_recs = np.array([
-        510,
-        530,
-        516,
-        510,
-        515,
-        544,
-        646,
-        686,
-        741,
-        734,
-        748,
-        760,
-        754,
-        700,
-        686,
-        720,
-        714,
-        761,
-        727,
-        714,
-        618,
-        584,
-        578,
-        544,
-    ])
+    demand_recs = np.array(
+        [
+            510,
+            530,
+            516,
+            510,
+            515,
+            544,
+            646,
+            686,
+            741,
+            734,
+            748,
+            760,
+            754,
+            700,
+            686,
+            720,
+            714,
+            761,
+            727,
+            714,
+            618,
+            584,
+            578,
+            544,
+        ]
+    )
 
     return gen_recs, demand_recs
 
@@ -150,11 +145,14 @@ def main():
 
     balance[t] = Sum(i, p[i, t]) >= demand[t]
 
-    EMcalc[...] = EM == Sum(
-        [t, i],
-        gendata[i, "d"] * sqr(p[i, t])
-        + gendata[i, "e"] * p[i, t]
-        + gendata[i, "f"],
+    EMcalc[...] = (
+        Sum(
+            [t, i],
+            gendata[i, "d"] * sqr(p[i, t])
+            + gendata[i, "e"] * p[i, t]
+            + gendata[i, "f"],
+        )
+        == EM
     )
 
     DEDcostbased = Model(

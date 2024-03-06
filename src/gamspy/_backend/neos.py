@@ -34,8 +34,11 @@ import zipfile
 from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
-from gamspy.exceptions import GamspyException, NeosClientException
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import (
+    GamspyException,
+    NeosClientException,
+    ValidationError,
+)
 
 logger = logging.getLogger("NEOS")
 logger.setLevel(logging.INFO)
@@ -47,8 +50,8 @@ logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
     from gams import GamsOptions
-    from gamspy import Container
-    from gamspy import Model
+
+    from gamspy import Container, Model
 
 
 class NeosClient:
@@ -97,7 +100,7 @@ class NeosClient:
         bool
         """
         response = self.neos.ping()
-        return True if response.startswith("NeosServer is alive") else False
+        return bool(response.startswith("NeosServer is alive"))
 
     def get_job_status(self, job_number: int, job_password: str) -> str:
         """
@@ -427,7 +430,7 @@ class NEOSServer(backend.Backend):
         self.model = model
 
     def is_async(self):
-        return False if self.client.is_blocking else True
+        return not self.client.is_blocking
 
     def solve(self, is_implicit: bool = False, keep_flags: bool = False):
         # Generate gams string and write modified symbols to gdx

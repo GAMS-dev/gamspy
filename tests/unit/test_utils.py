@@ -5,10 +5,8 @@ import platform
 import unittest
 
 import gamspy.utils as utils
-from gamspy import Container
-from gamspy import Set
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import Container, Set
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class UtilsSuite(unittest.TestCase):

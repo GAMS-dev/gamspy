@@ -26,14 +26,7 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 
 
 def reformat_df(dataframe):
@@ -86,20 +79,26 @@ def main():
     eq3 = Equation(m, name="eq3", type="regular")
     eq4 = Equation(m, name="eq4", type="regular")
 
-    eq1[...] = TC == Sum(
-        gen,
-        data[gen, "a"] * P[gen] * P[gen]
-        + data[gen, "b"] * P[gen]
-        + data[gen, "c"],
+    eq1[...] = (
+        Sum(
+            gen,
+            data[gen, "a"] * P[gen] * P[gen]
+            + data[gen, "b"] * P[gen]
+            + data[gen, "c"],
+        )
+        == TC
     )
     eq2[...] = Sum(gen, P[gen]) >= load
-    eq3[...] = TE == Sum(
-        gen,
-        data[gen, "d"] * P[gen] * P[gen]
-        + data[gen, "e"] * P[gen]
-        + data[gen, "f"],
+    eq3[...] = (
+        Sum(
+            gen,
+            data[gen, "d"] * P[gen] * P[gen]
+            + data[gen, "e"] * P[gen]
+            + data[gen, "f"],
+        )
+        == TE
     )
-    eq4[...] = OF == TC + TE * Eprice
+    eq4[...] = TC + TE * Eprice == OF
 
     P.lo[gen] = data[gen, "Pmin"]
     P.up[gen] = data[gen, "Pmax"]

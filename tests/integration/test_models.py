@@ -1,7 +1,7 @@
-import unittest
-import subprocess
-import os
 import glob
+import os
+import subprocess
+import unittest
 from pathlib import Path
 
 

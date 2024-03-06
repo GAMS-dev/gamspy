@@ -1,12 +1,13 @@
 from __future__ import annotations
-from typing import Union, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Union
 
 import gams.transfer as gt
 
 import gamspy._symbols.implicits as implicits
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set, Parameter, Variable, Equation
+    from gamspy import Alias, Equation, Parameter, Set, Variable
 
     SymbolType = Union[Alias, Set, Parameter, Variable, Equation]
 

@@ -53,9 +53,8 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy as gp
+import pandas as pd
 
 
 def main():

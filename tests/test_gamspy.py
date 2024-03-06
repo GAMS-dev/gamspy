@@ -8,6 +8,7 @@ import os
 import shutil
 import unittest
 
+import gamspy
 from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
 from integration.test_miro import miro_suite
@@ -30,8 +31,6 @@ from unit.test_set import set_suite
 from unit.test_special_values import special_values_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
-
-import gamspy
 
 try:
     from dotenv import load_dotenv

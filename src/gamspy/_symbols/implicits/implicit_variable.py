@@ -33,8 +33,7 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gams.transfer import Variable
-    from gams.transfer import Set
+    from gams.transfer import Set, Variable
 
 
 class ImplicitVariable(ImplicitSymbol, operable.Operable):

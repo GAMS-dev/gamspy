@@ -3,13 +3,8 @@ from __future__ import annotations
 import os
 import unittest
 
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import Container, Domain, Parameter, Set, Sum
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class DomainSuite(unittest.TestCase):

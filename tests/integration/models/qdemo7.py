@@ -28,16 +28,17 @@ import os
 from pathlib import Path
 
 import numpy as np
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Number,
+    Parameter,
+    Problem,
+    Sense,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 

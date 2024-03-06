@@ -33,10 +33,9 @@ import subprocess
 import sys
 
 import gamspy.utils as utils
-from .util import add_solver_entry
-from .util import remove_solver_entry
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
+
+from .util import add_solver_entry, remove_solver_entry
 
 
 def get_args():

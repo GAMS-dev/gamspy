@@ -9,7 +9,7 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Container, Set, Parameter, Variable, Equation
+    from gamspy import Container, Equation, Parameter, Set, Variable
 
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
@@ -243,13 +243,17 @@ class MiroJSONEncoder:
 
             headers_dict = self.prepare_headers_dict(symbol)
 
-            info.append({
-                "alias": (
-                    symbol.description if symbol.description else symbol.name
-                ),
-                "symtype": type_map[type(symbol)],
-                "headers": headers_dict,
-            })
+            info.append(
+                {
+                    "alias": (
+                        symbol.description
+                        if symbol.description
+                        else symbol.name
+                    ),
+                    "symtype": type_map[type(symbol)],
+                    "headers": headers_dict,
+                }
+            )
 
         return info
 

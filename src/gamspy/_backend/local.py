@@ -28,19 +28,17 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
-from gams import GamsJob
-from gams import GamsOptions
+from gams import GamsJob, GamsOptions
 from gams.control.workspace import GamsExceptionExecution
 
-import gamspy._miro as miro
 import gamspy._backend.backend as backend
-from gamspy.exceptions import customize_exception
-from gamspy.exceptions import GamspyException
+import gamspy._miro as miro
+from gamspy.exceptions import GamspyException, customize_exception
 
 if TYPE_CHECKING:
     import io
-    from gamspy import Container
-    from gamspy import Model
+
+    from gamspy import Container, Model
 
 
 class Local(backend.Backend):

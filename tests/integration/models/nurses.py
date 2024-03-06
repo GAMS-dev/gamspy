@@ -14,18 +14,20 @@ The goal of the model is to find an efficient balance between the different obje
 
 from __future__ import annotations
 
-import pandas as pd
 import os
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Set
-from gamspy import Alias
-from gamspy import Parameter
-from gamspy import Variable
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Sum
+import pandas as pd
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def read_data():

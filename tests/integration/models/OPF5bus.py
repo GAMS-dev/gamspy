@@ -27,15 +27,16 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def reformat_df(dataframe):
@@ -192,7 +193,7 @@ def main():
         bus, "pd"
     ] / Sbase == Sum(node.where[conex[node, bus]], Pij[bus, node])
 
-    const3[...] = OF >= Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
+    const3[...] = Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase) <= OF
 
     loadflow = Model(
         m,

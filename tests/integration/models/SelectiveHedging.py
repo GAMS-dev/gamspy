@@ -18,18 +18,20 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import ModelStatus
-from gamspy import Number
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    ModelStatus,
+    Number,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main(output=None):
