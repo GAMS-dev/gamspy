@@ -7,9 +7,8 @@ run_formatter:
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - pip install black==23.12.1 pylint==3.0.3
-    - pylint --fail-under=8 src/gamspy
-    - black src/gamspy --line-length=79 --preview --check
+    - pip install ruff==0.2.2
+    - ruff format src/gamspy --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
-    - black tests --line-length=79 --preview --check
+    - ruff format tests --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi

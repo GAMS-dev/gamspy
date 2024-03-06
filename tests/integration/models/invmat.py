@@ -18,26 +18,29 @@ from __future__ import annotations
 import os
 
 import numpy as np
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def data_records():
     # a records
-    a_recs = np.array([
-        [1, 2, 3, 4, 4],
-        [1, 3, 4, 3, 1],
-        [1, 4, 1, 2, 6],
-        [2, 4, 1, 1, 1],
-        [3, 1, 5, 2, 7],
-    ])
+    a_recs = np.array(
+        [
+            [1, 2, 3, 4, 4],
+            [1, 3, 4, 3, 1],
+            [1, 4, 1, 2, 6],
+            [2, 4, 1, 1, 1],
+            [3, 1, 5, 2, 7],
+        ]
+    )
 
     return a_recs
 

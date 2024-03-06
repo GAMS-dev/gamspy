@@ -25,15 +25,16 @@ from __future__ import annotations
 import os
 
 import pandas
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -66,79 +67,89 @@ def main():
         "elec-arc",
     ]
 
-    io_coefficients = pandas.DataFrame([
-        ["pellets", "pig-iron", -1.58],
-        ["pellets", "sponge", -1.38],
-        ["coke", "pig-iron", -0.63],
-        ["nat-gas", "sponge", -0.57],
-        ["electric", "steel-el", -0.58],
-        ["scrap", "steel-oh", -0.33],
-        ["scrap", "steel-bof", -0.12],
-        ["pig-iron", "pig-iron", 1.00],
-        ["pig-iron", "steel-oh", -0.77],
-        ["pig-iron", "steel-bof", -0.95],
-        ["sponge", "sponge", 1.00],
-        ["sponge", "steel-el", -1.09],
-        ["steel", "steel-oh", 1.00],
-        ["steel", "steel-el", 1.00],
-        ["steel", "steel-bof", 1.00],
-    ])
+    io_coefficients = pandas.DataFrame(
+        [
+            ["pellets", "pig-iron", -1.58],
+            ["pellets", "sponge", -1.38],
+            ["coke", "pig-iron", -0.63],
+            ["nat-gas", "sponge", -0.57],
+            ["electric", "steel-el", -0.58],
+            ["scrap", "steel-oh", -0.33],
+            ["scrap", "steel-bof", -0.12],
+            ["pig-iron", "pig-iron", 1.00],
+            ["pig-iron", "steel-oh", -0.77],
+            ["pig-iron", "steel-bof", -0.95],
+            ["sponge", "sponge", 1.00],
+            ["sponge", "steel-el", -1.09],
+            ["steel", "steel-oh", 1.00],
+            ["steel", "steel-el", 1.00],
+            ["steel", "steel-bof", 1.00],
+        ]
+    )
 
-    capacity_utilization = pandas.DataFrame([
-        ["blast-furn", "pig-iron", 1.0],
-        ["openhearth", "steel-oh", 1.0],
-        ["bof", "steel-bof", 1.0],
-        ["direct-red", "sponge", 1.0],
-        ["elec-arc", "steel-el", 1.0],
-    ])
+    capacity_utilization = pandas.DataFrame(
+        [
+            ["blast-furn", "pig-iron", 1.0],
+            ["openhearth", "steel-oh", 1.0],
+            ["bof", "steel-bof", 1.0],
+            ["direct-red", "sponge", 1.0],
+            ["elec-arc", "steel-el", 1.0],
+        ]
+    )
 
-    capacities_of_units = pandas.DataFrame([
-        ["blast-furn", "ahmsa", 3.25],
-        ["blast-furn", "fundidora", 1.40],
-        ["blast-furn", "sicartsa", 1.10],
-        ["openhearth", "ahmsa", 1.50],
-        ["openhearth", "fundidora", 0.85],
-        ["bof", "ahmsa", 2.07],
-        ["bof", "fundidora", 1.50],
-        ["bof", "sicartsa", 1.30],
-        ["direct-red", "hylsa", 0.98],
-        ["direct-red", "hylsap", 1.00],
-        ["elec-arc", "hylsa", 1.13],
-        ["elec-arc", "hylsap", 0.56],
-    ])
+    capacities_of_units = pandas.DataFrame(
+        [
+            ["blast-furn", "ahmsa", 3.25],
+            ["blast-furn", "fundidora", 1.40],
+            ["blast-furn", "sicartsa", 1.10],
+            ["openhearth", "ahmsa", 1.50],
+            ["openhearth", "fundidora", 0.85],
+            ["bof", "ahmsa", 2.07],
+            ["bof", "fundidora", 1.50],
+            ["bof", "sicartsa", 1.30],
+            ["direct-red", "hylsa", 0.98],
+            ["direct-red", "hylsap", 1.00],
+            ["elec-arc", "hylsa", 1.13],
+            ["elec-arc", "hylsap", 0.56],
+        ]
+    )
 
-    rail_distances = pandas.DataFrame([
-        ["ahmsa", "mexico-df", 1204],
-        ["ahmsa", "monterrey", 218],
-        ["ahmsa", "guadalaja", 1125],
-        ["ahmsa", "export", 739],
-        ["fundidora", "mexico-df", 1017],
-        ["fundidora", "guadalaja", 1030],
-        ["fundidora", "export", 521],
-        ["sicartsa", "mexico-df", 819],
-        ["sicartsa", "monterrey", 1305],
-        ["sicartsa", "guadalaja", 704],
-        ["hylsa", "mexico-df", 1017],
-        ["hylsa", "guadalaja", 1030],
-        ["hylsa", "export", 521],
-        ["hylsap", "mexico-df", 185],
-        ["hylsap", "monterrey", 1085],
-        ["hylsap", "guadalaja", 760],
-        ["hylsap", "export", 315],
-        ["import", "mexico-df", 428],
-        ["import", "monterrey", 521],
-        ["import", "guadalaja", 300],
-    ])
+    rail_distances = pandas.DataFrame(
+        [
+            ["ahmsa", "mexico-df", 1204],
+            ["ahmsa", "monterrey", 218],
+            ["ahmsa", "guadalaja", 1125],
+            ["ahmsa", "export", 739],
+            ["fundidora", "mexico-df", 1017],
+            ["fundidora", "guadalaja", 1030],
+            ["fundidora", "export", 521],
+            ["sicartsa", "mexico-df", 819],
+            ["sicartsa", "monterrey", 1305],
+            ["sicartsa", "guadalaja", 704],
+            ["hylsa", "mexico-df", 1017],
+            ["hylsa", "guadalaja", 1030],
+            ["hylsa", "export", 521],
+            ["hylsap", "mexico-df", 185],
+            ["hylsap", "monterrey", 1085],
+            ["hylsap", "guadalaja", 760],
+            ["hylsap", "export", 315],
+            ["import", "mexico-df", 428],
+            ["import", "monterrey", 521],
+            ["import", "guadalaja", 300],
+        ]
+    )
 
-    product_prices = pandas.DataFrame([
-        ["pellets", "domestic", 18.7],
-        ["coke", "domestic", 52.17],
-        ["nat-gas", "domestic", 14.0],
-        ["electric", "domestic", 24.0],
-        ["scrap", "domestic", 105.0],
-        ["steel", "import", 150],
-        ["steel", "export", 140],
-    ])
+    product_prices = pandas.DataFrame(
+        [
+            ["pellets", "domestic", 18.7],
+            ["coke", "domestic", 52.17],
+            ["nat-gas", "domestic", 14.0],
+            ["electric", "domestic", 24.0],
+            ["scrap", "domestic", 105.0],
+            ["steel", "import", 150],
+            ["steel", "export", 140],
+        ]
+    )
 
     demand_distribution = pandas.DataFrame(
         [["mexico-df", 55], ["monterrey", 30], ["guadalaja", 15]]

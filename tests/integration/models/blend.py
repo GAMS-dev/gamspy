@@ -20,15 +20,16 @@ from __future__ import annotations
 import os
 
 import numpy as np
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -55,11 +56,13 @@ def main():
         m,
         name="compdat",
         domain=[elem, alloy],
-        records=np.array([
-            [10, 10, 40, 60, 30, 30, 30, 50, 20],
-            [10, 30, 50, 30, 30, 40, 20, 40, 30],
-            [80, 60, 10, 10, 40, 30, 50, 10, 50],
-        ]),
+        records=np.array(
+            [
+                [10, 10, 40, 60, 30, 30, 30, 50, 20],
+                [10, 30, 50, 30, 30, 40, 20, 40, 30],
+                [80, 60, 10, 10, 40, 30, 50, 10, 50],
+            ]
+        ),
         description="composition data (pct)",
     )
     price = Parameter(

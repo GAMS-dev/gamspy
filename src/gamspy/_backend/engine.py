@@ -24,38 +24,35 @@
 #
 from __future__ import annotations
 
-import os
 import copy
 import io
-import uuid
 import json
-import time
 import logging
+import os
 import tempfile
-
+import time
+import urllib.parse
+import uuid
+import zipfile
 from typing import TYPE_CHECKING
 
-from abc import ABC
-
-import urllib3
-import urllib.parse
 import certifi
-import zipfile
-
-from gams import GamsEngineConfiguration
-from gams import GamsOptions
+import urllib3
+from gams import GamsEngineConfiguration, GamsOptions
 from gams.control.workspace import GamsException
-from gams.core.gmo import gmoProc_nrofmodeltypes
 from gams.core.cfg import cfgModelTypeName
+from gams.core.gmo import gmoProc_nrofmodeltypes
 from gams.core.opt import optSetStrStr
 
 import gamspy._backend.backend as backend
-from gamspy.exceptions import EngineException, EngineClientException
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import (
+    EngineClientException,
+    EngineException,
+    ValidationError,
+)
 
 if TYPE_CHECKING:
-    from gamspy import Container
-    from gamspy import Model
+    from gamspy import Container, Model
 
 
 logger = logging.getLogger("ENGINE")
@@ -99,7 +96,8 @@ def get_relative_paths(paths: list[str], start: str) -> list[str]:
     return relative_paths
 
 
-class Endpoint(ABC): ...
+class Endpoint:
+    ...
 
 
 class Job(Endpoint):
@@ -574,7 +572,7 @@ class GAMSEngine(backend.Backend):
         self.pf_file = self.job_name + ".pf"
 
     def is_async(self):
-        return False if self.client.is_blocking else True
+        return not self.client.is_blocking
 
     def preprocess(self, keep_flags: bool = False):
         gams_string, dirty_names = super().preprocess(keep_flags)
@@ -642,7 +640,7 @@ class GAMSEngine(backend.Backend):
             if not self.is_async():
                 job_status, message, _ = self.client.job.get(token)
 
-                if job_status not in STATUS_MAP.keys():
+                if job_status not in STATUS_MAP:
                     raise EngineException(
                         "Unknown job status code! Currently supported job"
                         f" status codes: {STATUS_MAP.keys()}",

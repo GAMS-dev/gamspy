@@ -18,15 +18,9 @@ from __future__ import annotations
 
 import os
 
-import numpy as np
-
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+import numpy as np
+from gamspy import Container, Equation, Model, Parameter, Set, Variable
 
 
 def main():
@@ -43,13 +37,15 @@ def main():
         cont,
         name="g",
         domain=[m, n],
-        records=np.array([
-            [0.4850, 0.7520, 0.8690, 0.9820],
-            [0.3690, 1.2540, 0.7030, 1.4550],
-            [5.2095, 10.0677, 22.9274, 20.2153],
-            [23.3037, 101.7790, 111.4610, 191.2670],
-            [28.5132, 111.8467, 134.3884, 211.4823],
-        ]),
+        records=np.array(
+            [
+                [0.4850, 0.7520, 0.8690, 0.9820],
+                [0.3690, 1.2540, 0.7030, 1.4550],
+                [5.2095, 10.0677, 22.9274, 20.2153],
+                [23.3037, 101.7790, 111.4610, 191.2670],
+                [28.5132, 111.8467, 134.3884, 211.4823],
+            ]
+        ),
     )
 
     # VARIABLES #

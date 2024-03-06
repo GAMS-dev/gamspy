@@ -18,35 +18,38 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def BondDataTable():
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
-        np.array([
-            [112.35, 2006, 8],
-            [105.33, 2003, 8],
-            [111.25, 2007, 7],
-            [107.30, 2004, 7],
-            [107.62, 2011, 6],
-            [106.68, 2009, 6],
-            [101.93, 2002, 6],
-            [101.30, 2005, 5],
-            [101.61, 2003, 5],
-            [100.06, 2002, 4],
-        ]),
+        np.array(
+            [
+                [112.35, 2006, 8],
+                [105.33, 2003, 8],
+                [111.25, 2007, 7],
+                [107.30, 2004, 7],
+                [107.62, 2011, 6],
+                [106.68, 2009, 6],
+                [101.93, 2002, 6],
+                [101.30, 2005, 5],
+                [101.61, 2003, 5],
+                [100.06, 2002, 4],
+            ]
+        ),
         columns=["Price", "Maturity", "Coupon"],
         index=[
             "DS-8-06",
@@ -175,19 +178,21 @@ def main():
 
     # PARAMETER #
     Liability.setRecords(
-        np.array([
-            0,
-            80000,
-            100000,
-            110000,
-            120000,
-            140000,
-            120000,
-            90000,
-            50000,
-            75000,
-            150000,
-        ])
+        np.array(
+            [
+                0,
+                80000,
+                100000,
+                110000,
+                120000,
+                140000,
+                120000,
+                90000,
+                50000,
+                75000,
+                150000,
+            ]
+        )
     )
 
     # VARIABLES #
@@ -252,41 +257,42 @@ def main():
 
     # Simulation for different values of the initial budget
 
-    HorizonHandle = open("HorizonPortfolios_new.csv", "w", encoding="UTF-8")
+    with open(
+        "HorizonPortfolios_new.csv", "w", encoding="UTF-8"
+    ) as HorizonHandle:
+        budget = 778985.948
+        while budget <= 818985.948:
+            Budget[...] = budget
+            HorizonMod.solve()
 
-    budget = 778985.948
-    while budget <= 818985.948:
-        Budget[...] = budget
-        HorizonMod.solve()
+            for ii in i.toList():
+                horizon_ret = round(HorizonRet.records.level[0], 2)
+                bond_mat = round(BondData.pivot().loc[ii, "Maturity"], 2)
+                coupon = Coupon.records[Coupon.records["i"] == ii].value.array[
+                    0
+                ]
+                purchased_price = round(
+                    x.records[x.records["i"] == ii].level.array[0]
+                    * Price.records[Price.records["i"] == ii].value.array[0],
+                    3,
+                )
 
-        for ii in i.toList():
-            horizon_ret = round(HorizonRet.records.level[0], 2)
-            bond_mat = round(BondData.pivot().loc[ii, "Maturity"], 2)
-            coupon = Coupon.records[Coupon.records["i"] == ii].value.array[0]
-            purchased_price = round(
-                x.records[x.records["i"] == ii].level.array[0]
-                * Price.records[Price.records["i"] == ii].value.array[0],
-                3,
-            )
+                HorizonHandle.write(
+                    f'{round(budget,2)},{horizon_ret},"{ii}",{bond_mat},{coupon},{purchased_price}'
+                )
+                HorizonHandle.write("\n")
 
-            HorizonHandle.write(
-                f'{round(budget,2)},{horizon_ret},"{ii}",{bond_mat},{coupon},{purchased_price}'
-            )
-            HorizonHandle.write("\n")
+            for tt in t.toList():
+                borrow_rec = borrow.records[borrow.records["t"] == tt]
+                borrow_rec = (
+                    round(borrow_rec.level.array[0], 3)
+                    if not borrow_rec.empty
+                    else 0
+                )
+                HorizonHandle.write(f'"{tt}",{borrow_rec}')
+                HorizonHandle.write("\n")
 
-        for tt in t.toList():
-            borrow_rec = borrow.records[borrow.records["t"] == tt]
-            borrow_rec = (
-                round(borrow_rec.level.array[0], 3)
-                if not borrow_rec.empty
-                else 0
-            )
-            HorizonHandle.write(f'"{tt}",{borrow_rec}')
-            HorizonHandle.write("\n")
-
-        budget += 10000
-
-    HorizonHandle.close()
+            budget += 10000
 
 
 if __name__ == "__main__":

@@ -16,22 +16,23 @@ from __future__ import annotations
 
 import os
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 
@@ -43,18 +44,20 @@ def main():
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
-        np.array([
-            [112.35, 2006, 8],
-            [105.33, 2003, 8],
-            [111.25, 2007, 7],
-            [107.30, 2004, 7],
-            [107.62, 2011, 6],
-            [106.68, 2009, 6],
-            [101.93, 2002, 6],
-            [101.30, 2005, 5],
-            [101.61, 2003, 5],
-            [100.06, 2002, 4],
-        ]),
+        np.array(
+            [
+                [112.35, 2006, 8],
+                [105.33, 2003, 8],
+                [111.25, 2007, 7],
+                [107.30, 2004, 7],
+                [107.62, 2011, 6],
+                [106.68, 2009, 6],
+                [101.93, 2002, 6],
+                [101.30, 2005, 5],
+                [101.61, 2003, 5],
+                [100.06, 2002, 4],
+            ]
+        ),
         columns=["Price", "Maturity", "Coupon"],
         index=[
             "DS-8-06",
@@ -149,56 +152,62 @@ def main():
     )
 
     Liability.setRecords(
-        np.array([
-            0,
-            80000,
-            100000,
-            110000,
-            120000,
-            140000,
-            120000,
-            90000,
-            50000,
-            75000,
-            150000,
-        ])
+        np.array(
+            [
+                0,
+                80000,
+                100000,
+                110000,
+                120000,
+                140000,
+                120000,
+                90000,
+                50000,
+                75000,
+                150000,
+            ]
+        )
     )
 
     r = Parameter(
         m,
         name="r",
         domain=t,
-        records=np.array([
-            0,
-            0.0422,
-            0.0440,
-            0.0450,
-            0.0466,
-            0.0480,
-            0.0482,
-            0.0485,
-            0.0488,
-            0.0491,
-            0.0493,
-        ]),
+        records=np.array(
+            [
+                0,
+                0.0422,
+                0.0440,
+                0.0450,
+                0.0466,
+                0.0480,
+                0.0482,
+                0.0485,
+                0.0488,
+                0.0491,
+                0.0493,
+            ]
+        ),
         description="spot rates",
     )
     y = Parameter(
         m,
         name="y",
         domain=i,
-        records=np.array([
-            0.0501,
-            0.0500,
-            0.0469,
-            0.0426,
-            0.0489,
-            0.0485,
-            0.0392,
-            0.0453,
-            0.0406,
-            0.0386,
-        ]),
+        records=np.array(
+            [
+                0.0501,
+                0.0500,
+                0.0469,
+                0.0426,
+                0.0489,
+                0.0485,
+                0.0392,
+                0.0453,
+                0.0406,
+                0.0386,
+            ]
+        ),
         description="yield rates",
     )
 

@@ -4,19 +4,20 @@ import os
 import unittest
 
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Product
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Smin
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Ord,
+    Parameter,
+    Product,
+    Set,
+    Smax,
+    Smin,
+    Sum,
+    Variable,
+)
 
 
 class OperationSuite(unittest.TestCase):
@@ -27,14 +28,16 @@ class OperationSuite(unittest.TestCase):
 
     def test_operations(self):
         # Prepare data
-        distances = pd.DataFrame([
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ])
+        distances = pd.DataFrame(
+            [
+                ["seattle", "new-york", 2.5],
+                ["seattle", "chicago", 1.7],
+                ["seattle", "topeka", 1.8],
+                ["san-diego", "new-york", 2.5],
+                ["san-diego", "chicago", 1.8],
+                ["san-diego", "topeka", 1.4],
+            ]
+        )
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])

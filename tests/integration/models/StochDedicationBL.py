@@ -19,12 +19,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Sense
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Sense, Sum, Variable
 
 
 def main():
@@ -54,11 +49,13 @@ def main():
     Price = m.getSymbols(["Price"])[0]
 
     # Parameters
-    Srf, SF, SLiability = m.getSymbols([
-        "Srf",
-        "SF",
-        "SLiability",
-    ])
+    Srf, SF, SLiability = m.getSymbols(
+        [
+            "Srf",
+            "SF",
+            "SLiability",
+        ]
+    )
 
     # Variables
     x = Variable(

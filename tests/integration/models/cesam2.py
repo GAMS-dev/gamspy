@@ -85,25 +85,23 @@ from __future__ import annotations
 import os
 
 import numpy as np
-
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.math import abs
-from gamspy.math import centropy
-from gamspy.math import exp
-from gamspy.math import log
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Number,
+    Options,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.math import abs, centropy, exp, log
 
 
 def main(is_centropy=False):
@@ -111,51 +109,53 @@ def main(is_centropy=False):
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
     )
 
-    SAM_recs = np.array([
-        [0, 14827.424, 0, 0, 2101.049, -0.327, 0, 0, 1488.157, 18416.303],
+    SAM_recs = np.array(
         [
-            7917.504,
-            0,
-            0,
-            0,
-            6953.332,
-            1564.500,
-            2518.500,
-            2597.798,
-            0,
-            20751.634,
-        ],
-        [9805.414, 0, 0, 0, 0, 0, 0, 0, 0, 9805.414],
-        [0, 0, 3699.706, 0, 0, 33.000, 0, 0, 0, 3732.706],
-        [0, 0, 6000.000, 3300.000, 0, 29.600, 0, 0, 200.000, 9687.915],
-        [733.600, 357.400, 74.400, 165.200, 139.500, 0, 0, 0, 0, 1470.100],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1712.300, 1712.300],
-        [
-            0,
-            0,
-            0,
-            150.000,
-            649.156,
-            -356.673,
-            -406.200,
-            0,
-            2163.857,
-            2200.140,
-        ],
-        [0, 5573.815, 0, 0, 0, 0, 0, 0, 0, 5573.815],
-        [
-            18456.518,
-            20758.639,
-            9805.414,
-            3732.706,
-            9643.037,
-            1470.100,
-            1712.300,
-            2197.798,
-            5573.815,
-            0,
-        ],
-    ])
+            [0, 14827.424, 0, 0, 2101.049, -0.327, 0, 0, 1488.157, 18416.303],
+            [
+                7917.504,
+                0,
+                0,
+                0,
+                6953.332,
+                1564.500,
+                2518.500,
+                2597.798,
+                0,
+                20751.634,
+            ],
+            [9805.414, 0, 0, 0, 0, 0, 0, 0, 0, 9805.414],
+            [0, 0, 3699.706, 0, 0, 33.000, 0, 0, 0, 3732.706],
+            [0, 0, 6000.000, 3300.000, 0, 29.600, 0, 0, 200.000, 9687.915],
+            [733.600, 357.400, 74.400, 165.200, 139.500, 0, 0, 0, 0, 1470.100],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1712.300, 1712.300],
+            [
+                0,
+                0,
+                0,
+                150.000,
+                649.156,
+                -356.673,
+                -406.200,
+                0,
+                2163.857,
+                2200.140,
+            ],
+            [0, 5573.815, 0, 0, 0, 0, 0, 0, 0, 5573.815],
+            [
+                18456.518,
+                20758.639,
+                9805.414,
+                3732.706,
+                9643.037,
+                1470.100,
+                1712.300,
+                2197.798,
+                5573.815,
+                0,
+            ],
+        ]
+    )
 
     # Set
     i = Set(
@@ -700,7 +700,7 @@ def main(is_centropy=False):
 
     if not is_centropy:
         # Cross-entropy objective function, explicit version
-        ENTROPY[...] = DENTROPY == (
+        ENTROPY[...] = (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 W3[ii, jj, jwt3]
@@ -722,16 +722,16 @@ def main(is_centropy=False):
                     - log(wbar2[macro, jwt2] + delta)
                 ),
             )
-        )
+        ) == DENTROPY
     else:
-        ENTROPY[...] = DENTROPY == (
+        ENTROPY[...] = (
             Sum(
                 Domain(ii, jj, jwt3).where[NONZERO[ii, jj]],
                 centropy(W3[ii, jj, jwt3], wbar3[ii, jj, jwt3]),
             )
             + Sum([ii, jwt1], centropy(W1[ii, jwt1], wbar1[ii, jwt1]))
             + Sum([macro, jwt2], centropy(W2[macro, jwt2], wbar2[macro, jwt2]))
-        )
+        ) == DENTROPY
 
     # Define bounds for cell values and fix variables not
     # included in the estimation

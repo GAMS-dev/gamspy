@@ -26,14 +26,15 @@ from __future__ import annotations
 
 import itertools
 from enum import Enum
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
 from gams.core.gdx import GMS_DT_EQU
-from gams.transfer._internals import EQU_TYPE
-from gams.transfer._internals import TRANSFER_TO_GAMS_EQUATION_SUBTYPES
+from gams.transfer._internals import (
+    EQU_TYPE,
+    TRANSFER_TO_GAMS_EQUATION_SUBTYPES,
+)
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -44,9 +45,9 @@ import gamspy._validation as validation
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Variable, Container
-    from gamspy._algebra.operation import Operation
+    from gamspy import Container, Set, Variable
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
 
 
 eq_types = ["=e=", "=l=", "=g="]
@@ -300,9 +301,13 @@ class Equation(gt.Equation, operable.Operable, Symbol):
             self._init_definition(definition)
 
             # create attributes
-            self._l, self._m, self._lo, self._up, self._s = (
-                self._init_attributes()
-            )
+            (
+                self._l,
+                self._m,
+                self._lo,
+                self._up,
+                self._s,
+            ) = self._init_attributes()
             self._stage = self._create_attr("stage")
             self._range = self._create_attr("range")
             self._slacklo = self._create_attr("slacklo")
@@ -324,7 +329,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitEquation(
-            self, name=self.name, type=self.type, domain=domain  # type: ignore  # noqa: E501
+            self,
+            name=self.name,
+            type=self.type,
+            domain=domain,  # type: ignore  # noqa: E501
         )
 
     def __setitem__(
@@ -556,9 +564,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
     @records.setter
     def records(self, records):
-        if records is not None:
-            if not isinstance(records, pd.DataFrame):
-                raise TypeError("Symbol 'records' must be type DataFrame")
+        if records is not None and not isinstance(records, pd.DataFrame):
+            raise TypeError("Symbol 'records' must be type DataFrame")
 
         # set records
         self._records = records
@@ -569,13 +576,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if self._records is not None:
-            if self.domain_forwarding:  # pragma: no cover
-                self._domainForwarding()
+        if self._records is not None and self.domain_forwarding:
+            self._domainForwarding()
 
-                # reset state check flags for all symbols in the container
-                for symbol in self.container.data.values():
-                    symbol._requires_state_check = True
+            # reset state check flags for all symbols in the container
+            for symbol in self.container.data.values():
+                symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)

@@ -34,34 +34,37 @@ from __future__ import annotations
 
 import os
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import ifthen
 
 
 def main(mip=False):
-    classData_recs = np.array([
-        [1, 1, 0, 1, 1, 0],
-        [1, 0, 0, 0, 1, 0],
-        [2, 0, 1, 0, 0, 1],
-        [2, 0, 1, 0, 1, 0],
-        [2, 1, 0, 1, 0, 0],
-        [2, 1, 1, 0, 0, 0],
-    ])
+    classData_recs = np.array(
+        [
+            [1, 1, 0, 1, 1, 0],
+            [1, 0, 0, 0, 1, 0],
+            [2, 0, 1, 0, 0, 1],
+            [2, 0, 1, 0, 1, 0],
+            [2, 1, 0, 1, 0, 0],
+            [2, 1, 1, 0, 0, 0],
+        ]
+    )
     classData_recs = pd.DataFrame(
         classData_recs,
         columns=["numCars", "opt1", "opt2", "opt3", "opt4", "opt5"],

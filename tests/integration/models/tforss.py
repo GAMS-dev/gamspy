@@ -22,18 +22,18 @@ import os
 from pathlib import Path
 
 import numpy as np
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.math import power
-from gamspy.math import Round
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.math import Round, power
 
 
 def main():
@@ -48,25 +48,29 @@ def main():
     )
 
     # Parameters
-    scd, land, ymf, a, b, pc, pd, nu, age = cont.getSymbols([
-        "scd",
-        "land",
-        "ymf",
-        "a",
-        "b",
-        "pc",
-        "pd",
-        "nu",
-        "age",
-    ])
+    scd, land, ymf, a, b, pc, pd, nu, age = cont.getSymbols(
+        [
+            "scd",
+            "land",
+            "ymf",
+            "a",
+            "b",
+            "pc",
+            "pd",
+            "nu",
+            "age",
+        ]
+    )
 
     # Scalar
-    mup, muc, life, rho = cont.getSymbols([
-        "mup",
-        "muc",
-        "life",
-        "rho",
-    ])
+    mup, muc, life, rho = cont.getSymbols(
+        [
+            "mup",
+            "muc",
+            "life",
+            "rho",
+        ]
+    )
 
     age[at] = 10 * Ord(at)
 
