@@ -3,22 +3,22 @@ from __future__ import annotations
 import os
 import unittest
 
+import gamspy._symbols.implicits as implicits
 import numpy as np
 import pandas as pd
-
-import gamspy._symbols.implicits as implicits
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import EquationType
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    EquationType,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math import sqr
 
 
@@ -202,14 +202,16 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_definition(self):
         # Prepare data
-        distances = pd.DataFrame([
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ])
+        distances = pd.DataFrame(
+            [
+                ["seattle", "new-york", 2.5],
+                ["seattle", "chicago", 1.7],
+                ["seattle", "topeka", 1.8],
+                ["san-diego", "new-york", 2.5],
+                ["san-diego", "chicago", 1.8],
+                ["san-diego", "topeka", 1.4],
+            ]
+        )
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
         capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])

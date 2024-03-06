@@ -18,18 +18,19 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Problem,
+    Sense,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -118,11 +119,13 @@ def main():
 
     # Also plot the tangent portfolio
     theta = 1
-    results.append([
-        np.sqrt(PortVariance.records.level[0]),
-        RiskFreeRate.records.value[0] + theta * d_bar.records.level[0],
-        theta,
-    ])
+    results.append(
+        [
+            np.sqrt(PortVariance.records.level[0]),
+            RiskFreeRate.records.value[0] + theta * d_bar.records.level[0],
+            theta,
+        ]
+    )
     SharpeFrontier = pd.DataFrame(
         results, columns=["Standard Deviations", "Expected Return", "Theta"]
     )

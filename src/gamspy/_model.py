@@ -28,12 +28,9 @@ import io
 import os
 import uuid
 from enum import Enum
-from typing import Iterable
-from typing import Literal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, Literal
 
-from gams import GamsOptions
-from gams import GamsExceptionExecution
+from gams import GamsExceptionExecution, GamsOptions
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -45,15 +42,15 @@ from gamspy._options import _map_options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Parameter, Variable, Equation, Container
+    import pandas as pd
+
+    from gamspy import Container, Equation, Parameter, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._options import Options
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
-    from gamspy._options import ModelInstanceOptions
-    import pandas as pd
+    from gamspy._options import ModelInstanceOptions, Options
+    from gamspy._symbols.implicits import ImplicitParameter
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
 
@@ -657,7 +654,7 @@ class Model:
         equations = []
         for equation in self.equations:
             if self._matches:
-                if equation not in self._matches.keys():
+                if equation not in self._matches:
                     equations.append(equation.gamsRepr())
             else:
                 equations.append(equation.gamsRepr())
@@ -665,10 +662,12 @@ class Model:
         equations_str = ",".join(equations)
 
         if self._matches:
-            matches_str = ",".join([
-                f"{equation.gamsRepr()}.{variable.gamsRepr()}"
-                for equation, variable in self._matches.items()
-            ])
+            matches_str = ",".join(
+                [
+                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                    for equation, variable in self._matches.items()
+                ]
+            )
 
             equations_str = (
                 ",".join([equations_str, matches_str])

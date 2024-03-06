@@ -3,18 +3,19 @@ from __future__ import annotations
 import os
 import unittest
 
-from pydantic import ValidationError
-
 import gamspy.math as math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from pydantic import ValidationError
 
 
 class OptionsSuite(unittest.TestCase):
@@ -142,7 +143,7 @@ class OptionsSuite(unittest.TestCase):
         with open(
             os.path.join(m.working_directory, m.gamsJobName() + ".pf")
         ) as file:
-            self.assertTrue("LP=conopt\n" == file.readline())
+            self.assertTrue(file.readline() == "LP=conopt\n")
 
     def test_gamspy_to_gams_options(self):
         options = Options(

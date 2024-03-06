@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import gamspy._algebra.condition as condition
 
@@ -13,5 +13,6 @@ class ImplicitSymbol(ABC):
         self.domain = domain
         self.where = condition.Condition(self)
 
+    @abstractmethod
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""

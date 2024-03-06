@@ -19,15 +19,16 @@ import os
 from pathlib import Path
 
 import numpy as np
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import ModelStatus
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    ModelStatus,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -78,19 +79,21 @@ def main():
         ReinvestmentRate,
         IndexReturns,
         pr,
-    ) = m.getSymbols([
-        "ExchangeRates0",
-        "ExchangeRates1",
-        "Price0",
-        "Price1",
-        "InitialHoldings",
-        "Accruals0",
-        "Accruals1",
-        "Outstanding",
-        "ReinvestmentRate",
-        "IndexReturns",
-        "pr",
-    ])
+    ) = m.getSymbols(
+        [
+            "ExchangeRates0",
+            "ExchangeRates1",
+            "Price0",
+            "Price1",
+            "InitialHoldings",
+            "Accruals0",
+            "Accruals1",
+            "Outstanding",
+            "ReinvestmentRate",
+            "IndexReturns",
+            "pr",
+        ]
+    )
 
     # SCALARS #
     TrnCstB = Parameter(
@@ -328,37 +331,36 @@ def main():
     print("\nInitVal: \n", round(InitVal.records.value[0], 3))
     print(CurrentValue.records)
 
-    ResultHandle = open("BondIndex.csv", "w", encoding="UTF-8")
-    ResultHandle.write(
-        f'"Objective Function", {round(BondIndex.objective_value,3)}\n'
-    )
-    ResultHandle.write(
-        f'"Final Epsilon", {round(EpsTolerance.records.value[0],3)}\n'
-    )
-    ResultHandle.write(
-        '"Initial Portfolio Value in USD",'
-        f" {round(InitVal.records.value[0],3)}\n"
-    )
-    ResultHandle.write("\n")
-    ResultHandle.write(
-        '"Bond number","CUSIP code","Holdings in unit of face value","Holdings'
-        ' in USD","Percentage of the portfolio value"\n'
-    )
-    for ii in Z0.records.itertuples():
-        if ii.level == 0:
-            continue
-        cv_value = CurrentValue.records.loc[
-            CurrentValue.records["i"] == ii.uni, "value"
-        ].values[0]
+    with open("BondIndex.csv", "w", encoding="UTF-8") as ResultHandle:
         ResultHandle.write(
-            f'"{ii.uni}","{i_recs[ii.Index]}",{round(ii.level,3)},{round(cv_value,2)},{round(100*(cv_value/InitVal.records.value[0]),2)}\n'
+            f'"Objective Function", {round(BondIndex.objective_value,3)}\n'
         )
+        ResultHandle.write(
+            f'"Final Epsilon", {round(EpsTolerance.records.value[0],3)}\n'
+        )
+        ResultHandle.write(
+            '"Initial Portfolio Value in USD",'
+            f" {round(InitVal.records.value[0],3)}\n"
+        )
+        ResultHandle.write("\n")
+        ResultHandle.write(
+            '"Bond number","CUSIP code","Holdings in unit of face value","Holdings'
+            ' in USD","Percentage of the portfolio value"\n'
+        )
+        for ii in Z0.records.itertuples():
+            if ii.level == 0:
+                continue
+            cv_value = CurrentValue.records.loc[
+                CurrentValue.records["i"] == ii.uni, "value"
+            ].values[0]
+            ResultHandle.write(
+                f'"{ii.uni}","{i_recs[ii.Index]}",{round(ii.level,3)},{round(cv_value,2)},{round(100*(cv_value/InitVal.records.value[0]),2)}\n'
+            )
 
-    ResultHandle.write(
-        '"Cash in US'
-        f' dollar",{Cash.records.level[0]},{((Cash.records.level[0]/InitVal.records.value[0])*100)}'
-    )
-    ResultHandle.close()
+        ResultHandle.write(
+            '"Cash in US'
+            f' dollar",{Cash.records.level[0]},{((Cash.records.level[0]/InitVal.records.value[0])*100)}'
+        )
 
     import math
 

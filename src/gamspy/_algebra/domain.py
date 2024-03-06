@@ -31,7 +31,7 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Set, Alias
+    from gamspy import Alias, Set
     from gamspy._symbols.implicits import ImplicitSet
 
 

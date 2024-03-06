@@ -20,18 +20,20 @@ from __future__ import annotations
 import os
 
 import gamspy.math as gams_math
-from gamspy import Card
-from gamspy import Container
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Set,
+    SolveStatus,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import GamspyException
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy import SolveStatus
 
 
 def main():

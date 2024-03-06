@@ -16,21 +16,22 @@ from __future__ import annotations
 
 import os
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def prepare_yield():
@@ -46,16 +47,18 @@ def prepare_yield():
         ("IO90", "T1"),
     ]
 
-    data = np.array([
-        [1.104439, 1.104439, 0.959238, 0.959238],
-        [1.110009, 0.975907, 0.935106, 1.167817],
-        [0.938159, 0.938159, 1.166825, 1.166825],
-        [0.933668, 1.154590, 1.156536, 0.903233],
-        [0.924840, 0.924840, 1.167546, 1.167546],
-        [0.891527, 1.200802, 1.141917, 0.907837],
-        [1.107461, 1.107461, 0.908728, 0.908728],
-        [1.105168, 0.925925, 0.877669, 1.187143],
-    ])
+    data = np.array(
+        [
+            [1.104439, 1.104439, 0.959238, 0.959238],
+            [1.110009, 0.975907, 0.935106, 1.167817],
+            [0.938159, 0.938159, 1.166825, 1.166825],
+            [0.933668, 1.154590, 1.156536, 0.903233],
+            [0.924840, 0.924840, 1.167546, 1.167546],
+            [0.891527, 1.200802, 1.141917, 0.907837],
+            [1.107461, 1.107461, 0.908728, 0.908728],
+            [1.105168, 0.925925, 0.877669, 1.187143],
+        ]
+    )
 
     idxs = pd.MultiIndex.from_tuples(idxs, names=["Index1", "Index2"])
     data = pd.DataFrame(data, columns=cols, index=idxs)
@@ -105,22 +108,26 @@ def main():
         m,
         name="CashYield",
         domain=[t, l],
-        records=np.array([
-            [1.030414, 1.030414, 1.012735, 1.012735],
-            [1.032623, 1.014298, 1.009788, 1.030481],
-            [0, 0, 0, 0],
-        ]),
+        records=np.array(
+            [
+                [1.030414, 1.030414, 1.012735, 1.012735],
+                [1.032623, 1.014298, 1.009788, 1.030481],
+                [0, 0, 0, 0],
+            ]
+        ),
         description="Risk free (cash) yield",
     )
     Liability = Parameter(
         m,
         name="Liability",
         domain=[t, l],
-        records=np.array([
-            [0, 0, 0, 0],
-            [26.474340, 26.474340, 10.953843, 10.953843],
-            [31.264791, 26.044541, 10.757200, 13.608207],
-        ]),
+        records=np.array(
+            [
+                [0, 0, 0, 0],
+                [26.474340, 26.474340, 10.953843, 10.953843],
+                [31.264791, 26.044541, 10.757200, 13.608207],
+            ]
+        ),
         description="Liabilities due to annuitant lapses",
     )
     FinalLiability = Parameter(

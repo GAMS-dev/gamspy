@@ -30,17 +30,18 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Parameter
-from gamspy import Product
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Parameter,
+    Product,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -258,11 +259,13 @@ def main():
         cont,
         name="alphl",
         domain=[i, lc],
-        records=np.array([
-            [0.38258, 0.06740, 0.00000],
-            [0.00000, 0.53476, 0.00000],
-            [0.00000, 0.16234, 0.42326],
-        ]),
+        records=np.array(
+            [
+                [0.38258, 0.06740, 0.00000],
+                [0.00000, 0.53476, 0.00000],
+                [0.00000, 0.16234, 0.42326],
+            ]
+        ),
         description="labor share parameter in production function",
     )
 
@@ -270,11 +273,13 @@ def main():
         cont,
         name="io",
         domain=[i, j],
-        records=np.array([
-            [0.12591, 0.19834, 0.01407],
-            [0.10353, 0.35524, 0.18954],
-            [0.02358, 0.11608, 0.08390],
-        ]),
+        records=np.array(
+            [
+                [0.12591, 0.19834, 0.01407],
+                [0.10353, 0.35524, 0.18954],
+                [0.02358, 0.11608, 0.08390],
+            ]
+        ),
         description="input-output coefficients",
     )
 
@@ -282,11 +287,13 @@ def main():
         cont,
         name="imat",
         domain=[i, j],
-        records=np.array([
-            [0.00000, 0.00000, 0.00000],
-            [0.93076, 0.93774, 0.93080],
-            [0.06924, 0.06226, 0.06920],
-        ]),
+        records=np.array(
+            [
+                [0.00000, 0.00000, 0.00000],
+                [0.93076, 0.93774, 0.93080],
+                [0.06924, 0.06226, 0.06920],
+            ]
+        ),
         description="capital composition matrix",
     )
 
@@ -294,11 +301,13 @@ def main():
         cont,
         name="wdist",
         domain=[i, lc],
-        records=np.array([
-            [1.00000, 0.52780, 0.00000],
-            [0.00000, 1.21879, 0.00000],
-            [0.00000, 1.11541, 1.00000],
-        ]),
+        records=np.array(
+            [
+                [1.00000, 0.52780, 0.00000],
+                [0.00000, 1.21879, 0.00000],
+                [0.00000, 1.11541, 1.00000],
+            ]
+        ),
         description="wage proportionality factors",
     )
 
@@ -717,11 +726,13 @@ def main():
         cont,
         name="labres1",
         domain=[i, lc],
-        records=np.array([
-            [2515.900, 442.643, 0.000],
-            [0.000, 767.776, 0.000],
-            [0.000, 355.568, 948.100],
-        ]),
+        records=np.array(
+            [
+                [2515.900, 442.643, 0.000],
+                [0.000, 767.776, 0.000],
+                [0.000, 355.568, 948.100],
+            ]
+        ),
         description="summary matrix with sectoral employment results",
     )
 
@@ -729,14 +740,16 @@ def main():
         cont,
         name="labres2",
         domain=["*", lc],
-        records=pd.DataFrame([
-            ["wa", "labor1", 0.074],
-            ["ls", "labor1", 2515.9],
-            ["wa", "labor2", 0.14],
-            ["ls", "labor2", 1565.987],
-            ["wa", "labor3", 0.152],
-            ["ls", "labor3", 948.1],
-        ]),
+        records=pd.DataFrame(
+            [
+                ["wa", "labor1", 0.074],
+                ["ls", "labor1", 2515.9],
+                ["wa", "labor2", 0.14],
+                ["ls", "labor2", 1565.987],
+                ["wa", "labor3", 0.152],
+                ["ls", "labor3", 948.1],
+            ]
+        ),
         description="summary matrix with aggregate employment results",
     )
 
@@ -744,12 +757,14 @@ def main():
         cont,
         name="hhres",
         domain=["*", hh],
-        records=pd.DataFrame([
-            ["yh", "lab_hh", 548.7478],
-            ["mps", "lab_hh", 0.06],
-            ["yh", "cap_hh", 574.8463],
-            ["mps", "cap_hh", 0.06],
-        ]),
+        records=pd.DataFrame(
+            [
+                ["yh", "lab_hh", 548.7478],
+                ["mps", "lab_hh", 0.06],
+                ["yh", "cap_hh", 574.8463],
+                ["mps", "cap_hh", 0.06],
+            ]
+        ),
         description="summary matrix with household results",
     )
 

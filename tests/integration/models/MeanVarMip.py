@@ -18,15 +18,17 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
@@ -178,9 +180,8 @@ def main():
         MeanVarianceMIP += "\n"
         lamda_loop += 0.1
 
-    FrontierHandle = open("MeanVarianceMIP.csv", "w", encoding="UTF-8")
-    FrontierHandle.write(MeanVarianceMIP)
-    FrontierHandle.close()
+    with open("MeanVarianceMIP.csv", "w", encoding="UTF-8") as FrontierHandle:
+        FrontierHandle.write(MeanVarianceMIP)
 
     # ***** Transaction Cost *****
     # In this section the MeanVar.gms model is modified by imposing transaction
@@ -293,9 +294,10 @@ def main():
         MeanVarianceWithCost += ",".join(x1_recs) + "\n"
         lamda_loop += 0.1
 
-    FrontierHandleTwo = open("MeanVarianceWithCost.csv", "w", encoding="UTF-8")
-    FrontierHandleTwo.write(MeanVarianceWithCost)
-    FrontierHandleTwo.close()
+    with open(
+        "MeanVarianceWithCost.csv", "w", encoding="UTF-8"
+    ) as FrontierHandleTwo:
+        FrontierHandleTwo.write(MeanVarianceWithCost)
 
     # ***** Portfolio Revision *****
     # In this section the MeanVar.gms model is modified by imposing zero-or-range
@@ -437,11 +439,10 @@ def main():
         MeanVarianceRevision += ",".join(sell_recs) + "\n"
         lamda_loop += 0.1
 
-    FrontierHandleThree = open(
+    with open(
         "MeanVarianceRevision.csv", "w", encoding="UTF-8"
-    )
-    FrontierHandleThree.write(MeanVarianceRevision)
-    FrontierHandleThree.close()
+    ) as FrontierHandleThree:
+        FrontierHandleThree.write(MeanVarianceRevision)
 
 
 if __name__ == "__main__":

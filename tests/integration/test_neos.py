@@ -3,14 +3,16 @@ from __future__ import annotations
 import os
 import unittest
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy._backend.neos import NeosClient
 from gamspy.exceptions import ValidationError
 
@@ -255,7 +257,7 @@ class NeosSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
             load_from="my_out_directory/output.gdx",
         )
-        self.assertTrue("x" in container.data.keys())
+        self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 

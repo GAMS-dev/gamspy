@@ -33,12 +33,12 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import (
-        ImplicitSet,
-        ImplicitParameter,
-        ImplicitEquation,
-    )
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import (
+        ImplicitEquation,
+        ImplicitParameter,
+        ImplicitSet,
+    )
 
 
 class Condition:

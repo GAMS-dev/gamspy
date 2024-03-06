@@ -6,16 +6,17 @@ import unittest
 
 import pandas as pd
 from gams import GamsEngineConfiguration
-
-from gamspy import Container
-from gamspy import EngineClient
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    EngineClient,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import ValidationError
 
 try:
@@ -221,21 +222,18 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        same_directory_file = open(
+        with open(
             m.working_directory + os.sep + "test.txt", "w"
-        )
+        ) as same_directory_file:
+            client = EngineClient(
+                host=os.environ["ENGINE_URL"],
+                username=os.environ["ENGINE_USER"],
+                password=os.environ["ENGINE_PASSWORD"],
+                namespace=os.environ["ENGINE_NAMESPACE"],
+                extra_model_files=[same_directory_file.name],
+            )
 
-        client = EngineClient(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
-            extra_model_files=[same_directory_file.name],
-        )
-
-        transport.solve(backend="engine", client=client)
-        same_directory_file.close()
-        os.unlink(same_directory_file.name)
+            transport.solve(backend="engine", client=client)
 
         file = tempfile.NamedTemporaryFile(delete=False)
         client = EngineClient(
@@ -430,7 +428,7 @@ class EngineSuite(unittest.TestCase):
             "out_dir", os.path.basename(m.gdxOutputPath())
         )
         container = Container(load_from=gdx_out_path)
-        self.assertTrue("x" in container.data.keys())
+        self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 

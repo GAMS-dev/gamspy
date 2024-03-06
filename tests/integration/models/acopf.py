@@ -27,31 +27,27 @@ Options:
 
 import argparse
 import os
-from numpy import pi
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Set
-from gamspy import Parameter
-from gamspy import Variable
-from gamspy import Equation
-from gamspy import Sum
-from gamspy import Domain
-from gamspy import Ord
-from gamspy import Number
-from gamspy import Smax
-from gamspy import Model
-from gamspy.math import sqr
-from gamspy.math import sin
-from gamspy.math import cos
-from gamspy.math import sqrt
-from gamspy.math import atan
-from gamspy.math import Max
-from gamspy import SpecialValues
+from gamspy import (
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Set,
+    Smax,
+    SpecialValues,
+    Sum,
+    Variable,
+)
+from gamspy.math import Max, atan, cos, sin, sqr, sqrt
+from numpy import pi
 
 
 def main():
-
     # Parse the arguments
     parser = argparse.ArgumentParser()
 
@@ -145,33 +141,35 @@ def main():
         monitored_lines,
         demandbid_t,
         demandbid_s,
-    ) = m.getSymbols([
-        "conj",
-        "costcoefset",
-        "costptset",
-        "t",
-        "bus",
-        "gen",
-        "circuit",
-        "interface",
-        "interfacemap",
-        "demandbid",
-        "demandbidmap",
-        "fuel_t",
-        "fuel_s",
-        "prime_mover",
-        "bus_t",
-        "bus_s",
-        "gen_t",
-        "gen_s",
-        "branch_t",
-        "branch_s",
-        "line",
-        "transformer",
-        "monitored_lines",
-        "demandbid_t",
-        "demandbid_s",
-    ])
+    ) = m.getSymbols(
+        [
+            "conj",
+            "costcoefset",
+            "costptset",
+            "t",
+            "bus",
+            "gen",
+            "circuit",
+            "interface",
+            "interfacemap",
+            "demandbid",
+            "demandbidmap",
+            "fuel_t",
+            "fuel_s",
+            "prime_mover",
+            "bus_t",
+            "bus_s",
+            "gen_t",
+            "gen_s",
+            "branch_t",
+            "branch_s",
+            "line",
+            "transformer",
+            "monitored_lines",
+            "demandbid_t",
+            "demandbid_s",
+        ]
+    )
 
     # Aliases
     i, j, c, gen1 = m.getSymbols(["i", "j", "c", "gen1"])
@@ -186,16 +184,18 @@ def main():
         branchinfo,
         interfaceinfo,
         demandbidinfo,
-    ) = m.getSymbols([
-        "baseMVA",
-        "total_cost",
-        "businfo",
-        "geninfo",
-        "fuelinfo",
-        "branchinfo",
-        "interfaceinfo",
-        "demandbidinfo",
-    ])
+    ) = m.getSymbols(
+        [
+            "baseMVA",
+            "total_cost",
+            "businfo",
+            "geninfo",
+            "fuelinfo",
+            "branchinfo",
+            "interfaceinfo",
+            "demandbidinfo",
+        ]
+    )
 
     t.setRecords([args.timeperiod])
 
@@ -394,18 +394,18 @@ def main():
 
     # Quadratic objective function
     numcostpts[gen] = geninfo[gen, "numcostpts", "given"]
-    costcoef[gen, costcoefset].where[geninfo[gen, "costcoef", costcoefset]] = (
+    costcoef[gen, costcoefset].where[
         geninfo[gen, "costcoef", costcoefset]
-    )
+    ] = geninfo[gen, "costcoef", costcoefset]
 
     # Piecewise linear information
     numcostcoef[gen] = geninfo[gen, "numcostcoef", "given"]
-    costpts_x[gen, costptset].where[geninfo[gen, "costpts_x", costptset]] = (
+    costpts_x[gen, costptset].where[
         geninfo[gen, "costpts_x", costptset]
-    )
-    costpts_y[gen, costptset].where[geninfo[gen, "costpts_y", costptset]] = (
+    ] = geninfo[gen, "costpts_x", costptset]
+    costpts_y[gen, costptset].where[
         geninfo[gen, "costpts_y", costptset]
-    )
+    ] = geninfo[gen, "costpts_y", costptset]
 
     # Line resistance (r) and reactance (x)
     r[i, j, c].where[line[i, j, c]] = branchinfo[i, j, c, "r", "given"]
@@ -768,26 +768,18 @@ def main():
         gen.where[atBus[gen, i] & status[gen]], V_P[gen]
     ) - Pd[i] == Sum(
         Domain(j, c).where[branchstatus[i, j, c]], V_LineP[i, j, c]
-    ) + Sum(
-        Domain(j, c).where[branchstatus[j, i, c]], V_LineP[i, j, c]
-    ) + Gs[
+    ) + Sum(Domain(j, c).where[branchstatus[j, i, c]], V_LineP[i, j, c]) + Gs[
         i
-    ] * (
-        sqr(V_real[i]) + sqr(V_imag[i])
-    )
+    ] * (sqr(V_real[i]) + sqr(V_imag[i]))
 
     # Balance of reactive power for bus
     c_BalanceQ[i].where[type[i] != 4] = Sum(
         gen.where[atBus[gen, i] & status[gen]], V_Q[gen]
     ) - Qd[i] == Sum(
         Domain(j, c).where[branchstatus[i, j, c]], V_LineQ[i, j, c]
-    ) + Sum(
-        Domain(j, c).where[branchstatus[j, i, c]], V_LineQ[i, j, c]
-    ) - Bs[
+    ) + Sum(Domain(j, c).where[branchstatus[j, i, c]], V_LineQ[i, j, c]) - Bs[
         i
-    ] * (
-        sqr(V_real[i]) + sqr(V_imag[i])
-    ) - (
+    ] * (sqr(V_real[i]) + sqr(V_imag[i])) - (
         sqr(V_real[i]) + sqr(V_imag[i])
     ) * Sum(
         bus_s.where[~bus_s.sameAs("given")],
@@ -799,7 +791,7 @@ def main():
     c_InterfaceP[i, j, c].where[
         (branchstatus[i, j, c] | branchstatus[j, i, c])
         & (Sum(interface.where[interfacemap[interface, i, j]], 1) >= 1)
-    ] = (V_interfaceP[i, j, c] == V_LineP[i, j, c])
+    ] = V_interfaceP[i, j, c] == V_LineP[i, j, c]
 
     # Limit of real power on interface at time t
     c_InterfaceLimit[interface] = (
@@ -835,7 +827,6 @@ def main():
     next_slope = Parameter(m, name="next_slope")
 
     for idx, gen_ in enumerate(gen.toList()):
-
         if not (
             (status.records.at[idx, "value"])
             and (costmodel.records.at[idx, "value"] == 1)
@@ -881,7 +872,9 @@ def main():
                 thisgen[gen1] = False
                 thisgen[gen_] = True
                 print("thisgen: ", thisgen.toList())
-                raise "Nonconvex piecewise linear costs not supported"
+                raise Exception(
+                    "Nonconvex piecewise linear costs not supported"
+                )
 
     # ===== SECTION: EQUATIONS PART 2
     # Defining piecewise linear generator cost curves

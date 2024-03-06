@@ -7,6 +7,7 @@ GAMSPy 0.12.1
   - Catch solve status errors and throw necessary exceptions.
   - __pow__ returns sqrt instead of rPower if the exponent is 0.5.
   - Deprecate delayed_execution mode.
+  - Replace pylint, flake8 and black with ruff.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.

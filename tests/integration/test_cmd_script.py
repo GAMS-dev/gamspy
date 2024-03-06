@@ -52,12 +52,14 @@ class CmdSuite(unittest.TestCase):
             )
 
         if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
-            subprocess.run([
-                "gamspy",
-                "install",
-                "license",
-                os.path.join(os.getcwd(), "old_license.txt"),
-            ])
+            subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.path.join(os.getcwd(), "old_license.txt"),
+                ]
+            )
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
@@ -80,12 +82,14 @@ class CmdSuite(unittest.TestCase):
         )
 
         if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
-            subprocess.run([
-                "gamspy",
-                "install",
-                "license",
-                os.path.join(os.getcwd(), "old_license.txt"),
-            ])
+            subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.path.join(os.getcwd(), "old_license.txt"),
+                ]
+            )
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):

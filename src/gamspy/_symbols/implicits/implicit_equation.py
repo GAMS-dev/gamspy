@@ -33,7 +33,7 @@ from gamspy._symbols.implicits.implicit_parameter import ImplicitParameter
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Equation
+    from gamspy import Equation, Set
 
 
 class ImplicitEquation(ImplicitSymbol):

@@ -18,39 +18,42 @@ from __future__ import annotations
 
 import os
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Options,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def BondDataTable():
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(
-        np.array([
-            [112.35, 2006, 8],
-            [105.33, 2003, 8],
-            [111.25, 2007, 7],
-            [107.30, 2004, 7],
-            [107.62, 2011, 6],
-            [106.68, 2009, 6],
-            [101.93, 2002, 6],
-            [101.30, 2005, 5],
-            [101.61, 2003, 5],
-            [100.06, 2002, 4],
-        ]),
+        np.array(
+            [
+                [112.35, 2006, 8],
+                [105.33, 2003, 8],
+                [111.25, 2007, 7],
+                [107.30, 2004, 7],
+                [107.62, 2011, 6],
+                [106.68, 2009, 6],
+                [101.93, 2002, 6],
+                [101.30, 2005, 5],
+                [101.61, 2003, 5],
+                [100.06, 2002, 4],
+            ]
+        ),
         columns=["Price", "Maturity", "Coupon"],
         index=[
             "DS-8-06",
@@ -163,19 +166,21 @@ def main():
     spread[...] = 0.02
 
     Liability.setRecords(
-        np.array([
-            0,
-            80000,
-            100000,
-            110000,
-            120000,
-            140000,
-            120000,
-            90000,
-            50000,
-            75000,
-            150000,
-        ])
+        np.array(
+            [
+                0,
+                80000,
+                100000,
+                110000,
+                120000,
+                140000,
+                120000,
+                90000,
+                50000,
+                75000,
+                150000,
+            ]
+        )
     )
 
     # VARIABLES #
@@ -471,10 +476,10 @@ def main():
         )
         output_csv += f'"{tt}",{borrow_rec},{surplus_rec}\n'
 
-    DedicationHandle = open(
+    with open(
         "DedicationMIPPortfolios.csv", "w", encoding="UTF-8"
-    )
-    DedicationHandle.write(output_csv)
+    ) as DedicationHandle:
+        DedicationHandle.write(output_csv)
 
 
 if __name__ == "__main__":

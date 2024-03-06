@@ -27,24 +27,25 @@ from __future__ import annotations
 import io
 from typing import TYPE_CHECKING
 
-from gams import EquType
-from gams import GamsModelInstanceOpt
-from gams import GamsModifier
-from gams import GamsOptions
-from gams import SymbolUpdateType
-from gams import UpdateAction
-from gams import VarType
-from gams import GamsException
+from gams import (
+    EquType,
+    GamsException,
+    GamsModelInstanceOpt,
+    GamsModifier,
+    GamsOptions,
+    SymbolUpdateType,
+    UpdateAction,
+    VarType,
+)
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
-from gamspy._options import ModelInstanceOptions
-from gamspy._options import Options
+from gamspy._options import ModelInstanceOptions, Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Parameter, Model, Container
+    from gamspy import Container, Model, Parameter
     from gamspy._symbols.implicits import ImplicitParameter
 
 
@@ -142,20 +143,22 @@ class ModelInstance:
         self.main_container.write(self.instance.sync_db._gmd)
 
         for modifiable in self.modifiables:
-            if isinstance(modifiable, implicits.ImplicitParameter):
-                if modifiable.parent.records is not None:
-                    parent_name, attr = modifiable.name.split(".")
-                    attr_name = "_".join([parent_name, attr])
+            if (
+                isinstance(modifiable, implicits.ImplicitParameter)
+                and modifiable.parent.records is not None
+            ):
+                parent_name, attr = modifiable.name.split(".")
+                attr_name = "_".join([parent_name, attr])
 
-                    columns = self._get_columns_to_drop(attr)
+                columns = self._get_columns_to_drop(attr)
 
-                    self.instance_container[attr_name].setRecords(
-                        self.main_container[parent_name].records.drop(
-                            columns, axis=1
-                        )
+                self.instance_container[attr_name].setRecords(
+                    self.main_container[parent_name].records.drop(
+                        columns, axis=1
                     )
+                )
 
-                    self.instance_container.write(self.instance.sync_db._gmd)
+                self.instance_container.write(self.instance.sync_db._gmd)
 
         # solve
         self.instance.solve(
@@ -325,6 +328,6 @@ class ModelInstance:
         )
         temp.read(self.instance.sync_db._gmd)
 
-        for name in temp.data.keys():
-            if name in self.main_container.data.keys():
+        for name in temp.data:
+            if name in self.main_container.data:
                 self.main_container[name].records = temp[name].records

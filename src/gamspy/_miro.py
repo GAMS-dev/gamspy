@@ -9,7 +9,7 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Container, Set, Parameter, Variable, Equation
+    from gamspy import Container, Equation, Parameter, Set, Variable
 
 
 class MiroJSONEncoder:
@@ -201,13 +201,17 @@ class MiroJSONEncoder:
 
             headers_dict = self.prepare_headers_dict(symbol)
 
-            info.append({
-                "alias": (
-                    symbol.description if symbol.description else symbol.name
-                ),
-                "symtype": type_map[type(symbol)],
-                "headers": headers_dict,
-            })
+            info.append(
+                {
+                    "alias": (
+                        symbol.description
+                        if symbol.description
+                        else symbol.name
+                    ),
+                    "symtype": type_map[type(symbol)],
+                    "headers": headers_dict,
+                }
+            )
 
         return info
 

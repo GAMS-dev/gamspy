@@ -3,19 +3,20 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
-
 import gamspy.math as gamspy_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import pandas as pd
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Number,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 class ConditionSuite(unittest.TestCase):
@@ -28,28 +29,30 @@ class ConditionSuite(unittest.TestCase):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
         markets = ["mexico-df", "monterrey", "guadalaja"]
 
-        rail_distances = pd.DataFrame([
-            ["ahmsa", "mexico-df", 1204],
-            ["ahmsa", "monterrey", 218],
-            ["ahmsa", "guadalaja", 1125],
-            ["ahmsa", "export", 739],
-            ["fundidora", "mexico-df", 1017],
-            ["fundidora", "guadalaja", 1030],
-            ["fundidora", "export", 521],
-            ["sicartsa", "mexico-df", 819],
-            ["sicartsa", "monterrey", 1305],
-            ["sicartsa", "guadalaja", 704],
-            ["hylsa", "mexico-df", 1017],
-            ["hylsa", "guadalaja", 1030],
-            ["hylsa", "export", 521],
-            ["hylsap", "mexico-df", 185],
-            ["hylsap", "monterrey", 1085],
-            ["hylsap", "guadalaja", 760],
-            ["hylsap", "export", 315],
-            ["import", "mexico-df", 428],
-            ["import", "monterrey", 521],
-            ["import", "guadalaja", 300],
-        ])
+        rail_distances = pd.DataFrame(
+            [
+                ["ahmsa", "mexico-df", 1204],
+                ["ahmsa", "monterrey", 218],
+                ["ahmsa", "guadalaja", 1125],
+                ["ahmsa", "export", 739],
+                ["fundidora", "mexico-df", 1017],
+                ["fundidora", "guadalaja", 1030],
+                ["fundidora", "export", 521],
+                ["sicartsa", "mexico-df", 819],
+                ["sicartsa", "monterrey", 1305],
+                ["sicartsa", "guadalaja", 704],
+                ["hylsa", "mexico-df", 1017],
+                ["hylsa", "guadalaja", 1030],
+                ["hylsa", "export", 521],
+                ["hylsap", "mexico-df", 185],
+                ["hylsap", "monterrey", 1085],
+                ["hylsap", "guadalaja", 760],
+                ["hylsap", "export", 315],
+                ["import", "mexico-df", 428],
+                ["import", "monterrey", 521],
+                ["import", "guadalaja", 300],
+            ]
+        )
 
         m = Container()
 
@@ -198,91 +201,97 @@ class ConditionSuite(unittest.TestCase):
         )
 
     def test_condition_on_equation(self):
-        td_data = pd.DataFrame([
-            ["icbm", "2", 0.05],
-            ["icbm", "6", 0.15],
-            ["icbm", "7", 0.10],
-            ["icbm", "8", 0.15],
-            ["icbm", "9", 0.20],
-            ["icbm", "18", 0.05],
-            ["mrbm-1", "1", 0.16],
-            ["mrbm-1", "2", 0.17],
-            ["mrbm-1", "3", 0.15],
-            ["mrbm-1", "4", 0.16],
-            ["mrbm-1", "5", 0.15],
-            ["mrbm-1", "6", 0.19],
-            ["mrbm-1", "7", 0.19],
-            ["mrbm-1", "8", 0.18],
-            ["mrbm-1", "9", 0.20],
-            ["mrbm-1", "10", 0.14],
-            ["mrbm-1", "12", 0.02],
-            ["mrbm-1", "14", 0.12],
-            ["mrbm-1", "15", 0.13],
-            ["mrbm-1", "16", 0.12],
-            ["mrbm-1", "17", 0.15],
-            ["mrbm-1", "18", 0.16],
-            ["mrbm-1", "19", 0.15],
-            ["mrbm-1", "20", 0.15],
-            ["lr-bomber", "1", 0.04],
-            ["lr-bomber", "2", 0.05],
-            ["lr-bomber", "3", 0.04],
-            ["lr-bomber", "4", 0.04],
-            ["lr-bomber", "5", 0.04],
-            ["lr-bomber", "6", 0.10],
-            ["lr-bomber", "7", 0.08],
-            ["lr-bomber", "8", 0.09],
-            ["lr-bomber", "9", 0.08],
-            ["lr-bomber", "10", 0.05],
-            ["lr-bomber", "11", 0.01],
-            ["lr-bomber", "12", 0.02],
-            ["lr-bomber", "13", 0.01],
-            ["lr-bomber", "14", 0.02],
-            ["lr-bomber", "15", 0.03],
-            ["lr-bomber", "16", 0.02],
-            ["lr-bomber", "17", 0.05],
-            ["lr-bomber", "18", 0.08],
-            ["lr-bomber", "19", 0.07],
-            ["lr-bomber", "20", 0.08],
-            ["f-bomber", "10", 0.04],
-            ["f-bomber", "11", 0.09],
-            ["f-bomber", "12", 0.08],
-            ["f-bomber", "13", 0.09],
-            ["f-bomber", "14", 0.08],
-            ["f-bomber", "15", 0.02],
-            ["f-bomber", "16", 0.07],
-            ["mrbm-2", "1", 0.08],
-            ["mrbm-2", "2", 0.06],
-            ["mrbm-2", "3", 0.08],
-            ["mrbm-2", "4", 0.05],
-            ["mrbm-2", "5", 0.05],
-            ["mrbm-2", "6", 0.02],
-            ["mrbm-2", "7", 0.02],
-            ["mrbm-2", "10", 0.10],
-            ["mrbm-2", "11", 0.05],
-            ["mrbm-2", "12", 0.04],
-            ["mrbm-2", "13", 0.09],
-            ["mrbm-2", "14", 0.02],
-            ["mrbm-2", "15", 0.01],
-            ["mrbm-2", "16", 0.01],
-        ])
+        td_data = pd.DataFrame(
+            [
+                ["icbm", "2", 0.05],
+                ["icbm", "6", 0.15],
+                ["icbm", "7", 0.10],
+                ["icbm", "8", 0.15],
+                ["icbm", "9", 0.20],
+                ["icbm", "18", 0.05],
+                ["mrbm-1", "1", 0.16],
+                ["mrbm-1", "2", 0.17],
+                ["mrbm-1", "3", 0.15],
+                ["mrbm-1", "4", 0.16],
+                ["mrbm-1", "5", 0.15],
+                ["mrbm-1", "6", 0.19],
+                ["mrbm-1", "7", 0.19],
+                ["mrbm-1", "8", 0.18],
+                ["mrbm-1", "9", 0.20],
+                ["mrbm-1", "10", 0.14],
+                ["mrbm-1", "12", 0.02],
+                ["mrbm-1", "14", 0.12],
+                ["mrbm-1", "15", 0.13],
+                ["mrbm-1", "16", 0.12],
+                ["mrbm-1", "17", 0.15],
+                ["mrbm-1", "18", 0.16],
+                ["mrbm-1", "19", 0.15],
+                ["mrbm-1", "20", 0.15],
+                ["lr-bomber", "1", 0.04],
+                ["lr-bomber", "2", 0.05],
+                ["lr-bomber", "3", 0.04],
+                ["lr-bomber", "4", 0.04],
+                ["lr-bomber", "5", 0.04],
+                ["lr-bomber", "6", 0.10],
+                ["lr-bomber", "7", 0.08],
+                ["lr-bomber", "8", 0.09],
+                ["lr-bomber", "9", 0.08],
+                ["lr-bomber", "10", 0.05],
+                ["lr-bomber", "11", 0.01],
+                ["lr-bomber", "12", 0.02],
+                ["lr-bomber", "13", 0.01],
+                ["lr-bomber", "14", 0.02],
+                ["lr-bomber", "15", 0.03],
+                ["lr-bomber", "16", 0.02],
+                ["lr-bomber", "17", 0.05],
+                ["lr-bomber", "18", 0.08],
+                ["lr-bomber", "19", 0.07],
+                ["lr-bomber", "20", 0.08],
+                ["f-bomber", "10", 0.04],
+                ["f-bomber", "11", 0.09],
+                ["f-bomber", "12", 0.08],
+                ["f-bomber", "13", 0.09],
+                ["f-bomber", "14", 0.08],
+                ["f-bomber", "15", 0.02],
+                ["f-bomber", "16", 0.07],
+                ["mrbm-2", "1", 0.08],
+                ["mrbm-2", "2", 0.06],
+                ["mrbm-2", "3", 0.08],
+                ["mrbm-2", "4", 0.05],
+                ["mrbm-2", "5", 0.05],
+                ["mrbm-2", "6", 0.02],
+                ["mrbm-2", "7", 0.02],
+                ["mrbm-2", "10", 0.10],
+                ["mrbm-2", "11", 0.05],
+                ["mrbm-2", "12", 0.04],
+                ["mrbm-2", "13", 0.09],
+                ["mrbm-2", "14", 0.02],
+                ["mrbm-2", "15", 0.01],
+                ["mrbm-2", "16", 0.01],
+            ]
+        )
 
-        wa_data = pd.DataFrame([
-            ["icbm", 200],
-            ["mrbm-1", 100],
-            ["lr-bomber", 300],
-            ["f-bomber", 150],
-            ["mrbm-2", 250],
-        ])
+        wa_data = pd.DataFrame(
+            [
+                ["icbm", 200],
+                ["mrbm-1", 100],
+                ["lr-bomber", 300],
+                ["f-bomber", 150],
+                ["mrbm-2", 250],
+            ]
+        )
 
-        tm_data = pd.DataFrame([
-            ["1", 30],
-            ["6", 100],
-            ["10", 40],
-            ["14", 50],
-            ["15", 70],
-            ["16", 35],
-            ["20", 10],
-        ])
+        tm_data = pd.DataFrame(
+            [
+                ["1", 30],
+                ["6", 100],
+                ["10", 40],
+                ["14", 50],
+                ["15", 70],
+                ["16", 35],
+                ["20", 10],
+            ]
+        )
 
         m = Container()
 
@@ -356,11 +365,13 @@ class ConditionSuite(unittest.TestCase):
         time_periods = [1, 2, 3, 4]
 
         # Example data for parameters
-        demand_data = pd.DataFrame({
-            "Product_A": {1: 100, 2: 150, 3: 120, 4: 180},
-            "Product_B": {1: 80, 2: 100, 3: 90, 4: 120},
-            "Product_C": {1: 50, 2: 60, 3: 70, 4: 80},
-        }).unstack()
+        demand_data = pd.DataFrame(
+            {
+                "Product_A": {1: 100, 2: 150, 3: 120, 4: 180},
+                "Product_B": {1: 80, 2: 100, 3: 90, 4: 120},
+                "Product_C": {1: 50, 2: 60, 3: 70, 4: 80},
+            }
+        ).unstack()
 
         setup_cost_data = pd.DataFrame(
             [("Product_A", 500), ("Product_B", 400), ("Product_C", 300)]

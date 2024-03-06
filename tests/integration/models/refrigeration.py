@@ -20,11 +20,7 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Variable
 
 
 def main():

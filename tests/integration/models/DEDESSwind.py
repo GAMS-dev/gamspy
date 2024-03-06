@@ -26,17 +26,18 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import pandas as pd
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def reformat_df(dataframe):

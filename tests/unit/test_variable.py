@@ -3,14 +3,9 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
-
 import gamspy._symbols.implicits as implicits
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Set
-from gamspy import Variable
-from gamspy import VariableType
+import pandas as pd
+from gamspy import Container, Equation, Set, Variable, VariableType
 from gamspy.exceptions import ValidationError
 
 

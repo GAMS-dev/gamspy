@@ -110,21 +110,22 @@ from __future__ import annotations
 import os
 from sys import float_info
 
-import numpy as np
-
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import numpy as np
+from gamspy import (
+    Alias,
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Number,
+    Options,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 

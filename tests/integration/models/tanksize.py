@@ -30,10 +30,7 @@ import os
 from pathlib import Path
 
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Model
-from gamspy import Sense
-from gamspy import Sum
+from gamspy import Container, Model, Sense, Sum
 
 
 def main():
@@ -66,27 +63,29 @@ def main():
         PRL,
         CSTCMin,
         CSTCMax,
-    ) = m.getSymbols([
-        "PRMIN",
-        "PRMAX",
-        "SLB",
-        "SUB",
-        "SI",
-        "DLB",
-        "DUB",
-        "DEMAND",
-        "TS",
-        "CSTI",
-        "CSTC",
-        "B",
-        "pdata",
-        "DPD",
-        "L",
-        "CAL",
-        "PRL",
-        "CSTCMin",
-        "CSTCMax",
-    ])
+    ) = m.getSymbols(
+        [
+            "PRMIN",
+            "PRMAX",
+            "SLB",
+            "SUB",
+            "SI",
+            "DLB",
+            "DUB",
+            "DEMAND",
+            "TS",
+            "CSTI",
+            "CSTC",
+            "B",
+            "pdata",
+            "DPD",
+            "L",
+            "CAL",
+            "PRL",
+            "CSTCMin",
+            "CSTCMax",
+        ]
+    )
 
     # Variables
     d, pC, s, sM, sH, cI, cC, cS, T, omega, cPT = m.getSymbols(
@@ -111,24 +110,26 @@ def main():
         NONIDLE,
         SEQUENCE,
         SYMMETRY,
-    ) = m.getSymbols([
-        "TIMECAP",
-        "UNIQUE",
-        "MATBAL",
-        "TANKCAP",
-        "PPN1",
-        "PPN2",
-        "SCCam1",
-        "SCCam2",
-        "DEFcC",
-        "DEFcI",
-        "DEFcS",
-        "DefsH",
-        "DEFcPT",
-        "NONIDLE",
-        "SEQUENCE",
-        "SYMMETRY",
-    ])
+    ) = m.getSymbols(
+        [
+            "TIMECAP",
+            "UNIQUE",
+            "MATBAL",
+            "TANKCAP",
+            "PPN1",
+            "PPN2",
+            "SCCam1",
+            "SCCam2",
+            "DEFcC",
+            "DEFcI",
+            "DEFcS",
+            "DefsH",
+            "DEFcPT",
+            "NONIDLE",
+            "SEQUENCE",
+            "SYMMETRY",
+        ]
+    )
 
     TIMECAP[...] = Sum(n, d[n] + Sum(p, TS[p] * omega[p, n])) == T
     UNIQUE[n] = Sum(p, omega[p, n]) <= 1
