@@ -668,31 +668,53 @@ class MiroSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             encoder.write_json()
 
-        last_item = Set(m, "l", is_miro_input=True)
+        m2 = Container()
+        i2 = Set(
+            m2,
+            name="i2",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j2 = Set(
+            m2,
+            name="j2",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+            is_miro_input=True,
+        )
         _ = Parameter(
-            m,
+            m2,
             name="last_item_miro_input",
-            domain=[i, last_item],
+            domain=[i2, j2],
+            records=distances,
             is_miro_input=True,
             is_miro_table=True,
         )
+        encoder = MiroJSONEncoder(m2)
         with self.assertRaises(ValidationError):
             encoder.write_json()
 
+        m3 = Container()
+        i3 = Set(m3, "i3", records=["i3"])
         _ = Parameter(
-            m,
+            m3,
             name="dimension_small",
-            domain=[i],
+            domain=i3,
+            records=[("i3", 2)],
             is_miro_input=True,
             is_miro_table=True,
         )
+        encoder = MiroJSONEncoder(m3)
         with self.assertRaises(ValidationError):
             encoder.write_json()
 
+        m4 = Container()
+        i4 = Set(m4, "i4", records=["i4"])
         _ = Parameter(
-            m,
+            m4,
             name="last_domain_str",
-            domain=[i, "bla"],
+            domain=[i4, "bla"],
+            records=[("i4", "bla", 2)],
             is_miro_input=True,
             is_miro_table=True,
         )
