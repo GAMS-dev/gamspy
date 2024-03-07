@@ -181,9 +181,10 @@ class Container(gt.Container):
             self._first_destruct = False
             # create conf_<model>/<model>_io.json
             encoder = MiroJSONEncoder(self)
-            encoder.writeJson()
-        except Exception:
-            pass
+            encoder.write_json()
+        except Exception as e:
+            if isinstance(e, ValidationError):
+                raise
 
     def _get_debugging_level(self, debugging_level: str):
         if (

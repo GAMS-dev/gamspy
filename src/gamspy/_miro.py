@@ -63,7 +63,6 @@ class MiroJSONEncoder:
         self.output_symbols = container._miro_output_symbols
         self.input_scalars = self._find_scalars(self.input_symbols)
         self.output_scalars = self._find_scalars(self.output_symbols)
-        self.miro_json = self.prepare_json()
 
     def _find_scalars(self, symbols: list[str]) -> list[str]:
         scalars = []
@@ -188,43 +187,66 @@ class MiroJSONEncoder:
             "object": "string",
         }
 
-        if isinstance(symbol, gp.Set) and symbol.records is None:
-            domain_keys = ["uni", "element_text"]
-            domain_values = [
-                {"type": "string", "alias": "uni"},
-                {"type": "string", "alias": "element_text"},
-            ]
-            return dict(zip(domain_keys, domain_values))
+        if symbol.records is None:
+            if isinstance(symbol, gp.Set):
+                domain_keys = ["uni", "element_text"]
+                domain_values = [
+                    {"type": "string", "alias": "uni"},
+                    {"type": "string", "alias": "element_text"},
+                ]
+                return dict(zip(domain_keys, domain_values))
+            elif isinstance(symbol, gp.Parameter):
+                domain_keys = symbol.domain_names + ["value"]
+                types = ["string"] * len(symbol.domain_names) + ["numeric"]
+            elif isinstance(symbol, (gp.Variable, gp.Equation)):
+                domain_keys = symbol.domain_names + [
+                    "level",
+                    "marginal",
+                    "lower",
+                    "upper",
+                    "scale",
+                ]
+                types = ["string"] * len(symbol.domain_names) + ["numeric"] * 5
 
-        domain_keys = symbol.records.columns.to_list()
-        if isinstance(symbol, gp.Parameter):
-            domain_keys = symbol.domain_labels + ["value"]
-        domain_values = []
+            domain_values = []
+            for column, column_type in zip(domain_keys, types):
+                try:
+                    elem = self.container[column]
+                    alias = elem.description if elem.description else column
+                except KeyError:
+                    alias = column
 
-        for dtype, column in zip(symbol.records.dtypes, domain_keys):
-            try:
-                elem = self.container[column]
-                alias = elem.description if elem.description else elem.name
-            except KeyError:
-                alias = column
+                domain_values.append({"type": column_type, "alias": alias})
+        else:
+            domain_keys = symbol.records.columns.to_list()
+            domain_values = []
 
-            domain_values.append(
-                {"type": type_map[dtype.name], "alias": alias}
-            )
+            for dtype, column in zip(symbol.records.dtypes, domain_keys):
+                try:
+                    elem = self.container[column]
+                    alias = elem.description if elem.description else elem.name
+                except KeyError:
+                    alias = column
 
-        if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
-            last_item = symbol.domain[-1]
-            self.validate_table(symbol, last_item)
+                domain_values.append(
+                    {"type": type_map[dtype.name], "alias": alias}
+                )
 
-            if isinstance(last_item, (gp.Set, gp.Alias)):
-                set_values = last_item.records["uni"].values.tolist()
+            if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
+                last_item = symbol.domain[-1]
+                self.validate_table(symbol, last_item)
 
-                domain_keys = domain_keys[:-2]
-                domain_keys += set_values
+                if isinstance(last_item, (gp.Set, gp.Alias)):
+                    set_values = last_item.records["uni"].values.tolist()
 
-                domain_values = domain_values[:-2]
-                for elem in last_item.records["uni"].values.tolist():
-                    domain_values.append({"type": "numeric", "alias": elem})
+                    domain_keys = domain_keys[:-2]
+                    domain_keys += set_values
+
+                    domain_values = domain_values[:-2]
+                    for elem in last_item.records["uni"].values.tolist():
+                        domain_values.append(
+                            {"type": "numeric", "alias": elem}
+                        )
 
         assert len(domain_keys) == len(domain_values)
         return dict(zip(domain_keys, domain_values))
@@ -292,7 +314,7 @@ class MiroJSONEncoder:
 
         return symbols_dict
 
-    def prepare_json(self) -> str:
+    def prepare_dict(self) -> dict:
         input_symbols_dict = self.prepare_symbols_dict(
             True, self.input_symbols
         )
@@ -306,10 +328,10 @@ class MiroJSONEncoder:
             "outputSymbols": output_symbols_dict,
         }
 
-        return json.dumps(miro_dict, indent=4)
+        return miro_dict
 
-    def writeJson(self):
-        content = self.prepare_json()
+    def write_json(self):
+        miro_dict = self.prepare_dict()
 
         filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         directory = os.path.dirname(sys.argv[0])
@@ -320,4 +342,6 @@ class MiroJSONEncoder:
             pass
 
         with open(os.path.join(conf_path, f"{filename}_io.json"), "w") as conf:
-            conf.write(content)
+            conf.write(json.dumps(miro_dict, indent=4))
+
+        return miro_dict

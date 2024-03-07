@@ -7,7 +7,8 @@ import subprocess
 import sys
 import unittest
 
-from gamspy import Container, Parameter, Set
+from gamspy import Container, Parameter, Set, Variable
+from gamspy._miro import MiroJSONEncoder
 
 
 class MiroSuite(unittest.TestCase):
@@ -453,6 +454,205 @@ class MiroSuite(unittest.TestCase):
             )
         except subprocess.CalledProcessError:
             self.fail("Columns are not as expected.")
+
+    def test_miro_encoder(self):
+        m = Container()
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+        _ = Set(
+            m,
+            name="model_type",
+            records=["lp"],
+            is_singleton=True,
+            is_miro_input=True,
+        )
+
+        # Data
+        _ = Parameter(
+            m,
+            name="a",
+            domain=[i],
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        _ = Parameter(
+            m,
+            name="b",
+            domain=[j],
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        _ = Parameter(
+            m,
+            name="table_without_records",
+            domain=[i, j],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        f = Parameter(
+            m,
+            name="f",
+            records=90,
+            description="freight in dollars per case per thousand miles",
+            is_miro_input=True,
+        )
+        c[i, j] = f * d[i, j] / 1000
+
+        # Variable
+        _ = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+            is_miro_output=True,
+        )
+        _ = Variable(
+            m,
+            name="z",
+            description="total transportation costs in thousands of dollars",
+            is_miro_output=True,
+        )
+
+        encoder = MiroJSONEncoder(m)
+        generated_json = encoder.write_json()
+        self.assertEqual(
+            generated_json,
+            {
+                "modelTitle": "GAMSPy App",
+                "inputSymbols": {
+                    "d": {
+                        "alias": "distance in thousands of miles",
+                        "symtype": "parameter",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "new-york": {
+                                "type": "numeric",
+                                "alias": "new-york",
+                            },
+                            "chicago": {"type": "numeric", "alias": "chicago"},
+                            "topeka": {"type": "numeric", "alias": "topeka"},
+                        },
+                    },
+                    "table_without_records": {
+                        "alias": "table_without_records",
+                        "symtype": "parameter",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "j": {"type": "string", "alias": "markets"},
+                            "value": {"type": "numeric", "alias": "value"},
+                        },
+                    },
+                    "_scalars": {
+                        "alias": "Input Scalars",
+                        "symnames": ["model_type", "f"],
+                        "symtext": [
+                            "model_type",
+                            "freight in dollars per case per thousand miles",
+                        ],
+                        "symtypes": ["set", "parameter"],
+                        "headers": {
+                            "scalar": {
+                                "type": "string",
+                                "alias": "Scalar Name",
+                            },
+                            "description": {
+                                "type": "string",
+                                "alias": "Scalar Description",
+                            },
+                            "value": {
+                                "type": "string",
+                                "alias": "Scalar Value",
+                            },
+                        },
+                    },
+                },
+                "outputSymbols": {
+                    "x": {
+                        "alias": "shipment quantities in cases",
+                        "symtype": "variable",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "j": {"type": "string", "alias": "markets"},
+                            "level": {"type": "numeric", "alias": "level"},
+                            "marginal": {
+                                "type": "numeric",
+                                "alias": "marginal",
+                            },
+                            "lower": {"type": "numeric", "alias": "lower"},
+                            "upper": {"type": "numeric", "alias": "upper"},
+                            "scale": {"type": "numeric", "alias": "scale"},
+                        },
+                    },
+                    "_scalarsve_out": {
+                        "alias": "Output Variable/Equation Scalars",
+                        "symnames": ["z"],
+                        "symtext": [
+                            "total transportation costs in thousands of dollars"
+                        ],
+                        "symtypes": ["variable"],
+                        "headers": {
+                            "scalar": {
+                                "type": "string",
+                                "alias": "Scalar Name",
+                            },
+                            "description": {
+                                "type": "string",
+                                "alias": "Scalar Description",
+                            },
+                            "level": {"type": "numeric", "alias": "Level"},
+                            "marginal": {
+                                "type": "numeric",
+                                "alias": "Marginal",
+                            },
+                            "lower": {"type": "numeric", "alias": "Lower"},
+                            "upper": {"type": "numeric", "alias": "Upper"},
+                            "scale": {"type": "numeric", "alias": "Scale"},
+                        },
+                    },
+                },
+            },
+        )
 
 
 def miro_suite():
