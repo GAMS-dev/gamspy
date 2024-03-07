@@ -485,7 +485,7 @@ class MiroSuite(unittest.TestCase):
             records=["new-york", "chicago", "topeka"],
             description="markets",
         )
-        _ = Set(m, name="k")
+        _ = Set(m, name="k", is_miro_input=True)
         _ = Set(
             m,
             name="model_type",
@@ -563,6 +563,17 @@ class MiroSuite(unittest.TestCase):
             {
                 "modelTitle": "GAMSPy App",
                 "inputSymbols": {
+                    "k": {
+                        "alias": "k",
+                        "symtype": "set",
+                        "headers": {
+                            "uni": {"type": "string", "alias": "uni"},
+                            "element_text": {
+                                "type": "string",
+                                "alias": "element_text",
+                            },
+                        },
+                    },
                     "d": {
                         "alias": "distance in thousands of miles",
                         "symtype": "parameter",
@@ -718,6 +729,7 @@ class MiroSuite(unittest.TestCase):
             is_miro_input=True,
             is_miro_table=True,
         )
+        encoder = MiroJSONEncoder(m4)
         with self.assertRaises(ValidationError):
             encoder.write_json()
 

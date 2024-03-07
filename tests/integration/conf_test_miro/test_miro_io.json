@@ -1,6 +1,20 @@
 {
     "modelTitle": "GAMSPy App",
     "inputSymbols": {
+        "k": {
+            "alias": "k",
+            "symtype": "set",
+            "headers": {
+                "uni": {
+                    "type": "string",
+                    "alias": "uni"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        },
         "d": {
             "alias": "distance in thousands of miles",
             "symtype": "parameter",
