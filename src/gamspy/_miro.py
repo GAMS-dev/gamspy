@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, no_type_check
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
@@ -15,6 +15,7 @@ MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
+@no_type_check
 def get_load_input_str(statement: str, gdx_in: str) -> str:
     string = "$gdxIn\n"  # close the old one
     string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
@@ -25,11 +26,13 @@ def get_load_input_str(statement: str, gdx_in: str) -> str:
     return string
 
 
+@no_type_check
 def get_unload_output_str(container: Container) -> str:
     unload_str = ",".join(container._miro_output_symbols)
     return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
 
 
+@no_type_check
 def load_miro_symbol_records(container: Container):
     # Load records of miro input symbols
     if MIRO_GDX_IN and container._miro_input_symbols:

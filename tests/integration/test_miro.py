@@ -9,6 +9,7 @@ import unittest
 
 from gamspy import Container, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
+from gamspy.exceptions import ValidationError
 
 
 class MiroSuite(unittest.TestCase):
@@ -484,6 +485,7 @@ class MiroSuite(unittest.TestCase):
             records=["new-york", "chicago", "topeka"],
             description="markets",
         )
+        _ = Set(m, name="k")
         _ = Set(
             m,
             name="model_type",
@@ -653,6 +655,49 @@ class MiroSuite(unittest.TestCase):
                 },
             },
         )
+
+        _ = Parameter(
+            m,
+            name="table_with_domain_forwarding",
+            domain=[i, j],
+            records=distances,
+            is_miro_input=True,
+            is_miro_table=True,
+            domain_forwarding=True,
+        )
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        last_item = Set(m, "l", is_miro_input=True)
+        _ = Parameter(
+            m,
+            name="last_item_miro_input",
+            domain=[i, last_item],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        _ = Parameter(
+            m,
+            name="dimension_small",
+            domain=[i],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        _ = Parameter(
+            m,
+            name="last_domain_str",
+            domain=[i, "bla"],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
 
 
 def miro_suite():
