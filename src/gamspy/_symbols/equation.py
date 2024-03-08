@@ -555,11 +555,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         -------
         DataFrame
         """
-        if not self._is_dirty:
-            return self._records
-
-        self.container._run()
-
         return self._records
 
     @records.setter

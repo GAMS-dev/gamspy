@@ -3,27 +3,23 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
 from gamspy import Container, Parameter, Set, Variable
 
 
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_magics(self):
-        # Prepare data
-        demands = pd.DataFrame(
-            [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-        )
-
         # Set
-        i = Set(self.m, name="i", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.markets)
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[i], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=self.demands)
 
         # Variable
         x = Variable(self.m, name="x", domain=[i], type="Positive")

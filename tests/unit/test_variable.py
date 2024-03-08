@@ -41,6 +41,13 @@ class VariableSuite(unittest.TestCase):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
+
+        # Same name, different domain forwarding
+        _ = Variable(self.m, "k")
+        self.assertRaises(
+            ValueError, Variable, self.m, "k", "free", None, None, True
+        )
+
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Variable(m, "var1", domain=[set1])

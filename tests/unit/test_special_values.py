@@ -77,6 +77,11 @@ class SpecialValuesSuite(unittest.TestCase):
             'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
         )
 
+        dummy = Parameter(self.m, "dummy")
+        i = Set(self.m, "i", records=["i1", "i2"])
+        dummy[...] = gp.Sum(i, -0.0)
+        self.assertEqual(dummy._assignment.gamsRepr(), "dummy = sum(i,EPS);")
+
 
 def special_values_suite():
     suite = unittest.TestSuite()

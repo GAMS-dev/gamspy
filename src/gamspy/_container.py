@@ -167,7 +167,7 @@ class Container(gt.Container):
             self.read(load_from)
             self._run()
 
-    def __del__(self):
+    def __del__(self):  # pragma: no cover
         try:
             if (
                 not IS_MIRO_INIT
@@ -198,7 +198,7 @@ class Container(gt.Container):
 
         return debugging_level
 
-    def _write_default_gdx_miro(self):
+    def _write_default_gdx_miro(self):  # pragma: no cover
         # create data_<model>/default.gdx
         symbols = self._miro_input_symbols + self._miro_output_symbols
 
@@ -396,7 +396,7 @@ class Container(gt.Container):
         self._is_first_run = False
 
         if IS_MIRO_INIT:
-            self._write_default_gdx_miro()
+            self._write_default_gdx_miro()  # pragma: no cover
 
         return summary
 
@@ -930,7 +930,14 @@ class Container(gt.Container):
             self._gdx_in, self._gdx_out, [], [], True
         )
 
-    def getEquations(self):
+    def getEquations(self) -> list[Equation]:
+        """
+        Returns all equation symbols in the Container.
+
+        Returns
+        -------
+        list[Equation]
+        """
         equations = [
             equation
             for equation in self.listEquations()

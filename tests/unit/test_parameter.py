@@ -12,8 +12,20 @@ from gamspy.exceptions import GamspyException, ValidationError
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_creation(self):
         # no name
@@ -46,30 +58,26 @@ class ParameterSuite(unittest.TestCase):
             _ = Parameter(m, "param1", domain=[set1])
 
     def test_parameter_string(self):
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
-
         # Check if the name is reserved
         self.assertRaises(ValidationError, Parameter, self.m, "set")
 
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             self.m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
-            description="distances",
+            records=self.capacities,
+            description="capacities",
         )
 
         self.assertEqual(
             a.getStatement(),
-            'Parameter a(i) "distances";',
+            'Parameter a(i) "capacities";',
         )
 
         b = Parameter(self.m, "b")
@@ -79,21 +87,18 @@ class ParameterSuite(unittest.TestCase):
 
     def test_implicit_parameter_string(self):
         m = Container()
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
 
         i = Set(
             m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         self.assertEqual(a[i].gamsRepr(), "a(i)")
@@ -131,30 +136,24 @@ class ParameterSuite(unittest.TestCase):
 
     def test_implicit_parameter_assignment(self):
         m = Container()
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
-
         i = Set(
             m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         b = Parameter(
             m,
             name="b",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         a[i] = b[i]

@@ -31,7 +31,6 @@ from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
-import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
@@ -154,12 +153,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
 
     def __iter__(self):
         return self
-
-    def __le__(self, other):
-        return expression.Expression(self, "<=", other)
-
-    def __ge__(self, other):
-        return expression.Expression(self, ">=", other)
 
     def gamsRepr(self) -> str:
         """
