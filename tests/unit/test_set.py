@@ -11,8 +11,20 @@ from gamspy.exceptions import ValidationError
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_set_creation(self):
         # no name
@@ -57,7 +69,7 @@ class SetSuite(unittest.TestCase):
         i = Set(
             self.m,
             "i",
-            records=["seattle", "san-diego"],
+            records=self.canning_plants,
             description="dummy set",
         )
         self.assertEqual(i.gamsRepr(), "i")
@@ -106,7 +118,7 @@ class SetSuite(unittest.TestCase):
             j[k] = 5
 
     def test_set_operators(self):
-        i = Set(self.m, "i", records=["seattle", "san-diego"])
+        i = Set(self.m, "i", records=self.canning_plants)
         card = Card(i)
         self.assertEqual(card.gamsRepr(), "card(i)")
 
@@ -131,8 +143,8 @@ class SetSuite(unittest.TestCase):
         )
 
     def test_set_operations(self):
-        i = Set(self.m, "i", records=["seattle", "san-diego"])
-        k = Set(self.m, "k", records=["seattle", "san-diego"])
+        i = Set(self.m, "i", records=self.canning_plants)
+        k = Set(self.m, "k", records=self.canning_plants)
         union = i + k
         self.assertEqual(union.gamsRepr(), "i + k")
 

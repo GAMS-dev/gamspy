@@ -25,8 +25,20 @@ from gamspy.math import sqr
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_equation_creation(self):
         # no name
@@ -201,33 +213,18 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(eq[e[u, v]].gamsRepr(), "eq(e(u,v))")
 
     def test_equation_definition(self):
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        canning_plants = ["seattle", "san-diego"]
-        markets = ["new-york", "chicago", "topeka"]
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-
         # Sets
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
-        j = Set(self.m, name="j", records=markets, description="Markets")
+        j = Set(self.m, name="j", records=self.markets, description="Markets")
 
         # Params
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
