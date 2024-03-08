@@ -108,7 +108,6 @@ SCOPES = [
     "USAGE",
     "AUTH",
     "CONFIGURATION",
-    "ALL",
 ]
 
 
