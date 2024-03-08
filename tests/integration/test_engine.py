@@ -345,6 +345,7 @@ class EngineSuite(unittest.TestCase):
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
+            is_blocking=False,
         )
         transport.solve(backend="engine", client=client)
 
@@ -366,7 +367,7 @@ class EngineSuite(unittest.TestCase):
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 
-    def test_api(self):
+    def test_api_job(self):
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
@@ -376,6 +377,46 @@ class EngineSuite(unittest.TestCase):
         )
 
         gms_path = os.path.join(os.getcwd(), "dummy.gms")
+        with open(gms_path, "w") as file:
+            file.write("Set i / i1*i3 /;")
+
+        token = client.job.post(os.getcwd(), gms_path)
+
+        status, _, _ = client.job.get(token)
+        while status != 10:
+            status, _, _ = client.job.get(token)
+            print(client.job.get_logs(token))
+
+    def test_api_auth(self):
+        # /api/auth -> post
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        token = client.auth.post(scope=["JOBS", "AUTH"])
+        self.assertTrue(token is not None and isinstance(token, str))
+
+        # /api/auth/login -> post
+        token = client.auth.login(scope=["JOBS", "AUTH"])
+        self.assertTrue(token is not None and isinstance(token, str))
+
+        # /api/auth/logout -> post
+        message = client.auth.logout()
+        self.assertTrue(message is not None and isinstance(message, str))
+
+        # First get a JWT token, then send a job
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        _ = client.auth.login(scope=["JOBS", "AUTH"])
+        gms_path = os.path.join(os.getcwd(), "dummy2.gms")
         with open(gms_path, "w") as file:
             file.write("Set i / i1*i3 /;")
 

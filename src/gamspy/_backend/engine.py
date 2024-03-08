@@ -48,6 +48,7 @@ import gamspy._backend.backend as backend
 from gamspy.exceptions import (
     EngineClientException,
     EngineException,
+    GamspyException,
     ValidationError,
 )
 
@@ -96,24 +97,190 @@ def get_relative_paths(paths: list[str], start: str) -> list[str]:
     return relative_paths
 
 
+SCOPES = [
+    "READONLY",
+    "NAMESPACES",
+    "JOBS",
+    "USERS",
+    "HYPERCUBE",
+    "CLEANUP",
+    "LICENSES",
+    "USAGE",
+    "AUTH",
+    "CONFIGURATION",
+    "ALL",
+]
+
+
 class Endpoint:
-    ...
+    def get_request_headers(self):
+        return {
+            "Authorization": self.client._engine_config._get_auth_header(),
+            "User-Agent": "GAMSPy EngineClient",
+            "Accept": "application/json",
+        }
+
+
+class Auth(Endpoint):
+    def __init__(self, client: EngineClient) -> None:
+        self.client = client
+        self._http = client._http
+        self.extra_model_files = client.extra_model_files
+        self.engine_options = client.engine_options
+
+    def post(
+        self,
+        expires_in: int = 14400,
+        scope: list[str] | None = None,
+    ) -> str:
+        """
+        Creates a JSON Web Token(JWT) for authentication
+
+        Parameters
+        ----------
+        expires_in : int, optional
+            Expiration time, by default 14400
+        scope : list[str] | None, optional
+            Scope of the token, by default None
+
+        Returns
+        -------
+        str
+            token
+
+        Raises
+        ------
+        EngineClientException
+            In case bad request
+        EngineClientException
+            In case unauthorized request
+        EngineClientException
+            In case there is an internal error
+        GamspyException
+            In case the status code is unrecognized
+        """
+        info = {"expires_in": str(expires_in)}
+
+        if isinstance(scope, list):
+            for elem in scope:
+                if elem not in SCOPES:
+                    raise ValidationError(f"{elem} is not a valid scope")
+
+            scope_info = " ".join(scope)
+            info.update({"scope": scope_info})
+
+        r = self._http.request(
+            "POST",
+            self.client._engine_config.host
+            + "/auth/?"
+            + urllib.parse.urlencode(info, doseq=True),
+            headers=self.get_request_headers(),
+        )
+
+        response_data = r.data.decode("utf-8", errors="replace")
+        info = json.loads(response_data)
+
+        if r.status == 200:
+            return info["token"]
+        elif r.status == 400:
+            raise EngineClientException(f"Bad request: {info['message']}")
+        elif r.status == 401:
+            raise EngineClientException(f"Unauthorized: {info['message']}")
+        elif r.status == 500:
+            raise EngineClientException(f"Internal error: {info['message']}")
+        else:
+            raise GamspyException(f"Unrecognized status code {r.status}")
+
+    def login(
+        self, expires_in: int = 14400, scope: list[str] | None = None
+    ) -> str:
+        """
+        Creates a JSON Web Token(JWT) for authentication (username and password in request body)
+
+        Parameters
+        ----------
+        expires_in : int, optional
+            Expiration time for the token, by default 14400
+        scope: list[str], optional
+            Scope of the token, by default None
+
+        Returns
+        -------
+        str
+        """
+        info = {
+            "username": self.client._engine_config.username,
+            "password": self.client._engine_config.password,
+            "expires_in": expires_in,
+        }
+
+        if isinstance(scope, list):
+            for elem in scope:
+                if elem not in SCOPES:
+                    raise ValidationError(f"{elem} is not a valid scope")
+
+            scope_info = " ".join(scope)
+            info.update({"scope": scope_info})
+
+        r = self._http.request(
+            "POST",
+            self.client._engine_config.host + "/auth/login",
+            fields=info,
+            headers=self.get_request_headers(),
+        )
+
+        response_data = r.data.decode("utf-8", errors="replace")
+        info = json.loads(response_data)
+
+        if r.status == 200:
+            self.client._engine_config.jwt = info["token"]
+            return info["token"]
+        elif r.status == 400:
+            raise EngineClientException(f"Bad request: {info['message']}")
+        elif r.status == 401:
+            raise EngineClientException(f"Unauthorized: {info['message']}")
+        elif r.status == 500:
+            raise EngineClientException(f"Internal error: {info['message']}")
+        else:
+            raise GamspyException(f"Unrecognized status code {r.status}")
+
+    def logout(self) -> str:
+        """
+        Invalidates all of your JSON Web Tokens(JWTs)
+
+        Returns
+        -------
+        str
+            message
+        """
+        r = self._http.request(
+            "POST",
+            self.client._engine_config.host + "/auth/logout",
+            headers=self.get_request_headers(),
+        )
+
+        response_data = r.data.decode("utf-8", errors="replace")
+        info = json.loads(response_data)
+
+        if r.status == 200:
+            self.client._engine_config.jwt = None
+            return info["message"]
+        elif r.status == 400:
+            raise EngineClientException(f"Bad request: {info['message']}")
+        elif r.status == 401:
+            raise EngineClientException(f"Unauthorized: {info['message']}")
+        elif r.status == 500:
+            raise EngineClientException(f"Internal error: {info['message']}")
+        else:
+            raise GamspyException(f"Unrecognized status code {r.status}")
 
 
 class Job(Endpoint):
-    def __init__(
-        self,
-        http: urllib3.PoolManager,
-        extra_model_files: list,
-        engine_config: GamsEngineConfiguration,
-        request_headers: dict,
-        engine_options: dict | None = None,
-    ) -> None:
-        self._http = http
-        self.extra_model_files = extra_model_files
-        self.engine_options = engine_options
-        self._engine_config = engine_config
-        self._request_headers = request_headers
+    def __init__(self, client: EngineClient) -> None:
+        self.client = client
+        self._http = client._http
+        self.extra_model_files = client.extra_model_files
+        self.engine_options = client.engine_options
 
     def get(self, token: str) -> tuple[int, str, int | None]:
         """
@@ -138,8 +305,8 @@ class Job(Endpoint):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "GET",
-                self._engine_config.host + f"/jobs/{token}",
-                headers=self._request_headers,
+                self.client._engine_config.host + f"/jobs/{token}",
+                headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
 
@@ -216,11 +383,11 @@ class Job(Endpoint):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "POST",
-                self._engine_config.host
+                self.client._engine_config.host
                 + "/jobs/?"
                 + urllib.parse.urlencode(query_params, doseq=True),
                 fields=file_params,
-                headers=self._request_headers,
+                headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
             if r.status == 201:
@@ -268,8 +435,8 @@ class Job(Endpoint):
 
         r = self._http.request(
             "GET",
-            self._engine_config.host + f"/jobs/{token}/result",
-            headers=self._request_headers,
+            self.client._engine_config.host + f"/jobs/{token}/result",
+            headers=self.get_request_headers(),
             preload_content=False,
         )
 
@@ -320,8 +487,8 @@ class Job(Endpoint):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "DELETE",
-                self._engine_config.host + "/jobs/" + token + "/result",
-                headers=self._request_headers,
+                self.client._engine_config.host + "/jobs/" + token + "/result",
+                headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
 
@@ -374,8 +541,8 @@ class Job(Endpoint):
         for attempt_number in range(MAX_REQUEST_ATTEMPS):
             r = self._http.request(
                 "DELETE",
-                self._engine_config.host + f"/jobs/{token}/unread-logs",
-                headers=self._request_headers,
+                self.client._engine_config.host + f"/jobs/{token}/unread-logs",
+                headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
             response_data = json.loads(response_data)
@@ -430,7 +597,7 @@ class Job(Endpoint):
             copy.deepcopy(self.engine_options) if self.engine_options else {}
         )
 
-        query_params["namespace"] = self._engine_config.namespace
+        query_params["namespace"] = self.client._engine_config.namespace
 
         if "data" in query_params or "model_data" in query_params:
             raise ValidationError(
@@ -514,20 +681,11 @@ class EngineClient:
         )
 
         self._engine_config = self._get_engine_config()
-        self._request_headers = {
-            "Authorization": self._engine_config._get_auth_header(),
-            "User-Agent": "GAMSPy EngineClient",
-            "Accept": "application/json",
-        }
 
         # Endpoints
-        self.job = Job(
-            self._http,
-            extra_model_files,
-            self._engine_config,
-            self._request_headers,
-            engine_options,
-        )
+        self.job = Job(self)
+
+        self.auth = Auth(self)
 
     def _get_engine_config(self):
         try:
