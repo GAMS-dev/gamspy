@@ -5,7 +5,6 @@ import unittest
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gams_math
-import pandas as pd
 from gamspy import Container, Equation, Parameter, Set, Variable
 from gamspy.exceptions import ValidationError
 
@@ -13,20 +12,17 @@ from gamspy.exceptions import ValidationError
 class MathSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_math(self):
-        # Prepare data
-        demands = pd.DataFrame(
-            [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-        )
-
         # Set
-        i = Set(self.m, name="i", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.markets)
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[i], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=self.demands)
         s1 = Parameter(self.m, name="s1", records=5)
         s2 = Parameter(self.m, name="s2", records=3)
         s3 = Parameter(self.m, name="s3", records=6)

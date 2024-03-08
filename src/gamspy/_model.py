@@ -532,10 +532,7 @@ class Model:
         ValidationError
             If the job is not initialized
         """
-        if self.container._job is not None:
-            self.container._job.interrupt()
-        else:
-            raise ValidationError("There is no initialized job to interrupt.")
+        self.container._job.interrupt()
 
     def freeze(
         self,

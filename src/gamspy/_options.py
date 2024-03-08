@@ -199,7 +199,7 @@ def _fix_log_option(
     # Output = writer & debug_logfile = True -> logOption = 4
     # will be implemented once GAMS Control allows it
     if output is not None and create_log_file:
-        ...
+        raise NotImplementedError("This functionality is not implemented yet.")
 
     return options
 

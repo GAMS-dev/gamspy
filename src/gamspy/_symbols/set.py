@@ -435,12 +435,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             has_symbol = True
 
         if has_symbol:
-            if not isinstance(self, Set):
-                raise TypeError(
-                    f"Cannot overwrite symbol {self.name} in container"
-                    " because it is not a Set object)"
-                )
-
             if any(
                 d1 != d2
                 for d1, d2 in itertools.zip_longest(self.domain, domain)
@@ -533,12 +527,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self._current_index = 0
         raise StopIteration
 
-    def __le__(self, other):
-        return expression.Expression(self, "<=", other)
-
-    def __ge__(self, other):
-        return expression.Expression(self, ">=", other)
-
     def __iter__(self):
         return self
 
@@ -578,11 +566,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         -------
         DataFrame
         """
-        if not self._is_dirty:
-            return self._records
-
-        self.container._run()
-
         return self._records
 
     @records.setter

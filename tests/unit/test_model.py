@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
 from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 
@@ -11,39 +10,35 @@ from gamspy.exceptions import ValidationError
 class ModelSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_model(self):
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        canning_plants = ["seattle", "san-diego"]
-        markets = ["new-york", "chicago", "topeka"]
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
         # Sets
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
-        j = Set(self.m, name="j", records=markets, description="Markets")
+        j = Set(self.m, name="j", records=self.markets, description="Markets")
 
         # Params
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -179,32 +174,29 @@ class ModelSuite(unittest.TestCase):
             "Model test_model6 / supply,demand.x /;",
         )
 
+        # Test repr and str
+        self.assertTrue(
+            test_model6.__repr__().startswith(f"<Model `{test_model6.name}`")
+        )
+        self.assertTrue(
+            str(test_model6).startswith(
+                f"Model {test_model6.name}:\n  Problem Type: LP\n  Sense: MIN\n  Equations:"
+            )
+        )
+
     def test_feasibility(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -250,34 +242,19 @@ class ModelSuite(unittest.TestCase):
         )
 
     def test_tuple_equations(self):
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        canning_plants = ["seattle", "san-diego"]
-        markets = ["new-york", "chicago", "topeka"]
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
         # Sets
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
-        j = Set(self.m, name="j", records=markets, description="Markets")
+        j = Set(self.m, name="j", records=self.markets, description="Markets")
 
         # Params
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 

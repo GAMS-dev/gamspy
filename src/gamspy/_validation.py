@@ -28,7 +28,7 @@ def get_dimension(
     return dimension
 
 
-def get_domain_path(symbol) -> list[str]:
+def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     path = []
     domain = symbol
 
@@ -62,7 +62,7 @@ def validate_dimension(
 
 
 def validate_one_dimensional_sets(
-    given: str | Set | Alias | ImplicitSet,
+    given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
     if isinstance(given, implicits.ImplicitSet):
