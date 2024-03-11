@@ -415,7 +415,13 @@ class EngineSuite(unittest.TestCase):
             namespace=os.environ["ENGINE_NAMESPACE"],
         )
 
-        _ = client.auth.login(scope=["JOBS", "AUTH"])
+        jwt_token = client.auth.login(scope=["JOBS", "AUTH"])
+
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            jwt=jwt_token,
+        )
         gms_path = os.path.join(os.getcwd(), "dummy2.gms")
         with open(gms_path, "w") as file:
             file.write("Set i / i1*i3 /;")
@@ -425,7 +431,9 @@ class EngineSuite(unittest.TestCase):
         status, _, _ = client.job.get(token)
         while status != 10:
             status, _, _ = client.job.get(token)
-            print(client.job.get_logs(token))
+
+        output_buffer, _ = client.job.get_logs(token)
+        print(output_buffer)
 
 
 def engine_suite():

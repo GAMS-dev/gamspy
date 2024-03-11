@@ -225,7 +225,6 @@ class Auth(Endpoint):
             "POST",
             self.client._engine_config.host + "/auth/login",
             fields=info,
-            headers=self.get_request_headers(),
         )
 
         response_data = r.data.decode("utf-8", errors="replace")
@@ -529,8 +528,8 @@ class Job(Endpoint):
 
         Returns
         -------
-        str
-            Current output buffer
+        tuple[str, bool]
+            Current output buffer and queue finished status
 
         Raises
         ------
