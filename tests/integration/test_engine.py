@@ -403,10 +403,6 @@ class EngineSuite(unittest.TestCase):
         token = client.auth.login(scope=["JOBS", "AUTH"])
         self.assertTrue(token is not None and isinstance(token, str))
 
-        # /api/auth/logout -> post
-        message = client.auth.logout()
-        self.assertTrue(message is not None and isinstance(message, str))
-
         # First get a JWT token, then send a job
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
@@ -434,6 +430,10 @@ class EngineSuite(unittest.TestCase):
 
         output_buffer, _ = client.job.get_logs(token)
         print(output_buffer)
+
+        # /api/auth/logout -> post
+        message = client.auth.logout()
+        self.assertTrue(message is not None and isinstance(message, str))
 
 
 def engine_suite():

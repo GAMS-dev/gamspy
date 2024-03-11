@@ -231,7 +231,6 @@ class Auth(Endpoint):
         info = json.loads(response_data)
 
         if r.status == 200:
-            self.client._engine_config.jwt = info["token"]
             return info["token"]
         elif r.status == 400:
             raise EngineClientException(f"Bad request: {info['message']}")
