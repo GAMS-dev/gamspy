@@ -427,9 +427,8 @@ class EngineSuite(unittest.TestCase):
         status, _, _ = client.job.get(token)
         while status != 10:
             status, _, _ = client.job.get(token)
-
-        output_buffer, _ = client.job.get_logs(token)
-        print(output_buffer)
+            output_buffer, _ = client.job.get_logs(token)
+            print(output_buffer)
 
         # /api/auth/logout -> post
         message = client.auth.logout()
