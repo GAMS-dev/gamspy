@@ -36,14 +36,10 @@ def load_miro_symbol_records(container: Container):  # pragma: no cover
         container._load_records_from_gdx(
             MIRO_GDX_IN, container._miro_input_symbols
         )
-        for symbol in container._miro_input_symbols:
-            if (
-                isinstance(container[symbol], gp.Parameter)
-                and container[symbol]._is_miro_table
-            ):
-                container[symbol]._records.columns = container[
-                    symbol
-                ].domain_names + ["value"]
+        for name in container._miro_input_symbols:
+            symbol = container[name]
+            if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
+                symbol._records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols
     if MIRO_GDX_OUT and container._miro_output_symbols:
