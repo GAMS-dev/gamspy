@@ -197,7 +197,10 @@ class MiroJSONEncoder:
 
                 set_values = last_item.records["uni"].values.tolist()
 
-                domain_keys = domain_keys[:1] + set_values
+                domain_keys = (
+                    [domain_keys[0]] if domain_keys[0] != "*" else ["uni"]
+                )
+                domain_keys += set_values
                 types = ["string"] + ["numeric"] * len(set_values)
         elif isinstance(symbol, (gp.Variable, gp.Equation)):
             domain_keys = symbol.domain_names + [

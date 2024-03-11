@@ -553,7 +553,6 @@ class MiroSuite(unittest.TestCase):
 
         encoder = MiroJSONEncoder(m)
         generated_json = encoder.write_json()
-        print(generated_json)
         self.assertEqual(
             generated_json,
             {
