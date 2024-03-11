@@ -30,7 +30,9 @@ def get_unload_output_str(container: Container) -> str:  # pragma: no cover
     return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
 
 
-def load_miro_symbol_records(container: Container):  # pragma: no cover
+def load_miro_symbol_records(
+    container: Container, is_implicit: bool = False
+):  # pragma: no cover
     # Load records of miro input symbols
     if MIRO_GDX_IN and container._miro_input_symbols:
         container._load_records_from_gdx(
@@ -42,7 +44,7 @@ def load_miro_symbol_records(container: Container):  # pragma: no cover
                 symbol._records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols
-    if MIRO_GDX_OUT and container._miro_output_symbols:
+    if MIRO_GDX_OUT and container._miro_output_symbols and not is_implicit:
         container._load_records_from_gdx(
             MIRO_GDX_OUT, container._miro_output_symbols
         )
