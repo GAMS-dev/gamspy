@@ -45,13 +45,17 @@
                     "type": "string",
                     "alias": "canning plants"
                 },
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
+                "new-york": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "new-york"
+                },
+                "chicago": {
+                    "type": "numeric",
+                    "alias": "chicago"
+                },
+                "topeka": {
+                    "type": "numeric",
+                    "alias": "topeka"
                 }
             }
         },

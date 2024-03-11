@@ -280,6 +280,28 @@ class MiroSuite(unittest.TestCase):
                 {
                     "modelTitle": "GAMSPy App",
                     "inputSymbols": {
+                        "k": {
+                            "alias": "k",
+                            "symtype": "set",
+                            "headers": {
+                                "uni": {"type": "string", "alias": "uni"},
+                                "element_text": {
+                                    "type": "string",
+                                    "alias": "element_text",
+                                },
+                            },
+                        },
+                        "a": {
+                            "alias": "capacity of plant i in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "I": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
                         "b": {
                             "alias": "demand at market j in cases",
                             "symtype": "parameter",
@@ -300,26 +322,6 @@ class MiroSuite(unittest.TestCase):
                                 "value": {"type": "numeric", "alias": "value"},
                             },
                         },
-                        "jlocdata": {
-                            "alias": "Market location information",
-                            "symtype": "parameter",
-                            "headers": {
-                                "j": {"type": "string", "alias": "markets"},
-                                "lat": {"type": "numeric", "alias": "lat"},
-                                "lnG": {"type": "numeric", "alias": "lnG"},
-                            },
-                        },
-                        "a": {
-                            "alias": "capacity of plant i in cases",
-                            "symtype": "parameter",
-                            "headers": {
-                                "I": {
-                                    "type": "string",
-                                    "alias": "canning plants",
-                                },
-                                "value": {"type": "numeric", "alias": "value"},
-                            },
-                        },
                         "ilocdata": {
                             "alias": "Plant location information",
                             "symtype": "parameter",
@@ -332,15 +334,13 @@ class MiroSuite(unittest.TestCase):
                                 "lnG": {"type": "numeric", "alias": "lnG"},
                             },
                         },
-                        "k": {
-                            "alias": "k",
-                            "symtype": "set",
+                        "jlocdata": {
+                            "alias": "Market location information",
+                            "symtype": "parameter",
                             "headers": {
-                                "uni": {"type": "string", "alias": "uni"},
-                                "element_text": {
-                                    "type": "string",
-                                    "alias": "element_text",
-                                },
+                                "j": {"type": "string", "alias": "markets"},
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lnG": {"type": "numeric", "alias": "lnG"},
                             },
                         },
                         "_scalars": {
@@ -348,10 +348,7 @@ class MiroSuite(unittest.TestCase):
                             "symnames": ["type", "f", "mins", "beta"],
                             "symtext": [
                                 "selected model type",
-                                (
-                                    "freight in dollars per case per thousand"
-                                    " miles"
-                                ),
+                                "freight in dollars per case per thousand miles",
                                 "minimum shipment (MIP- and MINLP-only)",
                                 "beta (MINLP-only)",
                             ],
@@ -386,7 +383,6 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "canning plants",
                                 },
-                                "j": {"type": "string", "alias": "markets"},
                                 "lngP": {"type": "numeric", "alias": "lngP"},
                                 "latP": {"type": "numeric", "alias": "latP"},
                                 "lngM": {"type": "numeric", "alias": "lngM"},
@@ -394,7 +390,7 @@ class MiroSuite(unittest.TestCase):
                                 "cap": {"type": "numeric", "alias": "cap"},
                                 "demand": {
                                     "type": "numeric",
-                                    "alias": "demand",
+                                    "alias": "satisfy demand at market j",
                                 },
                                 "quantities": {
                                     "type": "numeric",
@@ -406,8 +402,7 @@ class MiroSuite(unittest.TestCase):
                             "alias": "Output Scalars",
                             "symnames": ["total_cost"],
                             "symtext": [
-                                "total transportation costs in thousands of"
-                                " dollars"
+                                "total transportation costs in thousands of dollars"
                             ],
                             "symtypes": ["parameter"],
                             "headers": {
@@ -558,6 +553,7 @@ class MiroSuite(unittest.TestCase):
 
         encoder = MiroJSONEncoder(m)
         generated_json = encoder.write_json()
+        print(generated_json)
         self.assertEqual(
             generated_json,
             {
@@ -592,8 +588,12 @@ class MiroSuite(unittest.TestCase):
                         "symtype": "parameter",
                         "headers": {
                             "i": {"type": "string", "alias": "canning plants"},
-                            "j": {"type": "string", "alias": "markets"},
-                            "value": {"type": "numeric", "alias": "value"},
+                            "new-york": {
+                                "type": "numeric",
+                                "alias": "new-york",
+                            },
+                            "chicago": {"type": "numeric", "alias": "chicago"},
+                            "topeka": {"type": "numeric", "alias": "topeka"},
                         },
                     },
                     "_scalars": {

@@ -180,73 +180,44 @@ class MiroJSONEncoder:
     def prepare_headers_dict(
         self, symbol: Set | Parameter | Variable | Equation
     ):
-        type_map = {
-            str: "string",
-            "float64": "numeric",
-            "category": "string",
-            "object": "string",
-        }
+        if isinstance(symbol, gp.Set):
+            domain_keys = ["uni", "element_text"]
+            domain_values = [
+                {"type": "string", "alias": "uni"},
+                {"type": "string", "alias": "element_text"},
+            ]
+            return dict(zip(domain_keys, domain_values))
+        elif isinstance(symbol, gp.Parameter):
+            domain_keys = symbol.domain_names + ["value"]
+            types = ["string"] * len(symbol.domain_names) + ["numeric"]
 
-        if symbol.records is None:
-            if isinstance(symbol, gp.Set):
-                domain_keys = ["uni", "element_text"]
-                domain_values = [
-                    {"type": "string", "alias": "uni"},
-                    {"type": "string", "alias": "element_text"},
-                ]
-                return dict(zip(domain_keys, domain_values))
-            elif isinstance(symbol, gp.Parameter):
-                domain_keys = symbol.domain_names + ["value"]
-                types = ["string"] * len(symbol.domain_names) + ["numeric"]
-            elif isinstance(symbol, (gp.Variable, gp.Equation)):
-                domain_keys = symbol.domain_names + [
-                    "level",
-                    "marginal",
-                    "lower",
-                    "upper",
-                    "scale",
-                ]
-                types = ["string"] * len(symbol.domain_names) + ["numeric"] * 5
-
-            domain_values = []
-            for column, column_type in zip(domain_keys, types):
-                try:
-                    elem = self.container[column]
-                    alias = elem.description if elem.description else column
-                except KeyError:
-                    alias = column
-
-                domain_values.append({"type": column_type, "alias": alias})
-        else:
-            domain_keys = symbol.records.columns.to_list()
-            domain_values = []
-
-            for dtype, column in zip(symbol.records.dtypes, domain_keys):
-                try:
-                    elem = self.container[column]
-                    alias = elem.description if elem.description else elem.name
-                except KeyError:
-                    alias = column
-
-                domain_values.append(
-                    {"type": type_map[dtype.name], "alias": alias}
-                )
-
-            if isinstance(symbol, gp.Parameter) and symbol._is_miro_table:
+            if symbol._is_miro_table:
                 last_item = symbol.domain[-1]
                 self.validate_table(symbol, last_item)
 
-                if isinstance(last_item, (gp.Set, gp.Alias)):
-                    set_values = last_item.records["uni"].values.tolist()
+                set_values = last_item.records["uni"].values.tolist()
 
-                    domain_keys = domain_keys[:-2]
-                    domain_keys += set_values
+                domain_keys = domain_keys[:1] + set_values
+                types = ["string"] + ["numeric"] * len(set_values)
+        elif isinstance(symbol, (gp.Variable, gp.Equation)):
+            domain_keys = symbol.domain_names + [
+                "level",
+                "marginal",
+                "lower",
+                "upper",
+                "scale",
+            ]
+            types = ["string"] * len(symbol.domain_names) + ["numeric"] * 5
 
-                    domain_values = domain_values[:-2]
-                    for elem in last_item.records["uni"].values.tolist():
-                        domain_values.append(
-                            {"type": "numeric", "alias": elem}
-                        )
+        domain_values = []
+        for column, column_type in zip(domain_keys, types):
+            try:
+                elem = self.container[column]
+                alias = elem.description if elem.description else column
+            except KeyError:
+                alias = column
+
+            domain_values.append({"type": column_type, "alias": alias})
 
         assert len(domain_keys) == len(domain_values)
         return dict(zip(domain_keys, domain_values))
