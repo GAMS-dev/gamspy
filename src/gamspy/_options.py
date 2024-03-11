@@ -72,6 +72,7 @@ option_map = {
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
     "domain_violation_limit": "domlim",
+    "gdx_file": "gdx",
     "job_time_limit": "etlim",
     "job_heap_limit": "heaplimit",
     "hold_fixed_variables": "holdfixed",
@@ -80,6 +81,8 @@ option_map = {
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
     "license": "license",
+    "listing_file": "output",
+    "log_file": "_logfile",
     "variable_listing_limit": "limcol",
     "equation_listing_limit": "limrow",
     "node_limit": "nodlim",
@@ -127,6 +130,7 @@ class Options(BaseModel):
     basis_detection_threshold: Optional[float] = None
     compile_error_limit: int = 1
     domain_violation_limit: Optional[int] = None
+    gdx_file: Optional[str] = None
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
@@ -134,6 +138,8 @@ class Options(BaseModel):
     iteration_limit: Optional[int] = None
     keep_temporary_files: bool = False
     license: Optional[str] = None
+    listing_file: Optional[str] = None
+    log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
     equation_listing_limit: Optional[int] = None
     node_limit: Optional[int] = None
