@@ -198,6 +198,23 @@ class OptionsSuite(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             transport.solve(output=sys.stdout, create_log_file=True)
 
+        # test logfile
+        logfile_name = os.path.join(os.getcwd(), "log.txt")
+        transport.solve(
+            options=Options(log_file=logfile_name), create_log_file=True
+        )
+        self.assertTrue(os.path.exists(logfile_name))
+
+        # test listing file
+        listing_file_name = os.path.join(os.getcwd(), "listing.lst")
+        transport.solve(options=Options(listing_file=listing_file_name))
+        self.assertTrue(os.path.exists(listing_file_name))
+
+        # test gdx file
+        gdx_file_name = os.path.join(os.getcwd(), "gdxfile.gdx")
+        transport.solve(options=Options(gdx_file=gdx_file_name))
+        self.assertTrue(os.path.exists(gdx_file_name))
+
 
 def options_suite():
     suite = unittest.TestSuite()
