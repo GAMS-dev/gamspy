@@ -383,6 +383,7 @@ class MiroSuite(unittest.TestCase):
                                     "type": "string",
                                     "alias": "canning plants",
                                 },
+                                "j": {"type": "string", "alias": "markets"},
                                 "lngP": {"type": "numeric", "alias": "lngP"},
                                 "latP": {"type": "numeric", "alias": "latP"},
                                 "lngM": {"type": "numeric", "alias": "lngM"},

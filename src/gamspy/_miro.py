@@ -197,11 +197,11 @@ class MiroJSONEncoder:
 
                 set_values = last_item.records["uni"].values.tolist()
 
-                domain_keys = (
-                    [domain_keys[0]] if domain_keys[0] != "*" else ["uni"]
+                domain_keys = domain_keys[:-2]
+                types = ["string"] * len(domain_keys) + ["numeric"] * len(
+                    set_values
                 )
                 domain_keys += set_values
-                types = ["string"] + ["numeric"] * len(set_values)
         elif isinstance(symbol, (gp.Variable, gp.Equation)):
             domain_keys = symbol.domain_names + [
                 "level",
@@ -213,12 +213,17 @@ class MiroJSONEncoder:
             types = ["string"] * len(symbol.domain_names) + ["numeric"] * 5
 
         domain_values = []
+        uni_counter = 0
         for column, column_type in zip(domain_keys, types):
             try:
                 elem = self.container[column]
                 alias = elem.description if elem.description else column
             except KeyError:
                 alias = column
+
+                if alias == "*":
+                    alias = "uni" if uni_counter == 0 else f"uni{uni_counter}"
+                    uni_counter += 1
 
             domain_values.append({"type": column_type, "alias": alias})
 

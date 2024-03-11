@@ -142,6 +142,10 @@
                     "type": "string",
                     "alias": "canning plants"
                 },
+                "j": {
+                    "type": "string",
+                    "alias": "markets"
+                },
                 "lngP": {
                     "type": "numeric",
                     "alias": "lngP"
