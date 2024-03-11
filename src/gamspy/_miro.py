@@ -214,16 +214,19 @@ class MiroJSONEncoder:
 
         domain_values = []
         uni_counter = 0
+        for idx, key in enumerate(domain_keys):
+            if key == "*":
+                domain_keys[idx] = (
+                    "uni" if uni_counter == 0 else f"uni{uni_counter}"
+                )
+                uni_counter += 1
+
         for column, column_type in zip(domain_keys, types):
             try:
                 elem = self.container[column]
                 alias = elem.description if elem.description else column
             except KeyError:
                 alias = column
-
-                if alias == "*":
-                    alias = "uni" if uni_counter == 0 else f"uni{uni_counter}"
-                    uni_counter += 1
 
             domain_values.append({"type": column_type, "alias": alias})
 
