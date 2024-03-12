@@ -4,6 +4,7 @@ GAMSPy CHANGELOG
 GAMSPy 0.12.1
 -------------
 - General
+  - Fix dataframe column names of GAMS MIRO input tables.
   - Catch solve status errors and throw necessary exceptions.
   - __pow__ returns sqrt instead of rPower if the exponent is 0.5.
   - Deprecate delayed_execution mode.

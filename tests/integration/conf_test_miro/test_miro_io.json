@@ -15,106 +15,62 @@
                 }
             }
         },
-        "a": {
-            "alias": "capacity of plant i in cases",
-            "symtype": "parameter",
-            "headers": {
-                "I": {
-                    "type": "string",
-                    "alias": "canning plants"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
-        "b": {
-            "alias": "demand at market j in cases",
-            "symtype": "parameter",
-            "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
-                    "type": "numeric",
-                    "alias": "value"
-                }
-            }
-        },
         "d": {
             "alias": "distance in thousands of miles",
             "symtype": "parameter",
             "headers": {
-                "I": {
+                "i": {
                     "type": "string",
                     "alias": "canning plants"
                 },
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
-                },
-                "value": {
+                "new-york": {
                     "type": "numeric",
-                    "alias": "value"
+                    "alias": "new-york"
+                },
+                "chicago": {
+                    "type": "numeric",
+                    "alias": "chicago"
+                },
+                "topeka": {
+                    "type": "numeric",
+                    "alias": "topeka"
                 }
             }
         },
-        "ilocdata": {
-            "alias": "Plant location information",
+        "table_without_records": {
+            "alias": "table_without_records",
             "symtype": "parameter",
             "headers": {
-                "I": {
+                "i": {
                     "type": "string",
                     "alias": "canning plants"
                 },
-                "lat": {
+                "new-york": {
                     "type": "numeric",
-                    "alias": "lat"
+                    "alias": "new-york"
                 },
-                "lnG": {
+                "chicago": {
                     "type": "numeric",
-                    "alias": "lnG"
-                }
-            }
-        },
-        "jlocdata": {
-            "alias": "Market location information",
-            "symtype": "parameter",
-            "headers": {
-                "j": {
-                    "type": "string",
-                    "alias": "markets"
+                    "alias": "chicago"
                 },
-                "lat": {
+                "topeka": {
                     "type": "numeric",
-                    "alias": "lat"
-                },
-                "lnG": {
-                    "type": "numeric",
-                    "alias": "lnG"
+                    "alias": "topeka"
                 }
             }
         },
         "_scalars": {
             "alias": "Input Scalars",
             "symnames": [
-                "type",
-                "f",
-                "mins",
-                "beta"
+                "model_type",
+                "f"
             ],
             "symtext": [
-                "selected model type",
-                "freight in dollars per case per thousand miles",
-                "minimum shipment (MIP- and MINLP-only)",
-                "beta (MINLP-only)"
+                "model_type",
+                "freight in dollars per case per thousand miles"
             ],
             "symtypes": [
                 "set",
-                "parameter",
-                "parameter",
                 "parameter"
             ],
             "headers": {
@@ -134,11 +90,11 @@
         }
     },
     "outputSymbols": {
-        "schedule": {
+        "x": {
             "alias": "shipment quantities in cases",
-            "symtype": "parameter",
+            "symtype": "variable",
             "headers": {
-                "I": {
+                "i": {
                     "type": "string",
                     "alias": "canning plants"
                 },
@@ -146,46 +102,38 @@
                     "type": "string",
                     "alias": "markets"
                 },
-                "lngP": {
+                "level": {
                     "type": "numeric",
-                    "alias": "lngP"
+                    "alias": "level"
                 },
-                "latP": {
+                "marginal": {
                     "type": "numeric",
-                    "alias": "latP"
+                    "alias": "marginal"
                 },
-                "lngM": {
+                "lower": {
                     "type": "numeric",
-                    "alias": "lngM"
+                    "alias": "lower"
                 },
-                "latM": {
+                "upper": {
                     "type": "numeric",
-                    "alias": "latM"
+                    "alias": "upper"
                 },
-                "cap": {
+                "scale": {
                     "type": "numeric",
-                    "alias": "cap"
-                },
-                "demand": {
-                    "type": "numeric",
-                    "alias": "satisfy demand at market j"
-                },
-                "quantities": {
-                    "type": "numeric",
-                    "alias": "quantities"
+                    "alias": "scale"
                 }
             }
         },
-        "_scalars_out": {
-            "alias": "Output Scalars",
+        "_scalarsve_out": {
+            "alias": "Output Variable/Equation Scalars",
             "symnames": [
-                "total_cost"
+                "z"
             ],
             "symtext": [
                 "total transportation costs in thousands of dollars"
             ],
             "symtypes": [
-                "parameter"
+                "variable"
             ],
             "headers": {
                 "scalar": {
@@ -196,9 +144,25 @@
                     "type": "string",
                     "alias": "Scalar Description"
                 },
-                "value": {
-                    "type": "string",
-                    "alias": "Scalar Value"
+                "level": {
+                    "type": "numeric",
+                    "alias": "Level"
+                },
+                "marginal": {
+                    "type": "numeric",
+                    "alias": "Marginal"
+                },
+                "lower": {
+                    "type": "numeric",
+                    "alias": "Lower"
+                },
+                "upper": {
+                    "type": "numeric",
+                    "alias": "Upper"
+                },
+                "scale": {
+                    "type": "numeric",
+                    "alias": "Scale"
                 }
             }
         }

@@ -14,7 +14,7 @@ test-leg-3.8:
     - python scripts/reinstall.py
     - gamspy install solver mpsge
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch develop --single-branch miro
-    - cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..
+    - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
     - DELAYED_EXECUTION=0 coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"

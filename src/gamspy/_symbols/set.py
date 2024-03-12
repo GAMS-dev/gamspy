@@ -593,10 +593,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._requires_state_check = True
         self.container.modified = True
 
-        if (
-            self._records is not None and self.domain_forwarding
-        ):  # pragma: no cover
+        if self._records is not None and self.domain_forwarding:
             self._domainForwarding()
+            self._mark_forwarded_domain_sets()
 
             # reset state check flags for all symbols in the container
             for symbol in self.container.data.values():

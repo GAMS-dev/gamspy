@@ -62,7 +62,11 @@ def main():
 
     # Parameters
     dat = Parameter(
-        m, name="dat", description="unprotected data table", domain=[k, i, j]
+        m,
+        name="dat",
+        description="unprotected data table",
+        domain=[k, i, j],
+        domain_forwarding=True,
     )
     pro = Parameter(
         m,
@@ -96,7 +100,6 @@ def main():
         }
     )
 
-    dat.domain_forwarding = True  # let dat fill sets i, j, and k
     dat.setRecords(cdb.container["dat"].records)
     pro.setRecords(cdb.container["pro"].records)
 
