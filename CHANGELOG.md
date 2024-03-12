@@ -8,6 +8,7 @@ GAMSPy 0.12.1
   - __pow__ returns sqrt instead of rPower if the exponent is 0.5.
   - Deprecate delayed_execution mode.
   - Replace pylint, flake8 and black with ruff.
+  - Implement /api/auth -> post, /api/auth/login -> post and /api/auth/logout -> post for GAMS Engine.
   - Allow dumping log file to arbitrary path.
   - Allow dumping listing file to arbitrary path.
   - Allow dumping gdx file to arbitrary path.
@@ -16,6 +17,7 @@ GAMSPy 0.12.1
   - Add a new model (Nurses) to the model library and the Notebook examples.
   - Add an AC optimal power flow (ACOPF) model to the model library.
   - Add a test to verify the generated string for power where the exponent is 0.5.
+  - Add tests for /api/auth.
   - Add a test for creating log file with arbitrary name.
   - Add a test for creating lst file with arbitrary name.
   - Add a test for creating gdx file with arbitrary name.
