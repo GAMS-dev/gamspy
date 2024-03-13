@@ -19,6 +19,7 @@ from gamspy.math.log_power import (
 )
 from gamspy.math.matrix import (
     Dim,
+    _generate_dims,
     dim,
     next_alias,
     permute,

@@ -16,7 +16,6 @@ class MatrixSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_matrix_mult_bad(self):
