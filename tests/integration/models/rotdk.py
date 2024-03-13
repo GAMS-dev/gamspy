@@ -144,9 +144,7 @@ def main():
     )
 
     rotdk.solve(
-        options=Options(
-            variable_listing_limit=0, equation_listing_limit=0, time_limit=3
-        )
+        options=Options(variable_listing_limit=0, equation_listing_limit=0)
     )
 
     print("Objective Function Value: ", round(rotdk.objective_value, 2))

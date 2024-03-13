@@ -3,7 +3,16 @@ from __future__ import annotations
 import os
 import unittest
 
-from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import ValidationError
 
 
@@ -292,6 +301,131 @@ class ModelSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
         test_model.solve()
+
+    def test_compute_infeasibilities(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=self.canning_plants,
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=self.markets,
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        b[j] = 1.5 * b[j]
+        transport.solve()
+
+        infeasibilities = transport.compute_infeasibilities()
+        columns = [
+            "i",
+            "level",
+            "marginal",
+            "lower",
+            "upper",
+            "scale",
+            "infeasibility",
+        ]
+        self.assertEqual(list(infeasibilities.keys()), ["supply", "demand"])
+        self.assertEqual(list(infeasibilities["supply"].columns), columns)
+        self.assertEqual(
+            infeasibilities["supply"].values.tolist(),
+            [["san-diego", 1000.0, 0.0, float("-inf"), 600.0, 1.0, 400.0]],
+        )
+
+        self.assertEqual(
+            x.compute_infeasibilities().values.tolist(),
+            [
+                [
+                    "seattle",
+                    "new-york",
+                    -100.0,
+                    0.0,
+                    0.0,
+                    float("inf"),
+                    1.0,
+                    100.0,
+                ]
+            ],
+        )
+
+        self.assertEqual(
+            supply.compute_infeasibilities().values.tolist(),
+            [["san-diego", 1000.0, 0.0, float("-inf"), 600.0, 1.0, 400.0]],
+        )
 
 
 def model_suite():

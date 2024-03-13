@@ -42,6 +42,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
@@ -545,6 +546,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         ImplicitParameter
         """
         return self._infeas
+
+    def compute_infeasibilities(self) -> pd.DataFrame:
+        """
+        Computes infeasabilities of the equation
+
+        Returns
+        -------
+        pd.DataFrame
+        """
+        return utils._calculate_infeasibilities(self)
 
     @property
     def records(self):

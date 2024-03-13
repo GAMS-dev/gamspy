@@ -256,18 +256,16 @@ class Auth(Endpoint):
             headers=self.get_request_headers(),
         )
 
-        response_data = r.data.decode("utf-8", errors="replace")
-        info = json.loads(response_data)
-
         if r.status == 200:
-            self.client._engine_config.jwt = None
+            response_data = r.data.decode("utf-8", errors="replace")
+            info = json.loads(response_data)
             return info["message"]
         elif r.status == 400:
-            raise EngineClientException(f"Bad request: {info['message']}")
+            raise EngineClientException("Bad request!")
         elif r.status == 401:
-            raise EngineClientException(f"Unauthorized: {info['message']}")
+            raise EngineClientException("Unauthorized!")
         elif r.status == 500:
-            raise EngineClientException(f"Internal error: {info['message']}")
+            raise EngineClientException("Internal error!")
         else:
             raise GamspyException(f"Unrecognized status code {r.status}")
 
