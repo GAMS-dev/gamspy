@@ -30,13 +30,14 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
+import pandas as pd
 from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Set
+    from gamspy import Alias, Equation, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -200,6 +201,20 @@ def isin(symbol, sequence: Sequence) -> bool:
 
     """
     return any(symbol is item for item in sequence)
+
+
+def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
+    records = symbol.records
+    infeas_rows = records.where(
+        (records["level"] < records["lower"])
+        | (records["level"] > records["upper"])
+    ).dropna()
+    lower_distance = (infeas_rows["lower"] - infeas_rows["level"]).abs()
+    upper_distance = (infeas_rows["upper"] - infeas_rows["level"]).abs()
+    infeas = lower_distance.combine(upper_distance, min)
+    infeas_rows["infeasibility"] = infeas
+
+    return infeas_rows
 
 
 def _get_gamspy_base_directory() -> str:

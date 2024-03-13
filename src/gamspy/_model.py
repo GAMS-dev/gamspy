@@ -36,6 +36,7 @@ import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
@@ -522,6 +523,27 @@ class Model:
             for equation, variable in self._matches.items():
                 equation._is_dirty = True
                 variable._is_dirty = True
+
+    def compute_infeasibilities(self) -> dict[str, pd.DataFrame]:
+        """
+        Computes infeasabilities for all equations of the model
+
+        Returns
+        -------
+        dict[str, pd.DataFrame]
+            Dictionary of infeasibilities where equation names are keys and
+            infeasibilities are values
+        """
+        infeas_dict = {}
+
+        for equation in self.equations:
+            if equation.records is None:
+                continue
+
+            infeas_rows = utils._calculate_infeasibilities(equation)
+            infeas_dict[equation.name] = infeas_rows
+
+        return infeas_dict
 
     def interrupt(self) -> None:
         """

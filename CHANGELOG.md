@@ -13,6 +13,7 @@ GAMSPy 0.12.1
   - Allow dumping log file to arbitrary path.
   - Allow dumping listing file to arbitrary path.
   - Allow dumping gdx file to arbitrary path.
+  - Add calculate_infeasibilities function for variables, equations and models.
   - Add 'gamspy show license', and 'gamspy show base' commands.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
@@ -23,6 +24,7 @@ GAMSPy 0.12.1
   - Add a test for creating log file with arbitrary name.
   - Add a test for creating lst file with arbitrary name.
   - Add a test for creating gdx file with arbitrary name.
+  - Add tests for infeasibility calculations.
 - Documentation
   - Remove FAQ about Google Colab (it is resolved) and add FAQ about Windows Defender.
   - Remove documentation for delayed execution mode.
