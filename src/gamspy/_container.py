@@ -108,6 +108,7 @@ class Container(gt.Container):
         miro_protect: bool = True,
         options: Options | None = None,
     ):
+        self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
@@ -417,10 +418,7 @@ class Container(gt.Container):
         user_invoked: bool = False,
     ) -> str:
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
-        statements = (
-            self._all_statements if user_invoked else self._unsaved_statements
-        )
-        for statement in statements:
+        for statement in self._unsaved_statements:
             if isinstance(statement, str):
                 string += statement + "\n"
             elif isinstance(statement, gp.UniverseAlias):
@@ -448,6 +446,8 @@ class Container(gt.Container):
 
         if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
             string += miro.get_unload_output_str(self)
+
+        self._gams_string += string
 
         return string
 
@@ -918,9 +918,7 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._generate_gams_string(
-            self._gdx_in, self._gdx_out, [], [], True
-        )
+        return self._gams_string
 
     def getEquations(self) -> list[Equation]:
         """
