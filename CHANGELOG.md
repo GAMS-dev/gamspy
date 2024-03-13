@@ -16,6 +16,7 @@ GAMSPy 0.12.1
   - Disallow equation definitions without any equality sign.
   - Add calculate_infeasibilities function for variables, equations and models.
   - Add 'gamspy show license', and 'gamspy show base' commands.
+  - Replace __del__ with atexit.register function.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.
