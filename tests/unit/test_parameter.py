@@ -209,7 +209,7 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual(
             m.generateGamsString(),
             f"$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nParameter"
-            " rho;\n$offUNDF\n$gdxIn\n",
+            " rho;\n$loadDC rho\n$offUNDF\n$gdxIn\n",
         )
 
     def test_assignment_dimensionality(self):
