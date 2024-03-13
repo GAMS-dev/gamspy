@@ -13,6 +13,7 @@ GAMSPy 0.12.1
   - Allow dumping log file to arbitrary path.
   - Allow dumping listing file to arbitrary path.
   - Allow dumping gdx file to arbitrary path.
+  - Add 'gamspy show license', and 'gamspy show base' commands.
 - Testing
   - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.
@@ -26,6 +27,7 @@ GAMSPy 0.12.1
   - Remove FAQ about Google Colab (it is resolved) and add FAQ about Windows Defender.
   - Remove documentation for delayed execution mode.
   - Add an example for providing solver options.
+  - Document CLI for gamspy show commands.
 
 
 GAMSPy 0.12.0

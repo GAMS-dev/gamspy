@@ -37,22 +37,79 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry, remove_solver_entry
 
+SOLVER_CAPABILITIES = {
+    "BARON": [
+        "LP",
+        "MIP",
+        "NLP",
+        "CNS",
+        "DNLP",
+        "MINLP",
+        "QCP",
+        "MIQCP",
+        "GLOBAL",
+    ],
+    "CBC": ["LP", "MIP"],
+    "CONOPT3": ["LP", "NLP", "CNS", "DNLP", "QCP"],
+    "CONOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
+    "COPT": ["LP", "MIP", "QCP", "MIQCP"],
+    "CPLEX": ["LP", "MIP", "QCP", "MIQCP"],
+    "DICOPT": ["MINLP", "MIQCP"],
+    "GUROBI": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
+    "GUSS": [
+        "LP",
+        "MIP",
+        "NLP",
+        "MCP",
+        "CNS",
+        "DNLP",
+        "MINLP",
+        "QCP",
+        "MIQCP",
+    ],
+    "IPOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
+    "HIGHS": ["LP", "MIP"],
+    "KNITRO": [
+        "LP",
+        "NLP",
+        "MCP",
+        "MPEC",
+        "CNS",
+        "DNLP",
+        "MINLP",
+        "QCP",
+        "MIQCP",
+    ],
+    "MINOS": ["LP", "NLP", "CNS", "DNLP", "QCP"],
+    "MOSEK": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
+    "NLPEC": ["MCP", "MPEC"],
+    "PATH": ["MCP", "CNS"],
+    "SBB": ["MINLP", "MIQCP"],
+    "SCIP": ["MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP", "GLOBAL"],
+    "SHOT": ["MINLP", "MIQCP"],
+    "SNOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
+    "XPRESS": ["LP", "MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP"],
+}
+
 
 def get_args():
     parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
 
     parser.add_argument(
         "command",
-        choices=["install", "list", "run", "update", "uninstall", "version"],
+        choices=["install", "list", "run", "show", "update", "uninstall"],
         type=str,
+        nargs="?",
     )
     parser.add_argument(
         "component",
-        choices=["license", "miro", "solver", "solvers"],
+        choices=["base", "license", "miro", "solver", "solvers"],
         type=str,
         nargs="?",
         default=None,
     )
+
+    parser.add_argument("-v", "--version", action="store_true")
 
     miro_group = parser.add_argument_group(
         "run miro", description="`gamspy run miro` options"
@@ -87,7 +144,6 @@ def get_args():
         help="Whether to skip model execution",
         action="store_true",
     )
-    parser.add_argument("--version", action="store_true")
 
     _ = parser.add_argument_group(
         "gamspy install|uninstall license",
@@ -317,9 +373,24 @@ def list_solvers(args: argparse.Namespace):
 
     if component == "solvers":
         if args.all:
-            return utils.getAvailableSolvers()
+            solvers = utils.getAvailableSolvers()
+            print(f"Available solvers: {solvers}\n")
+            print("Model types that can be solved with the solver:\n")
+            for solver in solvers:
+                try:
+                    print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+                except KeyError:
+                    ...
+            return
 
-        print(utils.getInstalledSolvers())
+        solvers = utils.getInstalledSolvers()
+        print(f"Installed solvers: {solvers}\n")
+        print("Model types that can be solved with the solver:\n")
+        for solver in solvers:
+            try:
+                print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+            except KeyError:
+                ...
 
 
 def run(args: argparse.Namespace):
@@ -373,6 +444,45 @@ def run(args: argparse.Namespace):
     return None
 
 
+def show(args: argparse.Namespace):
+    if args.component == "license":
+        show_license()
+    elif args.component == "base":
+        show_base()
+    else:
+        raise ValidationError(
+            "`gamspy show` requires a third argument (license or base)."
+        )
+
+
+def show_license():
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "You must install gamspy_base to use this command!"
+        ) from e
+
+    userlice_path = os.path.join(gamspy_base.directory, "user_license.txt")
+    demolice_path = os.path.join(gamspy_base.directory, "gamslice.txt")
+    lice_path = (
+        userlice_path if os.path.exists(userlice_path) else demolice_path
+    )
+    with open(lice_path) as license_file:
+        print(license_file.read())
+
+
+def show_base():
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "You must install gamspy_base to use this command!"
+        ) from e
+
+    print(gamspy_base.directory)
+
+
 def uninstall(args: argparse.Namespace):
     if args.component == "license":
         uninstall_license()
@@ -380,24 +490,38 @@ def uninstall(args: argparse.Namespace):
         uninstall_solver(args)
 
 
+def print_version():
+    import gams
+
+    import gamspy
+
+    print(f"GAMSPy version: {gamspy.__version__}")
+    print(f"GAMS version: {gams.__version__}")
+
+    try:
+        import gamspy_base
+
+        print(f"gamspy_base version: {gamspy_base.__version__}")
+    except ModuleNotFoundError:
+        ...
+
+
 def main():
     """
     Entry point for gamspy command line application.
     """
     args = get_args()
-    if args.command == "version":
-        import gamspy
-
-        print(f"GAMSPy version: {gamspy.__version__}")
+    if args.version:
+        print_version()
     elif args.command == "install":
         install(args)
     elif args.command == "run":
         run(args)
+    elif args.command == "show":
+        show(args)
     elif args.command == "update":
         update()
     elif args.command == "list":
-        solvers = list_solvers(args)
-        if solvers:
-            print(solvers)
+        list_solvers(args)
     elif args.command == "uninstall":
         uninstall(args)
