@@ -1,18 +1,15 @@
 from __future__ import annotations
 
+import itertools
+import math
 import os
 import unittest
 
-import numpy as np
-from gamspy import Alias, Container, Parameter, Set, Variable, Sum
-from gamspy.exceptions import ValidationError
-from gamspy.math import dim
-from gamspy.math import trace
-from gamspy.math import vector_norm
-from gamspy.math import permute
 import gamspy as gp
-import math
-import itertools
+import numpy as np
+from gamspy import Alias, Container, Parameter, Set, Sum, Variable
+from gamspy.exceptions import ValidationError
+from gamspy.math import dim, permute, trace, vector_norm
 
 
 class MatrixSuite(unittest.TestCase):

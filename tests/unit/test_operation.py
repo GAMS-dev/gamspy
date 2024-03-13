@@ -17,8 +17,6 @@ from gamspy import (
     Sum,
     Variable,
 )
-import pandas as pd
-
 from gamspy.exceptions import ValidationError
 
 

@@ -24,6 +24,7 @@ from unit.test_equation import equation_suite
 from unit.test_extrinsic import extrinsic_suite
 from unit.test_magics import magics_suite
 from unit.test_math import math_suite
+from unit.test_matrix import matrix_suite
 from unit.test_model import model_suite
 from unit.test_operation import operation_suite
 from unit.test_options import options_suite
@@ -32,7 +33,6 @@ from unit.test_set import set_suite
 from unit.test_special_values import special_values_suite
 from unit.test_utils import utils_suite
 from unit.test_variable import variable_suite
-from unit.test_matrix import matrix_suite
 
 try:
     from dotenv import load_dotenv
