@@ -733,6 +733,32 @@ class MiroSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             encoder.write_json()
 
+        m5 = Container()
+        i5 = Set(m5, "i5", records=["i1", "i2"])
+        _ = Set(m5, "i6", domain=i5, records=["i1"], is_miro_input=True)
+        encoder = MiroJSONEncoder(m5)
+        generated_json = encoder.write_json()
+        self.assertEqual(
+            generated_json,
+            {
+                "modelTitle": "GAMSPy App",
+                "inputSymbols": {
+                    "i6": {
+                        "alias": "i6",
+                        "symtype": "set",
+                        "headers": {
+                            "i5": {"type": "string", "alias": "i5"},
+                            "element_text": {
+                                "type": "string",
+                                "alias": "element_text",
+                            },
+                        },
+                    }
+                },
+                "outputSymbols": {},
+            },
+        )
+
 
 def miro_suite():
     suite = unittest.TestSuite()

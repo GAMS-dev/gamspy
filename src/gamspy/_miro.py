@@ -179,12 +179,8 @@ class MiroJSONEncoder:
         self, symbol: Set | Parameter | Variable | Equation
     ):
         if isinstance(symbol, gp.Set):
-            domain_keys = ["uni", "element_text"]
-            domain_values = [
-                {"type": "string", "alias": "uni"},
-                {"type": "string", "alias": "element_text"},
-            ]
-            return dict(zip(domain_keys, domain_values))
+            domain_keys = symbol.domain_names + ["element_text"]
+            types = ["string"] * (len(symbol.domain_names) + 1)
         elif isinstance(symbol, gp.Parameter):
             domain_keys = symbol.domain_names + ["value"]
             types = ["string"] * len(symbol.domain_names) + ["numeric"]
