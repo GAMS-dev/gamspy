@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-from typing import List
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -23,15 +20,15 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     ----------
     container : Container
     name : str
-    domain : List[Set | str], optional
+    domain : list[Set | str], optional
     """
 
     def __init__(
         self,
         parent: Set | Alias,
         name: str,
-        domain: Optional[list[Set | str]] = None,
-        scalar_domains: List[Tuple[int, Set]] | None = None,
+        domain: list[Set | str] | None = None,
+        scalar_domains: list[tuple[int, Set]] | None = None,
     ) -> None:
         if domain is None:
             domain = ["*"]

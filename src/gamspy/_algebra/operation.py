@@ -1,25 +1,22 @@
 from __future__ import annotations
 
-from typing import List
-from typing import TYPE_CHECKING
-from typing import Union
-from typing import Sequence
+from typing import TYPE_CHECKING, Sequence
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
-import gamspy.utils as utils
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gams.transfer import Alias, Parameter, Set
 
+    from gamspy import Variable
     from gamspy._algebra import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
-    from gamspy import Variable
 
 
 class Operation(operable.Operable):
@@ -50,7 +47,7 @@ class Operation(operable.Operable):
 
         # allow conditions
         self.where = condition.Condition(self)
-        self.domain: List[Union[Set, Alias]] = []
+        self.domain: list[Set | Alias] = []
 
         self._operation_indices = []
         if not isinstance(expression, (bool, float, int)):
@@ -327,7 +324,7 @@ class Ord(operable.Operable):
 
     def __init__(self, set: Set | Alias):
         self._set = set
-        self.domain: List[Union[Set, Alias]] = []
+        self.domain: list[Set | Alias] = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -374,7 +371,7 @@ class Card(operable.Operable):
         symbol: Set | Alias | Parameter,
     ) -> None:
         self._symbol = symbol
-        self.domain: List[Union[Set, Alias]] = []
+        self.domain: list[Set | Alias] = []
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)

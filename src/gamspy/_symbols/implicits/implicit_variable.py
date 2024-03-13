@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import List
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._validation as validation
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import ValidationError
@@ -22,8 +20,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         parent: Variable,
         name: str,
         domain: list[Set | str],
-        permutation: List[int] | None = None,
-        scalar_domains: List[Tuple[int, Set]] | None = None,
+        permutation: list[int] | None = None,
+        scalar_domains: list[tuple[int | Set]] | None = None,
     ):
         """
         Implicit Variable
@@ -32,7 +30,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         ----------
         parent : Variable
         name : str
-        domain : List[Set | str]
+        domain : list[Set | str]
         """
         super().__init__(parent, name, domain, permutation, scalar_domains)
         self._l, self._m, self._lo, self._up, self._s = self._init_attributes()

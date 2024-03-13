@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, List, Tuple
+from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -11,7 +11,6 @@ from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
-
 
 if TYPE_CHECKING:
     from gamspy import Equation, Parameter, Set, Variable
@@ -25,8 +24,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         name: str,
         domain: list[Set | str] = [],
         records: Any | None = None,
-        permutation: List[int] | None = None,
-        scalar_domains: List[Tuple[int, Set]] | None = None,
+        permutation: list[int] | None = None,
+        scalar_domains: list[tuple[int, Set]] | None = None,
     ) -> None:
         """Implicit Parameter
 
@@ -34,7 +33,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         ----------
         parent : Parameter | Variable | Equation
         name : str
-        domain : List[Set | str], optional
+        domain : list[Set | str], optional
         records : Any, optional
         """
         super().__init__(parent, name, domain, permutation, scalar_domains)

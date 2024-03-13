@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Union, List, Tuple
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -10,14 +10,15 @@ import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
-import gamspy.utils as utils
 import gamspy._validation as validation
+import gamspy.utils as utils
+
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     import gamspy._algebra.expression as expression
-    from gamspy import Variable
+    from gamspy import Alias, Set, Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
     from gamspy._symbols.symbol import Symbol
@@ -43,7 +44,7 @@ LINE_LENGTH_OFFSET = 79000
 
 @dataclass
 class DomainPlaceHolder:
-    indices: List[Tuple[str, int]]
+    indices: list[tuple[str, int]]
 
 
 class Expression(operable.Operable):
@@ -84,7 +85,7 @@ class Expression(operable.Operable):
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
-        self.controlled_domain: list[Union[Set, Alias]] = list(
+        self.controlled_domain: list[Set | Alias] = list(
             set([*left_control, *right_control])
         )
         self.container = None
