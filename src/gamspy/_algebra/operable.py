@@ -6,8 +6,6 @@ import typing
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
 
-from gamspy.exceptions import ValidationError
-
 if typing.TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression

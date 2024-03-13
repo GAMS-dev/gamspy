@@ -250,7 +250,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             container.miro_protect = previous_state
 
     def __getitem__(
-        self, indices: Union[Sequence, str]
+        self, indices: Sequence | str
     ) -> implicits.ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 

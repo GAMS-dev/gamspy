@@ -26,23 +26,21 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import List, Union, Optional
+from typing import TYPE_CHECKING
 
 import gamspy._symbols.implicits as implicits
 import gamspy.math
 import gamspy.utils as utils
-from gamspy._symbols.set import Set
-from gamspy.exceptions import ValidationError, GamspyException
-from typing import TYPE_CHECKING
-
-from gamspy._symbols.variable import Variable
 from gamspy._symbols.parameter import Parameter
+from gamspy._symbols.set import Set
+from gamspy._symbols.variable import Variable
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols.alias import Alias
-    from gamspy._algebra.operation import Operation
-    from gamspy._algebra.expression import Expression
     from gamspy import Container
+    from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
+    from gamspy._symbols.alias import Alias
 
 
 def vector_norm(
@@ -51,12 +49,12 @@ def vector_norm(
         | Variable
         | implicits.ImplicitParameter
         | implicits.ImplicitVariable
-        | "Expression"
-        | "Operation"
+        | Expression
+        | Operation
     ),
     ord: float | int = 2,
-    dim: Optional[List[int] | List[Set | "Alias"]] = None,
-) -> "Operation" | "Expression":
+    dim: list[int] | list[Set | Alias] | None = None,
+) -> Operation | Expression:
     """
     Returns the vector norm of the provided vector x. If ord is not an even integer, absolute value is used which
     requires DNLP.
@@ -65,7 +63,7 @@ def vector_norm(
     ----------
     x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
     ord: int | float
-    dim: List[int] | List[Set | Alias], optional
+    dim: list[int] | list[Set | Alias], optional
 
     Returns
     -------
@@ -154,7 +152,7 @@ def vector_norm(
         ) ** (1 / ord)
 
 
-def next_alias(symbol: "Alias" | Set) -> "Alias":
+def next_alias(symbol: Alias | Set) -> Alias:
     """Provided the set or alias, it returns the next alias.
     If it is not found, it creates the alias. This function is
     mainly for matrix multiplication conflict resolution but
@@ -206,13 +204,13 @@ def next_alias(symbol: "Alias" | Set) -> "Alias":
 
 @dataclass
 class Dim:
-    dims: List[int]
+    dims: list[int]
 
     def __init__(self, dims):
         self.dims = dims
 
 
-def dim(dims: List[int]) -> Dim:
+def dim(dims: list[int]) -> Dim:
     """Returns an array where each element
     corresponds to a set where the dimension of the
     set is equal to the element in dims. If same dimension
@@ -222,7 +220,7 @@ def dim(dims: List[int]) -> Dim:
 
     Parameters
     ----------
-    dims: List[int]
+    dims: list[int]
 
     Returns
     -------
@@ -251,7 +249,7 @@ def dim(dims: List[int]) -> Dim:
     return Dim(dims=dims)
 
 
-def _generate_dims(m: "Container", dims: List[int]) -> List[Alias | Set]:
+def _generate_dims(m: Container, dims: list[int]) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"
@@ -268,15 +266,15 @@ def _generate_dims(m: "Container", dims: List[int]) -> List[Alias | Set]:
 
 
 def trace(
-    x: Union[
-        Parameter,
-        implicits.ImplicitParameter,
-        Variable,
-        implicits.ImplicitVariable,
-    ],
+    x: (
+        Parameter
+        | implicits.ImplicitParameter
+        | Variable
+        | implicits.ImplicitVariable
+    ),
     axis1: int = 0,
     axis2: int = 1,
-) -> "Operation":
+) -> Operation:
     """Returns trace of the given input x.
     By default trace of zeroth and first axis used. `axis1` and `axis2` parameters
     control on which axes to get trace. Domains at the axis1 and axis2 must be same
@@ -285,12 +283,12 @@ def trace(
 
     Parameters
     ----------
-    x: Union[
-        Parameter,
-        implicits.ImplicitParameter,
-        Variable,
-        implicits.ImplicitVariable,
-    ]
+    x: (
+        Parameter
+        | implicits.ImplicitParameter
+        | Variable
+        | implicits.ImplicitVariable
+    )
     axis1=0
     axis2=1
 
@@ -326,26 +324,26 @@ def trace(
 
 
 def permute(
-    x: Union[
-        Parameter,
-        implicits.ImplicitParameter,
-        Variable,
-        implicits.ImplicitVariable,
-    ],
-    dims: List[int],
+    x: (
+        Parameter
+        | implicits.ImplicitParameter
+        | Variable
+        | implicits.ImplicitVariable
+    ),
+    dims: list[int],
 ) -> implicits.ImplicitVariable | implicits.ImplicitParameter:
     """Permutes the dimensions provided input `x` using `dim`.
     Similar to PyTorch permute.
 
     Parameters
     ----------
-    x: Union[
-        Parameter,
-        implicits.ImplicitParameter,
-        Variable,
-        implicits.ImplicitVariable,
-    ]
-    dims: List[int]
+    x: (
+        Parameter
+        | implicits.ImplicitParameter
+        | Variable
+        | implicits.ImplicitVariable
+    )
+    dims: list[int]
 
     Returns
     -------

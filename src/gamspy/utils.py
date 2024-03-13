@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import platform
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Iterable, List
+from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
-    from gamspy import Alias, Equation, Set, Variable, Domain, Expression
+    from gamspy import Alias, Domain, Equation, Expression, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -93,7 +93,7 @@ def getInstalledSolvers() -> list[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
 
     Raises
     ------
@@ -148,7 +148,7 @@ def getAvailableSolvers() -> list[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
 
     Raises
     ------
@@ -473,12 +473,12 @@ def _permute_domain(domain, dims):
 
     Parameters
     ----------
-    domain : List[Set | str]
-    dims : List[int]
+    domain : list[Set | str]
+    dims : list[int]
 
     Returns
     -------
-    List[Set | str]
+    list[Set | str]
 
     Examples
     --------
@@ -511,7 +511,7 @@ def set_base_eq(set_a, set_b):
 
 
 # TODO either add description or make private
-def get_set(domain: List[Set | Alias | Domain | Expression]):
+def get_set(domain: list[Set | Alias | Domain | Expression]):
     res = []
     for el in domain:
         if hasattr(el, "left"):
