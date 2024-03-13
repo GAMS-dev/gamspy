@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+import atexit
 import os
 import shutil
 import sys
@@ -107,6 +108,9 @@ class Container(gt.Container):
         miro_protect: bool = True,
         options: Options | None = None,
     ):
+        if IS_MIRO_INIT:
+            atexit.register(self._write_miro_files)
+
         system_directory = (
             system_directory
             if system_directory
@@ -162,29 +166,19 @@ class Container(gt.Container):
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
-        self._first_destruct = True
         if load_from is not None:
             self.read(load_from)
             self._run()
 
-    def __del__(self):  # pragma: no cover
-        try:
-            if (
-                not IS_MIRO_INIT
-                or not self._first_destruct
-                or len(self._miro_input_symbols)
-                + len(self._miro_output_symbols)
-                == 0
-            ):
-                return
+    def _write_miro_files(self):  # pragma: no cover
+        if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
+            raise ValidationError(
+                "You have to define at least one miro input or output symbol!"
+            )
 
-            self._first_destruct = False
-            # create conf_<model>/<model>_io.json
-            encoder = MiroJSONEncoder(self)
-            encoder.write_json()
-        except Exception as e:
-            if isinstance(e, ValidationError):
-                raise
+        # create conf_<model>/<model>_io.json
+        encoder = MiroJSONEncoder(self)
+        encoder.write_json()
 
     def _get_debugging_level(self, debugging_level: str):
         if (
