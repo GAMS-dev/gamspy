@@ -109,6 +109,30 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
+    def test_show_license(self):
+        process = subprocess.run(
+            ["gamspy", "show", "license"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+
+        self.assertTrue(process.returncode == 0)
+        self.assertTrue(isinstance(process.stdout, str))
+
+    def test_show_base(self):
+        process = subprocess.run(
+            ["gamspy", "show", "base"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+
+        import gamspy_base
+
+        self.assertTrue(process.returncode == 0)
+        self.assertEqual(gamspy_base.directory, process.stdout.strip())
+
 
 def cmd_suite():
     suite = unittest.TestSuite()
