@@ -699,7 +699,7 @@ class Model:
         equations = []
         for equation in self.equations:
             if self._matches:
-                if equation not in self._matches.keys():
+                if equation not in self._matches:
                     equations.append(equation.name)
             else:
                 equations.append(equation.name)
@@ -707,10 +707,12 @@ class Model:
         equations_str = ",".join(equations)
 
         if self._matches:
-            matches_str = ",".join([
-                f"{equation.name}.{variable.name}"
-                for equation, variable in self._matches.items()
-            ])
+            matches_str = ",".join(
+                [
+                    f"{equation.name}.{variable.name}"
+                    for equation, variable in self._matches.items()
+                ]
+            )
 
             equations_str = (
                 ",".join([equations_str, matches_str])

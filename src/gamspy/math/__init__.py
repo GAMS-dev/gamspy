@@ -17,6 +17,14 @@ from gamspy.math.log_power import (
     sqr,
     vc_power,
 )
+from gamspy.math.matrix import (
+    Dim,
+    dim,
+    next_alias,
+    permute,
+    trace,
+    vector_norm,
+)
 from gamspy.math.misc import (
     Max,
     Min,
@@ -90,8 +98,6 @@ from gamspy.math.trigonometric import (
     tan,
     tanh,
 )
-
-from gamspy.math.matrix import dim, Dim, next_alias, permute, trace, vector_norm
 
 __all__ = [
     "cos",
