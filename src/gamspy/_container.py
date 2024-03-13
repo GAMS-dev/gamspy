@@ -172,9 +172,7 @@ class Container(gt.Container):
 
     def _write_miro_files(self):  # pragma: no cover
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
-            raise ValidationError(
-                "You have to define at least one miro input or output symbol!"
-            )
+            return
 
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
