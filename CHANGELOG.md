@@ -13,6 +13,7 @@ GAMSPy 0.12.1
   - Allow dumping log file to arbitrary path.
   - Allow dumping listing file to arbitrary path.
   - Allow dumping gdx file to arbitrary path.
+  - Disallow equation definitions without any equality sign.
   - Add calculate_infeasibilities function for variables, equations and models.
   - Add 'gamspy show license', and 'gamspy show base' commands.
 - Testing

@@ -96,7 +96,7 @@ class EquationSuite(unittest.TestCase):
         # Equations
         d = Parameter(self.m, name="d", records=0.5)
         eq1 = Equation(self.m, "eq1", type="nonbinding")
-        eq1[...] = x - d
+        eq1[...] = (x - d) == 0
         self.assertEqual(
             eq1._definition.gamsRepr(),
             "eq1 .. (x - d) =n= 0;",
@@ -105,13 +105,13 @@ class EquationSuite(unittest.TestCase):
 
         y = Variable(self.m, "y", domain=[i])
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
-        eq2[i] = y[i] - c[i]
+        eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
             eq2._definition.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
-        eq2[i] = y[i] - c[i]
+        eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
             eq2._definition.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
@@ -140,6 +140,10 @@ class EquationSuite(unittest.TestCase):
             EquationType.values(),
             ["REGULAR", "NONBINDING", "EXTERNAL", "CONE", "BOOLEAN"],
         )
+
+        eq6 = Equation(self.m, "eq6", domain=[i])
+        with self.assertRaises(ValidationError):
+            eq6[i] = y[i] - c[i]
 
     def test_nonbinding(self):
         x = Variable(self.m, "x")
@@ -525,14 +529,16 @@ class EquationSuite(unittest.TestCase):
             records={"lower": 1.0, "level": 1.5, "upper": 3.75},
         )
         f = Equation(self.m, name="f", type="nonbinding")
-        f[...] = x - c
+        f[...] = (x - c) == 0
 
         self.assertEqual(
             f._definition.gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
 
-        f2 = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
+        f2 = Equation(
+            self.m, name="f2", type="nonbinding", definition=(x - c) == 0
+        )
         self.assertEqual(
             f2._definition.gamsRepr(),
             "f2 .. (x - c) =n= 0;",
@@ -546,7 +552,7 @@ class EquationSuite(unittest.TestCase):
             "f3 .. (x - c) =n= 0;",
         )
 
-        f4 = Equation(self.m, name="f4", definition=x - c)
+        f4 = Equation(self.m, name="f4", definition=(x - c) == 0)
         self.assertEqual(
             f4._definition.gamsRepr(),
             "f4 .. (x - c) =e= 0;",
