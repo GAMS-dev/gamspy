@@ -1128,7 +1128,7 @@ class SolveSuite(unittest.TestCase):
         l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
         self.assertTrue('x' in l2.equations[0]._definition.find_variables())
         
-        e = Equation(self.m, "e", definition=x+5)
+        e = Equation(self.m, "e", definition=(x+5) == 0)
         self.assertTrue('x' in e._definition.find_variables())
         
     def test_invalid_arguments(self):

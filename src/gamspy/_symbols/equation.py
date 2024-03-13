@@ -44,6 +44,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Set, Variable
@@ -383,7 +384,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def _set_definition(self, assignment, domain):
         # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
-            assignment = assignment == 0
+            raise ValidationError(
+                "Equation definition must contain at least one equality sign such as ==, <= or >=."
+            )
 
         if self.type in non_regular_map:
             assignment.replace_operator(non_regular_map[self.type])
