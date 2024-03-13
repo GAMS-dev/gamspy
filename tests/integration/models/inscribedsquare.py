@@ -32,16 +32,8 @@ from __future__ import annotations
 import math
 import os
 
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Variable
-from gamspy.math import cos
-from gamspy.math import sin
+from gamspy import Card, Container, Equation, Model, Ord, Sense, Set, Variable
+from gamspy.math import cos, sin
 
 
 def fx(t):
@@ -55,7 +47,6 @@ def fy(t):
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Set

@@ -73,26 +73,26 @@ from __future__ import annotations
 import os
 
 import numpy as np
-
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqrt
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

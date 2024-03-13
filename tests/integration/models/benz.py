@@ -25,18 +25,12 @@ from __future__ import annotations
 import os
 
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Problem, Sense, Variable
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Variable
@@ -60,21 +54,15 @@ def main():
         + 16.8 * (gams_math.power(q1, 2)) * q2
         + 53.9 * 1000 * q1 * q2
         + 270 * 1000
-    ) * (
-        gams_math.power(w, 6)
-    ) + (
+    ) * (gams_math.power(w, 6)) + (
         1.45 * (10**6) * (gams_math.power(q1, 2)) * q2
         + 16.8 * (10**6) * q1 * q2
         + (10**6) * 338
-    ) * (
-        gams_math.power(w, 4)
-    ) - (
+    ) * (gams_math.power(w, 4)) - (
         5.72 * (10**6) * (gams_math.power(q1, 2)) * q2
         + 113 * (10**6) * (gams_math.power(q1, 2))
         + 4250 * (10**6) * q1
-    ) * (
-        gams_math.power(w, 2)
-    ) + (
+    ) * (gams_math.power(w, 2)) + (
         453 * (10**6) * (gams_math.power(q1, 2))
     ) == 0
     g2[...] = (
@@ -85,15 +73,11 @@ def main():
         + 840 * (gams_math.power(q1, 2)) * q2
         + 1.35 * (10**6) * q1 * q2
         + (10**6) * 13.5
-    ) * (
-        gams_math.power(w, 4)
-    ) + (
+    ) * (gams_math.power(w, 4)) + (
         6.93 * (10**6) * (gams_math.power(q1, 2)) * q2
         + 911 * (10**6) * q1
         + (10**6) * 4220
-    ) * (
-        gams_math.power(w, 2)
-    ) - (
+    ) * (gams_math.power(w, 2)) - (
         528 * (10**6) * (gams_math.power(q1, 2)) + 3640 * (10**6) * q1
     ) == 0
 

@@ -18,19 +18,13 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Problem, Sense, Variable
 from gamspy.math import sqr
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Variables
@@ -202,9 +196,9 @@ def main():
     profit.l[...] = 872
 
     process.solve()
-    print("Profit in model 'process': {:.2f}".format(profit.records.level[0]))
+    print(f"Profit in model 'process': {profit.records.level[0]:.2f}")
     rproc.solve()
-    print("Profit in model 'rproc': {:.2f}".format(profit.records.level[0]))
+    print(f"Profit in model 'rproc': {profit.records.level[0]:.2f}")
 
 
 if __name__ == "__main__":

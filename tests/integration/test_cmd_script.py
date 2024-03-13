@@ -52,12 +52,14 @@ class CmdSuite(unittest.TestCase):
             )
 
         if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
-            subprocess.run([
-                "gamspy",
-                "install",
-                "license",
-                os.path.join(os.getcwd(), "old_license.txt"),
-            ])
+            subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.path.join(os.getcwd(), "old_license.txt"),
+                ]
+            )
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
@@ -80,12 +82,14 @@ class CmdSuite(unittest.TestCase):
         )
 
         if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
-            subprocess.run([
-                "gamspy",
-                "install",
-                "license",
-                os.path.join(os.getcwd(), "old_license.txt"),
-            ])
+            subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.path.join(os.getcwd(), "old_license.txt"),
+                ]
+            )
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):
@@ -104,6 +108,30 @@ class CmdSuite(unittest.TestCase):
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
             )
+
+    def test_show_license(self):
+        process = subprocess.run(
+            ["gamspy", "show", "license"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+
+        self.assertTrue(process.returncode == 0)
+        self.assertTrue(isinstance(process.stdout, str))
+
+    def test_show_base(self):
+        process = subprocess.run(
+            ["gamspy", "show", "base"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+
+        import gamspy_base
+
+        self.assertTrue(process.returncode == 0)
+        self.assertEqual(gamspy_base.directory, process.stdout.strip())
 
 
 def cmd_suite():

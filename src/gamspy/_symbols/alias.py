@@ -31,17 +31,15 @@ from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
-import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
-from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Container
+    from gamspy import Container, Set
 
 
-class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
+class Alias(gt.Alias, operable.Operable, SetMixin):
     """
     Represents an Alias symbol in GAMS.
     https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet
@@ -155,12 +153,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def __iter__(self):
         return self
-
-    def __le__(self, other):
-        return expression.Expression(self, "<=", other)
-
-    def __ge__(self, other):
-        return expression.Expression(self, ">=", other)
 
     def gamsRepr(self) -> str:
         """

@@ -7,14 +7,15 @@ import subprocess
 import sys
 import unittest
 
-from gamspy import Container, Set, Parameter
+from gamspy import Container, Parameter, Set, Variable
+from gamspy._miro import MiroJSONEncoder
+from gamspy.exceptions import ValidationError
 
 
 class MiroSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_domain_forwarding(self):
@@ -46,6 +47,27 @@ class MiroSuite(unittest.TestCase):
         self.assertEqual(i2.records.values.tolist()[0][0], "i2")
         self.assertEqual(p2.records.values[0][1], 1)
 
+    def test_domain_forwarding_2(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro4_gdxin_.gdx"
+        )
+        miro_gdx_out = os.path.join(
+            directory, "miro_models", "_miro4_gdxout_.gdx"
+        )
+        model_path = os.path.join(directory, "miro_models", "miro4.py")
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+        subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
+
+        try:
+            subprocess.run(
+                ["python", model_path], env=subprocess_env, check=True
+            )
+        except subprocess.CalledProcessError:
+            self.fail("Records are not as expected.")
+
     def test_miro(self):
         directory = str(pathlib.Path(__file__).parent.resolve())
         current_environment = os.environ.copy()
@@ -62,7 +84,7 @@ class MiroSuite(unittest.TestCase):
                 capture_output=True,
             )
         except Exception as e:
-            exit(e)
+            self.fail(e)
 
         # Test default.gdx
         new_container = Container()
@@ -71,7 +93,7 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro input d
-        self.assertTrue("d" in new_container.data.keys())
+        self.assertTrue("d" in new_container.data)
         self.assertEqual(
             new_container["d"].records.values.tolist(),
             [
@@ -85,11 +107,11 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro scalar input f
-        self.assertTrue("f" in new_container.data.keys())
+        self.assertTrue("f" in new_container.data)
         self.assertEqual(new_container["f"].records.value.item(), 90.0)
 
         # Miro output x
-        self.assertTrue("x" in new_container.data.keys())
+        self.assertTrue("x" in new_container.data)
         self.assertEqual(
             new_container["x"].records.values.tolist(),
             [
@@ -119,7 +141,7 @@ class MiroSuite(unittest.TestCase):
         )
 
         # Miro output z
-        self.assertTrue("z" in new_container.data.keys())
+        self.assertTrue("z" in new_container.data)
         self.assertEqual(new_container["z"].records.level.item(), 153.675)
 
         # Test generated json
@@ -258,6 +280,28 @@ class MiroSuite(unittest.TestCase):
                 {
                     "modelTitle": "GAMSPy App",
                     "inputSymbols": {
+                        "k": {
+                            "alias": "k",
+                            "symtype": "set",
+                            "headers": {
+                                "uni": {"type": "string", "alias": "uni"},
+                                "element_text": {
+                                    "type": "string",
+                                    "alias": "element_text",
+                                },
+                            },
+                        },
+                        "a": {
+                            "alias": "capacity of plant i in cases",
+                            "symtype": "parameter",
+                            "headers": {
+                                "I": {
+                                    "type": "string",
+                                    "alias": "canning plants",
+                                },
+                                "value": {"type": "numeric", "alias": "value"},
+                            },
+                        },
                         "b": {
                             "alias": "demand at market j in cases",
                             "symtype": "parameter",
@@ -278,26 +322,6 @@ class MiroSuite(unittest.TestCase):
                                 "value": {"type": "numeric", "alias": "value"},
                             },
                         },
-                        "jlocdata": {
-                            "alias": "Market location information",
-                            "symtype": "parameter",
-                            "headers": {
-                                "j": {"type": "string", "alias": "markets"},
-                                "lat": {"type": "numeric", "alias": "lat"},
-                                "lnG": {"type": "numeric", "alias": "lnG"},
-                            },
-                        },
-                        "a": {
-                            "alias": "capacity of plant i in cases",
-                            "symtype": "parameter",
-                            "headers": {
-                                "I": {
-                                    "type": "string",
-                                    "alias": "canning plants",
-                                },
-                                "value": {"type": "numeric", "alias": "value"},
-                            },
-                        },
                         "ilocdata": {
                             "alias": "Plant location information",
                             "symtype": "parameter",
@@ -310,15 +334,13 @@ class MiroSuite(unittest.TestCase):
                                 "lnG": {"type": "numeric", "alias": "lnG"},
                             },
                         },
-                        "k": {
-                            "alias": "k",
-                            "symtype": "set",
+                        "jlocdata": {
+                            "alias": "Market location information",
+                            "symtype": "parameter",
                             "headers": {
-                                "uni": {"type": "string", "alias": "uni"},
-                                "element_text": {
-                                    "type": "string",
-                                    "alias": "element_text",
-                                },
+                                "j": {"type": "string", "alias": "markets"},
+                                "lat": {"type": "numeric", "alias": "lat"},
+                                "lnG": {"type": "numeric", "alias": "lnG"},
                             },
                         },
                         "_scalars": {
@@ -326,10 +348,7 @@ class MiroSuite(unittest.TestCase):
                             "symnames": ["type", "f", "mins", "beta"],
                             "symtext": [
                                 "selected model type",
-                                (
-                                    "freight in dollars per case per thousand"
-                                    " miles"
-                                ),
+                                "freight in dollars per case per thousand miles",
                                 "minimum shipment (MIP- and MINLP-only)",
                                 "beta (MINLP-only)",
                             ],
@@ -372,7 +391,7 @@ class MiroSuite(unittest.TestCase):
                                 "cap": {"type": "numeric", "alias": "cap"},
                                 "demand": {
                                     "type": "numeric",
-                                    "alias": "demand",
+                                    "alias": "satisfy demand at market j",
                                 },
                                 "quantities": {
                                     "type": "numeric",
@@ -384,8 +403,7 @@ class MiroSuite(unittest.TestCase):
                             "alias": "Output Scalars",
                             "symnames": ["total_cost"],
                             "symtext": [
-                                "total transportation costs in thousands of"
-                                " dollars"
+                                "total transportation costs in thousands of dollars"
                             ],
                             "symtypes": ["parameter"],
                             "headers": {
@@ -406,6 +424,340 @@ class MiroSuite(unittest.TestCase):
                     },
                 },
             )
+
+    def test_table_columns(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro3_gdxin_.gdx"
+        )
+        miro_gdx_out = os.path.join(
+            directory, "miro_models", "_miro3_gdxout_.gdx"
+        )
+        model_path = os.path.join(directory, "miro_models", "miro3.py")
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO"] = "1"
+        subprocess_env["MIRO_MODEL_PATH"] = model_path
+        subprocess_env["MIRO_MODE"] = "base"
+        subprocess_env["MIRO_DEV_MODE"] = "true"
+        subprocess_env["MIRO_USE_TMP"] = "false"
+        subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+        subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
+
+        try:
+            subprocess.run(
+                ["python", model_path], env=subprocess_env, check=True
+            )
+        except subprocess.CalledProcessError:
+            self.fail("Columns are not as expected.")
+
+    def test_miro_encoder(self):
+        m = Container()
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+        _ = Set(m, name="k", is_miro_input=True)
+        _ = Set(
+            m,
+            name="model_type",
+            records=["lp"],
+            is_singleton=True,
+            is_miro_input=True,
+        )
+
+        # Data
+        _ = Parameter(
+            m,
+            name="a",
+            domain=[i],
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        _ = Parameter(
+            m,
+            name="b",
+            domain=[j],
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        _ = Parameter(
+            m,
+            name="table_without_records",
+            domain=[i, j],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        f = Parameter(
+            m,
+            name="f",
+            records=90,
+            description="freight in dollars per case per thousand miles",
+            is_miro_input=True,
+        )
+        c[i, j] = f * d[i, j] / 1000
+
+        # Variable
+        _ = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+            is_miro_output=True,
+        )
+        _ = Variable(
+            m,
+            name="z",
+            description="total transportation costs in thousands of dollars",
+            is_miro_output=True,
+        )
+
+        encoder = MiroJSONEncoder(m)
+        generated_json = encoder.write_json()
+        self.assertEqual(
+            generated_json,
+            {
+                "modelTitle": "GAMSPy App",
+                "inputSymbols": {
+                    "k": {
+                        "alias": "k",
+                        "symtype": "set",
+                        "headers": {
+                            "uni": {"type": "string", "alias": "uni"},
+                            "element_text": {
+                                "type": "string",
+                                "alias": "element_text",
+                            },
+                        },
+                    },
+                    "d": {
+                        "alias": "distance in thousands of miles",
+                        "symtype": "parameter",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "new-york": {
+                                "type": "numeric",
+                                "alias": "new-york",
+                            },
+                            "chicago": {"type": "numeric", "alias": "chicago"},
+                            "topeka": {"type": "numeric", "alias": "topeka"},
+                        },
+                    },
+                    "table_without_records": {
+                        "alias": "table_without_records",
+                        "symtype": "parameter",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "new-york": {
+                                "type": "numeric",
+                                "alias": "new-york",
+                            },
+                            "chicago": {"type": "numeric", "alias": "chicago"},
+                            "topeka": {"type": "numeric", "alias": "topeka"},
+                        },
+                    },
+                    "_scalars": {
+                        "alias": "Input Scalars",
+                        "symnames": ["model_type", "f"],
+                        "symtext": [
+                            "model_type",
+                            "freight in dollars per case per thousand miles",
+                        ],
+                        "symtypes": ["set", "parameter"],
+                        "headers": {
+                            "scalar": {
+                                "type": "string",
+                                "alias": "Scalar Name",
+                            },
+                            "description": {
+                                "type": "string",
+                                "alias": "Scalar Description",
+                            },
+                            "value": {
+                                "type": "string",
+                                "alias": "Scalar Value",
+                            },
+                        },
+                    },
+                },
+                "outputSymbols": {
+                    "x": {
+                        "alias": "shipment quantities in cases",
+                        "symtype": "variable",
+                        "headers": {
+                            "i": {"type": "string", "alias": "canning plants"},
+                            "j": {"type": "string", "alias": "markets"},
+                            "level": {"type": "numeric", "alias": "level"},
+                            "marginal": {
+                                "type": "numeric",
+                                "alias": "marginal",
+                            },
+                            "lower": {"type": "numeric", "alias": "lower"},
+                            "upper": {"type": "numeric", "alias": "upper"},
+                            "scale": {"type": "numeric", "alias": "scale"},
+                        },
+                    },
+                    "_scalarsve_out": {
+                        "alias": "Output Variable/Equation Scalars",
+                        "symnames": ["z"],
+                        "symtext": [
+                            "total transportation costs in thousands of dollars"
+                        ],
+                        "symtypes": ["variable"],
+                        "headers": {
+                            "scalar": {
+                                "type": "string",
+                                "alias": "Scalar Name",
+                            },
+                            "description": {
+                                "type": "string",
+                                "alias": "Scalar Description",
+                            },
+                            "level": {"type": "numeric", "alias": "Level"},
+                            "marginal": {
+                                "type": "numeric",
+                                "alias": "Marginal",
+                            },
+                            "lower": {"type": "numeric", "alias": "Lower"},
+                            "upper": {"type": "numeric", "alias": "Upper"},
+                            "scale": {"type": "numeric", "alias": "Scale"},
+                        },
+                    },
+                },
+            },
+        )
+
+        _ = Parameter(
+            m,
+            name="table_with_domain_forwarding",
+            domain=[i, j],
+            records=distances,
+            is_miro_input=True,
+            is_miro_table=True,
+            domain_forwarding=True,
+        )
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        m2 = Container()
+        i2 = Set(
+            m2,
+            name="i2",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j2 = Set(
+            m2,
+            name="j2",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+            is_miro_input=True,
+        )
+        _ = Parameter(
+            m2,
+            name="last_item_miro_input",
+            domain=[i2, j2],
+            records=distances,
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        encoder = MiroJSONEncoder(m2)
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        m3 = Container()
+        i3 = Set(m3, "i3", records=["i3"])
+        _ = Parameter(
+            m3,
+            name="dimension_small",
+            domain=i3,
+            records=[("i3", 2)],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        encoder = MiroJSONEncoder(m3)
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        m4 = Container()
+        i4 = Set(m4, "i4", records=["i4"])
+        _ = Parameter(
+            m4,
+            name="last_domain_str",
+            domain=[i4, "bla"],
+            records=[("i4", "bla", 2)],
+            is_miro_input=True,
+            is_miro_table=True,
+        )
+        encoder = MiroJSONEncoder(m4)
+        with self.assertRaises(ValidationError):
+            encoder.write_json()
+
+        m5 = Container()
+        i5 = Set(m5, "i5", records=["i1", "i2"])
+        _ = Set(m5, "i6", domain=i5, records=["i1"], is_miro_input=True)
+        encoder = MiroJSONEncoder(m5)
+        generated_json = encoder.write_json()
+        self.assertEqual(
+            generated_json,
+            {
+                "modelTitle": "GAMSPy App",
+                "inputSymbols": {
+                    "i6": {
+                        "alias": "i6",
+                        "symtype": "set",
+                        "headers": {
+                            "i5": {"type": "string", "alias": "i5"},
+                            "element_text": {
+                                "type": "string",
+                                "alias": "element_text",
+                            },
+                        },
+                    }
+                },
+                "outputSymbols": {},
+            },
+        )
 
 
 def miro_suite():

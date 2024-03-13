@@ -12,16 +12,17 @@ import os
 from itertools import product
 
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def model_data():
@@ -35,11 +36,13 @@ def model_data():
     )  # product-resource combinations -->  ("Product_A", "Resource_A"), ("Product_B", "Resource_A"), ...
 
     # Parameters
-    demand_data = pd.DataFrame({
-        "Product_A": {1: 100, 2: 150, 3: 120, 4: 180},
-        "Product_B": {1: 80, 2: 100, 3: 90, 4: 120},
-        "Product_C": {1: 50, 2: 60, 3: 70, 4: 80},
-    }).unstack()
+    demand_data = pd.DataFrame(
+        {
+            "Product_A": {1: 100, 2: 150, 3: 120, 4: 180},
+            "Product_B": {1: 80, 2: 100, 3: 90, 4: 120},
+            "Product_C": {1: 50, 2: 60, 3: 70, 4: 80},
+        }
+    ).unstack()
 
     setup_cost_data = pd.DataFrame(
         [("Product_A", 100), ("Product_B", 200), ("Product_C", 300)]
@@ -48,16 +51,18 @@ def model_data():
         [("Product_A", 0.2), ("Product_B", 0.1), ("Product_C", 0.6)]
     )
 
-    capacity_data = pd.DataFrame([
-        ("Resource_A", 1, 340),
-        ("Resource_B", 1, 340),
-        ("Resource_A", 2, 330),
-        ("Resource_B", 2, 330),
-        ("Resource_A", 3, 300),
-        ("Resource_B", 3, 300),
-        ("Resource_A", 4, 380),
-        ("Resource_B", 4, 380),
-    ])
+    capacity_data = pd.DataFrame(
+        [
+            ("Resource_A", 1, 340),
+            ("Resource_B", 1, 340),
+            ("Resource_A", 2, 330),
+            ("Resource_B", 2, 330),
+            ("Resource_A", 3, 300),
+            ("Resource_B", 3, 300),
+            ("Resource_A", 4, 380),
+            ("Resource_B", 4, 380),
+        ]
+    )
 
     return {
         "products": products,
@@ -74,7 +79,6 @@ def model_data():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
     data = model_data()
 

@@ -22,70 +22,76 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import pandas as pd
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Prepare data
-    cost = pd.DataFrame([
-        ["f1", "d1", 2.49],
-        ["f1", "d2", 5.21],
-        ["f1", "d3", 3.76],
-        ["f1", "d4", 4.85],
-        ["f1", "d5", 2.07],
-        ["f2", "d1", 1.46],
-        ["f2", "d2", 2.54],
-        ["f2", "d3", 1.83],
-        ["f2", "d4", 1.86],
-        ["f2", "d5", 4.76],
-        ["f3", "d1", 3.26],
-        ["f3", "d2", 3.08],
-        ["f3", "d3", 2.60],
-        ["f3", "d4", 3.76],
-        ["f3", "d5", 4.45],
-    ])
+    cost = pd.DataFrame(
+        [
+            ["f1", "d1", 2.49],
+            ["f1", "d2", 5.21],
+            ["f1", "d3", 3.76],
+            ["f1", "d4", 4.85],
+            ["f1", "d5", 2.07],
+            ["f2", "d1", 1.46],
+            ["f2", "d2", 2.54],
+            ["f2", "d3", 1.83],
+            ["f2", "d4", 1.86],
+            ["f2", "d5", 4.76],
+            ["f3", "d1", 3.26],
+            ["f3", "d2", 3.08],
+            ["f3", "d3", 2.60],
+            ["f3", "d4", 3.76],
+            ["f3", "d5", 4.45],
+        ]
+    )
 
-    scenarios = pd.DataFrame([
-        ["lo", "d1", 150],
-        ["lo", "d2", 100],
-        ["lo", "d3", 250],
-        ["lo", "d4", 300],
-        ["lo", "d5", 600],
-        ["lo", "prob", 0.25],
-        ["mid", "d1", 160],
-        ["mid", "d2", 120],
-        ["mid", "d3", 270],
-        ["mid", "d4", 325],
-        ["mid", "d5", 700],
-        ["mid", "prob", 0.50],
-        ["hi", "d1", 170],
-        ["hi", "d2", 135],
-        ["hi", "d3", 300],
-        ["hi", "d4", 350],
-        ["hi", "d5", 800],
-        ["hi", "prob", 0.25],
-    ])
+    scenarios = pd.DataFrame(
+        [
+            ["lo", "d1", 150],
+            ["lo", "d2", 100],
+            ["lo", "d3", 250],
+            ["lo", "d4", 300],
+            ["lo", "d5", 600],
+            ["lo", "prob", 0.25],
+            ["mid", "d1", 160],
+            ["mid", "d2", 120],
+            ["mid", "d3", 270],
+            ["mid", "d4", 325],
+            ["mid", "d5", 700],
+            ["mid", "prob", 0.50],
+            ["hi", "d1", 170],
+            ["hi", "d2", 135],
+            ["hi", "d3", 300],
+            ["hi", "d4", 350],
+            ["hi", "d5", 800],
+            ["hi", "prob", 0.25],
+        ]
+    )
 
-    cut_coefficients = pd.DataFrame([
-        [idx, f"d{center}", 0]
-        for idx in range(1, 26)
-        for center in range(1, 6)
-    ])
+    cut_coefficients = pd.DataFrame(
+        [
+            [idx, f"d{center}", 0]
+            for idx in range(1, 26)
+            for center in range(1, 6)
+        ]
+    )
 
     # Set
     i = Set(m, name="i", records=["f1", "f2", "f3"], description="factories")

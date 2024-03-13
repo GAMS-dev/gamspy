@@ -3,32 +3,23 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
-
-from gamspy import Container
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+from gamspy import Container, Parameter, Set, Variable
 
 
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_magics(self):
-        # Prepare data
-        demands = pd.DataFrame(
-            [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-        )
-
         # Set
-        i = Set(self.m, name="i", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.markets)
 
         # Parameter
-        b = Parameter(self.m, name="b", domain=[i], records=demands)
+        b = Parameter(self.m, name="b", domain=[i], records=self.demands)
 
         # Variable
         x = Variable(self.m, name="x", domain=[i], type="Positive")
@@ -95,6 +86,22 @@ class MagicsSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( power(b(i),2) )")
         op3 = x[i] ** 2
         self.assertEqual(op3.gamsRepr(), "( power(x(i),2) )")
+
+        # Set/Parameter/Variable ** 0.5
+        op1 = i**0.5
+        self.assertEqual(op1.gamsRepr(), "( sqrt(i) )")
+        op2 = b[i] ** 0.5
+        self.assertEqual(op2.gamsRepr(), "( sqrt(b(i)) )")
+        op3 = x[i] ** 0.5
+        self.assertEqual(op3.gamsRepr(), "( sqrt(x(i)) )")
+
+        m = Container()
+        j = Parameter(m, "j", records=5)
+        k = Parameter(m, "k", records=2)
+        l = Parameter(m, "l")
+
+        l[...] = (j**k) ** 0.5
+        self.assertEqual(l.toValue(), 5.0)
 
         # AND
         # Parameter and Variable, Variable and Parameter

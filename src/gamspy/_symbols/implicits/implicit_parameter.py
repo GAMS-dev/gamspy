@@ -24,8 +24,7 @@
 #
 from __future__ import annotations
 
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
@@ -34,7 +33,7 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gamspy import Set, Parameter, Variable, Equation
+    from gamspy import Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
 
 
@@ -91,11 +90,10 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         )
 
         self.container._add_statement(statement)
-        self._assignment = statement
+        self.parent._assignment = statement
 
         self.parent._is_dirty = True
-        if not self.container.delayed_execution:
-            self.container._run()
+        self.container._run()
 
     @property
     def dimension(self):

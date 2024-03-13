@@ -21,23 +21,23 @@ from __future__ import annotations
 import os
 
 import numpy as np
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets
@@ -65,13 +65,15 @@ def main():
         m,
         name="dd",
         domain=[j, h],
-        records=np.array([
-            [200, 220, 250, 270, 300],
-            [50, 150, 0, 0, 0],
-            [140, 160, 180, 200, 220],
-            [10, 50, 80, 100, 340],
-            [580, 600, 620, 0, 0],
-        ]),
+        records=np.array(
+            [
+                [200, 220, 250, 270, 300],
+                [50, 150, 0, 0, 0],
+                [140, 160, 180, 200, 220],
+                [10, 50, 80, 100, 340],
+                [580, 600, 620, 0, 0],
+            ]
+        ),
         description="demand distribution on route j",
     )
 
@@ -79,13 +81,15 @@ def main():
         m,
         name="lamda",
         domain=[j, h],
-        records=np.array([
-            [0.2, 0.05, 0.35, 0.2, 0.2],
-            [0.3, 0.7, 0, 0, 0],
-            [0.1, 0.2, 0.4, 0.2, 0.1],
-            [0.2, 0.2, 0.3, 0.2, 0.1],
-            [0.1, 0.8, 0.1, 0, 0],
-        ]),
+        records=np.array(
+            [
+                [0.2, 0.05, 0.35, 0.2, 0.2],
+                [0.3, 0.7, 0, 0, 0],
+                [0.1, 0.2, 0.4, 0.2, 0.1],
+                [0.2, 0.2, 0.3, 0.2, 0.1],
+                [0.1, 0.8, 0.1, 0, 0],
+            ]
+        ),
         description="probability of demand state h on route j",
     )
 
@@ -93,12 +97,14 @@ def main():
         m,
         name="c",
         domain=[i, j],
-        records=np.array([
-            [18, 21, 18, 16, 10],
-            [0, 15, 16, 14, 9],
-            [0, 10, 0, 9, 6],
-            [17, 16, 17, 15, 10],
-        ]),
+        records=np.array(
+            [
+                [18, 21, 18, 16, 10],
+                [0, 15, 16, 14, 9],
+                [0, 10, 0, 9, 6],
+                [17, 16, 17, 15, 10],
+            ]
+        ),
         description="costs per aircraft (1000s)",
     )
 
@@ -106,12 +112,14 @@ def main():
         m,
         name="p",
         domain=[i, j],
-        records=np.array([
-            [16, 15, 28, 23, 81],
-            [0, 10, 14, 15, 57],
-            [0, 5, 0, 7, 29],
-            [9, 11, 22, 17, 55],
-        ]),
+        records=np.array(
+            [
+                [16, 15, 28, 23, 81],
+                [0, 10, 14, 15, 57],
+                [0, 5, 0, 7, 29],
+                [9, 11, 22, 17, 55],
+            ]
+        ),
         description="passenger capacity of aircraft i on route j",
     )
 

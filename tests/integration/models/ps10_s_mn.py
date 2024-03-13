@@ -18,22 +18,23 @@ from __future__ import annotations
 import os
 import time
 
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.math import Round
-from gamspy.math import uniform
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Number,
+    Options,
+    Ord,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.math import Round, uniform
 
 
 def main():
@@ -45,7 +46,6 @@ def main():
 
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

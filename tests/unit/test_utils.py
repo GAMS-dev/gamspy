@@ -5,17 +5,14 @@ import platform
 import unittest
 
 import gamspy.utils as utils
-from gamspy import Container
-from gamspy import Set
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import Container, Set
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_utils(self):

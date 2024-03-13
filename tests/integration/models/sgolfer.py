@@ -24,22 +24,23 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import Max as gams_max
 
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     cont = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     gf_c = gr_c * gg_c

@@ -33,24 +33,25 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 # Create model with GAMSPy
 def build_abstract_model():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     j = Set(
@@ -363,29 +364,35 @@ def fill_records(dataset, symbols):
     lastJob.setRecords(jobs[-1:])
     actual.setRecords(jobs[1:-1])
     pred.setRecords([(i, j) for i in jobs for j in jobs if j in succs[i]])
-    tw.setRecords([
-        (j, t)
-        for j in jobs
-        for tix, t in enumerate(periods)
-        if eft[j] <= tix + 1 <= lft[j]
-    ])
-    fw.setRecords([
-        (j, t, tau)
-        for jix, j in enumerate(jobs)
-        for tix, t in enumerate(periods)
-        for tauix, tau in enumerate(periods)
-        if tix <= tauix <= tix + job_durations[jix] - 1
-        and eft[j] <= tix + 1 <= lft[j]
-    ])
+    tw.setRecords(
+        [
+            (j, t)
+            for j in jobs
+            for tix, t in enumerate(periods)
+            if eft[j] <= tix + 1 <= lft[j]
+        ]
+    )
+    fw.setRecords(
+        [
+            (j, t, tau)
+            for jix, j in enumerate(jobs)
+            for tix, t in enumerate(periods)
+            for tauix, tau in enumerate(periods)
+            if tix <= tauix <= tix + job_durations[jix] - 1
+            and eft[j] <= tix + 1 <= lft[j]
+        ]
+    )
     capacities.setRecords(
         [(r, resource_capacities[rix]) for rix, r in enumerate(res)]
     )
     durations.setRecords([(j, job_durations[ix]) for ix, j in enumerate(jobs)])
-    demands.setRecords([
-        (j, r, resource_demands[jix][rix])
-        for jix, j in enumerate(jobs)
-        for rix, r in enumerate(res)
-    ])
+    demands.setRecords(
+        [
+            (j, r, resource_demands[jix][rix])
+            for jix, j in enumerate(jobs)
+            for rix, r in enumerate(res)
+        ]
+    )
 
 
 def main():

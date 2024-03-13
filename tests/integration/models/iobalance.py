@@ -21,27 +21,27 @@ from __future__ import annotations
 
 import os
 
-import numpy as np
-
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
+import numpy as np
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+)
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets
@@ -55,11 +55,13 @@ def main():
         m,
         name="a0",
         domain=[i, j],
-        records=np.array([
-            [0.120, 0.100, 0.049],
-            [0.210, 0.247, 0.265],
-            [0.026, 0.249, 0.145],
-        ]),
+        records=np.array(
+            [
+                [0.120, 0.100, 0.049],
+                [0.210, 0.247, 0.265],
+                [0.026, 0.249, 0.145],
+            ]
+        ),
         description="known base matrix",
     )
 
@@ -67,11 +69,13 @@ def main():
         m,
         name="z1",
         domain=[i, j],
-        records=np.array([
-            [98, 72, 75],
-            [65, 8, 63],
-            [88, 27, 44],
-        ]),
+        records=np.array(
+            [
+                [98, 72, 75],
+                [65, 8, 63],
+                [88, 27, 44],
+            ]
+        ),
         description="unknown industry flows",
     )
 

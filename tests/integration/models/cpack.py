@@ -25,18 +25,19 @@ import math
 import os
 import sys
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Problem,
+    Sense,
+    Set,
+    Variable,
+)
 from gamspy.math import sqr
-
 
 # take number of circles as first argument
 k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
@@ -44,7 +45,6 @@ print("Number of circles =", k)
 
 c = Container(
     system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-    delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
 )
 
 # Set

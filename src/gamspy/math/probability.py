@@ -25,7 +25,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import Union
 
 import gamspy._algebra.expression as expression
 from gamspy.math.misc import MathOp
@@ -35,9 +34,7 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-def binomial(
-    n: Union[int, float, Symbol], k: Union[int, float, Symbol]
-) -> Expression:
+def binomial(n: int | float | Symbol, k: int | float | Symbol) -> Expression:
     """
     (Generalized) Binomial coefficient for n > -1, -1 < k < n + 1
 
@@ -57,8 +54,8 @@ def binomial(
 
 
 def centropy(
-    x: Union[int, float, Symbol],
-    y: Union[int, float, Symbol],
+    x: int | float | Symbol,
+    y: int | float | Symbol,
     z: float = 1e-20,
 ) -> Expression:
     """
@@ -86,8 +83,8 @@ def centropy(
 
 
 def uniform(
-    lower_bound: Union[float, Expression],
-    upper_bound: Union[float, Expression],
+    lower_bound: float | Expression,
+    upper_bound: float | Expression,
 ) -> Expression:
     """
     Generates a random number from the uniform distribution between
@@ -108,7 +105,7 @@ def uniform(
 
 
 def uniformInt(
-    lower_bound: Union[int, float], upper_bound: Union[int, float]
+    lower_bound: int | float, upper_bound: int | float
 ) -> Expression:
     """
     Generates an integer random number from the discrete uniform distribution
@@ -129,7 +126,7 @@ def uniformInt(
     )
 
 
-def normal(mean: Union[int, float], dev: Union[int, float]) -> Expression:
+def normal(mean: int | float, dev: int | float) -> Expression:
     """
     Generate a random number from the normal distribution with mean `mean`
     and `standard deviation` dev.

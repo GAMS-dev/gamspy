@@ -22,17 +22,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Model
-from gamspy import Sense
-from gamspy import Sum
+from gamspy import Container, Domain, Model, Sense, Sum
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/thai.gdx",
     )
 
@@ -53,12 +48,14 @@ def main():
         demand,
         voycap,
         shiplim,
-    ) = m.getSymbols([
-        "objdef",
-        "demand",
-        "voycap",
-        "shiplim",
-    ])
+    ) = m.getSymbols(
+        [
+            "objdef",
+            "demand",
+            "voycap",
+            "shiplim",
+        ]
+    )
 
     objdef[...] = obj == w1 * Sum(
         Domain(j, k).where[vc[j, k]], z[j, k]

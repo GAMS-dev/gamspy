@@ -3,31 +3,42 @@ from __future__ import annotations
 import os
 import unittest
 
+import gamspy._symbols.implicits as implicits
 import numpy as np
 import pandas as pd
-
-import gamspy._symbols.implicits as implicits
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import EquationType
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    EquationType,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.exceptions import GamspyException, ValidationError
 from gamspy.math import sqr
 
 
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_equation_creation(self):
         # no name
@@ -54,7 +65,6 @@ class EquationSuite(unittest.TestCase):
         # Equation and domain containers are different
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -86,7 +96,7 @@ class EquationSuite(unittest.TestCase):
         # Equations
         d = Parameter(self.m, name="d", records=0.5)
         eq1 = Equation(self.m, "eq1", type="nonbinding")
-        eq1[...] = x - d
+        eq1[...] = (x - d) == 0
         self.assertEqual(
             eq1._definition.gamsRepr(),
             "eq1 .. (x - d) =n= 0;",
@@ -95,13 +105,13 @@ class EquationSuite(unittest.TestCase):
 
         y = Variable(self.m, "y", domain=[i])
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
-        eq2[i] = y[i] - c[i]
+        eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
             eq2._definition.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
-        eq2[i] = y[i] - c[i]
+        eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
             eq2._definition.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
@@ -130,6 +140,10 @@ class EquationSuite(unittest.TestCase):
             EquationType.values(),
             ["REGULAR", "NONBINDING", "EXTERNAL", "CONE", "BOOLEAN"],
         )
+
+        eq6 = Equation(self.m, "eq6", domain=[i])
+        with self.assertRaises(ValidationError):
+            eq6[i] = y[i] - c[i]
 
     def test_nonbinding(self):
         x = Variable(self.m, "x")
@@ -203,31 +217,18 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(eq[e[u, v]].gamsRepr(), "eq(e(u,v))")
 
     def test_equation_definition(self):
-        # Prepare data
-        distances = pd.DataFrame([
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ])
-        canning_plants = ["seattle", "san-diego"]
-        markets = ["new-york", "chicago", "topeka"]
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-
         # Sets
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
-        j = Set(self.m, name="j", records=markets, description="Markets")
+        j = Set(self.m, name="j", records=self.markets, description="Markets")
 
         # Params
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -336,7 +337,6 @@ class EquationSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -432,32 +432,22 @@ class EquationSuite(unittest.TestCase):
     def test_scalar_attr_assignment(self):
         a = Equation(self.m, "a")
         a.l = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.l._assignment.getStatement(), "a.l = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.l = 5;")
 
         a.m = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.m._assignment.getStatement(), "a.m = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.m = 5;")
 
         a.lo = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.lo._assignment.getStatement(), "a.lo = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.lo = 5;")
 
         a.up = 5
-        if self.m.delayed_execution:
-            self.assertEqual(a.up._assignment.getStatement(), "a.up = 5;")
+        self.assertEqual(a._assignment.getStatement(), "a.up = 5;")
 
         a.scale = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.scale._assignment.getStatement(), "a.scale = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.scale = 5;")
 
         a.stage = 5
-        if self.m.delayed_execution:
-            self.assertEqual(
-                a.stage._assignment.getStatement(), "a.stage = 5;"
-            )
+        self.assertEqual(a._assignment.getStatement(), "a.stage = 5;")
 
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
@@ -539,14 +529,16 @@ class EquationSuite(unittest.TestCase):
             records={"lower": 1.0, "level": 1.5, "upper": 3.75},
         )
         f = Equation(self.m, name="f", type="nonbinding")
-        f[...] = x - c
+        f[...] = (x - c) == 0
 
         self.assertEqual(
             f._definition.gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
 
-        f2 = Equation(self.m, name="f2", type="nonbinding", definition=x - c)
+        f2 = Equation(
+            self.m, name="f2", type="nonbinding", definition=(x - c) == 0
+        )
         self.assertEqual(
             f2._definition.gamsRepr(),
             "f2 .. (x - c) =n= 0;",
@@ -560,7 +552,7 @@ class EquationSuite(unittest.TestCase):
             "f3 .. (x - c) =n= 0;",
         )
 
-        f4 = Equation(self.m, name="f4", definition=x - c)
+        f4 = Equation(self.m, name="f4", definition=(x - c) == 0)
         self.assertEqual(
             f4._definition.gamsRepr(),
             "f4 .. (x - c) =e= 0;",
@@ -572,7 +564,6 @@ class EquationSuite(unittest.TestCase):
     def test_changed_domain(self):
         cont = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=False,
         )
 
         s = Set(cont, "s")
@@ -585,7 +576,6 @@ class EquationSuite(unittest.TestCase):
     def test_equation_assignment(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
@@ -597,7 +587,6 @@ class EquationSuite(unittest.TestCase):
 
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)

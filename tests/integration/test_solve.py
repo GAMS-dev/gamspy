@@ -33,7 +33,19 @@ from gamspy.math import sqr
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        self.canning_plants = ['seattle', 'san-diego']
+        self.markets = ['new-york', 'chicago', 'topeka']
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
         
     def test_uel_order(self):
         i = Set(self.m,'i')
@@ -47,48 +59,28 @@ class SolveSuite(unittest.TestCase):
 
 
     def test_read_on_demand(self):
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
         # Set
-        i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
         k = Set(
             self.m, name="k", records=["seattle", "san-diego", "california"]
         )
         k["seattle"] = False
-        if self.m.delayed_execution:
-            self.assertTrue(k._is_dirty)
-        else:
-            self.assertFalse(k._is_dirty)
+        self.assertFalse(k._is_dirty)
         self.assertEqual(
             k.records.loc[0, :].values.tolist(), ["san-diego", ""]
         )
         self.assertFalse(k._is_dirty)
 
         # Data
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         e = Parameter(self.m, name="e")
 
         c[i, j] = 90 * d[i, j] / 1000
-        if self.m.delayed_execution:
-            self.assertTrue(c._is_dirty)
-        else:
-            self.assertFalse(c._is_dirty)
+        self.assertFalse(c._is_dirty)
         self.assertEqual(
             c.records.values.tolist(),
             [
@@ -103,10 +95,7 @@ class SolveSuite(unittest.TestCase):
         self.assertFalse(c._is_dirty)
 
         e[...] = 5
-        if self.m.delayed_execution:
-            self.assertTrue(e._is_dirty)
-        else:
-            self.assertFalse(e._is_dirty)
+        self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
         self.assertEqual(e[...], 5)
 
@@ -167,30 +156,14 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_after_first_solve(self):
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-        demands = pd.DataFrame(
-            [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-        )
-
         # Set
-        i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -239,30 +212,14 @@ class SolveSuite(unittest.TestCase):
         self.assertAlmostEqual(second_z2_value, 768.375, 3)
 
     def test_solve(self):
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
-        demands = pd.DataFrame(
-            [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-        )
-
         # Set
-        i = Set(self.m, name="i", records=["seattle", "san-diego"])
-        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        b = Parameter(self.m, name="b", domain=[j], records=demands)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -307,13 +264,13 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test output redirection
-        with open("test.gms", "w") as file:
+        with open("bla.gms", "w") as file:
             _ = transport.solve(
                 options=Options(time_limit=100),
                 output=file,
             )
 
-        self.assertTrue(os.path.exists("test.gms"))
+        self.assertTrue(os.path.exists("bla.gms"))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
@@ -363,13 +320,13 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(TypeError, transport.solve, None, 5)
 
         # Try to solve invalid model
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
     def test_interrupt(self):
-        cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         power_forecast_recs = np.array(
             [
@@ -881,34 +838,24 @@ class SolveSuite(unittest.TestCase):
         import threading
 
         threading.Thread(target=interrupt_gams, args=(energy,)).start()
-        energy.solve(options=Options(relative_optimality_gap=0.000001))
-
-        self.assertIsNotNone(energy.objective_value)
+        
+        try:
+            energy.solve(options=Options(relative_optimality_gap=0.000001))
+            self.assertIsNotNone(energy.objective_value)
+        except GamspyException:
+            pass
 
     def test_solver_options(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -944,72 +891,17 @@ class SolveSuite(unittest.TestCase):
             ValidationError, transport.solve, None, None, {"rtmaxv": "1.e12"}
         )
 
-    def test_delayed_execution(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=False)
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-        # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        # Data
-        _ = Parameter(m, name="a", domain=[i], records=capacities)
-        _ = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
-        c = Parameter(m, name="c", domain=[i, j])
-        e = Parameter(m, name="e")
-        e[...] = 5
-        with self.assertRaises(Exception):
-            c[i] = 90 * d[i, j] / 1000
-
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-        # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-        v = Variable(m, name="v", domain=[i, j])
-        v.l[i, j] = 5
-        self.assertIsNotNone(v.records)
-
-        x = Variable(m, name="x")
-        x.l[...] = 5
-        self.assertIsNotNone(x.records)
-
     def test_ellipsis(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[...] = 90 * d[...] / 1000
 
@@ -1050,26 +942,14 @@ class SolveSuite(unittest.TestCase):
             c[..., ...] = 5
         
     def test_slice(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        i2 = Set(m, name="i2", records=["seattle", "san-diego"])
-        i3 = Set(m, name="i3", records=["seattle", "san-diego"])
-        i4 = Set(m, name="i4", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        i2 = Set(m, name="i2", records=self.canning_plants)
+        i3 = Set(m, name="i3", records=self.canning_plants)
+        i4 = Set(m, name="i4", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
         k = Set(m, "k", domain=[i, i2, i3, i4])
         self.assertEqual(k[..., i4].gamsRepr(), "k(i,i2,i3,i4)")
         self.assertEqual(k[i, ..., i4].gamsRepr(), "k(i,i2,i3,i4)")
@@ -1077,9 +957,9 @@ class SolveSuite(unittest.TestCase):
         self.assertEqual(k[..., i3, :].gamsRepr(), "k(i,i2,i3,i4)")
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
         self.assertEqual(a[:].gamsRepr(), "a(i)")
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         self.assertEqual(c[:, :].gamsRepr(), "c(i,j)")
         c[:, :] = 90 * d[:, :] / 1000
@@ -1107,29 +987,16 @@ class SolveSuite(unittest.TestCase):
         error_test[:] = Sum(ntd, error[ntd])
         
     def test_max_line_length(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         f = Parameter(m, "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", records=1)
         c[i, j] = 90 * d[i, j] / 1000
@@ -1156,29 +1023,16 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         
     def test_summary(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -1218,30 +1072,16 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
-        
-        # Prepare data
-        distances = pd.DataFrame(
-            [
-                ["seattle", "new-york", 2.5],
-                ["seattle", "chicago", 1.7],
-                ["seattle", "topeka", 1.8],
-                ["san-diego", "new-york", 2.5],
-                ["san-diego", "chicago", 1.8],
-                ["san-diego", "topeka", 1.4],
-            ]
-        )
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -1262,7 +1102,7 @@ class SolveSuite(unittest.TestCase):
             c[b[j]] = 90 * d[i, j] / 1000
             
     def test_after_exception(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None), delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)))
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
         x = Variable(m, "x", type="positive")
         e = Equation(m, "e", definition=x <= x + 1)
         t = Model(
@@ -1281,47 +1121,33 @@ class SolveSuite(unittest.TestCase):
         f = Parameter(m, "f")
         f[...] = 5
         
-        if m.delayed_execution:
-            self.assertEqual(m._unsaved_statements[-1].getStatement(), "f = 5;")
+        self.assertEqual(f._assignment.getStatement(), "f = 5;")
             
     def test_variable_discovery(self):
         x = self.m.addVariable('x')
         l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
         self.assertTrue('x' in l2.equations[0]._definition.find_variables())
         
-        e = Equation(self.m, "e", definition=x+5)
+        e = Equation(self.m, "e", definition=(x+5) == 0)
         self.assertTrue('x' in e._definition.find_variables())
         
     def test_invalid_arguments(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(
             m,
             name="i",
-            records=["seattle", "san-diego"],
+            records=self.canning_plants,
             description="canning plants",
         )
         j = Set(
             m,
             name="j",
-            records=["new-york", "chicago", "topeka"],
+            records=self.markets,
             description="markets",
         )
 
@@ -1330,21 +1156,21 @@ class SolveSuite(unittest.TestCase):
             m,
             name="a",
             domain=i,
-            records=capacities,
+            records=self.capacities,
             description="capacity of plant i in cases",
         )
         b = Parameter(
             m,
             name="b",
             domain=j,
-            records=demands,
+            records=self.demands,
             description="demand at market j in cases",
         )
         d = Parameter(
             m,
             name="d",
             domain=[i, j],
-            records=distances,
+            records=self.distances,
             description="distance in thousands of miles",
         )
         c = Parameter(

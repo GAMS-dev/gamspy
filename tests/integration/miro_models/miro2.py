@@ -22,20 +22,22 @@ from __future__ import annotations
 
 import sys
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+)
 from gamspy.math import Min
 
 
 def main():
-    m = Container(delayed_execution=True)
+    m = Container()
 
     # Prepare data
     distances = [
@@ -172,11 +174,13 @@ def main():
     c[i, j] = f * d[i, j] / 1000
 
     with open("miro.log", "w") as f:
-        f.writelines([
-            "------------------------------------\n",
-            "        Validating data\n",
-            "------------------------------------\n",
-        ])
+        f.writelines(
+            [
+                "------------------------------------\n",
+                "        Validating data\n",
+                "------------------------------------\n",
+            ]
+        )
         if a.records.value.sum() < b.records.value.sum():
             f.writelines(["a:: Capacity insufficient to meet demand"])
         else:

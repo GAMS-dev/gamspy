@@ -19,28 +19,26 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.math import normal
-from gamspy.math import power
-from gamspy.math import Round
-from gamspy.math import uniform
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from gamspy.math import Round, normal, power, uniform
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Set
@@ -82,9 +80,9 @@ def main():
     p[j] = Round(mu_value + c[j] + uniform(-sigma_value, sigma_value))
 
     di[s, t].where[(Ord(s)) <= (0.25 * Card(s))] = Round(normal(50, 10))
-    di[s, t].where[(Ord(s) > 0.25 * Card(s)) & (Ord(s) <= 0.75 * Card(s))] = (
-        Round(normal(100, 20))
-    )
+    di[s, t].where[
+        (Ord(s) > 0.25 * Card(s)) & (Ord(s) <= 0.75 * Card(s))
+    ] = Round(normal(100, 20))
     di[s, t].where[Ord(s) > 0.75 * Card(s)] = Round(normal(150, 40))
 
     d[t, s] = Sum(tt.where[Ord(tt) <= Ord(t)], di[s, tt])
@@ -146,9 +144,7 @@ def main():
     )
 
     rotdk.solve(
-        options=Options(
-            variable_listing_limit=0, equation_listing_limit=0, time_limit=3
-        )
+        options=Options(variable_listing_limit=0, equation_listing_limit=0)
     )
 
     print("Objective Function Value: ", round(rotdk.objective_value, 2))

@@ -20,18 +20,20 @@ Keywords: linear programming, transportation problem, scheduling
 
 from __future__ import annotations
 
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
-    m = Container(delayed_execution=True, working_directory=".")
+    m = Container()
 
     # Prepare data
     distances = [

@@ -3,55 +3,53 @@ from __future__ import annotations
 import os
 import unittest
 
-import pandas as pd
-
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Product
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Smin
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Ord,
+    Parameter,
+    Product,
+    Set,
+    Smax,
+    Smin,
+    Sum,
+    Variable,
+)
 
 
 class OperationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
-
-    def test_operations(self):
-        # Prepare data
-        distances = pd.DataFrame([
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
             ["seattle", "new-york", 2.5],
             ["seattle", "chicago", 1.7],
             ["seattle", "topeka", 1.8],
             ["san-diego", "new-york", 2.5],
             ["san-diego", "chicago", 1.8],
             ["san-diego", "topeka", 1.4],
-        ])
-        canning_plants = ["seattle", "san-diego"]
-        markets = ["new-york", "chicago", "topeka"]
-        capacities = pd.DataFrame([["seattle", 350], ["san-diego", 600]])
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
+    def test_operations(self):
         # Sets
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
-        j = Set(self.m, name="j", records=markets, description="Markets")
+        j = Set(self.m, name="j", records=self.markets, description="Markets")
 
         # Params
-        a = Parameter(self.m, name="a", domain=[i], records=capacities)
-        d = Parameter(self.m, name="d", domain=[i, j], records=distances)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -115,12 +113,15 @@ class OperationSuite(unittest.TestCase):
         self.assertEqual(expression.gamsRepr(), "(card(i) eq 5)")
         expression = Card(i) != 5
         self.assertEqual(expression.gamsRepr(), "(card(i) ne 5)")
+        expression = Card(i) <= 5
+        self.assertEqual(expression.gamsRepr(), "(card(i) <= 5)")
+        expression = Card(i) >= 5
+        self.assertEqual(expression.gamsRepr(), "(card(i) >= 5)")
 
     def test_operation_indices(self):
         # Test operation index
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         mt = 2016
         mg = 17
@@ -167,7 +168,6 @@ class OperationSuite(unittest.TestCase):
     def test_operation_overloads(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         c = Set(m, "c")
         s = Set(m, "s")
@@ -187,11 +187,10 @@ class OperationSuite(unittest.TestCase):
         bla2 = Parameter(m, "bla2", domain=s)
         bla[...] = bla2[...] != 0
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "bla(s) = (bla2(s) ne 0);",
-            )
+        self.assertEqual(
+            bla._assignment.getStatement(),
+            "bla(s) = (bla2(s) ne 0);",
+        )
 
 
 def operation_suite():

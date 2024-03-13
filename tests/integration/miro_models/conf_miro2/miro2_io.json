@@ -168,7 +168,7 @@
                 },
                 "demand": {
                     "type": "numeric",
-                    "alias": "demand"
+                    "alias": "satisfy demand at market j"
                 },
                 "quantities": {
                     "type": "numeric",

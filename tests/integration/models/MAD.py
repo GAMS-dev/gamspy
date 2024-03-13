@@ -19,17 +19,19 @@ import os
 from pathlib import Path
 
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Smax
-from gamspy import Smin
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Smax,
+    Smin,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 
@@ -37,7 +39,6 @@ def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=gdx_file,
     )
 
@@ -161,9 +162,7 @@ def main():
 
         MeanAbsoluteDeviation.solve()
 
-        output_csv += (
-            f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
-        )
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -216,9 +215,7 @@ def main():
         MeanVariance.solve()
         z.l[...] = gams_math.sqrt(z.l)
 
-        output_csv += (
-            f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
-        )
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -284,9 +281,7 @@ def main():
 
         MeanAbsoluteDeviationWeighted.solve()
 
-        output_csv += (
-            f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
-        )
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -303,17 +298,14 @@ def main():
 
         MeanAbsoluteDeviationWeighted.solve()
 
-        output_csv += (
-            f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
-        )
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
         mu_target += MU_STEP.records.value[0]
 
-    FrontierHandle = open("MADvsMV.csv", "w", encoding="UTF-8")
-    FrontierHandle.write(output_csv)
-    FrontierHandle.close()
+    with open("MADvsMV.csv", "w", encoding="UTF-8") as FrontierHandle:
+        FrontierHandle.write(output_csv)
 
     # Note that, the last two models will yield the same portfolios! See PFO Section 5.2.2.
 

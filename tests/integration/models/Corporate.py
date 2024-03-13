@@ -19,32 +19,38 @@ import os
 from pathlib import Path
 
 import gamspy.math as gams_math
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Sum,
+    Variable,
+)
 
 
 def main():
     # Define container
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/Corporate.gdx",
     )
 
     # SETS #
-    BroadAssetClassOne, BroadAssetClassTwo, BroadAssetClassThree, ACTIVE = (
-        m.getSymbols([
+    (
+        BroadAssetClassOne,
+        BroadAssetClassTwo,
+        BroadAssetClassThree,
+        ACTIVE,
+    ) = m.getSymbols(
+        [
             "BroadAssetClassOne",
             "BroadAssetClassTwo",
             "BroadAssetClassThree",
             "ACTIVE",
-        ])
+        ]
     )
 
     # ALIASES

@@ -53,9 +53,8 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy as gp
+import pandas as pd
 
 
 def main():
@@ -112,7 +111,6 @@ def main():
 
     c = gp.Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

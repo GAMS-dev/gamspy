@@ -36,17 +36,12 @@ import os
 from pathlib import Path
 
 import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Model
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Sum
+from gamspy import Container, Model, Problem, Sense, Sum
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/spatequ.gdx",
     )
 
@@ -62,15 +57,17 @@ def main():
         BetaS,
         BetasSq,
         TCost,
-    ) = m.getSymbols([
-        "AlphaD",
-        "BetaD",
-        "BetadSq",
-        "AlphaS",
-        "BetaS",
-        "BetasSq",
-        "TCost",
-    ])
+    ) = m.getSymbols(
+        [
+            "AlphaD",
+            "BetaD",
+            "BetadSq",
+            "AlphaS",
+            "BetaS",
+            "BetasSq",
+            "TCost",
+        ]
+    )
 
     # Variables
     DINT, SINT, TC, Qd, Qs, X, P, OBJ = m.getSymbols(
@@ -93,22 +90,24 @@ def main():
         OBJECT,
         IN_OUT,
         DOM_TRAD,
-    ) = m.getSymbols([
-        "DEM",
-        "DEMLOG",
-        "DEMINT",
-        "SUP",
-        "SUPLOG",
-        "SUPINT",
-        "SDBAL",
-        "PDIF",
-        "TRANSCOST",
-        "SX",
-        "DX",
-        "OBJECT",
-        "IN_OUT",
-        "DOM_TRAD",
-    ])
+    ) = m.getSymbols(
+        [
+            "DEM",
+            "DEMLOG",
+            "DEMINT",
+            "SUP",
+            "SUPLOG",
+            "SUPINT",
+            "SDBAL",
+            "PDIF",
+            "TRANSCOST",
+            "SX",
+            "DX",
+            "OBJECT",
+            "IN_OUT",
+            "DOM_TRAD",
+        ]
+    )
 
     DEM[r, c] = AlphaD[r, c] + Sum(cc, (BetaD[r, c, cc] * P[r, c])) == Qd[r, c]
 
@@ -137,9 +136,9 @@ def main():
 
     SDBAL[c] = Sum(r, Qd[r, c]) == Sum(r, Qs[r, c])
 
-    TRANSCOST[...] = TC == Sum((r, rr, c), X[r, rr, c] * TCost[r, rr, c])
+    TRANSCOST[...] = Sum((r, rr, c), X[r, rr, c] * TCost[r, rr, c]) == TC
 
-    OBJECT[...] = OBJ == Sum([r, c], DINT[r, c] - SINT[r, c]) - TC
+    OBJECT[...] = Sum([r, c], DINT[r, c] - SINT[r, c]) - TC == OBJ
 
     PDIF[r, rr, c] = P[r, c] - P[rr, c] <= TCost[r, rr, c]
 

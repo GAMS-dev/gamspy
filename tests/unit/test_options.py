@@ -1,23 +1,42 @@
 from __future__ import annotations
 
 import os
+import sys
 import unittest
 
-from pydantic import ValidationError
-
 import gamspy.math as math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
+from pydantic import ValidationError
 
 
 class OptionsSuite(unittest.TestCase):
+    def setUp(self):
+        self.m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+        )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
     def test_options(self):
         with self.assertRaises(ValidationError):
             _ = Options(hold_fixed_variables=5)
@@ -91,32 +110,18 @@ class OptionsSuite(unittest.TestCase):
         options = Options(lp="conopt")
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             debugging_level="keep",
             options=options,
         )
 
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
         # Set
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(m, name="i", records=self.canning_plants)
+        j = Set(m, name="j", records=self.markets)
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -143,7 +148,7 @@ class OptionsSuite(unittest.TestCase):
         with open(
             os.path.join(m.working_directory, m.gamsJobName() + ".pf")
         ) as file:
-            self.assertTrue("LP=conopt\n" == file.readline())
+            self.assertTrue(file.readline() == "LP=conopt\n")
 
     def test_gamspy_to_gams_options(self):
         options = Options(
@@ -155,6 +160,60 @@ class OptionsSuite(unittest.TestCase):
         self.assertTrue(gams_options["suffixalgebravars"] == "off")
         self.assertTrue(gams_options["suffixdlvars"] == "off")
         self.assertTrue(gams_options["solveopt"] == 0)
+
+    def test_log_option(self):
+        # Set
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
+
+        # Data
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+
+        # Equation
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        # logoption = 2
+        transport.solve(create_log_file=True)
+
+        # logoption = 4
+        with self.assertRaises(NotImplementedError):
+            transport.solve(output=sys.stdout, create_log_file=True)
+
+        # test logfile
+        logfile_name = os.path.join(os.getcwd(), "log.txt")
+        transport.solve(
+            options=Options(log_file=logfile_name), create_log_file=True
+        )
+        self.assertTrue(os.path.exists(logfile_name))
+
+        # test listing file
+        listing_file_name = os.path.join(os.getcwd(), "listing.lst")
+        transport.solve(options=Options(listing_file=listing_file_name))
+        self.assertTrue(os.path.exists(listing_file_name))
+
+        # test gdx file
+        gdx_file_name = os.path.join(os.getcwd(), "gdxfile.gdx")
+        transport.solve(options=Options(gdx_file=gdx_file_name))
+        self.assertTrue(os.path.exists(gdx_file_name))
 
 
 def options_suite():

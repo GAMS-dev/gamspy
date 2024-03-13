@@ -3,20 +3,14 @@ from __future__ import annotations
 import os
 import unittest
 
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
+from gamspy import Container, Domain, Parameter, Set, Sum
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class DomainSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_domain(self):
@@ -36,7 +30,6 @@ class DomainSuite(unittest.TestCase):
     def test_domain_forwarding(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         i = Set(m, name="i")
         _ = Parameter(
@@ -64,9 +57,8 @@ class DomainSuite(unittest.TestCase):
         M2 = self.m.addParameter("M2")
         M2[...] = Sum(job2, data2["release", job2] + data2["duration", job2])
 
-        if not self.m.delayed_execution:
-            with self.assertRaises(GamspyException):
-                M[...] = Sum(job2, data2["rbla", job2] + data2["bla", job2])
+        with self.assertRaises(GamspyException):
+            M[...] = Sum(job2, data2["rbla", job2] + data2["bla", job2])
 
 
 def domain_suite():

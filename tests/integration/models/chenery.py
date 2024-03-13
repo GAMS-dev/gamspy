@@ -23,18 +23,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Model
-from gamspy import Number
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Sum
+from gamspy import Container, Model, Number, Problem, Sense, Sum
 
 
 def main():
     container = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/chenery.gdx",
     )
 
@@ -57,22 +51,24 @@ def main():
         rho,
         deli,
         efy,
-    ) = container.getSymbols([
-        "aio",
-        "pdat",
-        "ddat",
-        "tdat",
-        "mew",
-        "xsi",
-        "gam",
-        "alp",
-        "ynot",
-        "sig",
-        "thet",
-        "rho",
-        "del",
-        "efy",
-    ])
+    ) = container.getSymbols(
+        [
+            "aio",
+            "pdat",
+            "ddat",
+            "tdat",
+            "mew",
+            "xsi",
+            "gam",
+            "alp",
+            "ynot",
+            "sig",
+            "thet",
+            "rho",
+            "del",
+            "efy",
+        ]
+    )
     lbar, plab, kbar, dbar = container.getSymbols(
         ["lbar", "plab", "kbar", "dbar"]
     )

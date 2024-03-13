@@ -17,18 +17,19 @@ from __future__ import annotations
 
 import os
 
-import pandas as pd
-
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import pandas as pd
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def reformat_df(dataframe):
@@ -102,7 +103,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #

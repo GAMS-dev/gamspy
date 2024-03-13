@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 import io
-
-from typing import List
-from typing import TYPE_CHECKING
-from typing import Union
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
@@ -14,12 +10,12 @@ from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import ImplicitSet, ImplicitParameter
-    from gamspy import Alias, Set, Parameter, Equation, Variable
+    from gamspy import Alias, Equation, Parameter, Set, Variable
+    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
 def get_dimension(
-    domain: List[Set | Alias | ImplicitSet | str],
+    domain: list[Set | Alias | ImplicitSet | str],
 ):
     dimension = 0
 
@@ -32,7 +28,7 @@ def get_dimension(
     return dimension
 
 
-def get_domain_path(symbol) -> List[str]:
+def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     path = []
     domain = symbol
 
@@ -45,17 +41,14 @@ def get_domain_path(symbol) -> List[str]:
         if isinstance(domain, gp.Alias):
             path.append(domain.alias_with.name)
 
-        if isinstance(domain, str):
-            domain = "*"
-        else:
-            domain = domain.domain[0]
+        domain = "*" if isinstance(domain, str) else domain.domain[0]
 
     return path
 
 
 def validate_dimension(
-    symbol: Union[Set, Parameter, Variable, Equation, ImplicitParameter],
-    domain: List[Set | Alias | ImplicitSet | str],
+    symbol: Set | Parameter | Variable | Equation | ImplicitParameter,
+    domain: list[Set | Alias | ImplicitSet | str],
 ):
     dimension = get_dimension(domain)
 
@@ -69,7 +62,7 @@ def validate_dimension(
 
 
 def validate_one_dimensional_sets(
-    given: str | Set | Alias | ImplicitSet,
+    given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
     if isinstance(given, implicits.ImplicitSet):
@@ -158,7 +151,7 @@ def _transform_given_indices(
 
 
 def validate_domain(
-    symbol: Union[Set, Parameter, Equation, ImplicitParameter],
+    symbol: Set | Parameter | Equation | ImplicitParameter,
     indices: Set | Alias | str | tuple | ImplicitSet,
 ):
     domain = _transform_given_indices(symbol.domain, indices)

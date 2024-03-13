@@ -28,21 +28,17 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
-from gams import GamsJob
-from gams import GamsOptions
+from gams import GamsJob, GamsOptions
 from gams.control.workspace import GamsExceptionExecution
 
 import gamspy._backend.backend as backend
-from gamspy.exceptions import customize_exception
-from gamspy.exceptions import GamspyException
+import gamspy._miro as miro
+from gamspy.exceptions import GamspyException, customize_exception
 
 if TYPE_CHECKING:
     import io
-    from gamspy import Container
-    from gamspy import Model
 
-MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
-MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+    from gamspy import Container, Model
 
 
 class Local(backend.Backend):
@@ -112,14 +108,7 @@ class Local(backend.Backend):
                 self.container._gdx_out, symbols
             )
 
-        if MIRO_GDX_IN and self.container._miro_input_symbols:
-            self.container._load_records_from_gdx(
-                MIRO_GDX_IN, self.container._miro_input_symbols
-            )
-        if MIRO_GDX_OUT and self.container._miro_output_symbols:
-            self.container._load_records_from_gdx(
-                MIRO_GDX_OUT, self.container._miro_output_symbols
-            )
+        miro.load_miro_symbol_records(self.container)
 
         self.container._swap_checkpoints()
 

@@ -2,20 +2,22 @@ from __future__ import annotations
 
 import os
 import tempfile
+import time
 import unittest
 
 import pandas as pd
 from gams import GamsEngineConfiguration
-
-from gamspy import Container
-from gamspy import EngineClient
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    EngineClient,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.exceptions import ValidationError
 
 try:
@@ -29,18 +31,11 @@ except Exception:
 class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
-
-    def test_engine(self):
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
-        )
-
-        # Prepare data
-        distances = [
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
             ["seattle", "new-york", 2.5],
             ["seattle", "chicago", 1.7],
             ["seattle", "topeka", 1.8],
@@ -48,18 +43,22 @@ class EngineSuite(unittest.TestCase):
             ["san-diego", "chicago", 1.8],
             ["san-diego", "topeka", 1.4],
         ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+    def test_engine(self):
+        m = Container(
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        )
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -127,30 +126,16 @@ class EngineSuite(unittest.TestCase):
     def test_no_config(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -179,30 +164,16 @@ class EngineSuite(unittest.TestCase):
     def test_extra_files(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -225,21 +196,18 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        same_directory_file = open(
+        with open(
             m.working_directory + os.sep + "test.txt", "w"
-        )
+        ) as same_directory_file:
+            client = EngineClient(
+                host=os.environ["ENGINE_URL"],
+                username=os.environ["ENGINE_USER"],
+                password=os.environ["ENGINE_PASSWORD"],
+                namespace=os.environ["ENGINE_NAMESPACE"],
+                extra_model_files=[same_directory_file.name],
+            )
 
-        client = EngineClient(
-            host=os.environ["ENGINE_URL"],
-            username=os.environ["ENGINE_USER"],
-            password=os.environ["ENGINE_PASSWORD"],
-            namespace=os.environ["ENGINE_NAMESPACE"],
-            extra_model_files=[same_directory_file.name],
-        )
-
-        transport.solve(backend="engine", client=client)
-        same_directory_file.close()
-        os.unlink(same_directory_file.name)
+            transport.solve(backend="engine", client=client)
 
         file = tempfile.NamedTemporaryFile(delete=False)
         client = EngineClient(
@@ -259,30 +227,16 @@ class EngineSuite(unittest.TestCase):
     def test_solve_twice(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -318,30 +272,16 @@ class EngineSuite(unittest.TestCase):
     def test_summary(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -369,31 +309,17 @@ class EngineSuite(unittest.TestCase):
     def test_non_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
-
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
         # Data
-        a = Parameter(m, name="a", domain=[i], records=capacities)
-        b = Parameter(m, name="b", domain=[j], records=demands)
-        d = Parameter(m, name="d", domain=[i, j], records=distances)
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
@@ -420,6 +346,7 @@ class EngineSuite(unittest.TestCase):
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
+            is_blocking=False,
         )
         transport.solve(backend="engine", client=client)
 
@@ -437,11 +364,11 @@ class EngineSuite(unittest.TestCase):
             "out_dir", os.path.basename(m.gdxOutputPath())
         )
         container = Container(load_from=gdx_out_path)
-        self.assertTrue("x" in container.data.keys())
+        self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 
-    def test_api(self):
+    def test_api_job(self):
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
@@ -460,6 +387,51 @@ class EngineSuite(unittest.TestCase):
         while status != 10:
             status, _, _ = client.job.get(token)
             print(client.job.get_logs(token))
+
+    def test_api_auth(self):
+        # /api/auth -> post
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        token = client.auth.post(scope=["JOBS", "AUTH"])
+        self.assertTrue(token is not None and isinstance(token, str))
+
+        # First get a JWT token, then send a job
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        # /api/auth/login -> post
+        jwt_token = client.auth.login(scope=["JOBS", "AUTH"])
+        time.sleep(1)
+
+        self.assertTrue(jwt_token is not None and isinstance(jwt_token, str))
+
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            jwt=jwt_token,
+        )
+        gms_path = os.path.join(os.getcwd(), "dummy2.gms")
+        with open(gms_path, "w") as file:
+            file.write("Set i / i1*i3 /;")
+
+        token = client.job.post(os.getcwd(), gms_path)
+
+        status, _, _ = client.job.get(token)
+        while status != 10:
+            status, _, _ = client.job.get(token)
+
+        # /api/auth/logout -> post
+        # message = client.auth.logout()
+        # self.assertTrue(message is not None and isinstance(message, str))
 
 
 def engine_suite():

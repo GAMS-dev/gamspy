@@ -26,15 +26,16 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def reformat_df(dataframe):
@@ -62,7 +63,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -89,18 +89,24 @@ def main():
     eq2 = Equation(m, name="eq2", type="regular")
     eq3 = Equation(m, name="eq3", type="regular")
 
-    eq1[...] = TC == Sum(
-        gen,
-        data[gen, "a"] * P[gen] * P[gen]
-        + data[gen, "b"] * P[gen]
-        + data[gen, "c"],
+    eq1[...] = (
+        Sum(
+            gen,
+            data[gen, "a"] * P[gen] * P[gen]
+            + data[gen, "b"] * P[gen]
+            + data[gen, "c"],
+        )
+        == TC
     )
     eq2[...] = Sum(gen, P[gen]) >= load
-    eq3[...] = TE == Sum(
-        gen,
-        data[gen, "d"] * P[gen] * P[gen]
-        + data[gen, "e"] * P[gen]
-        + data[gen, "f"],
+    eq3[...] = (
+        Sum(
+            gen,
+            data[gen, "d"] * P[gen] * P[gen]
+            + data[gen, "e"] * P[gen]
+            + data[gen, "f"],
+        )
+        == TE
     )
 
     P.lo[gen] = data[gen, "Pmin"]

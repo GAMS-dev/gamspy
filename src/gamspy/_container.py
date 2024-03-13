@@ -24,40 +24,37 @@
 #
 from __future__ import annotations
 
+import atexit
 import os
 import shutil
 import sys
 import uuid
-import warnings
-from typing import Any
-from typing import Literal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
 import pandas as pd
-from gams import DebugLevel
-from gams import GamsCheckpoint
-from gams import GamsJob
-from gams import GamsWorkspace
+from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
 from gams.core import gdx
 from gams.core.opt import optResetStr
 
 import gamspy as gp
+import gamspy._miro as miro
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._miro import MiroJSONEncoder
-from gamspy._options import _map_options, Options
+from gamspy._options import Options, _map_options
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import (
         Alias,
-        Set,
-        Parameter,
-        Variable,
         Equation,
         EquationType,
         Model,
+        Parameter,
+        Set,
+        Variable,
     )
     from gamspy._algebra.expression import Expression
     from gamspy._model import Sense
@@ -65,11 +62,7 @@ if TYPE_CHECKING:
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-
-LOAD_SYMBOL_TYPES = (gt.Set, gt.Parameter, gt.Variable, gt.Equation)
 MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
-MIRO_OUTPUT_TYPES = LOAD_SYMBOL_TYPES
-
 
 debugging_map = {
     "delete": DebugLevel.Off,
@@ -93,8 +86,6 @@ class Container(gt.Container):
         .gdx, .g00 files.
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default "delete"
-    delayed_execution : bool, optional
-        Delayed execution mode, by default False
     options : Options
         Global options for the overall execution
     miro_protect : bool
@@ -114,26 +105,23 @@ class Container(gt.Container):
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: str = "delete",
-        delayed_execution: bool = False,
         miro_protect: bool = True,
         options: Options | None = None,
     ):
+        self._gams_string = ""
+        if IS_MIRO_INIT:
+            atexit.register(self._write_miro_files)
+
         system_directory = (
             system_directory
             if system_directory
             else utils._get_gamspy_base_directory()
         )
 
-        self._delayed_execution = delayed_execution
-
-        if delayed_execution:
-            warnings.warn(
-                "Delayed execution mode will be deprecated in 0.12.0."
-            )
-
         self._debugging_level = self._get_debugging_level(debugging_level)
 
         self._unsaved_statements: list = []
+        self._all_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
 
@@ -179,10 +167,17 @@ class Container(gt.Container):
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
-        self._first_destruct = True
         if load_from is not None:
             self.read(load_from)
             self._run()
+
+    def _write_miro_files(self):  # pragma: no cover
+        if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
+            return
+
+        # create conf_<model>/<model>_io.json
+        encoder = MiroJSONEncoder(self)
+        encoder.write_json()
 
     def _get_debugging_level(self, debugging_level: str):
         if (
@@ -196,29 +191,9 @@ class Container(gt.Container):
 
         return debugging_level
 
-    def __del__(self):
-        try:
-            if (
-                not IS_MIRO_INIT
-                or not self._first_destruct
-                or len(self._miro_input_symbols)
-                + len(self._miro_output_symbols)
-                == 0
-            ):
-                return
-
-            self._first_destruct = False
-            # create conf_<model>/<model>_io.json
-            encoder = MiroJSONEncoder(self)
-            encoder.writeJson()
-        except Exception:
-            pass
-
-    def _write_default_gdx_miro(self):
+    def _write_default_gdx_miro(self):  # pragma: no cover
         # create data_<model>/default.gdx
-        symbols = list(
-            set(self._miro_input_symbols + self._miro_output_symbols)
-        )
+        symbols = self._miro_input_symbols + self._miro_output_symbols
 
         filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
         directory = os.path.dirname(sys.argv[0])
@@ -254,12 +229,13 @@ class Container(gt.Container):
             raise ValidationError("import_symbols must be a list of strings")
 
         self._import_symbols = import_symbols
-        self._unsaved_statements.append(gams_code)
+        self._add_statement(gams_code)
 
         self._run()
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
+        self._all_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""
@@ -333,14 +309,10 @@ class Container(gt.Container):
         Removes autogenerated model attributes, objective variable and equation from
         the container
         """
-        autogenerated_symbol_names = [
-            name
-            for name in self.data.keys()
-            if gp.Model._generate_prefix in name
-        ]
+        autogenerated_symbol_names = self._get_autogenerated_symbol_names()
 
         for name in autogenerated_symbol_names:
-            if name in self.data.keys():
+            if name in self.data:
                 del self.data[name]
 
     def _get_symbol_names_from_gdx(self, load_from: str) -> list[str]:
@@ -377,7 +349,7 @@ class Container(gt.Container):
 
     def _get_autogenerated_symbol_names(self) -> list[str]:
         names = []
-        for name in self.data.keys():
+        for name in self.data:
             if name.startswith(gp.Model._generate_prefix):
                 names.append(name)
 
@@ -417,7 +389,7 @@ class Container(gt.Container):
         self._is_first_run = False
 
         if IS_MIRO_INIT:
-            self._write_default_gdx_miro()
+            self._write_default_gdx_miro()  # pragma: no cover
 
         return summary
 
@@ -437,25 +409,13 @@ class Container(gt.Container):
         unload_str = ",".join(unload_names)
         return f"execute_unload '{gdx_out}' {unload_str}\n"
 
-    def _get_load_miro_input_str(self, statement, gdx_in):
-        string = "$gdxIn\n"  # close the old one
-        string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
-        string += f"$loadDC {statement}\n"
-        string += "$gdxIn\n"  # close the new one
-        string += f"$gdxIn {gdx_in}\n"
-
-        return string
-
-    def _get_unload_miro_symbols_str(self):
-        unload_str = ",".join(self._miro_output_symbols)
-        return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
-
     def _generate_gams_string(
         self,
         gdx_in: str,
         gdx_out: str,
         dirty_names: list[str],
         modified_names: list[str],
+        user_invoked: bool = False,
     ) -> str:
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:
@@ -467,19 +427,17 @@ class Container(gt.Container):
                 string += statement.getStatement() + "\n"
 
         for symbol_name in modified_names:
-            if not isinstance(
-                self[symbol_name], gp.Alias
-            ) and not symbol_name.startswith(gp.Model._generate_prefix):
+            symbol = self[symbol_name]
+            if isinstance(symbol, Symbol) and not symbol_name.startswith(
+                gp.Model._generate_prefix
+            ):
                 if (
-                    isinstance(self[symbol_name], MIRO_INPUT_TYPES)
-                    and self[symbol_name]._is_miro_input
+                    isinstance(symbol, MIRO_INPUT_TYPES)
+                    and symbol._is_miro_input
+                    and not IS_MIRO_INIT
+                    and MIRO_GDX_IN
                 ):
-                    if not IS_MIRO_INIT and MIRO_GDX_IN:
-                        string += self._get_load_miro_input_str(
-                            symbol_name, gdx_in
-                        )
-                    else:
-                        string += f"$loadDC {symbol_name}\n"
+                    string += miro.get_load_input_str(symbol_name, gdx_in)
                 else:
                     string += f"$loadDC {symbol_name}\n"
 
@@ -487,20 +445,11 @@ class Container(gt.Container):
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
 
         if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
-            string += self._get_unload_miro_symbols_str()
+            string += miro.get_unload_output_str(self)
+
+        self._gams_string += string
 
         return string
-
-    @property
-    def delayed_execution(self) -> bool:
-        """
-        Delayed execution mode.
-
-        Returns
-        -------
-        bool
-        """
-        return self._delayed_execution
 
     def gamsJobName(self) -> str | None:
         """
@@ -969,9 +918,16 @@ class Container(gt.Container):
         -------
         str
         """
-        return self._generate_gams_string(self._gdx_in, self._gdx_out, [], [])
+        return self._gams_string
 
-    def getEquations(self):
+    def getEquations(self) -> list[Equation]:
+        """
+        Returns all equation symbols in the Container.
+
+        Returns
+        -------
+        list[Equation]
+        """
         equations = [
             equation
             for equation in self.listEquations()
@@ -990,7 +946,7 @@ class Container(gt.Container):
         self._temp_container.read(load_from, symbol_names)
 
         for name in symbol_names:
-            if name in self.data.keys():
+            if name in self.data:
                 updated_records = self._temp_container[name].records
 
                 self[name]._records = updated_records

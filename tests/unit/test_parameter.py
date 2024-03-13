@@ -5,23 +5,27 @@ import unittest
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.exceptions import ValidationError, GamspyException
+from gamspy import Alias, Container, Ord, Parameter, Set, Sum, Variable
+from gamspy.exceptions import GamspyException, ValidationError
 
 
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
+            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
         )
+        self.canning_plants = ["seattle", "san-diego"]
+        self.markets = ["new-york", "chicago", "topeka"]
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_creation(self):
         # no name
@@ -48,37 +52,32 @@ class ParameterSuite(unittest.TestCase):
         # Parameter and domain containers are different
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Parameter(m, "param1", domain=[set1])
 
     def test_parameter_string(self):
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
-
         # Check if the name is reserved
         self.assertRaises(ValidationError, Parameter, self.m, "set")
 
         i = Set(
             self.m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             self.m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
-            description="distances",
+            records=self.capacities,
+            description="capacities",
         )
 
         self.assertEqual(
             a.getStatement(),
-            'Parameter a(i) "distances";',
+            'Parameter a(i) "capacities";',
         )
 
         b = Parameter(self.m, "b")
@@ -87,39 +86,32 @@ class ParameterSuite(unittest.TestCase):
         self.assertEqual((-b).name, "-b")
 
     def test_implicit_parameter_string(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
+        m = Container()
 
         i = Set(
             m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         self.assertEqual(a[i].gamsRepr(), "a(i)")
 
         a[i] = -a[i] * 5
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].gamsRepr(),
-                "a(i) = (-a(i) * 5);",
-            )
+        self.assertEqual(
+            a._assignment.gamsRepr(),
+            "a(i) = (-a(i) * 5);",
+        )
 
         cont = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
             working_directory=".",
         )
 
@@ -133,7 +125,6 @@ class ParameterSuite(unittest.TestCase):
     def test_parameter_assignment(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
         i = Set(self.m, "i")
@@ -144,66 +135,53 @@ class ParameterSuite(unittest.TestCase):
             a[j] = 5
 
     def test_implicit_parameter_assignment(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
-        canning_plants = pd.DataFrame(["seattle", "san-diego", "topeka"])
-
+        m = Container()
         i = Set(
             m,
             name="i",
-            records=canning_plants,
+            records=self.canning_plants,
             description="Canning Plants",
         )
         a = Parameter(
             m,
             name="a",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         b = Parameter(
             m,
             name="b",
             domain=[i],
-            records=pd.DataFrame(
-                [["seattle", 350], ["san-diego", 600], ["topeka", 500]]
-            ),
+            records=self.capacities,
         )
 
         a[i] = b[i]
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "a(i) = b(i);",
-            )
+        self.assertEqual(
+            a._assignment.getStatement(),
+            "a(i) = b(i);",
+        )
 
         v = Variable(m, "v", domain=[i])
         v.l[i] = v.l[i] * 5
 
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].getStatement(),
-                "v.l(i) = (v.l(i) * 5);",
-            )
+        self.assertEqual(
+            v._assignment.getStatement(),
+            "v.l(i) = (v.l(i) * 5);",
+        )
 
     def test_equality(self):
-        m = Container(
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False))
-        )
+        m = Container()
         j = Set(m, "j")
         h = Set(m, "h")
         hp = Alias(m, "hp", h)
         lamb = Parameter(m, "lambda", domain=[j, h])
         gamma = Parameter(m, "gamma", domain=[j, h])
         gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
-        if m.delayed_execution:
-            self.assertEqual(
-                m._unsaved_statements[-1].gamsRepr(),
-                "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
-            )
+        self.assertEqual(
+            gamma._assignment.gamsRepr(),
+            "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
+        )
 
     def test_override(self):
         # Parameter record override
@@ -223,7 +201,6 @@ class ParameterSuite(unittest.TestCase):
     def test_undef(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
         _ = Parameter(
             m, name="rho", records=[np.nan]
@@ -231,7 +208,8 @@ class ParameterSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            f"$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\n$offUNDF\n$gdxIn\n",
+            f"$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nParameter"
+            " rho;\n$loadDC rho\n$offUNDF\n$gdxIn\n",
         )
 
     def test_assignment_dimensionality(self):

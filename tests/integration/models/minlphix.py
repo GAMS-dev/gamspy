@@ -85,26 +85,26 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqrt
 
 
 def main():
     cont = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Set
@@ -252,12 +252,14 @@ def main():
         cont,
         name="kf",
         domain=[i, n],
-        records=np.array([
-            [32.4, 0.0225],
-            [25.0, 0.0130],
-            [3.76, 0.0043],
-            [35.1, 0.0156],
-        ]),
+        records=np.array(
+            [
+                [32.4, 0.0225],
+                [25.0, 0.0130],
+                [3.76, 0.0043],
+                [35.1, 0.0156],
+            ]
+        ),
         description="coeff. for heat duty temperature fits",
     )
 
@@ -265,12 +267,14 @@ def main():
         cont,
         name="af",
         domain=[i, n],
-        records=np.array([
-            [9.541, 1.028],
-            [12.24, 1.050],
-            [8.756, 1.029],
-            [9.181, 1.005],
-        ]),
+        records=np.array(
+            [
+                [9.541, 1.028],
+                [12.24, 1.050],
+                [8.756, 1.029],
+                [9.181, 1.005],
+            ]
+        ),
         description="coeff. for column temperature fits",
     )
 

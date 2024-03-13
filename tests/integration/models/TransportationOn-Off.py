@@ -27,14 +27,7 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy.math import sqr
 
 
@@ -56,11 +49,13 @@ def data_records():
     data_recs = reformat_df(pd.DataFrame(data, columns=cols, index=inds))
 
     # c records list
-    c_recs = np.array([
-        [0.0755, 0.0655, 0.0498, 0.0585],
-        [0.0276, 0.0163, 0.096, 0.0224],
-        [0.068, 0.0119, 0.034, 0.0751],
-    ])
+    c_recs = np.array(
+        [
+            [0.0755, 0.0655, 0.0498, 0.0585],
+            [0.0276, 0.0163, 0.096, 0.0224],
+            [0.068, 0.0119, 0.034, 0.0751],
+        ]
+    )
 
     return c_recs, data_recs
 
@@ -68,7 +63,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #

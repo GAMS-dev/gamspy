@@ -1,4 +1,5 @@
 GAMSPy Model,GAMS Model,Data,Model Type,License
+:ref:`acopf <acopf>`,,:download:`acopf.gdx <../../tests/integration/models/acopf.gdx>`,NLP,Demo
 :ref:`aircraft <aircraft>`,`aircraft <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_aircraft.html>`__,,LP,Demo
 :ref:`batchreactor <batchreactor>`,`batchreactor <https://www.gams.com/latest/noalib_ml/libhtml/noalib_batchreactor.html>`__,,NLP,Demo
 :ref:`benz <benz>`,`benz <https://www.gams.com/latest/noalib_ml/libhtml/noalib_benz.html>`__,,NLP,Demo
@@ -38,7 +39,6 @@ GAMSPy Model,GAMS Model,Data,Model Type,License
 :ref:`fuel <fuel>`,`fuel <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html>`__,,MINLP,Demo
 :ref:`gapmin <gapmin>`,`gapmin <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html>`__,,"MIP, RMIP",Demo
 :ref:`hansmcp <hansmcp>`,`hansmcp <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html>`__,:download:`hansmcp.gdx <../../tests/integration/models/hansmcp.gdx>`,MCP,Demo
-:ref:`hansmge <hansmge>`,`hansmge <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html>`__,:download:`hansmge.gdx <../../tests/integration/models/hansmge.gdx>`,MCP,Demo
 :ref:`heatex3 <heatex3>`,`heatex3 <https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html>`__,,NLP,Demo
 :ref:`hhd <hhd>`,,,NLP,Demo
 :ref:`Horizon <Horizon>`,`Horizon <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html>`__,,LP,Demo
@@ -58,6 +58,7 @@ GAMSPy Model,GAMS Model,Data,Model Type,License
 :ref:`minlphix <minlphix>`,`minlphix <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_minlphix.html>`__,,MINLP,Demo
 :ref:`MOED <MOED>`,`MOED <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MOED.html>`__,,QCP,Demo
 :ref:`MultiperiodACOPF24bus <MultiperiodACOPF24bus>`,`MultiperiodACOPF24bus <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_MultiperiodACOPF24bus.html>`__,,NLP,Requires license
+:ref:`nurses <nurses>`,,:download:`nurses_data.xlsx <../../tests/integration/models/nurses_data.xlsx>`,MIP,Demo
 :ref:`OPF2bus <OPF2bus>`,`OPF2bus <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF2bus.html>`__,,QCP,Demo
 :ref:`OPF5bus <OPF5bus>`,`OPF5bus <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_OPF5bus.html>`__,,LP,Demo
 :ref:`ParetoOptimalFront <ParetoOptimalFront>`,`ParetoOptimalFront <https://www.gams.com/latest/psoptlib_ml/libhtml/psoptlib_ParetoOptimalFront.html>`__,,NLP,Demo

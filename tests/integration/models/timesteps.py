@@ -33,23 +33,24 @@ from __future__ import annotations
 
 import os
 
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import uniformInt
 
 
 def main(mt=2016, mg=17, mindt=10, maxdt=40):
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     if mindt > maxdt:
@@ -108,7 +109,7 @@ def main(mt=2016, mg=17, mindt=10, maxdt=40):
     sMinDown[g, t1, t2] = (Ord(t1) >= Ord(t2)) & (
         Ord(t2) > Ord(t1) - pMinDown[g, t1]
     )
-    sMinDownFast[g, t1, t.lead((Ord(t1) - pMinDown[g, t1]))].where[
+    sMinDownFast[g, t1, t.lead(Ord(t1) - pMinDown[g, t1])].where[
         (tt[t]) & (Ord(t) <= pMinDown[g, t1])
     ] = True
 

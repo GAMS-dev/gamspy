@@ -1,55 +1,8 @@
 .. _debugging:
 
-*****************************
-Execution Modes and Debugging
-*****************************
-
-===============
-Execution Modes
-===============
-
-GAMSPy supports two execution modes through the ``Container``.
-
-Normal Execution
-----------------
-By default, normal execution is enabled. In this mode, each assignment or record reading attempt triggers 
-the execution of generated code, and the results are saved. This mode is suitable for debugging, although 
-it may be slower than delayed execution.
-
-.. code-block:: python
-
-    from gamspy import Container, Set, Parameter
-    m = Container()
-    i = Set(m, "i", records=["i1", "i2"])
-    a = Parameter(m, "a", domain=[i], records=[("i1", 1), ("i2", 2)])
-    a[i] = a[i] * 90
-
-In normal execution, the last line executes the actual computation in GAMS, as soon as it's specified.
-
-Delayed Execution
------------------
-Delayed execution is a mode designed for better performance. Assignments are not executed until the 
-``solve`` function of a model is called or an attempt is made to read the records of a dirty symbol.
-A dirty symbol is a symbol that was assigned a new value in previous lines.
-
-.. code-block:: python
-
-    from gamspy import Container, Set, Parameter
-    m = Container(delayed_execution=True)
-    i = Set(m, "i", records=["i1", "i2"])
-    a = Parameter(m, "a", domain=[i], records=[("i1", 1), ("i2", 2)])
-    a[i] = a[i] * 90 # This line is not executed yet. a is dirty now.
-    print(a.records) # An attempt to read a dirty symbol cause a GAMS run. a is not dirty anymore.
-
-This behaviour allows ``GAMSPy`` to minimize the number of actual runs in the backend. The performance
-improvement compared to normal execution mode might differ depending the model significantly.
-
-If you are familiar with ``GAMS`` language, and want to see the generated .gms file or .lst file,
-you can specify the working directory of the ``Container``.
-
-=========
+*********
 Debugging
-=========
+*********
 
 Specifying a Debugging Level
 ----------------------------
@@ -97,6 +50,42 @@ not have any effect.
 
 In this example, specifying the working directory as the current directory causes temporary GAMS files 
 (.gms, .lst, .g00. ,gdx files etc.) to be saved in the current directory.
+
+Generating a Listing File
+-------------------------
+If one is only interested in the listing file that is generated after the solve statement, they can specify
+the path for the lst file through :meth:`gamspy.Options`.
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(listing_file="<path_to_the_listing_file>.lst"))
+
+Generating a GDX File
+---------------------
+Sometimes, it might be useful to generate a GDX file which contains the records of all symbols specified in the model.
+The path of the GDX file to be generated can be specified through :meth:`gamspy.Options` as well.
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(gdx="<path_to_the_gdx_file>.gdx"))
 
 
 Generating a Log File
@@ -180,14 +169,12 @@ Inspecting Generated GAMS String
 --------------------------------
 
 Another alternative is to use the ``generateGamsString`` function. This function returns the GAMS code 
-generated up to that point as a string. This function must be used with delayed_execution mode, otherwise
-you will almost always get an empty string since the previous statements already ran with GAMS and the
-results were loaded into the container.
+generated up to that point as a string.
 
 .. code-block:: python
 
     from gamspy import Container
-    m = Container(delayed_execution=True, working_directory=".")
+    m = Container()
     ....
     ....
     ....
@@ -207,3 +194,45 @@ To see the generated GAMS statement for a certain symbol, ``getStatement`` funct
 The code snippet above prints the GAMS statement for the symbol `i`::
 
     'Set i(*);'
+
+Inspecting Misbehaving (Infeasible) Models
+------------------------------------------
+
+Infeasibility is always a possible outcome when solving models. Infeasibilities in a model can be calculated by using
+:meth:`gamspy.Model.compute_infeasibilities()`. This would list the infeasibilities in all equations of the model.
+Infeasibilities in a single equation as well as infeasibilities in a single variable can be computed with
+:meth:`gamspy.Equation.compute_infeasibilities()`, :meth:`gamspy.Variable.compute_infeasibilities()` respectively.
+
+.. code-block:: python
+
+    from gamspy import Container
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve()
+    print(model.compute_infeasibilities())
+
+
+
+Causes of infeasibility are not always easily identified. Solvers may report a particular equation as infeasible in cases where an entirely different equation is the cause.
+In these kind of complicated cases, one can dump all variables and equations in the listing file and inspect it.
+
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(equation_listing_limit=100, variable_listing_limit=100, listing_file="<path_to_the_listing_file>.lst"))
+

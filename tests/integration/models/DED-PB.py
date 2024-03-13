@@ -25,17 +25,10 @@ from __future__ import annotations
 
 import os
 
+import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
-
-import gamspy.math as gams_math
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 
 
 def reformat_df(dataframe):
@@ -93,7 +86,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -164,14 +156,17 @@ def main():
 
     balance[t] = Sum(i, p[i, t]) <= data[t, "load"]
 
-    EMcalc[...] = EM == Sum(
-        [t, i],
-        gendata[i, "d"] * gams_math.power(p[i, t], 2)
-        + gendata[i, "e"] * p[i, t]
-        + gendata[i, "f"],
+    EMcalc[...] = (
+        Sum(
+            [t, i],
+            gendata[i, "d"] * gams_math.power(p[i, t], 2)
+            + gendata[i, "e"] * p[i, t]
+            + gendata[i, "f"],
+        )
+        == EM
     )
 
-    EMlim[...] = EM <= lim
+    EMlim[...] = lim >= EM
 
     # Objective Function
     OF = Sum([i, t], 1 * data[t, "lamda"] * p[i, t]) - costThermal

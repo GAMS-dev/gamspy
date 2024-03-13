@@ -32,25 +32,25 @@ import os
 import sys
 
 from gams.connect import ConnectDatabase
-
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Number
-from gamspy import Options
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Number,
+    Options,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import Round
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets
@@ -62,7 +62,11 @@ def main():
 
     # Parameters
     dat = Parameter(
-        m, name="dat", description="unprotected data table", domain=[k, i, j]
+        m,
+        name="dat",
+        description="unprotected data table",
+        domain=[k, i, j],
+        domain_forwarding=True,
     )
     pro = Parameter(
         m,
@@ -74,27 +78,28 @@ def main():
     # extract data from Excel
     file_dir = os.path.dirname(os.path.abspath(__file__))
     cdb = ConnectDatabase(m.system_directory)
-    cdb.exec_task({
-        "PandasExcelReader": {
-            "file": os.path.join(file_dir, "cta.xlsx"),
-            "symbols": [
-                {
-                    "name": "dat",
-                    "range": "Sheet1!A1",
-                    "rowDimension": 2,
-                    "columnDimension": 1,
-                },
-                {
-                    "name": "pro",
-                    "range": "Sheet2!A1",
-                    "rowDimension": 2,
-                    "columnDimension": 1,
-                },
-            ],
+    cdb.exec_task(
+        {
+            "ExcelReader": {
+                "file": os.path.join(file_dir, "cta.xlsx"),
+                "symbols": [
+                    {
+                        "name": "dat",
+                        "range": "Sheet1!A1",
+                        "rowDimension": 2,
+                        "columnDimension": 1,
+                    },
+                    {
+                        "name": "pro",
+                        "range": "Sheet2!A1",
+                        "rowDimension": 2,
+                        "columnDimension": 1,
+                    },
+                ],
+            }
         }
-    })
+    )
 
-    dat.domain_forwarding = True  # let dat fill sets i, j, and k
     dat.setRecords(cdb.container["dat"].records)
     pro.setRecords(cdb.container["pro"].records)
 
@@ -208,26 +213,25 @@ def main():
     adjrep[k, i, j] = -adjn.l[i, j, k] + adjp.l[i, j, k]
 
     cdb = ConnectDatabase(m.system_directory, m)
-    cdb.exec_task({
-        "PandasExcelWriter": {
-            "file": os.path.join(file_dir, "results.xlsx"),
-            "excelWriterArguments": {"mode": "w"},
-            "symbols": [
-                {
-                    "name": "adjrep",
-                    "range": "adjrep!A1",
-                },
-                {
-                    "name": "rep",
-                    "range": "rep!A1",
-                },
-                {
-                    "name": "adjsum",
-                    "range": "adjsum!A1",
-                },
-            ],
+    cdb.exec_task(
+        {
+            "ExcelWriter": {
+                "file": os.path.join(file_dir, "results.xlsx"),
+                "clearSheet": True,
+                "symbols": [
+                    {
+                        "name": "adjrep",
+                    },
+                    {
+                        "name": "rep",
+                    },
+                    {
+                        "name": "adjsum",
+                    },
+                ],
+            }
         }
-    })
+    )
 
     binrep = Parameter(
         m,
@@ -258,17 +262,21 @@ def main():
         cutone = Equation(m, name=f"cutone_{it}")
         cuttwo = Equation(m, name=f"cuttwo_{it}")
         cutone[...] = (
-            sum([
-                1 - b[rec[:-1]] if rec[3] > 0.5 else b[rec[:-1]]
-                for rec in b_list
-            ])
+            sum(
+                [
+                    1 - b[rec[:-1]] if rec[3] > 0.5 else b[rec[:-1]]
+                    for rec in b_list
+                ]
+            )
             >= 1
         )
         cuttwo[...] = (
-            sum([
-                1 - b[rec[:-1]] if rec[3] < 0.5 else b[rec[:-1]]
-                for rec in b_list
-            ])
+            sum(
+                [
+                    1 - b[rec[:-1]] if rec[3] < 0.5 else b[rec[:-1]]
+                    for rec in b_list
+                ]
+            )
             >= 1
         )
 
@@ -287,16 +295,19 @@ def main():
         solve_time = cox3c.total_solve_time
 
     cdb = ConnectDatabase(m.system_directory, m)
-    cdb.exec_task({
-        "PandasExcelWriter": {
-            "file": os.path.join(file_dir, "results.xlsx"),
-            "symbols": [{
-                "name": "binrep",
-                "range": "binrep!A1",
-                "toExcelArguments": {"merge_cells": False},
-            }],
+    cdb.exec_task(
+        {
+            "ExcelWriter": {
+                "file": os.path.join(file_dir, "results.xlsx"),
+                "clearSheet": True,
+                "symbols": [
+                    {
+                        "name": "binrep",
+                    }
+                ],
+            }
         }
-    })
+    )
 
 
 if __name__ == "__main__":

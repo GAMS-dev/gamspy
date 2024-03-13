@@ -20,22 +20,22 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Set
@@ -67,42 +67,46 @@ def main():
         m,
         name="q",
         domain=[n, t],
-        records=pd.DataFrame([
-            ["res1", "ian", 128],
-            ["res1", "feb", 125],
-            ["res1", "mar", 234],
-            ["res1", "apr", 360],
-            ["res1", "mai", 541],
-            ["res1", "jun", 645],
-            ["res1", "jul", 807],
-            ["res1", "aug", 512],
-            ["res1", "sep", 267],
-            ["res1", "oct", 210],
-            ["res1", "nov", 981],
-            ["res1", "dec", 928],
-            ["res1", "enda", 250],
-        ]),
+        records=pd.DataFrame(
+            [
+                ["res1", "ian", 128],
+                ["res1", "feb", 125],
+                ["res1", "mar", 234],
+                ["res1", "apr", 360],
+                ["res1", "mai", 541],
+                ["res1", "jun", 645],
+                ["res1", "jul", 807],
+                ["res1", "aug", 512],
+                ["res1", "sep", 267],
+                ["res1", "oct", 210],
+                ["res1", "nov", 981],
+                ["res1", "dec", 928],
+                ["res1", "enda", 250],
+            ]
+        ),
         description="inflow water in the first reservoir rez1 (mil.m3)",
     )
     r = Parameter(
         m,
         name="r",
         domain=[n, t],
-        records=pd.DataFrame([
-            ["res1", "ian", 100],
-            ["res1", "feb", 150],
-            ["res1", "mar", 200],
-            ["res1", "apr", 500],
-            ["res1", "mai", 222],
-            ["res1", "jun", 700],
-            ["res1", "jul", 333],
-            ["res1", "aug", 333],
-            ["res1", "sep", 300],
-            ["res1", "oct", 250],
-            ["res1", "nov", 250],
-            ["res1", "dec", 250],
-            ["res1", "enda", 200],
-        ]),
+        records=pd.DataFrame(
+            [
+                ["res1", "ian", 100],
+                ["res1", "feb", 150],
+                ["res1", "mar", 200],
+                ["res1", "apr", 500],
+                ["res1", "mai", 222],
+                ["res1", "jun", 700],
+                ["res1", "jul", 333],
+                ["res1", "aug", 333],
+                ["res1", "sep", 300],
+                ["res1", "oct", 250],
+                ["res1", "nov", 250],
+                ["res1", "dec", 250],
+                ["res1", "enda", 200],
+            ]
+        ),
         description=(
             "required released water from the first reservoir rez1 (mil.m3)"
         ),

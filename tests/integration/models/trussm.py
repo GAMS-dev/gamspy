@@ -57,63 +57,67 @@ from __future__ import annotations
 import os
 
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Problem,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import uniform
 
 
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Prepare data
-    forces = pd.DataFrame([
-        ["j1", "k1", 0.0008],
-        ["j1", "k2", 1.0668],
-        ["j1", "k3", 0.2944],
-        ["j2", "k1", 0.0003],
-        ["j2", "k2", 0.0593],
-        ["j2", "k3", -1.3362],
-        ["j3", "k1", -0.0006],
-        ["j3", "k2", -0.0956],
-        ["j3", "k3", 0.7143],
-        ["j4", "k1", -1.0003],
-        ["j4", "k2", -0.8323],
-        ["j4", "k3", 1.6236],
-    ])
+    forces = pd.DataFrame(
+        [
+            ["j1", "k1", 0.0008],
+            ["j1", "k2", 1.0668],
+            ["j1", "k3", 0.2944],
+            ["j2", "k1", 0.0003],
+            ["j2", "k2", 0.0593],
+            ["j2", "k3", -1.3362],
+            ["j3", "k1", -0.0006],
+            ["j3", "k2", -0.0956],
+            ["j3", "k3", 0.7143],
+            ["j4", "k1", -1.0003],
+            ["j4", "k2", -0.8323],
+            ["j4", "k3", 1.6236],
+        ]
+    )
 
-    stiff_data = pd.DataFrame([
-        ["j1", "i1", 1.0],
-        ["j1", "i2", 0],
-        ["j1", "i3", 0.5],
-        ["j1", "i4", 0],
-        ["j1", "i5", 0],
-        ["j2", "i1", 0],
-        ["j2", "i2", 0],
-        ["j2", "i3", -0.5],
-        ["j2", "i4", -1.0],
-        ["j2", "i5", 0],
-        ["j3", "i1", 0],
-        ["j3", "i2", 0.5],
-        ["j3", "i3", 0],
-        ["j3", "i4", 0],
-        ["j3", "i5", 1.0],
-        ["j4", "i1", 0],
-        ["j4", "i2", 0.5],
-        ["j4", "i3", 0],
-        ["j4", "i4", 1.0],
-        ["j4", "i5", 0],
-    ])
+    stiff_data = pd.DataFrame(
+        [
+            ["j1", "i1", 1.0],
+            ["j1", "i2", 0],
+            ["j1", "i3", 0.5],
+            ["j1", "i4", 0],
+            ["j1", "i5", 0],
+            ["j2", "i1", 0],
+            ["j2", "i2", 0],
+            ["j2", "i3", -0.5],
+            ["j2", "i4", -1.0],
+            ["j2", "i5", 0],
+            ["j3", "i1", 0],
+            ["j3", "i2", 0.5],
+            ["j3", "i3", 0],
+            ["j3", "i4", 0],
+            ["j3", "i5", 1.0],
+            ["j4", "i1", 0],
+            ["j4", "i2", 0.5],
+            ["j4", "i3", 0],
+            ["j4", "i4", 1.0],
+            ["j4", "i5", 0],
+        ]
+    )
 
     # Set
     i = Set(

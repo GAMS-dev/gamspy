@@ -27,19 +27,20 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Alias
-from gamspy import Container
-from gamspy import Domain
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Alias,
+    Container,
+    Domain,
+    Equation,
+    Model,
+    Options,
+    Ord,
+    Parameter,
+    Set,
+    Smax,
+    Sum,
+    Variable,
+)
 
 
 def reformat_df(dataframe):
@@ -100,7 +101,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -235,16 +235,23 @@ def main():
         Domain(k, node).where[conex[node, bus]], Pij[bus, node, k]
     )
 
-    const3[...] = OF >= 10 * 8760 * (
-        Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
-        + 100000 * Sum(bus, LS[bus])
-    ) + 1e6 * Sum(
-        Domain(bus, node, k).where[conex[node, bus]],
-        0.5
-        * branch[bus, node, "cost"]
-        * alpha[bus, node, k].where[
-            (Ord(k) > 1) | (branch[node, bus, "stat"] == 0)
-        ],
+    const3[...] = (
+        10
+        * 8760
+        * (
+            Sum(Gen, Pg[Gen] * GenData[Gen, "b"] * Sbase)
+            + 100000 * Sum(bus, LS[bus])
+        )
+        + 1e6
+        * Sum(
+            Domain(bus, node, k).where[conex[node, bus]],
+            0.5
+            * branch[bus, node, "cost"]
+            * alpha[bus, node, k].where[
+                (Ord(k) > 1) | (branch[node, bus, "stat"] == 0)
+            ],
+        )
+        <= OF
     )
 
     loadflow = Model(

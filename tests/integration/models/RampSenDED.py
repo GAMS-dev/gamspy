@@ -27,14 +27,7 @@ import os
 
 import numpy as np
 import pandas as pd
-
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy.math import sqr
 
 
@@ -57,32 +50,34 @@ def data_records():
     gendata_recs = reformat_df(pd.DataFrame(data, columns=cols, index=inds))
 
     # demand records list
-    demands_recs = np.array([
-        510,
-        530,
-        516,
-        510,
-        515,
-        544,
-        646,
-        686,
-        741,
-        734,
-        748,
-        760,
-        754,
-        700,
-        686,
-        720,
-        714,
-        761,
-        727,
-        714,
-        618,
-        584,
-        578,
-        544,
-    ])
+    demands_recs = np.array(
+        [
+            510,
+            530,
+            516,
+            510,
+            515,
+            544,
+            646,
+            686,
+            741,
+            734,
+            748,
+            760,
+            754,
+            700,
+            686,
+            720,
+            714,
+            761,
+            727,
+            714,
+            618,
+            584,
+            578,
+            544,
+        ]
+    )
 
     return gendata_recs, demands_recs
 
@@ -90,7 +85,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -146,11 +140,14 @@ def main():
     Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU"]
     Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD"]
     balance[t] = Sum(i, p[i, t]) >= demand[t]
-    EMcalc[...] = EM == Sum(
-        [t, i],
-        gendata[i, "d"] * sqr(p[i, t])
-        + gendata[i, "e"] * p[i, t]
-        + gendata[i, "f"],
+    EMcalc[...] = (
+        Sum(
+            [t, i],
+            gendata[i, "d"] * sqr(p[i, t])
+            + gendata[i, "e"] * p[i, t]
+            + gendata[i, "f"],
+        )
+        == EM
     )
 
     DEDcostbased = Model(

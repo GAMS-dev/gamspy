@@ -21,15 +21,17 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 
@@ -37,7 +39,6 @@ def main():
     cont = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx",
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # Sets

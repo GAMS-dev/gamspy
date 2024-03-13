@@ -4,17 +4,13 @@ import os
 import unittest
 
 import gamspy as gp
-from gamspy import Container
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Variable
+from gamspy import Container, Parameter, Set, Variable
 
 
 class SpecialValuesSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         )
 
     def test_parameter_special_values(self):
@@ -31,34 +27,19 @@ class SpecialValuesSuite(unittest.TestCase):
         b = Parameter(self.m, "b", domain=[i])
         b[...] = gp.SpecialValues.EPS
 
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = EPS;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b(i) = EPS;")
 
         b[...] = gp.SpecialValues.NA
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = NA;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b(i) = NA;")
 
         b[...] = gp.SpecialValues.UNDEF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = UNDF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b(i) = UNDF;")
 
         b[...] = gp.SpecialValues.POSINF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = INF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b(i) = INF;")
 
         b[...] = gp.SpecialValues.NEGINF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b(i) = -INF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b(i) = -INF;")
 
     def test_implicit_parameter_special_values(self):
         i = Set(self.m, "i", records=["i1", "i2"])
@@ -66,34 +47,19 @@ class SpecialValuesSuite(unittest.TestCase):
         b = Variable(self.m, "b", domain=[i])
         b.l[...] = gp.SpecialValues.EPS
 
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = EPS;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b.l(i) = EPS;")
 
         b.l[...] = gp.SpecialValues.NA
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = NA;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b.l(i) = NA;")
 
         b.l[...] = gp.SpecialValues.UNDEF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = UNDF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b.l(i) = UNDF;")
 
         b.l[...] = gp.SpecialValues.POSINF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = INF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b.l(i) = INF;")
 
         b.l[...] = gp.SpecialValues.NEGINF
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(), "b.l(i) = -INF;"
-            )
+        self.assertEqual(b._assignment.gamsRepr(), "b.l(i) = -INF;")
 
     def test_operation_special_values(self):
         tax = Set(self.m, "tax", records=["i1", "i2"])
@@ -106,11 +72,15 @@ class SpecialValuesSuite(unittest.TestCase):
             x.l[tax] - e.l[tax], gp.SpecialValues.EPS
         )
 
-        if self.m.delayed_execution:
-            self.assertEqual(
-                self.m._unsaved_statements[-1].gamsRepr(),
-                'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
-            )
+        self.assertEqual(
+            results._assignment.gamsRepr(),
+            'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
+        )
+
+        dummy = Parameter(self.m, "dummy")
+        i = Set(self.m, "i", records=["i1", "i2"])
+        dummy[...] = gp.Sum(i, -0.0)
+        self.assertEqual(dummy._assignment.gamsRepr(), "dummy = sum(i,EPS);")
 
 
 def special_values_suite():

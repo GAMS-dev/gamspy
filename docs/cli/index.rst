@@ -9,9 +9,10 @@ gamspy
 
     install
     list
+    run
+    show
     update
     uninstall
-    version
 
 The base command for the GAMSPy CLI.
 
@@ -27,3 +28,7 @@ The base command for the GAMSPy CLI.
      - -h
      - 
      - Shows the help message
+   * - -\-version 
+     - -v
+     - 
+     - Shows the version of GAMSPy, GAMS and gamspy_base

@@ -33,12 +33,12 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gamspy._symbols.implicits import (
-        ImplicitSet,
-        ImplicitParameter,
-        ImplicitEquation,
-    )
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols.implicits import (
+        ImplicitEquation,
+        ImplicitParameter,
+        ImplicitSet,
+    )
 
 
 class Condition:
@@ -105,5 +105,7 @@ class Condition:
 
         self._symbol.container._add_statement(statement)
 
-        if not self._symbol.container.delayed_execution:
-            self._symbol.container._run()
+        if isinstance(self._symbol, ImplicitSymbol):
+            self._symbol.parent._assignment = statement
+
+        self._symbol.container._run()

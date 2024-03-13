@@ -23,26 +23,25 @@
 # SOFTWARE.
 #
 from __future__ import annotations
+
 import math
+import typing
 
-from typing import TYPE_CHECKING, Union
-
-import gamspy.math as gamspy_math
 import gamspy._algebra.expression as expression
+import gamspy.math as gamspy_math
 
-if TYPE_CHECKING:
+if typing.TYPE_CHECKING:
+    from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
-    from gamspy._algebra.operation import Operation
-    from gamspy._algebra.operation import Ord, Card
-    from gamspy import Alias, Equation, Parameter, Set, Variable
+    from gamspy._algebra.operation import Card, Operation, Ord
     from gamspy._symbols.implicits import (
         ImplicitParameter,
         ImplicitSet,
         ImplicitVariable,
     )
 
-    OperableType = Union[
+    OperableType = typing.Union[
         Alias,
         Equation,
         Parameter,
@@ -90,13 +89,15 @@ class Operable:
     def __rmul__(self: OperableType, other: OperableType):
         return expression.Expression(other, "*", self)
 
+    @typing.no_type_check
     def __pow__(self: OperableType, other: OperableType):
         if isinstance(other, int):
             return gamspy_math.power(self, other)
-        elif isinstance(other, float) and math.isclose(
-            other, round(other), rel_tol=1e-4
-        ):
-            return gamspy_math.power(self, other)
+        elif isinstance(other, float):
+            if other == 0.5:
+                return gamspy_math.sqrt(self)
+            elif math.isclose(other, round(other), rel_tol=1e-4):
+                return gamspy_math.power(self, other)
 
         return gamspy_math.rpower(self, other)
 

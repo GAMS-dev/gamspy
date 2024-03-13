@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import os
-from abc import ABC
-from abc import abstractmethod
-from typing import Literal
-from typing import TYPE_CHECKING
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
 
@@ -12,12 +10,13 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     import io
-    from gamspy._backend.engine import GAMSEngine, EngineClient
-    from gamspy._backend.neos import NeosClient, NEOSServer
-    from gamspy._backend.local import Local
+
     from gams import GamsOptions
-    from gamspy import Container
-    from gamspy import Model
+
+    from gamspy import Container, Model
+    from gamspy._backend.engine import EngineClient, GAMSEngine
+    from gamspy._backend.local import Local
+    from gamspy._backend.neos import NeosClient, NEOSServer
 
 SOLVE_STATUS = [
     "",
@@ -81,15 +80,18 @@ class Backend(ABC):
         self.gdx_out = gdx_out
 
     @abstractmethod
-    def is_async(self): ...
+    def is_async(self):
+        ...
 
     @abstractmethod
-    def solve(self, is_implicit: bool = False, keep_flags: bool = False): ...
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        ...
 
     def preprocess(self, keep_flags: bool = False):
-        dirty_names, modified_names = (
-            self.container._get_touched_symbol_names()
-        )
+        (
+            dirty_names,
+            modified_names,
+        ) = self.container._get_touched_symbol_names()
         self.clean_dirty_symbols(dirty_names)
         self.container.isValid(verbose=True, force=True)
         self.container.write(self.container._gdx_in, modified_names)
@@ -136,16 +138,18 @@ class Backend(ABC):
             ) = line.split(",")
 
         dataframe = pd.DataFrame(
-            [[
-                SOLVE_STATUS[int(solver_status)],
-                ModelStatus(int(model_status)).name,
-                objective_value,
-                num_equations,
-                num_variables,
-                model_type,
-                solver_name,
-                solver_time,
-            ]],
+            [
+                [
+                    SOLVE_STATUS[int(solver_status)],
+                    ModelStatus(int(model_status)).name,
+                    objective_value,
+                    num_equations,
+                    num_variables,
+                    model_type,
+                    solver_name,
+                    solver_time,
+                ]
+            ],
             columns=HEADER,
         )
         return dataframe

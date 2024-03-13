@@ -19,24 +19,24 @@ import os
 from pathlib import Path
 
 import pandas as pd
-
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Parameter
-from gamspy import Sense
-from gamspy import Smax
-from gamspy import Smin
-from gamspy import Sum
-from gamspy import Variable
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    Parameter,
+    Sense,
+    Smax,
+    Smin,
+    Sum,
+    Variable,
+)
 
 
 def main():
     # Define container
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
         load_from=str(Path(__file__).parent.absolute()) + "/Regret.gdx",
     )
 
@@ -192,10 +192,12 @@ def main():
         MU_TARGET[...] = mu_iter
         MinRegret.solve()
 
-        result.append([
-            MinRegret.objective_value,
-            (MU_TARGET.records.value[0] * Budget.records.value[0]),
-        ])
+        result.append(
+            [
+                MinRegret.objective_value,
+                (MU_TARGET.records.value[0] * Budget.records.value[0]),
+            ]
+        )
         result[-1] += x.records.level.tolist()
 
         RISK_TARGET[...] = MinRegret.objective_value

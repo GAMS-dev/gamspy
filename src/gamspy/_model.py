@@ -28,31 +28,30 @@ import io
 import os
 import uuid
 from enum import Enum
-from typing import Iterable
-from typing import Literal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable, Literal
 
-from gams import GamsOptions
+from gams import GamsExceptionExecution, GamsOptions
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Parameter, Variable, Equation, Container
+    import pandas as pd
+
+    from gamspy import Container, Equation, Parameter, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.implicits import ImplicitParameter
-    from gamspy._options import Options
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
-    from gamspy._options import ModelInstanceOptions
-    import pandas as pd
+    from gamspy._options import ModelInstanceOptions, Options
+    from gamspy._symbols.implicits import ImplicitParameter
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
 
@@ -448,14 +447,14 @@ class Model:
         if self._objective_variable:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        self.container._unsaved_statements.append(solve_string + ";\n")
+        self.container._add_statement(solve_string + ";\n")
 
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map:
             symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
-            self.container._unsaved_statements.append(
+            self.container._add_statement(
                 f"{symbol_name} = {self.name}.{attr_name};"
             )
 
@@ -479,11 +478,19 @@ class Model:
                     ModelStatus(temp_container[symbol_name].toValue()),
                 )
             elif python_attr == "solve_status":
+                status = SolveStatus(temp_container[symbol_name].toValue())
                 setattr(
                     self,
                     python_attr,
-                    SolveStatus(temp_container[symbol_name].toValue()),
+                    status,
                 )
+
+                if status != SolveStatus.NormalCompletion:
+                    raise GamsExceptionExecution(
+                        f"The model ({self.name}) was not solved successfully!"
+                        f" Solve status: {status.name}",
+                        status.value,
+                    )
             else:
                 setattr(
                     self,
@@ -517,6 +524,27 @@ class Model:
                 equation._is_dirty = True
                 variable._is_dirty = True
 
+    def compute_infeasibilities(self) -> dict[str, pd.DataFrame]:
+        """
+        Computes infeasabilities for all equations of the model
+
+        Returns
+        -------
+        dict[str, pd.DataFrame]
+            Dictionary of infeasibilities where equation names are keys and
+            infeasibilities are values
+        """
+        infeas_dict = {}
+
+        for equation in self.equations:
+            if equation.records is None:
+                continue
+
+            infeas_rows = utils._calculate_infeasibilities(equation)
+            infeas_dict[equation.name] = infeas_rows
+
+        return infeas_dict
+
     def interrupt(self) -> None:
         """
         Sends interrupt signal to the running job.
@@ -526,10 +554,7 @@ class Model:
         ValidationError
             If the job is not initialized
         """
-        if self.container._job is not None:
-            self.container._job.interrupt()
-        else:
-            raise ValidationError("There is no initialized job to interrupt.")
+        self.container._job.interrupt()
 
     def freeze(
         self,
@@ -648,7 +673,7 @@ class Model:
         equations = []
         for equation in self.equations:
             if self._matches:
-                if equation not in self._matches.keys():
+                if equation not in self._matches:
                     equations.append(equation.gamsRepr())
             else:
                 equations.append(equation.gamsRepr())
@@ -656,10 +681,12 @@ class Model:
         equations_str = ",".join(equations)
 
         if self._matches:
-            matches_str = ",".join([
-                f"{equation.gamsRepr()}.{variable.gamsRepr()}"
-                for equation, variable in self._matches.items()
-            ])
+            matches_str = ",".join(
+                [
+                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                    for equation, variable in self._matches.items()
+                ]
+            )
 
             equations_str = (
                 ",".join([equations_str, matches_str])

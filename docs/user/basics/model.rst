@@ -445,6 +445,8 @@ Here is the list of options and their descriptions:
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | domain_violation_limit            | Domain violation limit solver default                                             | int                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
+| gdx_file                          | Name of the gdx file with all symbols                                             | str                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | job_time_limit                    | Elapsed time limit in seconds                                                     | float                                                    |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | job_heap_limit                    | Maximum Heap size allowed in MB                                                   | float                                                    |
@@ -464,6 +466,10 @@ Here is the list of options and their descriptions:
 | keep_temporary_files              | Controls keeping or deletion of process directory and scratch files               | bool                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | license                           | Use alternative license file                                                      | Path to the alternative license                          |
++-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
+| listing_file                      | Listing file name                                                                 | Name of the listing file                                 |
++-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
+| log_file                          | Log file name                                                                     | Name of the log file                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | variable_listing_limit            | Maximum number of columns listed in one variable block                            | int                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
@@ -546,6 +552,21 @@ Here is the list of options and their descriptions:
 Solver Options
 --------------
 
-In addition to solve options, user can specify solver options to be used by the solver as a dictionary. For all possible
-solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
+In addition to solve options, user can specify solver options to be used by the solver as a dictionary.::
+    
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+
+    m = Container()
+    
+    ...
+    ...
+    Definition of your model
+    ...
+    ...
+
+    model = Model(m, "my_model", equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model.solve(solver="CONOPT", solver_options=solver_options={"rtmaxv": "1.e12"})
+
+    
+For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 

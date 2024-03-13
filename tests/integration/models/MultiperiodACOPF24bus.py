@@ -26,19 +26,20 @@ from __future__ import annotations
 import math
 import os
 
-import pandas as pd
-
 import gamspy.math as gams_math
-from gamspy import Alias
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Set
-from gamspy import Sum
-from gamspy import Variable
+import pandas as pd
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Equation,
+    Model,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy.math import sqr
 
 
@@ -215,7 +216,6 @@ def data_records():
 def main():
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        delayed_execution=int(os.getenv("DELAYED_EXECUTION", False)),
     )
 
     # SETS #
@@ -279,7 +279,7 @@ def main():
     ] = gams_math.atan(LN[i, j, "x"] / (LN[i, j, "r"]))
     LN[i, j, "th"].where[
         (LN[i, j, "Limit"]) & (LN[i, j, "x"]) & (LN[i, j, "r"] == 0)
-    ] = (math.pi / 2)
+    ] = math.pi / 2
     LN[i, j, "th"].where[
         (LN[i, j, "Limit"]) & (LN[i, j, "r"]) & (LN[i, j, "x"] == 0)
     ] = 0
@@ -338,8 +338,9 @@ def main():
         i, "qd"
     ] / Sbase == Sum(j.where[cx[j, i]], Qij[i, j, t])
 
-    eq5[...] = OF >= Sum(
-        [i, t], Pg[i, t] * GenD[i, "b"] * Sbase.where[GenD[i, "Pmax"]]
+    eq5[...] = (
+        Sum([i, t], Pg[i, t] * GenD[i, "b"] * Sbase.where[GenD[i, "Pmax"]])
+        <= OF
     )
 
     eq6[i, t].where[(GenD[i, "Pmax"]) & (Ord(t) > 1)] = (
