@@ -461,9 +461,6 @@ Here is the list of options and their descriptions:
 |                                   |                                                                                   |                                                          |
 |                                   |                                                                                   | 3: Same as 2 but issues an error if the level > 100      |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| infeasibility_tolerance           | Infeasibility tolerance of the solver. Sets the tolerance for marking an equation |                                                          |
-|                                   | infeasible in the equation listing. Note that the default value is 1.0e-13.       | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | iteration_limit                   | Iteration limit of solver                                                         | int                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
 | keep_temporary_files              | Controls keeping or deletion of process directory and scratch files               | bool                                                     |
