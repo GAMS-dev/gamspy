@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.2
+-------------
+- General
+  - Add infeasibility_tolerance as a model attribute.
+- Documentation
+  - Add documentation about solver specific infeasibility options.
+
 GAMSPy 0.12.1
 -------------
 - General
@@ -32,7 +39,6 @@ GAMSPy 0.12.1
   - Remove documentation for delayed execution mode.
   - Add an example for providing solver options.
   - Document CLI for gamspy show commands.
-
 
 GAMSPy 0.12.0
 -------------

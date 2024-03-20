@@ -104,7 +104,7 @@ class Container(gt.Container):
         load_from: str | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
-        debugging_level: str = "delete",
+        debugging_level: str = "keep_on_error",
         miro_protect: bool = True,
         options: Options | None = None,
     ):
