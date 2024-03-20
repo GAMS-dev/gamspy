@@ -76,7 +76,6 @@ option_map = {
     "job_time_limit": "etlim",
     "job_heap_limit": "heaplimit",
     "hold_fixed_variables": "holdfixed",
-    "hold_fixed_variables_async": "holdfixedasync",
     "integer_variable_upper_bound": "intvarup",
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",

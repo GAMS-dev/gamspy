@@ -202,6 +202,10 @@ Infeasibility is always a possible outcome when solving models. Infeasibilities 
 :meth:`gamspy.Model.compute_infeasibilities()`. This would list the infeasibilities in all equations of the model.
 Infeasibilities in a single equation as well as infeasibilities in a single variable can be computed with
 :meth:`gamspy.Equation.compute_infeasibilities()`, :meth:`gamspy.Variable.compute_infeasibilities()` respectively.
+The infeasibilities are computed by finding the distance of level to the nearest bound (i.e. lower bound or upper bound).
+While the compute_infeasibilities function of a model returns a dictionary where keys are the names of the equations and
+values are the infeasibilities as Pandas DataFrames, compute_infeasibilities function of a variable or an equation, returns
+a Pandas dataframe with infeasibilities.
 
 .. code-block:: python
 
@@ -219,8 +223,10 @@ Infeasibilities in a single equation as well as infeasibilities in a single vari
 
 
 
-Causes of infeasibility are not always easily identified. Solvers may report a particular equation as infeasible in cases where an entirely different equation is the cause.
-In these kind of complicated cases, one can dump all variables and equations in the listing file and inspect it.
+Causes of infeasibility are not always easily identified. Solvers may report a particular equation as infeasible in cases 
+where an entirely different equation is the cause. In these kind of complicated cases, one can dump all variables and equations 
+in the listing file and inspect it. In the worst case, the solver returns no solution (model status 19: Infeasible - No Solution), 
+leaving the variable levels untouched after a solve.
 
 
 .. code-block:: python
@@ -236,3 +242,38 @@ In these kind of complicated cases, one can dump all variables and equations in 
     ....
     model.solve(options=Options(equation_listing_limit=100, variable_listing_limit=100, listing_file="<path_to_the_listing_file>.lst"))
 
+The level attribute of the variables used in the model determine the equation level and the Equation Listing in the listing file show 
+potential infeasibilities using the INFES marker.
+
+The solver dependent methods for dealing with infeasibilities can be used by providing solver_options. For example, you can turn on the 
+conflict refiner also known as IIS finder if the problem is infeasible by providing a solver option.
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(solver="CPLEX", solver_options={"iis": 1}))
+
+
+An automated approach offered in GAMS/Cplex is known as FeasOpt (for Feasible Optimization) and it can be turned on by providing FeasOpt 
+argument in solver_options  which turns feasible relaxation on.
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(solver="CPLEX", solver_options={"FeasOpt": 1}))
