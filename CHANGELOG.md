@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.2
+-------------
+- General
+  - Make urllib3 a true dependency instead of an optional one.
+
 GAMSPy 0.12.1
 -------------
 - General
