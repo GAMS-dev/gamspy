@@ -415,7 +415,6 @@ class Container(gt.Container):
         gdx_out: str,
         dirty_names: list[str],
         modified_names: list[str],
-        user_invoked: bool = False,
     ) -> str:
         string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
         for statement in self._unsaved_statements:

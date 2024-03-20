@@ -40,6 +40,7 @@ dependencies = [
   "gamspy_base >= 46.1.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
+  "urllib3 >= 2.0.7",
 ]
 
 [project.urls]
@@ -59,11 +60,7 @@ dev = [
 test = [
   "coverage[toml] >= 7.2.7",
   "openpyxl >= 3.1.2",
-  "urllib3 >= 2.0.7",
-  "certifi >= 2022.09.14",
   "cerberus >= 1.3.5",
-  "SQLAlchemy >= 1.4.49",
-  "pyodbc >= 5.0.1",
   "python-dotenv >= 1.0.0",
 ]
 doc = [
@@ -71,8 +68,7 @@ doc = [
   "numpydoc>=1.5.0",
   "nbsphinx>=0.9.3",
   "sphinx_copybutton>=0.5.2",
-  "IPython>=8.18.1",
-  "ipykernel>=6.27.1",
+  "ipykernel",
   "matplotlib>=3.7.3",
   "sphinx_design>=0.5.0",
   "pydata_sphinx_theme>=0.14.1",
