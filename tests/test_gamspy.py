@@ -212,11 +212,13 @@ def main():
     miro_paths = [
         f"tests{os.sep}conf_test_gamspy",
         f"tests{os.sep}integration{os.sep}conf_test_miro",
-        "miro.log",
     ]
     for path in miro_paths:
         if os.path.exists(path):
             shutil.rmtree(path)
+
+    if os.path.exists("miro.log"):
+        os.remove("miro.log")
 
     shutil.rmtree("tmp")
 
