@@ -191,19 +191,19 @@ class OptionsSuite(unittest.TestCase):
             transport.solve(output=sys.stdout, create_log_file=True)
 
         # test logfile
-        logfile_name = os.path.join(os.getcwd(), "log.txt")
+        logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
         transport.solve(
             options=Options(log_file=logfile_name), create_log_file=True
         )
         self.assertTrue(os.path.exists(logfile_name))
 
         # test listing file
-        listing_file_name = os.path.join(os.getcwd(), "listing.lst")
+        listing_file_name = os.path.join(os.getcwd(), "tmp", "listing.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
         # test gdx file
-        gdx_file_name = os.path.join(os.getcwd(), "gdxfile.gdx")
+        gdx_file_name = os.path.join(os.getcwd(), "tmp", "gdxfile.gdx")
         transport.solve(options=Options(gdx_file=gdx_file_name))
         self.assertTrue(os.path.exists(gdx_file_name))
 

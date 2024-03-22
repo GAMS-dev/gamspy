@@ -252,13 +252,14 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test output redirection
-        with open("bla.gms", "w") as file:
+        redirection_path = os.path.join(os.getcwd(), "tmp", "bla.gms")
+        with open(redirection_path, "w") as file:
             _ = transport.solve(
                 options=Options(time_limit=100),
                 output=file,
             )
 
-        self.assertTrue(os.path.exists("bla.gms"))
+        self.assertTrue(os.path.exists(redirection_path))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
@@ -1025,7 +1026,7 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-        summary = transport2.solve(options=Options(trace_file="different_path.txt"))
+        summary = transport2.solve(options=Options(trace_file=f"tmp{os.sep}different_path.txt"))
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):

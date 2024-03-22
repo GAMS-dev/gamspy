@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import unittest
 
+import pandas as pd
 from gamspy import (
     Container,
     Equation,
@@ -45,7 +46,6 @@ class NeosSuite(unittest.TestCase):
     def test_neos_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -76,7 +76,8 @@ class NeosSuite(unittest.TestCase):
         client = NeosClient(
             email=os.environ["NEOS_EMAIL"],
         )
-        transport.solve(backend="neos", client=client)
+        summary = transport.solve(backend="neos", client=client)
+        self.assertTrue(isinstance(summary, pd.DataFrame))
 
         import math
 
@@ -87,7 +88,6 @@ class NeosSuite(unittest.TestCase):
     def test_no_client(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
         )
 
         i = Set(m, name="i", records=self.canning_plants)
@@ -162,7 +162,6 @@ class NeosSuite(unittest.TestCase):
     def test_neos_non_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -199,12 +198,14 @@ class NeosSuite(unittest.TestCase):
         job_number, job_password = client.jobs[-1]
         client.get_final_results(job_number, job_password)
         client.download_output(
-            job_number, job_password, working_directory="my_out_directory"
+            job_number,
+            job_password,
+            working_directory=f"tmp{os.sep}my_out_directory",
         )
 
         container = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            load_from="my_out_directory/output.gdx",
+            load_from=f"tmp{os.sep}my_out_directory/output.gdx",
         )
         self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)

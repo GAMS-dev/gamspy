@@ -289,7 +289,6 @@ class EngineSuite(unittest.TestCase):
     def test_non_blocking(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -324,20 +323,24 @@ class EngineSuite(unittest.TestCase):
             namespace=os.environ["ENGINE_NAMESPACE"],
             is_blocking=False,
         )
-        transport.solve(backend="engine", client=client)
+        # send jobs asynchronously
+        for _ in range(3):
+            transport.solve(backend="engine", client=client)
 
-        token = client.tokens[-1]
+        # gather the results
+        for i in range(3):
+            token = client.tokens[i]
 
-        job_status, _, exit_code = client.job.get(token)
-        while job_status != 10:
             job_status, _, exit_code = client.job.get(token)
+            while job_status != 10:
+                job_status, _, exit_code = client.job.get(token)
 
-        self.assertEqual(exit_code, 0)
+            self.assertEqual(exit_code, 0)
 
-        client.job.get_results(token, "out_dir")
+            client.job.get_results(token, f"tmp{os.sep}out_dir{i}")
 
         gdx_out_path = os.path.join(
-            "out_dir", os.path.basename(m.gdxOutputPath())
+            f"tmp{os.sep}out_dir0", os.path.basename(m.gdxOutputPath())
         )
         container = Container(load_from=gdx_out_path)
         self.assertTrue("x" in container.data)
@@ -353,11 +356,11 @@ class EngineSuite(unittest.TestCase):
             is_blocking=False,
         )
 
-        gms_path = os.path.join(os.getcwd(), "dummy.gms")
+        gms_path = os.path.join(os.getcwd(), "tmp", "dummy.gms")
         with open(gms_path, "w") as file:
             file.write("Set i / i1*i3 /;")
 
-        token = client.job.post(os.getcwd(), gms_path)
+        token = client.job.post(os.getcwd() + os.sep + "tmp", gms_path)
 
         status, _, _ = client.job.get(token)
         while status != 10:
@@ -395,11 +398,11 @@ class EngineSuite(unittest.TestCase):
             namespace=os.environ["ENGINE_NAMESPACE"],
             jwt=jwt_token,
         )
-        gms_path = os.path.join(os.getcwd(), "dummy2.gms")
+        gms_path = os.path.join(os.getcwd(), "tmp", "dummy2.gms")
         with open(gms_path, "w") as file:
             file.write("Set i / i1*i3 /;")
 
-        token = client.job.post(os.getcwd(), gms_path)
+        token = client.job.post(os.getcwd() + os.sep + "tmp", gms_path)
 
         status, _, _ = client.job.get(token)
         while status != 10:

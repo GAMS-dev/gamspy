@@ -112,7 +112,6 @@ class ParameterSuite(unittest.TestCase):
 
         cont = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
         )
 
         s = Set(cont, "s")

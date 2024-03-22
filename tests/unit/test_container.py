@@ -288,17 +288,17 @@ class ContainerSuite(unittest.TestCase):
         p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
         p2 = Parameter(m, name="p2", domain=[i])
         p2[i] = p1[i]
-        m.write("data.gdx")
+        m.write(f"tmp{os.sep}data.gdx")
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            load_from="data.gdx",
+            load_from=f"tmp{os.sep}data.gdx",
         )
         self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
 
     def test_copy(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
+            working_directory=f"tmp{os.sep}copy",
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -320,8 +320,8 @@ class ContainerSuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        self.assertRaises(ValidationError, m.copy, ".")
-        new_cont = m.copy(working_directory="test")
+        self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
+        new_cont = m.copy(working_directory=f"tmp{os.sep}test")
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 
         transport = Model(
