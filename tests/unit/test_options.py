@@ -114,21 +114,17 @@ class OptionsSuite(unittest.TestCase):
             options=options,
         )
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -162,21 +158,17 @@ class OptionsSuite(unittest.TestCase):
         self.assertTrue(gams_options["solveopt"] == 0)
 
     def test_log_option(self):
-        # Set
         i = Set(self.m, name="i", records=self.canning_plants)
         j = Set(self.m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
 

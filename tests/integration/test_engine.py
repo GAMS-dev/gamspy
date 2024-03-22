@@ -51,21 +51,17 @@ class EngineSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -128,21 +124,17 @@ class EngineSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -166,21 +158,17 @@ class EngineSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -229,21 +217,17 @@ class EngineSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -274,21 +258,17 @@ class EngineSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -312,21 +292,17 @@ class EngineSuite(unittest.TestCase):
             working_directory=".",
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 

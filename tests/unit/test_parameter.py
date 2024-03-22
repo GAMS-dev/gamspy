@@ -254,7 +254,6 @@ class ParameterSuite(unittest.TestCase):
             self.m, "row", records=[("row" + str(i), i) for i in range(1, 10)]
         )
 
-        # Data
         initial_state_data = pd.DataFrame(
             [
                 [0, 0, 0, 0, 8, 6, 0, 0, 0],

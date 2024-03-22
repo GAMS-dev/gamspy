@@ -166,10 +166,8 @@ class ContainerSuite(unittest.TestCase):
         a = Parameter(new_container, name="a", domain=[i])
         new_container.loadRecordsFromGdx("test.gdx")
 
-        # Set
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
 
-        # Parameter
         self.assertEqual(a.records.values.tolist(), [["i1", 1.0], ["i2", 2.0]])
 
         # Load specific symbols
@@ -303,23 +301,19 @@ class ContainerSuite(unittest.TestCase):
             working_directory=".",
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
         _ = Alias(m, "k", alias_with=j)
         _ = UniverseAlias(m)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -365,21 +359,17 @@ class ContainerSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 

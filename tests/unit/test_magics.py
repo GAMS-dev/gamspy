@@ -15,13 +15,10 @@ class MagicsSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_magics(self):
-        # Set
         i = Set(self.m, name="i", records=self.markets)
 
-        # Parameter
         b = Parameter(self.m, name="b", domain=[i], records=self.demands)
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i], type="Positive")
 
         # ADD
