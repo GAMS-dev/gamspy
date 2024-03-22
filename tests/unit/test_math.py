@@ -18,16 +18,13 @@ class MathSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_math(self):
-        # Set
         i = Set(self.m, name="i", records=self.markets)
 
-        # Parameter
         b = Parameter(self.m, name="b", domain=[i], records=self.demands)
         s1 = Parameter(self.m, name="s1", records=5)
         s2 = Parameter(self.m, name="s2", records=3)
         s3 = Parameter(self.m, name="s3", records=6)
 
-        # Variable
         v = Variable(self.m, name="v", domain=[i])
 
         # abs

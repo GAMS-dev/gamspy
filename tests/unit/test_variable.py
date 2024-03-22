@@ -56,7 +56,6 @@ class VariableSuite(unittest.TestCase):
         # Check if the name is reserved
         self.assertRaises(ValidationError, Variable, self.m, "set")
 
-        # Set
         i = Set(self.m, name="i", records=["bla", "damn"])
         j = Set(self.m, name="j", records=["test", "test2"])
 

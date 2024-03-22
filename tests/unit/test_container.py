@@ -166,10 +166,8 @@ class ContainerSuite(unittest.TestCase):
         a = Parameter(new_container, name="a", domain=[i])
         new_container.loadRecordsFromGdx("test.gdx")
 
-        # Set
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
 
-        # Parameter
         self.assertEqual(a.records.values.tolist(), [["i1", 1.0], ["i2", 2.0]])
 
         # Load specific symbols
@@ -290,44 +288,40 @@ class ContainerSuite(unittest.TestCase):
         p1 = Parameter(m, name="p1", domain=[i], records=[["i1", 1]])
         p2 = Parameter(m, name="p2", domain=[i])
         p2[i] = p1[i]
-        m.write("data.gdx")
+        m.write(f"tmp{os.sep}data.gdx")
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            load_from="data.gdx",
+            load_from=f"tmp{os.sep}data.gdx",
         )
         self.assertEqual(m["p2"].toList(), [("i1", 1.0)])
 
     def test_copy(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-            working_directory=".",
+            working_directory=f"tmp{os.sep}copy",
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
         _ = Alias(m, "k", alias_with=j)
         _ = UniverseAlias(m)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        self.assertRaises(ValidationError, m.copy, ".")
-        new_cont = m.copy(working_directory="test")
+        self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
+        new_cont = m.copy(working_directory=f"tmp{os.sep}test")
         self.assertEqual(m.data.keys(), new_cont.data.keys())
 
         transport = Model(
@@ -365,21 +359,17 @@ class ContainerSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 

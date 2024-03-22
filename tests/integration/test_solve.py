@@ -52,14 +52,13 @@ class SolveSuite(unittest.TestCase):
         p = self.m.addParameter('base',[i])
         d = Parameter(self.m,'d')
         i.setRecords(['i1','i2'])
-        d[...] = 0 # trigger the execution of GAMS
+        d[...] = 0
         i.setRecords(['i0','i1'])
         p[i] = i.ord
         self.assertEqual(p.records.values.tolist(), [['i1', 1.0], ['i0', 2.0]])
 
 
     def test_read_on_demand(self):
-        # Set
         i = Set(self.m, name="i", records=self.canning_plants)
         j = Set(self.m, name="j", records=self.markets)
         k = Set(
@@ -72,7 +71,6 @@ class SolveSuite(unittest.TestCase):
         )
         self.assertFalse(k._is_dirty)
 
-        # Data
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
@@ -102,11 +100,9 @@ class SolveSuite(unittest.TestCase):
         with self.assertRaises(TypeError):
             e.records = 5
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         z = Variable(self.m, name="z")
 
-        # Equation
         cost = Equation(self.m, name="cost")
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
@@ -156,23 +152,19 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_after_first_solve(self):
-        # Set
         i = Set(self.m, name="i", records=self.canning_plants)
         j = Set(self.m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         z = Variable(self.m, name="z")
         z2 = Variable(self.m, name="z2")
 
-        # Equation
         cost = Equation(self.m, name="cost")
         cost2 = Equation(self.m, name="cost2")
         supply = Equation(self.m, name="supply", domain=[i])
@@ -212,22 +204,18 @@ class SolveSuite(unittest.TestCase):
         self.assertAlmostEqual(second_z2_value, 768.375, 3)
 
     def test_solve(self):
-        # Set
         i = Set(self.m, name="i", records=self.canning_plants)
         j = Set(self.m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         z = Variable(self.m, name="z")
 
-        # Equation
         cost = Equation(self.m, name="cost")
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
@@ -264,13 +252,14 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Test output redirection
-        with open("bla.gms", "w") as file:
+        redirection_path = os.path.join(os.getcwd(), "tmp", "bla.gms")
+        with open(redirection_path, "w") as file:
             _ = transport.solve(
                 options=Options(time_limit=100),
                 output=file,
             )
 
-        self.assertTrue(os.path.exists("bla.gms"))
+        self.assertTrue(os.path.exists(redirection_path))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
 
@@ -437,7 +426,6 @@ class SolveSuite(unittest.TestCase):
             description="time slices (quarter-hour)",
         )
 
-        # Parameters
         PowerForecast = Parameter(
             cont,
             name="PowerForecast",
@@ -447,7 +435,6 @@ class SolveSuite(unittest.TestCase):
         )
 
         # Power Plant (PP)
-        # Scalars
         cPPvar = Parameter(
             cont,
             name="cPPvar",
@@ -461,7 +448,6 @@ class SolveSuite(unittest.TestCase):
             description="maximal capacity of power plant      [MW]",
         )
 
-        # Sets
         m = Set(
             cont,
             name="m",
@@ -481,8 +467,6 @@ class SolveSuite(unittest.TestCase):
             description="length of idle time period",
         )
 
-        # Spot Market (SM)
-        # Scalars
         cBL = Parameter(
             cont,
             name="cBL",
@@ -496,7 +480,6 @@ class SolveSuite(unittest.TestCase):
             description="cost for one peak load contract [euro / MWh]",
         )
 
-        # Parameter
         IPL = Parameter(
             cont,
             name="IPL",
@@ -505,8 +488,6 @@ class SolveSuite(unittest.TestCase):
         )
         IPL[t] = (Ord(t) >= 33) & (Ord(t) <= 80)
 
-        # Load following Contract (LFC)
-        # Scalars
         pLFCref = Parameter(
             cont,
             name="pLFCref",
@@ -521,7 +502,6 @@ class SolveSuite(unittest.TestCase):
             description="support points of the zone prices",
         )
 
-        # Parameters
         eLFCbY = Parameter(
             cont,
             name="eLFCbY",
@@ -559,7 +539,6 @@ class SolveSuite(unittest.TestCase):
             eLFCb[b.lag(1)] - eLFCb[b.lag(2)]
         )
 
-        # Variables
         c = Variable(cont, name="c", type="free", description="total cost")
         cPP = Variable(
             cont, name="cPP", type="positive", description="cost of PP usage"
@@ -655,7 +634,6 @@ class SolveSuite(unittest.TestCase):
         beta.up[...] = alpha.up
         pLFC.up[t] = pLFCref
 
-        # Equations
         obj = Equation(cont, name="obj", description="objective function")
         demand = Equation(
             cont,
@@ -848,21 +826,17 @@ class SolveSuite(unittest.TestCase):
     def test_solver_options(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -894,21 +868,17 @@ class SolveSuite(unittest.TestCase):
     def test_ellipsis(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[...] = 90 * d[...] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -944,7 +914,6 @@ class SolveSuite(unittest.TestCase):
     def test_slice(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         i2 = Set(m, name="i2", records=self.canning_plants)
         i3 = Set(m, name="i3", records=self.canning_plants)
@@ -956,7 +925,6 @@ class SolveSuite(unittest.TestCase):
         self.assertEqual(k[i, ...].gamsRepr(), "k(i,i2,i3,i4)")
         self.assertEqual(k[..., i3, :].gamsRepr(), "k(i,i2,i3,i4)")
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         self.assertEqual(a[:].gamsRepr(), "a(i)")
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
@@ -964,11 +932,9 @@ class SolveSuite(unittest.TestCase):
         self.assertEqual(c[:, :].gamsRepr(), "c(i,j)")
         c[:, :] = 90 * d[:, :] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
         self.assertEqual(x[:, :].gamsRepr(), "x(i,j)")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         self.assertEqual(supply[:].gamsRepr(), "supply(i)")
 
@@ -989,11 +955,9 @@ class SolveSuite(unittest.TestCase):
     def test_max_line_length(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
@@ -1001,10 +965,8 @@ class SolveSuite(unittest.TestCase):
         f = Parameter(m, "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
         
@@ -1025,21 +987,17 @@ class SolveSuite(unittest.TestCase):
     def test_summary(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -1068,27 +1026,23 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-        summary = transport2.solve(options=Options(trace_file="different_path.txt"))
+        summary = transport2.solve(options=Options(trace_file=f"tmp{os.sep}different_path.txt"))
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -1113,9 +1067,10 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=x,
         )
-        x.lo[...] = 0  # triggers GAMS
+        x.lo[...] = 0
         try:
-            t.solve()  # this fails with GAMS compilation error `Objective variable is not a free variable`
+            # This must fail because `Objective variable is not a free variable`
+            t.solve()
         except GamspyException:
             pass
         f = Parameter(m, "f")
@@ -1137,7 +1092,6 @@ class SolveSuite(unittest.TestCase):
             
         )
 
-        # Set
         i = Set(
             m,
             name="i",
@@ -1151,7 +1105,6 @@ class SolveSuite(unittest.TestCase):
             description="markets",
         )
 
-        # Data
         a = Parameter(
             m,
             name="a",
@@ -1181,7 +1134,6 @@ class SolveSuite(unittest.TestCase):
         )
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(
             m,
             name="x",
@@ -1190,7 +1142,6 @@ class SolveSuite(unittest.TestCase):
             description="shipment quantities in cases",
         )
 
-        # Equation
         supply = Equation(
             m,
             name="supply",

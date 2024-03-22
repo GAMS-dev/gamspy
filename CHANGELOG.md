@@ -5,6 +5,7 @@ GAMSPy 0.12.2
 -------------
 - General
   - Make urllib3 a true dependency instead of an optional one.
+  - Do not suppress compiler listing by default.
 
 GAMSPy 0.12.1
 -------------

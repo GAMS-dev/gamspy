@@ -85,7 +85,8 @@ class Container(gt.Container):
         Path to the working directory to store temporary files such .lst, .gms,
         .gdx, .g00 files.
     debugging_level : str, optional
-        Decides on keeping the temporary files generate by GAMS, by default "delete"
+        Decides on keeping the temporary files generate by GAMS, by default
+        "keep_on_error"
     options : Options
         Global options for the overall execution
     miro_protect : bool
@@ -104,7 +105,7 @@ class Container(gt.Container):
         load_from: str | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
-        debugging_level: str = "delete",
+        debugging_level: str = "keep_on_error",
         miro_protect: bool = True,
         options: Options | None = None,
     ):

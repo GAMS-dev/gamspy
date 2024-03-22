@@ -38,7 +38,6 @@ class OperationSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_operations(self):
-        # Sets
         i = Set(
             self.m,
             name="i",
@@ -53,7 +52,6 @@ class OperationSuite(unittest.TestCase):
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variables
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         z = Variable(self.m, name="z")
 
