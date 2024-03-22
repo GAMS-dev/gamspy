@@ -48,7 +48,6 @@ $include HANSEN.GEN
 """
     m = Container(
         system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        working_directory=".",
         load_from=str(Path(__file__).parent.absolute()) + "/hansmge.gdx",
     )
     m._addGamsCode(hansen_mpsge)

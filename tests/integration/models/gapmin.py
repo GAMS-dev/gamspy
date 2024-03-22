@@ -329,7 +329,6 @@ def main():
         xrep[j, i, "initial"] = x.l[i, j]
         xrep[j, i, "optimal"] = Number(1).where[xopt[i, j]]
 
-        # Parameter
         _ = Parameter(
             m,
             name="wopt",

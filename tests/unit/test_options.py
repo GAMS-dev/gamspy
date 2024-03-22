@@ -114,21 +114,17 @@ class OptionsSuite(unittest.TestCase):
             options=options,
         )
 
-        # Set
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
 
@@ -162,21 +158,17 @@ class OptionsSuite(unittest.TestCase):
         self.assertTrue(gams_options["solveopt"] == 0)
 
     def test_log_option(self):
-        # Set
         i = Set(self.m, name="i", records=self.canning_plants)
         j = Set(self.m, name="j", records=self.markets)
 
-        # Data
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        # Equation
         supply = Equation(self.m, name="supply", domain=[i])
         demand = Equation(self.m, name="demand", domain=[j])
 
@@ -199,19 +191,19 @@ class OptionsSuite(unittest.TestCase):
             transport.solve(output=sys.stdout, create_log_file=True)
 
         # test logfile
-        logfile_name = os.path.join(os.getcwd(), "log.txt")
+        logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
         transport.solve(
             options=Options(log_file=logfile_name), create_log_file=True
         )
         self.assertTrue(os.path.exists(logfile_name))
 
         # test listing file
-        listing_file_name = os.path.join(os.getcwd(), "listing.lst")
+        listing_file_name = os.path.join(os.getcwd(), "tmp", "listing.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
         # test gdx file
-        gdx_file_name = os.path.join(os.getcwd(), "gdxfile.gdx")
+        gdx_file_name = os.path.join(os.getcwd(), "tmp", "gdxfile.gdx")
         transport.solve(options=Options(gdx_file=gdx_file_name))
         self.assertTrue(os.path.exists(gdx_file_name))
 

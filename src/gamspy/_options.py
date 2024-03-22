@@ -154,7 +154,7 @@ class Options(BaseModel):
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
-    suppress_compiler_listing: bool = True
+    suppress_compiler_listing: bool = False
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
     trace_file: Optional[str] = None

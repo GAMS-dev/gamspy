@@ -919,7 +919,6 @@ def main():
     # Reactive power circle constraints (see Dan's pdf for derivation).
     # Add to a model when qlim=1
     if args.qlim == 1:
-        # Parameters
         R_max = Parameter(m, name="R_max", domain=gen)
         nameplate_pf = Parameter(m, name="nameplate_pf", domain=gen)
         Qfield = Parameter(m, name="Qfield", domain=gen)
@@ -934,7 +933,6 @@ def main():
         Qend[gen] = geninfo[gen, "Qend", "given"] / baseMVA
         Rend[gen] = geninfo[gen, "Rend", "given"] / baseMVA
 
-        # Equations
         c_Armature = Equation(
             m,
             name="c_Armature",
