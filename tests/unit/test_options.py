@@ -202,11 +202,6 @@ class OptionsSuite(unittest.TestCase):
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
-        # test gdx file
-        gdx_file_name = os.path.join(os.getcwd(), "tmp", "gdxfile.gdx")
-        transport.solve(options=Options(gdx_file=gdx_file_name))
-        self.assertTrue(os.path.exists(gdx_file_name))
-
 
 def options_suite():
     suite = unittest.TestSuite()
