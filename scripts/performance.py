@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--iters", default=5, type=int)
+parser.add_argument("--iters", default=3, type=int)
 args = parser.parse_args()
 
 root_directory = Path(__file__).parent.parent
