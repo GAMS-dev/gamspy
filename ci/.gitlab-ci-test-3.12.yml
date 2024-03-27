@@ -37,6 +37,7 @@ test-deg-3.12:
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
     - conda create -y -p "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" python=3.12
     - conda activate "$(pwd)/gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
@@ -63,6 +64,7 @@ test-dac-3.12:
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
     - conda create -y -p "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" python=3.12
     - conda activate "$(pwd)/gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"
     - conda install -c anaconda freetds
