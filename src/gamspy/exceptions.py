@@ -23,16 +23,24 @@
 # SOFTWARE.
 #
 """Exception classes for GAMSPy"""
+
 from __future__ import annotations
 
 import os
 
-from gams import GamsJob, GamsOptions, GamsWorkspace
+from gams import GamsOptions, GamsWorkspace
 from gams.control.workspace import GamsExceptionExecution
 
 
 class GamspyException(Exception):
     """Plain Gamspy exception."""
+
+    def __init__(self, message: str, return_code: int | None = None) -> None:
+        self.message = message
+        self.rc = return_code
+
+    def __str__(self) -> str:
+        return self.message
 
 
 class NeosClientException(Exception):
@@ -136,7 +144,7 @@ error_codes = {
 def customize_exception(
     workspace: GamsWorkspace,
     options: GamsOptions,
-    job: GamsJob,
+    job: str,
     exception: GamsExceptionExecution,
 ) -> str:
     error_message = ""
@@ -148,9 +156,14 @@ def customize_exception(
     footer = "=" * 80
     message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
 
-    lst_filename = options.output if options.output else job._job_name + ".lst"
-
-    lst_path = workspace._working_directory + os.path.sep + lst_filename
+    if options.output:
+        lst_path = (
+            options.output
+            if os.path.isabs(options.output)
+            else os.path.join(workspace._working_directory, options.output)
+        )
+    else:
+        lst_path = job + ".lst"
 
     with open(lst_path, encoding="utf-8") as lst_file:
         all_lines = lst_file.readlines()

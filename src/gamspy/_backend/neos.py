@@ -29,11 +29,15 @@ import logging
 import os
 import shutil
 import time
+import uuid
 import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
+from gams import GamsOptions
+
 import gamspy._backend.backend as backend
+import gamspy.utils as utils
 from gamspy.exceptions import (
     GamspyException,
     NeosClientException,
@@ -49,8 +53,6 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
-    from gams import GamsOptions
-
     from gamspy import Container, Model
 
 
@@ -283,8 +285,8 @@ class NeosClient:
         gams_string: str,
         gdx_path: str,
         restart_path: str,
-        save_name: str,
         options: GamsOptions,
+        save_name: str | None = None,
         xml_path: str = "neos.xml",
         working_directory: str = ".",
     ) -> None:
@@ -309,9 +311,11 @@ class NeosClient:
         ) as file:
             parameters = [line.rstrip() for line in file.readlines()]
 
-        parameter_string = "\n".join(
-            parameters + ["PREVIOUSWORK=1", f"save={save_name}"]
-        )
+        extras = ["PREVIOUSWORK=1"]
+        if save_name is not None:
+            extras.append(f"save={save_name}")
+
+        parameter_string = "\n".join(parameters + extras)
 
         template = f"""
             <document>
@@ -416,7 +420,7 @@ class NEOSServer(backend.Backend):
         container: Container,
         options: GamsOptions,
         client: NeosClient | None,
-        model: Model | None = None,
+        model: Model,
     ) -> None:
         if client is None:
             raise ValidationError(
@@ -433,11 +437,14 @@ class NEOSServer(backend.Backend):
         return not self.client.is_blocking
 
     def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Run a dummy job to get the restart file to be sent to NEOS Server
+        save_file = self._create_restart_file()
+
         # Generate gams string and write modified symbols to gdx
         gams_string, dirty_names = self.preprocess(keep_flags)
 
         # Run the model
-        self.run(gams_string)
+        self.run(gams_string, save_file)
 
         if self.is_async():
             return None
@@ -445,14 +452,67 @@ class NEOSServer(backend.Backend):
         # Synchronize GAMSPy with checkpoint and return a summary
         summary = self.postprocess(dirty_names, is_implicit)
 
+        # Run another dummy job to synchronize GAMS and GAMSPy state
+        self._sync(dirty_names)
+
         return summary
 
-    def run(self, gams_string: str):
+    def _create_restart_file(self):
+        job_id = f"_neos_restart_{uuid.uuid4()}"
+        job_name = os.path.join(self.container.working_directory, job_id)
+        with open(job_name + ".gms", "w") as gams_file:
+            gams_file.write("")
+
+        options = GamsOptions(self.container.workspace)
+        options._input = job_name + ".gms"
+        options._sysdir = utils._get_gamspy_base_directory()
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._writeoutput = 0
+        options.previouswork = 1
+        options._logoption = 0
+
+        save_file = job_name + ".g00"
+        options._save = save_file
+
+        pf_file = job_name + ".pf"
+        options.export(pf_file)
+
+        self.container._send_job(job_name, pf_file)
+
+        return save_file
+
+    def _sync(self, dirty_names: list[str]):
+        job_id = f"_neos_sync_{uuid.uuid4()}"
+        job_name = os.path.join(self.container.working_directory, job_id)
+
+        dirty_str = ",".join(dirty_names)
+        with open(job_name + ".gms", "w") as gams_file:
+            gams_file.write(
+                f'execute_load "{self.container._gdx_out}", {dirty_str};'
+            )
+
+        options = GamsOptions(self.container.workspace)
+        options._input = job_name + ".gms"
+        options._sysdir = utils._get_gamspy_base_directory()
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._writeoutput = 0
+        options._logoption = 0
+        options.previouswork = 1
+
+        pf_file = job_name + ".pf"
+        options.export(pf_file)
+
+        self.container._send_job(job_name, pf_file)
+
+    def run(self, gams_string: str, save_file: str):
         self.client._prepare_xml(
             gams_string,
             self.container._gdx_in,
-            self.container._restart_from._checkpoint_file_name,
-            self.container._save_to.name,
+            save_file,
             options=self.options,
             working_directory=self.container.working_directory,
         )
@@ -492,8 +552,6 @@ class NEOSServer(backend.Backend):
             self.container._load_records_from_gdx(
                 self.container._gdx_out, symbols
             )
-
-        self.container._swap_checkpoints()
 
         if (
             self.options.traceopt == 3

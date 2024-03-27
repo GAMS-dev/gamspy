@@ -45,6 +45,7 @@ from gams.core.gmo import gmoProc_nrofmodeltypes
 from gams.core.opt import optSetStrStr
 
 import gamspy._backend.backend as backend
+import gamspy.utils as utils
 from gamspy.exceptions import (
     EngineClientException,
     EngineException,
@@ -669,7 +670,7 @@ class EngineClient:
         self.engine_options = engine_options
         self.remove_results = remove_results
         self.is_blocking = is_blocking
-        self.tokens: list[tuple] = []
+        self.tokens: list[str] = []
 
         self._http = urllib3.PoolManager(
             cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
@@ -702,8 +703,8 @@ class GAMSEngine(backend.Backend):
         container: Container,
         client: EngineClient | None,
         options: GamsOptions,
+        model: Model,
         output: io.TextIOWrapper | None = None,
-        model: Model | None = None,
     ) -> None:
         if client is None:
             raise ValidationError(
@@ -738,18 +739,11 @@ class GAMSEngine(backend.Backend):
                 self.options._selected_solvers[i],
             )
 
-        # Set save file path
-        self.options._save = self.container._save_to.name
-
         # Set restart file path
-        self.options._restart = self.container._restart_from.name
+        self.options._restart = self.job_name + ".g00"
 
         # Set input file path
         self.options._input = self.job_name + ".gms"
-
-        # Set output file path
-        if not self.options.output:
-            self.options.output = self.job_name + ".lst"
 
         # Export pf file
         self.options.export(self.pf_file)
@@ -764,6 +758,10 @@ class GAMSEngine(backend.Backend):
         return dirty_names
 
     def solve(self, is_implicit: bool = False, keep_flags: bool = False):
+        # Run a dummy job to get the restart file to be sent to GAMS Engine
+        self._create_restart_file()
+
+        # Generate gams string and write modified symbols to gdx
         dirty_names = self.preprocess(keep_flags)
 
         self.run()
@@ -774,14 +772,73 @@ class GAMSEngine(backend.Backend):
         # Synchronize GAMSPy with checkpoint and return a summary
         summary = self.postprocess(dirty_names, is_implicit)
 
+        # Run another dummy job to synchronize GAMS and GAMSPy state
+        self._sync(dirty_names)
+
         return summary
+
+    def _create_restart_file(self):
+        job_path = os.path.join(
+            self.container.working_directory, self.job_name
+        )
+        with open(job_path + ".gms", "w") as gams_file:
+            gams_file.write("")
+
+        options = GamsOptions(self.container.workspace)
+        options._input = job_path + ".gms"
+        options._sysdir = utils._get_gamspy_base_directory()
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._writeoutput = 0
+        options._logoption = 0
+        options.previouswork = 1
+        options._save = job_path + ".g00"
+        self.save_file = job_path + ".g00"
+
+        pf_file = job_path + ".pf"
+        options.export(pf_file)
+
+        self.container._send_job(job_path, pf_file)
+
+        return job_path + ".g00"
+
+    def _sync(self, dirty_names: list[str]):
+        job_path = os.path.join(
+            self.container.working_directory, self.job_name
+        )
+
+        dirty_str = ",".join(dirty_names)
+        with open(job_path + ".gms", "w") as gams_file:
+            gams_file.write(
+                f'execute_load "{self.container._gdx_out}", {dirty_str};'
+            )
+
+        options = GamsOptions(self.container.workspace)
+        options._input = job_path + ".gms"
+        options._sysdir = utils._get_gamspy_base_directory()
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._writeoutput = 0
+        options._logoption = 0
+        options.previouswork = 1
+
+        pf_file = job_path + ".pf"
+        options.export(pf_file)
+
+        self.container._send_job(job_path, pf_file)
 
     def run(self):
         try:
             original_extra_files = copy.deepcopy(
                 self.client.job.extra_model_files
             )
-            self.client.job.extra_model_files = self._append_gamspy_files()
+            self.client.job.extra_model_files = self._append_gamspy_files(
+                os.path.join(
+                    self.container.working_directory, self.job_name + ".g00"
+                ),
+            )
             token = self.client.job.post(
                 self.container.working_directory,
                 os.path.join(self.container.working_directory, self.gms_file),
@@ -797,6 +854,7 @@ class GAMSEngine(backend.Backend):
                     raise EngineException(
                         "Unknown job status code! Currently supported job"
                         f" status codes: {STATUS_MAP.keys()}",
+                        return_code=job_status,
                         status_code=job_status,
                     )
 
@@ -804,12 +862,13 @@ class GAMSEngine(backend.Backend):
                     raise EngineException(
                         "Could not get job results because the job is"
                         f" {message}.",
+                        return_code=job_status,
                         status_code=job_status,
                     )
 
                 while job_status in [-10, -2, 0]:
                     logger.info(f"Job status is {message}...")
-                    job_status = self.client.job.get(token)
+                    job_status, _, _ = self.client.job.get(token)
 
                 while job_status in [1, 2]:
                     message, is_finished = self.client.job.get_logs(token)
@@ -836,8 +895,6 @@ class GAMSEngine(backend.Backend):
                 self.container._gdx_out, symbols
             )
 
-        self.container._swap_checkpoints()
-
         if (
             self.client.remove_results
             or self.options.traceopt != 3
@@ -849,10 +906,10 @@ class GAMSEngine(backend.Backend):
             self.container.working_directory, self.options.trace
         )
 
-    def _append_gamspy_files(self) -> list[str]:
+    def _append_gamspy_files(self, restart_file: str) -> list[str]:
         extra_model_files = self.client.job.extra_model_files + [
             self.container._gdx_in,
-            self.container._restart_from._checkpoint_file_name,
+            restart_file,
         ]
 
         return extra_model_files

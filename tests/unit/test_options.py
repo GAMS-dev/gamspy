@@ -144,7 +144,7 @@ class OptionsSuite(unittest.TestCase):
         with open(
             os.path.join(m.working_directory, m.gamsJobName() + ".pf")
         ) as file:
-            self.assertTrue(file.readline() == "LP=conopt\n")
+            self.assertTrue("LP=conopt\n" in file.read())
 
     def test_gamspy_to_gams_options(self):
         options = Options(

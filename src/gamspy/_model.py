@@ -30,7 +30,7 @@ import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Iterable, Literal
 
-from gams import GamsExceptionExecution, GamsOptions
+from gams import GamsOptions
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -40,7 +40,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
 from gamspy._options import _map_options
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -488,7 +488,7 @@ class Model:
                 )
 
                 if status != SolveStatus.NormalCompletion:
-                    raise GamsExceptionExecution(
+                    raise GamspyException(
                         f"The model ({self.name}) was not solved successfully!"
                         f" Solve status: {status.name}",
                         status.value,

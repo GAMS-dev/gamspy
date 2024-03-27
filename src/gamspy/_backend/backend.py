@@ -57,11 +57,11 @@ def backend_factory(
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, client, model)
+        return NEOSServer(container, options, client, model)  # type: ignore
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, client, options, output, model)
+        return GAMSEngine(container, client, options, model, output)  # type: ignore
     elif backend == "local":
         from gamspy._backend.local import Local
 
