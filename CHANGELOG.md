@@ -4,10 +4,13 @@ GAMSPy CHANGELOG
 GAMSPy 0.12.2
 -------------
 - General
+  - Add infeasibility_tolerance as a model attribute.
   - Make urllib3 a true dependency instead of an optional one.
   - Do not suppress compiler listing by default.
   - Improve the performance of model attribute loading.
   - Load miro input symbols once.
+- Documentation
+  - Add documentation about solver specific infeasibility options.
 
 GAMSPy 0.12.1
 -------------
@@ -40,7 +43,6 @@ GAMSPy 0.12.1
   - Remove documentation for delayed execution mode.
   - Add an example for providing solver options.
   - Document CLI for gamspy show commands.
-
 
 GAMSPy 0.12.0
 -------------

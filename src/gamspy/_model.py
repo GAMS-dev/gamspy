@@ -270,6 +270,8 @@ class Model:
         self.solve_status: SolveStatus | None = None
         self.solver_version = None
 
+        self._infeasibility_tolerance: float | None = None
+
         self.container._run()
 
     def __repr__(self) -> str:
@@ -544,6 +546,23 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
         return infeas_dict
+
+    @property
+    def infeasibility_tolerance(self) -> float | None:
+        """
+        This option sets the tolerance for marking an equation infeasible in
+        the equation listing. By default, 1.0e-13.
+
+        Returns
+        -------
+        float | None
+        """
+        return self._infeasibility_tolerance
+
+    @infeasibility_tolerance.setter
+    def infeasibility_tolerance(self, value: float):
+        self.container._add_statement(f"{self.name}.tolInfRep = {value};")
+        self._infeasibility_tolerance = value
 
     def interrupt(self) -> None:
         """
