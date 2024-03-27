@@ -72,11 +72,9 @@ option_map = {
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
     "domain_violation_limit": "domlim",
-    "gdx_file": "gdx",
     "job_time_limit": "etlim",
     "job_heap_limit": "heaplimit",
     "hold_fixed_variables": "holdfixed",
-    "hold_fixed_variables_async": "holdfixedasync",
     "integer_variable_upper_bound": "intvarup",
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
@@ -130,7 +128,6 @@ class Options(BaseModel):
     basis_detection_threshold: Optional[float] = None
     compile_error_limit: int = 1
     domain_violation_limit: Optional[int] = None
-    gdx_file: Optional[str] = None
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
