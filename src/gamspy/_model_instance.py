@@ -148,6 +148,7 @@ class ModelInstance:
         self, model: Model, freeze_options: Options | dict | None = None
     ):
         options = self._prepare_freeze_options(freeze_options)
+        options.license = self.model.container._license_path
 
         solve_string = f"{model.name} using {model.problem}"
 
@@ -233,13 +234,15 @@ class ModelInstance:
         if isinstance(given_options, Options):
             given_options = given_options._get_gams_compatible_options()
 
-        if given_options is None:
-            return
-
         options = GamsOptions(self.model.container.workspace)
+
+        if given_options is None:
+            return options
 
         for key, value in given_options.items():
             setattr(options, key, value)
+
+        return options
 
     def _prepare_options(
         self, given_options: ModelInstanceOptions | dict | None
