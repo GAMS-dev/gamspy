@@ -37,6 +37,8 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from gams.core.numpy import Gams2Numpy
+
     from gamspy import Alias, Equation, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
 
@@ -203,6 +205,11 @@ def isin(symbol, sequence: Sequence) -> bool:
     return any(symbol is item for item in sequence)
 
 
+def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
+    _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
+    return arrvals[0][0]
+
+
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
     records = symbol.records
     infeas_rows = records.where(
@@ -250,7 +257,7 @@ def _close_gdx_handle(handle):
 
     Parameters
     ----------
-    handle : gdxHandle
+    handle : gdx_handle
     """
     gdx.gdxClose(handle)
     gdx.gdxFree(handle)
@@ -275,7 +282,7 @@ def _open_gdx_file(system_directory: str, load_from: str):
 
     Returns
     -------
-    gdxHandle
+    gdx_handle
 
     Raises
     ------
@@ -283,21 +290,21 @@ def _open_gdx_file(system_directory: str, load_from: str):
         Exception while creating the handle or setting the special values
     """
     try:
-        gdxHandle = gdx.new_gdxHandle_tp()
-        rc = gdx.gdxCreateD(gdxHandle, system_directory, gdx.GMS_SSSIZE)
+        gdx_handle = gdx.new_gdxHandle_tp()
+        rc = gdx.gdxCreateD(gdx_handle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
     except AssertionError as e:
         raise GamspyException("GAMSPy could not create gdx handle.") from e
 
     try:
-        rc = gdx.gdxOpenRead(gdxHandle, load_from)
+        rc = gdx.gdxOpenRead(gdx_handle, load_from)
         assert rc[0]
     except AssertionError as e:
         raise GamspyException(
             "GAMSPy could not open gdx file to read from."
         ) from e
 
-    return gdxHandle
+    return gdx_handle
 
 
 def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
