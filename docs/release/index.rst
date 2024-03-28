@@ -26,4 +26,5 @@ Release Notes
    release_0.11.10
    release_0.12.0
    release_0.12.1
+   release_0.12.2
    
