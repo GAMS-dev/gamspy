@@ -58,7 +58,6 @@ class ConditionSuite(unittest.TestCase):
 
         m = Container()
 
-        # Set
         i = Set(
             m,
             name="i",
@@ -72,7 +71,6 @@ class ConditionSuite(unittest.TestCase):
             description="markets",
         )
 
-        # Data
         rd = Parameter(
             m,
             name="rd",
@@ -129,7 +127,6 @@ class ConditionSuite(unittest.TestCase):
 
         op = Variable(m, name="op", type="free", domain=[o, p])
 
-        # Equation
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
 
@@ -297,7 +294,6 @@ class ConditionSuite(unittest.TestCase):
 
         m = Container()
 
-        # Sets
         w = Set(
             m,
             name="w",
@@ -305,15 +301,12 @@ class ConditionSuite(unittest.TestCase):
         )
         t = Set(m, name="t", records=[str(i) for i in range(1, 21)])
 
-        # Parameters
         td = Parameter(m, name="td", domain=[w, t], records=td_data)
         wa = Parameter(m, name="wa", domain=[w], records=wa_data)
         tm = Parameter(m, name="tm", domain=[t], records=tm_data)
 
-        # Variables
         x = Variable(m, name="x", domain=[w, t], type="Positive")
 
-        # Equations
         maxw = Equation(m, name="maxw", domain=[w])
         minw = Equation(m, name="minw", domain=[t])
 
@@ -332,11 +325,9 @@ class ConditionSuite(unittest.TestCase):
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
 
-        # Variables
         sumc = Variable(m, name="sumc", type="free", domain=[o, p])
         op = Variable(m, name="op", type="free", domain=[o, p])
 
-        # Equation
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(

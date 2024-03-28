@@ -15,10 +15,9 @@ class CmdSuite(unittest.TestCase):
         gamspy_base_directory = utils._get_gamspy_base_directory()
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
 
+        old_license_path = os.path.join(os.getcwd(), "tmp", "old_license.txt")
         if os.path.exists(license_path):
-            shutil.copy(
-                license_path, os.path.join(os.getcwd(), "old_license.txt")
-            )
+            shutil.copy(license_path, old_license_path)
 
         license = "dummy license"
 
@@ -51,24 +50,23 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
+        if os.path.exists(old_license_path):
             subprocess.run(
                 [
                     "gamspy",
                     "install",
                     "license",
-                    os.path.join(os.getcwd(), "old_license.txt"),
+                    old_license_path,
                 ]
             )
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
         license_path = os.path.join(gamspy_base_directory, "user_license.txt")
+        old_license_path = os.path.join(os.getcwd(), "tmp", "old_license.txt")
 
         if os.path.exists(license_path):
-            shutil.copy(
-                license_path, os.path.join(os.getcwd(), "old_license.txt")
-            )
+            shutil.copy(license_path, old_license_path)
 
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
@@ -81,13 +79,13 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
-        if os.path.exists(os.path.join(os.getcwd(), "old_license.txt")):
+        if os.path.exists(old_license_path):
             subprocess.run(
                 [
                     "gamspy",
                     "install",
                     "license",
-                    os.path.join(os.getcwd(), "old_license.txt"),
+                    old_license_path,
                 ]
             )
 

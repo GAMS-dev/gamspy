@@ -81,7 +81,6 @@ class EquationSuite(unittest.TestCase):
             records={"lower": 1.0, "level": 1.5, "upper": 3.75},
         )
 
-        # Sets
         i = Set(
             self.m,
             name="i",
@@ -93,7 +92,6 @@ class EquationSuite(unittest.TestCase):
             self.m, name="c", domain=[i], records=np.array([0.5, 0.6])
         )
 
-        # Equations
         d = Parameter(self.m, name="d", records=0.5)
         eq1 = Equation(self.m, "eq1", type="nonbinding")
         eq1[...] = (x - d) == 0
@@ -166,7 +164,6 @@ class EquationSuite(unittest.TestCase):
         canning_plants = ["seattle", "san-diego"]
         markets = ["new-york", "chicago", "topeka"]
 
-        # Sets
         i = Set(
             self.m,
             name="i",
@@ -217,7 +214,6 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(eq[e[u, v]].gamsRepr(), "eq(e(u,v))")
 
     def test_equation_definition(self):
-        # Sets
         i = Set(
             self.m,
             name="i",
@@ -232,7 +228,6 @@ class EquationSuite(unittest.TestCase):
         c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variables
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         z = Variable(self.m, name="z")
 

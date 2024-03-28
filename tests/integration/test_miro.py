@@ -468,7 +468,6 @@ class MiroSuite(unittest.TestCase):
         capacities = [["seattle", 350], ["san-diego", 600]]
         demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-        # Set
         i = Set(
             m,
             name="i",
@@ -490,7 +489,6 @@ class MiroSuite(unittest.TestCase):
             is_miro_input=True,
         )
 
-        # Data
         _ = Parameter(
             m,
             name="a",
@@ -536,7 +534,6 @@ class MiroSuite(unittest.TestCase):
         )
         c[i, j] = f * d[i, j] / 1000
 
-        # Variable
         _ = Variable(
             m,
             name="x",

@@ -270,6 +270,8 @@ class Model:
         self.solve_status: SolveStatus | None = None
         self.solver_version = None
 
+        self._infeasibility_tolerance: float | None = None
+
         self.container._run()
 
     def __repr__(self) -> str:
@@ -459,31 +461,22 @@ class Model:
             )
 
     def _update_model_attributes(self) -> None:
-        temp_container = self.container._temp_container
-        temp_container.read(
-            self.container._gdx_out,
-            [
-                f"{self._generate_prefix}{self.name}_{gams_attr}"
-                for gams_attr in attribute_map
-            ],
+        container = self.container._temp_container
+        gdx_handle = utils._open_gdx_file(
+            self.container.system_directory, self.container._gdx_out
         )
 
         for gams_attr, python_attr in attribute_map.items():
             symbol_name = f"{self._generate_prefix}{self.name}_{gams_attr}"
+            data = utils._get_scalar_data(
+                container._gams2np, gdx_handle, symbol_name
+            )
 
             if python_attr == "status":
-                setattr(
-                    self,
-                    python_attr,
-                    ModelStatus(temp_container[symbol_name].toValue()),
-                )
+                setattr(self, python_attr, ModelStatus(data))
             elif python_attr == "solve_status":
-                status = SolveStatus(temp_container[symbol_name].toValue())
-                setattr(
-                    self,
-                    python_attr,
-                    status,
-                )
+                status = SolveStatus(data)
+                setattr(self, python_attr, status)
 
                 if status != SolveStatus.NormalCompletion:
                     raise GamsExceptionExecution(
@@ -492,12 +485,9 @@ class Model:
                         status.value,
                     )
             else:
-                setattr(
-                    self,
-                    python_attr,
-                    temp_container[symbol_name].toValue(),
-                )
+                setattr(self, python_attr, data)
 
+        utils._close_gdx_handle(gdx_handle)
         self.container._temp_container.data = {}
 
     def _make_variable_and_equations_dirty(self):
@@ -544,6 +534,23 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
         return infeas_dict
+
+    @property
+    def infeasibility_tolerance(self) -> float | None:
+        """
+        This option sets the tolerance for marking an equation infeasible in
+        the equation listing. By default, 1.0e-13.
+
+        Returns
+        -------
+        float | None
+        """
+        return self._infeasibility_tolerance
+
+    @infeasibility_tolerance.setter
+    def infeasibility_tolerance(self, value: float):
+        self.container._add_statement(f"{self.name}.tolInfRep = {value};")
+        self._infeasibility_tolerance = value
 
     def interrupt(self) -> None:
         """

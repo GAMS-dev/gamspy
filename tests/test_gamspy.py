@@ -44,7 +44,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.12.1")
+        self.assertEqual(gamspy.__version__, "0.12.2")
 
 
 class DocsSuite(unittest.TestCase):
@@ -153,6 +153,8 @@ def get_args():
 def main():
     args = get_args()
 
+    os.makedirs("tmp", exist_ok=True)
+
     runner = unittest.TextTestRunner()
 
     unittest_suites = [
@@ -207,23 +209,18 @@ def main():
     for txt_path in txt_paths:
         os.remove(txt_path)
 
-    gdx_paths = glob.glob("*.gdx")
-    for gdx_path in gdx_paths:
-        os.remove(gdx_path)
-
-    workfile_paths = glob.glob("*.g00")
-    for workfile_path in workfile_paths:
-        os.remove(workfile_path)
-
-    gams_paths = glob.glob("_*")
-    for gams_path in gams_paths:
-        if os.path.isfile(gams_path):
-            os.remove(gams_path)
-
-    miro_paths = ["conf_miro", "data_miro"]
+    miro_paths = [
+        f"tests{os.sep}conf_test_gamspy",
+        f"tests{os.sep}integration{os.sep}conf_test_miro",
+    ]
     for path in miro_paths:
         if os.path.exists(path):
             shutil.rmtree(path)
+
+    if os.path.exists("miro.log"):
+        os.remove("miro.log")
+
+    shutil.rmtree("tmp")
 
     return 0
 

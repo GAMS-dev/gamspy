@@ -38,11 +38,9 @@ class ModelInstanceSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
@@ -50,11 +48,9 @@ class ModelInstanceSuite(unittest.TestCase):
         bmult = Parameter(m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
         z = Variable(m, name="z")
 
-        # Equation
         cost = Equation(m, name="cost")
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
@@ -99,11 +95,9 @@ class ModelInstanceSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Set
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
-        # Data
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
         d = Parameter(m, name="d", domain=[i, j], records=self.distances)
@@ -111,11 +105,9 @@ class ModelInstanceSuite(unittest.TestCase):
         bmult = Parameter(m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        # Variable
         x = Variable(m, name="x", domain=[i, j], type="Positive")
         z = Variable(m, name="z")
 
-        # Equation
         cost = Equation(m, name="cost")
         supply = Equation(m, name="supply", domain=[i])
         demand = Equation(m, name="demand", domain=[j])
@@ -146,12 +138,10 @@ class ModelInstanceSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-        # Data
         INCOME0 = Parameter(
             m, name="INCOME0", description="notional income level", records=3.5
         )
 
-        # Variable
         IADJ = Variable(
             m,
             name="IADJ",
@@ -167,7 +157,6 @@ class ModelInstanceSuite(unittest.TestCase):
             type="Free",
         )
 
-        # Equation
         BALANCE = Equation(
             m,
             name="BALANCE",

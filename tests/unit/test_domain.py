@@ -14,7 +14,6 @@ class DomainSuite(unittest.TestCase):
         )
 
     def test_domain(self):
-        # Set
         i = Set(self.m, name="i", records=["seattle", "san-diego"])
         j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
