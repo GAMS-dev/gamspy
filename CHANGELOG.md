@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.3
+-------------
+- General
+  - Set log and listing file option relative to os.cwd instead of workspace.working_directory.
+- Testing
+  - Test relative path for listing file and log file creation options.
+
 GAMSPy 0.12.2
 -------------
 - General
