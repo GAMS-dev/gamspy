@@ -155,7 +155,7 @@ class ModelInstance:
         if model.sense:
             solve_string += f" {model.sense}"
 
-        if model._objective_variable:
+        if model._objective_variable is not None:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
         modifiers = self._create_modifiers()

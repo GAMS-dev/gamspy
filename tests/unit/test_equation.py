@@ -191,7 +191,7 @@ class EquationSuite(unittest.TestCase):
             domain=[i],
             description="observe supply limit at plant i",
         )
-        self.assertEqual(supply, "supply")
+        self.assertEqual(supply.gamsRepr(), "supply")
         self.assertEqual(
             supply.getStatement(),
             'Equation supply(i) "observe supply limit at plant i";',

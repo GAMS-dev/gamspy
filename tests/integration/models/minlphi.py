@@ -1565,7 +1565,7 @@ def main():
         # update the optimal solution storage parameters if new nlp
         # objective function value is less than the incumbent
         # ======================================================================
-        if zoau.l < zoaup:
+        if zoau.toValue() < zoaup.toValue():
             yhxopt[i, j] = yhx.l[i, j]
             yhuopt[hu, j] = yhu.l[hu, j]
             ycuopt[i, cu] = ycu.l[i, cu]
