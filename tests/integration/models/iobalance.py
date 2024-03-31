@@ -117,7 +117,7 @@ def main():
         olds[j] = s[j]
         r[i] = r[i] * u[i] / Sum(j, r[i] * a0[i, j] * x[j] * s[j])
         s[j] = s[j] * v[j] / Sum(i, r[i] * a0[i, j] * x[j] * s[j])
-        maxdelta[...] = max(
+        maxdelta[...] = gams_math.Max(
             Smax(i, gams_math.abs(oldr[i] - r[i])),
             Smax(j, gams_math.abs(olds[j] - s[j])),
         )
