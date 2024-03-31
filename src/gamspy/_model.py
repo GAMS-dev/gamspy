@@ -446,7 +446,7 @@ class Model:
 
             solve_string += f" {self.sense}"
 
-        if self._objective_variable:
+        if self._objective_variable is not None:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
         self.container._add_statement(solve_string + ";\n")
