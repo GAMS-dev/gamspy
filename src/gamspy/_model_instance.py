@@ -148,7 +148,6 @@ class ModelInstance:
         self, model: Model, freeze_options: Options | dict | None = None
     ):
         options = self._prepare_freeze_options(freeze_options)
-        options.license = self.model.container._license_path
 
         solve_string = f"{model.name} using {model.problem}"
 
