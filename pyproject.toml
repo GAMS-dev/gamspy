@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "0.12.1"
+version = "0.12.2"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -37,7 +37,7 @@ classifiers = [
 ]
 dependencies = [
   "gamsapi[transfer,control] >= 46.1.0",
-  "gamspy_base >= 46.1.0",
+  "gamspy_base >= 46.3.1",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
