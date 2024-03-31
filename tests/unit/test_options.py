@@ -202,6 +202,10 @@ class OptionsSuite(unittest.TestCase):
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
+        listing_file_name = os.path.join("tmp", "listing.lst")
+        transport.solve(options=Options(listing_file=listing_file_name))
+        self.assertTrue(os.path.exists(listing_file_name))
+
 
 def options_suite():
     suite = unittest.TestSuite()

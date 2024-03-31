@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -178,6 +179,16 @@ class Options(BaseModel):
         if options_dict["merge_strategy"] is not None:
             strategy = options_dict["merge_strategy"]
             options_dict["merge_strategy"] = multi_solve_map[strategy]
+
+        if options_dict["listing_file"] is not None:
+            os.makedirs(Path(options_dict["listing_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(options_dict["listing_file"]):
+                options_dict["listing_file"] = os.path.abspath(options_dict["listing_file"])
+
+        if options_dict["log_file"] is not None:
+            os.makedirs(Path(options_dict["log_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(options_dict["log_file"]):
+                options_dict["log_file"] = os.path.abspath(options_dict["log_file"])
 
         options_dict = {
             option_map[key]: value for key, value in options_dict.items()  # type: ignore
