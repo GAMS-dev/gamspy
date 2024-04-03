@@ -20,9 +20,6 @@ def main():
     assert i.records.values.tolist() == [["i1", ""]]
     assert p.records.values.tolist() == [["i1", 1.0]]
 
-    _ = Set(m, name="j", records=["j1"])
-    _ = Parameter(m, name="p2", records=5)
-
 
 if __name__ == "__main__":
     main()
