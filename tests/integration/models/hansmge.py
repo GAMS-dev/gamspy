@@ -17,9 +17,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from gamspy import Container
-from gamspy import Model
-from gamspy import Problem
+from gamspy import Container, Model, Problem
 
 
 def main():

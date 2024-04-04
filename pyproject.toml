@@ -37,7 +37,7 @@ classifiers = [
 ]
 dependencies = [
   "gamsapi[transfer,control] >= 46.1.0",
-  "gamspy_base >= 46.3.1",
+  "gamspy_base >= 46.4.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
