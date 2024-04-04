@@ -27,7 +27,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
-import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
@@ -60,7 +59,7 @@ class Operation(operable.Operable):
 
     def _extract_variables(self):
         if isinstance(self.expression, expression.Expression):
-            return self.expression.find_variables()
+            return self.expression._find_variables()
 
         if isinstance(self.expression, implicits.ImplicitVariable):
             return [self.expression.parent.name]
@@ -72,13 +71,11 @@ class Operation(operable.Operable):
 
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
-            index_str = self.domain[0].gamsRepr()
+            item = self.domain[0]
+            index_str = item.gamsRepr()
 
-            if (
-                isinstance(self.domain[0], expression.Expression)
-                and "$" in index_str
-                and not isinstance(self.domain[0].left, domain.Domain)
-                and index_str[0] == "("
+            if isinstance(item, expression.Expression) and isinstance(
+                item.left, implicits.ImplicitSet
             ):
                 # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
                 # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)

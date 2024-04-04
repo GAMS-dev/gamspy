@@ -75,18 +75,19 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             parent=self.parent, name=self.name, domain=domain
         )
 
-    def __setitem__(self, indices: list | str, assignment: Expression) -> None:
+    def __setitem__(self, indices: list | str, rhs: Expression) -> None:
+        # self[domain] = rhs
         domain = validation._transform_given_indices(self.domain, indices)
 
-        if isinstance(assignment, float):
-            assignment = utils._map_special_values(assignment)  # type: ignore
+        if isinstance(rhs, float):
+            rhs = utils._map_special_values(rhs)  # type: ignore
 
         statement = expression.Expression(
             ImplicitParameter(
                 parent=self.parent, name=self.name, domain=domain
             ),
             "=",
-            assignment,
+            rhs,
         )
 
         self.container._add_statement(statement)

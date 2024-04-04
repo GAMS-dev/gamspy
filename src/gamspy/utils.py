@@ -266,7 +266,7 @@ def _close_gdx_handle(handle):
 
 def _replace_equality_signs(string: str) -> str:
     string = string.replace("=l=", "<=")
-    string = string.replace("=e=", "=")
+    string = string.replace("=e=", "eq")
     string = string.replace("=g=", ">=")
     return string
 
