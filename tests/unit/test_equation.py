@@ -96,7 +96,7 @@ class EquationSuite(unittest.TestCase):
         eq1 = Equation(self.m, "eq1", type="nonbinding")
         eq1[...] = (x - d) == 0
         self.assertEqual(
-            eq1._definition.gamsRepr(),
+            eq1._assignment.gamsRepr(),
             "eq1 .. (x - d) =n= 0;",
         )
         self.assertEqual(eq1.type, "nonbinding")
@@ -105,13 +105,13 @@ class EquationSuite(unittest.TestCase):
         eq2 = Equation(self.m, "eq2", domain=[i], type="nonbinding")
         eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
-            eq2._definition.gamsRepr(),
+            eq2._assignment.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
         eq2[i] = (y[i] - c[i]) == 0
         self.assertEqual(
-            eq2._definition.gamsRepr(),
+            eq2._assignment.gamsRepr(),
             "eq2(i) .. (y(i) - c(i)) =n= 0;",
         )
 
@@ -146,15 +146,15 @@ class EquationSuite(unittest.TestCase):
     def test_nonbinding(self):
         x = Variable(self.m, "x")
         e = Equation(self.m, "e", definition=x == 0, type="NONBINDING")
-        self.assertEqual(e._definition.getStatement(), "e .. x =n= 0;")
+        self.assertEqual(e._assignment.getStatement(), "e .. x =n= 0;")
 
         x1 = Variable(self.m, "x1")
         e1 = Equation(self.m, "e1", definition=x1 >= 0, type="NONBINDING")
-        self.assertEqual(e1._definition.getStatement(), "e1 .. x1 =n= 0;")
+        self.assertEqual(e1._assignment.getStatement(), "e1 .. x1 =n= 0;")
 
         x2 = Variable(self.m, "x2")
         e2 = Equation(self.m, "e2", definition=x2 <= 0, type="NONBINDING")
-        self.assertEqual(e2._definition.getStatement(), "e2 .. x2 =n= 0;")
+        self.assertEqual(e2._assignment.getStatement(), "e2 .. x2 =n= 0;")
 
     def test_equation_declaration(self):
         # Check if the name is reserved
@@ -243,7 +243,7 @@ class EquationSuite(unittest.TestCase):
 
         self.assertIsNotNone(cost[...])
         self.assertEqual(
-            cost._definition.getStatement(),
+            cost._assignment.getStatement(),
             "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -256,7 +256,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum(j, x[i, j]) <= a[i],
         )
         self.assertEqual(
-            supply._definition.getStatement(),
+            supply._assignment.getStatement(),
             "supply(i) .. sum(j,x(i,j)) =l= a(i);",
         )
 
@@ -269,13 +269,13 @@ class EquationSuite(unittest.TestCase):
         )
         bla[i, j] = x[i, j] <= a[i]
         self.assertEqual(
-            bla._definition.getStatement(),
+            bla._assignment.getStatement(),
             "bla(i,j) .. x(i,j) =l= a(i);",
         )
 
         bla[i, "topeka"] = x[i, "topeka"] <= a[i]
         self.assertEqual(
-            bla._definition.getStatement(),
+            bla._assignment.getStatement(),
             'bla(i,"topeka") .. x(i,"topeka") =l= a(i);',
         )
 
@@ -287,7 +287,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            cost2._definition.getStatement(),
+            cost2._assignment.getStatement(),
             "cost2 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -298,7 +298,7 @@ class EquationSuite(unittest.TestCase):
             definition=Sum((i, j), c[i, j] * x[i, j]) == z,
         )
         self.assertEqual(
-            cost3._definition.getStatement(),
+            cost3._assignment.getStatement(),
             "cost3 .. sum((i,j),(c(i,j) * x(i,j))) =e= z;",
         )
 
@@ -311,7 +311,7 @@ class EquationSuite(unittest.TestCase):
         )
         bla2[i, j] = x[i, j] <= a[i]
         self.assertEqual(
-            bla2._definition.getStatement(),
+            bla2._assignment.getStatement(),
             "bla2(i,j) .. x(i,j) =l= a(i);",
         )
 
@@ -326,7 +326,7 @@ class EquationSuite(unittest.TestCase):
                 definition_domain=[i, "bla"],
             )
             self.assertEqual(
-                bla3._definition.getStatement(),
+                bla3._assignment.getStatement(),
                 'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
             )
 
@@ -352,7 +352,7 @@ class EquationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            eStartNaive._definition.getStatement(),
+            eStartNaive._assignment.getStatement(),
             "eStartNaive(g,t1) .. sum(t2 $ ((ord(t1) >= ord(t2)) and"
             " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
         )
@@ -527,7 +527,7 @@ class EquationSuite(unittest.TestCase):
         f[...] = (x - c) == 0
 
         self.assertEqual(
-            f._definition.gamsRepr(),
+            f._assignment.gamsRepr(),
             "f .. (x - c) =n= 0;",
         )
 
@@ -535,7 +535,7 @@ class EquationSuite(unittest.TestCase):
             self.m, name="f2", type="nonbinding", definition=(x - c) == 0
         )
         self.assertEqual(
-            f2._definition.gamsRepr(),
+            f2._assignment.gamsRepr(),
             "f2 .. (x - c) =n= 0;",
         )
 
@@ -543,13 +543,13 @@ class EquationSuite(unittest.TestCase):
             self.m, name="f3", type="nonbinding", definition=(x - c) == 0
         )
         self.assertEqual(
-            f3._definition.gamsRepr(),
+            f3._assignment.gamsRepr(),
             "f3 .. (x - c) =n= 0;",
         )
 
         f4 = Equation(self.m, name="f4", definition=(x - c) == 0)
         self.assertEqual(
-            f4._definition.gamsRepr(),
+            f4._assignment.gamsRepr(),
             "f4 .. (x - c) =e= 0;",
         )
 
@@ -592,7 +592,7 @@ class EquationSuite(unittest.TestCase):
         e = Equation(m, "e")
         e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
         self.assertEqual(
-            e._definition.getStatement(),
+            e._assignment.getStatement(),
             "e .. sum(i $ ((L - 1) eq i.val),(( sqr(x(i)) ) + ("
             " sqr(y(i)) ))) =e= 1;",
         )

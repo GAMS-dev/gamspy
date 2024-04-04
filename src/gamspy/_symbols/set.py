@@ -535,20 +535,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(
-        self,
-        indices: tuple | str,
-        assignment,
-    ):
+    def __setitem__(self, indices: tuple | str, rhs):
+        # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
-        if isinstance(assignment, bool):
-            assignment = "yes" if assignment is True else "no"  # type: ignore
+        if isinstance(rhs, bool):
+            rhs = "yes" if rhs is True else "no"  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
             "=",
-            assignment,
+            rhs,
         )
 
         self.container._add_statement(statement)
