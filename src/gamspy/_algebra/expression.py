@@ -70,6 +70,8 @@ class Expression(operable.Operable):
         self.left = left
         self.data = data
         self.right = right
+        if data == "=" and isinstance(right, Expression):
+            right._fix_equalities()
         self.representation = self._create_representation()
         self.where = condition.Condition(self)
 
@@ -80,11 +82,6 @@ class Expression(operable.Operable):
         # Adapt to GAMS quirks
         if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
             return out_str[1:-1]
-
-        if self.data == "$":
-            # defopLS(o,p) $ sumc(o,p) <= 0.5 .. op(o,p) =e= 1;   -> not valid
-            # defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1; -> valid
-            out_str = self._fix_condition_paranthesis(out_str)
 
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
@@ -128,14 +125,6 @@ class Expression(operable.Operable):
         if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
-        if self.data == "=" and isinstance(
-            self.left,
-            (implicits.ImplicitSet, implicits.ImplicitParameter),
-        ):
-            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) =e= 0); -> not valid
-            # error02(s1,s2) = (lfr(s1,s2) and sum(l(root,s,s1,s2),1) = 0); -> valid
-            right_str = utils._replace_equality_signs(right_str)
-
         return left_str, right_str
 
     def _create_output_str(self, left_str: str, right_str: str) -> str:
@@ -163,18 +152,7 @@ class Expression(operable.Operable):
     def __neg__(self):
         return Expression(None, "-", self)
 
-    def _fix_condition_paranthesis(self, string: str) -> str:
-        left, right = string.split("$", 1)
-        right = right.strip()
-
-        if right[0] != "(":
-            right = f"({right})"
-
-        string = f"{left}$ {right}"
-
-        return string
-
-    def replace_operator(self, operator: str):
+    def _replace_operator(self, operator: str):
         self.data = operator
         self.representation = self._create_representation()
 
@@ -198,35 +176,61 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def find_variables(self) -> list[Variable]:
-        current = self
-
+    def _find_variables(self) -> list[Variable]:
         stack = []
         variables: list[Variable] = []
 
+        node = self
         while True:
-            if current is not None:
-                stack.append(current)
+            if node is not None:
+                stack.append(node)
 
-                current = current.left if hasattr(current, "left") else None
+                node = node.left if hasattr(node, "left") else None
             elif stack:
-                current = stack.pop()
+                node = stack.pop()
 
-                if hasattr(current, "data") and isinstance(
-                    current.data, MathOp
-                ):
-                    variables += current.data.find_variables()
+                if hasattr(node, "data") and isinstance(node.data, MathOp):
+                    variables += node.data._find_variables()
 
-                if isinstance(current, gp.Variable):
-                    variables.append(current.name)
-                elif isinstance(current, implicits.ImplicitVariable):
-                    variables.append(current.parent.name)
-                elif isinstance(current, operation.Operation):
-                    operation_variables = current._extract_variables()
+                if isinstance(node, gp.Variable):
+                    variables.append(node.name)
+                elif isinstance(node, implicits.ImplicitVariable):
+                    variables.append(node.parent.name)
+                elif isinstance(node, operation.Operation):
+                    operation_variables = node._extract_variables()
                     variables += operation_variables
 
-                current = current.right if hasattr(current, "right") else None
+                node = node.right if hasattr(node, "right") else None
             else:
                 break  # pragma: no cover
 
         return list(set(variables))
+
+    def _fix_equalities(self):
+        # Equality operations on Parameter and Variable objects generate
+        # GAMS equality signs: =g=, =e=, =l=. If these signs appear on
+        # assignments, replace them with regular equality ops.
+        EQ_MAP = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
+        stack = []
+
+        node = self
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = node.left if hasattr(node, "left") else None
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, Expression) and node.data in EQ_MAP:
+                    node._replace_operator(EQ_MAP[node.data])
+
+                if isinstance(node, operation.Operation) and isinstance(
+                    node.expression, Expression
+                ):
+                    node.expression._fix_equalities()
+
+                node = node.right if hasattr(node, "right") else None
+            else:
+                break  # pragma: no cover
+
+        self.representation = self._create_representation()

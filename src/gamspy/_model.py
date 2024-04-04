@@ -503,8 +503,8 @@ class Model:
             if not equation.name.startswith(Model._generate_prefix):
                 equation._is_dirty = True
 
-            if equation._definition is not None:
-                variables = equation._definition.find_variables()
+            if equation._assignment is not None:
+                variables = equation._assignment._find_variables()
                 for name in variables:
                     if not name.startswith(Model._generate_prefix):
                         self.container[name]._is_dirty = True

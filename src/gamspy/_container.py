@@ -957,8 +957,8 @@ class Container(gt.Container):
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
-            if equation._definition is not None:
-                m._add_statement(equation._definition)
+            if equation._assignment is not None:
+                m._add_statement(equation._assignment)
 
         return m
 

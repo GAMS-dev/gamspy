@@ -459,7 +459,7 @@ class Job(Endpoint):
             raise EngineClientException(
                 "Fatal error while getting the results back from engine. GAMS"
                 f" Engine return code: {r.status}. Error message:"
-                f" {response_data['message']}",
+                f" {response_data}",
                 r.status,
             )
 
