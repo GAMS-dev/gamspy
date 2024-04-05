@@ -211,7 +211,7 @@ complete model and encourage users to solve it and further explore it::
     kk = gp.Equation(m, name="kk", domain=[t])
     dummy = gp.Equation(m, name="dummy")
     kk[t.lead(1)] = k[t.lead(1)] == k[t] + i[t]
-    dummy.definition = z == 0
+    dummy[...] = z == 0
     
     m1 = gp.Model(
         m,
