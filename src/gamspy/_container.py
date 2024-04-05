@@ -32,7 +32,6 @@ import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
-import pandas as pd
 from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
 from gams.core import gdx
 from gams.core.opt import optResetStr
@@ -47,6 +46,8 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import (
         Alias,
         Equation,
