@@ -8,6 +8,8 @@ GAMSPy 0.12.3
   - Simplify expression generation and fix incorrect expression data. 
 - Testing
   - Test relative path for listing file and log file creation options.
+- Documentation
+  - Remove the remnants of .definition and .assignment syntax from documentation.
 
 GAMSPy 0.12.2
 -------------
