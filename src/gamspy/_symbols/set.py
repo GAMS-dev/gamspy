@@ -496,6 +496,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             )
 
             if is_miro_input:
+                self._already_loaded = False
                 container._miro_input_symbols.append(self.name)
 
             if is_miro_output:

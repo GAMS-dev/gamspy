@@ -16,6 +16,7 @@ GAMSPy 0.12.2
   - Make urllib3 a true dependency instead of an optional one.
   - Do not suppress compiler listing by default.
   - Improve the performance of model attribute loading.
+  - Load miro input symbols once.
   - Fix license path for model instance.
 - Documentation
   - Add documentation about solver specific infeasibility options.
