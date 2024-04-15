@@ -639,39 +639,56 @@ tea-time           2          3         1         8             1
 ========  ==========  =========  ========  ========  ============  =======  ======
 
 
-Implicit Set Definition
-=======================
+Implicit Set Definition (via Domain Forwarding)
+===========================================
 
 As seen above, sets can be defined through data statements in the declaration. Alternatively, sets can be 
-defined implicitly through data statements of other symbols which use these sets as domains. 
-This is illustrated in the following example: ::
+defined implicitly through data statements of other symbols which use these sets as domains. This is called
+domain forwarding which can be achieved by using left angle `<` in GAMS syntax.  
+This is illustrated in the following example:
 
-    from gamspy import Container, Set, Parameter
-    import pandas as pd
+.. tab-set-code::
 
-    m = Container()
+    .. code-block:: python
+    
+        from gamspy import Container, Set, Parameter
 
-    distances = pd.DataFrame(
-        [
+        m = Container()
+
+        distances = [
             ["seattle", "new-york", 2.5],
             ["seattle", "chicago", 1.7],
             ["seattle", "topeka", 1.8],
             ["san-diego", "new-york", 2.5],
             ["san-diego", "chicago", 1.8],
             ["san-diego", "topeka", 1.4],
-        ],
-        columns=["from", "to", "distance"],
-    ).set_index(["from", "to"])
-    
-    i = Set(m, name="i", description="plants")
-    j = Set(m, name="j", description="markets")
-    
-    d = Parameter(m, name="d", 
-                  domain=[i, j],
-                  description="distance in thousands of miles",
-                  records = distances.reset_index(),
-                  domain_forwarding = True
-    )
+        ]
+
+        i = Set(m, name="i", description="plants")
+        j = Set(m, name="j", description="markets")
+
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            description="distance in thousands of miles",
+            records=distances,
+            domain_forwarding=True,
+        )
+        print(i.records)
+
+    .. code-block:: GAMS
+
+        Set
+            i 'canning plants'
+            j 'markets';
+
+        Table d(i<,j<) 'distance in thousands of miles'
+                    new-york  chicago  topeka
+        seattle         2.5      1.7     1.8
+        san-diego       2.5      1.8     1.4;
+
+        Display i;
 
 The ``domain_forwarding = True`` in the declaration of :meth:`gamspy.Parameter` ``d`` 
 forces set elements to be recursively included in all parent sets. Here set ``i`` 

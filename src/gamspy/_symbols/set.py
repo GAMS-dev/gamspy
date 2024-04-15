@@ -496,6 +496,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             )
 
             if is_miro_input:
+                self._already_loaded = False
                 container._miro_input_symbols.append(self.name)
 
             if is_miro_output:
@@ -503,7 +504,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
             validation.validate_container(self, self.domain)
             self.container._add_statement(self)
-            self._current_index = 0
 
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
@@ -517,18 +517,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             return len(self.records.index)
 
         return 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)

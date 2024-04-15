@@ -232,6 +232,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             )
 
             if is_miro_input:
+                self._already_loaded = False
                 container._miro_input_symbols.append(self.name)
 
             if is_miro_output:

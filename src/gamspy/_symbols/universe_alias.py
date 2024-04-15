@@ -39,9 +39,6 @@ class UniverseAlias(gt.UniverseAlias):
         # add statement
         obj.container._add_statement(obj)
 
-        # iterator index
-        obj._current_index = 0
-
         return obj
 
     def __new__(cls, container: Container, name: str = "universe"):
@@ -107,15 +104,3 @@ class UniverseAlias(gt.UniverseAlias):
             return len(self.records.index)
 
         return 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self

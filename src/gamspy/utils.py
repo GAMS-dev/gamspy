@@ -30,13 +30,13 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
     from gamspy import Alias, Equation, Set, Variable

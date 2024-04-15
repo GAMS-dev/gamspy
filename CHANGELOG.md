@@ -8,6 +8,10 @@ GAMSPy 0.12.3
   - Simplify expression generation and fix incorrect expression data. 
 - Testing
   - Test relative path for listing file and log file creation options.
+- Documentation
+  - Remove the remnants of .definition and .assignment syntax from documentation.
+  - Fix the example in gamspy for gams users.
+  - Add notes about the equivalent operation in GAMS to .where syntax in GAMSPy.
 
 GAMSPy 0.12.2
 -------------
@@ -16,6 +20,7 @@ GAMSPy 0.12.2
   - Make urllib3 a true dependency instead of an optional one.
   - Do not suppress compiler listing by default.
   - Improve the performance of model attribute loading.
+  - Load miro input symbols once.
   - Fix license path for model instance.
 - Documentation
   - Add documentation about solver specific infeasibility options.
