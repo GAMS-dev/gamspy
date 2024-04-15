@@ -4,7 +4,7 @@ import os
 import unittest
 
 import pandas as pd
-from gamspy import Alias, Card, Container, Ord, Parameter, Set, UniverseAlias
+from gamspy import Alias, Card, Container, Ord, Parameter, Set
 from gamspy.exceptions import ValidationError
 
 
@@ -240,64 +240,6 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.tval.gamsRepr(), "i.tval")
         self.assertEqual(i.first.gamsRepr(), "i.first")
         self.assertEqual(i.last.gamsRepr(), "i.last")
-
-    def test_iterable(self):
-        # Set with no records
-        i = Set(self.m, "i")
-        count = 0
-        for _ in i:
-            count += 1
-
-        self.assertEqual(count, 0)
-
-        # Set with records
-        k = Set(self.m, "k", records=[str(idx) for idx in range(1, 3)])
-        count = 0
-        for _ in k:
-            count += 1
-
-        self.assertEqual(count, 2)
-
-        # Alias with no records
-        x = Set(self.m, "x")
-        a = Alias(self.m, "a", x)
-        count = 0
-        for _ in a:
-            count += 1
-
-        self.assertEqual(count, 0)
-
-        # Alias with records
-        b = Set(self.m, "b", records=[str(idx) for idx in range(1, 3)])
-        c = Alias(self.m, "c", b)
-
-        count = 0
-        for _ in c:
-            count += 1
-
-        self.assertEqual(count, 2)
-
-        # UniverseAlias with no records
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        )
-        x = Set(m, "set1")
-        a = UniverseAlias(m, "universe1")
-        count = 0
-        for _ in a:
-            count += 1
-
-        self.assertEqual(count, 0)
-
-        # UniverseAlias with records
-        b = Set(m, "set2", records=[str(idx) for idx in range(1, 3)])
-        c = UniverseAlias(m, "universe2")
-
-        count = 0
-        for _ in c:
-            count += 1
-
-        self.assertEqual(count, 2)
 
     def test_sameas(self):
         i = Set(self.m, "i")

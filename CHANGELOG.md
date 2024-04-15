@@ -10,6 +10,7 @@ GAMSPy 0.12.3
   - Test relative path for listing file and log file creation options.
 - Documentation
   - Remove the remnants of .definition and .assignment syntax from documentation.
+  - Fix the example in gamspy for gams users.
 
 GAMSPy 0.12.2
 -------------
