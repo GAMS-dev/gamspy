@@ -132,7 +132,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             validation.validate_container(self, self.domain)
             self.where = condition.Condition(self)
             self.container._add_statement(self)
-            self._current_index = 0
 
             self.container._run()
 
@@ -141,18 +140,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             return len(self.records.index)
 
         return 0
-
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
 
     def gamsRepr(self) -> str:
         """
