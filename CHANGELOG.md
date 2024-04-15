@@ -11,6 +11,7 @@ GAMSPy 0.12.3
 - Documentation
   - Remove the remnants of .definition and .assignment syntax from documentation.
   - Fix the example in gamspy for gams users.
+  - Add notes about the equivalent operation in GAMS to .where syntax in GAMSPy.
 
 GAMSPy 0.12.2
 -------------
