@@ -224,6 +224,21 @@ def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
     return infeas_rows
 
 
+def _filter_gams_string(raw_string: str) -> str:
+    FILTERS = (
+        "$onMultiR",
+        "$onUNDF",
+        "$gdxIn",
+        "$loadDC",
+        "$offUNDF",
+        "execute_unload",
+    )
+    filtered_lines = [
+        line for line in raw_string.split("\n") if not line.startswith(FILTERS)
+    ]
+    return "\n".join(filtered_lines)
+
+
 def _get_gamspy_base_directory() -> str:
     """
     Returns the gamspy_base directory.
