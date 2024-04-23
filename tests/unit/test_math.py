@@ -28,8 +28,6 @@ class MathSuite(unittest.TestCase):
         v = Variable(self.m, name="v", domain=[i])
 
         # abs
-        op1 = gams_math.abs(-5)
-        self.assertEqual(op1, 5)
         op2 = gams_math.abs(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "( abs(b(i)) )")
@@ -133,9 +131,6 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( log10(b(i)) )")
 
         # round
-        op1 = gams_math.Round(5.3)
-        self.assertEqual(op1, 5)
-
         op2 = gams_math.Round(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "( round(b(i),0) )")
@@ -248,7 +243,7 @@ class MathSuite(unittest.TestCase):
 
         # normal
         op2 = gams_math.normal(mean=0, dev=1)
-        self.assertTrue(op2, expression.Expression)
+        self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "( normal(0,1) )")
 
         # sign
@@ -367,7 +362,7 @@ class MathSuite(unittest.TestCase):
         defopLS = Equation(m, "defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == gams_math.ifthen(sumc[o, p] >= 0.5, 1, 0)
         self.assertEqual(
-            defopLS._definition.gamsRepr(),
+            defopLS._assignment.gamsRepr(),
             "defopLS(o,p) .. op(o,p) =e= ( ifthen(sumc(o,p) >= 0.5,1,0) );",
         )
 

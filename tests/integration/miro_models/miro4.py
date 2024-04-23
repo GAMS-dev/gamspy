@@ -6,7 +6,7 @@ from gamspy import (
 
 
 def main():
-    m = Container()
+    m = Container(working_directory=".")
     i = Set(m, name="i")
     p = Parameter(
         m,

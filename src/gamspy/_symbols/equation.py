@@ -340,11 +340,12 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: tuple | str | implicits.ImplicitSet,
-        assignment: Expression,
+        rhs: Expression,
     ):
+        # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
-        self._set_definition(assignment, domain)
+        self._set_definition(domain, rhs)
         self._is_dirty = True
 
         self.container._run()
@@ -371,25 +372,27 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     def _init_definition(
         self,
         assignment: Variable | Operation | Expression | None = None,
-    ) -> None:
+    ):
         if assignment is None:
-            self._definition = None  # type: ignore
+            self._assignment = None  # type: ignore
             return None
 
         domain = (
             self._definition_domain if self._definition_domain else self.domain
         )
-        self._set_definition(assignment, domain)
+        self._set_definition(domain, assignment)
 
-    def _set_definition(self, assignment, domain):
+    def _set_definition(self, domain, rhs):
+        # self[domain] = rhs
+
         # In case of an MCP equation without any equality, add the equality
-        if not any(eq_type in assignment.gamsRepr() for eq_type in eq_types):
+        if not any(eq_type in rhs.gamsRepr() for eq_type in eq_types):
             raise ValidationError(
                 "Equation definition must contain at least one equality sign such as ==, <= or >=."
             )
 
         if self.type in non_regular_map:
-            assignment.replace_operator(non_regular_map[self.type])
+            rhs._replace_operator(non_regular_map[self.type])
 
         statement = expression.Expression(
             implicits.ImplicitEquation(
@@ -399,11 +402,11 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 domain=domain,
             ),
             "..",
-            assignment,
+            rhs,
         )
 
         self.container._add_statement(statement)
-        self._definition = statement
+        self._assignment = statement
 
     @property
     def l(self):  # noqa: E741, E743

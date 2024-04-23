@@ -93,7 +93,7 @@ number of records of a set::
        records=[str(x) for x in range(1985, 1996)],
     )
     s = gp.Parameter(m, name="s")
-    s.assignment = gp.Card(t)
+    s[...] = gp.Card(t)
 
 Note that ``s`` will be assigned the value ``11`` since the set ``t`` has 11 elements.
 

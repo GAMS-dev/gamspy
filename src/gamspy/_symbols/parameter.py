@@ -232,6 +232,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             )
 
             if is_miro_input:
+                self._already_loaded = False
                 container._miro_input_symbols.append(self.name)
 
             if is_miro_output:
@@ -256,8 +257,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: tuple | str | implicits.ImplicitSet,
-        assignment: Expression | float | int,
-    ) -> None:
+        rhs: Expression | float | int,
+    ):
+        # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
         if self._is_miro_input and self.container.miro_protect:
@@ -267,13 +269,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 " assigning to MIRO input symbols"
             )
 
-        if isinstance(assignment, float):
-            assignment = utils._map_special_values(assignment)  # type: ignore
+        if isinstance(rhs, float):
+            rhs = utils._map_special_values(rhs)  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitParameter(self, name=self.name, domain=domain),
             "=",
-            assignment,
+            rhs,
         )
 
         self.container._add_statement(statement)

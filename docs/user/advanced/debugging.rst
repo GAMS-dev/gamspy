@@ -184,6 +184,41 @@ generated up to that point as a string.
     ....
     ....
 
+By default ``generateGamsString`` returns exactly the same string that is executed but ``show_raw`` argument
+allows users to see only the raw model without any data or dollar calls or other necessary statements to make the model work.
+
+For example, the following code snippet:
+.. code-block:: python
+
+    from gamspy import Container, Set
+    m = Container()
+    i = Set(m, "i")
+    j = Set(m, "j")
+    print(m.generateGamsString(show_raw=True))
+
+generates: ::
+
+    Set i(*);
+    Set j(*);
+
+Without show_raw argument, the following string would be generated: ::
+
+    $onMultiR
+    $onUNDF
+    $gdxIn <gdx_in_file_name>
+    Set i(*);
+    $loadDC i
+    $offUNDF
+    $gdxIn
+    $onMultiR
+    $onUNDF
+    $gdxIn <gdx_in_file_name>
+    Set j(*);
+    $loadDC j
+    $offUNDF
+    $gdxIn
+
+
 To see the generated GAMS statement for a certain symbol, ``getStatement`` function can be utilized. ::
 
     from gamspy import Container, Set

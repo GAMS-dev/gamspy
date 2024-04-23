@@ -30,13 +30,13 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
-import pandas as pd
 from gams.core import gdx
 
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
     from gamspy import Alias, Equation, Set, Variable
@@ -224,6 +224,21 @@ def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
     return infeas_rows
 
 
+def _filter_gams_string(raw_string: str) -> str:
+    FILTERS = (
+        "$onMultiR",
+        "$onUNDF",
+        "$gdxIn",
+        "$loadDC",
+        "$offUNDF",
+        "execute_unload",
+    )
+    filtered_lines = [
+        line for line in raw_string.split("\n") if not line.startswith(FILTERS)
+    ]
+    return "\n".join(filtered_lines)
+
+
 def _get_gamspy_base_directory() -> str:
     """
     Returns the gamspy_base directory.
@@ -266,7 +281,7 @@ def _close_gdx_handle(handle):
 
 def _replace_equality_signs(string: str) -> str:
     string = string.replace("=l=", "<=")
-    string = string.replace("=e=", "=")
+    string = string.replace("=e=", "eq")
     string = string.replace("=g=", ">=")
     return string
 

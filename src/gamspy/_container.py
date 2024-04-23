@@ -32,7 +32,6 @@ import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
-import pandas as pd
 from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
 from gams.core import gdx
 from gams.core.opt import optResetStr
@@ -47,6 +46,8 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import (
         Alias,
         Equation,
@@ -905,20 +906,29 @@ class Container(gt.Container):
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
-            if equation._definition is not None:
-                m._add_statement(equation._definition)
+            if equation._assignment is not None:
+                m._add_statement(equation._assignment)
 
         return m
 
-    def generateGamsString(self) -> str:
+    def generateGamsString(self, show_raw: bool = False) -> str:
         """
         Generates the GAMS code
+
+        Parameters
+        ----------
+        show_raw : bool, optional
+            Shows the raw model without data and other necessary
+            GAMS statements, by default False.
 
         Returns
         -------
         str
         """
-        return self._gams_string
+        if not show_raw:
+            return self._gams_string
+
+        return utils._filter_gams_string(self._gams_string)
 
     def getEquations(self) -> list[Equation]:
         """

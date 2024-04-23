@@ -183,12 +183,13 @@ class OptionsSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-        # logoption = 2
-        transport.solve(create_log_file=True)
 
-        # logoption = 4
-        with self.assertRaises(NotImplementedError):
-            transport.solve(output=sys.stdout, create_log_file=True)
+        transport.solve()  # logoption=0
+        transport.solve(create_log_file=True)  # logoption = 2
+        transport.solve(output=sys.stdout)  # logoption = 3
+        transport.solve(
+            output=sys.stdout, create_log_file=True
+        )  # logoption = 4
 
         # test logfile
         logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
@@ -199,6 +200,10 @@ class OptionsSuite(unittest.TestCase):
 
         # test listing file
         listing_file_name = os.path.join(os.getcwd(), "tmp", "listing.lst")
+        transport.solve(options=Options(listing_file=listing_file_name))
+        self.assertTrue(os.path.exists(listing_file_name))
+
+        listing_file_name = os.path.join("tmp", "listing.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 

@@ -496,6 +496,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             )
 
             if is_miro_input:
+                self._already_loaded = False
                 container._miro_input_symbols.append(self.name)
 
             if is_miro_output:
@@ -503,7 +504,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
             validation.validate_container(self, self.domain)
             self.container._add_statement(self)
-            self._current_index = 0
 
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
@@ -518,37 +518,22 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return 0
 
-    def __next__(self):
-        if self._current_index < len(self):
-            row = self.records.iloc[self._current_index]
-            self._current_index += 1
-            return row
-
-        self._current_index = 0
-        raise StopIteration
-
-    def __iter__(self):
-        return self
-
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)
 
-    def __setitem__(
-        self,
-        indices: tuple | str,
-        assignment,
-    ):
+    def __setitem__(self, indices: tuple | str, rhs):
+        # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
-        if isinstance(assignment, bool):
-            assignment = "yes" if assignment is True else "no"  # type: ignore
+        if isinstance(rhs, bool):
+            rhs = "yes" if rhs is True else "no"  # type: ignore
 
         statement = expression.Expression(
             implicits.ImplicitSet(self, name=self.name, domain=domain),
             "=",
-            assignment,
+            rhs,
         )
 
         self.container._add_statement(statement)

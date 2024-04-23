@@ -172,14 +172,31 @@ This package is for the mathematical operations of GAMS.
 
 GAMSPy:
 
-.. code-block:: python
+.. tab-set-code::
 
-    import gamspy.math as gams_math
-    import math
+    .. code-block:: python
 
-    sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
-    sigma.l[i, k] = uniform(0.1, 1) # Generates a different value from uniform distribution for each element of the domain.
-    sigma.l[i, k] = math.uniform(0.1, 1) # This is not equivalent to the statement above. This generates only one value for the whole domain.
+        from gamspy import Container, Set, Variable
+        import gamspy.math as gams_math
+        import random
+
+        m = Container()
+        i = Set(m, "i", records=['i1', 'i2'])
+        k = Set(m, "k", records=['k1', 'k2'])
+        sigma = Variable(m, name="sigma", domain=[i, k], type="Positive")
+        sigma.l[i, k] = gams_math.uniform(0.1, 1) # Generates a different value from uniform distribution for each element of the domain.
+        print(sigma.records)
+        sigma.l[i, k] = random.uniform(0.1, 1) # This is not equivalent to the statement above. This generates only one value for the whole domain.
+        print(sigma.records)
+
+    .. code-block:: GAMS
+
+        Set i / i1, i2 /;
+        Set k / k1, k2 /;
+        Positive Variable sigma(i,k);
+        sigma.l(i,k) = uniform(0.1, 1);
+        display sigma.l;
+
 
 Logical Operations
 ------------------

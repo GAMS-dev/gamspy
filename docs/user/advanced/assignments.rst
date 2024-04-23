@@ -46,6 +46,9 @@ operations and equations. These topics are covered in later sections of this cha
     Logical conditions used with the ``where`` operator cannot include variables. 
     However, variable attributes are allowed.
 
+.. note::
+    ``where`` operator is equivalent to the dollar condition $ in GAMS.
+
 
 Logical Conditions
 ===================

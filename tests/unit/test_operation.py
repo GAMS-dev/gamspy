@@ -157,7 +157,7 @@ class OperationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            eStartFast._definition.gamsRepr(),
+            eStartFast._assignment.gamsRepr(),
             "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
             " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
             " =l= 1;",
@@ -176,7 +176,7 @@ class OperationSuite(unittest.TestCase):
         profit = Equation(m, "profit", domain=s)
         profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
         self.assertEqual(
-            profit._definition.getStatement(),
+            profit._assignment.getStatement(),
             "profit(s) .. ( - sum(c,(a(c,s) * p(c)))) =g= 0;",
         )
 

@@ -52,7 +52,7 @@ class MathOp:
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
         return f"{self.op_name}({operands_str})"
 
-    def find_variables(self):
+    def _find_variables(self):
         variables = []
         for elem in self.elements:
             if isinstance(elem, gp.Variable):
@@ -60,7 +60,7 @@ class MathOp:
             elif isinstance(elem, implicits.ImplicitVariable):
                 variables.append(elem.parent.name)
             elif isinstance(elem, expression.Expression):
-                variables += elem.find_variables()
+                variables += elem._find_variables()
 
         return variables
 

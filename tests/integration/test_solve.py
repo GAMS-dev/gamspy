@@ -1081,10 +1081,10 @@ class SolveSuite(unittest.TestCase):
     def test_variable_discovery(self):
         x = self.m.addVariable('x')
         l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
-        self.assertTrue('x' in l2.equations[0]._definition.find_variables())
+        self.assertTrue('x' in l2.equations[0]._assignment._find_variables())
         
         e = Equation(self.m, "e", definition=(x+5) == 0)
-        self.assertTrue('x' in e._definition.find_variables())
+        self.assertTrue('x' in e._assignment._find_variables())
         
     def test_invalid_arguments(self):
         m = Container(

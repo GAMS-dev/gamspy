@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -179,6 +180,16 @@ class Options(BaseModel):
             strategy = options_dict["merge_strategy"]
             options_dict["merge_strategy"] = multi_solve_map[strategy]
 
+        if options_dict["listing_file"] is not None:
+            os.makedirs(Path(options_dict["listing_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(options_dict["listing_file"]):
+                options_dict["listing_file"] = os.path.abspath(options_dict["listing_file"])
+
+        if options_dict["log_file"] is not None:
+            os.makedirs(Path(options_dict["log_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(options_dict["log_file"]):
+                options_dict["log_file"] = os.path.abspath(options_dict["log_file"])
+
         options_dict = {
             option_map[key]: value for key, value in options_dict.items()  # type: ignore
         }
@@ -192,17 +203,9 @@ def _fix_log_option(
     options: GamsOptions,
 ) -> GamsOptions:
     if output is None:
-        if create_log_file:
-            # Output = None & debug_logfile = True -> logOption = 2
-            options._logoption = 2
-        else:
-            # Output = None & debug_logfile = False -> logOption = 0
-            options._logoption = 0
-
-    # Output = writer & debug_logfile = True -> logOption = 4
-    # will be implemented once GAMS Control allows it
-    if output is not None and create_log_file:
-        raise NotImplementedError("This functionality is not implemented yet.")
+        options._logoption = 2 if create_log_file else 0
+    else:
+        options._logoption = 4 if create_log_file else 3
 
     return options
 
