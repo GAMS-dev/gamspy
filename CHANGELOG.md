@@ -6,8 +6,10 @@ GAMSPy 0.12.3
 - General
   - Set log and listing file option relative to os.cwd instead of workspace.working_directory.
   - Simplify expression generation and fix incorrect expression data. 
+  - Add logoption=4.
 - Testing
   - Test relative path for listing file and log file creation options.
+  - Update log option tests.
 - Documentation
   - Remove the remnants of .definition and .assignment syntax from documentation.
   - Fix the example in gamspy for gams users.

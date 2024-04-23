@@ -203,17 +203,9 @@ def _fix_log_option(
     options: GamsOptions,
 ) -> GamsOptions:
     if output is None:
-        if create_log_file:
-            # Output = None & debug_logfile = True -> logOption = 2
-            options._logoption = 2
-        else:
-            # Output = None & debug_logfile = False -> logOption = 0
-            options._logoption = 0
-
-    # Output = writer & debug_logfile = True -> logOption = 4
-    # will be implemented once GAMS Control allows it
-    if output is not None and create_log_file:
-        raise NotImplementedError("This functionality is not implemented yet.")
+        options._logoption = 2 if create_log_file else 0
+    else:
+        options._logoption = 4 if create_log_file else 3
 
     return options
 
