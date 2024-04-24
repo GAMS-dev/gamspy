@@ -191,6 +191,66 @@ class ModelSuite(unittest.TestCase):
             )
         )
 
+        # empty model name
+        self.assertRaises(
+            ValueError,
+            Model,
+            self.m,
+            "test_model7",
+            "",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name too long
+        self.assertRaises(
+            ValueError,
+            Model,
+            self.m,
+            "transport aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name is not an str
+        self.assertRaises(
+            TypeError,
+            Model,
+            self.m,
+            5,
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name contains empty space
+        self.assertRaises(
+            ValidationError,
+            Model,
+            self.m,
+            "test_model 8",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name begins with underscore
+        self.assertRaises(
+            ValidationError,
+            Model,
+            self.m,
+            "_test_model7",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
     def test_feasibility(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
