@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.4
+-------------
+- General
+  - Add checks on model name.
+- Testing
+  - Test invalid model names.
+
 GAMSPy 0.12.3
 -------------
 - General
