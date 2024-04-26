@@ -5,6 +5,7 @@ GAMSPy 0.12.4
 -------------
 - General
   - Add checks on model name.
+  - Adjust when to throw an exception and when to throw a warning for different SolveStatus values.
 - Testing
   - Test invalid model names.
 
