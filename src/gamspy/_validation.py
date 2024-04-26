@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
-MAX_MODEL_LENGTH = GAMS_SYMBOL_MAX_LENGTH - 19
+MAX_MODEL_LENGTH = GAMS_SYMBOL_MAX_LENGTH - 25
 
 
 def get_dimension(
