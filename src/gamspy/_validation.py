@@ -15,8 +15,6 @@ if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
-MAX_MODEL_LENGTH = GAMS_SYMBOL_MAX_LENGTH - 19
-
 
 def get_dimension(
     domain: list[Set | Alias | ImplicitSet | str],
@@ -315,10 +313,10 @@ def validate_model_name(name: str) -> str:
     if len(name) == 0:
         raise ValueError("Model name must be at least one character.")
 
-    if len(name) > MAX_MODEL_LENGTH:
+    if len(name) > GAMS_SYMBOL_MAX_LENGTH:
         raise ValueError(
             "Model 'name' is too long, "
-            f"max is {MAX_MODEL_LENGTH} characters"
+            f"max is {GAMS_SYMBOL_MAX_LENGTH} characters"
         )
 
     if name[0] == "_":

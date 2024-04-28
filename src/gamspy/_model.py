@@ -251,13 +251,13 @@ class Model:
     ):
         # check if the name is a reserved word
         name = validation.validate_name(name)
-
         self.name = validation.validate_model_name(name)
         self.container = container
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
         self.equations = list(equations)
+        self._auto_id = str(uuid.uuid4()).replace("-", "_")
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -310,12 +310,11 @@ class Model:
         )
 
     def _generate_obj_var_and_equation(self):
-        auto_id = str(uuid.uuid4()).replace("-", "_")
         variable = gp.Variable(
-            self.container, f"{Model._generate_prefix}{auto_id}_variable"
+            self.container, f"{Model._generate_prefix}variable_{self._auto_id}"
         )
         equation = gp.Equation(
-            self.container, f"{Model._generate_prefix}{auto_id}_equation"
+            self.container, f"{Model._generate_prefix}equation_{self._auto_id}"
         )
 
         return variable, equation
@@ -479,7 +478,7 @@ class Model:
 
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map:
-            symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
+            symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
             self.container._add_statement(
@@ -493,7 +492,7 @@ class Model:
         )
 
         for gams_attr, python_attr in attribute_map.items():
-            symbol_name = f"{self._generate_prefix}{self.name}_{gams_attr}"
+            symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
             data = utils._get_scalar_data(
                 container._gams2np, gdx_handle, symbol_name
             )
