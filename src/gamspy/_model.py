@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 import uuid
 from enum import Enum
@@ -54,6 +55,13 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
+logger = logging.getLogger("MODEL")
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 class Problem(Enum):
@@ -132,7 +140,7 @@ class SolveStatus(Enum):
     IterationInterrupt = 2
     ResourceInterrupt = 3
     TerminatedBySolver = 4
-    EvalError = 5
+    EvaluationInterrupt = 5
     CapabilityError = 6
     LicenseError = 7
     UserInterrupt = 8
@@ -141,6 +149,24 @@ class SolveStatus(Enum):
     InternalError = 11
     Skipped = 12
     SystemError = 13
+
+
+INTERRUPT_STATUS = [
+    SolveStatus.IterationInterrupt,
+    SolveStatus.ResourceInterrupt,
+    SolveStatus.EvaluationInterrupt,
+    SolveStatus.UserInterrupt,
+]
+
+ERROR_STATUS = [
+    SolveStatus.CapabilityError,
+    SolveStatus.LicenseError,
+    SolveStatus.SetupError,
+    SolveStatus.SolverError,
+    SolveStatus.InternalError,
+    SolveStatus.SystemError,
+    SolveStatus.TerminatedBySolver,
+]
 
 
 # GAMS name -> GAMSPy name
@@ -225,13 +251,13 @@ class Model:
     ):
         # check if the name is a reserved word
         name = validation.validate_name(name)
-
         self.name = validation.validate_model_name(name)
         self.container = container
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
         self.equations = list(equations)
+        self._auto_id = str(uuid.uuid4()).replace("-", "_")
         self._objective_variable = self._set_objective_variable(objective)
         self._matches = matches
         self._limited_variables = limited_variables
@@ -284,12 +310,11 @@ class Model:
         )
 
     def _generate_obj_var_and_equation(self):
-        auto_id = str(uuid.uuid4()).replace("-", "_")
         variable = gp.Variable(
-            self.container, f"{Model._generate_prefix}{auto_id}_variable"
+            self.container, f"{Model._generate_prefix}variable_{self._auto_id}"
         )
         equation = gp.Equation(
-            self.container, f"{Model._generate_prefix}{auto_id}_equation"
+            self.container, f"{Model._generate_prefix}equation_{self._auto_id}"
         )
 
         return variable, equation
@@ -453,7 +478,7 @@ class Model:
 
     def _create_model_attributes(self) -> None:
         for attr_name in attribute_map:
-            symbol_name = f"{self._generate_prefix}{self.name}_{attr_name}"
+            symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
             self.container._add_statement(
@@ -467,7 +492,7 @@ class Model:
         )
 
         for gams_attr, python_attr in attribute_map.items():
-            symbol_name = f"{self._generate_prefix}{self.name}_{gams_attr}"
+            symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
             data = utils._get_scalar_data(
                 container._gams2np, gdx_handle, symbol_name
             )
@@ -478,10 +503,16 @@ class Model:
                 status = SolveStatus(data)
                 setattr(self, python_attr, status)
 
-                if status != SolveStatus.NormalCompletion:
+                if status in INTERRUPT_STATUS:
+                    logger.warn(
+                        f"The solve was interrupted! Solve status: {status.name}. "
+                        "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus."
+                    )
+                elif status in ERROR_STATUS:
                     raise GamspyException(
                         f"The model ({self.name}) was not solved successfully!"
-                        f" Solve status: {status.name}",
+                        f" Solve status: {status.name}. "
+                        "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus",
                         status.value,
                     )
             else:

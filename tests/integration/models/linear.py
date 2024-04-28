@@ -31,11 +31,9 @@ from gamspy import (
     Problem,
     Sense,
     Set,
-    SolveStatus,
     Sum,
     Variable,
 )
-from gamspy.exceptions import GamspyException
 
 
 def main():
@@ -333,13 +331,7 @@ def main():
     devp.up[i] = 100
     devn.up[i] = 100
 
-    try:
-        mod1.solve()
-    except GamspyException:
-        if mod1.solve_status == SolveStatus.EvalError:
-            pass
-        else:
-            raise
+    mod1.solve()
     result["mod1", n] = b.l[n]
     result["mod1", "obj"] = obj.l
 
@@ -359,13 +351,7 @@ def main():
     result["mod4", n] = b.l[n]
     result["mod4", "obj"] = obj.l
 
-    try:
-        mod5.solve()
-    except GamspyException:
-        if mod5.solve_status == SolveStatus.EvalError:
-            pass
-        else:
-            raise
+    mod5.solve()
 
     result["mod5", n] = b.l[n]
     result["mod5", "obj"] = obj.l

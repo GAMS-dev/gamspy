@@ -208,7 +208,7 @@ class ModelSuite(unittest.TestCase):
             ValueError,
             Model,
             self.m,
-            "transport aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             "LP",
             self.m.getEquations(),
             "min",
