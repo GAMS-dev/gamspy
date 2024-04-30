@@ -219,17 +219,35 @@ Without show_raw argument, the following string would be generated: ::
     $gdxIn
 
 
-To see the generated GAMS statement for a certain symbol, ``getStatement`` function can be utilized. ::
+To see the generated GAMS declaration for a certain symbol, ``getDeclaration`` function can be utilized. ::
 
     from gamspy import Container, Set
     m = Container()
     i = Set(m, "i", records=['i1', 'i2'])
-    print(i.getStatement())
+    print(i.getDeclaration())
 
 
 The code snippet above prints the GAMS statement for the symbol ``i``::
 
     'Set i(*);'
+
+To see the generated GAMS definition for a certain symbol, ``getDefinition`` function can be utilized. ::
+
+    from gamspy import Sum, Container, Set, Parameter, Variable, Equation
+        
+    m = Container()
+    i = Set(m, "i", records=['i1','i2'])
+    a = Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i2','2']])
+    z = Variable(m, 'z')
+
+    eq = Equation(m, name="eq")
+    eq[...] = Sum(i, a[i]) <= z
+    print(eq.getDefinition())
+
+
+The code snippet above prints the GAMS statement for the symbol ``i``::
+
+    'eq .. sum(i,a(i)) =l= z;'
 
 Inspecting Misbehaving (Infeasible) Models
 ------------------------------------------
