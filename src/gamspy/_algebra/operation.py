@@ -31,6 +31,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gams.transfer import Alias, Parameter, Set
@@ -317,6 +318,11 @@ class Card(operable.Operable):
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
+
+    def __bool__(self):
+        raise ValidationError(
+            "Card operation cannot be used as a truth value. Use len(<symbol>.records) instead."
+        )
 
     def gamsRepr(self) -> str:
         return f"card({self._symbol.name})"

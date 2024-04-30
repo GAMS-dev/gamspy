@@ -95,7 +95,6 @@ class SolveSuite(unittest.TestCase):
         e[...] = 5
         self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
-        self.assertEqual(e[...], 5)
 
         with self.assertRaises(TypeError):
             e.records = 5
