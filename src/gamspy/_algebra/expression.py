@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import gamspy as gp
@@ -175,6 +176,16 @@ class Expression(operable.Operable):
         """
         return self.representation
 
+    def getDeclaration(self) -> str:
+        """
+        Declaration of the Expression in GAMS
+
+        Returns
+        -------
+        str
+        """
+        return self.gamsRepr()
+
     def getStatement(self) -> str:
         """
         Statement of this Expression in .gms file.
@@ -183,7 +194,12 @@ class Expression(operable.Operable):
         -------
         str
         """
-        return self.gamsRepr()
+        warnings.warn(
+            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.getDeclaration()
 
     def _find_variables(self) -> list[Variable]:
         stack = []

@@ -76,12 +76,12 @@ class ParameterSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            a.getStatement(),
+            a.getDeclaration(),
             'Parameter a(i) "capacities";',
         )
 
         b = Parameter(self.m, "b")
-        self.assertEqual(b.getStatement(), "Parameter b;")
+        self.assertEqual(b.getDeclaration(), "Parameter b;")
         self.assertEqual((b == 5).gamsRepr(), "(b eq 5)")
         self.assertEqual((-b).name, "-b")
 
@@ -106,7 +106,7 @@ class ParameterSuite(unittest.TestCase):
         a[i] = -a[i] * 5
 
         self.assertEqual(
-            a._assignment.gamsRepr(),
+            a.getDefinition(),
             "a(i) = (-a(i) * 5);",
         )
 
@@ -119,7 +119,7 @@ class ParameterSuite(unittest.TestCase):
         A = Parameter(cont, "A", domain=[s, m])
 
         A.domain = ["s", "m"]
-        self.assertEqual(A.getStatement(), "Parameter A(*,*);")
+        self.assertEqual(A.getDeclaration(), "Parameter A(*,*);")
 
     def test_parameter_assignment(self):
         m = Container(
@@ -157,7 +157,7 @@ class ParameterSuite(unittest.TestCase):
 
         a[i] = b[i]
         self.assertEqual(
-            a._assignment.getStatement(),
+            a.getDefinition(),
             "a(i) = b(i);",
         )
 
@@ -165,7 +165,7 @@ class ParameterSuite(unittest.TestCase):
         v.l[i] = v.l[i] * 5
 
         self.assertEqual(
-            v._assignment.getStatement(),
+            v.getDefinition(),
             "v.l(i) = (v.l(i) * 5);",
         )
 
@@ -178,7 +178,7 @@ class ParameterSuite(unittest.TestCase):
         gamma = Parameter(m, "gamma", domain=[j, h])
         gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
         self.assertEqual(
-            gamma._assignment.gamsRepr(),
+            gamma.getDefinition(),
             "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
         )
 

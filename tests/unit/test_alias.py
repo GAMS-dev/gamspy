@@ -57,13 +57,13 @@ class AliasSuite(unittest.TestCase):
         i = Set(self.m, name="i", records=["a", "b", "c"])
         j = Alias(self.m, name="j", alias_with=i)
         self.assertEqual(j.gamsRepr(), "j")
-        self.assertEqual(j.getStatement(), "Alias(i,j);")
+        self.assertEqual(j.getDeclaration(), "Alias(i,j);")
 
         # Set and Alias with domain
         k = Set(self.m, name="k", domain=[i], records=["a", "b"])
         m = Alias(self.m, name="m", alias_with=k)
         self.assertEqual(m.gamsRepr(), "m")
-        self.assertEqual(m.getStatement(), "Alias(k,m);")
+        self.assertEqual(m.getDeclaration(), "Alias(k,m);")
 
         # Check if the name is reserved
         self.assertRaises(ValidationError, Alias, self.m, "set", i)

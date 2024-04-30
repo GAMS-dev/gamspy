@@ -17,17 +17,6 @@ symbol below:
 
 .. tab-set-code:: 
 
-    .. code-block:: GAMS
-
-        Set i / i1, i2 /;
-        Alias (i, a);
-        Parameter p / i1 1, i2 2 /;
-        Variable v(i);
-        Equation e(i);
-        e(i) .. v(i) + p(i) =l= z
-        Model my_model / e /;
-        solve my_model using LP min z;
-
     .. code-block:: python
 
         import gamspy as gp
@@ -43,6 +32,16 @@ symbol below:
         model = gp.Model(m, "my_model", equations=[e], problem="lp", sense="min", objective=z)
         model.solve()
 
+    .. code-block:: GAMS
+
+        Set i / i1, i2 /;
+        Alias (i, a);
+        Parameter p / i1 1, i2 2 /;
+        Variable v(i);
+        Equation e(i);
+        e(i) .. v(i) + p(i) =l= z
+        Model my_model / e /;
+        solve my_model using LP min z;
 
 Translating Operations: Sum/Product/Smin/Smax
 ---------------------------------------------
@@ -50,14 +49,6 @@ Translating Operations: Sum/Product/Smin/Smax
 Frequently used GAMS operations which accept an index list and an expression can be translated as follows:
 
 .. tab-set-code::
-
-    .. code-block:: GAMS
-
-        Set i / i1, i2 /;
-        Parameter a / i1 1, i2 2 /;
-        Variable z;
-        Equation eq;
-        eq .. sum(i, a(i)) =l= z;
     
     .. code-block:: python
 
@@ -71,6 +62,13 @@ Frequently used GAMS operations which accept an index list and an expression can
         eq = gp.Equation(m, name="eq")
         eq[...] = Sum(i, a[i]) <= z
 
+    .. code-block:: GAMS
+
+        Set i / i1, i2 /;
+        Parameter a / i1 1, i2 2 /;
+        Variable z;
+        Equation eq;
+        eq .. sum(i, a(i)) =l= z;
 
 Card/Ord
 --------
@@ -79,14 +77,6 @@ Card and Ord operations can be translated as follows:
 
 .. tab-set-code::
 
-    .. code-block:: GAMS
-        
-        Set i / i0..i180 /;
-        Parameter step;
-        step = pi / 180;
-        Parameter omega(i);
-        omega(i) = (Ord(i) - 1) * step;
-    
     .. code-block:: python
 
         import gamspy as gp
@@ -98,6 +88,14 @@ Card and Ord operations can be translated as follows:
         omega = Parameter(m, name="omega", domain=[i])
         omega[i] = (Ord(i) - 1) * step
 
+    .. code-block:: GAMS
+        
+        Set i / i0..i180 /;
+        Parameter step;
+        step = pi / 180;
+        Parameter omega(i);
+        omega(i) = (Ord(i) - 1) * step;
+
 Domain
 ------
 
@@ -105,20 +103,6 @@ This class is exclusively for conditioning on a domain with more than one set.
 
 .. tab-set-code::
 
-    .. code-block:: GAMS
-        
-        Set bus / i1..i6 /;
-        Alias (bus, node);
-        Set conex(bus, bus);
-        
-        Parameter branch(bus, node, "*") / ...... /;
-        Parameter p;
-
-        conex(bus, node)$(branch(bus, node, "x")) = yes;
-        conex(bus, node)$(conex(node, bus)) = yes;
-
-        p = smax((bus, node) $ (conex(bus, node)), branch(bus, node, "bij" * 3.14 * 2))
-    
     .. code-block:: python
         
         import gamspy as gp
@@ -141,19 +125,26 @@ This class is exclusively for conditioning on a domain with more than one set.
             branch[bus, node, "bij"] * 3.14 * 2,
         )
 
+    .. code-block:: GAMS
+        
+        Set bus / i1..i6 /;
+        Alias (bus, node);
+        Set conex(bus, bus);
+        
+        Parameter branch(bus, node, "*") / ...... /;
+        Parameter p;
+
+        conex(bus, node)$(branch(bus, node, "x")) = yes;
+        conex(bus, node)$(conex(node, bus)) = yes;
+
+        p = smax((bus, node) $ (conex(bus, node)), branch(bus, node, "bij" * 3.14 * 2))
+
 Number
 ------
 
 This is for conditions on numbers or yes/no statements.
 
 .. tab-set-code::
-
-    .. code-block:: GAMS
-    
-        Set i / 1..4 /;
-        Set ie(i);
-        Variable x(i);
-        ie(i) = yes$(x.lo(i) = x.up(i));
 
     .. code-block:: python
         
@@ -164,6 +155,13 @@ This is for conditions on numbers or yes/no statements.
         ie = gp.Set(m, "ie", domain=[i])
         x = gp.Variable(m, "x", domain=[i])
         ie[i] = gp.Number(1).where[x.lo[i] == x.up[i]]
+
+    .. code-block:: GAMS
+    
+        Set i / 1..4 /;
+        Set ie(i);
+        Variable x(i);
+        ie(i) = yes$(x.lo(i) = x.up(i));
 
 math package
 ------------
@@ -211,13 +209,13 @@ Mapping:
 
 .. tab-set-code::
 
-    .. code-block:: GAMS
-    
-        error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);
-
     .. code-block:: python
 
         error01[s1,s2] = rt[s1,s2] & (~lfr[s1,s2]) | ((~rt[s1,s2]) & lfr[s1,s2])
+
+    .. code-block:: GAMS
+    
+        error01(s1,s2) = rt(s1,s2) and not lfr(s1,s2) or not rt(s1,s2) and lfr(s1,s2);
 
 
 Translating GAMS Macros

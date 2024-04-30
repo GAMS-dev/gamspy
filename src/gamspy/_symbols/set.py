@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
@@ -600,9 +601,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
         return self.name
 
-    def getStatement(self) -> str:
+    def getDeclaration(self) -> str:
         """
-        Statement of the Set definition
+        Declaration of the Set in GAMS
 
         Returns
         -------
@@ -621,6 +622,34 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         output += ";"
 
         return output
+
+    def getDefinition(self) -> str:
+        """
+        Definition of the Set in GAMS
+
+        Returns
+        -------
+        str
+        """
+        if self._assignment is None:
+            raise ValidationError("Set is not defined!")
+
+        return self._assignment.getDeclaration()
+
+    def getStatement(self) -> str:
+        """
+        Statement of the Set declaration
+
+        Returns
+        -------
+        str
+        """
+        warnings.warn(
+            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.getDeclaration()
 
 
 def singleton_check(is_singleton: bool, records: Any | None):
