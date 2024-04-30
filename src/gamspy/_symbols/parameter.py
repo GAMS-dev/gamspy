@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -355,9 +356,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         return self.name
 
-    def getStatement(self) -> str:
+    def getDeclaration(self) -> str:
         """
-        Statement of the Parameter definition
+        Declaration of the Parameter in GAMS
 
         Returns
         -------
@@ -375,3 +376,31 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         output += ";"
 
         return output
+
+    def getDefinition(self) -> str:
+        """
+        Definition of the Parameter in GAMS
+
+        Returns
+        -------
+        str
+        """
+        if self._assignment is None:
+            raise ValidationError("Parameter is not defined!")
+
+        return self._assignment.getDeclaration()
+
+    def getStatement(self) -> str:
+        """
+        Statement of the Parameter declaration
+
+        Returns
+        -------
+        str
+        """
+        warnings.warn(
+            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.getDeclaration()

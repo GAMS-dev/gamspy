@@ -63,7 +63,7 @@ class VariableSuite(unittest.TestCase):
         v4 = Variable(self.m, "v4")
         self.assertEqual(v4.gamsRepr(), "v4")
         self.assertEqual(
-            v4.getStatement(),
+            v4.getDeclaration(),
             "free Variable v4;",
         )
 
@@ -74,7 +74,7 @@ class VariableSuite(unittest.TestCase):
         v0 = Variable(self.m, name="v0", description="some text")
         self.assertEqual(v0.gamsRepr(), "v0")
         self.assertEqual(
-            v0.getStatement(),
+            v0.getDeclaration(),
             'free Variable v0 "some text";',
         )
 
@@ -85,7 +85,7 @@ class VariableSuite(unittest.TestCase):
         v1 = Variable(self.m, name="v1", domain=[i])
         self.assertEqual(v1.gamsRepr(), "v1")
         self.assertEqual(
-            v1.getStatement(),
+            v1.getDeclaration(),
             "free Variable v1(i);",
         )
 
@@ -95,7 +95,7 @@ class VariableSuite(unittest.TestCase):
         v2 = Variable(self.m, name="v2", domain=[i, j])
         self.assertEqual(v2.gamsRepr(), "v2")
         self.assertEqual(
-            v2.getStatement(),
+            v2.getDeclaration(),
             "free Variable v2(i,j);",
         )
 
@@ -106,7 +106,7 @@ class VariableSuite(unittest.TestCase):
             records=pd.DataFrame(data=[3.14159], columns=["level"]),
         )
         self.assertEqual(
-            pi.getStatement(),
+            pi.getDeclaration(),
             "free Variable pi;",
         )
         new_pi = -pi
@@ -124,7 +124,7 @@ class VariableSuite(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            v.getStatement(),
+            v.getDeclaration(),
             "free Variable v(*);",
         )
 
@@ -138,7 +138,7 @@ class VariableSuite(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            v3.getStatement(),
+            v3.getDeclaration(),
             "positive Variable v3(*,*);",
         )
 
@@ -147,25 +147,25 @@ class VariableSuite(unittest.TestCase):
 
         v = Variable(self.m, name="v", type="Positive")
         self.assertEqual(
-            v.getStatement(),
+            v.getDeclaration(),
             "positive Variable v;",
         )
 
         v1 = Variable(self.m, name="v1", type="Negative")
         self.assertEqual(
-            v1.getStatement(),
+            v1.getDeclaration(),
             "negative Variable v1;",
         )
 
         v2 = Variable(self.m, name="v2", type="Binary")
         self.assertEqual(
-            v2.getStatement(),
+            v2.getDeclaration(),
             "binary Variable v2;",
         )
 
         v3 = Variable(self.m, name="v3", domain=[i], type="Integer")
         self.assertEqual(
-            v3.getStatement(),
+            v3.getDeclaration(),
             "integer Variable v3(i);",
         )
 
@@ -284,7 +284,7 @@ class VariableSuite(unittest.TestCase):
         x.l[k] = 5
 
         self.assertEqual(
-            x._assignment.gamsRepr(),
+            x.getDefinition(),
             "x.l(k) = 5;",
         )
         self.assertFalse(x._is_dirty)
@@ -293,28 +293,28 @@ class VariableSuite(unittest.TestCase):
         a = Variable(self.m, "a")
         b = Variable(self.m, "b", "binary")
         a.l = 5
-        self.assertEqual(a._assignment.getStatement(), "a.l = 5;")
+        self.assertEqual(a.getDefinition(), "a.l = 5;")
 
         a.m = 5
-        self.assertEqual(a._assignment.getStatement(), "a.m = 5;")
+        self.assertEqual(a.getDefinition(), "a.m = 5;")
 
         a.lo = 5
-        self.assertEqual(a._assignment.getStatement(), "a.lo = 5;")
+        self.assertEqual(a.getDefinition(), "a.lo = 5;")
 
         a.up = 5
-        self.assertEqual(a._assignment.getStatement(), "a.up = 5;")
+        self.assertEqual(a.getDefinition(), "a.up = 5;")
 
         a.scale = 5
-        self.assertEqual(a._assignment.getStatement(), "a.scale = 5;")
+        self.assertEqual(a.getDefinition(), "a.scale = 5;")
 
         a.fx = 5
-        self.assertEqual(a._assignment.getStatement(), "a.fx = 5;")
+        self.assertEqual(a.getDefinition(), "a.fx = 5;")
 
         b.prior = 5
-        self.assertEqual(b._assignment.getStatement(), "b.prior = 5;")
+        self.assertEqual(b.getDefinition(), "b.prior = 5;")
 
         a.stage = 5
-        self.assertEqual(a._assignment.getStatement(), "a.stage = 5;")
+        self.assertEqual(a.getDefinition(), "a.stage = 5;")
 
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

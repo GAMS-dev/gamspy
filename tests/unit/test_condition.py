@@ -89,7 +89,7 @@ class ConditionSuite(unittest.TestCase):
         muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
 
         self.assertEqual(
-            muf._assignment.getStatement(),
+            muf.getDefinition(),
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ rd(i,j));",
         )
 
@@ -131,7 +131,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
 
         self.assertEqual(
-            defopLS._assignment.getStatement(),
+            defopLS.getDefinition(),
             "defopLS(o,p) $ (sumc(o,p) <= 0.5) .. op(o,p) =e= 1;",
         )
 
@@ -144,18 +144,18 @@ class ConditionSuite(unittest.TestCase):
 
         expression = Sum(i, muf[i, j]).where[muf[i, j] > 0]
         self.assertEqual(
-            expression.getStatement(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
+            expression.getDeclaration(), "(sum(i,muf(i,j)) $ (muf(i,j) > 0))"
         )
 
         k["ahmsa"] = True
         self.assertEqual(
-            k._assignment.getStatement(),
+            k.getDefinition(),
             'k("ahmsa") = yes;',
         )
 
         k["ahmsa"] = False
         self.assertEqual(
-            k._assignment.getStatement(),
+            k.getDefinition(),
             'k("ahmsa") = no;',
         )
 
@@ -192,7 +192,7 @@ class ConditionSuite(unittest.TestCase):
         ]
 
         self.assertEqual(
-            Util_gap._assignment.getStatement(),
+            Util_gap.getDefinition(),
             "Util_gap(t) = (1 $ (( round(Util_lic(t),10) ) ne ( round("
             "Util_lic2(t),10) )));",
         )
@@ -314,7 +314,7 @@ class ConditionSuite(unittest.TestCase):
         minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
 
         self.assertEqual(
-            minw._assignment.getStatement(),
+            minw.getDefinition(),
             "minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
@@ -331,7 +331,7 @@ class ConditionSuite(unittest.TestCase):
         defopLS = Equation(m, name="defopLS", domain=[o, p])
         defopLS[o, p] = op[o, p] == Number(1).where[sumc[o, p] >= 0.5]
         self.assertEqual(
-            defopLS._assignment.getStatement(),
+            defopLS.getDefinition(),
             "defopLS(o,p) .. op(o,p) =e= (1 $ (sumc(o,p) >= 0.5));",
         )
 
@@ -339,7 +339,7 @@ class ConditionSuite(unittest.TestCase):
         k[p].where[k[p]] = True
 
         self.assertEqual(
-            k._assignment.gamsRepr(),
+            k.getDefinition(),
             "k(p) $ k(p) = yes;",
         )
 
@@ -474,7 +474,7 @@ class ConditionSuite(unittest.TestCase):
         c[s].where[Ord(s) <= Ord(s)] = 1
 
         self.assertEqual(
-            c._assignment.getStatement(),
+            c.getDefinition(),
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 

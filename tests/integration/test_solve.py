@@ -246,7 +246,7 @@ class SolveSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            transport2.getStatement(),
+            transport2.getDeclaration(),
             "Model transport2 / cost,supply,demand,x(freeLinks) /;",
         )
 
@@ -1075,7 +1075,7 @@ class SolveSuite(unittest.TestCase):
         f = Parameter(m, "f")
         f[...] = 5
         
-        self.assertEqual(f._assignment.getStatement(), "f = 5;")
+        self.assertEqual(f.getDefinition(), "f = 5;")
             
     def test_variable_discovery(self):
         x = self.m.addVariable('x')

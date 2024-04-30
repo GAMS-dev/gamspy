@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import itertools
+import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -632,9 +633,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         """
         return self.name
 
-    def getStatement(self) -> str:
+    def getDeclaration(self) -> str:
         """
-        Statement of the Equation declaration
+        Declaration of the Equation in GAMS
 
         Returns
         -------
@@ -650,6 +651,34 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         output += ";"
         return output
+
+    def getDefinition(self) -> str:
+        """
+        Definition of the Equation in GAMS
+
+        Returns
+        -------
+        str
+        """
+        if self._assignment is None:
+            raise ValidationError("Equation is not defined!")
+
+        return self._assignment.getDeclaration()
+
+    def getStatement(self) -> str:
+        """
+        Statement of the Equation declaration
+
+        Returns
+        -------
+        str
+        """
+        warnings.warn(
+            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.getDeclaration()
 
 
 def cast_type(type: str | EquationType) -> str:
