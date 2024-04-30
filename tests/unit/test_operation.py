@@ -17,6 +17,7 @@ from gamspy import (
     Sum,
     Variable,
 )
+from gamspy.exceptions import ValidationError
 
 
 class OperationSuite(unittest.TestCase):
@@ -189,6 +190,45 @@ class OperationSuite(unittest.TestCase):
             bla._assignment.getStatement(),
             "bla(s) = (bla2(s) ne 0);",
         )
+
+    def test_truth_value(self):
+        i_list = [f"i{i}" for i in range(10)]
+        i = Set(self.m, "i", records=i_list)
+        j = Alias(self.m, "j", alias_with=i)
+        x = Variable(self.m, "x", domain=[i, j])
+        eq = Equation(self.m, "eq", domain=[i, j])
+
+        with self.assertRaises(ValidationError):
+            eq[i, j].where[
+                (Ord(i) < Card(i)) and (Ord(j) > 1) and (Ord(j) < Card(j))
+            ] = x[i, j] >= 1
+
+        with self.assertRaises(ValidationError):
+            if Card(i):
+                ...
+
+        with self.assertRaises(ValidationError):
+            if i:
+                ...
+
+        with self.assertRaises(ValidationError):
+            if j:
+                ...
+
+        a = Parameter(self.m, "a")
+        with self.assertRaises(ValidationError):
+            if a:
+                ...
+
+        v = Variable(self.m, "v")
+        with self.assertRaises(ValidationError):
+            if v:
+                ...
+
+        e = Equation(self.m, "e")
+        with self.assertRaises(ValidationError):
+            if e:
+                ...
 
 
 def operation_suite():
