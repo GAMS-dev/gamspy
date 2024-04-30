@@ -22,8 +22,8 @@ class Symbol:
     def gamsRepr(self: SymbolType):
         """Representation of the symbol in GAMS"""
 
-    def getStatement(self: SymbolType):
-        """Declaration string of the symbol in GAMS"""
+    def getDeclaration(self: SymbolType):
+        """Declaration of the symbol in GAMS"""
 
     def _get_domain_str(self: SymbolType):
         if isinstance(self.domain_forwarding, bool):
