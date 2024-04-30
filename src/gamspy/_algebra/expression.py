@@ -34,6 +34,7 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
@@ -151,6 +152,14 @@ class Expression(operable.Operable):
 
     def __neg__(self):
         return Expression(None, "-", self)
+
+    def __bool__(self):
+        raise ValidationError(
+            "An expression cannot be used as a truth value. If you are "
+            "trying to generate an expression, use binary operators "
+            "instead (e.g. &, |, ^). For more details, see: "
+            "https://gamspy.readthedocs.io/en/latest/user/gamspy_for_gams_users.html#logical-operations"
+        )
 
     def _replace_operator(self, operator: str):
         self.data = operator

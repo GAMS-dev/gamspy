@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Union
 import gams.transfer as gt
 
 import gamspy._symbols.implicits as implicits
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Equation, Parameter, Set, Variable
@@ -13,6 +14,11 @@ if TYPE_CHECKING:
 
 
 class Symbol:
+    def __bool__(self):
+        raise ValidationError(
+            "A symbol cannot be used as a truth value. Use len(<symbol>.records) instead."
+        )
+
     def gamsRepr(self: SymbolType):
         """Representation of the symbol in GAMS"""
 

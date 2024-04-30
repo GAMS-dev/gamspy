@@ -34,6 +34,7 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Set
@@ -140,6 +141,11 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             return len(self.records.index)
 
         return 0
+
+    def __bool__(self):
+        raise ValidationError(
+            "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
+        )
 
     def gamsRepr(self) -> str:
         """
