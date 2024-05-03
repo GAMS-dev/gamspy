@@ -7,6 +7,7 @@ stages:
   - docs
   - test
   - website
+  - audit
 
 variables:
   MACHINES_CONTAINER_REG:
@@ -41,4 +42,5 @@ include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test-3.10.yml',
           'ci/.gitlab-ci-test-3.11.yml',
           'ci/.gitlab-ci-test-3.12.yml',
-          'ci/.gitlab-ci-update-website.yml']
+          'ci/.gitlab-ci-update-website.yml',
+          'ci/.gitlab-ci-audit.yml']
