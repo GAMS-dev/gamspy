@@ -18,12 +18,15 @@ repos:
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
-
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.2.2
-  hooks:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.2.2
+    hooks:
     # Run the linter.
-    - id: ruff
-      args: [ --fix ]
+    -   id: ruff
+        args: [ --fix ]
     # Run the formatter.
-    - id: ruff-format
+    -   id: ruff-format
+-   repo: https://github.com/pypa/pip-audit
+    rev: v2.7.3
+    hooks:
+    -   id: pip-audit

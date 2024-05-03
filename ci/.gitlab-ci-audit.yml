@@ -1,0 +1,16 @@
+audit-wheel:
+  stage: audit
+  when: on_success
+  tags: [linux]
+  image: python:3.8
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install pip-audit
+    - pip-audit
+    - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: manual
