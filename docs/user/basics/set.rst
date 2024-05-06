@@ -640,7 +640,7 @@ tea-time           2          3         1         8             1
 
 
 Implicit Set Definition (via Domain Forwarding)
-===========================================
+===============================================
 
 As seen above, sets can be defined through data statements in the declaration. Alternatively, sets can be 
 defined implicitly through data statements of other symbols which use these sets as domains. This is called
