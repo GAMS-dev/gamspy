@@ -593,6 +593,9 @@ class Model:
         ValidationError
             If the job is not initialized
         """
+        if self.container._job is None:
+            raise ValidationError("No job was initialized yet!")
+
         self.container._job.interrupt()
 
     def freeze(
@@ -656,6 +659,10 @@ class Model:
         create_log_file : bool
             Allows creating a log file
 
+        Returns
+        -------
+        DataFrame, optional
+
         Raises
         ------
         ValidationError
@@ -708,6 +715,17 @@ class Model:
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = gp.Variable(m, "v")
+        >>> e = gp.Equation(m, "e", definition= v == 5)
+        >>> my_model = gp.Model(m, "my_model", "LP", [e])
+        >>> my_model.getDeclaration()
+        'Model my_model / e /;'
+
         """
         equations = []
         for equation in self.equations:

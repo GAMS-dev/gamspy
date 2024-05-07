@@ -25,7 +25,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -39,7 +39,24 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
+    import gamspy._algebra.expression as expression
     from gamspy import Variable
+    from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+    from gamspy._symbols.symbol import Symbol
+
+    OperandType = Optional[
+        Union[
+            int,
+            float,
+            str,
+            Operation,
+            expression.Expression,
+            Symbol,
+            ImplicitSymbol,
+            MathOp,
+        ]
+    ]
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -60,15 +77,19 @@ class Expression(operable.Operable):
 
     Examples
     --------
-    >>> a = Parameter(name="a", records=[["a", 1], ["b", 2], ["c", 3]]))
-    >>> b = Parameter(name="b", records=[["a", 1], ["b", 2], ["c", 3]]))
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> a = gp.Parameter(m, name="a")
+    >>> b = gp.Parameter(m, name="b")
     >>> expression = a * b
-    Expression(a, "*", b)
     >>> expression.gamsRepr()
-    (a * b)
+    '(a * b)'
+
     """
 
-    def __init__(self, left, data, right) -> None:
+    def __init__(
+        self, left: OperandType, data: str | MathOp, right: OperandType
+    ):
         self.left = left
         self.data = data
         self.right = right
@@ -173,6 +194,17 @@ class Expression(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> expression = a * b
+        >>> expression.gamsRepr()
+        '(a * b)'
+
         """
         return self.representation
 
@@ -183,6 +215,17 @@ class Expression(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> expression = a * b
+        >>> expression.getDeclaration()
+        '(a * b)'
+
         """
         return self.gamsRepr()
 
@@ -205,7 +248,7 @@ class Expression(operable.Operable):
         stack = []
         variables: list[Variable] = []
 
-        node = self
+        node: OperandType = self
         while True:
             if node is not None:
                 stack.append(node)

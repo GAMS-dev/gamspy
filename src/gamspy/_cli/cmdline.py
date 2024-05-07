@@ -391,6 +391,10 @@ def list_solvers(args: argparse.Namespace):
                 print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
             except KeyError:
                 ...
+    else:
+        raise ValidationError(
+            "gamspy list requires a third argument (solvers)."
+        )
 
 
 def run(args: argparse.Namespace):

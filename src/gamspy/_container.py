@@ -107,8 +107,8 @@ class Container(gt.Container):
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: str = "keep_on_error",
-        miro_protect: bool = True,
         options: Options | None = None,
+        miro_protect: bool = True,
     ):
         self._gams_string = ""
         if IS_MIRO_INIT:
@@ -120,10 +120,7 @@ class Container(gt.Container):
             else utils._get_gamspy_base_directory()
         )
 
-        self._debugging_level = self._get_debugging_level(debugging_level)
-
         self._unsaved_statements: list = []
-        self._all_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
 
@@ -137,7 +134,7 @@ class Container(gt.Container):
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
-            debugging_map[debugging_level],
+            self._get_debugging_level(debugging_level),
         )
 
         self.working_directory = self.workspace.working_directory
@@ -191,7 +188,7 @@ class Container(gt.Container):
                 " 'keep_on_error'"
             )
 
-        return debugging_level
+        return debugging_map[debugging_level]
 
     def _write_default_gdx_miro(self):  # pragma: no cover
         # create data_<model>/default.gdx
@@ -237,7 +234,6 @@ class Container(gt.Container):
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
-        self._all_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""

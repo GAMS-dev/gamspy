@@ -640,6 +640,18 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+        >>> v = gp.Variable(m, "v", domain=[i])
+        >>> e = gp.Equation(m, "e", domain=[i])
+        >>> e.getDeclaration()
+        'Equation e(i);'
+
         """
         output = f"Equation {self.name}"
 
@@ -659,6 +671,19 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+        >>> v = gp.Variable(m, "v", domain=[i])
+        >>> e = gp.Equation(m, "e", domain=[i])
+        >>> e[i] = a[i] <= v[i]
+        >>> e.getDefinition()
+        'e(i) .. a(i) =l= v(i);'
+
         """
         if self._assignment is None:
             raise ValidationError("Equation is not defined!")
