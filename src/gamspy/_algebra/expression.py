@@ -109,8 +109,7 @@ class Expression(operable.Operable):
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            indices = utils._get_matching_paranthesis_indices(out_str)
-            match_index = indices[0]
+            match_index = utils._get_matching_paranthesis_indices(out_str)
             out_str = out_str[1:match_index] + out_str[match_index + 1 :]
 
         return out_str
@@ -252,8 +251,7 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-
-                node = node.left if hasattr(node, "left") else None
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -268,7 +266,7 @@ class Expression(operable.Operable):
                     operation_variables = node._extract_variables()
                     variables += operation_variables
 
-                node = node.right if hasattr(node, "right") else None
+                node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
@@ -285,7 +283,7 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-                node = node.left if hasattr(node, "left") else None
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -297,7 +295,7 @@ class Expression(operable.Operable):
                 ):
                     node.expression._fix_equalities()
 
-                node = node.right if hasattr(node, "right") else None
+                node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
