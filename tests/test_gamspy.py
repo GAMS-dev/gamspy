@@ -66,6 +66,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}_model_instance.py",
             f"{root}{os.sep}_model.py",
             f"{root}{os.sep}utils.py",
+            f"{root}{os.sep}_algebra{os.sep}expression.py",
             f"{root}{os.sep}_algebra{os.sep}domain.py",
             f"{root}{os.sep}_algebra{os.sep}number.py",
             f"{root}{os.sep}_symbols{os.sep}alias.py",

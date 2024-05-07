@@ -311,7 +311,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     is_miro_input : bool
     is_miro_output : bool
 
-
     Examples
     --------
     >>> import gamspy as gp
@@ -608,6 +607,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> i.getDeclaration()
+        'Set i(*);'
+
         """
         output = f"Set {self.name}"
 
@@ -630,6 +638,16 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> i['i1'] = False
+        >>> i.getDefinition()
+        'i("i1") = no;'
+
         """
         if self._assignment is None:
             raise ValidationError("Set is not defined!")

@@ -92,7 +92,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2'])
-    >>> v = gp.Variable(m, "a", domain=[i])
+    >>> v = gp.Variable(m, "v", domain=[i])
 
     """
 
@@ -528,6 +528,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> v = gp.Variable(m, "v", domain=[i])
+        >>> v.getDeclaration()
+        'free Variable v(i);'
+
         """
         output = self.type + " "
 
@@ -551,6 +561,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> v = gp.Variable(m, "v", domain=[i])
+        >>> v.l[i] = 0;
+        >>> v.getDefinition()
+        'v.l(i) = 0;'
+
         """
         if not hasattr(self, "_assignment"):
             raise ValidationError("Variable is not defined!")

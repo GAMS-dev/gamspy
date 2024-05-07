@@ -363,6 +363,16 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+        >>> a.getDeclaration()
+        'Parameter a(i);'
+
         """
         statement_name = self.name
         if self.domain:
@@ -384,6 +394,17 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
+        >>> a[i] = a[i] * 5
+        >>> a.getDefinition()
+        'a(i) = (a(i) * 5);'
+
         """
         if self._assignment is None:
             raise ValidationError("Parameter is not defined!")
