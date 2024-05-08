@@ -170,6 +170,15 @@ class Container(gt.Container):
             self.read(load_from)
             self._run()
 
+    def __repr__(self):
+        return f"<Container ({hex(id(self))})>"
+
+    def __str__(self):
+        if len(self):
+            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
+
+        return f"<Empty Container ({hex(id(self))})>"
+
     def _write_miro_files(self):  # pragma: no cover
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
             return
