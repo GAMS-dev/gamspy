@@ -10,6 +10,7 @@ GAMSPy 0.12.4
   - Do not allow expressions and symbols to be used as truth values.
   - Add deprecation message for getStatement and expose getDeclaration and getDefinition.
   - Override __repr__ and __str__ of Container.
+  - Synchronize gamspy_base and gamsapi versions.
 - Testing
   - Test invalid model names.
   - Add tests for expressions and symbols that are used as truth values.
