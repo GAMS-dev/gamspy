@@ -131,6 +131,7 @@ class Container(gt.Container):
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
+        self._is_socket_open = True
         atexit.register(self._stop_socket)
 
         system_directory = (
@@ -214,8 +215,9 @@ class Container(gt.Container):
             )
 
     def _stop_socket(self):
-        if hasattr(self, "_socket"):
+        if self._is_socket_open:
             self._socket.sendall("stop".encode("ascii"))
+            self._is_socket_open = False
 
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
@@ -498,6 +500,9 @@ class Container(gt.Container):
         self._gams_string += string
 
         return string
+
+    def close(self):
+        self._stop_socket()
 
     def gamsJobName(self) -> str | None:
         """
