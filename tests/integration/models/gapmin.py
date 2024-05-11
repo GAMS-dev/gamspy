@@ -446,9 +446,7 @@ def main():
                 abs(zlbest.toValue() - zfeas.toValue()),
             ]
             results.write(
-                "{:<15} {:<15.3f} {:<20.3f} {:<15.1f} {:<15.3f}\n".format(
-                    row[0], row[1], row[2], row[3], row[4]
-                )
+                f"{row[0]:<15} {row[1]:<15.3f} {row[2]:<20.3f} {row[3]:<15.1f} {row[4]:<15.3f}\n"
             )
 
             if status.toValue() == 2:

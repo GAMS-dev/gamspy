@@ -486,9 +486,9 @@ def main(is_centropy=False):
                 stderr3 * abs(SAM0[record.i, record.j])
             )
             #  Multiplicative errors
-            sigmay3[record.i, record.j].where[
-                icoeff[record.i, record.j]
-            ] = stderr3
+            sigmay3[record.i, record.j].where[icoeff[record.i, record.j]] = (
+                stderr3
+            )
             vbar3[record.i, record.j, "1"] = -3 * sigmay3[record.i, record.j]
             vbar3[record.i, record.j, "2"] = 0
             vbar3[record.i, record.j, "3"] = 3 * sigmay3[record.i, record.j]

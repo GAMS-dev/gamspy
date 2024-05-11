@@ -199,9 +199,9 @@ def main():
         visited[i] = False
 
         for _ in i.toList():
-            nextj[j].where[
-                x.l[fromi, j] > 0.5
-            ] = True  # check x.l(fromi,j) = 1 would be dangerous
+            nextj[j].where[x.l[fromi, j] > 0.5] = (
+                True  # check x.l(fromi,j) = 1 would be dangerous
+            )
             tour[fromi, nextj, tt] = True  # store in table
             visited[fromi] = True  # mark city 'fromi' as visited
             fromi[j] = nextj[j]

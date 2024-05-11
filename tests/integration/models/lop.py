@@ -151,12 +151,12 @@ def main():
                     v[s2, r1].where[lr[root_elem, f_elem, s2, r1]] = True
                     v[f_elem, "1"].where[Card(k) == 0] = True
 
-                    l[root_elem, to, k].where[
-                        tree[root_elem, f_elem, to]
-                    ] = True
-                    lr[root_elem, to, v].where[
-                        tree[root_elem, f_elem, to]
-                    ] = True
+                    l[root_elem, to, k].where[tree[root_elem, f_elem, to]] = (
+                        True
+                    )
+                    lr[root_elem, to, v].where[tree[root_elem, f_elem, to]] = (
+                        True
+                    )
                     l[root_elem, to, f_elem, to].where[
                         tree[root_elem, f_elem, to]
                     ] = True
