@@ -394,18 +394,18 @@ def main():
 
     # Quadratic objective function
     numcostpts[gen] = geninfo[gen, "numcostpts", "given"]
-    costcoef[gen, costcoefset].where[
+    costcoef[gen, costcoefset].where[geninfo[gen, "costcoef", costcoefset]] = (
         geninfo[gen, "costcoef", costcoefset]
-    ] = geninfo[gen, "costcoef", costcoefset]
+    )
 
     # Piecewise linear information
     numcostcoef[gen] = geninfo[gen, "numcostcoef", "given"]
-    costpts_x[gen, costptset].where[
+    costpts_x[gen, costptset].where[geninfo[gen, "costpts_x", costptset]] = (
         geninfo[gen, "costpts_x", costptset]
-    ] = geninfo[gen, "costpts_x", costptset]
-    costpts_y[gen, costptset].where[
+    )
+    costpts_y[gen, costptset].where[geninfo[gen, "costpts_y", costptset]] = (
         geninfo[gen, "costpts_y", costptset]
-    ] = geninfo[gen, "costpts_y", costptset]
+    )
 
     # Line resistance (r) and reactance (x)
     r[i, j, c].where[line[i, j, c]] = branchinfo[i, j, c, "r", "given"]
