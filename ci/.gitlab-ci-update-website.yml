@@ -1,7 +1,7 @@
 update-website:
   stage: website
   needs: []
-  tags: [linux]
+  tags: [puma]
   image:
     name: $MACHINES_CONTAINER_REG/leg/builder-full:latest
     entrypoint: [""]

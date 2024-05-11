@@ -139,6 +139,16 @@ class ContainerSuite(unittest.TestCase):
         e3 = m.addEquation("e", records=pd.DataFrame())
         self.assertTrue(id(e3) == id(e1))
 
+    def test_str(self):
+        self.assertEqual(str(self.m), f"<Empty Container ({hex(id(self.m))})>")
+
+        _ = Set(self.m, "i")
+        self.assertEqual(
+            str(self.m),
+            f"<Container ({hex(id(self.m))}) with {len(self.m)} symbols: {self.m.data.keys()}>",
+        )
+        self.assertEqual(repr(self.m), f"<Container ({hex(id(self.m))})>")
+
     def test_read_write(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),

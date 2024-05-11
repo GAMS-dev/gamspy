@@ -47,7 +47,7 @@ that domain lists and descriptions are allowed and recommended ::
     utility = Variable(m, "utility", description = "utility measure")
 
 The :meth:`Variable() <gamspy.Variable>` class indicates that this is a variable 
-statement. ``name`` is the internal name of the variable in GAMSPy, it is an 
+statement. ``name`` is the optional internal name of the variable in GAMSPy, it is an 
 *identifier*. In the optional ``domain`` list the set or sets may be specified 
 over which an indexed variable is declared. The optional ``description`` may be 
 used to describe the variable for future reference and to ease readability. 

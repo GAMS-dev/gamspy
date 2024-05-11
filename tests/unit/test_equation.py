@@ -41,8 +41,8 @@ class EquationSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_equation_creation(self):
-        # no name
-        self.assertRaises(TypeError, Equation, self.m)
+        # no name is fine now
+        _ = Equation(self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Equation, self.m, 5)

@@ -24,6 +24,7 @@
 #
 from __future__ import annotations
 
+import uuid
 import warnings
 from typing import TYPE_CHECKING
 
@@ -49,8 +50,11 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
     Parameters
     ----------
     container : Container
-    name : str
+        Container of the alias.
+    name : str, optional
+        Name of the alias.
     alias_with : Set
+        Alias set object.
 
     Examples
     --------
@@ -91,29 +95,45 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
 
         return obj
 
-    def __new__(cls, container: Container, name: str, alias_with: Set):
+    def __new__(
+        cls,
+        container: Container,
+        name: str | None = None,
+        alias_with: Set | None = None,
+    ):
         if not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
             )
 
-        if not isinstance(name, str):
-            raise TypeError(f"Name must of type `str` but found {type(name)}")
-
-        try:
-            symobj = container[name]
-            if isinstance(symobj, cls):
-                return symobj
-
+        if not isinstance(alias_with, (gp.Set, gp.Alias)):
             raise TypeError(
-                f"Cannot overwrite symbol `{name}` in container"
-                " because it is not an Alias object)"
+                f"alias_with must be a Set but found {type(alias_with)}"
             )
-        except KeyError:
-            return object.__new__(Alias)
 
-    def __init__(self, container: Container, name: str, alias_with: Set):
+        if name is None:
+            return object.__new__(cls)
+        else:
+            if not isinstance(name, str):
+                raise TypeError(
+                    f"Name must of type `str` but found {type(name)}"
+                )
+            try:
+                symobj = container[name]
+                if isinstance(symobj, cls):
+                    return symobj
+
+                raise TypeError(
+                    f"Cannot overwrite symbol `{name}` in container"
+                    " because it is not an Alias object)"
+                )
+            except KeyError:
+                return object.__new__(Alias)
+
+    def __init__(
+        self, container: Container, name: str | None, alias_with: Set
+    ):
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
@@ -127,7 +147,11 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             self.alias_with = alias_with
         else:
             self._is_dirty = False
-            name = validation.validate_name(name)
+
+            if name is not None:
+                name = validation.validate_name(name)
+            else:
+                name = str(uuid.uuid4()).replace("-", "_")
 
             super().__init__(container, name, alias_with)
 

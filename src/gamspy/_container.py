@@ -129,10 +129,10 @@ class Container(gt.Container):
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default
         "keep_on_error"
-    options : Options
+    options : Options, optional
         Global options for the overall execution
-    miro_protect : bool
-        Protects MIRO input symbol records from being re-assigned
+    miro_protect : bool, optional
+        Protects MIRO input symbol records from being re-assigned, by default True
 
     Examples
     --------
@@ -148,8 +148,8 @@ class Container(gt.Container):
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: str = "keep_on_error",
-        miro_protect: bool = True,
         options: Options | None = None,
+        miro_protect: bool = True,
     ):
         self._gams_string = ""
         if IS_MIRO_INIT:
@@ -163,10 +163,7 @@ class Container(gt.Container):
             else utils._get_gamspy_base_directory()
         )
 
-        self._debugging_level = self._get_debugging_level(debugging_level)
-
         self._unsaved_statements: list = []
-        self._all_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
 
@@ -180,7 +177,7 @@ class Container(gt.Container):
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
-            debugging_map[debugging_level],
+            self._get_debugging_level(debugging_level),
         )
 
         self.working_directory = self.workspace.working_directory
@@ -243,6 +240,15 @@ class Container(gt.Container):
     def _stop_socket(self):
         if hasattr(self, "_socket"):
             self._socket.sendall("stop".encode("ascii"))
+            
+    def __repr__(self):
+        return f"<Container ({hex(id(self))})>"
+
+    def __str__(self):
+        if len(self):
+            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
+
+        return f"<Empty Container ({hex(id(self))})>"
 
     def _write_miro_files(self):  # pragma: no cover
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
@@ -262,7 +268,7 @@ class Container(gt.Container):
                 " 'keep_on_error'"
             )
 
-        return debugging_level
+        return debugging_map[debugging_level]
 
     def _write_default_gdx_miro(self):  # pragma: no cover
         # create data_<model>/default.gdx
@@ -308,7 +314,6 @@ class Container(gt.Container):
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
-        self._all_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""

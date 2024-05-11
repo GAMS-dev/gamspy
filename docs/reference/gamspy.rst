@@ -20,6 +20,7 @@ gamspy
    gamspy.Sense
    gamspy.Options
    gamspy.ModelInstanceOptions
+   gamspy.Expression
    gamspy._algebra.domain
    gamspy._algebra.number
    gamspy.Sum

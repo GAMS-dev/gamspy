@@ -387,7 +387,7 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     return "(" + ",".join(set_strs) + ")"
 
 
-def _get_matching_paranthesis_indices(string: str) -> dict:
+def _get_matching_paranthesis_indices(string: str) -> int:
     """
     Stack based paranthesis matcher.
 
@@ -397,7 +397,7 @@ def _get_matching_paranthesis_indices(string: str) -> dict:
 
     Returns
     -------
-    dict
+    int
 
     Raises
     ------
@@ -421,4 +421,4 @@ def _get_matching_paranthesis_indices(string: str) -> dict:
     if stack:
         raise AssertionError("Too many opening parentheses!")
 
-    return matching_indices
+    return matching_indices[0]
