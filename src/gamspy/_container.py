@@ -240,7 +240,7 @@ class Container(gt.Container):
     def _stop_socket(self):
         if hasattr(self, "_socket"):
             self._socket.sendall("stop".encode("ascii"))
-            
+
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
 
