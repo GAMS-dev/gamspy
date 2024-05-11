@@ -215,7 +215,7 @@ class Container(gt.Container):
             )
 
     def _stop_socket(self):
-        if self._is_socket_open:
+        if hasattr(self, "_socket") and self._is_socket_open:
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
