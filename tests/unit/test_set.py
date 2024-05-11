@@ -27,8 +27,8 @@ class SetSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_set_creation(self):
-        # no name
-        self.assertRaises((ValidationError, TypeError), Set, self.m)
+        # no name is fine now
+        _ = Set(self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)

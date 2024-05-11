@@ -16,8 +16,8 @@ class VariableSuite(unittest.TestCase):
         )
 
     def test_variable_creation(self):
-        # no name
-        self.assertRaises(TypeError, Variable, self.m)
+        # no name is fine now
+        _ = Variable(self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Variable, self.m, 5)

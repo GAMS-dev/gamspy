@@ -28,8 +28,8 @@ class ParameterSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_creation(self):
-        # no name
-        self.assertRaises((TypeError, ValidationError), Parameter, self.m)
+        # no name is fine
+        _ = Parameter(self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Parameter, self.m, 5)

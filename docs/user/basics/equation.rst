@@ -34,7 +34,7 @@ Equation Declaration
 A GAMSPy equation must be declared before it may
 be referenced by creating an instance of ``gamspy.Equation``.
 The declaration of an equation is similar to a set, parameter,
-or variable, in that it requires a container, a name, a domain (if applicable),
+or variable, in that it requires a container, an optional name, a domain (if applicable),
 and an optional description. For a complete list of available arguments, see
 the :meth:`Equation reference<gamspy.Equation>`.
 

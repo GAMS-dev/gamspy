@@ -88,10 +88,10 @@ class Container(gt.Container):
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default
         "keep_on_error"
-    options : Options
+    options : Options, optional
         Global options for the overall execution
-    miro_protect : bool
-        Protects MIRO input symbol records from being re-assigned
+    miro_protect : bool, optional
+        Protects MIRO input symbol records from being re-assigned, by default True
 
     Examples
     --------
