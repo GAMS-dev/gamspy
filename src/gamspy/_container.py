@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import uuid
+import warnings
 from contextlib import closing
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -196,6 +197,13 @@ class Container(gt.Container):
             raise GamspyException(
                 f"There was an error while communicating with GAMS server: {e}"
             ) from e
+        except KeyboardInterrupt:
+            warnings.warn(
+                "Keyboard interrupt was received. Shutting down...",
+                stacklevel=2,
+            )
+            self._stop_socket()
+            raise
 
         try:
             return_code = int(
