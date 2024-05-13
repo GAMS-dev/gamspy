@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.5
+-------------
+- General
+  - Do not pick the default solver if the given solver is not compatible with the problem type.
+- Testing
+  - Test whether the given solver is capable of solving the problem type.
+
 GAMSPy 0.12.4
 -------------
 - General
