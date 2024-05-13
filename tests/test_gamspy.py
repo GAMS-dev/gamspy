@@ -44,7 +44,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.12.3")
+        self.assertEqual(gamspy.__version__, "0.12.4")
 
 
 class DocsSuite(unittest.TestCase):
