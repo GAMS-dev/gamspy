@@ -17,6 +17,7 @@ from gamspy import (
     Sum,
     Variable,
 )
+from gamspy.exceptions import ValidationError
 
 
 class OperationSuite(unittest.TestCase):
@@ -157,7 +158,7 @@ class OperationSuite(unittest.TestCase):
             <= 1
         )
         self.assertEqual(
-            eStartFast._assignment.gamsRepr(),
+            eStartFast.getDefinition(),
             "eStartFast(g,t1) .. sum(tt(t) $ (ord(t) <="
             " pMinDown(g,t1)),vStart(g,t + (ord(t1) - pMinDown(g,t1))))"
             " =l= 1;",
@@ -176,7 +177,7 @@ class OperationSuite(unittest.TestCase):
         profit = Equation(m, "profit", domain=s)
         profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
         self.assertEqual(
-            profit._assignment.getStatement(),
+            profit.getDefinition(),
             "profit(s) .. ( - sum(c,(a(c,s) * p(c)))) =g= 0;",
         )
 
@@ -186,9 +187,48 @@ class OperationSuite(unittest.TestCase):
         bla[...] = bla2[...] != 0
 
         self.assertEqual(
-            bla._assignment.getStatement(),
+            bla.getDefinition(),
             "bla(s) = (bla2(s) ne 0);",
         )
+
+    def test_truth_value(self):
+        i_list = [f"i{i}" for i in range(10)]
+        i = Set(self.m, "i", records=i_list)
+        j = Alias(self.m, "j", alias_with=i)
+        x = Variable(self.m, "x", domain=[i, j])
+        eq = Equation(self.m, "eq", domain=[i, j])
+
+        with self.assertRaises(ValidationError):
+            eq[i, j].where[
+                (Ord(i) < Card(i)) and (Ord(j) > 1) and (Ord(j) < Card(j))
+            ] = x[i, j] >= 1
+
+        with self.assertRaises(ValidationError):
+            if Card(i):
+                ...
+
+        with self.assertRaises(ValidationError):
+            if i:
+                ...
+
+        with self.assertRaises(ValidationError):
+            if j:
+                ...
+
+        a = Parameter(self.m, "a")
+        with self.assertRaises(ValidationError):
+            if a:
+                ...
+
+        v = Variable(self.m, "v")
+        with self.assertRaises(ValidationError):
+            if v:
+                ...
+
+        e = Equation(self.m, "e")
+        with self.assertRaises(ValidationError):
+            if e:
+                ...
 
 
 def operation_suite():

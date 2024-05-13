@@ -1,30 +1,7 @@
-#
-# GAMS - General Algebraic Modeling System Python API
-#
-# Copyright (c) 2023 GAMS Development Corp. <support@gams.com>
-# Copyright (c) 2023 GAMS Software GmbH <support@gams.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import warnings
+from typing import TYPE_CHECKING, Optional, Union
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -34,10 +11,28 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
+    import gamspy._algebra.expression as expression
     from gamspy import Variable
+    from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+    from gamspy._symbols.symbol import Symbol
+
+    OperandType = Optional[
+        Union[
+            int,
+            float,
+            str,
+            Operation,
+            expression.Expression,
+            Symbol,
+            ImplicitSymbol,
+            MathOp,
+        ]
+    ]
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -58,15 +53,19 @@ class Expression(operable.Operable):
 
     Examples
     --------
-    >>> a = Parameter(name="a", records=[["a", 1], ["b", 2], ["c", 3]]))
-    >>> b = Parameter(name="b", records=[["a", 1], ["b", 2], ["c", 3]]))
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> a = gp.Parameter(m, name="a")
+    >>> b = gp.Parameter(m, name="b")
     >>> expression = a * b
-    Expression(a, "*", b)
     >>> expression.gamsRepr()
-    (a * b)
+    '(a * b)'
+
     """
 
-    def __init__(self, left, data, right) -> None:
+    def __init__(
+        self, left: OperandType, data: str | MathOp, right: OperandType
+    ):
         self.left = left
         self.data = data
         self.right = right
@@ -86,8 +85,7 @@ class Expression(operable.Operable):
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            indices = utils._get_matching_paranthesis_indices(out_str)
-            match_index = indices[0]
+            match_index = utils._get_matching_paranthesis_indices(out_str)
             out_str = out_str[1:match_index] + out_str[match_index + 1 :]
 
         return out_str
@@ -152,6 +150,14 @@ class Expression(operable.Operable):
     def __neg__(self):
         return Expression(None, "-", self)
 
+    def __bool__(self):
+        raise ValidationError(
+            "An expression cannot be used as a truth value. If you are "
+            "trying to generate an expression, use binary operators "
+            "instead (e.g. &, |, ^). For more details, see: "
+            "https://gamspy.readthedocs.io/en/latest/user/gamspy_for_gams_users.html#logical-operations"
+        )
+
     def _replace_operator(self, operator: str):
         self.data = operator
         self.representation = self._create_representation()
@@ -163,8 +169,40 @@ class Expression(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> expression = a * b
+        >>> expression.gamsRepr()
+        '(a * b)'
+
         """
         return self.representation
+
+    def getDeclaration(self) -> str:
+        """
+        Declaration of the Expression in GAMS
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a")
+        >>> b = gp.Parameter(m, name="b")
+        >>> expression = a * b
+        >>> expression.getDeclaration()
+        '(a * b)'
+
+        """
+        return self.gamsRepr()
 
     def getStatement(self) -> str:
         """
@@ -174,18 +212,22 @@ class Expression(operable.Operable):
         -------
         str
         """
-        return self.gamsRepr()
+        warnings.warn(
+            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.getDeclaration()
 
     def _find_variables(self) -> list[Variable]:
         stack = []
         variables: list[Variable] = []
 
-        node = self
+        node: OperandType = self
         while True:
             if node is not None:
                 stack.append(node)
-
-                node = node.left if hasattr(node, "left") else None
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -200,7 +242,7 @@ class Expression(operable.Operable):
                     operation_variables = node._extract_variables()
                     variables += operation_variables
 
-                node = node.right if hasattr(node, "right") else None
+                node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
@@ -217,7 +259,7 @@ class Expression(operable.Operable):
         while True:
             if node is not None:
                 stack.append(node)
-                node = node.left if hasattr(node, "left") else None
+                node = getattr(node, "left", None)
             elif stack:
                 node = stack.pop()
 
@@ -229,7 +271,7 @@ class Expression(operable.Operable):
                 ):
                     node.expression._fix_equalities()
 
-                node = node.right if hasattr(node, "right") else None
+                node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 

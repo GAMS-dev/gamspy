@@ -29,11 +29,9 @@ from gamspy import (
     Ord,
     Parameter,
     Set,
-    SolveStatus,
     Sum,
     Variable,
 )
-from gamspy.exceptions import GamspyException
 
 
 def main():
@@ -90,13 +88,7 @@ def main():
         objective=j,
     )
 
-    try:
-        control3.solve()
-    except GamspyException:
-        if control3.solve_status == SolveStatus.EvalError:
-            pass
-        else:
-            raise
+    control3.solve()
 
     import math
 

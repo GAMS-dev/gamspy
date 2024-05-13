@@ -3,6 +3,8 @@ from __future__ import annotations
 import io
 from typing import TYPE_CHECKING, Any
 
+from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
+
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
@@ -197,6 +199,9 @@ def validate_container(
 
 
 def validate_name(word: str) -> str:
+    if not isinstance(word, str):
+        raise TypeError("Symbol name must be type str")
+
     reserved_words = [
         "abort",
         "acronym",
@@ -302,6 +307,31 @@ def validate_name(word: str) -> str:
         )
 
     return word
+
+
+def validate_model_name(name: str) -> str:
+    if len(name) == 0:
+        raise ValueError("Model name must be at least one character.")
+
+    if len(name) > GAMS_SYMBOL_MAX_LENGTH:
+        raise ValueError(
+            "Model 'name' is too long, "
+            f"max is {GAMS_SYMBOL_MAX_LENGTH} characters"
+        )
+
+    if name[0] == "_":
+        raise ValidationError(
+            "Valid GAMS names cannot begin with a '_' character."
+        )
+
+    if not all(True if i == "_" else i.isalnum() for i in name):
+        raise ValidationError(
+            f"`{name}` is an invalid model name. "
+            "Model names can only contain alphanumeric characters "
+            "(letters and numbers) and the '_' character."
+        )
+
+    return name
 
 
 def validate_solver_args(solver: Any, options: Any, output: Any):

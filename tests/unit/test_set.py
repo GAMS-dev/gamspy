@@ -27,8 +27,8 @@ class SetSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_set_creation(self):
-        # no name
-        self.assertRaises((ValidationError, TypeError), Set, self.m)
+        # no name is fine now
+        _ = Set(self.m)
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)
@@ -63,7 +63,7 @@ class SetSuite(unittest.TestCase):
         # Without records
         b = Set(self.m, "b")
         self.assertEqual(b.gamsRepr(), "b")
-        self.assertEqual(b.getStatement(), "Set b(*);")
+        self.assertEqual(b.getDeclaration(), "Set b(*);")
 
         # Without domain
         i = Set(
@@ -74,7 +74,7 @@ class SetSuite(unittest.TestCase):
         )
         self.assertEqual(i.gamsRepr(), "i")
         self.assertEqual(
-            i.getStatement(),
+            i.getDeclaration(),
             'Set i(*) "dummy set";',
         )
 
@@ -82,7 +82,7 @@ class SetSuite(unittest.TestCase):
         j = Set(self.m, "j", records=["seattle", "san-diego", "california"])
         k = Set(self.m, "k", domain=[j], records=["seattle", "san-diego"])
         self.assertEqual(k.gamsRepr(), "k")
-        self.assertEqual(k.getStatement(), "Set k(j);")
+        self.assertEqual(k.getDeclaration(), "Set k(j);")
 
         # With two domain
         m = Set(self.m, "m", records=[f"i{i}" for i in range(2)])
@@ -90,11 +90,11 @@ class SetSuite(unittest.TestCase):
         a = Set(self.m, "a", [m, n])
         a.generateRecords(density=1)
         self.assertEqual(a.gamsRepr(), "a")
-        self.assertEqual(a.getStatement(), "Set a(m,n);")
+        self.assertEqual(a.getDeclaration(), "Set a(m,n);")
 
         s = Set(self.m, "s", is_singleton=True)
         self.assertEqual(
-            s.getStatement(),
+            s.getDeclaration(),
             "Singleton Set s(*);",
         )
 
@@ -138,7 +138,7 @@ class SetSuite(unittest.TestCase):
         k[j] = ~k[j]
 
         self.assertEqual(
-            k._assignment.gamsRepr(),
+            k.getDefinition(),
             "k(j) = ( not k(j));",
         )
 
@@ -165,7 +165,7 @@ class SetSuite(unittest.TestCase):
         i["i1"] = False
 
         self.assertEqual(
-            i._assignment.getStatement(),
+            i.getDefinition(),
             'i("i1") = no;',
         )
 
@@ -223,7 +223,7 @@ class SetSuite(unittest.TestCase):
         sMinDown[s, t.lead(Ord(t) - Ord(s))] = 1
 
         self.assertEqual(
-            sMinDown._assignment.gamsRepr(),
+            sMinDown.getDefinition(),
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 
@@ -255,7 +255,7 @@ class SetSuite(unittest.TestCase):
         p[i] = i.sameAs("2")
 
         self.assertEqual(
-            p._assignment.getStatement(),
+            p.getDefinition(),
             'p(i) = ( sameAs(i,"2") );',
         )
 

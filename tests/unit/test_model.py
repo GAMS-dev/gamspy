@@ -123,7 +123,7 @@ class ModelSuite(unittest.TestCase):
             objective=z,
         )
         self.assertEqual(
-            test_model2.getStatement(),
+            test_model2.getDeclaration(),
             "Model test_model2 / cost,supply /;",
         )
         self.assertEqual(test_model2.equations, [cost, supply])
@@ -158,7 +158,7 @@ class ModelSuite(unittest.TestCase):
             matches={supply: x, cost: z},
         )
         self.assertEqual(
-            test_model5.getStatement(),
+            test_model5.getDeclaration(),
             "Model test_model5 / supply.x,cost.z /;",
         )
 
@@ -177,7 +177,7 @@ class ModelSuite(unittest.TestCase):
             sense="min",
         )
         self.assertEqual(
-            test_model6.getStatement(),
+            test_model6.getDeclaration(),
             "Model test_model6 / supply,demand.x /;",
         )
 
@@ -189,6 +189,66 @@ class ModelSuite(unittest.TestCase):
             str(test_model6).startswith(
                 f"Model {test_model6.name}:\n  Problem Type: LP\n  Sense: MIN\n  Equations:"
             )
+        )
+
+        # empty model name
+        self.assertRaises(
+            ValueError,
+            Model,
+            self.m,
+            "test_model7",
+            "",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name too long
+        self.assertRaises(
+            ValueError,
+            Model,
+            self.m,
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name is not an str
+        self.assertRaises(
+            TypeError,
+            Model,
+            self.m,
+            5,
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name contains empty space
+        self.assertRaises(
+            ValidationError,
+            Model,
+            self.m,
+            "test_model 8",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        # model name begins with underscore
+        self.assertRaises(
+            ValidationError,
+            Model,
+            self.m,
+            "_test_model7",
+            "LP",
+            self.m.getEquations(),
+            "min",
+            Sum((i, j), c[i, j] * x[i, j]),
         )
 
     def test_feasibility(self):

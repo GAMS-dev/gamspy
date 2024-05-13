@@ -95,7 +95,6 @@ class SolveSuite(unittest.TestCase):
         e[...] = 5
         self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
-        self.assertEqual(e[...], 5)
 
         with self.assertRaises(TypeError):
             e.records = 5
@@ -247,7 +246,7 @@ class SolveSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            transport2.getStatement(),
+            transport2.getDeclaration(),
             "Model transport2 / cost,supply,demand,x(freeLinks) /;",
         )
 
@@ -1076,7 +1075,7 @@ class SolveSuite(unittest.TestCase):
         f = Parameter(m, "f")
         f[...] = 5
         
-        self.assertEqual(f._assignment.getStatement(), "f = 5;")
+        self.assertEqual(f.getDefinition(), "f = 5;")
             
     def test_variable_discovery(self):
         x = self.m.addVariable('x')

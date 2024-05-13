@@ -80,12 +80,10 @@ class Backend(ABC):
         self.gdx_out = gdx_out
 
     @abstractmethod
-    def is_async(self):
-        ...
+    def is_async(self): ...
 
     @abstractmethod
-    def solve(self, is_implicit: bool = False, keep_flags: bool = False):
-        ...
+    def solve(self, is_implicit: bool = False, keep_flags: bool = False): ...
 
     def preprocess(self, keep_flags: bool = False):
         (

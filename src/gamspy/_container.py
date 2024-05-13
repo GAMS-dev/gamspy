@@ -1,27 +1,3 @@
-#
-# GAMS - General Algebraic Modeling System Python API
-#
-# Copyright (c) 2023 GAMS Development Corp. <support@gams.com>
-# Copyright (c) 2023 GAMS Software GmbH <support@gams.com>
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
 from __future__ import annotations
 
 import atexit
@@ -88,10 +64,10 @@ class Container(gt.Container):
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default
         "keep_on_error"
-    options : Options
+    options : Options, optional
         Global options for the overall execution
-    miro_protect : bool
-        Protects MIRO input symbol records from being re-assigned
+    miro_protect : bool, optional
+        Protects MIRO input symbol records from being re-assigned, by default True
 
     Examples
     --------
@@ -107,8 +83,8 @@ class Container(gt.Container):
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: str = "keep_on_error",
-        miro_protect: bool = True,
         options: Options | None = None,
+        miro_protect: bool = True,
     ):
         self._gams_string = ""
         if IS_MIRO_INIT:
@@ -120,10 +96,7 @@ class Container(gt.Container):
             else utils._get_gamspy_base_directory()
         )
 
-        self._debugging_level = self._get_debugging_level(debugging_level)
-
         self._unsaved_statements: list = []
-        self._all_statements: list = []
         self._is_first_run = True
         self.miro_protect = miro_protect
 
@@ -137,7 +110,7 @@ class Container(gt.Container):
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
-            debugging_map[debugging_level],
+            self._get_debugging_level(debugging_level),
         )
 
         self.working_directory = self.workspace.working_directory
@@ -173,6 +146,15 @@ class Container(gt.Container):
             self.read(load_from)
             self._run()
 
+    def __repr__(self):
+        return f"<Container ({hex(id(self))})>"
+
+    def __str__(self):
+        if len(self):
+            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
+
+        return f"<Empty Container ({hex(id(self))})>"
+
     def _write_miro_files(self):  # pragma: no cover
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
             return
@@ -191,7 +173,7 @@ class Container(gt.Container):
                 " 'keep_on_error'"
             )
 
-        return debugging_level
+        return debugging_map[debugging_level]
 
     def _write_default_gdx_miro(self):  # pragma: no cover
         # create data_<model>/default.gdx
@@ -237,7 +219,6 @@ class Container(gt.Container):
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
-        self._all_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
         """Casts GTP symbols to GAMSpy symbols"""
