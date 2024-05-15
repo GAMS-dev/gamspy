@@ -1,5 +1,5 @@
-audit-wheel:
-  stage: audit
+upload-wheel:
+  stage: upload
   when: on_success
   tags: [linux]
   image: python:3.8
@@ -7,9 +7,10 @@ audit-wheel:
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - pip install pip-audit
-    - pip-audit
+    - pip install wheel build twine pip-audit
+    - pip-audit -v
     - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
+    - twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
   rules:
     - if: $CI_COMMIT_BRANCH != "master"
       when: never
