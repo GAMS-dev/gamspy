@@ -215,6 +215,7 @@ class Container(gt.Container):
         >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
         >>> m["piHalf"].toValue()
         1.5707963267948966
+        
         """
         if import_symbols is not None and (
             not isinstance(import_symbols, list)
