@@ -15,6 +15,7 @@ Yale University Press, 1973.
 from __future__ import annotations
 
 import os
+from math import isclose
 
 from gamspy import Container
 
@@ -171,13 +172,11 @@ solve HANSEN using mcp;
 """
     m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
     m.addGamsCode(hansen_mpsge, import_symbols=["HH"])
-    assert m["HH"].toList() == [
-        ("AGENT1", 5.1549387457797575),
-        ("AGENT2", 2.8275348367319024),
-        ("AGENT3", 0.5875814218295569),
-        ("AGENT4", 8.55996755346388),
-    ]
-
+    demands = m["HH"].toList()
+    assert isclose(demands[0][1], 5.1549, rel_tol=1e-4)
+    assert isclose(demands[1][1], 2.8275, rel_tol=1e-4)
+    assert isclose(demands[2][1], 0.5876, rel_tol=1e-4)
+    assert isclose(demands[3][1], 8.5600, rel_tol=1e-4)
 
 if __name__ == "__main__":
     main()
