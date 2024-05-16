@@ -210,6 +210,7 @@ class Container(gt.Container):
 
         Examples
         --------
+        >>> from gamspy import Container
         >>> m = Container()
         >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
         >>> m["piHalf"].toValue()
