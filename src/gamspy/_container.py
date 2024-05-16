@@ -195,7 +195,7 @@ class Container(gt.Container):
             symbols,
         )
 
-    def _addGamsCode(
+    def addGamsCode(
         self, gams_code: str, import_symbols: list[str] = []
     ) -> None:
         """
@@ -204,7 +204,16 @@ class Container(gt.Container):
         Parameters
         ----------
         gams_code : str
-        import_symbols : List[str], optional
+            Gams code that you want to insert.
+        import_symbols : list[str], optional
+            Symbols to be imported to the container from GAMS.
+
+        Examples
+        --------
+        >>> m = Container()
+        >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        >>> m["piHalf"].toValue()
+        1.5707963267948966
         """
         if import_symbols is not None and (
             not isinstance(import_symbols, list)

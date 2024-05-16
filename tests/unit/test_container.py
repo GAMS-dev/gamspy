@@ -6,6 +6,7 @@ import unittest
 
 import gamspy.utils as utils
 import pandas as pd
+import urllib3
 from gamspy import (
     Alias,
     Container,
@@ -225,13 +226,32 @@ class ContainerSuite(unittest.TestCase):
         )
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
-        m._addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
         self.assertTrue("piHalf" in m.data)
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
 
         pi = Parameter(m, "pi")
         with self.assertRaises(ValidationError):
-            m._addGamsCode("scalar pi / pi /;", import_symbols=[pi])
+            m.addGamsCode("scalar pi / pi /;", import_symbols=[pi])
+
+    def test_add_gams_code_on_actual_models(self):
+        links = {
+            "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
+            "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
+            "NLP": "https://gams.com/latest/gamslib_ml/weapons.18",
+            "MCP": "https://gams.com/latest/gamslib_ml/wallmcp.127",
+            "CNS": "https://gams.com/latest/gamslib_ml/camcns.209",
+            "DNLP": "https://gams.com/latest/gamslib_ml/linear.23",
+            "MINLP": "https://gams.com/latest/gamslib_ml/meanvarx.113",
+            "QCP": "https://gams.com/latest/gamslib_ml/himmel11.95",
+            "MIQCP": "https://gams.com/latest/gamslib_ml/qalan.282",
+            "MPSGE": "https://gams.com/latest/gamslib_ml/hansmge.147",
+        }
+
+        for link in links.values():
+            data = urllib3.request("GET", link).data.decode("utf-8")
+            m = Container()
+            m.addGamsCode(data)
 
     def test_system_directory(self):
         import gamspy_base
