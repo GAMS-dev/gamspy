@@ -178,5 +178,6 @@ solve HANSEN using mcp;
     assert isclose(demands[2][1], 0.5876, rel_tol=1e-4)
     assert isclose(demands[3][1], 8.5600, rel_tol=1e-4)
 
+
 if __name__ == "__main__":
     main()
