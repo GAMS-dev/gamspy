@@ -1105,7 +1105,7 @@ class Container(gt.Container):
         -------
         str | None
         """
-        return self._job.name if self._job is not None else None
+        return self._job
 
     def gdxInputPath(self) -> str:
         """
