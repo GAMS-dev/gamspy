@@ -389,7 +389,14 @@ class Model:
         )
 
         if solver:
-            gams_options.all_model_types = solver
+            gams_options.lp = solver
+            if solver.upper() != gams_options.lp.upper():
+                raise ValidationError(
+                    f"Given solver `{solver}` is not capable of solving given"
+                    f" problem type `{self.problem}`. See capability matrix "
+                    "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                    " to choose a suitable solver"
+                )
 
         if solver_options:
             if solver is None:
@@ -619,7 +626,7 @@ class Model:
         create_log_file: bool = False,
     ) -> pd.DataFrame | None:
         """
-        Generates the gams string, writes it to a file and runs it
+        Solves the model with given options.
 
         Parameters
         ----------
@@ -643,6 +650,7 @@ class Model:
         Returns
         -------
         DataFrame, optional
+            Summary of the solve
 
         Raises
         ------

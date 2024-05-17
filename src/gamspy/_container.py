@@ -502,37 +502,133 @@ class Container(gt.Container):
         return string
 
     def close(self):
+        """Stops the socket and releases resources."""
         self._stop_socket()
 
-    def gamsJobName(self) -> str | None:
+    def read(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+        load_records: bool = True,
+        mode: str | None = None,
+        encoding: str | None = None,
+    ):
         """
-        Returns the name of the latest GAMS job that was executed
+        Reads specified symbols from the gdx file. If symbol_names are
+        not provided, it reads all symbols from the gdx file.
 
-        Returns
-        -------
-        str | None
-        """
-        return self._job
+        Parameters
+        ----------
+        load_from : str
+        symbol_names : List[str], optional
+        load_records : bool
+        mode : str, optional
+        encoding : str, optional
 
-    def gdxInputPath(self) -> str:
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+        >>> new_container = gp.Container()
+        >>> new_container.read("test.gdx")
+        >>> new_container.data.keys() == m.data.keys()
+        True
+
         """
-        Path to the input gdx file
+        super().read(load_from, symbol_names, load_records, mode, encoding)
+        self._cast_symbols(symbol_names)
+
+    def write(
+        self,
+        write_to: str,
+        symbol_names: list[str] | None = None,
+        compress: bool = False,
+        mode: str | None = None,
+        eps_to_zero: bool = True,
+    ):
+        """
+        Writes specified symbols to the gdx file. If symbol_names are
+        not provided, it writes all symbols to the gdx file.
+
+        Parameters
+        ----------
+        write_to : str
+        symbol_names : List[str], optional
+        compress : bool
+        mode : str, optional
+        eps_to_zero : bool
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+
+        """
+        dirty_names, _ = self._get_touched_symbol_names()
+
+        if len(dirty_names) > 0:
+            self._run(keep_flags=True)
+
+        super().write(
+            write_to,
+            symbol_names,
+            compress,
+            mode=mode,
+            eps_to_zero=eps_to_zero,
+        )
+
+    def generateGamsString(self, show_raw: bool = False) -> str:
+        """
+        Generates the GAMS code
+
+        Parameters
+        ----------
+        show_raw : bool, optional
+            Shows the raw model without data and other necessary
+            GAMS statements, by default False.
 
         Returns
         -------
         str
         """
-        return self._gdx_in
+        if not show_raw:
+            return self._gams_string
 
-    def gdxOutputPath(self) -> str:
-        """
-        Path to the output gdx file
+        return utils._filter_gams_string(self._gams_string)
 
-        Returns
-        -------
-        str
+    def loadRecordsFromGdx(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+    ):
         """
-        return self._gdx_out
+        Loads data of the given symbols from a gdx file. If no
+        symbol names are given, data of all symbols are loaded.
+
+        Parameters
+        ----------
+        load_from : str
+            Path to the gdx file
+        symbols : List[str], optional
+            Symbols whose data will be load from gdx, by default None
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set
+        >>> m = Container()
+        >>> i = Set(m, "i", records=["i1", "i2"])
+        >>> m.write("test.gdx")
+        >>> m2 = Container()
+        >>> m2.loadRecordsFromGdx("test.gdx")
+        >>> print(i.records.equals(m2["i"].records))
+        True
+
+        """
+        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
 
     def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
         """
@@ -949,25 +1045,6 @@ class Container(gt.Container):
 
         return m
 
-    def generateGamsString(self, show_raw: bool = False) -> str:
-        """
-        Generates the GAMS code
-
-        Parameters
-        ----------
-        show_raw : bool, optional
-            Shows the raw model without data and other necessary
-            GAMS statements, by default False.
-
-        Returns
-        -------
-        str
-        """
-        if not show_raw:
-            return self._gams_string
-
-        return utils._filter_gams_string(self._gams_string)
-
     def getEquations(self) -> list[Equation]:
         """
         Returns all equation symbols in the Container.
@@ -1012,108 +1089,32 @@ class Container(gt.Container):
         if user_invoked:
             self._run()
 
-    def loadRecordsFromGdx(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-    ) -> None:
+    def gamsJobName(self) -> str | None:
         """
-        Loads data of the given symbols from a gdx file. If no
-        symbol names are given, data of all symbols are loaded.
+        Returns the name of the latest GAMS job that was executed
 
-        Parameters
-        ----------
-        load_from : str
-            Path to the gdx file
-        symbols : List[str], optional
-            Symbols whose data will be load from gdx, by default None
-
-        Examples
-        --------
-        >>> from gamspy import Container, Set
-        >>> m = Container()
-        >>> i = Set(m, "i", records=["i1", "i2"])
-        >>> m.write("test.gdx")
-        >>> m2 = Container()
-        >>> m2.loadRecordsFromGdx("test.gdx")
-        >>> print(i.records.equals(m2["i"].records))
-        True
-
+        Returns
+        -------
+        str | None
         """
-        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
+        return self._job.name if self._job is not None else None
 
-    def read(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-        load_records: bool = True,
-        mode: str | None = None,
-        encoding: str | None = None,
-    ) -> None:
+    def gdxInputPath(self) -> str:
         """
-        Reads specified symbols from the gdx file. If symbol_names are
-        not provided, it reads all symbols from the gdx file.
+        Path to the input gdx file
 
-        Parameters
-        ----------
-        load_from : str
-        symbol_names : List[str], optional
-        load_records : bool
-        mode : str, optional
-        encoding : str, optional
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
-        >>> new_container = gp.Container()
-        >>> new_container.read("test.gdx")
-        >>> new_container.data.keys() == m.data.keys()
-        True
-
+        Returns
+        -------
+        str
         """
-        super().read(load_from, symbol_names, load_records, mode, encoding)
-        self._cast_symbols(symbol_names)
+        return self._gdx_in
 
-    def write(
-        self,
-        write_to: str,
-        symbol_names: list[str] | None = None,
-        compress: bool = False,
-        mode: str | None = None,
-        eps_to_zero: bool = True,
-    ) -> None:
+    def gdxOutputPath(self) -> str:
         """
-        Writes specified symbols to the gdx file. If symbol_names are
-        not provided, it writes all symbols to the gdx file.
+        Path to the output gdx file
 
-        Parameters
-        ----------
-        write_to : str
-        symbol_names : List[str], optional
-        compress : bool
-        mode : str, optional
-        eps_to_zero : bool
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
-
+        Returns
+        -------
+        str
         """
-        dirty_names, _ = self._get_touched_symbol_names()
-
-        if len(dirty_names) > 0:
-            self._run(keep_flags=True)
-
-        super().write(
-            write_to,
-            symbol_names,
-            compress,
-            mode=mode,
-            eps_to_zero=eps_to_zero,
-        )
+        return self._gdx_out
