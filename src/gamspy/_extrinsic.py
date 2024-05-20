@@ -8,10 +8,11 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
-    from gamspy._container import Container
 
 
 class ExtinsicFunction(operable.Operable):
+    """Extrinsic function registered by the user."""
+
     def __init__(self, name: str):
         self.name = name
         self.args: tuple | None = None
@@ -47,23 +48,54 @@ class ExtinsicFunction(operable.Operable):
 
         return representation
 
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
+        """
+        Representation of this ExtrinsicFunction in GAMS language.
+
+        Returns
+        -------
+        str
+        """
         return self.__str__()
 
-    def getStatement(self):
+    def getDeclaration(self) -> str:
+        """
+        Declaration of the ExtrinsicFunction in GAMS
+
+        Returns
+        -------
+        str
+        """
         return self.gamsRepr()
 
 
 class ExtrinsicLibrary:
-    def __init__(
-        self, container: Container, path: str, name: str, functions: dict
-    ):
-        self.container = container
+    """
+    Extrinsic library registered by the user.
+
+    Parameters
+    ----------
+    path : str
+        Path to the shared object that contains the library.
+    name : str
+        Name of the extrinsic library.
+    functions : dict[str, str]
+        Functions to be imported from the extrinsic library.
+    """
+
+    def __init__(self, path: str, name: str, functions: dict[str, str]):
         self.path = path
         self.name = name
         self.functions = functions
 
-    def getStatement(self):
+    def getDeclaration(self) -> str:
+        """
+        Declaration of the ExtrinsicLibrary in GAMS
+
+        Returns
+        -------
+        str
+        """
         library_str = f"$funclibin {self.name} {self.path}\n"
 
         for gamspy_name, actual_name in self.functions.items():

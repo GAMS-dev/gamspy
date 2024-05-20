@@ -407,7 +407,7 @@ class Container(gt.Container):
             elif isinstance(statement, gp.UniverseAlias):
                 continue
             else:
-                string += statement.getStatement() + "\n"
+                string += statement.getDeclaration() + "\n"
 
         for symbol_name in modified_names:
             symbol = self[symbol_name]
@@ -1032,7 +1032,7 @@ class Container(gt.Container):
         if user_invoked:
             self._run()
 
-    def registerExtrinsicLibrary(
+    def importExtrinsicLibrary(
         self, lib_path: str, lib_name: str, functions: dict[str, str]
     ):
         if not os.path.exists(lib_path):
@@ -1043,7 +1043,7 @@ class Container(gt.Container):
                 f"`{lib_name}` is already registered. Try a different library name."
             )
 
-        external_lib = ExtrinsicLibrary(self, lib_path, lib_name, functions)
+        external_lib = ExtrinsicLibrary(lib_path, lib_name, functions)
         self._add_statement(external_lib)
 
         return external_lib
