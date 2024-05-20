@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from gamspy._container import Container
 
 
-class ExternalFunction(operable.Operable):
+class ExtinsicFunction(operable.Operable):
     def __init__(self, name: str):
         self.name = name
         self.args: tuple | None = None
@@ -54,7 +54,7 @@ class ExternalFunction(operable.Operable):
         return self.gamsRepr()
 
 
-class ExternalLibrary:
+class ExtrinsicLibrary:
     def __init__(
         self, container: Container, path: str, name: str, functions: dict
     ):
@@ -75,6 +75,6 @@ class ExternalLibrary:
 
     def __getattr__(self, name):
         if name in self.functions:
-            return ExternalFunction(name)
+            return ExtinsicFunction(name)
 
         return self.__getattribute__(name)

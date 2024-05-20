@@ -16,7 +16,7 @@ import gamspy as gp
 import gamspy._miro as miro
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
-from gamspy._externals import ExternalLibrary
+from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options, _map_options
 from gamspy._symbols.symbol import Symbol
@@ -1032,7 +1032,7 @@ class Container(gt.Container):
         if user_invoked:
             self._run()
 
-    def registerExternalLibrary(
+    def registerExtrinsicLibrary(
         self, lib_path: str, lib_name: str, functions: dict[str, str]
     ):
         if not os.path.exists(lib_path):
@@ -1043,9 +1043,10 @@ class Container(gt.Container):
                 f"`{lib_name}` is already registered. Try a different library name."
             )
 
-        external_lib = ExternalLibrary(self, lib_path, lib_name, functions)
-        setattr(self, lib_name, external_lib)
+        external_lib = ExtrinsicLibrary(self, lib_path, lib_name, functions)
         self._add_statement(external_lib)
+
+        return external_lib
 
     def gamsJobName(self) -> str | None:
         """
