@@ -21,6 +21,7 @@ from unit.test_condition import condition_suite
 from unit.test_container import container_suite
 from unit.test_domain import domain_suite
 from unit.test_equation import equation_suite
+from unit.test_extrinsic import extrinsic_suite
 from unit.test_magics import magics_suite
 from unit.test_math import math_suite
 from unit.test_model import model_suite
@@ -175,6 +176,7 @@ def main():
         magics_suite,
         options_suite,
         special_values_suite,
+        extrinsic_suite,
     ]
 
     print(f"Running unittests\n{'='*80}")

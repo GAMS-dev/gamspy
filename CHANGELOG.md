@@ -5,8 +5,10 @@ GAMSPy 0.12.5
 -------------
 - General
   - Do not pick the default solver if the given solver is not compatible with the problem type.
+  - Add extrinsic function support.
 - Testing
   - Test whether the given solver is capable of solving the problem type.
+  - Add tests for extrinsic functions.
 - Documentation
   - Remove unnecessary GTP functions from documentation
 

@@ -1038,11 +1038,6 @@ class Container(gt.Container):
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"`{lib_path}` is not a valid path.")
 
-        if lib_name in dir(self):
-            raise ValidationError(
-                f"`{lib_name}` is already registered. Try a different library name."
-            )
-
         external_lib = ExtrinsicLibrary(lib_path, lib_name, functions)
         self._add_statement(external_lib)
 
