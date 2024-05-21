@@ -14,7 +14,11 @@ class ExtrinsicSuite(unittest.TestCase):
         )
 
     def test_extrinsic_functions(self):
-        names = {"Linux": "libtricclib64.so", "Darwin": "libtricclib64.dylib", "Windows": "tricclib64.dll"}
+        names = {
+            "Linux": "libtricclib64.so",
+            "Darwin": "libtricclib64.dylib",
+            "Windows": "tricclib64.dll",
+        }
         directory = os.path.dirname(os.path.abspath(__file__))
         shared_object = os.path.join(directory, names[platform.system()])
 
@@ -42,6 +46,7 @@ class ExtrinsicSuite(unittest.TestCase):
         d3 = Parameter(self.m, "d3")
         d3[...] = trilib.myCos(90, 1) * 3
         self.assertEqual(int(d3.toValue()), 0)
+
 
 def extrinsic_suite():
     suite = unittest.TestSuite()
