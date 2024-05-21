@@ -14,38 +14,34 @@ class ExtrinsicSuite(unittest.TestCase):
         )
 
     def test_extrinsic_functions(self):
+        names = {"Linux": "libtricclib64.so", "Darwin": "libtricclib64.dylib", "Windows": "tricclib64.dll"}
         directory = os.path.dirname(os.path.abspath(__file__))
+        shared_object = os.path.join(directory, names[platform.system()])
 
-        if platform.system() == "Linux":
-            # This is a library which contains myNum=1.
-            my_lib = self.m.importExtrinsicLibrary(
-                f"{directory}/libextrinsic.so",
-                "mine",
-                functions={
-                    "getMyNum": "getMyNum",
-                    "multiplyMyNum": "multiplyMyNum",
-                },
-            )
+        # This is a library which contains myNum=1.
+        trilib = self.m.importExtrinsicLibrary(
+            shared_object,
+            "trilib",
+            functions={
+                "myPi": "Pi",
+                "myCos": "Cosine",
+            },
+        )
 
-            # Test extrinsic function with no argument
-            d = Parameter(self.m, "d")
-            d[...] = my_lib.getMyNum()
-            self.assertEqual(int(d.toValue()), 1)
+        # Test extrinsic function with no argument
+        d = Parameter(self.m, "d")
+        d[...] = trilib.myPi
+        self.assertEqual(d.toValue(), 3.141592653589793238462643)
 
-            # Test extrinsic function with one argument
-            d2 = Parameter(self.m, "d2")
-            d2[...] = my_lib.multiplyMyNum(5)
-            self.assertEqual(int(d2.toValue()), 5)
+        # Test extrinsic function with one argument
+        d2 = Parameter(self.m, "d2")
+        d2[...] = trilib.myCos(90)
+        self.assertEqual(int(d2.toValue()), 0)
 
-            # Test the interaction with other components
-            d3 = Parameter(self.m, "d3")
-            d3[...] = my_lib.multiplyMyNum(5) * 5
-            self.assertEqual(int(d3.toValue()), 25)
-
-            d4 = Parameter(self.m, records=10)
-            d4[...] = d4 * my_lib.multiplyMyNum(5)
-            self.assertEqual(int(d4.toValue()), 50)
-
+        # Test the interaction with other components
+        d3 = Parameter(self.m, "d3")
+        d3[...] = trilib.myCos(90, 1) * 3
+        self.assertEqual(int(d3.toValue()), 0)
 
 def extrinsic_suite():
     suite = unittest.TestSuite()
