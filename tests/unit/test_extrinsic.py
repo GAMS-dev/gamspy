@@ -37,6 +37,15 @@ class ExtrinsicSuite(unittest.TestCase):
             d2[...] = my_lib.multiplyMyNum(5)
             self.assertEqual(int(d2.toValue()), 5)
 
+            # Test the interaction with other components
+            d3 = Parameter(self.m, "d3")
+            d3[...] = my_lib.multiplyMyNum(5) * 5
+            self.assertEqual(int(d3.toValue()), 25)
+
+            d4 = Parameter(self.m, records=10)
+            d4[...] = d4 * my_lib.multiplyMyNum(5)
+            self.assertEqual(int(d4.toValue()), 50)
+
 
 def extrinsic_suite():
     suite = unittest.TestSuite()
