@@ -9,6 +9,7 @@ GAMSPy 0.12.5
 - Testing
   - Test whether the given solver is capable of solving the problem type.
   - Add an addGamsCode test for each problem type. 
+  - Test Jupyter Notebooks in docs automatically.
 - Documentation
   - Remove unnecessary GTP functions from documentation
   - Add a doctest for addGamsCode.
