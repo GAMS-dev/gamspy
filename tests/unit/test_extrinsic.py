@@ -36,7 +36,6 @@ class ExtrinsicSuite(unittest.TestCase):
         # This is a library which contains myNum=1.
         trilib = self.m.importExtrinsicLibrary(
             shared_object,
-            "trilib",
             functions={
                 "myPi": "Pi",
                 "myCos": "Cosine",

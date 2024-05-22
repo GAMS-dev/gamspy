@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -77,15 +78,13 @@ class ExtrinsicLibrary:
     ----------
     path : str
         Path to the shared object that contains the library.
-    name : str
-        Name of the extrinsic library.
     functions : dict[str, str]
         Functions to be imported from the extrinsic library.
     """
 
-    def __init__(self, path: str, name: str, functions: dict[str, str]):
+    def __init__(self, path: str, functions: dict[str, str]):
+        self.name = "ext" + str(uuid.uuid4()).replace("-", "_")
         self.path = path
-        self.name = name
         self.functions = functions
 
     def getDeclaration(self) -> str:

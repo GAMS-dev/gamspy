@@ -1044,12 +1044,32 @@ class Container(gt.Container):
             self._run()
 
     def importExtrinsicLibrary(
-        self, lib_path: str, lib_name: str, functions: dict[str, str]
-    ):
+        self, lib_path: str, functions: dict[str, str]
+    ) -> ExtrinsicLibrary:
+        """
+        Imports an extrinsic library to the GAMS environment.
+
+        Parameters
+        ----------
+        lib_path : str
+            Path to the .so, .dylib or .dll file that contains the extrinsic library
+        functions : dict[str, str]
+            Names of the functions as a dictionary. Key is the desired function name in GAMSPy
+            and value is the function name in the extrinsic library.
+
+        Returns
+        -------
+        ExtrinsicLibrary
+
+        Raises
+        ------
+        FileNotFoundError
+            In case the extrinsic library does not exist in the given path.
+        """
         if not os.path.exists(lib_path):
             raise FileNotFoundError(f"`{lib_path}` is not a valid path.")
 
-        external_lib = ExtrinsicLibrary(lib_path, lib_name, functions)
+        external_lib = ExtrinsicLibrary(lib_path, functions)
         self._add_statement(external_lib)
 
         return external_lib
