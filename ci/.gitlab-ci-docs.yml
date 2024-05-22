@@ -15,6 +15,7 @@ build-docs:
     - PATH=$(pwd)/bin/:$PATH
     - cd docs && make html
     - if [ "$?" == "0" ]; then echo "Docs build passed!"; else exit 1; fi
+    - pytest --nbmake docs/user/notebooks/*.ipynb
   rules:
     - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
       when: never

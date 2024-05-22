@@ -72,6 +72,11 @@ doc = [
   "matplotlib>=3.7.3",
   "sphinx_design>=0.5.0",
   "pydata_sphinx_theme>=0.14.1",
+  "plotly>=5.22.0",
+  "kaleido>=0.2.1",
+  "pytest>=8.2.1",
+  "nbmake>=1.5.3",
+  "openpyxl>=3.1.2",
 ]
 
 [project.scripts]
