@@ -7,6 +7,16 @@ import unittest
 from gamspy import Container, Parameter
 
 
+def get_default_platform():
+    operating_system = platform.system().lower()
+    architecture = platform.machine()
+
+    if operating_system == "darwin":
+        return f"mac_{architecture}"
+
+    return operating_system
+
+
 class ExtrinsicSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
@@ -16,11 +26,12 @@ class ExtrinsicSuite(unittest.TestCase):
     def test_extrinsic_functions(self):
         names = {
             "Linux": "libtricclib64.so",
-            "Darwin": "libtricclib64.dylib",
+            "mac_x86": "libtricclib64x86.dylib",
+            "mac_arm64": "libtricclib64arm.dylib",
             "Windows": "tricclib64.dll",
         }
         directory = os.path.dirname(os.path.abspath(__file__))
-        shared_object = os.path.join(directory, names[platform.system()])
+        shared_object = os.path.join(directory, names[get_default_platform()])
 
         # This is a library which contains myNum=1.
         trilib = self.m.importExtrinsicLibrary(
