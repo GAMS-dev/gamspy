@@ -101,6 +101,8 @@ html_theme_options = {
     "show_toc_level": 2,
 }
 
+autodoc_default_options = {'member-order': 'bysource'}
+
 autodoc_member_order = "bysource"
 
 # Display todos by setting to True

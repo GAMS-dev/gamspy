@@ -7,7 +7,7 @@ stages:
   - docs
   - test
   - website
-  - audit
+  - upload
 
 variables:
   MACHINES_CONTAINER_REG:
@@ -34,6 +34,13 @@ variables:
   PF_GAMS_LICENSE:
     value: $GAMS_LICENSE
     description: "GAMS license string used for testing"
+  PF_PYPI_USERNAME:
+    value: $PYPI_USERNAME
+    description: "Username for PyPI"
+  PF_PYPI_PASSWORD:
+    value: $PYPI_PASSWORD
+    description: "Password for PyPI"
+
 
 include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-docs.yml',
@@ -43,4 +50,4 @@ include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test-3.11.yml',
           'ci/.gitlab-ci-test-3.12.yml',
           'ci/.gitlab-ci-update-website.yml',
-          'ci/.gitlab-ci-audit.yml']
+          'ci/.gitlab-ci-upload.yml']

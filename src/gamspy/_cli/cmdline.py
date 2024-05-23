@@ -202,10 +202,11 @@ def install_solver(args: argparse.Namespace):
                     "--force-reinstall",
                 ],
                 check=True,
+                stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as e:
             raise GamspyException(
-                f"Could not install gamspy-{solver_name}: {e.output}"
+                f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
             ) from e
     else:
         try:
