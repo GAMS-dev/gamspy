@@ -522,6 +522,7 @@ class Container(gt.Container):
         return string
 
     def close(self):
+        """Stops the socket and releases resources."""
         self._stop_socket()
 
     def read(
@@ -1147,7 +1148,7 @@ class Container(gt.Container):
         -------
         str | None
         """
-        return self._job.name if self._job is not None else None
+        return self._job
 
     def gdxInputPath(self) -> str:
         """
