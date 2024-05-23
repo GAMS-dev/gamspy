@@ -65,10 +65,16 @@ models = [
 def run_gams_models() -> float:
     times = []
 
-    for iter in NUM_ITERS:
+    for iter in range(NUM_ITERS):
         start = timer()
         for model in models:
-            subprocess.run([gams_path, f"{dir_path}/{model}.gms"])
+            subprocess.run(
+                [
+                    gams_path,
+                    f"{dir_path}/gams_models/{model}.gms",
+                    "solprint=silent",
+                ]
+            )
         end = timer()
         print(f"[GAMS] ITERATION {iter} took: {end - start}")
         times.append(end - start)
@@ -79,10 +85,15 @@ def run_gams_models() -> float:
 def run_gamspy_models() -> float:
     times = []
 
-    for _ in NUM_ITERS:
+    for _ in range(NUM_ITERS):
         start = timer()
         for model in models:
-            subprocess.run(["python", f"{dir_path}/../tests/integration/models/{model}.py"])
+            subprocess.run(
+                [
+                    "python",
+                    f"{dir_path}/../tests/integration/models/{model}.py",
+                ]
+            )
         end = timer()
         print(f"[GAMSPy] ITERATION {iter} took: {end - start}")
         times.append(end - start)
