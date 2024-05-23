@@ -41,8 +41,13 @@ class Symbol:
 
         return "(" + ",".join(set_strs) + ")"
 
-    def _mark_forwarded_domain_sets(self):
-        for elem in self.domain:
-            if hasattr(elem, "modified"):
+    def _mark_forwarded_domain_sets(
+        self: SymbolType, domain_forwarding: list[bool] | bool
+    ):
+        if isinstance(domain_forwarding, bool):
+            domain_forwarding = [domain_forwarding]
+
+        for elem, forwarding in zip(self.domain, domain_forwarding):
+            if hasattr(elem, "modified") and forwarding:
                 elem.modified = False
                 elem._is_dirty = True

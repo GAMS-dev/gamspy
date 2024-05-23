@@ -228,6 +228,9 @@ class Container(gt.Container):
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
+            while self._process.poll() is None:
+                ...
+
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
 
