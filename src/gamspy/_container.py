@@ -134,7 +134,6 @@ class Container(gt.Container):
             atexit.register(self._write_miro_files)
 
         self._is_socket_open = True
-        atexit.register(self._stop_socket)
 
         system_directory = (
             system_directory
