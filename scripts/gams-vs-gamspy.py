@@ -1,5 +1,7 @@
+import sys
 import os
 import subprocess
+from collections import defaultdict
 from timeit import default_timer as timer
 
 import gamspy_base
@@ -62,52 +64,68 @@ models = [
 ]
 
 
-def run_gams_models() -> float:
-    times = []
+def run_gams_models() -> dict:
+    times = defaultdict(lambda: 0)
 
     for iter in range(NUM_ITERS):
-        start = timer()
         for model in models:
+            start = timer()
             subprocess.run(
                 [
                     gams_path,
                     f"{dir_path}/gams_models/{model}.gms",
                     "solprint=silent",
-                ]
+                ],
+                stdout=subprocess.DEVNULL,
             )
-        end = timer()
-        print(f"[GAMS] ITERATION {iter} took: {end - start}")
-        times.append(end - start)
+            end = timer()
+            times[model] += end - start
 
-    return sum(times) / NUM_ITERS
+        print(f"[GAMS] ITERATION {iter} took: {sum(times.values())}")
+
+    return times
 
 
-def run_gamspy_models() -> float:
-    times = []
+def run_gamspy_models() -> dict:
+    times = defaultdict(lambda: 0)
 
-    for _ in range(NUM_ITERS):
-        start = timer()
+    for iter in range(NUM_ITERS):
         for model in models:
+            start = timer()
             subprocess.run(
                 [
                     "python",
                     f"{dir_path}/../tests/integration/models/{model}.py",
-                ]
+                ],
+                stdout=subprocess.DEVNULL,
             )
-        end = timer()
-        print(f"[GAMSPy] ITERATION {iter} took: {end - start}")
-        times.append(end - start)
+            end = timer()
+            times[model] += end - start
 
-    return sum(times) / NUM_ITERS
+        print(f"[GAMSPy] ITERATION {iter} took: {sum(times.values())}")
+
+    return times
 
 
 def main():
-    gams_time = run_gams_models()
-    gamspy_time = run_gamspy_models()
+    gams_times = run_gams_models()
+    gamspy_times = run_gamspy_models()
 
+    gams_time = sum(gams_times.values()) / NUM_ITERS
+    gamspy_time = sum(gamspy_times.values()) / NUM_ITERS
     print(f"GAMS: {gams_time:.02}")
     print(f"GAMSPy: {(gamspy_time / NUM_ITERS):.02}")
     print(f"Diff: {(gamspy_time / gams_time):.02}")
+
+    print("Biggest diffs:")
+
+    diffs = {}
+    for name, gams_time, gamspy_time in zip(models, gams_times.values(), gamspy_times.values()):
+        diffs[name] = gamspy_time / gams_time
+
+    for w in sorted(diffs, key=diffs.get, reverse=True):
+        print(w, diffs[w])
+    
 
 
 if __name__ == "__main__":
