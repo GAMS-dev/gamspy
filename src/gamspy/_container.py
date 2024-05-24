@@ -10,7 +10,7 @@ import time
 import uuid
 import warnings
 from contextlib import closing
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 from gams import DebugLevel, GamsJob, GamsWorkspace
@@ -28,6 +28,8 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from typing import Any, Literal
+
     import pandas as pd
 
     from gamspy import (
@@ -221,6 +223,9 @@ class Container(gt.Container):
                 f" {job_name + '.lst'} for more details.",
                 return_code=return_code,
             )
+
+    def __del__(self):
+        self._stop_socket()
 
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:

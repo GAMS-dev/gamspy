@@ -6,7 +6,7 @@ import os
 import uuid
 import warnings
 from enum import Enum
-from typing import TYPE_CHECKING, Iterable, Literal
+from typing import TYPE_CHECKING
 
 from gams import GamsOptions
 
@@ -21,6 +21,8 @@ from gamspy._options import _map_options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from typing import Iterable, Literal
+
     import pandas as pd
 
     from gamspy import Container, Equation, Parameter, Variable
@@ -292,11 +294,15 @@ class Model:
         )
 
     def _generate_obj_var_and_equation(self):
-        variable = gp.Variable(
-            self.container, f"{Model._generate_prefix}variable_{self._auto_id}"
+        variable = gp.Variable._constructor_bypass(
+            self.container,
+            f"{Model._generate_prefix}variable_{self._auto_id}",
+            domain=[],
         )
-        equation = gp.Equation(
-            self.container, f"{Model._generate_prefix}equation_{self._auto_id}"
+        equation = gp.Equation._constructor_bypass(
+            self.container,
+            f"{Model._generate_prefix}equation_{self._auto_id}",
+            domain=[],
         )
 
         return variable, equation

@@ -3,10 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Literal
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import Literal, Optional, TYPE_CHECKING, Union
 
 from gams import GamsOptions
 from gams import GamsWorkspace

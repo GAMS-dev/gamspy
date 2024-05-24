@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
-import gamspy as gp
+import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._options import Options
@@ -22,7 +22,9 @@ def get_dimension(
     dimension = 0
 
     for elem in domain:
-        if isinstance(elem, (gp.Set, gp.Alias, implicits.ImplicitSet)):
+        if isinstance(
+            elem, (symbols.Set, symbols.Alias, implicits.ImplicitSet)
+        ):
             dimension += elem.dimension
         else:
             dimension += 1
@@ -40,7 +42,7 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
         else:
             path.append(domain.name)
 
-        if isinstance(domain, gp.Alias):
+        if isinstance(domain, symbols.Alias):
             path.append(domain.alias_with.name)
 
         domain = "*" if isinstance(domain, str) else domain.domain[0]
@@ -73,10 +75,10 @@ def validate_one_dimensional_sets(
     given_path = get_domain_path(given)
 
     if (
-        isinstance(actual, gp.Set)
+        isinstance(actual, symbols.Set)
         and actual.name not in given_path
         or (
-            isinstance(actual, gp.Alias)
+            isinstance(actual, symbols.Alias)
             and actual.alias_with.name not in given_path
         )
     ):
@@ -90,7 +92,14 @@ def validate_type(domain):
     for given in domain:
         if not isinstance(
             given,
-            (gp.Set, gp.Alias, implicits.ImplicitSet, str, type(...), slice),
+            (
+                symbols.Set,
+                symbols.Alias,
+                implicits.ImplicitSet,
+                str,
+                type(...),
+                slice,
+            ),
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -166,18 +175,9 @@ def validate_domain(
         actual = symbol.domain[offset]
         actual_dim = 1 if isinstance(actual, str) else actual.dimension
 
-        if actual_dim == 1 and given_dim == 1:
-            if isinstance(given, str):
-                if (
-                    hasattr(actual, "records")
-                    and not actual.records.isin([given]).sum().any()
-                ):
-                    raise ValidationError(
-                        f"Literal index `{given}` was not found in set"
-                        f" `{actual}`"
-                    )
-            else:
-                validate_one_dimensional_sets(given, actual)
+        if actual_dim == 1 and given_dim == 1 and not isinstance(given, str):
+            validate_one_dimensional_sets(given, actual)
+
         offset += given_dim
 
     return domain
@@ -189,7 +189,7 @@ def validate_container(
 ):
     for set in domain:
         if (
-            isinstance(set, (gp.Set, gp.Alias))
+            isinstance(set, (symbols.Set, symbols.Alias))
             and set.container != self.container
         ):
             raise ValidationError(
@@ -334,7 +334,7 @@ def validate_model_name(name: str) -> str:
     return name
 
 
-def validate_solver_args(solver: Any, options: Any, output: Any):
+def validate_solver_args(solver, options, output):
     # Check validity of solver
     if solver is not None:
         if not isinstance(solver, str):

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import os
-import platform
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 from gams.core import gdx
@@ -12,6 +10,9 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from typing import Iterable
+
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
@@ -45,6 +46,8 @@ def getInstalledSolvers() -> list[str]:
     >>> installed_solvers = utils.getInstalledSolvers()
 
     """
+    import platform
+
     try:
         import gamspy_base
     except ModuleNotFoundError as e:
