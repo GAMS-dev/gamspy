@@ -405,7 +405,8 @@ class Container(gt.Container):
         symbol_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-            symbol_names.append(symbol_name)
+            if not symbol_name.startswith(gp.Model._generate_prefix):
+                symbol_names.append(symbol_name)
 
         utils._close_gdx_handle(gdx_handle)
 
