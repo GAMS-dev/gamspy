@@ -91,7 +91,9 @@ class Backend(ABC):
             modified_names,
         ) = self.container._get_touched_symbol_names()
         self.clean_dirty_symbols(dirty_names)
-        self.container.write(self.container._gdx_in, modified_names)
+
+        if len(modified_names) != 0:
+            self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
             self.gdx_in, self.gdx_out, dirty_names, modified_names

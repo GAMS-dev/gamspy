@@ -13,6 +13,7 @@ from gams import GamsOptions
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
+import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
@@ -348,7 +349,18 @@ class Model:
                 )
 
             variable, equation = self._generate_obj_var_and_equation()
-            equation[...] = variable == 0
+            statement = expression.Expression(
+                implicits.ImplicitEquation(
+                    equation,
+                    name=equation.name,
+                    type=equation.type,
+                    domain=[],
+                ),
+                "..",
+                variable == 0,
+            )
+            self.container._add_statement(statement)
+            equation._assignment = statement
             equation.modified = False
             equation._is_dirty = False
             variable.modified = False
@@ -365,7 +377,18 @@ class Model:
             assignment = assignment == variable
 
             # equation .. Sum((i,j),c[i,j]*x[i,j]) =e= var
-            equation[...] = assignment
+            statement = expression.Expression(
+                implicits.ImplicitEquation(
+                    equation,
+                    name=equation.name,
+                    type=equation.type,
+                    domain=[],
+                ),
+                "..",
+                assignment,
+            )
+            self.container._add_statement(statement)
+            equation._assignment = statement
             equation.modified = False
             equation._is_dirty = False
             variable.modified = False

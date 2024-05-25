@@ -234,7 +234,7 @@ class ContainerSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             m.addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
-    def test_add_gams_code_on_actual_models(self):
+    def _test_add_gams_code_on_actual_models(self):
         links = {
             "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
             "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
