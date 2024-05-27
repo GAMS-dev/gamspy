@@ -3,15 +3,11 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Literal
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import Literal, Optional, Any, TYPE_CHECKING
 
-from gams import GamsOptions
-from gams import GamsWorkspace
-from gams import SymbolUpdateType
+from gams import GamsOptions, GamsWorkspace, SymbolUpdateType
 from pydantic import BaseModel
+from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("Options")
 logger.setLevel(logging.INFO)
@@ -24,6 +20,7 @@ logger.addHandler(handler)
 
 if TYPE_CHECKING:
     import io
+    from gamspy._model import Problem
 
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
 
@@ -55,7 +52,6 @@ option_map = {
     "integer_variable_upper_bound": "intvarup",
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
-    "license": "license",
     "listing_file": "output",
     "log_file": "_logfile",
     "variable_listing_limit": "limcol",
@@ -76,8 +72,6 @@ option_map = {
     "suppress_compiler_listing": "suppress",
     "report_solver_status": "sysout",
     "threads": "threads",
-    "trace_file": "trace",
-    "trace_file_format": "traceopt",
     "write_listing_file": "_writeoutput",
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
@@ -111,7 +105,6 @@ class Options(BaseModel):
     integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
     keep_temporary_files: bool = False
-    license: Optional[str] = None
     listing_file: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
@@ -121,6 +114,7 @@ class Options(BaseModel):
     relative_optimality_gap: Optional[float] = None
     profile: Optional[int] = None
     profile_tolerance: Optional[float] = None
+    redirect_log_to_stdout: Optional[bool] = False
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
@@ -132,165 +126,103 @@ class Options(BaseModel):
     suppress_compiler_listing: bool = False
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
-    trace_file: Optional[str] = None
-    trace_file_format: Optional[Literal[0, 1, 2, 3, 4, 5]] = None
     write_listing_file: bool = True
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def _get_gams_compatible_options(self):
-        options_dict = self.model_dump()
-        if options_dict["allow_suffix_in_equation"] is not None:
-            allows_suffix = options_dict["allow_suffix_in_equation"]
-            options_dict["allow_suffix_in_equation"] = (
+    def _get_gams_compatible_options(self) -> dict:
+        gamspy_options = self.model_dump(exclude_none=True)
+        if "allow_suffix_in_equation" in gamspy_options:
+            allows_suffix = gamspy_options["allow_suffix_in_equation"]
+            gamspy_options["allow_suffix_in_equation"] = (
                 "on" if allows_suffix else "off"
             )
 
-        if options_dict["allow_suffix_in_limited_variables"] is not None:
-            allows_suffix = options_dict["allow_suffix_in_limited_variables"]
-            options_dict["allow_suffix_in_limited_variables"] = (
+        if "allow_suffix_in_limited_variables" in gamspy_options:
+            allows_suffix = gamspy_options["allow_suffix_in_limited_variables"]
+            gamspy_options["allow_suffix_in_limited_variables"] = (
                 "on" if allows_suffix else "off"
             )
 
-        if options_dict["merge_strategy"] is not None:
-            strategy = options_dict["merge_strategy"]
-            options_dict["merge_strategy"] = multi_solve_map[strategy]
+        if "merge_strategy" in gamspy_options:
+            strategy = gamspy_options["merge_strategy"]
+            gamspy_options["merge_strategy"] = multi_solve_map[strategy]
 
-        if options_dict["listing_file"] is not None:
-            os.makedirs(Path(options_dict["listing_file"]).parent.absolute(), exist_ok=True)
-            if not os.path.isabs(options_dict["listing_file"]):
-                options_dict["listing_file"] = os.path.abspath(options_dict["listing_file"])
+        if "listing_file" in gamspy_options:
+            os.makedirs(Path(gamspy_options["listing_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(gamspy_options["listing_file"]):
+                gamspy_options["listing_file"] = os.path.abspath(gamspy_options["listing_file"])
 
-        if options_dict["log_file"] is not None:
-            os.makedirs(Path(options_dict["log_file"]).parent.absolute(), exist_ok=True)
-            if not os.path.isabs(options_dict["log_file"]):
-                options_dict["log_file"] = os.path.abspath(options_dict["log_file"])
+        if "log_file" in gamspy_options:
+            os.makedirs(Path(gamspy_options["log_file"]).parent.absolute(), exist_ok=True)
+            if not os.path.isabs(gamspy_options["log_file"]):
+                gamspy_options["log_file"] = os.path.abspath(gamspy_options["log_file"])
 
-        options_dict = {
-            option_map[key]: value for key, value in options_dict.items()  # type: ignore
+        gams_options = {
+            option_map[key]: value for key, value in gamspy_options.items() if key in option_map
         }
 
-        return options_dict
+        gams_options['previouswork'] = 1 # # In case GAMS version differs on backend
+        gams_options['traceopt'] = 3
 
+        if self.log_file:
+            if self.redirect_log_to_stdout:
+                gams_options['_logoption'] = 4
+            else:
+                gams_options['_logoption'] = 2
+        else:
+            if self.redirect_log_to_stdout:
+                gams_options['_logoption'] = 3
+            else:
+                gams_options['_logoption'] = 0
 
-def _fix_log_option(
-    output: Union[io.TextIOWrapper, None],
-    create_log_file: bool,
-    options: GamsOptions,
-) -> GamsOptions:
-    if output is None:
-        options._logoption = 2 if create_log_file else 0
-    else:
-        options._logoption = 4 if create_log_file else 3
+        return gams_options
+    
+    def _set_extra_options(self, working_directory: str, solver: str | None, solver_options: dict | None):
+        extra_options: dict[str, Any] = {}
 
-    return options
+        if solver is not None:
+            extra_options['solver'] = solver
 
-
-def _set_options(
-    gams_options: GamsOptions,
-    options: Options,
-    is_seedable: bool = True,
-):
-    options_dict = options._get_gams_compatible_options()
-    for option, value in options_dict.items():
-        if value is not None:
-            if option == "seed" and not is_seedable:
-                continue
-            setattr(gams_options, option.lower(), value)
-
-    return gams_options
-
-
-def _set_trace_options(
-    gams_options: GamsOptions,
-    options: Optional[Options],
-    backend: str,
-    workspace: GamsWorkspace,
-):
-    if options is not None:
-        if options.trace_file_format is not None:
-            if options.trace_file_format != 3:
-                logger.log(
-                    logging.INFO,
-                    "Trace file format is different than 3. GAMSPy will not"
-                    " return any summary!",
+        if solver_options:
+            if solver is None:
+                raise ValidationError(
+                    "You need to provide a 'solver' to apply solver options."
                 )
-            trace_option = options.trace_file_format
-        else:
-            trace_option = 3
 
-        if options.trace_file is None:
-            trace_path = (
-                "trace.txt"
-                if backend in ["engine", "neos"]
-                else os.path.join(workspace.working_directory, "trace.txt")
-            )
-        else:
-            trace_path = (
-                options.trace_file
-                if backend in ["engine", "neos"]
-                else os.path.abspath(options.trace_file)
-            )
-    else:
-        trace_option = 3
-        trace_path = (
-            "trace.txt"
-            if backend in ["engine", "neos"]
-            else os.path.join(workspace.working_directory, "trace.txt")
-        )
+            solver_file_name = os.path.join(working_directory, f"{solver.lower()}.123")
 
-    gams_options.trace = trace_path
-    gams_options.traceopt = trace_option
+            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
+                for key, value in solver_options.items():
+                    solver_file.write(f"{key} {value}\n")
 
-    return gams_options
+            
+            extra_options["optfile"] = 123
 
+        self._extra_options = extra_options
+    
+    def _get_gams_options(self, workspace: GamsWorkspace, problem: Problem | None = None) -> GamsOptions:
+        gams_options = GamsOptions(workspace)
 
-def _map_options(
-    workspace: GamsWorkspace,
-    backend: str = "local",
-    options: Union[Options, None] = None,
-    global_options: Union[Options, None] = None,
-    is_seedable: bool = True,
-    output: Optional[io.TextIOWrapper] = None,
-    create_log_file: bool = False,
-) -> GamsOptions:
-    """
-    Maps given GAMSPy options to GamsOptions
+        if hasattr(self, "_extra_options") and "solver" in self._extra_options:
+            solver = self._extra_options["solver"]
+            setattr(gams_options, "all_model_types", solver)
+            if solver.lower() != getattr(gams_options, str(problem).lower()).lower():
+                raise ValidationError(
+                    f"Given solver `{solver}` is not capable of solving given"
+                    f" problem type `{problem}`. See capability matrix "
+                    "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                    " to choose a suitable solver"
+                )
+            
+        if hasattr(self, "_extra_options") and "optfile" in self._extra_options:
+            setattr(gams_options, "optfile", self._extra_options["optfile"])
 
-    Parameters
-    ----------
-    options : Options | None
-        GAMSPy options
-    global_options : Options | None
-        Global options
-    is_seedable : bool, optional
-        only seedable at first run or in model.solve function, by default True
+        gams_options_dict = self._get_gams_compatible_options()
+        for key, value in gams_options_dict.items():
+            setattr(gams_options, key, value)
 
-    Returns
-    -------
-    GamsOptions
-
-    """
-    gams_options = GamsOptions(workspace)
-
-    if global_options is not None:
-        gams_options = _set_options(
-            gams_options,
-            global_options,
-            is_seedable,
-        )
-
-    if options is not None:
-        gams_options = _set_options(gams_options, options, is_seedable)
-
-    gams_options = _set_trace_options(
-        gams_options, options, backend, workspace
-    )
-    gams_options = _fix_log_option(output, create_log_file, gams_options)
-    gams_options.previouswork = 1  # In case GAMS version differs on backend
-
-    return gams_options
-
+        return gams_options
 
 update_type_map = {
     "0": SymbolUpdateType.Zero,

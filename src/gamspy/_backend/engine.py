@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import GamsEngineConfiguration, GamsOptions
+from gams import GamsEngineConfiguration
 from gams.control.workspace import GamsException
 from gams.core.cfg import cfgModelTypeName
 from gams.core.gmo import gmoProc_nrofmodeltypes
@@ -29,7 +29,7 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Container, Model
+    from gamspy import Container, Model, Options
 
 
 logger = logging.getLogger("ENGINE")
@@ -677,7 +677,7 @@ class GAMSEngine(backend.Backend):
         self,
         container: Container,
         client: EngineClient | None,
-        options: GamsOptions,
+        options: Options,
         output: io.TextIOWrapper | None = None,
         model: Model | None = None,
     ) -> None:
@@ -693,7 +693,13 @@ class GAMSEngine(backend.Backend):
         )
 
         self.client = client
-        self.options = options
+        if model is None:
+            self.options = options._get_gams_options(self.container.workspace)
+        else:
+            self.options = options._get_gams_options(
+                self.container.workspace, model.problem
+            )
+        self.options.trace = "trace.txt"
         self.output = output
         self.model = model
         self.job_name = f"_job_{uuid.uuid4()}"
