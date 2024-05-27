@@ -8,6 +8,7 @@ from gamspy import (
     Equation,
     Model,
     Parameter,
+    Problem,
     Sense,
     Set,
     Sum,
@@ -474,6 +475,21 @@ class ModelSuite(unittest.TestCase):
             supply.compute_infeasibilities().values.tolist(),
             [["san-diego", 1000.0, 0.0, float("-inf"), 600.0, 1.0, 400.0]],
         )
+
+    def test_equations(self):
+        e = Equation(self.m, "e")
+        e.l[...] = -10
+        e.lo[...] = 5
+        model = Model(
+            self.m,
+            "my",
+            problem=Problem.LP,
+            equations=[e],
+            sense=Sense.FEASIBILITY,
+        )
+
+        with self.assertRaises(ValidationError):
+            model.solve()
 
 
 def model_suite():

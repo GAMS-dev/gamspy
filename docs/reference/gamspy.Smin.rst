@@ -1,7 +1,7 @@
-Product
-=======
+Smin
+====
 
-.. autoclass:: gamspy.Product
+.. autoclass:: gamspy.Smin
    :members:
    :undoc-members:
    :show-inheritance:

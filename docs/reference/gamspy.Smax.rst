@@ -1,7 +1,7 @@
-Smin
+Smax
 ====
 
-.. autoclass:: gamspy.Smin
+.. autoclass:: gamspy.Smax
    :members:
    :undoc-members:
    :show-inheritance:

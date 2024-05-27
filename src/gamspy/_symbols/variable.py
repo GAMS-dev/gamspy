@@ -548,9 +548,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         return output
 
-    def getDefinition(self) -> str:
+    def getAssignment(self) -> str:
         """
-        Definition of the Variable in GAMS
+        Latest assignment to the Variable in GAMS
 
         Returns
         -------
@@ -563,7 +563,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> v = gp.Variable(m, "v", domain=[i])
         >>> v.l[i] = 0;
-        >>> v.getDefinition()
+        >>> v.getAssignment()
         'v.l(i) = 0;'
 
         """

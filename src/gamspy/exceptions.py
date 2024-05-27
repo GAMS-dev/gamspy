@@ -121,8 +121,8 @@ def customize_exception(
         exception.value = error_message
         return exception
 
-    header = "=" * 80
-    footer = "=" * 80
+    header = "=" * 14
+    footer = "=" * 14
     message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
 
     lst_filename = options.output if options.output else job._job_name + ".lst"
@@ -142,11 +142,16 @@ def customize_exception(
                 temp_index = index
 
                 while (
-                    all_lines[temp_index].startswith("****")
-                    and temp_index < len(all_lines) - 1
+                    any(
+                        "****" in err_line
+                        for err_line in all_lines[temp_index : temp_index + 5]
+                    )
+                    and temp_index < len(all_lines) - 10
                 ):
-                    error_lines.append(all_lines[temp_index])
-                    temp_index += 1
+                    for offset in range(5):
+                        error_lines.append(all_lines[temp_index + offset])
+
+                    temp_index += 5
 
                 error_message = message_format.format(
                     message="".join(error_lines),

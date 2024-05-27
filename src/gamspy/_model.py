@@ -473,8 +473,8 @@ class Model:
             if not equation.name.startswith(Model._generate_prefix):
                 equation._is_dirty = True
 
-            if equation._assignment is not None:
-                variables = equation._assignment._find_variables()
+            if equation._definition is not None:
+                variables = equation._definition._find_variables()
                 for name in variables:
                     if not name.startswith(Model._generate_prefix):
                         self.container[name]._is_dirty = True
@@ -610,6 +610,8 @@ class Model:
             In case sense is different than "MIN" or "MAX"
         """
         validation.validate_solver_args(solver, options, output)
+        validation.validate_model(self)
+
         if options is None:
             options = self.container._options
 
