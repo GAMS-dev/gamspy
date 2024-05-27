@@ -284,7 +284,7 @@ class VariableSuite(unittest.TestCase):
         x.l[k] = 5
 
         self.assertEqual(
-            x.getDefinition(),
+            x.getAssignment(),
             "x.l(k) = 5;",
         )
         self.assertFalse(x._is_dirty)
@@ -293,28 +293,28 @@ class VariableSuite(unittest.TestCase):
         a = Variable(self.m, "a")
         b = Variable(self.m, "b", "binary")
         a.l = 5
-        self.assertEqual(a.getDefinition(), "a.l = 5;")
+        self.assertEqual(a.getAssignment(), "a.l = 5;")
 
         a.m = 5
-        self.assertEqual(a.getDefinition(), "a.m = 5;")
+        self.assertEqual(a.getAssignment(), "a.m = 5;")
 
         a.lo = 5
-        self.assertEqual(a.getDefinition(), "a.lo = 5;")
+        self.assertEqual(a.getAssignment(), "a.lo = 5;")
 
         a.up = 5
-        self.assertEqual(a.getDefinition(), "a.up = 5;")
+        self.assertEqual(a.getAssignment(), "a.up = 5;")
 
         a.scale = 5
-        self.assertEqual(a.getDefinition(), "a.scale = 5;")
+        self.assertEqual(a.getAssignment(), "a.scale = 5;")
 
         a.fx = 5
-        self.assertEqual(a.getDefinition(), "a.fx = 5;")
+        self.assertEqual(a.getAssignment(), "a.fx = 5;")
 
         b.prior = 5
-        self.assertEqual(b.getDefinition(), "b.prior = 5;")
+        self.assertEqual(b.getAssignment(), "b.prior = 5;")
 
         a.stage = 5
-        self.assertEqual(a.getDefinition(), "a.stage = 5;")
+        self.assertEqual(a.getAssignment(), "a.stage = 5;")
 
     def test_implicit_variable(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

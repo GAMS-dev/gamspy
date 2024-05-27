@@ -16,7 +16,7 @@ class SpecialValuesSuite(unittest.TestCase):
     def test_parameter_special_values(self):
         x = Parameter(self.m, "x", records=5)
         x[...] = x + gp.SpecialValues.EPS
-        self.assertEqual(x.getDefinition(), "x = (x + EPS);")
+        self.assertEqual(x.getAssignment(), "x = (x + EPS);")
 
         i = Set(self.m, "i", records=["i1", "i2"])
 
@@ -27,19 +27,19 @@ class SpecialValuesSuite(unittest.TestCase):
         b = Parameter(self.m, "b", domain=[i])
         b[...] = gp.SpecialValues.EPS
 
-        self.assertEqual(b.getDefinition(), "b(i) = EPS;")
+        self.assertEqual(b.getAssignment(), "b(i) = EPS;")
 
         b[...] = gp.SpecialValues.NA
-        self.assertEqual(b.getDefinition(), "b(i) = NA;")
+        self.assertEqual(b.getAssignment(), "b(i) = NA;")
 
         b[...] = gp.SpecialValues.UNDEF
-        self.assertEqual(b.getDefinition(), "b(i) = UNDF;")
+        self.assertEqual(b.getAssignment(), "b(i) = UNDF;")
 
         b[...] = gp.SpecialValues.POSINF
-        self.assertEqual(b.getDefinition(), "b(i) = INF;")
+        self.assertEqual(b.getAssignment(), "b(i) = INF;")
 
         b[...] = gp.SpecialValues.NEGINF
-        self.assertEqual(b.getDefinition(), "b(i) = -INF;")
+        self.assertEqual(b.getAssignment(), "b(i) = -INF;")
 
     def test_implicit_parameter_special_values(self):
         i = Set(self.m, "i", records=["i1", "i2"])
@@ -47,19 +47,19 @@ class SpecialValuesSuite(unittest.TestCase):
         b = Variable(self.m, "b", domain=[i])
         b.l[...] = gp.SpecialValues.EPS
 
-        self.assertEqual(b.getDefinition(), "b.l(i) = EPS;")
+        self.assertEqual(b.getAssignment(), "b.l(i) = EPS;")
 
         b.l[...] = gp.SpecialValues.NA
-        self.assertEqual(b.getDefinition(), "b.l(i) = NA;")
+        self.assertEqual(b.getAssignment(), "b.l(i) = NA;")
 
         b.l[...] = gp.SpecialValues.UNDEF
-        self.assertEqual(b.getDefinition(), "b.l(i) = UNDF;")
+        self.assertEqual(b.getAssignment(), "b.l(i) = UNDF;")
 
         b.l[...] = gp.SpecialValues.POSINF
-        self.assertEqual(b.getDefinition(), "b.l(i) = INF;")
+        self.assertEqual(b.getAssignment(), "b.l(i) = INF;")
 
         b.l[...] = gp.SpecialValues.NEGINF
-        self.assertEqual(b.getDefinition(), "b.l(i) = -INF;")
+        self.assertEqual(b.getAssignment(), "b.l(i) = -INF;")
 
     def test_operation_special_values(self):
         tax = Set(self.m, "tax", records=["i1", "i2"])
@@ -73,14 +73,14 @@ class SpecialValuesSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            results.getDefinition(),
+            results.getAssignment(),
             'results(tax,"x") = ( max((x.l(tax) - e.l(tax)),EPS) );',
         )
 
         dummy = Parameter(self.m, "dummy")
         i = Set(self.m, "i", records=["i1", "i2"])
         dummy[...] = gp.Sum(i, -0.0)
-        self.assertEqual(dummy.getDefinition(), "dummy = sum(i,EPS);")
+        self.assertEqual(dummy.getAssignment(), "dummy = sum(i,EPS);")
 
 
 def special_values_suite():

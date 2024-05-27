@@ -382,9 +382,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         return output
 
-    def getDefinition(self) -> str:
+    def getAssignment(self) -> str:
         """
-        Definition of the Parameter in GAMS
+        Latest assignment to the Parameter in GAMS
 
         Returns
         -------
@@ -397,11 +397,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
         >>> a[i] = a[i] * 5
-        >>> a.getDefinition()
+        >>> a.getAssignment()
         'a(i) = (a(i) * 5);'
 
         """
-        if self._assignment is None:
+        if not hasattr(self, "_assignment"):
             raise ValidationError("Parameter is not defined!")
 
         return self._assignment.getDeclaration()

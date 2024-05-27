@@ -372,7 +372,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         assignment: Variable | Operation | Expression | None = None,
     ):
         if assignment is None:
-            self._assignment = None  # type: ignore
+            self._definition = None  # type: ignore
             return None
 
         domain = (
@@ -404,7 +404,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         )
 
         self.container._add_statement(statement)
-        self._assignment = statement
+        self._definition = statement
 
     @property
     def l(self):  # noqa: E741, E743
@@ -682,10 +682,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         'e(i) .. a(i) =l= v(i);'
 
         """
-        if self._assignment is None:
+        if self._definition is None:
             raise ValidationError("Equation is not defined!")
 
-        return self._assignment.getDeclaration()
+        return self._definition.getDeclaration()
 
     def getStatement(self) -> str:
         """
