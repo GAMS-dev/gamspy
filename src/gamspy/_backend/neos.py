@@ -27,7 +27,7 @@ logger.addHandler(stream_handler)
 if TYPE_CHECKING:
     from gams import GamsOptions
 
-    from gamspy import Container, Model
+    from gamspy import Container, Model, Options
 
 
 class NeosClient:
@@ -390,7 +390,7 @@ class NEOSServer(backend.Backend):
     def __init__(
         self,
         container: Container,
-        options: GamsOptions,
+        options: Options,
         client: NeosClient | None,
         model: Model | None = None,
     ) -> None:
@@ -402,6 +402,13 @@ class NEOSServer(backend.Backend):
         super().__init__(container, "in.gdx", "output.gdx")
 
         self.options = options
+        if model is None:
+            self.options = options._get_gams_options(self.container.workspace)
+        else:
+            self.options = options._get_gams_options(
+                self.container.workspace, model.problem
+            )
+        self.options.trace = "trace.txt"
         self.client = client
         self.model = model
 

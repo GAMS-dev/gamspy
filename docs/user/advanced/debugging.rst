@@ -89,7 +89,7 @@ to learn about the meaning of all savepoint values.
     model.solve(options=Options(savepoint=1))
 
 
-Generating a Log File
+Redirecting Output and Generating a Log File
 ---------------------
 
 The output of GAMS can be redirected to standard output or to a file by specifying the handle for the destination.
@@ -124,12 +124,12 @@ You can also redirect the output to a file:
     ....
     ....
     ....
-    with open("mylog.txt", "w") as log:
+    with open("my_output.txt", "w") as log:
         model.solve(output=log)
 
 This code snippets redirects the output of the execution to a file named "mylog.txt".
 
-If you want to have your log file generated in the working directory, ``create_log_file`` argument can be provided. 
+If you want to redirect GAMS logs to a file, ``log_file`` option can be provided. 
 
 .. code-block:: python
 
@@ -143,10 +143,10 @@ If you want to have your log file generated in the working directory, ``create_l
     ....
     ....
     ....
-    model.solve(create_log_file=True)
+    model.solve(options=Options(log_file="my_log_file.txt"))
 
-This code snippet would generate a log file in the specified working directory. This argument is also useful for both
-redirecting the output to standard output and generating the log file at the same time.
+This code snippet would generate a log file in the specified working directory. The log can also be 
+redirected to a file and to the console at the same time.
 
 
 .. code-block:: python
@@ -161,7 +161,7 @@ redirecting the output to standard output and generating the log file at the sam
     ....
     ....
     ....
-    model.solve(output=sys.stdout, create_log_file=True)
+    model.solve(output=sys.stdout, options=Options(log_file="my_log_file.txt", redirect_log_to_stdout=True))
 
 This code snippet would redirect the output to your console as well as saving the log file in your working directory.
 

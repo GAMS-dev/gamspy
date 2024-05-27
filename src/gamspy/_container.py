@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Literal
 import gams.transfer as gt
 from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
 from gams.core import gdx
-from gams.core.opt import optResetStr
 
 import gamspy as gp
 import gamspy._miro as miro
@@ -18,7 +17,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
-from gamspy._options import Options, _map_options
+from gamspy._options import Options
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
@@ -98,7 +97,6 @@ class Container(gt.Container):
         )
 
         self._unsaved_statements: list = []
-        self._is_first_run = True
         self.miro_protect = miro_protect
 
         # import symbols from arbitrary gams code
@@ -124,7 +122,6 @@ class Container(gt.Container):
         ) = self._setup_paths()
 
         self._job: GamsJob | None = None
-        self._is_first_run = True
         self._temp_container = gt.Container(
             system_directory=self.system_directory
         )
@@ -133,12 +130,7 @@ class Container(gt.Container):
             raise TypeError(
                 f"`options` must be of type Option but found {type(options)}"
             )
-        self._options = options
-        self._gams_options = _map_options(
-            self.workspace,
-            global_options=options,
-            is_seedable=True,
-        )
+        self._options = Options() if options is None else options
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -373,15 +365,12 @@ class Container(gt.Container):
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
-        runner = backend_factory(self, self._gams_options)
-
+        runner = backend_factory(self, self._options)
         summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
 
-        if not self._is_first_run:
-            # Required for correct seeding
-            optResetStr(self._gams_options._opt, "seed")
-
-        self._is_first_run = False
+        if self._options and self._options.seed is not None:
+            # Required for correct seeding. Seed can only be set in the first run.
+            self._options.seed = None
 
         if IS_MIRO_INIT:
             self._write_default_gdx_miro()  # pragma: no cover
