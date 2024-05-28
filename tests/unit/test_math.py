@@ -117,8 +117,8 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op1.gamsRepr(), "( logBeta(3,5) )")
 
         # logGamma
-        op1 = gams_math.log_gamma(3, 5)
-        self.assertEqual(op1.gamsRepr(), "( logGamma(3,5) )")
+        op1 = gams_math.log_gamma(3)
+        self.assertEqual(op1.gamsRepr(), "( logGamma(3) )")
 
         # log2
         op2 = gams_math.log2(b[i])
