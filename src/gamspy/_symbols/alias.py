@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-import warnings
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -108,7 +107,10 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
                 return object.__new__(Alias)
 
     def __init__(
-        self, container: Container, name: str | None, alias_with: Set
+        self,
+        container: Container,
+        name: str | None = None,
+        alias_with: Set | None = None,
     ):
         # does symbol exist
         has_symbol = False
@@ -127,7 +129,7 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
             else:
-                name = str(uuid.uuid4()).replace("-", "_")
+                name = "a" + str(uuid.uuid4()).replace("-", "_")
 
             super().__init__(container, name, alias_with)
 
@@ -167,18 +169,3 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Alias declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

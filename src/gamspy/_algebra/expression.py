@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, Optional, Union
 
 import gamspy as gp
@@ -203,21 +202,6 @@ class Expression(operable.Operable):
 
         """
         return self.gamsRepr()
-
-    def getStatement(self) -> str:
-        """
-        Statement of this Expression in .gms file.
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
 
     def _find_variables(self) -> list[Variable]:
         stack = []

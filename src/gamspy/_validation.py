@@ -368,3 +368,11 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
             "`output` must be of type io.TextIOWrapper but found"
             f" {type(output)}"
         )
+
+
+def validate_model(model: gp.Model):
+    for equation in model.equations:
+        if equation._definition is None:
+            raise ValidationError(
+                f"`{equation.name}` has been declared as an equation but no equation definition was found."
+            )

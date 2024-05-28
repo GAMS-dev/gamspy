@@ -106,7 +106,7 @@ class ParameterSuite(unittest.TestCase):
         a[i] = -a[i] * 5
 
         self.assertEqual(
-            a.getDefinition(),
+            a.getAssignment(),
             "a(i) = (-a(i) * 5);",
         )
 
@@ -157,7 +157,7 @@ class ParameterSuite(unittest.TestCase):
 
         a[i] = b[i]
         self.assertEqual(
-            a.getDefinition(),
+            a.getAssignment(),
             "a(i) = b(i);",
         )
 
@@ -165,7 +165,7 @@ class ParameterSuite(unittest.TestCase):
         v.l[i] = v.l[i] * 5
 
         self.assertEqual(
-            v.getDefinition(),
+            v.getAssignment(),
             "v.l(i) = (v.l(i) * 5);",
         )
 
@@ -178,7 +178,7 @@ class ParameterSuite(unittest.TestCase):
         gamma = Parameter(m, "gamma", domain=[j, h])
         gamma[j, h] = Sum(hp.where[Ord(hp) >= Ord(h)], lamb[j, hp])
         self.assertEqual(
-            gamma.getDefinition(),
+            gamma.getAssignment(),
             "gamma(j,h) = sum(hp $ (ord(hp) >= ord(h)),lambda(j,hp));",
         )
 

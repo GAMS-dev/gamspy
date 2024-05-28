@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import uuid
-import warnings
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
@@ -470,7 +469,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
                 if is_miro_input or is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "s" + str(uuid.uuid4()).replace("-", "_")
 
@@ -625,9 +624,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         return output
 
-    def getDefinition(self) -> str:
+    def getAssignment(self) -> str:
         """
-        Definition of the Set in GAMS
+        Latest assignment to the Set in GAMS
 
         Returns
         -------
@@ -639,29 +638,14 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         >>> m = gp.Container()
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> i['i1'] = False
-        >>> i.getDefinition()
+        >>> i.getAssignment()
         'i("i1") = no;'
 
         """
-        if self._assignment is None:
-            raise ValidationError("Set is not defined!")
+        if not hasattr(self, "_assignment"):
+            raise ValidationError("Set is not assigned!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Set declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
 
 
 def singleton_check(is_singleton: bool, records: Any | None):

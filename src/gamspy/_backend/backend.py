@@ -11,9 +11,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     import io
 
-    from gams import GamsOptions
-
-    from gamspy import Container, Model
+    from gamspy import Container, Model, Options
     from gamspy._backend.engine import EngineClient, GAMSEngine
     from gamspy._backend.local import Local
     from gamspy._backend.neos import NeosClient, NEOSServer
@@ -48,7 +46,7 @@ HEADER = [
 
 def backend_factory(
     container: Container,
-    options: GamsOptions | None = None,
+    options: Options | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
@@ -57,11 +55,11 @@ def backend_factory(
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, client, model)
+        return NEOSServer(container, options, client, model)  # type: ignore
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, client, options, output, model)
+        return GAMSEngine(container, client, options, output, model)  # type: ignore
     elif backend == "local":
         from gamspy._backend.local import Local
 

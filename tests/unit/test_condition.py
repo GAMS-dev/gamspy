@@ -89,7 +89,7 @@ class ConditionSuite(unittest.TestCase):
         muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
 
         self.assertEqual(
-            muf.getDefinition(),
+            muf.getAssignment(),
             "muf(i,j) = ((2.48 + (0.0084 * rd(i,j))) $ rd(i,j));",
         )
 
@@ -149,13 +149,13 @@ class ConditionSuite(unittest.TestCase):
 
         k["ahmsa"] = True
         self.assertEqual(
-            k.getDefinition(),
+            k.getAssignment(),
             'k("ahmsa") = yes;',
         )
 
         k["ahmsa"] = False
         self.assertEqual(
-            k.getDefinition(),
+            k.getAssignment(),
             'k("ahmsa") = no;',
         )
 
@@ -192,7 +192,7 @@ class ConditionSuite(unittest.TestCase):
         ]
 
         self.assertEqual(
-            Util_gap.getDefinition(),
+            Util_gap.getAssignment(),
             "Util_gap(t) = (1 $ (( round(Util_lic(t),10) ) ne ( round("
             "Util_lic2(t),10) )));",
         )
@@ -339,7 +339,7 @@ class ConditionSuite(unittest.TestCase):
         k[p].where[k[p]] = True
 
         self.assertEqual(
-            k.getDefinition(),
+            k.getAssignment(),
             "k(p) $ k(p) = yes;",
         )
 
@@ -474,7 +474,7 @@ class ConditionSuite(unittest.TestCase):
         c[s].where[Ord(s) <= Ord(s)] = 1
 
         self.assertEqual(
-            c.getDefinition(),
+            c.getAssignment(),
             "c(s) $ (ord(s) <= ord(s)) = 1;",
         )
 

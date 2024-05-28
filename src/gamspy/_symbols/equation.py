@@ -3,7 +3,6 @@ from __future__ import annotations
 import builtins
 import itertools
 import uuid
-import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -274,7 +273,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 name = validation.validate_name(name)
 
                 if is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "e" + str(uuid.uuid4()).replace("-", "_")
 
@@ -372,7 +371,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         assignment: Variable | Operation | Expression | None = None,
     ):
         if assignment is None:
-            self._assignment = None  # type: ignore
+            self._definition = None  # type: ignore
             return None
 
         domain = (
@@ -404,7 +403,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         )
 
         self.container._add_statement(statement)
-        self._assignment = statement
+        self._definition = statement
 
     @property
     def l(self):  # noqa: E741, E743
@@ -682,25 +681,10 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         'e(i) .. a(i) =l= v(i);'
 
         """
-        if self._assignment is None:
+        if self._definition is None:
             raise ValidationError("Equation is not defined!")
 
-        return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Equation declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
+        return self._definition.getDeclaration()
 
 
 def cast_type(type: str | EquationType) -> str:

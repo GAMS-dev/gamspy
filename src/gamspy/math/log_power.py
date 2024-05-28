@@ -43,7 +43,7 @@ def log_beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("logBeta", (x, y)), None)
 
 
-def log_gamma(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def log_gamma(x: int | float | Symbol) -> Expression:
     """
     Log gamma function
 
@@ -51,7 +51,7 @@ def log_gamma(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     -------
     Expression
     """
-    return expression.Expression(None, MathOp("logGamma", (x, y)), None)
+    return expression.Expression(None, MathOp("logGamma", (x,)), None)
 
 
 def logit(x: int | float | Symbol) -> Expression:

@@ -429,22 +429,22 @@ class EquationSuite(unittest.TestCase):
     def test_scalar_attr_assignment(self):
         a = Equation(self.m, "a")
         a.l = 5
-        self.assertEqual(a.getDefinition(), "a.l = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.l = 5;")
 
         a.m = 5
-        self.assertEqual(a.getDefinition(), "a.m = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.m = 5;")
 
         a.lo = 5
-        self.assertEqual(a.getDefinition(), "a.lo = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.lo = 5;")
 
         a.up = 5
-        self.assertEqual(a.getDefinition(), "a.up = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.up = 5;")
 
         a.scale = 5
-        self.assertEqual(a.getDefinition(), "a.scale = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.scale = 5;")
 
         a.stage = 5
-        self.assertEqual(a.getDefinition(), "a.stage = 5;")
+        self.assertEqual(a._assignment.getDeclaration(), "a.stage = 5;")
 
     def test_implicit_equation(self):
         i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])

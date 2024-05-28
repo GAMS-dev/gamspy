@@ -4,7 +4,7 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
-from gams import GamsJob, GamsOptions
+from gams import GamsJob
 from gams.control.workspace import GamsExceptionExecution
 
 import gamspy._backend.backend as backend
@@ -14,20 +14,28 @@ from gamspy.exceptions import GamspyException, customize_exception
 if TYPE_CHECKING:
     import io
 
-    from gamspy import Container, Model
+    from gamspy import Container, Model, Options
 
 
 class Local(backend.Backend):
     def __init__(
         self,
         container: Container,
-        options: GamsOptions,
+        options: Options,
         output: io.TextIOWrapper | None = None,
         model: Model | None = None,
     ) -> None:
         super().__init__(container, container._gdx_in, container._gdx_out)
-        self.options = options
-        self.options.license = container._license_path
+        if model is None:
+            self.options = options._get_gams_options(self.container.workspace)
+        else:
+            self.options = options._get_gams_options(
+                self.container.workspace, model.problem
+            )
+        self.options.license = self.container._license_path
+        self.options.trace = os.path.join(
+            self.container.workspace.working_directory, "trace.txt"
+        )
         self.output = output
         self.model = model
 
@@ -88,7 +96,7 @@ class Local(backend.Backend):
 
         self.container._swap_checkpoints()
 
-        if self.options.traceopt == 3 and not is_implicit:
+        if not is_implicit:
             return self.prepare_summary(
                 self.container.working_directory, self.options.trace
             )

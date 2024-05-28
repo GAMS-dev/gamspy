@@ -10,14 +10,14 @@ from typing import TYPE_CHECKING, Any, Literal
 import gams.transfer as gt
 from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
 from gams.core import gdx
-from gams.core.opt import optResetStr
 
 import gamspy as gp
 import gamspy._miro as miro
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
-from gamspy._options import Options, _map_options
+from gamspy._options import Options
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
@@ -97,7 +97,6 @@ class Container(gt.Container):
         )
 
         self._unsaved_statements: list = []
-        self._is_first_run = True
         self.miro_protect = miro_protect
 
         # import symbols from arbitrary gams code
@@ -123,7 +122,6 @@ class Container(gt.Container):
         ) = self._setup_paths()
 
         self._job: GamsJob | None = None
-        self._is_first_run = True
         self._temp_container = gt.Container(
             system_directory=self.system_directory
         )
@@ -132,12 +130,7 @@ class Container(gt.Container):
             raise TypeError(
                 f"`options` must be of type Option but found {type(options)}"
             )
-        self._options = options
-        self._gams_options = _map_options(
-            self.workspace,
-            global_options=options,
-            is_seedable=True,
-        )
+        self._options = Options() if options is None else options
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -195,7 +188,7 @@ class Container(gt.Container):
             symbols,
         )
 
-    def _addGamsCode(
+    def addGamsCode(
         self, gams_code: str, import_symbols: list[str] = []
     ) -> None:
         """
@@ -204,7 +197,18 @@ class Container(gt.Container):
         Parameters
         ----------
         gams_code : str
-        import_symbols : List[str], optional
+            Gams code that you want to insert.
+        import_symbols : list[str], optional
+            Symbols to be imported to the container from GAMS.
+
+        Examples
+        --------
+        >>> from gamspy import Container
+        >>> m = Container()
+        >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        >>> m["piHalf"].toValue()
+        1.5707963267948966
+
         """
         if import_symbols is not None and (
             not isinstance(import_symbols, list)
@@ -361,15 +365,12 @@ class Container(gt.Container):
         return dirty_names, modified_names
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
-        runner = backend_factory(self, self._gams_options)
-
+        runner = backend_factory(self, self._options)
         summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
 
-        if not self._is_first_run:
-            # Required for correct seeding
-            optResetStr(self._gams_options._opt, "seed")
-
-        self._is_first_run = False
+        if self._options and self._options.seed is not None:
+            # Required for correct seeding. Seed can only be set in the first run.
+            self._options.seed = None
 
         if IS_MIRO_INIT:
             self._write_default_gdx_miro()  # pragma: no cover
@@ -406,7 +407,7 @@ class Container(gt.Container):
             elif isinstance(statement, gp.UniverseAlias):
                 continue
             else:
-                string += statement.getStatement() + "\n"
+                string += statement.getDeclaration() + "\n"
 
         for symbol_name in modified_names:
             symbol = self[symbol_name]
@@ -433,35 +434,130 @@ class Container(gt.Container):
 
         return string
 
-    def gamsJobName(self) -> str | None:
+    def read(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+        load_records: bool = True,
+        mode: str | None = None,
+        encoding: str | None = None,
+    ):
         """
-        Returns the name of the latest GAMS job that was executed
+        Reads specified symbols from the gdx file. If symbol_names are
+        not provided, it reads all symbols from the gdx file.
 
-        Returns
-        -------
-        str | None
-        """
-        return self._job.name if self._job is not None else None
+        Parameters
+        ----------
+        load_from : str
+        symbol_names : List[str], optional
+        load_records : bool
+        mode : str, optional
+        encoding : str, optional
 
-    def gdxInputPath(self) -> str:
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+        >>> new_container = gp.Container()
+        >>> new_container.read("test.gdx")
+        >>> new_container.data.keys() == m.data.keys()
+        True
+
         """
-        Path to the input gdx file
+        super().read(load_from, symbol_names, load_records, mode, encoding)
+        self._cast_symbols(symbol_names)
+
+    def write(
+        self,
+        write_to: str,
+        symbol_names: list[str] | None = None,
+        compress: bool = False,
+        mode: str | None = None,
+        eps_to_zero: bool = True,
+    ):
+        """
+        Writes specified symbols to the gdx file. If symbol_names are
+        not provided, it writes all symbols to the gdx file.
+
+        Parameters
+        ----------
+        write_to : str
+        symbol_names : List[str], optional
+        compress : bool
+        mode : str, optional
+        eps_to_zero : bool
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+        >>> m.write("test.gdx")
+
+        """
+        dirty_names, _ = self._get_touched_symbol_names()
+
+        if len(dirty_names) > 0:
+            self._run(keep_flags=True)
+
+        super().write(
+            write_to,
+            symbol_names,
+            compress,
+            mode=mode,
+            eps_to_zero=eps_to_zero,
+        )
+
+    def generateGamsString(self, show_raw: bool = False) -> str:
+        """
+        Generates the GAMS code
+
+        Parameters
+        ----------
+        show_raw : bool, optional
+            Shows the raw model without data and other necessary
+            GAMS statements, by default False.
 
         Returns
         -------
         str
         """
-        return self._gdx_in
+        if not show_raw:
+            return self._gams_string
 
-    def gdxOutputPath(self) -> str:
-        """
-        Path to the output gdx file
+        return utils._filter_gams_string(self._gams_string)
 
-        Returns
-        -------
-        str
+    def loadRecordsFromGdx(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+    ):
         """
-        return self._gdx_out
+        Loads data of the given symbols from a gdx file. If no
+        symbol names are given, data of all symbols are loaded.
+
+        Parameters
+        ----------
+        load_from : str
+            Path to the gdx file
+        symbols : List[str], optional
+            Symbols whose data will be load from gdx, by default None
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set
+        >>> m = Container()
+        >>> i = Set(m, "i", records=["i1", "i2"])
+        >>> m.write("test.gdx")
+        >>> m2 = Container()
+        >>> m2.loadRecordsFromGdx("test.gdx")
+        >>> print(i.records.equals(m2["i"].records))
+        True
+
+        """
+        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
 
     def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
         """
@@ -887,29 +983,10 @@ class Container(gt.Container):
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
-            if equation._assignment is not None:
-                m._add_statement(equation._assignment)
+            if equation._definition is not None:
+                m._add_statement(equation._definition)
 
         return m
-
-    def generateGamsString(self, show_raw: bool = False) -> str:
-        """
-        Generates the GAMS code
-
-        Parameters
-        ----------
-        show_raw : bool, optional
-            Shows the raw model without data and other necessary
-            GAMS statements, by default False.
-
-        Returns
-        -------
-        str
-        """
-        if not show_raw:
-            return self._gams_string
-
-        return utils._filter_gams_string(self._gams_string)
 
     def getEquations(self) -> list[Equation]:
         """
@@ -955,108 +1032,63 @@ class Container(gt.Container):
         if user_invoked:
             self._run()
 
-    def loadRecordsFromGdx(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-    ) -> None:
+    def importExtrinsicLibrary(
+        self, lib_path: str, functions: dict[str, str]
+    ) -> ExtrinsicLibrary:
         """
-        Loads data of the given symbols from a gdx file. If no
-        symbol names are given, data of all symbols are loaded.
+        Imports an extrinsic library to the GAMS environment.
 
         Parameters
         ----------
-        load_from : str
-            Path to the gdx file
-        symbols : List[str], optional
-            Symbols whose data will be load from gdx, by default None
+        lib_path : str
+            Path to the .so, .dylib or .dll file that contains the extrinsic library
+        functions : dict[str, str]
+            Names of the functions as a dictionary. Key is the desired function name in GAMSPy
+            and value is the function name in the extrinsic library.
 
-        Examples
-        --------
-        >>> from gamspy import Container, Set
-        >>> m = Container()
-        >>> i = Set(m, "i", records=["i1", "i2"])
-        >>> m.write("test.gdx")
-        >>> m2 = Container()
-        >>> m2.loadRecordsFromGdx("test.gdx")
-        >>> print(i.records.equals(m2["i"].records))
-        True
+        Returns
+        -------
+        ExtrinsicLibrary
 
+        Raises
+        ------
+        FileNotFoundError
+            In case the extrinsic library does not exist in the given path.
         """
-        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
+        if not os.path.exists(lib_path):
+            raise FileNotFoundError(f"`{lib_path}` is not a valid path.")
 
-    def read(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-        load_records: bool = True,
-        mode: str | None = None,
-        encoding: str | None = None,
-    ) -> None:
+        external_lib = ExtrinsicLibrary(lib_path, functions)
+        self._add_statement(external_lib)
+
+        return external_lib
+
+    def gamsJobName(self) -> str | None:
         """
-        Reads specified symbols from the gdx file. If symbol_names are
-        not provided, it reads all symbols from the gdx file.
+        Returns the name of the latest GAMS job that was executed
 
-        Parameters
-        ----------
-        load_from : str
-        symbol_names : List[str], optional
-        load_records : bool
-        mode : str, optional
-        encoding : str, optional
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
-        >>> new_container = gp.Container()
-        >>> new_container.read("test.gdx")
-        >>> new_container.data.keys() == m.data.keys()
-        True
-
+        Returns
+        -------
+        str | None
         """
-        super().read(load_from, symbol_names, load_records, mode, encoding)
-        self._cast_symbols(symbol_names)
+        return self._job.name if self._job is not None else None
 
-    def write(
-        self,
-        write_to: str,
-        symbol_names: list[str] | None = None,
-        compress: bool = False,
-        mode: str | None = None,
-        eps_to_zero: bool = True,
-    ) -> None:
+    def gdxInputPath(self) -> str:
         """
-        Writes specified symbols to the gdx file. If symbol_names are
-        not provided, it writes all symbols to the gdx file.
+        Path to the input gdx file
 
-        Parameters
-        ----------
-        write_to : str
-        symbol_names : List[str], optional
-        compress : bool
-        mode : str, optional
-        eps_to_zero : bool
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> m.write("test.gdx")
-
+        Returns
+        -------
+        str
         """
-        dirty_names, _ = self._get_touched_symbol_names()
+        return self._gdx_in
 
-        if len(dirty_names) > 0:
-            self._run(keep_flags=True)
+    def gdxOutputPath(self) -> str:
+        """
+        Path to the output gdx file
 
-        super().write(
-            write_to,
-            symbol_names,
-            compress,
-            mode=mode,
-            eps_to_zero=eps_to_zero,
-        )
+        Returns
+        -------
+        str
+        """
+        return self._gdx_out

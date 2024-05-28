@@ -187,7 +187,7 @@ class OperationSuite(unittest.TestCase):
         bla[...] = bla2[...] != 0
 
         self.assertEqual(
-            bla.getDefinition(),
+            bla.getAssignment(),
             "bla(s) = (bla2(s) ne 0);",
         )
 
