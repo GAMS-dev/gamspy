@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Literal, Optional, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from gams import GamsOptions, GamsWorkspace, SymbolUpdateType
 from pydantic import BaseModel
+
 from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("Options")
@@ -19,7 +20,6 @@ handler.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 if TYPE_CHECKING:
-    import io
     from gamspy._model import Problem
 
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
@@ -149,40 +149,59 @@ class Options(BaseModel):
             gamspy_options["merge_strategy"] = multi_solve_map[strategy]
 
         if "listing_file" in gamspy_options:
-            os.makedirs(Path(gamspy_options["listing_file"]).parent.absolute(), exist_ok=True)
+            os.makedirs(
+                Path(gamspy_options["listing_file"]).parent.absolute(),
+                exist_ok=True,
+            )
             if not os.path.isabs(gamspy_options["listing_file"]):
-                gamspy_options["listing_file"] = os.path.abspath(gamspy_options["listing_file"])
+                gamspy_options["listing_file"] = os.path.abspath(
+                    gamspy_options["listing_file"]
+                )
 
         if "log_file" in gamspy_options:
-            os.makedirs(Path(gamspy_options["log_file"]).parent.absolute(), exist_ok=True)
+            os.makedirs(
+                Path(gamspy_options["log_file"]).parent.absolute(),
+                exist_ok=True,
+            )
             if not os.path.isabs(gamspy_options["log_file"]):
-                gamspy_options["log_file"] = os.path.abspath(gamspy_options["log_file"])
+                gamspy_options["log_file"] = os.path.abspath(
+                    gamspy_options["log_file"]
+                )
 
         gams_options = {
-            option_map[key]: value for key, value in gamspy_options.items() if key in option_map
+            option_map[key]: value
+            for key, value in gamspy_options.items()
+            if key in option_map
         }
 
-        gams_options['previouswork'] = 1 # # In case GAMS version differs on backend
-        gams_options['traceopt'] = 3
+        gams_options["previouswork"] = (
+            1  # # In case GAMS version differs on backend
+        )
+        gams_options["traceopt"] = 3
 
         if self.log_file:
             if self.redirect_log_to_stdout:
-                gams_options['_logoption'] = 4
+                gams_options["_logoption"] = 4
             else:
-                gams_options['_logoption'] = 2
+                gams_options["_logoption"] = 2
         else:
             if self.redirect_log_to_stdout:
-                gams_options['_logoption'] = 3
+                gams_options["_logoption"] = 3
             else:
-                gams_options['_logoption'] = 0
+                gams_options["_logoption"] = 0
 
         return gams_options
-    
-    def _set_extra_options(self, working_directory: str, solver: str | None, solver_options: dict | None):
+
+    def _set_extra_options(
+        self,
+        working_directory: str,
+        solver: str | None,
+        solver_options: dict | None,
+    ):
         extra_options: dict[str, Any] = {}
 
         if solver is not None:
-            extra_options['solver'] = solver
+            extra_options["solver"] = solver
 
         if solver_options:
             if solver is None:
@@ -190,39 +209,49 @@ class Options(BaseModel):
                     "You need to provide a 'solver' to apply solver options."
                 )
 
-            solver_file_name = os.path.join(working_directory, f"{solver.lower()}.123")
+            solver_file_name = os.path.join(
+                working_directory, f"{solver.lower()}.123"
+            )
 
             with open(solver_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            
             extra_options["optfile"] = 123
 
         self._extra_options = extra_options
-    
-    def _get_gams_options(self, workspace: GamsWorkspace, problem: Problem | None = None) -> GamsOptions:
+
+    def _get_gams_options(
+        self, workspace: GamsWorkspace, problem: Problem | None = None
+    ) -> GamsOptions:
         gams_options = GamsOptions(workspace)
 
         if hasattr(self, "_extra_options") and "solver" in self._extra_options:
             solver = self._extra_options["solver"]
-            setattr(gams_options, "all_model_types", solver)
-            if solver.lower() != getattr(gams_options, str(problem).lower()).lower():
+            gams_options.all_model_types = solver
+            if (
+                solver.lower()
+                != getattr(gams_options, str(problem).lower()).lower()
+            ):
                 raise ValidationError(
                     f"Given solver `{solver}` is not capable of solving given"
                     f" problem type `{problem}`. See capability matrix "
                     "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
                     " to choose a suitable solver"
                 )
-            
-        if hasattr(self, "_extra_options") and "optfile" in self._extra_options:
-            setattr(gams_options, "optfile", self._extra_options["optfile"])
+
+        if (
+            hasattr(self, "_extra_options")
+            and "optfile" in self._extra_options
+        ):
+            gams_options.optfile = self._extra_options["optfile"]
 
         gams_options_dict = self._get_gams_compatible_options()
         for key, value in gams_options_dict.items():
             setattr(gams_options, key, value)
 
         return gams_options
+
 
 update_type_map = {
     "0": SymbolUpdateType.Zero,

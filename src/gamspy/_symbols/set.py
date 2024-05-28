@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import uuid
-import warnings
 from typing import TYPE_CHECKING, Any, Literal
 
 import gams.transfer as gt
@@ -470,7 +469,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if name is not None:
                 name = validation.validate_name(name)
                 if is_miro_input or is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "s" + str(uuid.uuid4()).replace("-", "_")
 
@@ -647,21 +646,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             raise ValidationError("Set is not assigned!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Set declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
 
 
 def singleton_check(is_singleton: bool, records: Any | None):

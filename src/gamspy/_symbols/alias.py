@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-import warnings
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -170,18 +169,3 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Alias declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

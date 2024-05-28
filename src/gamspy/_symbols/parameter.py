@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import uuid
-import warnings
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -212,7 +211,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 name = validation.validate_name(name)
 
                 if is_miro_input or is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "p" + str(uuid.uuid4()).replace("-", "_")
 
@@ -405,18 +404,3 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             raise ValidationError("Parameter is not defined!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Parameter declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

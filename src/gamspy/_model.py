@@ -4,7 +4,6 @@ import io
 import logging
 import os
 import uuid
-import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Iterable, Literal
 
@@ -700,18 +699,3 @@ class Model:
         model_str += ";"
 
         return model_str
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Model declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

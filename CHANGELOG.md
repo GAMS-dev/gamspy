@@ -10,6 +10,7 @@ GAMSPy 0.12.5
   - Refactor the underlying implementation of options.
   - Show better error messages.
   - Fix number of arguments that log_gamma takes.
+  - Rename getStatement to getDeclaration.
 - Testing
   - Add tests for extrinsic functions.
   - Test whether the given solver is capable of solving the problem type.

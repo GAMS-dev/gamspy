@@ -3,7 +3,6 @@ from __future__ import annotations
 import builtins
 import itertools
 import uuid
-import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -249,7 +248,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 name = validation.validate_name(name)
 
                 if is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "v" + str(uuid.uuid4()).replace("-", "_")
 
@@ -571,21 +570,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             raise ValidationError("Variable is not defined!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Variable declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
 
 
 def cast_type(type: str | VariableType) -> str:
