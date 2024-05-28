@@ -8,7 +8,8 @@ GAMSPy 0.12.5
   - Add extrinsic function support.
   - Expose addGamsCode to user.
   - Refactor the underlying implementation of options.
-  - Show better error messages
+  - Show better error messages.
+  - Fix number of arguments that log_gamma takes.
 - Testing
   - Add tests for extrinsic functions.
   - Test whether the given solver is capable of solving the problem type.
