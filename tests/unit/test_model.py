@@ -83,7 +83,7 @@ class ModelSuite(unittest.TestCase):
             sense="min",
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
-        test_model.solve()
+        test_model.solve(solver="CPLEX")
         self.assertEqual(
             list(self.m.data.keys()),
             [

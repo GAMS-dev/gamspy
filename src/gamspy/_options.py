@@ -229,10 +229,7 @@ class Options(BaseModel):
         if hasattr(self, "_extra_options") and "solver" in self._extra_options:
             solver = self._extra_options["solver"]
             gams_options.all_model_types = solver
-            if (
-                solver.lower()
-                != getattr(gams_options, str(problem).lower()).lower()
-            ):
+            if problem is not None and solver.lower() != getattr(gams_options, str(problem).lower()).lower():
                 raise ValidationError(
                     f"Given solver `{solver}` is not capable of solving given"
                     f" problem type `{problem}`. See capability matrix "
