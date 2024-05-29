@@ -1,8 +1,8 @@
 .. _debugging:
 
-*********
-Debugging
-*********
+*************************
+Debugging and Performance
+*************************
 
 Specifying a Debugging Level
 ----------------------------
@@ -334,3 +334,29 @@ argument in solver_options  which turns feasible relaxation on.
 
 There are also facilities of other solvers such as BARON, COPT, Gurobi, Lindo etc. which can be enabled in the same way.
 To see all facilities, refer to the `Solver Manuals <https://gams.com/latest/docs/S_MAIN.html>`_.
+
+Performance Optimization
+------------------------
+
+State synchronization of symbols between GAMS and GAMSPy can be manipulated to improve performance in certain cases.
+GAMSPy by default synchronizes all declared symbols with GAMS state but symbols can be excluded from this synchronization
+on demand by setting ``.synchronize`` property to False. For example, while calculating fibonacci numbers, it is not 
+necessary to synchronize the records of symbol ``f`` with GAMS in every iteration. 
+
+.. code-block:: python
+
+    m = gp.Container()
+    i = gp.Set(m,'i',records=[item for item in range(1000)])
+    f = gp.Parameter(m, 'f', domain=i)
+    f['0'] = 0
+    f['1'] = 1
+
+    f.synchronize = False
+    for n in range(2,1000):
+        f[str(n)] = f[str(n-2)] + f[str(n-1)]
+    f.synchronize = True
+    print(f.records)
+
+By disabling the synchronization of ``f``, the state of ``f`` is synchronized with GAMS only at the end of the loop instead
+of 999 times. 
+

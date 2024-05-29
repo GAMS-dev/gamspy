@@ -121,8 +121,8 @@ def div0(
 
 
 def dist(
-    x1: tuple[int, float] | Symbol,
-    x2: tuple[int, float] | Symbol,
+    x1: int | float | Symbol,
+    x2: int | float | Symbol,
 ) -> Expression:
     """
     L2 norm
@@ -136,9 +136,6 @@ def dist(
     Exception
         In case both x1 and x2 are not a tuple or none.
     """
-    if isinstance(x1, tuple) or isinstance(x2, tuple):
-        raise ValidationError("Both should be a tuple or none")
-
     return expression.Expression(None, MathOp("eDist", (x1, x2)), None)
 
 

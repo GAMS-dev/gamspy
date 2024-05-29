@@ -381,7 +381,7 @@ class ContainerSuite(unittest.TestCase):
 
         self.assertEqual(
             m.generateGamsString(),
-            f"$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nSet i(*);\n$loadDC i\n$offUNDF\n$gdxIn\n$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nAlias(i,a);\n$loadDC i\n$offUNDF\n$gdxIn\n$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nParameter p;\n$loadDC p\n$offUNDF\n$gdxIn\n$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nfree Variable v;\n$loadDC v\n$offUNDF\n$gdxIn\n$onMultiR\n$onUNDF\n$gdxIn {m._gdx_in}\nEquation e;\n$loadDC e\n$offUNDF\n$gdxIn\n",
+            f"$onMultiR\n$onUNDF\nSet i(*);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nAlias(i,a);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nParameter p;\n$gdxIn {m._gdx_in}\n$loadDC p\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nfree Variable v;\n$gdxIn {m._gdx_in}\n$loadDC v\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nEquation e;\n$gdxIn {m._gdx_in}\n$loadDC e\n$gdxIn\n$offUNDF\n",
         )
 
         self.assertEqual(

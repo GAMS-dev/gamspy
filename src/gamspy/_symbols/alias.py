@@ -150,6 +150,19 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
+    @property
+    def synchronize(self):
+        raise ValidationError(
+            "Each Alias object is tied to a Set. Change the synchronization setting of the set instead."
+        )
+
+    @synchronize.setter
+    def synchronize(self, value: bool):
+        raise ValidationError(
+            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
+            f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."
+        )
+
     def gamsRepr(self) -> str:
         """
         Representation of this Alias in GAMS language.

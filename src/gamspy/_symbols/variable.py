@@ -125,6 +125,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj.container._add_statement(obj)
         obj._is_dirty = False
         obj._is_frozen = False
+        obj._synchronize = True
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -187,6 +188,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     ):
         # miro support
         self._is_miro_output = is_miro_output
+
+        self._synchronize = True
 
         # domain handling
         if domain is None:
