@@ -4,8 +4,10 @@ GAMSPy CHANGELOG
 GAMSPy 0.12.6
 -------------
 - General
+  - Do not open gdx file in case there is nothing to load.
   - Fix solver capability check bug.
 Testing
+  - Adapt generateGamsString tests to new the gdx load logic. 
   - Add test for the solver capability bug.
 
 GAMSPy 0.12.5

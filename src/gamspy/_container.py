@@ -400,7 +400,7 @@ class Container(gt.Container):
         dirty_names: list[str],
         modified_names: list[str],
     ) -> str:
-        string = f"$onMultiR\n$onUNDF\n$gdxIn {gdx_in}\n"
+        string = "$onMultiR\n$onUNDF\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
                 string += statement + "\n"
@@ -408,6 +408,9 @@ class Container(gt.Container):
                 continue
             else:
                 string += statement.getDeclaration() + "\n"
+
+        if modified_names:
+            string += f"$gdxIn {gdx_in}\n"
 
         for symbol_name in modified_names:
             symbol = self[symbol_name]
@@ -424,7 +427,10 @@ class Container(gt.Container):
                 else:
                     string += f"$loadDC {symbol_name}\n"
 
-        string += "$offUNDF\n$gdxIn\n"
+        if modified_names:
+            string += "$gdxIn\n"
+
+        string += "$offUNDF\n"
         string += self._get_unload_symbols_str(dirty_names, gdx_out)
 
         if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
