@@ -278,6 +278,22 @@ class ParameterSuite(unittest.TestCase):
                 uels_on_axes=True,
             )
 
+    def test_expert_sync(self):
+        i_list = [str(i) for i in range(4)]
+        m = Container()
+        i = Set(m, "i", records=i_list)
+        f = Parameter(m, "f", domain=i)
+        f["0"] = 0
+        f["1"] = 1
+
+        f.synchronize = False
+        for n in range(2, 4):
+            f[str(n)] = f[str(n - 2)] + f[str(n - 1)]
+
+        self.assertEqual(f.records.value.tolist(), [1.0])
+        f.synchronize = True
+        self.assertEqual(f.records.value.tolist(), [1.0, 1.0, 2.0])
+
 
 def parameter_suite():
     suite = unittest.TestSuite()

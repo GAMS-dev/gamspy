@@ -653,6 +653,17 @@ class EquationSuite(unittest.TestCase):
         )
         self.assertEqual(e.records.level.tolist(), [1, 2, 3])
 
+    def test_expert_sync(self):
+        m = Container()
+        i = Set(m, "i", records=["i1", "i2"])
+        e = Equation(m, "e", domain=i)
+        e.l = 5
+        e.synchronize = False
+        e.l = e.l * 5
+        self.assertEqual(e.records.level.tolist(), [5.0, 5.0])
+        e.synchronize = True
+        self.assertEqual(e.records.level.tolist(), [25.0, 25.0])
+
 
 def equation_suite():
     suite = unittest.TestSuite()

@@ -70,6 +70,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}_algebra{os.sep}expression.py",
             f"{root}{os.sep}_algebra{os.sep}domain.py",
             f"{root}{os.sep}_algebra{os.sep}number.py",
+            f"{root}{os.sep}_symbols{os.sep}symbol.py",
             f"{root}{os.sep}_symbols{os.sep}alias.py",
             f"{root}{os.sep}_symbols{os.sep}equation.py",
             f"{root}{os.sep}_symbols{os.sep}parameter.py",
