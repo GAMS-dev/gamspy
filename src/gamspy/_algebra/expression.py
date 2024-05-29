@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Union
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
@@ -12,7 +12,6 @@ import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
-
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
@@ -35,8 +34,6 @@ if TYPE_CHECKING:
             MathOp,
         ]
     ]
-    from gamspy import Alias
-    from gamspy import Set
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -89,9 +86,9 @@ class Expression(operable.Operable):
             set([*left_control, *right_control])
         )
         self.container = None
-        if hasattr(left, "container"):
+        if left is not None and hasattr(left, "container"):
             self.container = left.container
-        elif hasattr(right, "container"):
+        elif right is not None and hasattr(right, "container"):
             self.container = right.container
 
     def _create_domain(self):
