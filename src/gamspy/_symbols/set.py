@@ -351,6 +351,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
+        obj._synchronize = True
 
         # miro support
         obj._is_miro_input = False
@@ -411,6 +412,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     ):
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
+
+        self._synchronize = True
 
         # domain handling
         if domain is None:

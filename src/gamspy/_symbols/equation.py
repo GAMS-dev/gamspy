@@ -142,6 +142,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         obj._is_frozen = False
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
+        obj._synchronize = True
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -211,6 +212,8 @@ class Equation(gt.Equation, operable.Operable, Symbol):
     ):
         # miro support
         self._is_miro_output = is_miro_output
+
+        self._synchronize = True
 
         # domain handling
         if domain is None:

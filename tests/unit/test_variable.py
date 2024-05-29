@@ -414,6 +414,17 @@ class VariableSuite(unittest.TestCase):
         v = Variable(self.m, "v", domain=["*"], records=s, uels_on_axes=True)
         self.assertEqual(v.records.level.tolist(), [1, 2, 3])
 
+    def test_expert_sync(self):
+        m = Container()
+        i = Set(m, "i", records=["i1", "i2"])
+        v = Variable(m, "v", domain=i)
+        v.l = 5
+        v.synchronize = False
+        v.l = v.l * 5
+        self.assertEqual(v.records.level.tolist(), [5.0, 5.0])
+        v.synchronize = True
+        self.assertEqual(v.records.level.tolist(), [25.0, 25.0])
+
 
 def variable_suite():
     suite = unittest.TestSuite()

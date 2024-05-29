@@ -92,6 +92,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # gamspy attributes
         obj._is_dirty = False
         obj._is_frozen = False
+        obj._synchronize = True
 
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
@@ -159,6 +160,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
         self._is_miro_table = is_miro_table
+
+        self._synchronize = True
 
         # domain handling
         if domain is None:

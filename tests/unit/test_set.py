@@ -292,6 +292,15 @@ class SetSuite(unittest.TestCase):
         i = Set(self.m, "i", records=s, uels_on_axes=True)
         self.assertEqual(i.records["uni"].tolist(), ["a", "b"])
 
+    def test_expert_sync(self):
+        m = Container()
+        i = Set(m, "i", records=["i1"])
+        i.synchronize = False
+        i["i2"] = True
+        self.assertEqual(i.records.uni.tolist(), ["i1"])
+        i.synchronize = True
+        self.assertEqual(i.records.uni.tolist(), ["i1", "i2"])
+
 
 def set_suite():
     suite = unittest.TestSuite()
