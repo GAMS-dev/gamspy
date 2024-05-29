@@ -97,18 +97,12 @@ class Operation(operable.Operable):
             item = self.op_domain[0]
             index_str = item.gamsRepr()
 
-
-            if (
-                isinstance(item, expression.Expression) and
-                and "$" in index_str
-                and not isinstance(item.left, domain.Domain)
-                and index_str[0] == "("
+            if isinstance(item, expression.Expression) and isinstance(
+                item.left, implicits.ImplicitSet
             ):
                 # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
                 # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
-                index_str = index_str[1:-1]
-
-            return index_str
+                return index_str
 
         return (
             "("
