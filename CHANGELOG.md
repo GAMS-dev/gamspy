@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.6
+-------------
+- General
+  - Fix solver capability check bug.
+Testing
+  - Add test for the solver capability bug.
+
 GAMSPy 0.12.5
 -------------
 - General
