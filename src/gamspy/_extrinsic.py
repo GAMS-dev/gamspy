@@ -8,6 +8,7 @@ import gamspy._algebra.operable as operable
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
+    from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
 
 
@@ -17,6 +18,7 @@ class ExtinsicFunction(operable.Operable):
     def __init__(self, name: str):
         self.name = name
         self.args: tuple | None = None
+        self.domain: list[Set | Alias] = []
 
     def __len__(self):
         return len(self.__str__())

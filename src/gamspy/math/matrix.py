@@ -194,7 +194,7 @@ def next_alias(symbol: Alias | Set) -> Alias:
     num = int(num) + 1
     expected_name = f"{prefix}_{num}"
     find_x = symbol.container.data.get(expected_name, None)
-    if not find_x:
+    if find_x is None:
         find_x = Alias(
             symbol.container, name=expected_name, alias_with=current
         )
@@ -254,7 +254,7 @@ def _generate_dims(m: Container, dims: list[int]) -> list[Alias | Set]:
     for x in dims:
         expected_name = f"DenseDim{x}_1"
         find_x = m.data.get(expected_name, None)
-        if not find_x:
+        if find_x is None:
             find_x = Set(m, name=expected_name, records=range(x))
 
         while find_x in sets_so_far:
