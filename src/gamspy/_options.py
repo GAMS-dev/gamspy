@@ -118,15 +118,15 @@ class Options(BaseModel):
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Literal[0, 1, 2] | None = None
-    show_os_memory: Literal[0, 1, 2] | None = None
+    report_solution: Optional[Literal[0, 1, 2]] = None
+    show_os_memory: Optional[Literal[0, 1, 2]] = None
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
-    suppress_compiler_listing: bool | None = None
+    suppress_compiler_listing: Optional[bool] = None
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
-    write_listing_file: bool | None = None
+    write_listing_file: Optional[bool] = None
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
