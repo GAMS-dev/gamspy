@@ -102,7 +102,9 @@ class Operation(operable.Operable):
             ):
                 # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
                 # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
-                return index_str
+                index_str = index_str[1:-1]
+
+            return index_str
 
         return (
             "("
