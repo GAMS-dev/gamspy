@@ -97,14 +97,14 @@ class Options(BaseModel):
     allow_suffix_in_equation: Optional[bool] = None
     allow_suffix_in_limited_variables: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
-    compile_error_limit: int = 1
+    compile_error_limit: int | None = None
     domain_violation_limit: Optional[int] = None
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
     integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
-    keep_temporary_files: bool = False
+    keep_temporary_files: bool | None = None
     listing_file: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
@@ -118,15 +118,15 @@ class Options(BaseModel):
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Literal[0, 1, 2] = 2
-    show_os_memory: Literal[0, 1, 2] = 0
+    report_solution: Literal[0, 1, 2] | None = None
+    show_os_memory: Literal[0, 1, 2] | None = None
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
-    suppress_compiler_listing: bool = False
+    suppress_compiler_listing: bool | None = None
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
-    write_listing_file: bool = True
+    write_listing_file: bool | None = None
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 

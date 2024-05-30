@@ -82,12 +82,11 @@ class Local(backend.Backend):
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
         except GamspyException as exception:
+            self.container.workspace._has_error = True
             message = customize_exception(
                 self.container.workspace, self.options, job_name, exception
             )
             exception.message = message
-            self.container.workspace._has_error = True
-            self.container._stop_socket()
             raise exception
         finally:
             self.container._unsaved_statements = []

@@ -196,7 +196,6 @@ class Container(gt.Container):
                 "Keyboard interrupt was received. Shutting down...",
                 stacklevel=2,
             )
-            self._stop_socket()
             raise
 
         try:
