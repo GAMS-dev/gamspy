@@ -97,14 +97,14 @@ class Options(BaseModel):
     allow_suffix_in_equation: Optional[bool] = None
     allow_suffix_in_limited_variables: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
-    compile_error_limit: int | None = None
+    compile_error_limit: Optional[int] = None
     domain_violation_limit: Optional[int] = None
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
     integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
-    keep_temporary_files: bool | None = None
+    keep_temporary_files: Optional[bool] = None
     listing_file: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
