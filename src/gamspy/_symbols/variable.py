@@ -3,7 +3,6 @@ from __future__ import annotations
 import builtins
 import itertools
 import uuid
-import warnings
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -126,6 +125,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj.container._add_statement(obj)
         obj._is_dirty = False
         obj._is_frozen = False
+        obj._synchronize = True
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -189,6 +189,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # miro support
         self._is_miro_output = is_miro_output
 
+        self._synchronize = True
+
         # domain handling
         if domain is None:
             domain = []
@@ -249,7 +251,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 name = validation.validate_name(name)
 
                 if is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "v" + str(uuid.uuid4()).replace("-", "_")
 
@@ -548,9 +550,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         return output
 
-    def getDefinition(self) -> str:
+    def getAssignment(self) -> str:
         """
-        Definition of the Variable in GAMS
+        Latest assignment to the Variable in GAMS
 
         Returns
         -------
@@ -563,7 +565,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> v = gp.Variable(m, "v", domain=[i])
         >>> v.l[i] = 0;
-        >>> v.getDefinition()
+        >>> v.getAssignment()
         'v.l(i) = 0;'
 
         """
@@ -571,21 +573,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             raise ValidationError("Variable is not defined!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Variable declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
 
 
 def cast_type(type: str | VariableType) -> str:

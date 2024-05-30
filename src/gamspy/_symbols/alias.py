@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-import warnings
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -151,6 +150,19 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
+    @property
+    def synchronize(self):
+        raise ValidationError(
+            "Each Alias object is tied to a Set. Change the synchronization setting of the set instead."
+        )
+
+    @synchronize.setter
+    def synchronize(self, value: bool):
+        raise ValidationError(
+            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
+            f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."
+        )
+
     def gamsRepr(self) -> str:
         """
         Representation of this Alias in GAMS language.
@@ -170,18 +182,3 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         str
         """
         return f"Alias({self.alias_with.name},{self.name});"
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Alias declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

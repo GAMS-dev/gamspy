@@ -26,7 +26,7 @@ class ExtrinsicSuite(unittest.TestCase):
     def _test_extrinsic_functions(self):
         names = {
             "linux": "libtricclib64.so",
-            "mac_x86": "libtricclib64x86.dylib",
+            "mac_x86_64": "libtricclib64x86.dylib",
             "mac_arm64": "libtricclib64arm.dylib",
             "windows": "tricclib64.dll",
         }

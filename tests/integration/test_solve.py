@@ -1014,20 +1014,6 @@ class SolveSuite(unittest.TestCase):
         summary = transport.solve()
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
-        summary = transport.solve(options=Options(trace_file_format=5))
-        self.assertIsNone(summary)
-        
-        transport2 = Model(
-            m,
-            name="transport2",
-            equations=m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
-        summary = transport2.solve(options=Options(trace_file=f"tmp{os.sep}different_path.txt"))
-        self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
-        
     def test_validation(self):
         m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
@@ -1075,15 +1061,15 @@ class SolveSuite(unittest.TestCase):
         f = Parameter(m, "f")
         f[...] = 5
         
-        self.assertEqual(f.getDefinition(), "f = 5;")
+        self.assertEqual(f.getAssignment(), "f = 5;")
             
     def test_variable_discovery(self):
         x = self.m.addVariable('x')
         l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
-        self.assertTrue('x' in l2.equations[0]._assignment._find_variables())
+        self.assertTrue('x' in l2.equations[0]._definition._find_variables())
         
         e = Equation(self.m, "e", definition=(x+5) == 0)
-        self.assertTrue('x' in e._assignment._find_variables())
+        self.assertTrue('x' in e._definition._find_variables())
         
     def test_invalid_arguments(self):
         m = Container(

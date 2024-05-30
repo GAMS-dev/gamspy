@@ -138,7 +138,7 @@ class SetSuite(unittest.TestCase):
         k[j] = ~k[j]
 
         self.assertEqual(
-            k.getDefinition(),
+            k.getAssignment(),
             "k(j) = ( not k(j));",
         )
 
@@ -165,7 +165,7 @@ class SetSuite(unittest.TestCase):
         i["i1"] = False
 
         self.assertEqual(
-            i.getDefinition(),
+            i.getAssignment(),
             'i("i1") = no;',
         )
 
@@ -223,7 +223,7 @@ class SetSuite(unittest.TestCase):
         sMinDown[s, t.lead(Ord(t) - Ord(s))] = 1
 
         self.assertEqual(
-            sMinDown.getDefinition(),
+            sMinDown.getAssignment(),
             "sMinDown(s,t + (ord(t) - ord(s))) = 1;",
         )
 
@@ -255,7 +255,7 @@ class SetSuite(unittest.TestCase):
         p[i] = i.sameAs("2")
 
         self.assertEqual(
-            p.getDefinition(),
+            p.getAssignment(),
             'p(i) = ( sameAs(i,"2") );',
         )
 
@@ -291,6 +291,15 @@ class SetSuite(unittest.TestCase):
         s = pd.Series(index=["a", "b"])
         i = Set(self.m, "i", records=s, uels_on_axes=True)
         self.assertEqual(i.records["uni"].tolist(), ["a", "b"])
+
+    def test_expert_sync(self):
+        m = Container()
+        i = Set(m, "i", records=["i1"])
+        i.synchronize = False
+        i["i2"] = True
+        self.assertEqual(i.records.uni.tolist(), ["i1"])
+        i.synchronize = True
+        self.assertEqual(i.records.uni.tolist(), ["i1", "i2"])
 
 
 def set_suite():

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import uuid
-import warnings
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -93,6 +92,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # gamspy attributes
         obj._is_dirty = False
         obj._is_frozen = False
+        obj._synchronize = True
 
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
@@ -161,6 +161,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._is_miro_output = is_miro_output
         self._is_miro_table = is_miro_table
 
+        self._synchronize = True
+
         # domain handling
         if domain is None:
             domain = []
@@ -212,7 +214,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 name = validation.validate_name(name)
 
                 if is_miro_input or is_miro_output:
-                    name = name.lower()
+                    name = name.lower()  # type: ignore
             else:
                 name = "p" + str(uuid.uuid4()).replace("-", "_")
 
@@ -382,9 +384,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         return output
 
-    def getDefinition(self) -> str:
+    def getAssignment(self) -> str:
         """
-        Definition of the Parameter in GAMS
+        Latest assignment to the Parameter in GAMS
 
         Returns
         -------
@@ -397,26 +399,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> a = gp.Parameter(m, "a", [i], records=[['i1',1],['i2',2]])
         >>> a[i] = a[i] * 5
-        >>> a.getDefinition()
+        >>> a.getAssignment()
         'a(i) = (a(i) * 5);'
 
         """
-        if self._assignment is None:
+        if not hasattr(self, "_assignment"):
             raise ValidationError("Parameter is not defined!")
 
         return self._assignment.getDeclaration()
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Parameter declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()

@@ -19,11 +19,43 @@ class Symbol:
             "A symbol cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
-    def gamsRepr(self: SymbolType):
-        """Representation of the symbol in GAMS"""
+    @property
+    def synchronize(self: SymbolType) -> bool:
+        """
+        Synchronization state of the symbol. If True, the symbol data
+        will be communicated with GAMS. Otherwise, GAMS state will not be updated.
 
-    def getDeclaration(self: SymbolType):
-        """Declaration of the symbol in GAMS"""
+        Returns
+        -------
+        bool
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["i1"])
+        >>> i.synchronize = False
+        >>> i["i2"] = True
+        >>> i.records.uni.tolist()
+        ['i1']
+        >>> i.synchronize = True
+        >>> i.records.uni.tolist()
+        ['i1', 'i2']
+
+        """
+        return self._synchronize
+
+    @synchronize.setter
+    def synchronize(self: SymbolType, value: bool):
+        """
+        If set to True, the current state will be synchronized with GAMS.
+        Else, the symbol will not be synchronized with GAMS.
+        """
+        if value:
+            self._synchronize = True
+            self.container._run()
+        else:
+            self._synchronize = False
 
     def _get_domain_str(self: SymbolType):
         if isinstance(self.domain_forwarding, bool):

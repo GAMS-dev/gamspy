@@ -12,7 +12,7 @@ from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Equation, Parameter, Set, Variable
+    from gamspy import Alias, Equation, Model, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
@@ -368,3 +368,11 @@ def validate_solver_args(solver, options, output):
             "`output` must be of type io.TextIOWrapper but found"
             f" {type(output)}"
         )
+
+
+def validate_model(model: Model):
+    for equation in model.equations:
+        if equation._definition is None:
+            raise ValidationError(
+                f"`{equation.name}` has been declared as an equation but no equation definition was found."
+            )

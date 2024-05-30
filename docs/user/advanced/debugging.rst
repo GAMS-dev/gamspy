@@ -1,8 +1,8 @@
 .. _debugging:
 
-*********
-Debugging
-*********
+*************************
+Debugging and Performance
+*************************
 
 Specifying a Debugging Level
 ----------------------------
@@ -89,7 +89,7 @@ to learn about the meaning of all savepoint values.
     model.solve(options=Options(savepoint=1))
 
 
-Generating a Log File
+Redirecting Output and Generating a Log File
 ---------------------
 
 The output of GAMS can be redirected to standard output or to a file by specifying the handle for the destination.
@@ -124,12 +124,12 @@ You can also redirect the output to a file:
     ....
     ....
     ....
-    with open("mylog.txt", "w") as log:
+    with open("my_output.txt", "w") as log:
         model.solve(output=log)
 
 This code snippets redirects the output of the execution to a file named "mylog.txt".
 
-If you want to have your log file generated in the working directory, ``create_log_file`` argument can be provided. 
+If you want to redirect GAMS logs to a file, ``log_file`` option can be provided. 
 
 .. code-block:: python
 
@@ -143,10 +143,10 @@ If you want to have your log file generated in the working directory, ``create_l
     ....
     ....
     ....
-    model.solve(create_log_file=True)
+    model.solve(options=Options(log_file="my_log_file.txt"))
 
-This code snippet would generate a log file in the specified working directory. This argument is also useful for both
-redirecting the output to standard output and generating the log file at the same time.
+This code snippet would generate a log file in the specified working directory. The log can also be 
+redirected to a file and to the console at the same time.
 
 
 .. code-block:: python
@@ -161,7 +161,7 @@ redirecting the output to standard output and generating the log file at the sam
     ....
     ....
     ....
-    model.solve(output=sys.stdout, create_log_file=True)
+    model.solve(output=sys.stdout, options=Options(log_file="my_log_file.txt", redirect_log_to_stdout=True))
 
 This code snippet would redirect the output to your console as well as saving the log file in your working directory.
 
@@ -334,3 +334,29 @@ argument in solver_options  which turns feasible relaxation on.
 
 There are also facilities of other solvers such as BARON, COPT, Gurobi, Lindo etc. which can be enabled in the same way.
 To see all facilities, refer to the `Solver Manuals <https://gams.com/latest/docs/S_MAIN.html>`_.
+
+Performance Optimization
+------------------------
+
+State synchronization of symbols between GAMS and GAMSPy can be manipulated to improve performance in certain cases.
+GAMSPy by default synchronizes all declared symbols with GAMS state but symbols can be excluded from this synchronization
+on demand by setting ``.synchronize`` property to False. For example, while calculating fibonacci numbers, it is not 
+necessary to synchronize the records of symbol ``f`` with GAMS in every iteration. 
+
+.. code-block:: python
+
+    m = gp.Container()
+    i = gp.Set(m,'i',records=[item for item in range(1000)])
+    f = gp.Parameter(m, 'f', domain=i)
+    f['0'] = 0
+    f['1'] = 1
+
+    f.synchronize = False
+    for n in range(2,1000):
+        f[str(n)] = f[str(n-2)] + f[str(n-1)]
+    f.synchronize = True
+    print(f.records)
+
+By disabling the synchronization of ``f``, the state of ``f`` is synchronized with GAMS only at the end of the loop instead
+of 999 times. 
+

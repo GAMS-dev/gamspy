@@ -4,11 +4,8 @@ import io
 import logging
 import os
 import uuid
-import warnings
 from enum import Enum
 from typing import TYPE_CHECKING
-
-from gams import GamsOptions
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -18,7 +15,6 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
-from gamspy._options import _map_options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -398,55 +394,6 @@ class Model:
 
         return assignment
 
-    def _prepare_gams_options(
-        self,
-        solver: str | None = None,
-        backend: str = "local",
-        options: Options | None = None,
-        solver_options: dict | None = None,
-        output: io.TextIOWrapper | None = None,
-        create_log_file: bool = False,
-    ) -> GamsOptions:
-        gams_options = _map_options(
-            self.container.workspace,
-            backend=backend,
-            options=options,
-            global_options=self.container._options,
-            is_seedable=False,
-            output=output,
-            create_log_file=create_log_file,
-        )
-
-        if solver:
-            gams_options.lp = solver
-            if solver.upper() != gams_options.lp.upper():
-                raise ValidationError(
-                    f"Given solver `{solver}` is not capable of solving given"
-                    f" problem type `{self.problem}`. See capability matrix "
-                    "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
-                    " to choose a suitable solver"
-                )
-
-        if solver_options:
-            if solver is None:
-                raise ValidationError(
-                    "You need to provide a 'solver' to apply solver options."
-                )
-
-            solver_file_name = (
-                self.container.workspace.working_directory
-                + os.sep
-                + f"{solver.lower()}.123"
-            )
-
-            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
-                for key, value in solver_options.items():
-                    solver_file.write(f"{key} {value}\n")
-
-            gams_options.optfile = 123
-
-        return gams_options
-
     def _validate_model(self, equations, problem, sense=None) -> tuple:
         if isinstance(problem, str):
             if problem.upper() not in gp.Problem.values():
@@ -552,8 +499,8 @@ class Model:
             if not equation.name.startswith(Model._generate_prefix):
                 equation._is_dirty = True
 
-            if equation._assignment is not None:
-                variables = equation._assignment._find_variables()
+            if equation._definition is not None:
+                variables = equation._definition._find_variables()
                 for name in variables:
                     if not name.startswith(Model._generate_prefix):
                         self.container[name]._is_dirty = True
@@ -652,7 +599,6 @@ class Model:
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
-        create_log_file: bool = False,
     ) -> pd.DataFrame | None:
         """
         Solves the model with given options.
@@ -673,8 +619,6 @@ class Model:
             Backend to run on
         client : EngineClient, NeosClient, optional
             EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
-        create_log_file : bool
-            Allows creating a log file
 
         Returns
         -------
@@ -692,19 +636,20 @@ class Model:
             In case sense is different than "MIN" or "MAX"
         """
         validation.validate_solver_args(solver, options, output)
+        validation.validate_model(self)
+
+        if options is None:
+            options = self.container._options
+
+        options._set_extra_options(
+            self.container.working_directory,
+            solver=solver,
+            solver_options=solver_options,
+        )
 
         if self._is_frozen:
             self.instance.solve(model_instance_options, output)
             return None
-
-        gams_options = self._prepare_gams_options(
-            solver,
-            backend,
-            options,
-            solver_options,
-            output=output,
-            create_log_file=create_log_file,
-        )
 
         self._append_solve_string()
         self._create_model_attributes()
@@ -712,7 +657,7 @@ class Model:
 
         runner = backend_factory(
             self.container,
-            gams_options,
+            options,
             output,
             backend,
             client,
@@ -781,18 +726,3 @@ class Model:
         model_str += ";"
 
         return model_str
-
-    def getStatement(self) -> str:
-        """
-        Statement of the Model declaration
-
-        Returns
-        -------
-        str
-        """
-        warnings.warn(
-            "getStatement is going to be renamed in 0.12.5. Please use getDeclaration instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.getDeclaration()
