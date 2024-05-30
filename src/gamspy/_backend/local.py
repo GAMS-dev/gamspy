@@ -86,6 +86,8 @@ class Local(backend.Backend):
                 self.container.workspace, self.options, job_name, exception
             )
             exception.message = message
+            self.container.workspace._has_error = True
+            self.container._stop_socket()
             raise exception
         finally:
             self.container._unsaved_statements = []

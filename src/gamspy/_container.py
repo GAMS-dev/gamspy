@@ -189,7 +189,7 @@ class Container(gt.Container):
             response = self._socket.recv(2)
         except Exception as e:
             raise GamspyException(
-                f"There was an error while communicating with GAMS server: {e}"
+                f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
             warnings.warn(
@@ -204,7 +204,7 @@ class Container(gt.Container):
                 response[: response.find(b"\x00")].decode("utf-8")
             )
         except ValueError as e:
-            raise AssertionError(
+            raise GamspyException(
                 "Did not receive any return code from GAMS backend. Check"
                 f" {job_name + '.lst'}."
             ) from e

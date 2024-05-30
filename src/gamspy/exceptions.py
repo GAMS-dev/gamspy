@@ -12,11 +12,9 @@ class GamspyException(Exception):
     """Plain Gamspy exception."""
 
     def __init__(self, message: str, return_code: int | None = None) -> None:
+        super().__init__(message)
         self.message = message
         self.rc = return_code
-
-    def __str__(self) -> str:
-        return self.message
 
 
 class NeosClientException(Exception):

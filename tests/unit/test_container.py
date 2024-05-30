@@ -452,7 +452,7 @@ Equation e;
         m.read("test.gdx", load_records=False)
         self.assertIsNone(m["a"].records, None)
 
-    def _test_debugging_level(self):
+    def test_debugging_level(self):
         from gamspy.math import sqrt
 
         with self.assertRaises(ValidationError):

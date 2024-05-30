@@ -140,6 +140,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         # gamspy attributes
         obj._is_dirty = False
         obj._is_frozen = False
+        obj._definition = None
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._synchronize = True

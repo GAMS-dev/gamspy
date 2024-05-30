@@ -356,7 +356,7 @@ class Model:
                 variable == 0,
             )
             self.container._add_statement(statement)
-            equation._assignment = statement
+            equation._definition = statement
             equation.modified = False
             equation._is_dirty = False
             variable.modified = False
@@ -384,7 +384,7 @@ class Model:
                 assignment,
             )
             self.container._add_statement(statement)
-            equation._assignment = statement
+            equation._definition = statement
             equation.modified = False
             equation._is_dirty = False
             variable.modified = False

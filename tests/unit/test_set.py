@@ -277,7 +277,7 @@ class SetSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             j6[j1, j2] = j5[j1, j2, j3]
 
-    def _test_domain_verification(self):
+    def test_domain_verification(self):
         m = Container(
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )

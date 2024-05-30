@@ -40,7 +40,7 @@ class DomainSuite(unittest.TestCase):
         )
         self.assertEqual(i.toList(), ["i1"])
 
-    def _test_domain_validation(self):
+    def test_domain_validation(self):
         times = Set(self.m, "times", records=["release", "duration"])
         job = Set(self.m, "job", records=["job1", "job2"])
         data = Parameter(self.m, "data", domain=[times, job])
