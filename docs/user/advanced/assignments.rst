@@ -25,8 +25,8 @@ for a conditional expression is: ::
     term.where[logical_condition]
 
 Here, ``term`` can be a number, a (indexed) symbol, and also a complex expression. 
-The ``where`` operator may be read as '*under the condition that the following 
-``logical_condition`` evaluates to TRUE*'.
+The ``where`` operator may be read as '*under the condition that the following* 
+``logical_condition`` *evaluates to TRUE*'.
 
 Consider the following simple condition, where ``u[i]``, ``s[i]`` and ``v[i]`` are 
 parameters with index ``i``: ::

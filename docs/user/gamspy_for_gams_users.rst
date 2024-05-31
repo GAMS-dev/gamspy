@@ -4,7 +4,7 @@
 GAMSPy for GAMS Users
 *********************
 
-This document is for users who are already GAMS users and interested in translating their
+This document is for GAMS users who are interested in translating their
 existing GAMS models to GAMSPy. 
 
 Translating Symbols

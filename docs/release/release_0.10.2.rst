@@ -3,7 +3,7 @@ GAMSPy 0.10.2
 
 - General
 
-  - Write and read only dirty symbols instead of all symbols to improve performance.
+  - Read and write only dirty symbols instead of all symbols to improve performance.
   - Make gdx file names thread safe by using uuid.
 
 - Documentation

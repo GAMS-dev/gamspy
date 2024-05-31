@@ -18,7 +18,7 @@ GAMSPy 0.12.1
 
 - Testing
 
-  - Replace cta PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
+  - Replace PandasExcelReader and PandasExcelWriter with new ExcelReader and ExcelWriter from GAMS Connect correspondingly. 
   - Add a new model (Nurses) to the model library and the Notebook examples.
   - Add an AC optimal power flow (ACOPF) model to the model library.
   - Add a test to verify the generated string for power where the exponent is 0.5.
