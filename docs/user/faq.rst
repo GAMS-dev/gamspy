@@ -201,9 +201,9 @@ Some of the features that have not been fully implemented in GAMSPy include:
     challenging. Efforts are being made to provide better ways to communicate such constructs 
     to the solver for enhanced compatibility.
 3. External equations:
-    GAMSPy does not yet fully support `external equations <https://www.gams.com/45/docs/UG_ExternalEquations.html?search=external%20equations>`_.
+    GAMSPy does not yet fully support `external equations <https://www.gams.com/latest/docs/UG_ExternalEquations.html?search=external%20equations>`_.
 4. Extrinsic functions:
-    Some `extrinsic functions <https://www.gams.com/45/docs/UG_ExtrinsicFunctions.html?search=extrinsic>`_ 
+    Some `extrinsic functions <https://www.gams.com/latest/docs/UG_ExtrinsicFunctions.html?search=extrinsic>`_ 
     that are part of the GAMS language may not be fully accessible in GAMSPy. 
 
 It's important to emphasize that the GAMSPy team is actively working on expanding the feature 

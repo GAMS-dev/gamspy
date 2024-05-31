@@ -4,7 +4,7 @@ GAMSPy 0.10.3
 - General
 
   - Allow creating log file in working directory.
-  - Forbid extra arguments for pydantic models (Options, EngineCofig)
+  - Forbid extra arguments for pydantic models (Options, EngineConfig)
 
 - Documentation
 

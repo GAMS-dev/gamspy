@@ -14,12 +14,12 @@ Introduction
 One very important principle will motivate all our discussions on data:
 
 .. note::
-    Data should be entered in its most basic form and each data item should be entered 
-    only once.
+    Data should be entered in its simplest form, and each data item should only be 
+    entered once.
 
-There are two reasons for adopting this principle. Numbers are almost certain to change, 
-and when they do, we want to be able to make the process of changing them as easy and 
-safe as possible. We also want to make our model easy for others to read and understand. 
+This principle is adopted for two main reasons: Numbers are likely to change, and when 
+they do, it's important to make the process of updating them as easy and safe as 
+possible. We also want to make our model easy for others to read and understand. 
 Keeping the amount of data as small as possible will certainly help. The reader should 
 always be kept aware of all the assumptions made during data manipulation in order to be 
 able to reproduce the results of a study.
@@ -31,7 +31,7 @@ in scalar and in list oriented format.
 Scalars
 =========
 
-A GAMSPy parameter of dimensionality zero is called *scalar*. This means that there are 
+A GAMSPy parameter with zero dimensionality is called a *scalar*. This means that there are 
 no associated sets, so there is exactly one number associated with the parameter: ::
 
     from gamspy import Container, Parameter
@@ -55,8 +55,8 @@ assignment statement could be used to provide the value: ::
 Parameters
 ==========
 
-The parameter format is used to enter list oriented data which can be indexed over one 
-or several sets.
+The parameter format is used to enter list-oriented data, which can be indexed over 
+one or more sets.
 
 The Syntax
 ----------
@@ -67,12 +67,12 @@ The following example illustrates the parameter statement ::
 
     m = Container()
 
-    j = Set(m, "j", records = ["mexico-df", "monterrey", "guadalaja"], 
+    j = Set(m, "j", records = ["mexico-df", "monterrey", "guadalajara"], 
             description = "markets")
     
     dd = Parameter(m, name = "dd", domain = j, description = "distribution of demand",
                    records = [["mexico-df", 55], 
-                              ["guadalaja", 15]])
+                              ["guadalajara", 15]])
 
 The class :meth:`gamspy.Parameter` indicates that this is a parameter statement and 
 ``name = "dd"`` is the internal name of the parameter in GAMSPy, it is an *identifier*.
@@ -94,7 +94,7 @@ Besides using the :meth:`gamspy.Parameter` class directly, one can also facilita
 
     dd = AddParameter("dd", domain = j, description = "distribution of demand",
                       records = [["mexico-df", 55], 
-                                 ["guadalaja", 15]])
+                                 ["guadalajara", 15]])
 
 
 Parameter Data for Higher Dimensions
