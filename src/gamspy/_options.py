@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import logging
 import os
 from pathlib import Path
@@ -114,7 +115,6 @@ class Options(BaseModel):
     relative_optimality_gap: Optional[float] = None
     profile: Optional[int] = None
     profile_tolerance: Optional[float] = None
-    redirect_log_to_stdout: Optional[bool] = False
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
@@ -130,7 +130,7 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def _get_gams_compatible_options(self) -> dict:
+    def _get_gams_compatible_options(self, output: io.TextIOWrapper | None) -> dict:
         gamspy_options = self.model_dump(exclude_none=True)
         if "allow_suffix_in_equation" in gamspy_options:
             allows_suffix = gamspy_options["allow_suffix_in_equation"]
@@ -180,12 +180,12 @@ class Options(BaseModel):
         gams_options["traceopt"] = 3
 
         if self.log_file:
-            if self.redirect_log_to_stdout:
+            if output is not None:
                 gams_options["_logoption"] = 4
             else:
                 gams_options["_logoption"] = 2
         else:
-            if self.redirect_log_to_stdout:
+            if output is not None:
                 gams_options["_logoption"] = 3
             else:
                 gams_options["_logoption"] = 0
@@ -222,7 +222,7 @@ class Options(BaseModel):
         self._extra_options = extra_options
 
     def _get_gams_options(
-        self, workspace: GamsWorkspace, problem: Problem | None = None
+        self, workspace: GamsWorkspace, problem: Problem | None = None, output: io.TextIOWrapper | None = None,
     ) -> GamsOptions:
         gams_options = GamsOptions(workspace)
 
@@ -243,7 +243,7 @@ class Options(BaseModel):
         ):
             gams_options.optfile = self._extra_options["optfile"]
 
-        gams_options_dict = self._get_gams_compatible_options()
+        gams_options_dict = self._get_gams_compatible_options(output)
         for key, value in gams_options_dict.items():
             setattr(gams_options, key, value)
 

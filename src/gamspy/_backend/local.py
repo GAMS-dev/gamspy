@@ -28,7 +28,7 @@ class Local(backend.Backend):
             self.options = options._get_gams_options(self.container.workspace)
         else:
             self.options = options._get_gams_options(
-                self.container.workspace, model.problem
+                self.container.workspace, model.problem, output
             )
         self.options.license = self.container._license_path
         self.options.trace = os.path.join(
@@ -76,8 +76,7 @@ class Local(backend.Backend):
 
         try:
             self.container._job = job_name
-            self.container._process.stdout = self.output
-            self.container._send_job(job_name, pf_file)
+            self.container._send_job(job_name, pf_file, self.output)
 
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()

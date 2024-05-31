@@ -152,7 +152,7 @@ class OptionsSuite(unittest.TestCase):
             allow_suffix_in_limited_variables=False,
             merge_strategy="replace",
         )
-        gams_options = options._get_gams_compatible_options()
+        gams_options = options._get_gams_compatible_options(output=None)
         self.assertTrue(gams_options["suffixalgebravars"] == "off")
         self.assertTrue(gams_options["suffixdlvars"] == "off")
         self.assertTrue(gams_options["solveopt"] == 0)

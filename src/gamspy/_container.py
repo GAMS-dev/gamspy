@@ -8,7 +8,6 @@ import subprocess
 import sys
 import time
 import uuid
-import warnings
 from contextlib import closing
 from typing import TYPE_CHECKING
 
@@ -27,6 +26,7 @@ from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import io
     from typing import Any, Literal
 
     import pandas as pd
@@ -73,6 +73,8 @@ def open_connection(system_directory: str):
             f"incrementalMode={address[1]}",
         ],
         text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
 
     start = time.time()
@@ -183,21 +185,31 @@ class Container(gt.Container):
             self.read(load_from)
             self._run()
 
-    def _send_job(self, job_name: str, pf_file: str):
+    def _send_job(
+        self,
+        job_name: str,
+        pf_file: str,
+        output: io.TextIOWrapper | None = None,
+    ):
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
+
+            if output is not None:
+                while True:
+                    data = self._process.stdout.readline()
+                    if data.startswith("--- Job ") and "elapsed" in data:
+                        output.write(data)
+                        break
+
+                    output.write(data)
+
             response = self._socket.recv(2)
         except Exception as e:
             raise GamspyException(
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
-            warnings.warn(
-                "Keyboard interrupt was received. Shutting down...",
-                stacklevel=2,
-            )
-            raise
-
+            self._process.send_signal(2)  # Send SIGINT
         try:
             return_code = int(
                 response[: response.find(b"\x00")].decode("utf-8")
