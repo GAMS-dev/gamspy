@@ -6,7 +6,8 @@ GAMS MIRO
 
 With `GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration), you can interact 
 with the underlying GAMSPy model, quickly create scenarios, compare results and visualize your data with a variety 
-of graphical output options.
+of graphical output options. Please refer to the `GAMS MIRO documentation <https://gams.com/miro/>`_ for more 
+information and insights.
 
 GAMSPy - GAMS MIRO Integration
 ==============================

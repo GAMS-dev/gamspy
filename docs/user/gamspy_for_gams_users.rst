@@ -221,7 +221,7 @@ Mapping:
 Translating GAMS Macros
 -----------------------
 
-`Macros in GAMS <https://www.gams.com/45/docs/UG_DollarControlOptions.html#UG_DollarControl_MacrosInGAMS>`_ can be translated to GAMSPy as functions.
+`Macros in GAMS <https://www.gams.com/latest/docs/UG_DollarControlOptions.html#UG_DollarControl_MacrosInGAMS>`_ can be translated to GAMSPy as functions.
 The following example shows how GAMS Macro `reciprocal` can be defined as a function in Python to be used in GAMSPy:
 
 .. tab-set-code::

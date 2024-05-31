@@ -10,7 +10,7 @@ Card and Ord
 
 The ``Card`` and ``Ord`` operators help to formulate position related
 expressions on sets which hold labels that do not have a numerical
-representation. Both operators ``Card`` and ``Ord`` return integer values
+representation. Both operators, ``Card`` and ``Ord``, return integer values
 when applied to sets. While the integer values returned do not represent
 the numerical value of the label, they can be used for the same purpose.
 

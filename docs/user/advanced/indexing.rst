@@ -9,7 +9,7 @@ Indexing
 ********
 
 GAMSPy supports Numpy-like indexing including the usage of `Slices <https://docs.python.org/3/library/functions.html?highlight=slice#slice>`_ 
-and `Ellipsis <https://docs.python.org/3/library/constants.html#Ellipsis>`_. Ellipsis expands to the number of `:` objects needed for the 
+and `Ellipsis <https://docs.python.org/3/library/constants.html#Ellipsis>`_. An ellipsis expands to the number of colon (`:`) objects needed for the 
 selection tuple to index all dimensions. There may only be a single ellipsis present. 
 
 Usage of Slice
@@ -25,7 +25,7 @@ The equivalent representation of the example above with slices would be: ::
     c = gp.Parameter(m, name="c", domain=[i, j])
     c[:, :] = 90 * d[:, :] / 1000
 
-Each `:` refers to the domain item in that index for the symbol. In this example, the first `:` is `i` and the second `:` is `j`. 
+Each `:` refers to the corresponding domain item in that index for the symbol. In this example, the first `:` is `i` and the second `:` is `j`. 
 Hence, it is equivalent to: ::
 
     import gamspy as gp
@@ -49,7 +49,7 @@ The equivalent representation of the example above with ellipsis would be: ::
     c = gp.Parameter(m, name="c", domain=[i, j])
     c[...] = 90 * d[...] / 1000
 
-is also equivalent to: ::
+This is also equivalent to: ::
 
     import gamspy as gp
     m = gp.Container()

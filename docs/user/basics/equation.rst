@@ -38,8 +38,8 @@ or variable, in that it requires a container, an optional name, a domain (if app
 and an optional description. For a complete list of available arguments, see
 the :meth:`Equation reference<gamspy.Equation>`.
 
-An example for equation declarations adapted from :ref:`trnsport.py <trnsport>`
-is shown below for illustration::
+Below is an example of equation declarations adapted from :ref:`trnsport.py <trnsport>` 
+for illustration:::
 
     from gamspy import Container, Set, Equation
     m = Container()
@@ -64,7 +64,7 @@ is shown below for illustration::
 First a ``gamspy.Container`` is created and two sets ``i`` and ``j`` are added.
 Those will be used as domain for the equations about to be declared.
 Two instances of ``gamspy.Equation`` are created and assigned to Python
-variables for later use. In this case both equations are one dimensional
+variables for later use. In this case both equations are one dimensional,
 and use the sets ``i`` (``supply``) and ``j`` (``demand``) as domain.
 In typical circumstances an indexed equation declaration implies that a block
 of constraints will be generated. For example, equation ``supply`` implies that

@@ -8,7 +8,7 @@
 Lag and Lead
 ************
 
-``Lag`` and ``Lead`` operators can be used on ordered sets only via the methods
+``Lag`` and ``Lead`` operators can be used on ordered sets only, via the methods
 ``lag()`` and ``lead()``. They are used to relate the current member of an
 ordered set to the previous or next member of the set. Both ``lag()`` and
 ``lead()`` require the argument ``n`` indicating the element offset to be
