@@ -373,6 +373,19 @@ class EquationSuite(unittest.TestCase):
             "assign_1(i,j) .. a(i,j) =e= (b(i,j) + c(i,j));",
         )
 
+        m = Container()
+        k = Set(m, "k")
+
+        a = Parameter(m, name="a")
+        b = Variable(m, name="b", domain=[k])
+        c = Parameter(m, name="c", domain=[k])
+        assign_1 = Equation(m, name="assign_1")
+
+        assign_1[...] = a == Sum(k, b[k] * c[k])
+        self.assertEqual(
+            assign_1.getDefinition(), "assign_1 .. a =e= sum(k,(b(k) * c(k)));"
+        )
+
     def test_equation_attributes(self):
         pi = Equation(self.m, "pi")
 
