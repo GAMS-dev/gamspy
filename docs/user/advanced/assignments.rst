@@ -25,8 +25,8 @@ for a conditional expression is: ::
     term.where[logical_condition]
 
 Here, ``term`` can be a number, a (indexed) symbol, and also a complex expression. 
-The ``where`` operator may be read as under the condition that the following 
-``logical_condition`` evaluates to TRUE.
+The ``where`` operator may be read as '*under the condition that the following 
+``logical_condition`` evaluates to TRUE*'.
 
 Consider the following simple condition, where ``u[i]``, ``s[i]`` and ``v[i]`` are 
 parameters with index ``i``: ::
@@ -35,8 +35,8 @@ parameters with index ``i``: ::
 
 Note that the ``term`` is the parameter ``u[i]`` and the ``logical condition`` is 
 the expression ``~ s[i]``. If the condition is not satisfied, no assignment is made. 
-To make it clear, this conditional assignment may be read as: '*given that s[i] is 
-not existing, u[i] equals v[i]*'.
+To make it clear, this conditional assignment may be read as: '*given that s[i] does 
+not exist, u[i] equals v[i]*'.
 
 Logical conditions may take various forms, they are introduced in the next section. 
 Conditional expressions may be used in the context of assignments, indexed 
@@ -47,13 +47,13 @@ operations and equations. These topics are covered in later sections of this cha
     However, variable attributes are allowed.
 
 .. note::
-    ``where`` operator is equivalent to the dollar condition $ in GAMS.
+    The ``where`` operator is equivalent to the dollar condition ``$`` in GAMS.
 
 
 Logical Conditions
 ===================
 
-Logical conditions are special expressions that evaluate to a value of either TRUE or 
+Logical conditions are special expressions that evaluate to either TRUE or 
 FALSE. Logical conditions may be numerical expressions and numerical relations and 
 they may refer to set membership. In the following subsections this is shown in the 
 context of simple conditional assignments with the ``where`` operator on the 
@@ -149,7 +149,7 @@ read more `here <https://www.w3schools.com/python/gloss_python_bitwise_operators
 way to construct complex logical conditions is by nesting them. For details, see subsection 
 `Nested Conditions <nested-conditions>`_ below.
 
-The following somewhat artificial examples serve as illustration. ::
+The following somewhat artificial examples serve as illustrations. ::
 
     from gamspy import Container, Set, Parameter
     m = Container()
@@ -257,7 +257,7 @@ for set membership as logical condition. ::
 Note that the set ``j`` is a subset of the set ``i`` and that the parameter ``t`` is declared 
 but not defined. The conditional expression ``t[i].where[j[i]]`` in the last line restricts 
 the assignment to the members of the subset ``j`` since only they satisfy the condition 
-``j[i]``. The values for ``t['i4']`` and ``t['i5']`` remain unchanged. In this case this 
+``j[i]``. The values for ``t['i4']`` and ``t['i5']`` remain unchanged. In this case, this 
 means that they are zero (by default). Note that there is an alternative formulation for 
 this type of conditional assignment; for details see subsection 
 `Filtering Sets in Assignments <filtering-sets-in-assignments>`_ below.
@@ -352,7 +352,7 @@ Consider the following example: ::
 These two complex logical conditions are equivalent. However, the parentheses make the second 
 expression easier to understand.
 
-Some simple examples of complex logical conditions, their numerical values and their logical 
+Some simple examples of complex logical conditions, their numerical values, and their logical 
 values are given below.
 
 =============================  ================  ==============
@@ -378,7 +378,7 @@ An alternative way to model complex logical conditions is by nesting them. The s
 
 Note that in nested conditions all succeeding expressions after the ``where`` operator must 
 be enclosed in parentheses. The nested expression is equivalent to the following conditional 
-expression that uses the logical operator ``&`` instead of the nesting: ::
+expression that uses the logical operator ``&`` instead of nesting: ::
 
     term.where[logical_condition1 & logical_condition2 & ...]
 

@@ -4,16 +4,20 @@
 GAMS MIRO
 *********
 
-With `GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration), you can interact 
-with the underlying GAMSPy model, quickly create scenarios, compare results and visualize your data with a variety 
-of graphical output options. Please refer to the `GAMS MIRO documentation <https://gams.com/miro/>`_ for more 
-information and insights.
+`GAMS MIRO <https://gams.com/sales/miro_facts/>`_ (Model Interface with Rapid Orchestration) is a deployment 
+environment that enables you to turn your GAMSPy model into fully-fledged end-user applications that are easy 
+to distribute. You can interact with the underlying GAMSPy model, quickly create scenarios, compare results 
+and visualize your data with a variety of graphical output options. 
+
+This section provides a brief overview of the relevant commands for using GAMS MIRO with GAMSPy.  
+Please refer to the `GAMS MIRO documentation <https://gams.com/miro/>`_ for more information and insights.
 
 GAMSPy - GAMS MIRO Integration
 ==============================
 
-All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your MIRO input and output symbols. 
-For example, the following code snippet declares symbol `d` as a MIRO input and symbol `x` as a MIRO output: ::
+All you need to do to use your GAMSPy models in GAMS MIRO is to annotate your MIRO input and output symbols 
+that should be visible in the application. For example, the following code snippet declares symbol `d` as a 
+MIRO input and symbol `x` as a MIRO output: ::
 
     ...
     ...
@@ -35,16 +39,19 @@ command-line utility: ::
 
     gamspy run miro --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
-This initializes the default values for your GAMS MIRO app and creates the necessary data contract. Then, it spawns 
-a GAMS MIRO app with base mode by default. To run the MIRO configuration mode instead, add the `--mode=config` argument: ::
+This initializes the default values for your GAMS MIRO app, creates the necessary data contract and spawns 
+the application. To run the MIRO `Configuration mode <https://www.gams.com/miro/customize.html>`_, add the 
+`--mode=config` argument: ::
 
     gamspy run miro --mode="config" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
-To deploy a GAMSPy MIRO app (create a `.miroapp` file), run with `--mode=deploy`: ::
+To `deploy <https://www.gams.com/miro/deployment.html>`_ a GAMSPy MIRO app (create a `.miroapp` file), run 
+with `--mode=deploy`: ::
 
     gamspy run miro --mode="deploy" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
-The MIRO installation path can also be set as an environment variable with the name "MIRO_PATH" (e.g. in .bashrc), so that it does not have to be specified for each run. ::
+The MIRO installation path can also be set as an environment variable with the name "MIRO_PATH" (e.g. in .bashrc), 
+so that it does not have to be specified for each run. ::
 
     gamspy run miro --model <path_to_your_model>
 

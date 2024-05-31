@@ -8,12 +8,12 @@
 Indexing
 ********
 
-GAMSPy supports Numpy-like indexing including the usage of `Slices <https://docs.python.org/3/library/functions.html?highlight=slice#slice>`_ 
+GAMSPy supports NumPy-like indexing including the usage of `Slices <https://docs.python.org/3/library/functions.html?highlight=slice#slice>`_ 
 and `Ellipsis <https://docs.python.org/3/library/constants.html#Ellipsis>`_. An ellipsis expands to the number of colon (`:`) objects needed for the 
 selection tuple to index all dimensions. There may only be a single ellipsis present. 
 
-Usage of Slice
-==============
+Usage of Slices
+===============
 
 The equivalent representation of the example above with slices would be: ::
 
