@@ -34,6 +34,10 @@ class Local(backend.Backend):
         self.options.trace = os.path.join(
             self.container.workspace.working_directory, "trace.txt"
         )
+        if self.container._network_license:
+            self.options._netlicense = os.path.join(
+                self.options._scrdir, "gamslice.dat"
+            )
         self.output = output
         self.model = model
 

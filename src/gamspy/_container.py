@@ -57,6 +57,20 @@ debugging_map = {
 TIMEOUT = 10
 
 
+def is_network_license() -> bool:
+    base_directory = utils._get_gamspy_base_directory()
+    user_license_path = os.path.join(base_directory, "user_license.txt")
+    if not os.path.exists(user_license_path):
+        return False
+
+    with open(user_license_path) as file:
+        license = file.readline()
+
+        if license.startswith("network"):
+            return True
+        
+    return False
+
 def find_free_address():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("127.0.0.1", 0))
@@ -132,6 +146,7 @@ class Container(gt.Container):
         options: Options | None = None,
         miro_protect: bool = True,
     ):
+        self._network_license = is_network_license()
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
