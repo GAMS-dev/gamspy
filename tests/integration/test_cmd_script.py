@@ -1,37 +1,30 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 import unittest
-from pathlib import Path
 
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
 
 
 class CmdSuite(unittest.TestCase):
     def test_install_license(self):
-        this_folder = str(Path(__file__).parent)
         gamspy_base_directory = utils._get_gamspy_base_directory()
-        license_path = os.path.join(gamspy_base_directory, "user_license.txt")
-
-        old_license_path = os.path.join(os.getcwd(), "tmp", "old_license.txt")
-        if os.path.exists(license_path):
-            shutil.copy(license_path, old_license_path)
-
-        license = "dummy license"
-
-        with open(
-            os.path.join(this_folder, "my_license.txt"), "w"
-        ) as license_file:
-            license_file.write(license)
 
         _ = subprocess.run(
             [
                 "gamspy",
                 "install",
                 "license",
-                os.path.join(this_folder, "my_license.txt"),
+                os.environ["LOCAL07"],
             ],
             check=True,
         )
@@ -42,7 +35,24 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
-        with self.assertRaises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                os.environ["LOCAL07"],
+                "--node-specific",
+            ],
+            check=True,
+        )
+
+        self.assertTrue(
+            os.path.exists(
+                os.path.join(gamspy_base_directory, "node_info.json")
+            )
+        )
+
+        with self.assertRaises(ValidationError):
             _ = subprocess.run(
                 ["gamspy", "install", "license", "blabla"],
                 check=True,
@@ -50,23 +60,8 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        if os.path.exists(old_license_path):
-            subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    old_license_path,
-                ]
-            )
-
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
-        license_path = os.path.join(gamspy_base_directory, "user_license.txt")
-        old_license_path = os.path.join(os.getcwd(), "tmp", "old_license.txt")
-
-        if os.path.exists(license_path):
-            shutil.copy(license_path, old_license_path)
 
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
@@ -79,15 +74,15 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
-        if os.path.exists(old_license_path):
-            subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    old_license_path,
-                ]
-            )
+        # Recover the license
+        subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                os.environ["LOCAL07"],
+            ]
+        )
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):

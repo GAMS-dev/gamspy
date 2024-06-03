@@ -151,6 +151,11 @@ def get_args():
             " uninstall and update gamspy installed solver list."
         ),
     )
+    install_group.add_argument(
+        "--node-specific",
+        action="store_true",
+        help="Whether the license is node-specific license.",
+    )
 
     list_group = parser.add_argument_group(
         "list solvers", description="`gamspy list solvers` options"
@@ -163,12 +168,35 @@ def get_args():
 def install_license(args: argparse.Namespace):
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
-    if args.name is None or not os.path.exists(args.name):
-        raise ValidationError(
-            f'Given license path ("{args.name}") is not valid.'
+    command = [os.path.join(gamspy_base_dir, "gamsgetkey"), args.name]
+
+    if args.node_specific:
+        command.append("-i")
+        process = subprocess.run(
+            os.path.join(gamspy_base_dir, "gamsprobe"),
+            text=True,
+            capture_output=True,
         )
 
-    shutil.copy(args.name, gamspy_base_dir + os.sep + "user_license.txt")
+        if process.returncode:
+            raise ValidationError(process.stderr)
+
+        node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
+        with open(node_info_path, "w") as file:
+            file.write(process.stdout)
+
+        command.append(node_info_path)
+
+    process = subprocess.run(
+        command,
+        text=True,
+        capture_output=True,
+    )
+    if process.returncode:
+        raise ValidationError(process.stderr)
+
+    with open(os.path.join(gamspy_base_dir, "user_license.txt"), "w") as file:
+        file.write(process.stdout)
 
 
 def uninstall_license():
