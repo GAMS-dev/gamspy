@@ -54,7 +54,7 @@ debugging_map = {
     "keep": DebugLevel.KeepFiles,
 }
 
-TIMEOUT = 10
+TIMEOUT = 30
 
 
 def is_network_license() -> bool:
@@ -68,8 +68,9 @@ def is_network_license() -> bool:
 
         if license.startswith("network"):
             return True
-        
+
     return False
+
 
 def find_free_address():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
@@ -78,13 +79,19 @@ def find_free_address():
         return s.getsockname()
 
 
-def open_connection(system_directory: str):
+def open_connection(system_directory: str, working_directory: str):
+    license_path = utils._get_license_path(system_directory)
+    process_directory = os.path.join(working_directory, "225a")
+    os.makedirs(process_directory, exist_ok=True)
+
     address = find_free_address()
     process = subprocess.Popen(
         [
             os.path.join(system_directory, "gams"),
             "dummy_name",
             f"incrementalMode={address[1]}",
+            f"procdir={process_directory}",
+            f"license={license_path}",
         ],
         text=True,
         stdout=subprocess.PIPE,
@@ -167,8 +174,6 @@ class Container(gt.Container):
 
         super().__init__(system_directory=system_directory)
 
-        self._license_path = utils._get_license_path(self.system_directory)
-
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
@@ -194,7 +199,9 @@ class Container(gt.Container):
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
 
-        self._socket, self._process = open_connection(self.system_directory)
+        self._socket, self._process = open_connection(
+            self.system_directory, self.working_directory
+        )
 
         if load_from is not None:
             self.read(load_from)

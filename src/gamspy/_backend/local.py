@@ -30,14 +30,9 @@ class Local(backend.Backend):
             self.options = options._get_gams_options(
                 self.container.workspace, model.problem, output
             )
-        self.options.license = self.container._license_path
         self.options.trace = os.path.join(
             self.container.workspace.working_directory, "trace.txt"
         )
-        if self.container._network_license:
-            self.options._netlicense = os.path.join(
-                self.options._scrdir, "gamslice.dat"
-            )
         self.output = output
         self.model = model
 
@@ -69,9 +64,12 @@ class Local(backend.Backend):
         self.options._sysdir = utils._get_gamspy_base_directory()
 
         scrdir = os.path.join(self.container.working_directory, "225a")
-        os.makedirs(scrdir, exist_ok=True)
         self.options._scrdir = scrdir
         self.options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        if self.container._network_license:
+            self.options._netlicense = os.path.join(
+                self.options._scrdir, "gamslice.dat"
+            )
 
         pf_file = os.path.join(
             self.container.working_directory, job_name + ".pf"
