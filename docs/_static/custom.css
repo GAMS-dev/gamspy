@@ -16,3 +16,14 @@
   margin-left: 15px;
   vertical-align: middle;
 }
+
+.admonition-information {
+    background-color: #e0f7fa;  /* Light blue background */
+    border-left: 3px solid #007acc;  /* Blue border on the left */
+    padding: 10px;
+    margin: 10px 0;
+}
+.admonition-information .admonition-title {
+    color: #007acc;  /* Blue title text */
+    font-weight: bold;
+}
