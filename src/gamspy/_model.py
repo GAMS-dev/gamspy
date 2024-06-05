@@ -475,7 +475,7 @@ class Model:
                     )
                 elif status in ERROR_STATUS:
                     raise GamspyException(
-                        f"The model ({self.name}) was not solved successfully!"
+                        f"The model `{self.name}` was not solved successfully!"
                         f" Solve status: {status.name}. "
                         "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus",
                         status.value,

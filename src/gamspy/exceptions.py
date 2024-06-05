@@ -119,11 +119,9 @@ def customize_exception(
     workspace: GamsWorkspace,
     options: GamsOptions,
     job: str,
-    exception: GamsExceptionExecution,
+    exception: GamspyException,
 ) -> str:
-    error_message = ""
     if not options._writeoutput:
-        exception.value = error_message
         return exception
 
     header = "=" * 14
@@ -154,14 +152,14 @@ def customize_exception(
                 while (
                     any(
                         "****" in err_line
-                        for err_line in all_lines[temp_index : temp_index + 5]
+                        for err_line in all_lines[temp_index : temp_index + 10]
                     )
                     and temp_index < len(all_lines) - 10
                 ):
-                    for offset in range(5):
+                    for offset in range(10):
                         error_lines.append(all_lines[temp_index + offset])
 
-                    temp_index += 5
+                    temp_index += 10
 
                 error_message = message_format.format(
                     message="".join(error_lines),

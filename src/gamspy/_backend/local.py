@@ -87,7 +87,8 @@ class Local(backend.Backend):
             message = customize_exception(
                 self.container.workspace, self.options, job_name, exception
             )
-            exception.message = message
+
+            exception.args = (exception.message + message,)
             raise exception
         finally:
             self.container._unsaved_statements = []
