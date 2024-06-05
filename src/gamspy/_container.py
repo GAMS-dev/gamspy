@@ -486,7 +486,7 @@ class Container(gt.Container):
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
         runner = backend_factory(self, self._options)
-        summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
+        summary = runner.solve(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
