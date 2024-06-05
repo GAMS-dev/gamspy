@@ -32,3 +32,9 @@ details are found in :ref:`reference`.
    model_library
    gamspy_for_gams_users
    license
+
+.. toctree::
+   :caption: Machine Learning
+   :maxdepth: 1
+
+   ml/ml

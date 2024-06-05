@@ -22,8 +22,6 @@ alone. Here's why GAMSPy stands out as the ultimate choice:
 
 * GAMSPy generates the equations and variables in GAMS not in Python giving GAMSPy a speed advantage
 
-
-
 .. toctree::
    :maxdepth: 1
 
