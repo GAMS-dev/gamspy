@@ -359,6 +359,33 @@ class EquationSuite(unittest.TestCase):
             " (ord(t2) > (ord(t1) - pMinDown(g,t1)))),vStart(g,t2)) =l= 1;",
         )
 
+        m = Container()
+        i = Set(m, "i")
+        j = Set(m, "j")
+
+        a = Parameter(m, name="a", domain=[i, j])
+        b = Parameter(m, name="b", domain=[i, j])
+        c = Variable(m, name="c", domain=[i, j])
+        assign_1 = Equation(m, name="assign_1", domain=[i, j])
+        assign_1[...] = a[i, j] == b[i, j] + c[i, j]
+        self.assertEqual(
+            assign_1.getDefinition(),
+            "assign_1(i,j) .. a(i,j) =e= (b(i,j) + c(i,j));",
+        )
+
+        m = Container()
+        k = Set(m, "k")
+
+        a = Parameter(m, name="a")
+        b = Variable(m, name="b", domain=[k])
+        c = Parameter(m, name="c", domain=[k])
+        assign_1 = Equation(m, name="assign_1")
+
+        assign_1[...] = a == Sum(k, b[k] * c[k])
+        self.assertEqual(
+            assign_1.getDefinition(), "assign_1 .. a =e= sum(k,(b(k) * c(k)));"
+        )
+
     def test_equation_attributes(self):
         pi = Equation(self.m, "pi")
 

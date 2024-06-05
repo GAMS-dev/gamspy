@@ -171,7 +171,7 @@ class MagicsSuite(unittest.TestCase):
         # E
         # Parameter == Variable, Variable == Parameter
         op1 = b[i] == x[i]
-        self.assertEqual(op1.gamsRepr(), "(b(i) eq x(i))")
+        self.assertEqual(op1.gamsRepr(), "b(i) =e= x(i)")
         op2 = x[i] == b[i]
         self.assertEqual(op2.gamsRepr(), "x(i) =e= b(i)")
         op3 = b[i] == b[i]
