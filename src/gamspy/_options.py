@@ -4,9 +4,9 @@ import io
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
-from gams import GamsOptions, GamsWorkspace, SymbolUpdateType
+from gams import SymbolUpdateType
 from pydantic import BaseModel
 
 import gamspy.utils as utils
