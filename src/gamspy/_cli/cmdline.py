@@ -13,60 +13,6 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry, remove_solver_entry
 
-SOLVER_CAPABILITIES = {
-    "BARON": [
-        "LP",
-        "MIP",
-        "NLP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-        "GLOBAL",
-    ],
-    "CBC": ["LP", "MIP"],
-    "CONOPT3": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "CONOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "COPT": ["LP", "MIP", "QCP", "MIQCP"],
-    "CPLEX": ["LP", "MIP", "QCP", "MIQCP"],
-    "DICOPT": ["MINLP", "MIQCP"],
-    "GUROBI": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "GUSS": [
-        "LP",
-        "MIP",
-        "NLP",
-        "MCP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "IPOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "HIGHS": ["LP", "MIP"],
-    "KNITRO": [
-        "LP",
-        "NLP",
-        "MCP",
-        "MPEC",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "MINOS": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "MOSEK": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "NLPEC": ["MCP", "MPEC"],
-    "PATH": ["MCP", "CNS"],
-    "SBB": ["MINLP", "MIQCP"],
-    "SCIP": ["MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP", "GLOBAL"],
-    "SHOT": ["MINLP", "MIQCP"],
-    "SNOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "XPRESS": ["LP", "MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP"],
-}
-
 
 def get_args():
     parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
@@ -388,7 +334,7 @@ def list_solvers(args: argparse.Namespace):
             print("Model types that can be solved with the solver:\n")
             for solver in solvers:
                 try:
-                    print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+                    print(f"{solver}: {utils.SOLVER_CAPABILITIES[solver]}")
                 except KeyError:
                     ...
             return
@@ -398,7 +344,7 @@ def list_solvers(args: argparse.Namespace):
         print("Model types that can be solved with the solver:\n")
         for solver in solvers:
             try:
-                print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+                print(f"{solver}: {utils.SOLVER_CAPABILITIES[solver]}")
             except KeyError:
                 ...
     else:

@@ -405,13 +405,7 @@ class NEOSServer(backend.Backend):
 
         super().__init__(container, model, "in.gdx", "output.gdx")
 
-        self.options = options
-        if model is None:
-            self.options = options._get_gams_options(self.container.workspace)
-        else:
-            self.options = options._get_gams_options(
-                self.container.workspace, model.problem
-            )
+        self.options = options._get_gams_options(self.container.workspace)
         self.options.trace = "trace.txt"
         self.client = client
 

@@ -226,7 +226,7 @@ class Container(gt.Container):
                     output.write(data)
 
             response = self._socket.recv(2)
-        except Exception as e:
+        except (Exception, ConnectionResetError) as e:
             raise GamspyException(
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
@@ -250,7 +250,10 @@ class Container(gt.Container):
             )
 
     def __del__(self):
-        self._stop_socket()
+        try:
+            self._stop_socket()
+        except (Exception, ConnectionResetError):
+            ...
 
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:

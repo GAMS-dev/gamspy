@@ -344,7 +344,7 @@ def validate_model_name(name: str) -> str:
     return name
 
 
-def validate_solver_args(solver, options, output):
+def validate_solver_args(solver, problem, options, output):
     # Check validity of solver
     if solver is not None:
         if not isinstance(solver, str):
@@ -364,6 +364,14 @@ def validate_solver_args(solver, options, output):
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
                 f" {solver.lower()}`"
+            )
+
+        if str(problem) not in utils.SOLVER_CAPABILITIES[solver.upper()]:
+            raise ValidationError(
+                f"Given solver `{solver}` is not capable of solving given"
+                f" problem type `{problem}`. See capability matrix "
+                "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                " to choose a suitable solver"
             )
 
     # Check validity of options

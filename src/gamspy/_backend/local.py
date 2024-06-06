@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
-import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, customize_exception
 
 if TYPE_CHECKING:
@@ -26,16 +25,30 @@ class Local(backend.Backend):
         super().__init__(
             container, model, container._gdx_in, container._gdx_out
         )
-        if model is None:
-            self.options = options._get_gams_options(self.container.workspace)
-        else:
-            self.options = options._get_gams_options(
-                self.container.workspace, model.problem, output
-            )
-        self.options.trace = os.path.join(
+        self.options = options
+        self.output = output
+
+    def _prepare_extra_options(self, job_name: str) -> dict:
+        trace_file_path = os.path.join(
             self.container.workspace.working_directory, "trace.txt"
         )
-        self.output = output
+        scrdir = os.path.join(self.container.working_directory, "225a")
+
+        extra_options = {
+            "trace": trace_file_path,
+            "input": job_name + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+        }
+
+        if self.container._network_license:
+            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
+
+        if self.options.listing_file is None:
+            self.options.listing_file = job_name + ".lst"
+
+        return extra_options
 
     def is_async(self):
         return False
@@ -55,27 +68,19 @@ class Local(backend.Backend):
     def run(self, gams_string: str):
         job_id = "_" + str(uuid.uuid4())
         job_name = os.path.join(self.container.working_directory, job_id)
+
+        # Write gms file
         with open(job_name + ".gms", "w") as gams_file:
             gams_file.write(gams_string)
 
-        # prepare pf file
-        self.options._input = job_name + ".gms"
-        if not self.options.output:
-            self.options.output = job_name + ".lst"
-        self.options._sysdir = utils._get_gamspy_base_directory()
-
-        scrdir = os.path.join(self.container.working_directory, "225a")
-        self.options._scrdir = scrdir
-        self.options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        if self.container._network_license:
-            self.options._netlicense = os.path.join(
-                self.options._scrdir, "gamslice.dat"
-            )
+        # Write pf file
+        extra_options = self._prepare_extra_options(job_name)
+        self.options._set_extra_options(extra_options)
 
         pf_file = os.path.join(
             self.container.working_directory, job_name + ".pf"
         )
-        self.options.export(pf_file)
+        self.options.export(pf_file, self.output)
 
         try:
             self.container._job = job_name
@@ -107,7 +112,8 @@ class Local(backend.Backend):
 
         if self.model is not None:
             return self.prepare_summary(
-                self.container.working_directory, self.options.trace
+                self.container.working_directory,
+                self.options._extra_options["trace"],
             )
 
         return None

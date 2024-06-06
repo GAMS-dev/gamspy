@@ -699,7 +699,7 @@ class GAMSEngine(backend.Backend):
             self.options = options._get_gams_options(self.container.workspace)
         else:
             self.options = options._get_gams_options(
-                self.container.workspace, model.problem, output
+                self.container.workspace, output
             )
         self.options.trace = "trace.txt"
         self.output = output

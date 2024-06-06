@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 from gams import GamsOptions, GamsWorkspace, SymbolUpdateType
 from pydantic import BaseModel
 
+import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 logger = logging.getLogger("Options")
@@ -181,14 +182,14 @@ class Options(BaseModel):
 
         if self.log_file:
             if output is not None:
-                gams_options["_logoption"] = 4
+                gams_options["logoption"] = 4
             else:
-                gams_options["_logoption"] = 2
+                gams_options["logoption"] = 2
         else:
             if output is not None:
-                gams_options["_logoption"] = 3
+                gams_options["logoption"] = 3
             else:
-                gams_options["_logoption"] = 0
+                gams_options["logoption"] = 0
 
         return gams_options
 
@@ -196,12 +197,12 @@ class Options(BaseModel):
         self,
         working_directory: str,
         solver: str | None,
+        problem: Problem,
         solver_options: dict | None,
     ):
-        solver_options: dict[str, Any] = {}
-
-        if solver is not None:
-            solver_options["solver"] = solver
+        """Set the solver and the solver options"""
+        if solver:
+            self._solver = (str(problem), solver)
 
         if solver_options:
             if solver is None:
@@ -217,37 +218,32 @@ class Options(BaseModel):
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            solver_options["optfile"] = 123
+            self._solver_options_file = 123
 
-        self._solver_options = solver_options
+    def _set_extra_options(self, options: dict) -> None:
+        """Set extra options of the backend"""
+        self._extra_options = options
 
-    def _get_gams_options(
-        self, workspace: GamsWorkspace, problem: Problem | None = None, output: io.TextIOWrapper | None = None,
-    ) -> GamsOptions:
-        gams_options = GamsOptions(workspace)
+    def export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
+        all_options = dict()
+        # Solver options
+        if hasattr(self, "_solver"):
+            problem_type, solver = self._solver
+            all_options[problem_type] = solver
 
-        if hasattr(self, "_solver_options") and "solver" in self._solver_options:
-            solver = self._solver_options["solver"]
-            gams_options.all_model_types = solver
-            if problem is not None and solver.lower() != getattr(gams_options, str(problem).lower()).lower():
-                raise ValidationError(
-                    f"Given solver `{solver}` is not capable of solving given"
-                    f" problem type `{problem}`. See capability matrix "
-                    "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
-                    " to choose a suitable solver"
-                )
+        if hasattr(self, "_solver_options_file"):
+            all_options["optfile"] = self._solver_options_file
 
-        if (
-            hasattr(self, "_solver_options")
-            and "optfile" in self._solver_options
-        ):
-            gams_options.optfile = self._solver_options["optfile"]
+        # Extra options
+        all_options.update(**self._extra_options)
 
-        gams_options_dict = self._get_gams_compatible_options(output)
-        for key, value in gams_options_dict.items():
-            setattr(gams_options, key, value)
+        # User options
+        user_options = self._get_gams_compatible_options(output)
+        all_options.update(**user_options)
 
-        return gams_options
+        # Generate pf file
+        with open(pf_file, "w") as file:
+            file.write("\n".join([f"{key} = {value}" for key, value in all_options.items()]))
 
 
 update_type_map = {

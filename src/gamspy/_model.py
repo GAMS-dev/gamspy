@@ -635,7 +635,7 @@ class Model:
         ValueError
             In case sense is different than "MIN" or "MAX"
         """
-        validation.validate_solver_args(solver, options, output)
+        validation.validate_solver_args(solver, self.problem, options, output)
         validation.validate_model(self)
 
         if options is None:
@@ -644,6 +644,7 @@ class Model:
         options._set_solver_options(
             self.container.working_directory,
             solver=solver,
+            problem=self.problem,
             solver_options=solver_options,
         )
 

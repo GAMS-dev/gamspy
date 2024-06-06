@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
-from gams import GamsOptions, GamsWorkspace
+if TYPE_CHECKING:
+    from gams import GamsWorkspace
+
+    from gamspy import Options
 
 
 class GamspyException(Exception):
@@ -116,25 +120,27 @@ error_codes = {
 
 def customize_exception(
     workspace: GamsWorkspace,
-    options: GamsOptions,
-    job: str,
+    options: Options,
+    job_name: str,
     exception: GamspyException,
 ) -> str:
-    if not options._writeoutput:
+    if options.write_listing_file is False:
         return exception
 
     header = "=" * 14
     footer = "=" * 14
     message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
 
-    if options.output:
+    if options.listing_file:
         lst_path = (
-            options.output
-            if os.path.isabs(options.output)
-            else os.path.join(workspace._working_directory, options.output)
+            options.listing_file
+            if os.path.isabs(options.listing_file)
+            else os.path.join(
+                workspace._working_directory, options.listing_file
+            )
         )
     else:
-        lst_path = job + ".lst"
+        lst_path = job_name + ".lst"
 
     with open(lst_path, encoding="utf-8") as lst_file:
         all_lines = lst_file.readlines()
