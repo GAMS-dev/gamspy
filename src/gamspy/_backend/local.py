@@ -30,7 +30,7 @@ class Local(backend.Backend):
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         trace_file_path = os.path.join(
-            self.container.workspace.working_directory, "trace.txt"
+            self.container.working_directory, "trace.txt"
         )
         scrdir = os.path.join(self.container.working_directory, "225a")
 
@@ -91,7 +91,10 @@ class Local(backend.Backend):
         except GamspyException as exception:
             self.container.workspace._has_error = True
             message = customize_exception(
-                self.container.workspace, self.options, job_name, exception
+                self.container.working_directory,
+                self.options,
+                job_name,
+                exception.rc,
             )
 
             exception.args = (exception.message + message,)

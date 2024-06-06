@@ -55,7 +55,7 @@ option_map = {
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
     "listing_file": "output",
-    "log_file": "_logfile",
+    "log_file": "logfile",
     "variable_listing_limit": "limcol",
     "equation_listing_limit": "limrow",
     "node_limit": "nodlim",
@@ -74,7 +74,7 @@ option_map = {
     "suppress_compiler_listing": "suppress",
     "report_solver_status": "sysout",
     "threads": "threads",
-    "write_listing_file": "_writeoutput",
+    "write_listing_file": "writeoutput",
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }

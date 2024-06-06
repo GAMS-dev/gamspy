@@ -6,8 +6,6 @@ import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from gams import GamsWorkspace
-
     from gamspy import Options
 
 
@@ -119,13 +117,13 @@ error_codes = {
 
 
 def customize_exception(
-    workspace: GamsWorkspace,
+    working_directory: str,
     options: Options,
     job_name: str,
-    exception: GamspyException,
+    return_code: int,
 ) -> str:
     if options.write_listing_file is False:
-        return exception
+        return ""
 
     header = "=" * 14
     footer = "=" * 14
@@ -135,50 +133,51 @@ def customize_exception(
         lst_path = (
             options.listing_file
             if os.path.isabs(options.listing_file)
-            else os.path.join(
-                workspace._working_directory, options.listing_file
-            )
+            else os.path.join(working_directory, options.listing_file)
         )
     else:
         lst_path = job_name + ".lst"
 
-    with open(lst_path, encoding="utf-8") as lst_file:
-        all_lines = lst_file.readlines()
-        num_lines = len(all_lines)
+    try:
+        with open(lst_path, encoding="utf-8") as lst_file:
+            all_lines = lst_file.readlines()
+            num_lines = len(all_lines)
 
-        index = 0
-        while index < num_lines:
-            line = all_lines[index]
+            index = 0
+            while index < num_lines:
+                line = all_lines[index]
 
-            if line.startswith("****"):
-                error_lines = [all_lines[index - 1]]
-                temp_index = index
+                if line.startswith("****"):
+                    error_lines = [all_lines[index - 1]]
+                    temp_index = index
 
-                while (
-                    any(
-                        "****" in err_line
-                        for err_line in all_lines[temp_index : temp_index + 10]
+                    while (
+                        any(
+                            "****" in err_line
+                            for err_line in all_lines[temp_index : temp_index + 10]
+                        )
+                        and temp_index < len(all_lines) - 10
+                    ):
+                        for offset in range(10):
+                            error_lines.append(all_lines[temp_index + offset])
+
+                        temp_index += 10
+
+                    error_message = message_format.format(
+                        message="".join(error_lines),
+                        header=header,
+                        footer=footer,
+                        return_code=return_code,
+                        meaning=error_codes[return_code],
                     )
-                    and temp_index < len(all_lines) - 10
-                ):
-                    for offset in range(10):
-                        error_lines.append(all_lines[temp_index + offset])
+                    break
 
-                    temp_index += 10
-
-                error_message = message_format.format(
-                    message="".join(error_lines),
-                    header=header,
-                    footer=footer,
-                    return_code=exception.rc,
-                    meaning=error_codes[exception.rc],
-                )
-                break
-
-            index += 1
+                index += 1
+    except FileNotFoundError:
+        return ""
 
     explanation = (
-        f"\nMeaning of return code {exception.rc}: {error_codes[exception.rc]}"
+        f"\nMeaning of return code {return_code}: {error_codes[return_code]}"
     )
 
     return error_message + explanation

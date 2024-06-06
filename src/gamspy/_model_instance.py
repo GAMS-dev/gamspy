@@ -88,7 +88,7 @@ class ModelInstance:
         self.modifiables = self._init_modifiables(modifiables)
         self.instance_container = gp.Container(
             system_directory=container.system_directory,
-            working_directory=container.workspace.working_directory,
+            working_directory=container.working_directory,
         )
         self.model = model
 
@@ -330,7 +330,7 @@ class ModelInstance:
     def _update_main_container(self):
         temp = gp.Container(
             system_directory=self.container.system_directory,
-            working_directory=self.container.workspace.working_directory,
+            working_directory=self.container.working_directory,
         )
         temp.read(self.instance.sync_db._gmd)
 

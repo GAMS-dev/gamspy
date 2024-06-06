@@ -144,7 +144,7 @@ class OptionsSuite(unittest.TestCase):
         with open(
             os.path.join(m.working_directory, m.gamsJobName() + ".pf")
         ) as file:
-            self.assertTrue("LP=conopt" in file.read())
+            self.assertTrue("lp = conopt" in file.read())
 
     def test_gamspy_to_gams_options(self):
         options = Options(
@@ -185,14 +185,12 @@ class OptionsSuite(unittest.TestCase):
         )
 
         transport.solve()  # logoption=0
-        transport.solve(
-            options=Options(redirect_log_to_stdout=True)
-        )  # logoption = 3
+        transport.solve(output=sys.stdout)  # logoption = 3
         logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
         transport.solve(
             output=sys.stdout,
             options=Options(
-                log_file=logfile_name, redirect_log_to_stdout=True
+                log_file=logfile_name
             ),
         )  # logoption = 4
 
