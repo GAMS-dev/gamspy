@@ -106,7 +106,7 @@ class Options(BaseModel):
     hold_fixed_variables: Optional[bool] = None
     integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
-    keep_temporary_files: Optional[bool] = None
+    keep_temporary_files: Optional[int] = None
     listing_file: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
@@ -218,7 +218,7 @@ class Options(BaseModel):
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            self._solver_options_file = 123
+            self._solver_options_file = "123"
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""

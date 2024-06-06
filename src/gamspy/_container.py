@@ -64,9 +64,11 @@ def is_network_license() -> bool:
         return False
 
     with open(user_license_path) as file:
-        license = file.readline()
+        lines = file.readlines()
+        if "+" not in lines[0]:
+            return False
 
-        if license.startswith("network"):
+        if lines[4][47] == "N":
             return True
 
     return False
