@@ -114,9 +114,6 @@ class Local(backend.Backend):
         miro.load_miro_symbol_records(self.container)
 
         if self.model is not None:
-            return self.prepare_summary(
-                self.container.working_directory,
-                self.options._extra_options["trace"],
-            )
+            return self.prepare_summary(self.container.working_directory)
 
         return None

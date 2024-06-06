@@ -105,11 +105,11 @@ class Backend(ABC):
 
         return gams_string, dirty_names
 
-    def prepare_summary(self, working_directory: str, trace_file: str):
+    def prepare_summary(self, working_directory: str):
         from gamspy._model import ModelStatus
 
         with open(
-            os.path.join(working_directory, trace_file), encoding="utf-8"
+            os.path.join(working_directory, "trace.txt"), encoding="utf-8"
         ) as file:
             line = file.readlines()[-1]
             (

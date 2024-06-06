@@ -693,60 +693,25 @@ class GAMSEngine(backend.Backend):
             os.path.basename(container._gdx_in),
             os.path.basename(container._gdx_out),
         )
-
-        self.client = client
-        if model is None:
-            self.options = options._get_gams_options(self.container.workspace)
-        else:
-            self.options = options._get_gams_options(
-                self.container.workspace, output
-            )
-        self.options.trace = "trace.txt"
+        self.options = options
         self.output = output
-        self.job_name = f"_job_{uuid.uuid4()}"
-        self.gms_file = self.job_name + ".gms"
-        self.pf_file = self.job_name + ".pf"
+        self.client = client
+
+        self.job_id = f"_job_{uuid.uuid4()}"
+        self.gms_file = self.job_id + ".gms"
+        self.pf_file = self.job_id + ".pf"
 
     def is_async(self):
         return not self.client.is_blocking
-
-    def preprocess(self, keep_flags: bool = False):
-        gams_string, dirty_names = super().preprocess(keep_flags)
-
-        # Set selected solvers
-        for i in range(1, gmoProc_nrofmodeltypes):
-            optSetStrStr(
-                self.options._opt,
-                cfgModelTypeName(self.options._cfg, i),
-                self.options._selected_solvers[i],
-            )
-
-        # Set restart file path
-        self.options._restart = self.job_name + ".g00"
-
-        # Set input file path
-        self.options._input = self.job_name + ".gms"
-
-        # Export pf file
-        self.options.export(self.pf_file)
-
-        # Export gms file
-        gms_path = os.path.join(
-            self.container.working_directory, self.gms_file
-        )
-        with open(gms_path, "w", encoding="utf-8") as file:
-            file.write(gams_string)
-
-        return dirty_names
 
     def solve(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(keep_flags)
 
-        self.run()
+        self.run(gams_string)
 
         if self.is_async():
             return None
@@ -760,65 +725,95 @@ class GAMSEngine(backend.Backend):
         return summary
 
     def _create_restart_file(self):
-        job_path = os.path.join(
-            self.container.working_directory, self.job_name
+        trace_file_path = os.path.join(
+            self.container.working_directory, "trace.txt"
         )
-        with open(job_path + ".gms", "w") as gams_file:
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        job_name = os.path.join(self.container.working_directory, self.job_id)
+
+        with open(job_name + ".gms", "w") as gams_file:
             gams_file.write("")
 
-        options = GamsOptions(self.container.workspace)
-        options._input = job_path + ".gms"
-        options._sysdir = utils._get_gamspy_base_directory()
-        scrdir = os.path.join(self.container.working_directory, "225a")
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._writeoutput = 0
-        options._logoption = 0
-        options.previouswork = 1
-        options._save = job_path + ".g00"
-        self.save_file = job_path + ".g00"
+        options = Options()
+        extra_options = {
+            "trace": trace_file_path,
+            "input": job_name + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "writeoutput": 0,
+            "logoption": 0,
+            "previouswork": 1,
+            "save": job_name + ".g00",
+        }
+        options._set_extra_options(extra_options)
 
-        pf_file = job_path + ".pf"
-        options.export(pf_file)
+        pf_file = job_name + ".pf"
+        options.export(pf_file, self.output)
 
-        self.container._send_job(job_path, pf_file)
-
-        return job_path + ".g00"
+        self.container._send_job(job_name, pf_file)
 
     def _sync(self, dirty_names: list[str]):
-        job_path = os.path.join(
-            self.container.working_directory, self.job_name
+        trace_file_path = os.path.join(
+            self.container.working_directory, "trace.txt"
         )
+        scrdir = os.path.join(self.container.working_directory, "225a")
+
+        job_name = os.path.join(self.container.working_directory, self.job_id)
 
         dirty_str = ",".join(dirty_names)
-        with open(job_path + ".gms", "w") as gams_file:
+        with open(job_name + ".gms", "w") as gams_file:
             gams_file.write(
                 f'execute_load "{self.container._gdx_out}", {dirty_str};'
             )
 
-        options = GamsOptions(self.container.workspace)
-        options._input = job_path + ".gms"
-        options._sysdir = utils._get_gamspy_base_directory()
+        options = Options()
+        extra_options = {
+            "trace": trace_file_path,
+            "input": job_name + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "writeoutput": 0,
+            "logoption": 0,
+            "previouswork": 1,
+            "save": job_name + ".g00",
+        }
+        options._set_extra_options(extra_options)
+
+        pf_file = job_name + ".pf"
+        options.export(pf_file, self.output)
+
+        self.container._send_job(job_name, pf_file)
+
+    def run(self, gams_string: str):
         scrdir = os.path.join(self.container.working_directory, "225a")
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._writeoutput = 0
-        options._logoption = 0
-        options.previouswork = 1
+        extra_options = {
+            "trace": "trace.txt",
+            "restart": self.job_id + ".g00",
+            "input": self.job_id + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+        }
+        self.options._set_extra_options(extra_options)
+        self.options.export(self.pf_file)
 
-        pf_file = job_path + ".pf"
-        options.export(pf_file)
+        # Export gms file
+        gms_path = os.path.join(
+            self.container.working_directory, self.gms_file
+        )
 
-        self.container._send_job(job_path, pf_file)
+        with open(gms_path, "w", encoding="utf-8") as file:
+            file.write(gams_string)
 
-    def run(self):
         try:
             original_extra_files = copy.deepcopy(
                 self.client.job.extra_model_files
             )
             self.client.job.extra_model_files = self._append_gamspy_files(
                 os.path.join(
-                    self.container.working_directory, self.job_name + ".g00"
+                    self.container.working_directory, self.job_id + ".g00"
                 ),
             )
             token = self.client.job.post(
@@ -881,9 +876,7 @@ class GAMSEngine(backend.Backend):
         if self.client.remove_results or self.model is None:
             return None
 
-        return self.prepare_summary(
-            self.container.working_directory, self.options.trace
-        )
+        return self.prepare_summary(self.container.working_directory)
 
     def _append_gamspy_files(self, restart_file: str) -> list[str]:
         extra_model_files = self.client.job.extra_model_files + [
