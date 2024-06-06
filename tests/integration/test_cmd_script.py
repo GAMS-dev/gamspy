@@ -5,7 +5,6 @@ import subprocess
 import unittest
 
 import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
 
 try:
     from dotenv import load_dotenv
@@ -52,7 +51,7 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
                 ["gamspy", "install", "license", "blabla"],
                 check=True,
