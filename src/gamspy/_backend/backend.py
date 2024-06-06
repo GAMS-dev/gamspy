@@ -72,8 +72,11 @@ def backend_factory(
 
 
 class Backend(ABC):
-    def __init__(self, container: Container, gdx_in: str, gdx_out: str):
+    def __init__(
+        self, container: Container, model: Model, gdx_in: str, gdx_out: str
+    ):
         self.container = container
+        self.model = model
         self.gdx_in = gdx_in
         self.gdx_out = gdx_out
 
@@ -158,5 +161,4 @@ class Backend(ABC):
 
     def clean_dirty_symbols(self, dirty_names: list[str]):
         for name in dirty_names:
-            if self.container[name].synchronize:
-                self.container[name]._is_dirty = False
+            self.container[name]._is_dirty = False

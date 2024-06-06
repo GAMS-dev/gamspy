@@ -641,7 +641,7 @@ class Model:
         if options is None:
             options = self.container._options
 
-        options._set_extra_options(
+        options._set_solver_options(
             self.container.working_directory,
             solver=solver,
             solver_options=solver_options,

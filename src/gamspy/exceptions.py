@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 
 from gams import GamsOptions, GamsWorkspace
-from gams.control.workspace import GamsExceptionExecution
 
 
 class GamspyException(Exception):

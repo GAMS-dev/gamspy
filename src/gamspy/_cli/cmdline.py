@@ -168,7 +168,12 @@ def get_args():
 def install_license(args: argparse.Namespace):
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
-    command = [os.path.join(gamspy_base_dir, "gamsgetkey"), args.name, "-u", "1234"]
+    command = [
+        os.path.join(gamspy_base_dir, "gamsgetkey"),
+        args.name,
+        "-u",
+        "1234",
+    ]
 
     if args.node_specific:
         command.append("-i")

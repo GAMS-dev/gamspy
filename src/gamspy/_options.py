@@ -192,16 +192,16 @@ class Options(BaseModel):
 
         return gams_options
 
-    def _set_extra_options(
+    def _set_solver_options(
         self,
         working_directory: str,
         solver: str | None,
         solver_options: dict | None,
     ):
-        extra_options: dict[str, Any] = {}
+        solver_options: dict[str, Any] = {}
 
         if solver is not None:
-            extra_options["solver"] = solver
+            solver_options["solver"] = solver
 
         if solver_options:
             if solver is None:
@@ -217,17 +217,17 @@ class Options(BaseModel):
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            extra_options["optfile"] = 123
+            solver_options["optfile"] = 123
 
-        self._extra_options = extra_options
+        self._solver_options = solver_options
 
     def _get_gams_options(
         self, workspace: GamsWorkspace, problem: Problem | None = None, output: io.TextIOWrapper | None = None,
     ) -> GamsOptions:
         gams_options = GamsOptions(workspace)
 
-        if hasattr(self, "_extra_options") and "solver" in self._extra_options:
-            solver = self._extra_options["solver"]
+        if hasattr(self, "_solver_options") and "solver" in self._solver_options:
+            solver = self._solver_options["solver"]
             gams_options.all_model_types = solver
             if problem is not None and solver.lower() != getattr(gams_options, str(problem).lower()).lower():
                 raise ValidationError(
@@ -238,10 +238,10 @@ class Options(BaseModel):
                 )
 
         if (
-            hasattr(self, "_extra_options")
-            and "optfile" in self._extra_options
+            hasattr(self, "_solver_options")
+            and "optfile" in self._solver_options
         ):
-            gams_options.optfile = self._extra_options["optfile"]
+            gams_options.optfile = self._solver_options["optfile"]
 
         gams_options_dict = self._get_gams_compatible_options(output)
         for key, value in gams_options_dict.items():
