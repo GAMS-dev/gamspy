@@ -698,6 +698,7 @@ class GAMSEngine(backend.Backend):
         self.client = client
 
         self.job_id = f"_job_{uuid.uuid4()}"
+        self.job_name = os.path.join(self.container.working_directory, self.job_id)
         self.gms_file = self.job_id + ".gms"
         self.pf_file = self.job_id + ".pf"
 
@@ -724,77 +725,11 @@ class GAMSEngine(backend.Backend):
 
         return summary
 
-    def _create_restart_file(self):
-        trace_file_path = os.path.join(
-            self.container.working_directory, "trace.txt"
-        )
-        scrdir = os.path.join(self.container.working_directory, "225a")
-        job_name = os.path.join(self.container.working_directory, self.job_id)
-
-        with open(job_name + ".gms", "w") as gams_file:
-            gams_file.write("")
-
-        options = Options()
-        extra_options = {
-            "trace": trace_file_path,
-            "input": job_name + ".gms",
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
-            "logoption": 0,
-            "previouswork": 1,
-            "save": job_name + ".g00",
-        }
-        options._set_extra_options(extra_options)
-
-        pf_file = job_name + ".pf"
-        options.export(pf_file, self.output)
-
-        self.container._send_job(job_name, pf_file)
-
-    def _sync(self, dirty_names: list[str]):
-        trace_file_path = os.path.join(
-            self.container.working_directory, "trace.txt"
-        )
-        scrdir = os.path.join(self.container.working_directory, "225a")
-
-        job_name = os.path.join(self.container.working_directory, self.job_id)
-
-        dirty_str = ",".join(dirty_names)
-        with open(job_name + ".gms", "w") as gams_file:
-            gams_file.write(
-                f'execute_load "{self.container._gdx_out}", {dirty_str};'
-            )
-
-        options = Options()
-        extra_options = {
-            "trace": trace_file_path,
-            "input": job_name + ".gms",
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
-            "logoption": 0,
-            "previouswork": 1,
-            "save": job_name + ".g00",
-        }
-        options._set_extra_options(extra_options)
-
-        pf_file = job_name + ".pf"
-        options.export(pf_file, self.output)
-
-        self.container._send_job(job_name, pf_file)
-
     def run(self, gams_string: str):
-        scrdir = os.path.join(self.container.working_directory, "225a")
         extra_options = {
             "trace": "trace.txt",
             "restart": self.job_id + ".g00",
             "input": self.job_id + ".gms",
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
         }
         self.options._set_extra_options(extra_options)
         self.options.export(self.pf_file)
@@ -877,6 +812,53 @@ class GAMSEngine(backend.Backend):
             return None
 
         return self.prepare_summary(self.container.working_directory)
+    
+    def _prepare_dummy_options(self) -> dict:
+        trace_file_path = os.path.join(
+            self.container.working_directory, "trace.txt"
+        )
+        scrdir = os.path.join(self.container.working_directory, "225a")
+
+        extra_options = {
+            "trace": trace_file_path,
+            "input": self.job_name + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "writeoutput": 0,
+            "logoption": 0,
+            "previouswork": 1,
+        }
+
+        return extra_options
+
+    def _create_restart_file(self):
+        pf_file = self.job_name + ".pf"
+        with open(self.job_name + ".gms", "w") as gams_file:
+            gams_file.write("")
+
+        options = Options()
+        extra_options = self._prepare_dummy_options()
+        options._set_extra_options(extra_options)
+        options._extra_options["save"] = self.job_name + ".g00"
+        options.export(pf_file, self.output)
+
+        self.container._send_job(self.job_name, pf_file)
+
+    def _sync(self, dirty_names: list[str]):
+        pf_file = self.job_name + ".pf"
+        dirty_str = ",".join(dirty_names)
+        with open(self.job_name + ".gms", "w") as gams_file:
+            gams_file.write(
+                f'execute_load "{self.container._gdx_out}", {dirty_str};'
+            )
+
+        options = Options()
+        extra_options = self._prepare_dummy_options()
+        options._set_extra_options(extra_options)
+        options.export(pf_file, self.output)
+
+        self.container._send_job(self.job_name, pf_file)
 
     def _append_gamspy_files(self, restart_file: str) -> list[str]:
         extra_model_files = self.client.job.extra_model_files + [
