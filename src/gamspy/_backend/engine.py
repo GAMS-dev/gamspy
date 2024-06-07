@@ -14,14 +14,11 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import GamsEngineConfiguration, GamsOptions
+from gams import GamsEngineConfiguration
 from gams.control.workspace import GamsException
-from gams.core.cfg import cfgModelTypeName
-from gams.core.gmo import gmoProc_nrofmodeltypes
-from gams.core.opt import optSetStrStr
 
 import gamspy._backend.backend as backend
-import gamspy.utils as utils
+from gamspy._options import Options
 from gamspy.exceptions import (
     EngineClientException,
     EngineException,
@@ -30,7 +27,7 @@ from gamspy.exceptions import (
 )
 
 if TYPE_CHECKING:
-    from gamspy import Container, Model, Options
+    from gamspy import Container, Model
 
 
 logger = logging.getLogger("ENGINE")
@@ -698,7 +695,9 @@ class GAMSEngine(backend.Backend):
         self.client = client
 
         self.job_id = f"_job_{uuid.uuid4()}"
-        self.job_name = os.path.join(self.container.working_directory, self.job_id)
+        self.job_name = os.path.join(
+            self.container.working_directory, self.job_id
+        )
         self.gms_file = self.job_id + ".gms"
         self.pf_file = self.job_id + ".pf"
 
@@ -729,10 +728,10 @@ class GAMSEngine(backend.Backend):
         extra_options = {
             "trace": "trace.txt",
             "restart": self.job_id + ".g00",
-            "input": self.job_id + ".gms",
+            "input": self.gms_file,
         }
         self.options._set_extra_options(extra_options)
-        self.options.export(self.pf_file)
+        self.options.export(self.job_name + ".pf")
 
         # Export gms file
         gms_path = os.path.join(
@@ -812,7 +811,7 @@ class GAMSEngine(backend.Backend):
             return None
 
         return self.prepare_summary(self.container.working_directory)
-    
+
     def _prepare_dummy_options(self) -> dict:
         trace_file_path = os.path.join(
             self.container.working_directory, "trace.txt"

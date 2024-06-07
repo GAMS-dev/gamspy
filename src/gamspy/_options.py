@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
@@ -9,17 +8,7 @@ from typing import TYPE_CHECKING, Literal, Optional
 from gams import SymbolUpdateType
 from pydantic import BaseModel
 
-import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
-
-logger = logging.getLogger("Options")
-logger.setLevel(logging.INFO)
-
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
 
 if TYPE_CHECKING:
     from gamspy._model import Problem

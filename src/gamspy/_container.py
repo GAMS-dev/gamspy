@@ -513,7 +513,7 @@ class Container(gt.Container):
             return ""
 
         unload_str = ",".join(unload_names)
-        return f"execute_unload '{gdx_out}' {unload_str}\n"
+        return f"execute_unload '{gdx_out}' {unload_str};\n"
 
     def _generate_gams_string(
         self,

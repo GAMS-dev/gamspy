@@ -45,9 +45,6 @@ class Local(backend.Backend):
         if self.container._network_license:
             extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
-        if self.options.listing_file is None:
-            self.options.listing_file = job_name + ".lst"
-
         return extra_options
 
     def is_async(self):
