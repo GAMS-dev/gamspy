@@ -23,7 +23,7 @@ class ExtrinsicSuite(unittest.TestCase):
             system_directory=os.getenv("SYSTEM_DIRECTORY", None),
         )
 
-    def _test_extrinsic_functions(self):
+    def test_extrinsic_functions(self):
         names = {
             "linux": "libtricclib64.so",
             "mac_x86_64": "libtricclib64x86.dylib",

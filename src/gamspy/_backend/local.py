@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
+import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, customize_exception
 
 if TYPE_CHECKING:
@@ -41,6 +42,9 @@ class Local(backend.Backend):
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "license": utils._get_license_path(
+                self.container.system_directory
+            ),
         }
 
         if self.container._network_license:
@@ -92,7 +96,7 @@ class Local(backend.Backend):
                 self.container.working_directory,
                 self.options,
                 job_name,
-                exception.rc,
+                exception.rc,  # type: ignore
             )
 
             exception.args = (exception.message + message,)

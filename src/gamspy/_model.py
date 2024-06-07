@@ -557,10 +557,11 @@ class Model:
         ValidationError
             If the job is not initialized
         """
-        if self.container._job is None:
-            raise ValidationError("No job was initialized yet!")
+        self.container._process.send_signal(2)
+        self.container._stop_socket()
 
-        self.container._job.interrupt()
+        while self.container._process.poll() is None:
+            ...
 
     def freeze(
         self,

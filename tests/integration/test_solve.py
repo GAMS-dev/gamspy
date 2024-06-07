@@ -313,7 +313,7 @@ class SolveSuite(unittest.TestCase):
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
-    def _test_interrupt(self):
+    def test_interrupt(self):
         cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
 
         power_forecast_recs = np.array(

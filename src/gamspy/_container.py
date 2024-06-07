@@ -234,6 +234,11 @@ class Container(gt.Container):
             ) from e
         except KeyboardInterrupt:
             self._process.send_signal(2)  # Send SIGINT
+            self._stop_socket()
+
+            while self._process.poll() is None:
+                ...
+            return
         try:
             return_code = int(
                 response[: response.find(b"\x00")].decode("utf-8")

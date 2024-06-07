@@ -11,6 +11,7 @@ import zipfile
 from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
+import gamspy.utils as utils
 from gamspy._options import Options
 from gamspy.exceptions import (
     GamspyException,
@@ -505,6 +506,9 @@ class NEOSServer(backend.Backend):
             "writeoutput": 0,
             "logoption": 0,
             "previouswork": 1,
+            "license": utils._get_license_path(
+                self.container.system_directory
+            ),
         }
 
         return extra_options

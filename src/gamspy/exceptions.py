@@ -63,6 +63,7 @@ error_codes = {
     9: "GAMS could not be started",
     10: "Out of memory",
     11: "Out of disk",
+    13: "System error",
     109: "Could not create process/scratch directory",
     110: "Too many process/scratch directories",
     112: "Could not delete the process/scratch directory",
@@ -154,7 +155,9 @@ def customize_exception(
                     while (
                         any(
                             "****" in err_line
-                            for err_line in all_lines[temp_index : temp_index + 10]
+                            for err_line in all_lines[
+                                temp_index : temp_index + 10
+                            ]
                         )
                         and temp_index < len(all_lines) - 10
                     ):
