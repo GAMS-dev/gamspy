@@ -158,11 +158,10 @@ class Options(BaseModel):
                     gamspy_options["log_file"]
                 )
 
-        gams_options = {
-            option_map[key]: value
-            for key, value in gamspy_options.items()
-            if key in option_map
-        }
+        gams_options = dict()
+        for key, value in gamspy_options.items():
+            value = int(value) if isinstance(value, bool) else value
+            gams_options[option_map[key]] = value
 
         gams_options["previouswork"] = (
             1  # # In case GAMS version differs on backend

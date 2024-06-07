@@ -10,10 +10,8 @@ import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
-from gams import GamsOptions
-
 import gamspy._backend.backend as backend
-import gamspy.utils as utils
+from gamspy._options import Options
 from gamspy.exceptions import (
     GamspyException,
     NeosClientException,
@@ -29,7 +27,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
-    from gamspy import Container, Model, Options
+    from gamspy import Container, Model
 
 
 class NeosClient:
@@ -77,7 +75,7 @@ class NeosClient:
         -------
         bool
         """
-        response = self.neos.ping()
+        response: str = self.neos.ping()
         return bool(response.startswith("NeosServer is alive"))
 
     def get_job_status(self, job_number: int, job_password: str) -> str:
@@ -261,7 +259,7 @@ class NeosClient:
         gams_string: str,
         gdx_path: str,
         restart_path: str,
-        options: GamsOptions,
+        options: Options,
         save_name: str | None = None,
         xml_path: str = "neos.xml",
         working_directory: str = ".",
@@ -287,7 +285,7 @@ class NeosClient:
         ) as file:
             parameters = [line.rstrip() for line in file.readlines()]
 
-        extras = ["PREVIOUSWORK=1"]
+        extras = []
         if save_name is not None:
             extras.append(f"save={save_name}")
 
@@ -405,22 +403,26 @@ class NEOSServer(backend.Backend):
 
         super().__init__(container, model, "in.gdx", "output.gdx")
 
-        self.options = options._get_gams_options(self.container.workspace)
-        self.options.trace = "trace.txt"
+        self.options = options
         self.client = client
+
+        self.job_id = f"_job_{uuid.uuid4()}"
+        self.job_name = os.path.join(
+            self.container.working_directory, self.job_id
+        )
 
     def is_async(self):
         return not self.client.is_blocking
 
     def solve(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to NEOS Server
-        save_file = self._create_restart_file()
+        self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
         gams_string, dirty_names = self.preprocess(keep_flags)
 
         # Run the model
-        self.run(gams_string, save_file)
+        self.run(gams_string)
 
         if self.is_async():
             return None
@@ -433,62 +435,16 @@ class NEOSServer(backend.Backend):
 
         return summary
 
-    def _create_restart_file(self):
-        job_id = f"_neos_restart_{uuid.uuid4()}"
-        job_name = os.path.join(self.container.working_directory, job_id)
-        with open(job_name + ".gms", "w") as gams_file:
-            gams_file.write("")
+    def run(self, gams_string: str):
+        extra_options = {
+            "trace": "trace.txt",
+        }
+        self.options._set_extra_options(extra_options)
 
-        options = GamsOptions(self.container.workspace)
-        options._input = job_name + ".gms"
-        options._sysdir = utils._get_gamspy_base_directory()
-        scrdir = os.path.join(self.container.working_directory, "225a")
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._writeoutput = 0
-        options.previouswork = 1
-        options._logoption = 0
-
-        save_file = job_name + ".g00"
-        options._save = save_file
-
-        pf_file = job_name + ".pf"
-        options.export(pf_file)
-
-        self.container._send_job(job_name, pf_file)
-
-        return save_file
-
-    def _sync(self, dirty_names: list[str]):
-        job_id = f"_neos_sync_{uuid.uuid4()}"
-        job_name = os.path.join(self.container.working_directory, job_id)
-
-        dirty_str = ",".join(dirty_names)
-        with open(job_name + ".gms", "w") as gams_file:
-            gams_file.write(
-                f'execute_load "{self.container._gdx_out}", {dirty_str};'
-            )
-
-        options = GamsOptions(self.container.workspace)
-        options._input = job_name + ".gms"
-        options._sysdir = utils._get_gamspy_base_directory()
-        scrdir = os.path.join(self.container.working_directory, "225a")
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._writeoutput = 0
-        options._logoption = 0
-        options.previouswork = 1
-
-        pf_file = job_name + ".pf"
-        options.export(pf_file)
-
-        self.container._send_job(job_name, pf_file)
-
-    def run(self, gams_string: str, save_file: str):
         self.client._prepare_xml(
             gams_string,
-            self.container._gdx_in,
-            save_file,
+            gdx_path=self.container._gdx_in,
+            restart_path=self.job_name + ".g00",
             options=self.options,
             working_directory=self.container.working_directory,
         )
@@ -506,7 +462,7 @@ class NEOSServer(backend.Backend):
             )
 
             shutil.move(
-                os.path.join(self.container.working_directory, "output.gdx"),
+                os.path.join(self.container.working_directory, self.gdx_out),
                 self.container._gdx_out,
             )
 
@@ -530,8 +486,53 @@ class NEOSServer(backend.Backend):
             )
 
         if self.client.is_blocking and self.model is not None:
-            return self.prepare_summary(
-                self.container.working_directory, self.options.trace
-            )
+            return self.prepare_summary(self.container.working_directory)
 
         return None
+
+    def _prepare_dummy_options(self) -> dict:
+        trace_file_path = os.path.join(
+            self.container.working_directory, "trace.txt"
+        )
+        scrdir = os.path.join(self.container.working_directory, "225a")
+
+        extra_options = {
+            "trace": trace_file_path,
+            "input": self.job_name + ".gms",
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "writeoutput": 0,
+            "logoption": 0,
+            "previouswork": 1,
+        }
+
+        return extra_options
+
+    def _create_restart_file(self):
+        pf_file = self.job_name + ".pf"
+        with open(self.job_name + ".gms", "w") as gams_file:
+            gams_file.write("")
+
+        options = Options()
+        extra_options = self._prepare_dummy_options()
+        options._set_extra_options(extra_options)
+        options._extra_options["save"] = self.job_name + ".g00"
+        options.export(pf_file)
+
+        self.container._send_job(self.job_name, pf_file)
+
+    def _sync(self, dirty_names: list[str]):
+        pf_file = self.job_name + ".pf"
+        dirty_str = ",".join(dirty_names)
+        with open(self.job_name + ".gms", "w") as gams_file:
+            gams_file.write(
+                f'execute_load "{self.container._gdx_out}", {dirty_str};'
+            )
+
+        options = Options()
+        extra_options = self._prepare_dummy_options()
+        options._set_extra_options(extra_options)
+        options.export(pf_file)
+
+        self.container._send_job(self.job_name, pf_file)

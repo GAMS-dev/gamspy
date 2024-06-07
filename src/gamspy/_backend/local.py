@@ -37,6 +37,7 @@ class Local(backend.Backend):
         extra_options = {
             "trace": trace_file_path,
             "input": job_name + ".gms",
+            "output": job_name + ".lst",
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
