@@ -121,9 +121,9 @@ def customize_exception(
     working_directory: str,
     options: Options,
     job_name: str,
-    return_code: int,
+    return_code: int | None,
 ) -> str:
-    if options.write_listing_file is False:
+    if options.write_listing_file is False or return_code is None:
         return ""
 
     header = "=" * 14

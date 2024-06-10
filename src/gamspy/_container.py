@@ -216,21 +216,30 @@ class Container(gt.Container):
         output: io.TextIOWrapper | None = None,
     ):
         try:
-            self._socket.sendall(pf_file.encode("utf-8"))
-
-            if output is not None:
-                while True:
-                    data = self._process.stdout.readline()
-                    if data.startswith("--- Job ") and "elapsed" in data:
-                        output.write(data)
-                        break
-
-                    output.write(data)
-
-            response = self._socket.recv(2)
-        except (Exception, ConnectionResetError) as e:
+            self._socket.sendall(
+                pf_file.encode("utf-8")
+            )  # 1. Send pf file name
+        except ConnectionError as e:
             raise GamspyException(
-                f"There was an error while communicating with GAMS server: {e}",
+                f"There was an error while sending pf file name to GAMS server: {e}",
+            ) from e
+
+        if output is not None:  # 2. Redirect output
+            while True:
+                data = self._process.stdout.readline()
+                if data.startswith("--- Job ") and "elapsed" in data:
+                    output.write(data)
+                    break
+
+                output.write(data)
+
+        try:
+            response = self._socket.recv(
+                2
+            )  # 3. Receive response from GAMS Server
+        except ConnectionError as e:
+            raise GamspyException(
+                f"There was an error while receiving output from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
             self._process.send_signal(2)  # Send SIGINT
@@ -279,7 +288,7 @@ class Container(gt.Container):
 
         return f"<Empty Container ({hex(id(self))})>"
 
-    def _write_miro_files(self):  # pragma: no cover
+    def _write_miro_files(self):
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
             return
 
@@ -299,7 +308,7 @@ class Container(gt.Container):
 
         return debugging_map[debugging_level]
 
-    def _write_default_gdx_miro(self):  # pragma: no cover
+    def _write_default_gdx_miro(self):
         # create data_<model>/default.gdx
         symbols = self._miro_input_symbols + self._miro_output_symbols
 
@@ -503,7 +512,7 @@ class Container(gt.Container):
             self._options.seed = None
 
         if IS_MIRO_INIT:
-            self._write_default_gdx_miro()  # pragma: no cover
+            self._write_default_gdx_miro()
 
         return summary
 

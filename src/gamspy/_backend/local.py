@@ -96,7 +96,7 @@ class Local(backend.Backend):
                 self.container.working_directory,
                 self.options,
                 job_name,
-                exception.rc,  # type: ignore
+                exception.rc,
             )
 
             exception.args = (exception.message + message,)

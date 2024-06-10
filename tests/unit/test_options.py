@@ -189,9 +189,7 @@ class OptionsSuite(unittest.TestCase):
         logfile_name = os.path.join(os.getcwd(), "tmp", "log.txt")
         transport.solve(
             output=sys.stdout,
-            options=Options(
-                log_file=logfile_name
-            ),
+            options=Options(log_file=logfile_name),
         )  # logoption = 4
 
         # test logfile
