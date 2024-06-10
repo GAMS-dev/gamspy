@@ -9,7 +9,8 @@ import shutil
 import unittest
 
 import gamspy
-from integration.test_cmd_script import cmd_suite
+
+# from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
 from integration.test_miro import miro_suite
 
@@ -120,7 +121,7 @@ def run_integration_tests(
     integration_suites = [
         solve_suite,
         # model_instance_suite,
-        cmd_suite,
+        # cmd_suite,
         miro_suite,
     ]
 

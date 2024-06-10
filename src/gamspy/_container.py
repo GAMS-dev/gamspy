@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import atexit
 import os
+import platform
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -216,15 +218,13 @@ class Container(gt.Container):
         output: io.TextIOWrapper | None = None,
     ):
         try:
-            self._socket.sendall(
-                pf_file.encode("utf-8")
-            )  # 1. Send pf file name
+            self._socket.sendall(pf_file.encode("utf-8"))
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while sending pf file name to GAMS server: {e}",
             ) from e
 
-        if output is not None:  # 2. Redirect output
+        if output is not None:
             while True:
                 data = self._process.stdout.readline()
                 if data.startswith("--- Job ") and "elapsed" in data:
@@ -234,19 +234,18 @@ class Container(gt.Container):
                 output.write(data)
 
         try:
-            response = self._socket.recv(
-                2
-            )  # 3. Receive response from GAMS Server
+            response = self._socket.recv(2)
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while receiving output from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
-            self._process.send_signal(2)  # Send SIGINT
-            self._stop_socket()
+            if platform.system() == "Windows":
+                self._process.send_signal(signal.SIGTERM)
+            else:
+                self._process.send_signal(signal.SIGINT)
 
-            while self._process.poll() is None:
-                ...
+            self._stop_socket()
             return
         try:
             return_code = int(
