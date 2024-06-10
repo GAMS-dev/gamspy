@@ -4,7 +4,7 @@
 GAMSPy for GAMS Users
 *********************
 
-This document is for users who are already GAMS users and interested in translating their
+This document is for GAMS users who are interested in translating their
 existing GAMS models to GAMSPy. 
 
 Translating Symbols
@@ -221,7 +221,7 @@ Mapping:
 Translating GAMS Macros
 -----------------------
 
-`Macros in GAMS <https://www.gams.com/45/docs/UG_DollarControlOptions.html#UG_DollarControl_MacrosInGAMS>`_ can be translated to GAMSPy as functions.
+`Macros in GAMS <https://www.gams.com/latest/docs/UG_DollarControlOptions.html#UG_DollarControl_MacrosInGAMS>`_ can be translated to GAMSPy as functions.
 The following example shows how GAMS Macro `reciprocal` can be defined as a function in Python to be used in GAMSPy:
 
 .. tab-set-code::

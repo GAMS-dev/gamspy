@@ -12,6 +12,7 @@ import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.operation as operation
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -283,7 +284,17 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._run()
 
     def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "eq", other)
+        op = "eq"
+        if isinstance(
+            other,
+            (
+                implicits.ImplicitVariable,
+                expression.Expression,
+                operation.Operation,
+            ),
+        ):
+            op = "=e="
+        return expression.Expression(self, op, other)
 
     def __neg__(self):
         return implicits.ImplicitParameter(
