@@ -152,19 +152,21 @@ def customize_exception(
                     error_lines = [all_lines[index - 1]]
                     temp_index = index
 
-                    while (
-                        any(
+                    try:
+                        while any(
                             "****" in err_line
                             for err_line in all_lines[
-                                temp_index : temp_index + 10
+                                temp_index : temp_index + 8
                             ]
-                        )
-                        and temp_index < len(all_lines) - 10
-                    ):
-                        for offset in range(10):
-                            error_lines.append(all_lines[temp_index + offset])
+                        ):
+                            for offset in range(8):
+                                error_lines.append(
+                                    all_lines[temp_index + offset]
+                                )
 
-                        temp_index += 10
+                            temp_index += 8
+                    except IndexError:
+                        ...
 
                     error_message = message_format.format(
                         message="".join(error_lines),
