@@ -91,7 +91,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._is_dirty = False
-        obj._is_frozen = False
         obj._synchronize = True
 
         obj.where = condition.Condition(obj)
@@ -208,7 +207,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container.miro_protect = previous_state
         else:
             self._is_dirty = False
-            self._is_frozen = False
 
             if name is not None:
                 name = validation.validate_name(name)

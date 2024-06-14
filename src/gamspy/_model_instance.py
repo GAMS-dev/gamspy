@@ -268,7 +268,6 @@ class ModelInstance:
                     )
                 )
 
-                modifiable._is_frozen = True
             elif isinstance(modifiable, implicits.ImplicitParameter):
                 attribute = modifiable.name.split(".")[-1]
                 update_action = update_action_map[attribute]
@@ -313,8 +312,6 @@ class ModelInstance:
                 modifiers.append(
                     GamsModifier(sync_db_symbol, update_action, data_symbol)
                 )
-
-                modifiable.parent._is_frozen = True
             else:
                 raise ValidationError(
                     f"Symbol type {type(modifiable)} cannot be modified in a"

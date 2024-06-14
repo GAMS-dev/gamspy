@@ -139,7 +139,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._is_dirty = False
-        obj._is_frozen = False
         obj._definition = None
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
@@ -271,7 +270,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         else:
             type = cast_type(type)
             self._is_dirty = False
-            self._is_frozen = False
 
             if name is not None:
                 name = validation.validate_name(name)

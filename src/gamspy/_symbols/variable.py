@@ -124,7 +124,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._is_dirty = False
-        obj._is_frozen = False
         obj._synchronize = True
 
         # create attributes
@@ -245,7 +244,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         else:
             type = cast_type(type)
             self._is_dirty = False
-            self._is_frozen = False
 
             if name is not None:
                 name = validation.validate_name(name)

@@ -585,10 +585,6 @@ class Model:
 
     def unfreeze(self) -> None:
         """Unfreezes all symbols"""
-        for symbol in self.container.data.values():
-            if hasattr(symbol, "_is_frozen") and symbol._is_frozen:
-                symbol._is_frozen = False
-
         self._is_frozen = False
 
     def solve(
