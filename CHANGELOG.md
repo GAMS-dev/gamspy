@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.12.7
+-------------
+- General
+  - Fix parameter equality bug in equations.
+- Testing
+  - Add test to verify the correctness of parameter equality in equations.
+
 GAMSPy 0.12.6
 -------------
 - General

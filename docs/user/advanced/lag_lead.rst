@@ -8,7 +8,7 @@
 Lag and Lead
 ************
 
-``Lag`` and ``Lead`` operators can be used on ordered sets only via the methods
+``Lag`` and ``Lead`` operators can be used on ordered sets only, via the methods
 ``lag()`` and ``lead()``. They are used to relate the current member of an
 ordered set to the previous or next member of the set. Both ``lag()`` and
 ``lead()`` require the argument ``n`` indicating the element offset to be
@@ -35,7 +35,7 @@ Note that the only difference between ``type="linear"`` and ``type="circular"``
 is how endpoints are treated. Linear operators assume that there are no
 elements preceding the first and following the last element of the ordered set.
 This assumption may result in elements of the set being referenced that
-actually do not exist. Therefore the user must think carefully about the
+actually do not exist. Therefore, the user must think carefully about the
 treatment of endpoints. Models with linear lag and lead operators will need
 special exception handling logic to deal with them. The following sections will
 describe how this issue is handled in ``GAMSPy`` in the context in which these
@@ -88,7 +88,7 @@ The following example shows the use of ``lag()`` on the right-hand side of an as
 
 This sets the values for the parameter ``a`` to ``1987``, ``1988`` up to ``1991``
 corresponding to the labels ``"y-1987"``, ``"y-1988"`` and so on.
-Observe that the parameter ``b`` is initialized to ``-1`` so that the result of
+Observe that the parameter ``b`` is initialized to ``-1``, so that the result of
 the next assignment can be seen clearly. The last assignment
 uses ``lag()`` on the right-hand side, resulting in the values for ``b`` to
 equal the values for ``a`` from the previous period. If there is no previous
@@ -121,7 +121,7 @@ left-hand side of an assignment::
     print(c.records)
 
 Here, the assignment to ``c`` involves the ``lead()`` operator on the left-hand
-side. It is best to spell out step by step how this assignment is made. For
+side. It is best to spell out step-by-step how this assignment is made. For
 each element in ``t``, find the element of ``c`` associated with ``t+2``. If it
 exists, replace its value with the value of ``a[t]``. If not (as with labels
 ``"y-1990"`` and ``"y-1991"``) make no assignment. The first element of the set ``t`` is
@@ -162,7 +162,7 @@ assignment statements::
     print(lagval.records)
     print(leadval.records)
 
-In the example parameter ``lagval`` is used for reference while ``leadval`` is
+In the example, parameter ``lagval`` is used for reference while ``leadval`` is
 used for assignment. Notice that the case of circular lag and lead operators
 does not refer to any non-existent elements. The difference between reference
 and assignment is therefore not important. Note that the following two
@@ -176,7 +176,7 @@ are equivalent to::
     lagval[s.lead(2, "cicular")] = val[s]
     leadval[s] = val[s.lag(1, "circular")]
 
-The use of reference and assignment have been reversed with no difference in effect.
+The use of reference and assignment has been reversed with no difference in effect.
 
 
 Lags and Leads in Equations

@@ -34,8 +34,8 @@ the default scale factor is 1.
 Note that there is one scale value for each individual component of a multidimensional variable.
 
 Assume that :math:`c` is the scale factor of a variable :math:`V_u`. Assume further, that the variable 
-seen by the algorithm is :math:`V_a`. Then we have: :math:`V_a = V_u/c`. This means that each variable 
-as seen by the user is *divided* by the scale factor.
+seen by the algorithm is :math:`V_a`. Then we have: :math:`V_a = V_u/c`. This means that each variable, 
+as seen by the user, is *divided* by the scale factor.
 
 For example, consider the following code snippet: ::
 
@@ -70,18 +70,12 @@ By setting ``x1.scale`` to 0.01 and ``x2.scale`` to 10, the model seen by the so
     xPrime2.up[...] = 1
 
 Note that the solver does not see the variables ``x1`` or ``x2``, but rather the scaled (and 
-better-behaved) variables ``xPrime1`` and ``xPrime2``. Note further, that upper and lower bounds 
+better-behaved) variables ``xPrime1`` and ``xPrime2``. Note further that upper and lower bounds 
 on variables are automatically scaled in the same way as the variable itself.
 
 .. warning::
     Discrete variables cannot be scaled.
 
-Variable x;
-x.scale = 0.1;
-display x.stage;
-The output is:
-----      3 VARIABLE x.scale = 0.100
-The field .scale has to be in a certain range ( >1e-20 and no special value), but this is only checked at model generation time. The field .prior can be any number and even +inf (but no other special values). For further information on .prior, see section Setting Priorities for Branching. For an introduction to variable and equation fields, see sections Variable Attributes and Equation Attributes respectively.
 
 Scaling Equations
 ------------------
@@ -94,7 +88,7 @@ The scale factor of an equation is defined using the equation attribute
 The scale factor ``d`` is a number or a numerical expression that evaluates to a number. Note 
 that the default scale factor is 1.
 
-Assume that :math:`d` is the scale factor of an equation :math:`G_u`. Assume further, that the 
+Assume that :math:`d` is the scale factor of an equation :math:`G_u`. Assume further that the 
 equation seen by the algorithm is :math:`G_a`. Then we have: :math:`G_a = G_u/d`. This means 
 that each equation as seen by the user is *divided* by the scale factor.
 
@@ -183,12 +177,12 @@ by :math:`d(G_a)/d(V_a)`. Then we have: :math:`\mathbf{d(G_a)/d(V_a) = d(G_u)/d(
 where :math:`c` is the scale factor for the variable and :math:`d` is the scale 
 factor for the equation. 
 
-The user may affect the scaling of derivatives by scaling both the equation and variable involved.
+The user may affect the scaling of derivatives by scaling both the equation and the variable involved.
 
 Scaling Data
 -------------
 
-Scaling input data may contribute considerably towards achieving a well-scaled model. We recommend 
+Scaling input data may contribute considerably to achieving a well-scaled model. We recommend 
 users to try to define the units of the input data such that the largest values expected for decision 
 variables and their marginals is under a million, if possible.
 
@@ -225,7 +219,7 @@ Introduction to Conic Programming
 
 Conic programs can be thought of as generalized linear programs with the additional 
 nonlinear constraint :math:`x \in C`, where :math:`C` is required to be a convex cone. 
-The resulting class of problems is known as <em>conic optimization</em> and has the 
+The resulting class of problems is known as *conic optimization* and has the 
 following form:
 
 .. math::
@@ -322,7 +316,7 @@ The original problem is:
 where :math:`x \in \mathbb{R}^n` is the decision variable, 
 :math:`d, a, l, u \in \mathbb{R}^n` are parameters with :math:`l_i>0` and 
 :math:`d_i \ge 0` and :math:`b \in \mathbb{R}` is a scalar parameter. The original model 
-may be written in GAMSPy using the equations: ::
+may be written in GAMSPy using the following equations: ::
     
     defobj = Sum(n, d[n]/x[n]) == obj
     e1     = Sum(n, a[n]*x[n]) <= b
@@ -376,7 +370,7 @@ can reformulate the problem using conic constraints as:
                         & x \in [l,u],\\
                         & t \ge 0, \\
 
-The GAMSPy formulation using conic equations is: ::
+The GAMSPy formulation using conic equations is as follows: ::
 
     defobjc        = Sum(n, d[n]*t[n]) == obj
     e1             = Sum(n, a[n]*x[n]) <= b

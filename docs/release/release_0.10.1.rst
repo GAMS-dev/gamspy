@@ -4,7 +4,7 @@ GAMSPy 0.10.1
 - General
   
   - Fix ellipsis syntax bug for variable and equation attributes
-  - Introduce Pydantic as a dependency for options and engine config validation
+  - Introduce Pydantic as a dependency for options and engine configuration validation
 
 - Documentation
   

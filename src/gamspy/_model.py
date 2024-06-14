@@ -3,6 +3,8 @@ from __future__ import annotations
 import io
 import logging
 import os
+import platform
+import signal
 import uuid
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -557,11 +559,12 @@ class Model:
         ValidationError
             If the job is not initialized
         """
-        self.container._process.send_signal(2)
-        self.container._stop_socket()
+        if platform.system() == "Windows":
+            self.container._process.send_signal(signal.SIGTERM)
+        else:
+            self.container._process.send_signal(signal.SIGINT)
 
-        while self.container._process.poll() is None:
-            ...
+        self.container._stop_socket()
 
     def freeze(
         self,
