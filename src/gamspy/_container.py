@@ -96,6 +96,7 @@ def open_connection(system_directory: str, working_directory: str):
             f"incrementalMode={address[1]}",
             f"procdir={process_directory}",
             f"license={license_path}",
+            f"curdir={working_directory}",
         ],
         text=True,
         stdout=subprocess.PIPE,
