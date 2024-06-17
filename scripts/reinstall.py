@@ -35,7 +35,7 @@ def install_gamspy(args):
 
 
 def install_gams_license():
-    lice = os.environ["GAMS_LICENSE"]
+    lice = os.environ["LOCAL07"]
     command = ["gamspy", "install", "license"]
 
     try:
