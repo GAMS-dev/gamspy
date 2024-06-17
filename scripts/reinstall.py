@@ -35,17 +35,8 @@ def install_gamspy(args):
 
 
 def install_gams_license():
-    lice = os.environ["LOCAL07"]
-    command = ["gamspy", "install", "license"]
-
-    try:
-        f = tempfile.NamedTemporaryFile(mode="wt", suffix=".txt", delete=False)
-        f.write(lice)
-        f.close()
-        command.append(f.name)
-        subprocess.run(command, check=True)
-    finally:
-        os.unlink(f.name)
+    command = ["gamspy", "install", "license", os.environ["LOCAL07"]]
+    subprocess.run(command, check=True)
 
 
 if __name__ == "__main__":
