@@ -134,7 +134,6 @@ INTERRUPT_STATUS = [
     SolveStatus.ResourceInterrupt,
     SolveStatus.EvaluationInterrupt,
     SolveStatus.UserInterrupt,
-    SolveStatus.TerminatedBySolver,
 ]
 
 ERROR_STATUS = [
@@ -144,6 +143,7 @@ ERROR_STATUS = [
     SolveStatus.SolverError,
     SolveStatus.InternalError,
     SolveStatus.SystemError,
+    SolveStatus.TerminatedBySolver,
 ]
 
 

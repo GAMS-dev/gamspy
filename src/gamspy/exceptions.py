@@ -123,7 +123,6 @@ def customize_exception(
     job_name: str,
     return_code: int | None,
 ) -> str:
-    error_message = ""
     if options.write_listing_file is False or return_code is None:
         return ""
 

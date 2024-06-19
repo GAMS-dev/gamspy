@@ -196,7 +196,7 @@ class Container(gt.Container):
 
         if options is not None and not isinstance(options, Options):
             raise TypeError(
-                f"`options` must be of type gamspy.Options but found {type(options)}"
+                f"`options` must be of type Option but found {type(options)}"
             )
         self._options = Options() if options is None else options
 

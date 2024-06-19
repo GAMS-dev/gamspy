@@ -54,7 +54,7 @@ from gamspy import (
 from gamspy.math import ifthen
 
 
-def main(mip=True):
+def main(mip=False):
     classData_recs = np.array(
         [
             [1, 1, 0, 1, 1, 0],
@@ -259,7 +259,7 @@ def main(mip=True):
     rep = Parameter(m, name="rep", domain=[p, c, o])
     rep[p, c, o].where[(cp.l[c, p] > 0.5)] = classData[c, o]
 
-    print("Objective Function Value: ", carseqMIP.objective_value)
+    print("Objective Function Value: ", carseqLS.objective_value)
 
 
 if __name__ == "__main__":
