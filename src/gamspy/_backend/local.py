@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import uuid
 from typing import TYPE_CHECKING
 
 import gamspy._backend.backend as backend
@@ -28,6 +27,7 @@ class Local(backend.Backend):
         )
         self.options = options
         self.output = output
+        self.job_name = self.container._job
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         trace_file_path = os.path.join(
@@ -68,25 +68,20 @@ class Local(backend.Backend):
         return summary
 
     def run(self, gams_string: str):
-        job_id = "_" + str(uuid.uuid4())
-        job_name = os.path.join(self.container.working_directory, job_id)
-
         # Write gms file
-        with open(job_name + ".gms", "w") as gams_file:
+        with open(self.job_name + ".gms", "w") as gams_file:
             gams_file.write(gams_string)
 
         # Write pf file
-        extra_options = self._prepare_extra_options(job_name)
+        extra_options = self._prepare_extra_options(self.job_name)
         self.options._set_extra_options(extra_options)
 
-        pf_file = os.path.join(
-            self.container.working_directory, job_name + ".pf"
-        )
+        pf_file = self.job_name + ".pf"
         self.options.export(pf_file, self.output)
 
         try:
-            self.container._job = job_name
-            self.container._send_job(job_name, pf_file, self.output)
+            self.container._job = self.job_name
+            self.container._send_job(self.job_name, pf_file, self.output)
 
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
@@ -95,7 +90,7 @@ class Local(backend.Backend):
             message = customize_exception(
                 self.container.working_directory,
                 self.options,
-                job_name,
+                self.job_name,
                 exception.rc,
             )
 

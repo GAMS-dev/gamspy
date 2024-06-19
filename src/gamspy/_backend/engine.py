@@ -8,7 +8,6 @@ import os
 import tempfile
 import time
 import urllib.parse
-import uuid
 import zipfile
 from typing import TYPE_CHECKING
 
@@ -695,12 +694,10 @@ class GAMSEngine(backend.Backend):
         self.output = output
         self.client = client
 
-        self.job_id = f"_job_{uuid.uuid4()}"
-        self.job_name = os.path.join(
-            self.container.working_directory, self.job_id
-        )
-        self.gms_file = self.job_id + ".gms"
-        self.pf_file = self.job_id + ".pf"
+        self.job_name = self.container._job
+        self.gms_file = self.job_name + ".gms"
+        self.pf_file = self.job_name + ".pf"
+        self.restart_file = self.job_name + ".g00"
 
     def is_async(self):
         return not self.client.is_blocking
@@ -728,8 +725,8 @@ class GAMSEngine(backend.Backend):
     def run(self, gams_string: str):
         extra_options = {
             "trace": "trace.txt",
-            "restart": self.job_id + ".g00",
-            "input": self.gms_file,
+            "restart": os.path.basename(self.restart_file),
+            "input": os.path.basename(self.gms_file),
         }
         self.options._set_extra_options(extra_options)
         self.options.export(self.job_name + ".pf")
@@ -747,14 +744,12 @@ class GAMSEngine(backend.Backend):
                 self.client.job.extra_model_files
             )
             self.client.job.extra_model_files = self._append_gamspy_files(
-                os.path.join(
-                    self.container.working_directory, self.job_id + ".g00"
-                ),
+                self.restart_file
             )
             token = self.client.job.post(
                 self.container.working_directory,
-                os.path.join(self.container.working_directory, self.gms_file),
-                os.path.join(self.container.working_directory, self.pf_file),
+                self.gms_file,
+                self.pf_file,
             )
             self.client.job.extra_model_files = original_extra_files
             self.client.tokens.append(token)
@@ -821,7 +816,7 @@ class GAMSEngine(backend.Backend):
 
         extra_options = {
             "trace": trace_file_path,
-            "input": self.job_name + ".gms",
+            "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
@@ -836,22 +831,21 @@ class GAMSEngine(backend.Backend):
         return extra_options
 
     def _create_restart_file(self):
-        pf_file = self.job_name + ".pf"
-        with open(self.job_name + ".gms", "w") as gams_file:
+        with open(self.gms_file, "w") as gams_file:
             gams_file.write("")
 
         options = Options()
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
-        options._extra_options["save"] = self.job_name + ".g00"
-        options.export(pf_file, self.output)
+        options._extra_options["save"] = self.restart_file
+        options.export(self.pf_file, self.output)
 
-        self.container._send_job(self.job_name, pf_file)
+        self.container._send_job(self.job_name, self.pf_file)
 
     def _sync(self, dirty_names: list[str]):
-        pf_file = self.job_name + ".pf"
+        pf_file = self.pf_file
         dirty_str = ",".join(dirty_names)
-        with open(self.job_name + ".gms", "w") as gams_file:
+        with open(self.gms_file, "w") as gams_file:
             gams_file.write(
                 f'execute_load "{self.container._gdx_out}", {dirty_str};'
             )
