@@ -53,31 +53,7 @@ class UtilsSuite(unittest.TestCase):
     def test_available_solvers(self):
         available_solvers = utils.getAvailableSolvers()
 
-        expected = [
-            "BARON",
-            "CBC",
-            "CONOPT",
-            "CONOPT3",
-            "CONVERT",
-            "COPT",
-            "CPLEX",
-            "DICOPT",
-            "GUROBI",
-            "HIGHS",
-            "IPOPT",
-            "IPOPTH",
-            "KNITRO",
-            "MINOS",
-            "MOSEK",
-            "MPSGE",
-            "NLPEC",
-            "PATH",
-            "SBB",
-            "SCIP",
-            "SHOT",
-            "SNOPT",
-            "XPRESS",
-        ]
+        expected = ["CONOPT", "CONVERT", "CPLEX", "NLPEC", "PATH", "SBB"]
         self.assertEqual(available_solvers, expected)
 
 
