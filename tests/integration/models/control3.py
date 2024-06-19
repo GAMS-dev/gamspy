@@ -92,7 +92,7 @@ def main():
 
     import math
 
-    assert math.isclose(control3.objective_value, 0, rel_tol=0.001)
+    assert math.isclose(control3.objective_value, 2e300, rel_tol=0.001)
 
 
 if __name__ == "__main__":

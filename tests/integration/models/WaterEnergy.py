@@ -32,11 +32,9 @@ from gamspy import (
     Model,
     Parameter,
     Set,
-    SolveStatus,
     Sum,
     Variable,
 )
-from gamspy.exceptions import GamspyException
 from gamspy.math import sqr
 
 
@@ -269,13 +267,7 @@ def main():
         sense="min",
         objective=TC + CC + WaterCost,
     )
-    try:
-        DEDcostbased.solve()
-    except GamspyException:
-        if DEDcostbased.solve_status == SolveStatus.TerminatedBySolver:
-            pass
-        else:
-            raise
+    DEDcostbased.solve()
 
     print(
         "Objective Function Value:  ", round(DEDcostbased.objective_value, 4)

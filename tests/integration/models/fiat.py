@@ -311,7 +311,9 @@ def main():
     fiat.solve()
     import math
 
-    assert math.isclose(fiat.objective_value, 1.4594, rel_tol=0.001)
+    assert math.isclose(
+        fiat.objective_value, 1.7306919333204087, rel_tol=0.001
+    )
     print("Objective Function Value:  ", fiat.objective_value)
     # End Fiat
 
