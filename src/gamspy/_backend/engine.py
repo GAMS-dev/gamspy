@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import GamsEngineConfiguration
+from gams import DebugLevel, GamsEngineConfiguration
 from gams.control.workspace import GamsException
 
 import gamspy._backend.backend as backend
@@ -689,12 +689,12 @@ class GAMSEngine(backend.Backend):
             model,
             os.path.basename(container._gdx_in),
             os.path.basename(container._gdx_out),
+            options,
         )
-        self.options = options
         self.output = output
         self.client = client
 
-        self.job_name = self.container._job
+        self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
@@ -723,20 +723,18 @@ class GAMSEngine(backend.Backend):
         return summary
 
     def run(self, gams_string: str):
+        if self.container._debugging_level == DebugLevel.KeepFiles:
+            self.options.log_file = os.path.basename(self.job_name) + ".log"
+
         extra_options = {
             "trace": "trace.txt",
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
         }
         self.options._set_extra_options(extra_options)
-        self.options.export(self.job_name + ".pf")
+        self.options.export(self.pf_file)
 
-        # Export gms file
-        gms_path = os.path.join(
-            self.container.working_directory, self.gms_file
-        )
-
-        with open(gms_path, "w", encoding="utf-8") as file:
+        with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
         try:

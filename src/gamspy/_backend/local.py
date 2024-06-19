@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
+from gams import DebugLevel
+
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
 import gamspy.utils as utils
@@ -23,11 +25,13 @@ class Local(backend.Backend):
         model: Model | None = None,
     ) -> None:
         super().__init__(
-            container, model, container._gdx_in, container._gdx_out
+            container, model, container._gdx_in, container._gdx_out, options
         )
-        self.options = options
         self.output = output
-        self.job_name = self.container._job
+        self.job_name = self.get_job_name()
+
+        if self.container._debugging_level == DebugLevel.KeepFiles:
+            self.options.log_file = self.job_name + ".log"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         trace_file_path = os.path.join(

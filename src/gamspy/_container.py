@@ -179,10 +179,11 @@ class Container(gt.Container):
 
         super().__init__(system_directory=system_directory)
 
+        self._debugging_level = self._get_debugging_level(debugging_level)
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
-            self._get_debugging_level(debugging_level),
+            self._debugging_level,
         )
 
         self.working_directory = self.workspace.working_directory

@@ -9,6 +9,8 @@ import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
+from gams import DebugLevel
+
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
 from gamspy._options import Options
@@ -401,11 +403,10 @@ class NEOSServer(backend.Backend):
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 
-        super().__init__(container, model, "in.gdx", "output.gdx")
+        super().__init__(container, model, "in.gdx", "output.gdx", options)
 
-        self.options = options
         self.client = client
-        self.job_name = self.container._job
+        self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
@@ -435,6 +436,9 @@ class NEOSServer(backend.Backend):
         return summary
 
     def run(self, gams_string: str):
+        if self.container._debugging_level == DebugLevel.KeepFiles:
+            self.options.log_file = os.path.basename(self.job_name) + ".log"
+
         extra_options = {"trace": "trace.txt"}
         self.options._set_extra_options(extra_options)
 

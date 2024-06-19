@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import os
+import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
+from gams import DebugLevel
 
 from gamspy.exceptions import ValidationError
 
@@ -73,18 +75,34 @@ def backend_factory(
 
 class Backend(ABC):
     def __init__(
-        self, container: Container, model: Model, gdx_in: str, gdx_out: str
+        self,
+        container: Container,
+        model: Model,
+        gdx_in: str,
+        gdx_out: str,
+        options: Options,
     ):
         self.container = container
         self.model = model
         self.gdx_in = gdx_in
         self.gdx_out = gdx_out
+        self.options = options
 
     @abstractmethod
     def is_async(self): ...
 
     @abstractmethod
     def solve(self, keep_flags: bool = False): ...
+
+    def get_job_name(self):
+        job_name = self.container._job
+
+        if self.container._debugging_level == DebugLevel.KeepFiles:
+            job_name = os.path.join(
+                self.container.working_directory, "_" + str(uuid.uuid4())
+            )
+
+        return job_name
 
     def preprocess(self, keep_flags: bool = False):
         (
