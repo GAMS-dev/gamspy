@@ -81,6 +81,16 @@ SOLVER_CAPABILITIES = {
 }
 
 
+def getSolverCapabilities() -> dict[str, list[str]]:
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return gamspy_base.capabilities
+
+
 def getInstalledSolvers() -> list[str]:
     """
     Returns the list of installed solvers

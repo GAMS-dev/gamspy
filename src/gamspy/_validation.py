@@ -366,7 +366,8 @@ def validate_solver_args(solver, problem, options, output):
                 f" {solver.lower()}`"
             )
 
-        if str(problem) not in utils.SOLVER_CAPABILITIES[solver.upper()]:
+        capabilities = utils.getSolverCapabilities()
+        if str(problem) not in capabilities[solver.upper()]:
             raise ValidationError(
                 f"Given solver `{solver}` is not capable of solving given"
                 f" problem type `{problem}`. See capability matrix "
