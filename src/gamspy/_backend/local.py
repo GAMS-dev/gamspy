@@ -26,12 +26,9 @@ class Local(backend.Backend):
         model: Model | None = None,
     ) -> None:
         super().__init__(container, container._gdx_in, container._gdx_out)
-        if model is None:
-            self.options = options._get_gams_options(self.container.workspace)
-        else:
-            self.options = options._get_gams_options(
-                self.container.workspace, model.problem
-            )
+        self.options = options._get_gams_options(
+            self.container.workspace, output
+        )
         self.options.license = self.container._license_path
         self.options.trace = os.path.join(
             self.container.workspace.working_directory, "trace.txt"

@@ -208,6 +208,10 @@ def _filter_gams_string(raw_string: str) -> str:
         "$loadDC",
         "$offUNDF",
         "execute_unload",
+        "Parameter autogen",
+        "autogen",
+        "$offListing",
+        "$onListing",
     )
     filtered_lines = [
         line for line in raw_string.split("\n") if not line.startswith(FILTERS)

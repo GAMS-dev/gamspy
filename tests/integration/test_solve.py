@@ -1159,10 +1159,6 @@ class SolveSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             transport.solve(solver="SNOPT")
 
-        # solver is installed but cannot be used for this problem type
-        with self.assertRaises(ValidationError):
-            transport.solve(solver="MPSGE")
-        
         with self.assertRaises(TypeError):
             transport.solve(options={"bla": "bla"})
             

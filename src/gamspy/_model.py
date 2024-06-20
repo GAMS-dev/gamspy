@@ -415,6 +415,7 @@ class Model:
         self.container._add_statement(solve_string + ";\n")
 
     def _create_model_attributes(self) -> None:
+        self.container._add_statement("$offListing")
         for attr_name in attribute_map:
             symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
@@ -422,6 +423,7 @@ class Model:
             self.container._add_statement(
                 f"{symbol_name} = {self.name}.{attr_name};"
             )
+        self.container._add_statement("$onListing")
 
     def _update_model_attributes(self) -> None:
         container = self.container._temp_container
@@ -614,10 +616,11 @@ class Model:
         if options is None:
             options = self.container._options
 
-        options._set_extra_options(
+        options._set_solver_options(
             self.container.working_directory,
-            solver=solver,
-            solver_options=solver_options,
+            solver,
+            self.problem,
+            solver_options,
         )
 
         if self._is_frozen:
