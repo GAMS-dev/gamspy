@@ -18,7 +18,7 @@ alone. Here's why GAMSPy stands out as the ultimate choice:
 
   * You are not limited with inference, you can try training your neural-network.
 
-  * You can build the architecture from scratch in GAMSPy, if you like
+  * You can build the architecture from scratch in GAMSPy
 
 * GAMSPy generates the equations and variables in GAMS not in Python giving GAMSPy a speed advantage
 
