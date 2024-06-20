@@ -161,7 +161,7 @@ redirected to both a file and the console simultaneously.
     ....
     ....
     ....
-    model.solve(output=sys.stdout, options=Options(log_file="my_log_file.txt", redirect_log_to_stdout=True))
+    model.solve(output=sys.stdout, options=Options(log_file="my_log_file.txt"))
 
 This code snippet would redirect the output to your console as well as saving the log file in your working directory.
 
@@ -188,6 +188,7 @@ By default, ``generateGamsString`` returns exactly the same string that is execu
 allows users to see only the raw model without any data or dollar calls or other necessary statements to make the model work.
 
 For example, the following code snippet:
+
 .. code-block:: python
 
     from gamspy import Container, Set

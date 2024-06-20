@@ -1,25 +1,18 @@
 from __future__ import annotations
 
-import logging
+import io
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Optional
+import tempfile
+from typing import TYPE_CHECKING, Literal, Optional
 
-from gams import GamsOptions, GamsWorkspace, SymbolUpdateType
+from gams import SymbolUpdateType, GamsOptions
 from pydantic import BaseModel
 
 from gamspy.exceptions import ValidationError
 
-logger = logging.getLogger("Options")
-logger.setLevel(logging.INFO)
-
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-handler.setLevel(logging.INFO)
-logger.addHandler(handler)
-
 if TYPE_CHECKING:
+    from gams import GamsWorkspace
     from gamspy._model import Problem
 
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
@@ -53,7 +46,7 @@ option_map = {
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
     "listing_file": "output",
-    "log_file": "_logfile",
+    "log_file": "logfile",
     "variable_listing_limit": "limcol",
     "equation_listing_limit": "limrow",
     "node_limit": "nodlim",
@@ -72,7 +65,7 @@ option_map = {
     "suppress_compiler_listing": "suppress",
     "report_solver_status": "sysout",
     "threads": "threads",
-    "write_listing_file": "_writeoutput",
+    "write_listing_file": "writeoutput",
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }
@@ -97,14 +90,14 @@ class Options(BaseModel):
     allow_suffix_in_equation: Optional[bool] = None
     allow_suffix_in_limited_variables: Optional[bool] = None
     basis_detection_threshold: Optional[float] = None
-    compile_error_limit: int = 1
+    compile_error_limit: Optional[int] = None
     domain_violation_limit: Optional[int] = None
     job_time_limit: Optional[float] = None
     job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
     integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
-    keep_temporary_files: bool = False
+    keep_temporary_files: Optional[int] = None
     listing_file: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
@@ -114,23 +107,22 @@ class Options(BaseModel):
     relative_optimality_gap: Optional[float] = None
     profile: Optional[int] = None
     profile_tolerance: Optional[float] = None
-    redirect_log_to_stdout: Optional[bool] = False
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Literal[0, 1, 2] = 2
-    show_os_memory: Literal[0, 1, 2] = 0
+    report_solution: Optional[Literal[0, 1, 2]] = None
+    show_os_memory: Optional[Literal[0, 1, 2]] = None
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
-    suppress_compiler_listing: bool = False
+    suppress_compiler_listing: Optional[bool] = None
     report_solver_status: Optional[bool] = None
     threads: Optional[int] = None
-    write_listing_file: bool = True
+    write_listing_file: Optional[bool] = None
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def _get_gams_compatible_options(self) -> dict:
+    def _get_gams_compatible_options(self, output: io.TextIOWrapper | None) -> dict:
         gamspy_options = self.model_dump(exclude_none=True)
         if "allow_suffix_in_equation" in gamspy_options:
             allows_suffix = gamspy_options["allow_suffix_in_equation"]
@@ -168,11 +160,10 @@ class Options(BaseModel):
                     gamspy_options["log_file"]
                 )
 
-        gams_options = {
-            option_map[key]: value
-            for key, value in gamspy_options.items()
-            if key in option_map
-        }
+        gams_options = dict()
+        for key, value in gamspy_options.items():
+            value = int(value) if isinstance(value, bool) else value
+            gams_options[option_map[key]] = value
 
         gams_options["previouswork"] = (
             1  # # In case GAMS version differs on backend
@@ -180,28 +171,28 @@ class Options(BaseModel):
         gams_options["traceopt"] = 3
 
         if self.log_file:
-            if self.redirect_log_to_stdout:
-                gams_options["_logoption"] = 4
+            if output is not None:
+                gams_options["logoption"] = 4
             else:
-                gams_options["_logoption"] = 2
+                gams_options["logoption"] = 2
         else:
-            if self.redirect_log_to_stdout:
-                gams_options["_logoption"] = 3
+            if output is not None:
+                gams_options["logoption"] = 3
             else:
-                gams_options["_logoption"] = 0
+                gams_options["logoption"] = 0
 
         return gams_options
 
-    def _set_extra_options(
+    def _set_solver_options(
         self,
         working_directory: str,
         solver: str | None,
+        problem: Problem,
         solver_options: dict | None,
     ):
-        extra_options: dict[str, Any] = {}
-
-        if solver is not None:
-            extra_options["solver"] = solver
+        """Set the solver and the solver options"""
+        if solver:
+            self._solver = (str(problem), solver)
 
         if solver_options:
             if solver is None:
@@ -217,35 +208,38 @@ class Options(BaseModel):
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            extra_options["optfile"] = 123
+            self._solver_options_file = "123"
 
-        self._extra_options = extra_options
+    def _set_extra_options(self, options: dict) -> None:
+        """Set extra options of the backend"""
+        self._extra_options = options
 
-    def _get_gams_options(
-        self, workspace: GamsWorkspace, problem: Problem | None = None
-    ) -> GamsOptions:
-        gams_options = GamsOptions(workspace)
+    def export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
+        all_options = dict()
+        # Solver options
+        if hasattr(self, "_solver"):
+            problem_type, solver = self._solver
+            all_options[problem_type] = solver
 
-        if hasattr(self, "_extra_options") and "solver" in self._extra_options:
-            solver = self._extra_options["solver"]
-            gams_options.all_model_types = solver
-            if problem is not None and solver.lower() != getattr(gams_options, str(problem).lower()).lower():
-                raise ValidationError(
-                    f"Given solver `{solver}` is not capable of solving given"
-                    f" problem type `{problem}`. See capability matrix "
-                    "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
-                    " to choose a suitable solver"
-                )
+        if hasattr(self, "_solver_options_file"):
+            all_options["optfile"] = self._solver_options_file
 
-        if (
-            hasattr(self, "_extra_options")
-            and "optfile" in self._extra_options
-        ):
-            gams_options.optfile = self._extra_options["optfile"]
+        # Extra options
+        if hasattr(self, "_extra_options") and self._extra_options:
+            all_options.update(**self._extra_options)
 
-        gams_options_dict = self._get_gams_compatible_options()
-        for key, value in gams_options_dict.items():
-            setattr(gams_options, key, value)
+        # User options
+        user_options = self._get_gams_compatible_options(output)
+        all_options.update(**user_options)
+
+        # Generate pf file
+        with open(pf_file, "w") as file:
+            file.write("\n".join([f"{key} = {value}" for key, value in all_options.items()]))
+
+    def _get_gams_options(self, workspace: GamsWorkspace, output: io.TextIOWrapper | None = None) -> GamsOptions:
+        with tempfile.NamedTemporaryFile() as file:
+            self.export(file.name, output)
+            gams_options = GamsOptions(workspace, opt_file=file.name)
 
         return gams_options
 
