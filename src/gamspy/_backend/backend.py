@@ -156,5 +156,4 @@ class Backend(ABC):
 
     def clean_dirty_symbols(self, dirty_names: list[str]):
         for name in dirty_names:
-            if self.container[name].synchronize:
-                self.container[name]._is_dirty = False
+            self.container[name]._is_dirty = False
