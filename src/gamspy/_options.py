@@ -237,9 +237,9 @@ class Options(BaseModel):
             file.write("\n".join([f"{key} = {value}" for key, value in all_options.items()]))
 
     def _get_gams_options(self, workspace: GamsWorkspace, output: io.TextIOWrapper | None = None) -> GamsOptions:
-        with tempfile.NamedTemporaryFile() as file:
-            self.export(file.name, output)
-            gams_options = GamsOptions(workspace, opt_file=file.name)
+        temp_path = os.path.join(workspace.working_directory, "dummy.pf")
+        self.export(temp_path, output)
+        gams_options = GamsOptions(workspace, opt_file=temp_path)
 
         return gams_options
 
