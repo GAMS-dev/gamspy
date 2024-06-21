@@ -12,7 +12,7 @@ GAMSPy 0.12.3
   
   - Test relative path for listing file and log file creation options.
   - Update log option tests.
-  - Add new tests for generateGamString.
+  - Add new tests for generateGamsString.
 
 - Documentation
   

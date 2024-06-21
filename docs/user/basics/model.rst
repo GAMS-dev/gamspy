@@ -59,7 +59,7 @@ EMP        Extended Mathematical Program
 MPSGE      General Equilibrium
 ========== ==========================================================
 
-All model types are exposed with ``Problem`` enum but the problem type
+All model types are exposed with ``Problem`` enum, but the problem type
 can be specified as a string as well.
 
 Also the direction types of the optimization (MIN, MAX, or FEASIBILITY) are
@@ -106,7 +106,7 @@ Model Attributes
 
 Models have attributes that hold a variety of information, including
 
-* information about the results of a solve performed, a solve statement, the solution of a model,
+* information about the results from solving a model, a solve statement, the model's solution,
 * information about certain features to be used by GAMS or the solver,
 * information passed to GAMS or the solver specifying various settings that are also subject to option statements.
 
@@ -114,7 +114,7 @@ Models have attributes that hold a variety of information, including
 Model Attribute        Description
 ====================== ===========================
 num_domain_violations  Number of domain violations
-algorithm_time         Solver dependent timing information
+algorithm_time         Solver-dependent timing information
 total_solve_time       Elapsed time it took to execute a solve statement in total
 total_solver_time      Elapsed time taken by the solver only
 num_iterations         Number of iterations used
@@ -210,7 +210,8 @@ Solving with GAMS Engine
 Synchronous Solve
 ~~~~~~~~~~~~~~~~~
 
-In order to send your model to be solved to GAMS Engine, you need to define the configuration of GAMS Engine.
+In order to send your model to be solved to `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_, 
+you need to define the configuration of GAMS Engine.
 This can be done by importing ``EngineClient`` and creating an instance. Then, the user can pass it to the 
 ``solve`` method and specify the backend as ``engine``. ::
 
@@ -295,7 +296,7 @@ Solving with NEOS Server
 Synchronous Solve
 ~~~~~~~~~~~~~~~~~
 
-In order to send your model to be solved to NEOS Server, you need to create a NeosClient.
+In order to send your model to be solved to `NEOS Server <https://neos-server.org/neos/>`_, you need to create a NeosClient.
 This can be done by importing ``NeosClient`` and creating an instance. Then, the user can pass it to the 
 ``solve`` method and specify the backend as ``neos``. ::
 
@@ -371,7 +372,7 @@ last submitted job, we can do that following: ::
         job_number, job_password, working_directory="my_out_directory"
     )
 
-The results would be downloaded to the given working directory. The downloaded gdx file will always have name "output.gdx". 
+The results would be downloaded to the given working directory. The downloaded gdx file will always have the name "output.gdx". 
 Then, if one wants to read the results, they can simply create a new Container and read the results from the downloaded gdx 
 file: ::
 
@@ -405,152 +406,152 @@ Solve options can be specified as an :meth:`gamspy.Options` class. For example: 
 
 Here is the list of options and their descriptions:
 
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| Option                            | Description                                                                       | Possible Values                                          |
-+===================================+===================================================================================+==========================================================+
-| cns                               | Default cns solver                                                                | Any solver installed in your system that can solve cns   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| dnlp                              | Default dnlp solver                                                               | Any solver installed in your system that can solve dnlp  |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| emp                               | Default emp solver                                                                | Any solver installed in your system that can solve emp   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| lp                                | Default lp solver                                                                 | Any solver installed in your system that can solve lp    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| mcp                               | Default mcp solver                                                                | Any solver installed in your system that can solve mcp   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| minlp                             | Default minlp solver                                                              | Any solver installed in your system that can solve minlp |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| mip                               | Default mip solver                                                                | Any solver installed in your system that can solve mip   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| miqcp                             | Default miqcp solver                                                              | Any solver installed in your system that can solve miqcp |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| mpec                              | Default mpec solver                                                               | Any solver installed in your system that can solve mpec  |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| nlp                               | Default nlp solver                                                                | Any solver installed in your system that can solve nlp   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| qcp                               | Default qcp solver                                                                | Any solver installed in your system that can solve qcp   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| rminlp                            | Default rminlp solver                                                             |                                                          |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| rmip                              | Default rmip solver                                                               | Any solver installed in your system that can solve rmip  |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| rmiqcp                            | Default rmiqcp solver                                                             |                                                          |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| rmpec                             | Default rmpec solver                                                              | Any solver installed in your system that can solve rmpec |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| allow_suffix_in_equation          | Allow variables with suffixes in model algebra                                    | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| allow_suffix_in_limited_variables | Allow domain limited variables with suffixes in model                             | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| basis_detection_threshold         | Basis detection threshold                                                         | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| compile_error_limit               | Compile time error limiy                                                          | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| domain_violation_limit            | Domain violation limit solver default                                             | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| gdx_file                          | Name of the gdx file with all symbols                                             | str                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| job_time_limit                    | Elapsed time limit in seconds                                                     | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| job_heap_limit                    | Maximum Heap size allowed in MB                                                   | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| hold_fixed_variables              | Treat fixed variables as constants                                                | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| integer_variable_upper_bound      | Set mode for default upper bounds on integer variables                            | 0: Set to +INF                                           |
-|                                   |                                                                                   |                                                          |          
-|                                   |                                                                                   | 1: Set to 100.                                           |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: Set to 100 and write to the log if the level > 100    |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 3: Same as 2 but issues an error if the level > 100      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| iteration_limit                   | Iteration limit of solver                                                         | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| keep_temporary_files              | Controls keeping or deletion of process directory and scratch files               | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| license                           | Use alternative license file                                                      | Path to the alternative license                          |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| listing_file                      | Listing file name                                                                 | Name of the listing file                                 |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| log_file                          | Log file name                                                                     | Name of the log file                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| variable_listing_limit            | Maximum number of columns listed in one variable block                            | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| equation_listing_limit            | Maximum number of rows listed in one equation block                               | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| node_limit                        | Node limit in branch and bound tree                                               | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| absolute_optimality_gap           | Absolute Optimality criterion solver default                                      | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| relative_optimality_gap           | Relative Optimality criterion solver default                                      | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| profile                           | Execution profiling                                                               | 0: No profiling                                          |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 1: Minimum profiling                                     |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: Profiling depth for nested control structures         |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| profile_tolerance                 | Minimum time a statement must use to appear in profile generated output           | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| time_limit                        | Wall-clock time limit for solver                                                  | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| savepoint                         | Save solver point in GDX file                                                     | 0: No point GDX file is to be saved                      |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 1: A point GDX file from the last solve is to be saved   |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: A point GDX file from every solve is to be saved      |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 3: A point GDX file from the last solve is to be saved   |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 4: A point GDX file from every solve is to be saved      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| seed                              | Random number seed                                                                | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| report_solution                   | Solution report print option                                                      | 0: Remove solution listings following solves             |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 1: Include solution listings following solves            |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: Suppress all solution information                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| show_os_memory                    |                                                                                   | 0: Show memory reported by internal accounting           |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 1: Show resident set size reported by operating system   |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: Show virtual set size reported by operating system    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| solver_link_type                  | Solver link option                                                                | https://gams.com/45/docs/UG_GamsCall.html#GAMSAOsolvelink|
-|                                   |                                                                                   |                                                          |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| multi_solve_strategy              | Multiple solve management                                                         | "replace" | "merge" | "clear"                            |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| step_summary                      | Summary of computing resources used by job steps                                  | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| suppress_compiler_listing         | Compiler listing option                                                           | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| report_solver_status              | Solver Status file reporting option                                               | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| threads                           | Number of threads to be used by a solver                                          | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| trace_file                        | Trace file name                                                                   | Name of the trace file                                   |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| trace_level                       | Modelstat/Solvestat threshold used in conjunction with action=GT                  | int                                                      |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| trace_file_format                 | Trace file format option                                                          | 0: Solver and GAMS step trace                            |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 1: Solver and GAMS exit trace                            |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 2: Solver trace only                                     |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 3: Trace only in format used for GAMS performance world  |
-|                                   |                                                                                   |                                                          |
-|                                   |                                                                                   | 5: Gams exit trace with all available trace fields       |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| write_listing_file                | Controls listing file creation                                                    | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| zero_rounding_threshold           | The results of certain operations will be set to zero if abs(result) LE ZeroRes   | float                                                    |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
-| report_underflow                  | Report underflow as a warning when abs(results) LE ZeroRes and result set to zero | bool                                                     |
-+-----------------------------------+-----------------------------------------------------------------------------------+----------------------------------------------------------+
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| Option                            | Description                                                                       | Possible Values                                                                           |
++===================================+===================================================================================+===========================================================================================+
+| cns                               | Default cns solver                                                                | Any solver installed in your system that can solve cns                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| dnlp                              | Default dnlp solver                                                               | Any solver installed in your system that can solve dnlp                                   |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| emp                               | Default emp solver                                                                | Any solver installed in your system that can solve emp                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| lp                                | Default lp solver                                                                 | Any solver installed in your system that can solve lp                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| mcp                               | Default mcp solver                                                                | Any solver installed in your system that can solve mcp                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| minlp                             | Default minlp solver                                                              | Any solver installed in your system that can solve minlp                                  |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| mip                               | Default mip solver                                                                | Any solver installed in your system that can solve mip                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| miqcp                             | Default miqcp solver                                                              | Any solver installed in your system that can solve miqcp                                  |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| mpec                              | Default mpec solver                                                               | Any solver installed in your system that can solve mpec                                   |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| nlp                               | Default nlp solver                                                                | Any solver installed in your system that can solve nlp                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| qcp                               | Default qcp solver                                                                | Any solver installed in your system that can solve qcp                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| rminlp                            | Default rminlp solver                                                             |                                                                                           |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| rmip                              | Default rmip solver                                                               | Any solver installed in your system that can solve rmip                                   |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| rmiqcp                            | Default rmiqcp solver                                                             |                                                                                           |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| rmpec                             | Default rmpec solver                                                              | Any solver installed in your system that can solve rmpec                                  |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| allow_suffix_in_equation          | Allow variables with suffixes in model algebra                                    | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| allow_suffix_in_limited_variables | Allow domain limited variables with suffixes in model                             | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| basis_detection_threshold         | Basis detection threshold                                                         | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| compile_error_limit               | Compile time error limit                                                          | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| domain_violation_limit            | Domain violation limit solver default                                             | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| gdx_file                          | Name of the gdx file with all symbols                                             | str                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| job_time_limit                    | Elapsed time limit in seconds                                                     | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| job_heap_limit                    | Maximum Heap size allowed in MB                                                   | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| hold_fixed_variables              | Treat fixed variables as constants                                                | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| integer_variable_upper_bound      | Set mode for default upper bounds on integer variables                            | 0: Set to +INF                                                                            |
+|                                   |                                                                                   |                                                                                           |          
+|                                   |                                                                                   | 1: Set to 100.                                                                            |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: Set to 100 and write to the log if the level > 100                                     |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 3: Same as 2 but issues an error if the level > 100                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| iteration_limit                   | Iteration limit of solver                                                         | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| keep_temporary_files              | Controls keeping or deletion of process directory and scratch files               | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| license                           | Use alternative license file                                                      | Path to the alternative license                                                           |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| listing_file                      | Listing file name                                                                 | Name of the listing file                                                                  |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| log_file                          | Log file name                                                                     | Name of the log file                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| variable_listing_limit            | Maximum number of columns listed in one variable block                            | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| equation_listing_limit            | Maximum number of rows listed in one equation block                               | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| node_limit                        | Node limit in branch and bound tree                                               | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| absolute_optimality_gap           | Absolute Optimality criterion solver default                                      | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| relative_optimality_gap           | Relative Optimality criterion solver default                                      | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| profile                           | Execution profiling                                                               | 0: No profiling                                                                           |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 1: Minimum profiling                                                                      |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: Profiling depth for nested control structures                                          |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| profile_tolerance                 | Minimum time a statement must use to appear in profile generated output           | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| time_limit                        | Wall-clock time limit for solver                                                  | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| savepoint                         | Save solver point in GDX file                                                     | 0: No point GDX file is to be saved                                                       |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 1: A point GDX file from the last solve is to be saved                                    |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: A point GDX file from every solve is to be saved                                       |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 3: A point GDX file from the last solve is to be saved                                    |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 4: A point GDX file from every solve is to be saved                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| seed                              | Random number seed                                                                | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| report_solution                   | Solution report print option                                                      | 0: Remove solution listings following solves                                              |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 1: Include solution listings following solves                                             |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: Suppress all solution information                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| show_os_memory                    |                                                                                   | 0: Show memory reported by internal accounting                                            |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 1: Show resident set size reported by operating system                                    |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: Show virtual set size reported by operating system                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| solver_link_type                  | Solver link option                                                                | See `GAMS documentation <https://gams.com/latest/docs/UG_GamsCall.html#GAMSAOsolvelink>`_ |
+|                                   |                                                                                   |                                                                                           |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| multi_solve_strategy              | Multiple solve management                                                         | "replace" | "merge" | "clear"                                                             |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| step_summary                      | Summary of computing resources used by job steps                                  | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| suppress_compiler_listing         | Compiler listing option                                                           | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| report_solver_status              | Solver Status file reporting option                                               | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| threads                           | Number of threads to be used by a solver                                          | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| trace_file                        | Trace file name                                                                   | Name of the trace file                                                                    |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| trace_level                       | Modelstat/Solvestat threshold used in conjunction with action=GT                  | int                                                                                       |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| trace_file_format                 | Trace file format option                                                          | 0: Solver and GAMS step trace                                                             |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 1: Solver and GAMS exit trace                                                             |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 2: Solver trace only                                                                      |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 3: Trace only in format used for GAMS performance world                                   |
+|                                   |                                                                                   |                                                                                           |
+|                                   |                                                                                   | 5: Gams exit trace with all available trace fields                                        |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| write_listing_file                | Controls listing file creation                                                    | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| zero_rounding_threshold           | The results of certain operations will be set to zero if abs(result) LE ZeroRes   | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| report_underflow                  | Report underflow as a warning when abs(results) LE ZeroRes and result set to zero | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 
 Solver Options
 --------------

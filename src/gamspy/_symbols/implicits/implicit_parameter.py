@@ -4,9 +4,11 @@ from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._algebra.operation as operation
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 
 if TYPE_CHECKING:
     from gamspy import Equation, Parameter, Set, Variable
@@ -77,7 +79,13 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return self.parent.dimension
 
     def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "eq", other)
+        op = "eq"
+        if isinstance(
+            other,
+            (ImplicitVariable, expression.Expression, operation.Operation),
+        ):
+            op = "=e="
+        return expression.Expression(self, op, other)
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)

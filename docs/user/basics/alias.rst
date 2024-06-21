@@ -9,9 +9,9 @@ Alias: Multiple Names for a Set
 ***********************************
 
 
-Sometimes it is necessary to have more than one name for the same set, e.g., in models that 
+Sometimes it is necessary to have more than one name for the same set, for example, in models that 
 deal with the interactions of elements within the same set.
-In input-output models for example, each commodity may be used in the production of all 
+For instance, in input-output models, each commodity may be used in the production of all 
 other commodities and it is necessary to have two names for the set of commodities to specify 
 the problem without ambiguity. Example: ::
     
@@ -96,8 +96,8 @@ members of one set have to be modeled. Example: ::
 The parameter ``tran`` is 
 two-dimensional and both indices are the set ``i``. The data for the transport cost between 
 the plants is given in this symbol; note that the transport costs are given only for one 
-direction here, i.e. the costs from ``pto-suarez`` to ``palmasola`` are explicitly specified in 
-the parameter while the costs in the opposite direction are not given at all:
+direction; for instance, costs are specified from ``pto-suarez`` to ``palmasola`` but not 
+vice versa. 
 
 ==========  ===========  ============  ========  ============
 ..            palmasola    pto-suarez    potosi    baranquill

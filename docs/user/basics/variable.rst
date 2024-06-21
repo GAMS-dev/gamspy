@@ -12,8 +12,8 @@ Introduction
 =============
 
 This chapter covers the declaration and manipulation of GAMSPy 
-:meth:`variables <gamspy.Variable>`. Many of the concepts covered in the 
-previous chapters are directly applicable here.
+:meth:`variables <gamspy.Variable>`. Many concepts from previous chapters apply 
+here as well.
 
 A variable is the GAMSPy name for what are called *endogenous variables* by 
 economists, *columns* or *activities* by linear programming experts, and 
@@ -70,7 +70,7 @@ used to settle the issue. For more details on domain checking, see section
 in the GAMS documentation.
 
 .. note::
-    - Variables can be defined over from 0 up to 20 sets
+    - Variables can be defined over 0 to 20 sets.
     - The sets over which variables are declared indicate that these variables are potentially 
       defined for every element of the defining sets. However the actual definition of variables 
       does not occur until variables appear in an :ref:`equation definition <equation>` where the 
@@ -410,8 +410,10 @@ statement has been processed or if non-default values have been set with an assi
 statement, this condition is satisfied. 
 
 .. warning::
-    The ``fx`` attribute is mostly just a shorthand for ``lo`` and ``up`` and can 
-    therefore only be used only on the left-hand side of an assignment statement.
+    The ``fx`` attribute fixes the variable at a certain value, effectively setting both 
+    the lower and upper bounds to this value. Therefore, it is mostly just a shorthand 
+    for ``lo`` and ``up`` and can only be used on the left-hand side of an assignment 
+    statement.
 
 
 .. _types-of-discrete-variables:

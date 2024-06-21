@@ -8,7 +8,7 @@
 Card and Ord
 ************
 
-The ``Card`` and ``Ord`` operators help to formulate position related
+The ``Card`` and ``Ord`` operators help to formulate position-related
 expressions on sets which hold labels that do not have a numerical
 representation. Both operators ``Card`` and ``Ord`` return integer values
 when applied to sets. While the integer values returned do not represent
@@ -19,7 +19,7 @@ Ord
 ==========
 
 The ``Ord`` operator can be used with one-dimensional sets that are static and
-ordered as well as corresponding aliases. It returns the relative position of
+ordered, as well as corresponding aliases. It returns the relative position of
 elements. The following example shows how ``Ord`` can be used::
 
     import gamspy as gp
@@ -39,14 +39,14 @@ Note that as a result of the statements above, the value of ``val["1985"]`` will
 
 A common use of ``Ord`` is in setting up vectors that represent quantities
 growing in some analytically specified way. For example, suppose a country has
-56 million people in the base period and the population is growing at the rate
+56 million people in the base period, and the population is growing at the rate
 of 1.5 percent per year. Then the population in succeeding years can be
 calculated as follows::
 
     population[t] = 56*(1.015**(gp.Ord(t) - 1))
 
 It is often useful to simulate general matrix operations in GAMSPy. The first
-index of a two dimensional parameter can conveniently represent the rows, the
+index of a two-dimensional parameter can conveniently represent the rows, the
 second the columns and order is necessary. The example below shows how to set
 the upper triangle of a matrix equal to the row index plus the column index,
 and the diagonal and lower triangle to zero::
