@@ -5,6 +5,7 @@ import os
 import uuid
 from typing import TYPE_CHECKING
 
+import gams.transfer as gt
 from gams import (
     EquType,
     GamsCheckpoint,
@@ -86,9 +87,8 @@ class ModelInstance:
         restart_from = GamsCheckpoint(container.workspace, save_file)
 
         self.modifiables = self._init_modifiables(modifiables)
-        self.instance_container = gp.Container(
+        self.instance_container = gt.Container(
             system_directory=container.system_directory,
-            working_directory=container.working_directory,
         )
         self.model = model
 
@@ -298,7 +298,7 @@ class ModelInstance:
                     if modifiable.parent.dimension
                     else None
                 )
-                _ = gp.Parameter(
+                _ = gt.Parameter(
                     self.instance_container,
                     attr_name,
                     domain=domain,
@@ -325,9 +325,8 @@ class ModelInstance:
         return self.instance.solver_status
 
     def _update_main_container(self):
-        temp = gp.Container(
+        temp = gt.Container(
             system_directory=self.container.system_directory,
-            working_directory=self.container.working_directory,
         )
         temp.read(self.instance.sync_db._gmd)
 

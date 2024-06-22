@@ -17,11 +17,7 @@ from gamspy import (
 
 class ModelInstanceSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
-        )
         self.canning_plants = ["seattle", "san-diego"]
-        self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
             ["seattle", "new-york", 2.5],
             ["seattle", "chicago", 1.7],
@@ -34,10 +30,7 @@ class ModelInstanceSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_change(self):
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        )
-
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
@@ -91,10 +84,7 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertFalse(transport._is_frozen)
 
     def test_variable_change(self):
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        )
-
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
@@ -133,11 +123,10 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.solve(model_instance_options={"solver": "conopt"})
         self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
 
-    def test_fx(self):
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        )
+        transport.unfreeze()
 
+    def test_fx(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
         INCOME0 = Parameter(
             m, name="INCOME0", description="notional income level", records=3.5
         )
@@ -176,6 +165,8 @@ class ModelInstanceSuite(unittest.TestCase):
         mm.solve()
 
         self.assertEqual(MPSADJ.records["level"].tolist()[0], 0)
+        mm.unfreeze()
+        m.close()
 
 
 def model_instance_suite():

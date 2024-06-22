@@ -9,6 +9,8 @@ import uuid
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from gams.core.gmd import gmdCloseLicenseSession
+
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -589,8 +591,9 @@ class Model:
         self._is_frozen = True
 
     def unfreeze(self) -> None:
-        """Unfreezes all symbols"""
+        """Unfreezes the model"""
         self._is_frozen = False
+        gmdCloseLicenseSession(self.instance.instance.sync_db._gmd)
 
     def solve(
         self,
