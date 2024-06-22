@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
 
-from gams import GamsJob, GamsOptions, GamsWorkspace
-from gams.control.workspace import GamsExceptionExecution
+if TYPE_CHECKING:
+    from gamspy import Options
 
 
 class GamspyException(Exception):
     """Plain Gamspy exception."""
+
+    def __init__(self, message: str, return_code: int | None = None) -> None:
+        super().__init__(message)
+        self.message = message
+        self.rc = return_code
 
 
 class NeosClientException(Exception):
@@ -57,6 +63,7 @@ error_codes = {
     9: "GAMS could not be started",
     10: "Out of memory",
     11: "Out of disk",
+    13: "System error",
     109: "Could not create process/scratch directory",
     110: "Too many process/scratch directories",
     112: "Could not delete the process/scratch directory",
@@ -111,61 +118,71 @@ error_codes = {
 
 
 def customize_exception(
-    workspace: GamsWorkspace,
-    options: GamsOptions,
-    job: GamsJob,
-    exception: GamsExceptionExecution,
+    working_directory: str,
+    options: Options,
+    job_name: str,
+    return_code: int | None,
 ) -> str:
-    error_message = ""
-    if not options._writeoutput:
-        exception.value = error_message
-        return exception
+    if options.write_listing_file is False or return_code is None:
+        return ""
 
     header = "=" * 14
     footer = "=" * 14
     message_format = "\n\n{header}\nError Summary\n{footer}\n{message}\n"
 
-    lst_filename = options.output if options.output else job._job_name + ".lst"
+    if options.listing_file:
+        lst_path = (
+            options.listing_file
+            if os.path.isabs(options.listing_file)
+            else os.path.join(working_directory, options.listing_file)
+        )
+    else:
+        lst_path = job_name + ".lst"
 
-    lst_path = workspace._working_directory + os.path.sep + lst_filename
+    try:
+        with open(lst_path, encoding="utf-8") as lst_file:
+            all_lines = lst_file.readlines()
+            num_lines = len(all_lines)
 
-    with open(lst_path, encoding="utf-8") as lst_file:
-        all_lines = lst_file.readlines()
-        num_lines = len(all_lines)
+            index = 0
+            while index < num_lines:
+                line = all_lines[index]
 
-        index = 0
-        while index < num_lines:
-            line = all_lines[index]
+                if line.startswith("****"):
+                    error_lines = [all_lines[index - 1]]
+                    temp_index = index
 
-            if line.startswith("****"):
-                error_lines = [all_lines[index - 1]]
-                temp_index = index
+                    try:
+                        while any(
+                            "****" in err_line
+                            for err_line in all_lines[
+                                temp_index : temp_index + 8
+                            ]
+                        ):
+                            for offset in range(8):
+                                error_lines.append(
+                                    all_lines[temp_index + offset]
+                                )
 
-                while (
-                    any(
-                        "****" in err_line
-                        for err_line in all_lines[temp_index : temp_index + 5]
+                            temp_index += 8
+                    except IndexError:
+                        ...
+
+                    error_message = message_format.format(
+                        message="".join(error_lines),
+                        header=header,
+                        footer=footer,
+                        return_code=return_code,
+                        meaning=error_codes[return_code],
                     )
-                    and temp_index < len(all_lines) - 10
-                ):
-                    for offset in range(5):
-                        error_lines.append(all_lines[temp_index + offset])
+                    break
 
-                    temp_index += 5
-
-                error_message = message_format.format(
-                    message="".join(error_lines),
-                    header=header,
-                    footer=footer,
-                    return_code=exception.rc,
-                    meaning=error_codes[exception.rc],
-                )
-                break
-
-            index += 1
+                index += 1
+    except FileNotFoundError:
+        return ""
 
     explanation = (
-        f"\nMeaning of return code {exception.rc}: {error_codes[exception.rc]}"
+        f"\nMeaning of return code {return_code}: {error_codes[return_code]}"
     )
 
     return error_message + explanation

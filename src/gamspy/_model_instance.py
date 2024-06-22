@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import io
+import os
+import uuid
 from typing import TYPE_CHECKING
 
+import gams.transfer as gt
 from gams import (
     EquType,
+    GamsCheckpoint,
     GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
@@ -78,23 +82,48 @@ class ModelInstance:
         modifiables: list[Parameter | ImplicitParameter],
         freeze_options: Options | dict | None = None,
     ):
+        self.container = container
+        save_file = self._create_restart_file()
+        restart_from = GamsCheckpoint(container.workspace, save_file)
+
         self.modifiables = self._init_modifiables(modifiables)
-        self.main_container = container
-        self.instance_container = gp.Container(
+        self.instance_container = gt.Container(
             system_directory=container.system_directory,
-            working_directory=container.workspace.working_directory,
         )
         self.model = model
 
-        self.checkpoint = self.main_container._restart_from
+        self.checkpoint = restart_from
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
+
+    def _create_restart_file(self):
+        job_id = f"_instance_restart_{uuid.uuid4()}"
+        job_name = os.path.join(self.container.working_directory, job_id)
+        with open(job_name + ".gms", "w") as gams_file:
+            gams_file.write("")
+
+        options = GamsOptions(self.container.workspace)
+        options._input = job_name + ".gms"
+        options._sysdir = utils._get_gamspy_base_directory()
+        scrdir = os.path.join(self.container.working_directory, "225a")
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._writeoutput = 0
+        options.previouswork = 1
+        options._logoption = 0
+        options._save = job_name + ".g00"
+
+        pf_file = job_name + ".pf"
+        options.export(pf_file)
+
+        self.container._send_job(job_name, pf_file)
+
+        return job_name + ".g00"
 
     def instantiate(
         self, model: Model, freeze_options: Options | dict | None = None
     ):
         options = self._prepare_freeze_options(freeze_options)
-        options.license = self.model.container._license_path
 
         solve_string = f"{model.name} using {model.problem}"
 
@@ -117,7 +146,7 @@ class ModelInstance:
         options, update_type = self._prepare_options(given_options)
 
         # update sync_db
-        self.main_container.write(self.instance.sync_db._gmd)
+        self.container.write(self.instance.sync_db._gmd)
 
         for modifiable in self.modifiables:
             if (
@@ -130,9 +159,7 @@ class ModelInstance:
                 columns = self._get_columns_to_drop(attr)
 
                 self.instance_container[attr_name].setRecords(
-                    self.main_container[parent_name].records.drop(
-                        columns, axis=1
-                    )
+                    self.container[parent_name].records.drop(columns, axis=1)
                 )
 
                 self.instance_container.write(self.instance.sync_db._gmd)
@@ -241,7 +268,6 @@ class ModelInstance:
                     )
                 )
 
-                modifiable._is_frozen = True
             elif isinstance(modifiable, implicits.ImplicitParameter):
                 attribute = modifiable.name.split(".")[-1]
                 update_action = update_action_map[attribute]
@@ -272,7 +298,7 @@ class ModelInstance:
                     if modifiable.parent.dimension
                     else None
                 )
-                _ = gp.Parameter(
+                _ = gt.Parameter(
                     self.instance_container,
                     attr_name,
                     domain=domain,
@@ -286,8 +312,6 @@ class ModelInstance:
                 modifiers.append(
                     GamsModifier(sync_db_symbol, update_action, data_symbol)
                 )
-
-                modifiable.parent._is_frozen = True
             else:
                 raise ValidationError(
                     f"Symbol type {type(modifiable)} cannot be modified in a"
@@ -301,12 +325,11 @@ class ModelInstance:
         return self.instance.solver_status
 
     def _update_main_container(self):
-        temp = gp.Container(
-            system_directory=self.main_container.system_directory,
-            working_directory=self.main_container.workspace.working_directory,
+        temp = gt.Container(
+            system_directory=self.container.system_directory,
         )
         temp.read(self.instance.sync_db._gmd)
 
         for name in temp.data:
-            if name in self.main_container.data:
-                self.main_container[name].records = temp[name].records
+            if name in self.container.data:
+                self.container[name].records = temp[name].records

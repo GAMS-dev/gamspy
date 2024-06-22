@@ -10,7 +10,7 @@ upload-wheel:
     - pip install wheel build twine pip-audit
     - pip-audit -v
     - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
-    - twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
+    - python -m build && twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
   rules:
     - if: $CI_COMMIT_BRANCH != "master"
       when: never

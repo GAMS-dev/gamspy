@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import atexit
 import os
+import platform
 import shutil
+import signal
+import socket
+import subprocess
 import sys
+import time
 import uuid
-from typing import TYPE_CHECKING, Any, Literal
+from contextlib import closing
+from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-from gams import DebugLevel, GamsCheckpoint, GamsJob, GamsWorkspace
+from gams import DebugLevel, GamsWorkspace
 from gams.core import gdx
 
 import gamspy as gp
@@ -19,9 +25,12 @@ from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options
 from gamspy._symbols.symbol import Symbol
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
+    import io
+    from typing import Any, Literal
+
     import pandas as pd
 
     from gamspy import (
@@ -46,6 +55,69 @@ debugging_map = {
     "keep_on_error": DebugLevel.KeepFilesOnError,
     "keep": DebugLevel.KeepFiles,
 }
+
+TIMEOUT = 30
+
+
+def is_network_license() -> bool:
+    base_directory = utils._get_gamspy_base_directory()
+    user_license_path = os.path.join(base_directory, "user_license.txt")
+    if not os.path.exists(user_license_path):
+        return False
+
+    with open(user_license_path) as file:
+        lines = file.readlines()
+        if "+" not in lines[0]:
+            return False
+
+        if lines[4][47] == "N":
+            return True
+
+    return False
+
+
+def find_free_address():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(("127.0.0.1", 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()
+
+
+def open_connection(system_directory: str, working_directory: str):
+    license_path = utils._get_license_path(system_directory)
+    process_directory = os.path.join(working_directory, "225a")
+    os.makedirs(process_directory, exist_ok=True)
+
+    address = find_free_address()
+    process = subprocess.Popen(
+        [
+            os.path.join(system_directory, "gams"),
+            "dummy_name",
+            f"incrementalMode={address[1]}",
+            f"procdir={process_directory}",
+            f"license={license_path}",
+            f"curdir={working_directory}",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+
+    start = time.time()
+    while True:
+        try:
+            new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            new_socket.connect(address)
+            break
+        except (ConnectionRefusedError, OSError) as e:
+            end = time.time()
+
+            if end - start > TIMEOUT:
+                raise GamspyException(
+                    "Timeout while establishing the connection with socket."
+                ) from e
+
+    return new_socket, process
 
 
 class Container(gt.Container):
@@ -86,9 +158,12 @@ class Container(gt.Container):
         options: Options | None = None,
         miro_protect: bool = True,
     ):
+        self._network_license = is_network_license()
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
+
+        self._is_socket_open = True
 
         system_directory = (
             system_directory
@@ -104,24 +179,17 @@ class Container(gt.Container):
 
         super().__init__(system_directory=system_directory)
 
-        self._license_path = utils._get_license_path(self.system_directory)
-
+        self._debugging_level = self._get_debugging_level(debugging_level)
         self.workspace = GamsWorkspace(
             working_directory,
             self.system_directory,
-            self._get_debugging_level(debugging_level),
+            self._debugging_level,
         )
 
         self.working_directory = self.workspace.working_directory
 
-        (
-            self._save_to,
-            self._restart_from,
-            self._gdx_in,
-            self._gdx_out,
-        ) = self._setup_paths()
+        self._job, self._gdx_in, self._gdx_out = self._setup_paths()
 
-        self._job: GamsJob | None = None
         self._temp_container = gt.Container(
             system_directory=self.system_directory
         )
@@ -135,9 +203,81 @@ class Container(gt.Container):
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
+
+        self._socket, self._process = open_connection(
+            self.system_directory, self.working_directory
+        )
+
         if load_from is not None:
             self.read(load_from)
             self._run()
+
+    def _send_job(
+        self,
+        job_name: str,
+        pf_file: str,
+        output: io.TextIOWrapper | None = None,
+    ):
+        try:
+            self._socket.sendall(pf_file.encode("utf-8"))
+        except ConnectionError as e:
+            raise GamspyException(
+                f"There was an error while sending pf file name to GAMS server: {e}",
+            ) from e
+
+        if output is not None:
+            while True:
+                data = self._process.stdout.readline()
+                if data.startswith("--- Job ") and "elapsed" in data:
+                    output.write(data)
+                    break
+
+                output.write(data)
+
+        try:
+            response = self._socket.recv(2)
+        except ConnectionError as e:
+            raise GamspyException(
+                f"There was an error while receiving output from GAMS server: {e}",
+            ) from e
+        except KeyboardInterrupt:
+            if platform.system() == "Windows":
+                self._process.send_signal(signal.SIGTERM)
+            else:
+                self._process.send_signal(signal.SIGINT)
+
+            self._stop_socket()
+            return
+        try:
+            return_code = int(
+                response[: response.find(b"\x00")].decode("utf-8")
+            )
+        except ValueError as e:
+            raise GamspyException(
+                "Did not receive any return code from GAMS backend. Check"
+                f" {job_name + '.lst'}."
+            ) from e
+
+        if return_code != 0:
+            raise GamspyException(
+                f"Job failed! Return code is {return_code}. Check:"
+                f" {job_name + '.lst'} for more details.",
+                return_code=return_code,
+            )
+
+    def __del__(self):
+        try:
+            self._stop_socket()
+        except (Exception, ConnectionResetError):
+            ...
+
+    def _stop_socket(self):
+        if hasattr(self, "_socket") and self._is_socket_open:
+            self._socket.sendall("stop".encode("ascii"))
+            self._is_socket_open = False
+
+            while self._process.poll() is None:
+                ...
 
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
@@ -148,7 +288,7 @@ class Container(gt.Container):
 
         return f"<Empty Container ({hex(id(self))})>"
 
-    def _write_miro_files(self):  # pragma: no cover
+    def _write_miro_files(self):
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
             return
 
@@ -168,7 +308,7 @@ class Container(gt.Container):
 
         return debugging_map[debugging_level]
 
-    def _write_default_gdx_miro(self):  # pragma: no cover
+    def _write_default_gdx_miro(self):
         # create data_<model>/default.gdx
         symbols = self._miro_input_symbols + self._miro_output_symbols
 
@@ -309,7 +449,8 @@ class Container(gt.Container):
         symbol_names = []
         for i in range(1, symbol_count + 1):
             _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-            symbol_names.append(symbol_name)
+            if not symbol_name.startswith(gp.Model._generate_prefix):
+                symbol_names.append(symbol_name)
 
         utils._close_gdx_handle(gdx_handle)
 
@@ -325,14 +466,15 @@ class Container(gt.Container):
 
         return symbol_names
 
-    def _setup_paths(self) -> tuple[GamsCheckpoint, GamsCheckpoint, str, str]:
+    def _setup_paths(self) -> tuple[str, str, str]:
         suffix = uuid.uuid4()
-        save_to = GamsCheckpoint(self.workspace, f"_save_{suffix}.g00")
-        restart_from = GamsCheckpoint(self.workspace, f"_restart_{suffix}.g00")
-        gdx_in = self.working_directory + os.sep + f"_gdx_in_{suffix}.gdx"
-        gdx_out = self.working_directory + os.sep + f"_gdx_out_{suffix}.gdx"
+        job = os.path.join(self.working_directory, "_" + str(uuid.uuid4()))
+        gdx_in = os.path.join(self.working_directory, f"_gdx_in_{suffix}.gdx")
+        gdx_out = os.path.join(
+            self.working_directory, f"_gdx_out_{suffix}.gdx"
+        )
 
-        return save_to, restart_from, gdx_in, gdx_out
+        return job, gdx_in, gdx_out
 
     def _get_autogenerated_symbol_names(self) -> list[str]:
         names = []
@@ -366,19 +508,16 @@ class Container(gt.Container):
 
     def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
         runner = backend_factory(self, self._options)
-        summary = runner.solve(is_implicit=True, keep_flags=keep_flags)
+        summary = runner.solve(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
             self._options.seed = None
 
         if IS_MIRO_INIT:
-            self._write_default_gdx_miro()  # pragma: no cover
+            self._write_default_gdx_miro()
 
         return summary
-
-    def _swap_checkpoints(self):
-        self._restart_from, self._save_to = self._save_to, self._restart_from
 
     def _get_unload_symbols_str(
         self, dirty_names: list[str], gdx_out: str
@@ -391,7 +530,7 @@ class Container(gt.Container):
             return ""
 
         unload_str = ",".join(unload_names)
-        return f"execute_unload '{gdx_out}' {unload_str}\n"
+        return f"execute_unload '{gdx_out}' {unload_str};\n"
 
     def _generate_gams_string(
         self,
@@ -439,6 +578,10 @@ class Container(gt.Container):
         self._gams_string += string
 
         return string
+
+    def close(self):
+        """Stops the socket and releases resources."""
+        self._stop_socket()
 
     def read(
         self,
@@ -967,20 +1110,6 @@ class Container(gt.Container):
                     description=symbol.description,
                 )
 
-        try:
-            shutil.copy(
-                self._save_to._checkpoint_file_name,
-                m._save_to._checkpoint_file_name,
-            )
-        except FileNotFoundError:
-            # save_to might not exist and it's fine
-            pass
-
-        shutil.copy(
-            self._restart_from._checkpoint_file_name,
-            m._restart_from._checkpoint_file_name,
-        )
-
         shutil.copy(self._gdx_in, m._gdx_in)
         try:
             shutil.copy(self._gdx_out, m._gdx_out)
@@ -1077,7 +1206,7 @@ class Container(gt.Container):
         -------
         str | None
         """
-        return self._job.name if self._job is not None else None
+        return self._job
 
     def gdxInputPath(self) -> str:
         """

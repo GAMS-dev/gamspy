@@ -13,60 +13,6 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry, remove_solver_entry
 
-SOLVER_CAPABILITIES = {
-    "BARON": [
-        "LP",
-        "MIP",
-        "NLP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-        "GLOBAL",
-    ],
-    "CBC": ["LP", "MIP"],
-    "CONOPT3": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "CONOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "COPT": ["LP", "MIP", "QCP", "MIQCP"],
-    "CPLEX": ["LP", "MIP", "QCP", "MIQCP"],
-    "DICOPT": ["MINLP", "MIQCP"],
-    "GUROBI": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "GUSS": [
-        "LP",
-        "MIP",
-        "NLP",
-        "MCP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "IPOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "HIGHS": ["LP", "MIP"],
-    "KNITRO": [
-        "LP",
-        "NLP",
-        "MCP",
-        "MPEC",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "MINOS": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "MOSEK": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "NLPEC": ["MCP", "MPEC"],
-    "PATH": ["MCP", "CNS"],
-    "SBB": ["MINLP", "MIQCP"],
-    "SCIP": ["MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP", "GLOBAL"],
-    "SHOT": ["MINLP", "MIQCP"],
-    "SNOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "XPRESS": ["LP", "MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP"],
-}
-
 
 def get_args():
     parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
@@ -151,6 +97,12 @@ def get_args():
             " uninstall and update gamspy installed solver list."
         ),
     )
+    install_group.add_argument(
+        "--node-specific",
+        "-i",
+        action="store_true",
+        help="Whether the license is node-specific license.",
+    )
 
     list_group = parser.add_argument_group(
         "list solvers", description="`gamspy list solvers` options"
@@ -163,12 +115,40 @@ def get_args():
 def install_license(args: argparse.Namespace):
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
-    if args.name is None or not os.path.exists(args.name):
-        raise ValidationError(
-            f'Given license path ("{args.name}") is not valid.'
+    command = [
+        os.path.join(gamspy_base_dir, "gamsgetkey"),
+        args.name,
+        "-u",
+        "1234",
+    ]
+
+    if args.node_specific:
+        command.append("-i")
+        process = subprocess.run(
+            os.path.join(gamspy_base_dir, "gamsprobe"),
+            text=True,
+            capture_output=True,
         )
 
-    shutil.copy(args.name, gamspy_base_dir + os.sep + "user_license.txt")
+        if process.returncode:
+            raise ValidationError(process.stderr)
+
+        node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
+        with open(node_info_path, "w") as file:
+            file.write(process.stdout)
+
+        command.append(node_info_path)
+
+    process = subprocess.run(
+        command,
+        text=True,
+        capture_output=True,
+    )
+    if process.returncode:
+        raise ValidationError(process.stderr)
+
+    with open(os.path.join(gamspy_base_dir, "user_license.txt"), "w") as file:
+        file.write(process.stdout)
 
 
 def uninstall_license():
@@ -349,13 +329,14 @@ def list_solvers(args: argparse.Namespace):
     component = args.component
 
     if component == "solvers":
+        capabilities = utils.getSolverCapabilities()
         if args.all:
             solvers = utils.getAvailableSolvers()
             print(f"Available solvers: {solvers}\n")
             print("Model types that can be solved with the solver:\n")
             for solver in solvers:
                 try:
-                    print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+                    print(f"{solver}: {capabilities[solver]}")
                 except KeyError:
                     ...
             return
@@ -365,7 +346,7 @@ def list_solvers(args: argparse.Namespace):
         print("Model types that can be solved with the solver:\n")
         for solver in solvers:
             try:
-                print(f"{solver}: {SOLVER_CAPABILITIES[solver]}")
+                print(f"{solver}: {capabilities[solver]}")
             except KeyError:
                 ...
     else:

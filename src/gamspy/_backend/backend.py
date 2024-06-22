@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import os
+import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
+from gams import DebugLevel
 
 from gamspy.exceptions import ValidationError
 
@@ -72,16 +74,35 @@ def backend_factory(
 
 
 class Backend(ABC):
-    def __init__(self, container: Container, gdx_in: str, gdx_out: str):
+    def __init__(
+        self,
+        container: Container,
+        model: Model,
+        gdx_in: str,
+        gdx_out: str,
+        options: Options,
+    ):
         self.container = container
+        self.model = model
         self.gdx_in = gdx_in
         self.gdx_out = gdx_out
+        self.options = options
 
     @abstractmethod
     def is_async(self): ...
 
     @abstractmethod
-    def solve(self, is_implicit: bool = False, keep_flags: bool = False): ...
+    def solve(self, keep_flags: bool = False): ...
+
+    def get_job_name(self):
+        job_name = self.container._job
+
+        if self.container._debugging_level == DebugLevel.KeepFiles:
+            job_name = os.path.join(
+                self.container.working_directory, "_" + str(uuid.uuid4())
+            )
+
+        return job_name
 
     def preprocess(self, keep_flags: bool = False):
         (
@@ -89,7 +110,9 @@ class Backend(ABC):
             modified_names,
         ) = self.container._get_touched_symbol_names()
         self.clean_dirty_symbols(dirty_names)
-        self.container.write(self.container._gdx_in, modified_names)
+
+        if len(modified_names) != 0:
+            self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
             self.gdx_in, self.gdx_out, dirty_names, modified_names
@@ -100,11 +123,11 @@ class Backend(ABC):
 
         return gams_string, dirty_names
 
-    def prepare_summary(self, working_directory: str, trace_file: str):
+    def prepare_summary(self, working_directory: str):
         from gamspy._model import ModelStatus
 
         with open(
-            os.path.join(working_directory, trace_file), encoding="utf-8"
+            os.path.join(working_directory, "trace.txt"), encoding="utf-8"
         ) as file:
             line = file.readlines()[-1]
             (

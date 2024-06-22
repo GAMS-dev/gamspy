@@ -1,7 +1,6 @@
 import argparse
 import os
 import subprocess
-import tempfile
 
 if os.path.exists(os.getcwd() + os.sep + ".env"):
     from dotenv import load_dotenv
@@ -35,17 +34,8 @@ def install_gamspy(args):
 
 
 def install_gams_license():
-    lice = os.environ["GAMS_LICENSE"]
-    command = ["gamspy", "install", "license"]
-
-    try:
-        f = tempfile.NamedTemporaryFile(mode="wt", suffix=".txt", delete=False)
-        f.write(lice)
-        f.close()
-        command.append(f.name)
-        subprocess.run(command, check=True)
-    finally:
-        os.unlink(f.name)
+    command = ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]]
+    subprocess.run(command, check=True)
 
 
 if __name__ == "__main__":

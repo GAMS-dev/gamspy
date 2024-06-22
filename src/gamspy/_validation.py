@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
-import gamspy as gp
+import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Equation, Parameter, Set, Variable
+    from gamspy import Alias, Equation, Model, Parameter, Set, Variable
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
@@ -22,7 +22,9 @@ def get_dimension(
     dimension = 0
 
     for elem in domain:
-        if isinstance(elem, (gp.Set, gp.Alias, implicits.ImplicitSet)):
+        if isinstance(
+            elem, (symbols.Set, symbols.Alias, implicits.ImplicitSet)
+        ):
             dimension += elem.dimension
         else:
             dimension += 1
@@ -40,7 +42,7 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
         else:
             path.append(domain.name)
 
-        if isinstance(domain, gp.Alias):
+        if isinstance(domain, symbols.Alias):
             path.append(domain.alias_with.name)
 
         domain = "*" if isinstance(domain, str) else domain.domain[0]
@@ -73,10 +75,10 @@ def validate_one_dimensional_sets(
     given_path = get_domain_path(given)
 
     if (
-        isinstance(actual, gp.Set)
+        isinstance(actual, symbols.Set)
         and actual.name not in given_path
         or (
-            isinstance(actual, gp.Alias)
+            isinstance(actual, symbols.Alias)
             and actual.alias_with.name not in given_path
         )
     ):
@@ -90,7 +92,14 @@ def validate_type(domain):
     for given in domain:
         if not isinstance(
             given,
-            (gp.Set, gp.Alias, implicits.ImplicitSet, str, type(...), slice),
+            (
+                symbols.Set,
+                symbols.Alias,
+                implicits.ImplicitSet,
+                str,
+                type(...),
+                slice,
+            ),
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -178,6 +187,7 @@ def validate_domain(
                     )
             else:
                 validate_one_dimensional_sets(given, actual)
+
         offset += given_dim
 
     return domain
@@ -189,7 +199,7 @@ def validate_container(
 ):
     for set in domain:
         if (
-            isinstance(set, (gp.Set, gp.Alias))
+            isinstance(set, (symbols.Set, symbols.Alias))
             and set.container != self.container
         ):
             raise ValidationError(
@@ -334,7 +344,7 @@ def validate_model_name(name: str) -> str:
     return name
 
 
-def validate_solver_args(solver: Any, options: Any, output: Any):
+def validate_solver_args(solver, problem, options, output):
     # Check validity of solver
     if solver is not None:
         if not isinstance(solver, str):
@@ -356,6 +366,15 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
                 f" {solver.lower()}`"
             )
 
+        capabilities = utils.getSolverCapabilities()
+        if str(problem) not in capabilities[solver.upper()]:
+            raise ValidationError(
+                f"Given solver `{solver}` is not capable of solving given"
+                f" problem type `{problem}`. See capability matrix "
+                "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                " to choose a suitable solver"
+            )
+
     # Check validity of options
     if options is not None and not isinstance(options, Options):
         raise TypeError(
@@ -370,7 +389,7 @@ def validate_solver_args(solver: Any, options: Any, output: Any):
         )
 
 
-def validate_model(model: gp.Model):
+def validate_model(model: Model):
     for equation in model.equations:
         if equation._definition is None:
             raise ValidationError(

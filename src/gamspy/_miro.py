@@ -15,7 +15,7 @@ MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
-def get_load_input_str(statement: str, gdx_in: str) -> str:  # pragma: no cover
+def get_load_input_str(statement: str, gdx_in: str) -> str:
     string = "$gdxIn\n"  # close the old one
     string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
     string += f"$loadDC {statement}\n"
@@ -25,14 +25,12 @@ def get_load_input_str(statement: str, gdx_in: str) -> str:  # pragma: no cover
     return string
 
 
-def get_unload_output_str(container: Container) -> str:  # pragma: no cover
+def get_unload_output_str(container: Container) -> str:
     unload_str = ",".join(container._miro_output_symbols)
     return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
 
 
-def load_miro_symbol_records(
-    container: Container, is_implicit: bool = False
-):  # pragma: no cover
+def load_miro_symbol_records(container: Container):
     # Load records of miro input symbols
     if MIRO_GDX_IN and container._miro_input_symbols:
         names = [
@@ -48,7 +46,7 @@ def load_miro_symbol_records(
                 symbol._records.columns = symbol.domain_names + ["value"]
 
     # Load records of miro output symbols
-    if MIRO_GDX_OUT and container._miro_output_symbols and not is_implicit:
+    if MIRO_GDX_OUT and container._miro_output_symbols:
         container._load_records_from_gdx(
             MIRO_GDX_OUT, container._miro_output_symbols
         )

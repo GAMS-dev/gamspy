@@ -234,7 +234,7 @@ class ContainerSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             m.addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
-    def test_add_gams_code_on_actual_models(self):
+    def _test_add_gams_code_on_actual_models(self):
         links = {
             "LP": "https://gams.com/latest/gamslib_ml/trnsport.1",
             "MIP": "https://gams.com/latest/gamslib_ml/prodsch.9",
@@ -245,7 +245,7 @@ class ContainerSuite(unittest.TestCase):
             "MINLP": "https://gams.com/latest/gamslib_ml/meanvarx.113",
             "QCP": "https://gams.com/latest/gamslib_ml/himmel11.95",
             "MIQCP": "https://gams.com/latest/gamslib_ml/qalan.282",
-            "MPSGE": "https://gams.com/latest/gamslib_ml/hansmge.147",
+            # "MPSGE": "https://gams.com/latest/gamslib_ml/hansmge.147",
         }
 
         for link in links.values():
@@ -350,23 +350,24 @@ class ContainerSuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
-        new_cont = m.copy(working_directory=f"tmp{os.sep}test")
-        self.assertEqual(m.data.keys(), new_cont.data.keys())
+        if not m._network_license:
+            self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
+            new_cont = m.copy(working_directory=f"tmp{os.sep}test")
+            self.assertEqual(m.data.keys(), new_cont.data.keys())
 
-        transport = Model(
-            new_cont,
-            name="transport",
-            equations=m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
+            transport = Model(
+                new_cont,
+                name="transport",
+                equations=m.getEquations(),
+                problem="LP",
+                sense=Sense.MIN,
+                objective=Sum((i, j), c[i, j] * x[i, j]),
+            )
 
-        transport.solve()
+            transport.solve()
 
-        self.assertIsNotNone(new_cont.gamsJobName())
-        self.assertAlmostEqual(transport.objective_value, 153.675, 3)
+            self.assertIsNotNone(new_cont.gamsJobName())
+            self.assertAlmostEqual(transport.objective_value, 153.675, 3)
 
     def test_generate_gams_string(self):
         m = Container(

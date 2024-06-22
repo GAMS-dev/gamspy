@@ -21,3 +21,4 @@ tests/integration/models/results.xlsx
 /_*
 miro.log
 trace.txt
+data
