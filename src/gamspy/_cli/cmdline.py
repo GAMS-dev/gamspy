@@ -99,6 +99,7 @@ def get_args():
     )
     install_group.add_argument(
         "--node-specific",
+        "-i",
         action="store_true",
         help="Whether the license is node-specific license.",
     )
