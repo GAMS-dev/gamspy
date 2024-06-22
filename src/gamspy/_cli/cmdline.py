@@ -334,14 +334,20 @@ def list_solvers(args: argparse.Namespace):
             print(f"Available solvers: {solvers}\n")
             print("Model types that can be solved with the solver:\n")
             for solver in solvers:
-                print(f"{solver}: {capabilities[solver]}")
+                try:
+                    print(f"{solver}: {capabilities[solver]}")
+                except KeyError:
+                    ...
             return
 
         solvers = utils.getInstalledSolvers()
         print(f"Installed solvers: {solvers}\n")
         print("Model types that can be solved with the solver:\n")
         for solver in solvers:
-            print(f"{solver}: {capabilities[solver]}")
+            try:
+                print(f"{solver}: {capabilities[solver]}")
+            except KeyError:
+                ...
     else:
         raise ValidationError(
             "gamspy list requires a third argument (solvers)."
