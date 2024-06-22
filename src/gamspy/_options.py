@@ -223,7 +223,8 @@ class Options(BaseModel):
             all_options["optfile"] = self._solver_options_file
 
         # Extra options
-        all_options.update(**self._extra_options)
+        if hasattr(self, "_extra_options") and self._extra_options:
+            all_options.update(**self._extra_options)
 
         # User options
         user_options = self._get_gams_compatible_options(output)

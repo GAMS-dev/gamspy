@@ -82,13 +82,7 @@ SOLVER_CAPABILITIES = {
 
 
 def getSolverCapabilities() -> dict[str, list[str]]:
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
-
-    return gamspy_base.capabilities
+    return SOLVER_CAPABILITIES
 
 
 def getInstalledSolvers() -> list[str]:
@@ -275,6 +269,10 @@ def _filter_gams_string(raw_string: str) -> str:
         "$loadDC",
         "$offUNDF",
         "execute_unload",
+        "Parameter autogen",
+        "autogen",
+        "$offListing",
+        "$onListing",
     )
     filtered_lines = [
         line for line in raw_string.split("\n") if not line.startswith(FILTERS)

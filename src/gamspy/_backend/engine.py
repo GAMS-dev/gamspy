@@ -402,39 +402,43 @@ class Job(Endpoint):
         if not os.path.exists(working_directory):
             os.makedirs(working_directory, exist_ok=True)
 
-        r = self._http.request(
-            "GET",
-            self.client._engine_config.host + f"/jobs/{token}/result",
-            headers=self.get_request_headers(),
-            preload_content=False,
-        )
-
-        if r.status == 200:
-            fd, path = tempfile.mkstemp()
-
-            try:
-                with open(path, "wb") as out:
-                    while True:
-                        data = r.read(6000)
-                        if not data:
-                            break
-                        out.write(data)
-
-                r.release_conn()
-
-                with zipfile.ZipFile(path, "r") as zip_ref:
-                    zip_ref.extractall(working_directory)
-            finally:
-                os.close(fd)
-                os.remove(path)
-        else:
-            response_data = r.data.decode("utf-8", errors="replace")
-            raise EngineClientException(
-                "Fatal error while getting the results back from engine. GAMS"
-                f" Engine return code: {r.status}. Error message:"
-                f" {response_data}",
-                r.status,
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
+            r = self._http.request(
+                "GET",
+                self.client._engine_config.host + f"/jobs/{token}/result",
+                headers=self.get_request_headers(),
+                preload_content=False,
             )
+
+            if r.status == 200:
+                fd, path = tempfile.mkstemp()
+
+                try:
+                    with open(path, "wb") as out:
+                        while True:
+                            data = r.read(6000)
+                            if not data:
+                                break
+                            out.write(data)
+
+                    r.release_conn()
+
+                    with zipfile.ZipFile(path, "r") as zip_ref:
+                        zip_ref.extractall(working_directory)
+                finally:
+                    os.close(fd)
+                    os.remove(path)
+            elif r.status == 429:
+                time.sleep(2**attempt_number)  # retry with exponential backoff
+                continue
+            else:
+                response_data = r.data.decode("utf-8", errors="replace")
+                raise EngineClientException(
+                    "Fatal error while getting the results back from engine. GAMS"
+                    f" Engine return code: {r.status}. Error message:"
+                    f" {response_data}",
+                    r.status,
+                )
 
     def delete_results(self, token: str):
         """
