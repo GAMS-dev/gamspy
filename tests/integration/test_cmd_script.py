@@ -5,6 +5,7 @@ import subprocess
 import unittest
 
 import gamspy.utils as utils
+from gamspy import Container
 
 try:
     from dotenv import load_dotenv
@@ -23,7 +24,7 @@ class CmdSuite(unittest.TestCase):
                 "gamspy",
                 "install",
                 "license",
-                os.environ["LOCAL07"],
+                os.environ["NETWORK_LICENSE"],
             ],
             check=True,
         )
@@ -34,12 +35,15 @@ class CmdSuite(unittest.TestCase):
             )
         )
 
+        m = Container()
+        self.assertTrue(m._network_license)
+
         _ = subprocess.run(
             [
                 "gamspy",
                 "install",
                 "license",
-                os.environ["LOCAL07"],
+                os.environ["LOCAL_LICENSE"],
                 "--node-specific",
             ],
             check=True,
@@ -50,6 +54,9 @@ class CmdSuite(unittest.TestCase):
                 os.path.join(gamspy_base_directory, "node_info.json")
             )
         )
+
+        m = Container()
+        self.assertFalse(m._network_license)
 
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
@@ -79,7 +86,7 @@ class CmdSuite(unittest.TestCase):
                 "gamspy",
                 "install",
                 "license",
-                os.environ["LOCAL07"],
+                os.environ["LOCAL_LICENSE"],
             ]
         )
 
@@ -100,6 +107,23 @@ class CmdSuite(unittest.TestCase):
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
             )
+
+    def test_list_solvers(self):
+        process = subprocess.run(
+            ["gamspy", "list", "solvers"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "list", "solvers", "-a"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+
+        self.assertTrue(process.returncode == 0)
 
     def test_show_license(self):
         process = subprocess.run(

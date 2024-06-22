@@ -10,7 +10,7 @@ test-leg-3.9:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL07; fi
+    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL_LICENSE; fi
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -44,7 +44,7 @@ test-deg-3.9:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL07; fi
+    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL_LICENSE; fi
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -70,7 +70,7 @@ test-dac-3.9:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL07; fi
+    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL_LICENSE; fi
     - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
@@ -100,7 +100,7 @@ test-wei-3.9:
     - python -m pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
-    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL07; fi
+    - if [ "$CI_COMMIT_BRANCH" == "server-mode" ]; then gamspy install license $LOCAL_LICENSE; fi
     - coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
