@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import time
 import unittest
 
 import gamspy.utils as utils
@@ -37,6 +38,8 @@ class CmdSuite(unittest.TestCase):
 
         m = Container()
         self.assertTrue(m._network_license)
+        m.close()
+        time.sleep(1)
 
         _ = subprocess.run(
             [
