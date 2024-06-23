@@ -512,6 +512,10 @@ class Container(gt.Container):
         runner = backend_factory(self, self._options)
         summary = runner.run(keep_flags=keep_flags)
 
+        if self._options and self._options.seed is not None:
+            # Required for correct seeding. Seed can only be set in the first run.
+            self._options.seed = None
+
         if IS_MIRO_INIT:
             self._write_default_gdx_miro()
 
