@@ -694,8 +694,8 @@ class GAMSEngine(backend.Backend):
             os.path.basename(container._gdx_in),
             os.path.basename(container._gdx_out),
             options,
+            output,
         )
-        self.output = output
         self.client = client
 
         self.job_name = self.get_job_name()
@@ -706,14 +706,14 @@ class GAMSEngine(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def solve(self, keep_flags: bool = False):
+    def run(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
         gams_string, dirty_names = self.preprocess(keep_flags)
 
-        self.run(gams_string)
+        self.execute_gams(gams_string)
 
         if self.is_async():
             return None
@@ -726,7 +726,7 @@ class GAMSEngine(backend.Backend):
 
         return summary
 
-    def run(self, gams_string: str):
+    def execute_gams(self, gams_string: str):
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
@@ -845,7 +845,6 @@ class GAMSEngine(backend.Backend):
         self.container._send_job(self.job_name, self.pf_file)
 
     def _sync(self, dirty_names: list[str]):
-        pf_file = self.pf_file
         dirty_str = ",".join(dirty_names)
         with open(self.gms_file, "w") as gams_file:
             gams_file.write(
@@ -855,9 +854,9 @@ class GAMSEngine(backend.Backend):
         options = Options()
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
-        options.export(pf_file, self.output)
+        options.export(self.pf_file, self.output)
 
-        self.container._send_job(self.job_name, pf_file)
+        self.container._send_job(self.job_name, self.pf_file)
 
     def _append_gamspy_files(self, restart_file: str) -> list[str]:
         extra_model_files = self.client.job.extra_model_files + [

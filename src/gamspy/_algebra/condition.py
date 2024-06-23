@@ -64,4 +64,4 @@ class Condition:
         if isinstance(self._symbol, implicits.ImplicitEquation):
             self._symbol.parent._definition = statement
 
-        self._symbol.container._run()
+        self._symbol.container._synch_with_gams()

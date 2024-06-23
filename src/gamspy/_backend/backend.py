@@ -57,7 +57,7 @@ def backend_factory(
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, client, model)  # type: ignore
+        return NEOSServer(container, options, client, output, model)  # type: ignore
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
@@ -81,18 +81,20 @@ class Backend(ABC):
         gdx_in: str,
         gdx_out: str,
         options: Options,
+        output: io.TextIOWrapper | None,
     ):
         self.container = container
         self.model = model
         self.gdx_in = gdx_in
         self.gdx_out = gdx_out
         self.options = options
+        self.output = output
 
     @abstractmethod
     def is_async(self): ...
 
     @abstractmethod
-    def solve(self, keep_flags: bool = False): ...
+    def run(self, keep_flags: bool = False): ...
 
     def get_job_name(self):
         job_name = self.container._job

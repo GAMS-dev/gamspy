@@ -242,7 +242,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._run()
+                self.container._synch_with_gams()
 
             container.miro_protect = previous_state
 
@@ -279,7 +279,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self._assignment = statement
 
         self._is_dirty = True
-        self.container._run()
+        self.container._synch_with_gams()
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -311,7 +311,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if not self._is_dirty:
             return self._records
 
-        self.container._run()
+        self.container._synch_with_gams()
 
         return self._records
 
@@ -350,7 +350,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
-        self.container._run()
+        self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """

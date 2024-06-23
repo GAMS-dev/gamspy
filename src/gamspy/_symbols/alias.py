@@ -137,7 +137,7 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
-            self.container._run()
+            self.container._synch_with_gams()
 
     def __len__(self):
         if self.records is not None:
@@ -159,7 +159,7 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
     @synchronize.setter
     def synchronize(self, value: bool):
         raise ValidationError(
-            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
+            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."  # type: ignore
             f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."
         )
 

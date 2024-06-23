@@ -331,6 +331,10 @@ and password in the same way: ::
 
     NEOS_EMAIL=<your_email> NEOS_USER=<your_username> NEOS_PASSWORD=<your_password> python <your_script>
 
+Alternatively, the output of NEOS can be redirected to a file by specifying the output stream: ::
+
+    model.solve(backend="neos", client=client, output=sys.stdout)
+
 Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
