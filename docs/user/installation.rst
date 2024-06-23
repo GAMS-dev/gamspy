@@ -44,10 +44,15 @@ For more information about GAMS licenses and how to get a new license, check
 
 Installing or updating your license
 ===================================
-A GAMS license file is an ASCII file of six lines, which is sent to you via e-mail. 
-Please copy all six lines into a file (typically named gamslice.txt). Then, run::
+A GAMSPy license is a 36 character identification number which is sent to you via e-mail. 
+In order to install your license, all you need to do is to run::
 
     gamspy install license <path_to_your_license_file>
+
+For machines that are not connected to the internet, to install a license with the information of the node,
+one can run::
+
+    gamspy install license -i <path_to_your_license_file>
 
 GAMS/Gurobi-Link
 ================

@@ -3,16 +3,14 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
-import tempfile
 from typing import TYPE_CHECKING, Literal, Optional
 
-from gams import SymbolUpdateType, GamsOptions
+from gams import SymbolUpdateType
 from pydantic import BaseModel
 
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gams import GamsWorkspace
     from gamspy._model import Problem
 
 multi_solve_map = {"replace": 0, "merge": 1, "clear": 2}
@@ -235,13 +233,6 @@ class Options(BaseModel):
         # Generate pf file
         with open(pf_file, "w") as file:
             file.write("\n".join([f"{key} = {value}" for key, value in all_options.items()]))
-
-    def _get_gams_options(self, workspace: GamsWorkspace, output: io.TextIOWrapper | None = None) -> GamsOptions:
-        temp_path = os.path.join(workspace.working_directory, "dummy.pf")
-        self.export(temp_path, output)
-        gams_options = GamsOptions(workspace, opt_file=temp_path)
-
-        return gams_options
 
 
 update_type_map = {

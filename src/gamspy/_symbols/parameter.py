@@ -92,7 +92,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._is_dirty = False
-        obj._is_frozen = False
         obj._synchronize = True
 
         obj.where = condition.Condition(obj)
@@ -209,7 +208,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container.miro_protect = previous_state
         else:
             self._is_dirty = False
-            self._is_frozen = False
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -344,7 +342,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         if self._records is not None and self.domain_forwarding:
             self._domainForwarding()
-            self._mark_forwarded_domain_sets()
+            self._mark_forwarded_domain_sets(self.domain_forwarding)
 
             # reset state check flags for all symbols in the container
             for symbol in self.container.data.values():
