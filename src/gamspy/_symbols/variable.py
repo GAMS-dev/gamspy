@@ -287,7 +287,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._run()
+                self.container._synch_with_gams()
 
             container.miro_protect = True
 
@@ -486,7 +486,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
-        self.container._run()
+        self.container._synch_with_gams()
 
     @property
     def type(self):

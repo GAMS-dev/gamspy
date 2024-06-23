@@ -210,7 +210,7 @@ class Container(gt.Container):
 
         if load_from is not None:
             self.read(load_from)
-            self._run()
+            self._synch_with_gams()
 
     def _send_job(
         self,
@@ -359,7 +359,7 @@ class Container(gt.Container):
         self._import_symbols = import_symbols
         self._add_statement(gams_code)
 
-        self._run()
+        self._synch_with_gams()
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
@@ -506,13 +506,11 @@ class Container(gt.Container):
 
         return dirty_names, modified_names
 
-    def _run(self, keep_flags: bool = False) -> pd.DataFrame | None:
+    def _synch_with_gams(
+        self, keep_flags: bool = False
+    ) -> pd.DataFrame | None:
         runner = backend_factory(self, self._options)
-        summary = runner.solve(keep_flags=keep_flags)
-
-        if self._options and self._options.seed is not None:
-            # Required for correct seeding. Seed can only be set in the first run.
-            self._options.seed = None
+        summary = runner.run(keep_flags=keep_flags)
 
         if IS_MIRO_INIT:
             self._write_default_gdx_miro()
@@ -649,7 +647,7 @@ class Container(gt.Container):
         dirty_names, _ = self._get_touched_symbol_names()
 
         if dirty_names:
-            self._run(keep_flags=True)
+            self._synch_with_gams(keep_flags=True)
 
         super().write(
             write_to,
@@ -1035,7 +1033,7 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._run()
+        self._synch_with_gams()
 
         for name, symbol in self:
             new_domain = []
@@ -1165,7 +1163,7 @@ class Container(gt.Container):
         self._temp_container.data = {}
 
         if user_invoked:
-            self._run()
+            self._synch_with_gams()
 
     def importExtrinsicLibrary(
         self, lib_path: str, functions: dict[str, str]

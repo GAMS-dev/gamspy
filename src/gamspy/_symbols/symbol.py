@@ -53,7 +53,7 @@ class Symbol:
         """
         if value:
             self._synchronize = True
-            self.container._run()
+            self.container._synch_with_gams()
         else:
             self._synchronize = False
 
