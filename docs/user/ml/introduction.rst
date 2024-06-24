@@ -53,8 +53,6 @@ more information about the features in their own respective pages.
 Implicit default domains
 ========================
 
-TODO Maybe document it somewhere else as well
-
 We have extended GAMSPy to make it work without explicitly specifying the
 indices. Let a, b, c be variables (e.g. matrices). When symbols are accessed
 without specific domains, the domains specified when declaring the symbol is
@@ -319,8 +317,6 @@ are frequently used in machine learning applications.
 Vector Norms
 ------------
 
-TODO maybe mention the square trick here
-
 Vector norms are essential to many machine learning applications. For example,
 in ordinary least squares method, one minimizes the squared residuals which can
 be formulated as minimizing the vector size of the residuals.
@@ -383,6 +379,49 @@ norm.
    # 0  i1    5.0
    # 1  i2   25.0
 
+Canceling out the square root
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is common to minimize the L2 norms of residuals in optimization problems.
+Minimizing an L2 norm typically requires using the square root (sqrt) function,
+which necessitates using a Non-Linear Programming (NLP) model type. However, in
+many cases, you can achieve this by minimizing the square of the norm instead,
+allowing the use of a Quadratically Constrained Programming (QCP) model type.
+
+Normally, this approach wouldn't work in GAMSPy because the square and square
+root operations do not cancel each other automatically. However, the
+`vector_norm` operation is an exception. When the conditions are correct,
+`vector_norm` marks the `sqrt` function as cancellable, effectively allowing the
+minimization of the squared norm within a QCP model.
+
+This enhanced functionality simplifies the optimization process and broadens
+the applicability of the `vector_norm` function in various modeling scenarios.
+
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import vector_norm, square
+
+   m = gp.Container()
+   i = gp.Set(m, name="i", records=["i1", "i2"])
+   j = gp.Set(m, name="j", records=["j1", "j2"])
+   mat = gp.Parameter(m, "mat", domain=[i, j],
+                      records=[
+                        ("i1", "j1", 3),
+                        ("i1", "j2", 4),
+                        ("i2", "j1", 7),
+                        ("i2", "j2", 24),
+                      ]
+                     )
+   expr = gp.math.vector_norm(mat, dim=[j])
+   expr.gamsRepr()
+   # '( sqrt(sum(j,( sqr(mat(i,j)) ))) )'
+
+   # You can see square cancels the square root in this case
+   (expr ** 2).gamsRepr()
+   # 'sum(j,( sqr(mat(i,j)) ))'
 
 Permute
 -------
@@ -507,7 +546,51 @@ applications.
 Improved domain tracking
 ========================
 
-Talk about domain tracking
+GAMSPy provides a flexible implementation of matrix multiplication that goes
+beyond parameters and variables. Expressions can also be used within matrix
+multiplications. To support this functionality, GAMSPy tracks the domain of
+each expression.
+
+You can query the domain of an expression by using the `domain` attibute. In
+some cases, in addition to tracking the domain, GAMSPy needs to change domain
+in order to preserve domains when the resulting multiplication has the same set
+in its domain more than once. You can also use this feature to change a set or
+alias to its alias. You can see the following code snippet for the example.
+
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   m = gp.Container()
+   i = gp.Set(m, "i")
+   j = gp.Set(m, "j")
+   k = gp.Set(m, "k")
+
+   a = gp.Variable(m, name="a", domain=[i, j])
+   b = gp.Variable(m, name="b", domain=[k, j])
+   c = gp.Variable(m, name="c", domain=[i, k])
+
+   expr = a + b
+   expr.domain
+   # [<Set `i` (0x...)>, <Set `j` (0x...)>, <Set `k` (0x...)>]
+
+   expr2 = c + b
+   expr2.domain
+   # [<Set `i` (0x...)>, <Set `k` (0x...)>, <Set `j` (0x...)>]
+
+
+   expr3 = expr @ expr2
+   expr3.domain
+   # [<Set `i` (0x...)>, <Alias `AliasOfj_2` (0x...)>, <Set `j` (0x...)>]
+   expr3.gamsRepr()
+   # 'sum(k,((a(i,AliasOfj_2) + b(k,AliasOfj_2)) * (c(i,k) + b(k,j))))'
+
+   # if you want to use your own alias
+   jj = gp.Alias(m, "jj", j)
+   expr4 = expr3[i, jj, j]
+   expr4.gamsRepr()
+   # 'sum(k,((a(i,jj) + b(k,jj)) * (c(i,k) + b(k,j))))'
 
 
 .. _DNLP: https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_DNLP
