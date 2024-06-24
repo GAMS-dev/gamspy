@@ -1261,7 +1261,7 @@ class Container(gt.Container):
             os.makedirs(path)
         except OSError as e:
             raise ValidationError(e.strerror) from e
-        
+
         gdx_files = glob.glob(os.path.join(self.working_directory, "_*in.gdx"))
         for file in gdx_files:
             shutil.copy(file, path)
