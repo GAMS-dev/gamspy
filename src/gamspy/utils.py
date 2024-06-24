@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import platform
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Iterable
 
