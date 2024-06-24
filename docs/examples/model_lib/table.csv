@@ -39,6 +39,7 @@ GAMSPy Model,GAMS Model,Data,Model Type,License
 :ref:`fuel <fuel>`,`fuel <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fuel.html>`__,,MINLP,Demo
 :ref:`gapmin <gapmin>`,`gapmin <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_gapmin.html>`__,,"MIP, RMIP",Demo
 :ref:`hansmcp <hansmcp>`,`hansmcp <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmcp.html>`__,:download:`hansmcp.gdx <../../tests/integration/models/hansmcp.gdx>`,MCP,Demo
+:ref:`hansmge <hansmge>`,`hansmge <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_hansmge.html>`__,:download:`hansmge.gdx <../../tests/integration/models/hansmge.gdx>`,MCP,Demo
 :ref:`heatex3 <heatex3>`,`heatex3 <https://www.gams.com/latest/noalib_ml/libhtml/noalib_heatex3.html>`__,,NLP,Demo
 :ref:`hhd <hhd>`,,,NLP,Demo
 :ref:`Horizon <Horizon>`,`Horizon <https://www.gams.com/latest/finlib_ml/libhtml/finlib_Horizon.html>`__,,LP,Demo
@@ -47,6 +48,7 @@ GAMSPy Model,GAMS Model,Data,Model Type,License
 :ref:`InternationalMeanVar <InternationalMeanVar>`,`InternationalMeanVar <https://www.gams.com/latest/finlib_ml/libhtml/finlib_InternationalMeanVar.html>`__,:download:`InternationalMeanVar.gdx <../../tests/integration/models/InternationalMeanVar.gdx>`,NLP,Demo
 :ref:`invmat <invmat>`,,,LP,Demo
 :ref:`iobalance <iobalance>`,`iobalance <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_iobalance.html>`__,,"LP, NLP, QCP",Demo
+:ref:`knapsack <knapsack>`,,,,
 :ref:`korcns <korcns>`,`korcns <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_korcns.html>`__,,CNS,Demo
 :ref:`linear <linear>`,`linear <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_linear.html>`__,,"DNLP, LP, NLP",Demo
 :ref:`lop <lop>`,`lop <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_lop.html>`__,:download:`lop.gdx <../../tests/integration/models/lop.gdx>`,"LP, MIP",Demo
