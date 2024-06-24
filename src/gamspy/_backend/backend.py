@@ -78,15 +78,11 @@ class Backend(ABC):
         self,
         container: Container,
         model: Model,
-        gdx_in: str,
-        gdx_out: str,
         options: Options,
         output: io.TextIOWrapper | None,
     ):
         self.container = container
         self.model = model
-        self.gdx_in = gdx_in
-        self.gdx_out = gdx_out
         self.options = options
         self.output = output
 
@@ -106,7 +102,7 @@ class Backend(ABC):
 
         return job_name
 
-    def preprocess(self, keep_flags: bool = False):
+    def preprocess(self, gdx_in: str, gdx_out: str, keep_flags: bool = False):
         (
             dirty_names,
             modified_names,
@@ -117,7 +113,7 @@ class Backend(ABC):
             self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
-            self.gdx_in, self.gdx_out, dirty_names, modified_names
+            gdx_in, gdx_out, dirty_names, modified_names
         )
 
         if not keep_flags:

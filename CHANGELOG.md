@@ -5,6 +5,7 @@ GAMSPy 0.13.1
 -------------
 - General
   - Support output redirection for NEOS backend.
+  - Support GAMSPy to GAMS automatic conversion.
 - Documentation
   - Update model documentation to show how to redirect NEOS output to a file.
 

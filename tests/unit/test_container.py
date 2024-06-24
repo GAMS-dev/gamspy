@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gc
 import os
+import subprocess
 import unittest
 
 import gamspy.utils as utils
@@ -486,6 +487,194 @@ Equation e;
         test_keep_on_error_err()
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
+
+    def test_to_gams(self):
+        i = Set(
+            self.m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+        # debugging level is different than keep
+        with self.assertRaises(ValidationError):
+            self.m.toGams("bla")
+
+        m = Container(debugging_level="keep")
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+        # File already exists
+        with self.assertRaises(ValidationError):
+            m.toGams("src")
+
+        gams_model_dir = os.path.join("tmp", "gams_model")
+        m.toGams(gams_model_dir)
+
+        try:
+            import gamspy_base
+
+            process = subprocess.run(
+                [
+                    os.path.join(gamspy_base.directory, "gams"),
+                    os.path.join(gams_model_dir, "model.gms"),
+                ],
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(process.returncode, 0)
+            self.assertTrue("153.675" in process.stdout)
+        except ImportError:
+            ...
 
 
 def container_suite():

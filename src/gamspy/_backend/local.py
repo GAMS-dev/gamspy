@@ -24,20 +24,15 @@ class Local(backend.Backend):
         output: io.TextIOWrapper | None = None,
         model: Model | None = None,
     ) -> None:
-        super().__init__(
-            container,
-            model,
-            container._gdx_in,
-            container._gdx_out,
-            options,
-            output,
-        )
+        super().__init__(container, model, options, output)
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
 
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = self.job_name + ".log"
+            self.container._gdx_in = self.job_name + "in.gdx"
+            self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         trace_file_path = os.path.join(
@@ -67,7 +62,9 @@ class Local(backend.Backend):
 
     def run(self, keep_flags: bool = False):
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(
+            self.container._gdx_in, self.container._gdx_out, keep_flags
+        )
 
         # Run the model
         self.execute_gams(gams_string)
