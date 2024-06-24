@@ -105,6 +105,9 @@ The same information can also be reached programmatically via utils module of GA
     print(gp.utils.getInstalledSolvers())
     print(gp.utils.getAvailableSolvers())
 
+.. note::
+    All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
+
 
 Installing/Uninstalling New Solvers
 ===================================
