@@ -8,6 +8,8 @@ GAMSPy 0.13.1
   - Support GAMSPy to GAMS automatic conversion.
 - Documentation
   - Update model documentation to show how to redirect NEOS output to a file.
+- Testing
+  - Add a new model (knapsack) to the model library.
 
 GAMSPy 0.13.0
 -------------
