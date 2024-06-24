@@ -688,14 +688,7 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
-        super().__init__(
-            container,
-            model,
-            os.path.basename(container._gdx_in),
-            os.path.basename(container._gdx_out),
-            options,
-            output,
-        )
+        super().__init__(container, model, options, output)
         self.client = client
 
         self.job_name = self.get_job_name()
@@ -711,7 +704,11 @@ class GAMSEngine(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(
+            os.path.basename(self.container._gdx_in),
+            os.path.basename(self.container._gdx_out),
+            keep_flags,
+        )
 
         self.execute_gams(gams_string)
 

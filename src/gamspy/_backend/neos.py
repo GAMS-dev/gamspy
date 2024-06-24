@@ -409,9 +409,7 @@ class NEOSServer(backend.Backend):
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 
-        super().__init__(
-            container, model, "in.gdx", "output.gdx", options, output
-        )
+        super().__init__(container, model, options, output)
 
         self.client = client
         self.job_name = self.get_job_name()
@@ -427,7 +425,9 @@ class NEOSServer(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(
+            "in.gdx", "output.gdx", keep_flags
+        )
 
         # Run the model
         self.execute_gams(gams_string)
@@ -472,7 +472,7 @@ class NEOSServer(backend.Backend):
             )
 
             shutil.move(
-                os.path.join(self.container.working_directory, self.gdx_out),
+                os.path.join(self.container.working_directory, "output.gdx"),
                 self.container._gdx_out,
             )
 

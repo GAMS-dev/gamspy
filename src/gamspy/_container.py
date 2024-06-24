@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import atexit
+import glob
+import logging
 import os
 import platform
 import shutil
@@ -26,6 +28,14 @@ from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
+
+logger = logging.getLogger("CONTAINER")
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
     import io
@@ -467,12 +477,10 @@ class Container(gt.Container):
         return symbol_names
 
     def _setup_paths(self) -> tuple[str, str, str]:
-        suffix = uuid.uuid4()
-        job = os.path.join(self.working_directory, "_" + str(uuid.uuid4()))
-        gdx_in = os.path.join(self.working_directory, f"_gdx_in_{suffix}.gdx")
-        gdx_out = os.path.join(
-            self.working_directory, f"_gdx_out_{suffix}.gdx"
-        )
+        suffix = "_" + str(uuid.uuid4())
+        job = os.path.join(self.working_directory, suffix)
+        gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
+        gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
 
         return job, gdx_in, gdx_out
 
@@ -1229,3 +1237,38 @@ class Container(gt.Container):
         str
         """
         return self._gdx_out
+
+    def toGams(self, path: str) -> None:
+        """
+        Generates GAMS model under path/model.gms
+
+        Parameters
+        ----------
+        path : str
+            Path to the directory which will contain the GAMS model.
+
+        Raises
+        ------
+        ValidationError
+            In case debugging level is different than "keep".
+        """
+        if self._debugging_level != DebugLevel.KeepFiles:
+            raise ValidationError(
+                "In order to convert your GAMSPy model to GAMS, the debugging_level argument of Container must be set to `keep`."
+            )
+
+        try:
+            os.makedirs(path)
+        except OSError as e:
+            raise ValidationError(e.strerror) from e
+        
+        gdx_files = glob.glob(os.path.join(self.working_directory, "_*in.gdx"))
+        for file in gdx_files:
+            shutil.copy(file, path)
+
+        with open(os.path.join(path, "model.gms"), "w") as file:
+            file.write(self.generateGamsString())
+
+        logging.info(
+            f'GAMS model has been generated under {os.path.join(path, "model.gms")}'
+        )
