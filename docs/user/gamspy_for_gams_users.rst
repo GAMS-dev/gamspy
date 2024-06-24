@@ -5,7 +5,7 @@ GAMSPy for GAMS Users
 *********************
 
 This document is for GAMS users who are interested in translating their
-existing GAMS models to GAMSPy. 
+existing GAMS models to GAMSPy or vice versa. 
 
 Translating Symbols
 -------------------
@@ -248,3 +248,23 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
         x2 = gp.Parameter(m, "x2", records=3)
         z[:] = reciprocal(x1) + reciprocal(x2)
         print(z.records)
+
+Automatic Conversion of a GAMSPy Model to GAMS
+----------------------------------------------
+
+Existing GAMSPy models can be translated to a GAMS model automatically by using ``Container.toGams()``: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    i = gp.Set(m, "i", records=["i1", "i2"])
+    a = gp.Parameter(m, "a", domain=i)
+    ...
+    ...
+    rest of your model
+    ...
+    ...
+
+    m.toGams(path=<gams_model_path>)
+
+The generated GAMS model can be found under <gams_model_path>/model.gms
