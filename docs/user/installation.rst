@@ -40,7 +40,7 @@ Licensing
 ---------
 GAMSPy comes with a free demo license which lets you generate and solve small models.
 For more information about GAMS licenses and how to get a new license, check 
-`GAMS Licensing <https://www.gams.com/latest/docs/UG_License.html>`_.
+`GAMS Licensing <https://www.gams.com/sales/licensing>`_.
 
 Installing or updating your license
 ===================================
@@ -86,13 +86,12 @@ Then, you can run the gamspy command as usual::
 Solvers
 -------
 
-GAMSPy comes with 6 default solvers (CPLEX, CONOPT, PATH, NLPEC, SBB, and CONVERT) and
-more solvers can be installed on demand.
+GAMSPy comes with default solvers and more solvers can be installed on demand.
 
 Listing Solvers
 ===============
 
-In order to list the installed solvers, you can run either::
+In order to list the installed solvers on your machine, you can run either::
 
     gamspy list solvers
 
