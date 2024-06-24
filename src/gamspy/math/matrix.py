@@ -183,7 +183,6 @@ def next_alias(symbol: Alias | Set) -> Alias:
     'DenseDim10_2'
 
     """
-    from gamspy._symbols.alias import Alias
 
     current = symbol
     if symbol.name.startswith("DenseDim") or symbol.name.startswith("AliasOf"):
@@ -195,9 +194,7 @@ def next_alias(symbol: Alias | Set) -> Alias:
     expected_name = f"{prefix}_{num}"
     find_x = symbol.container.data.get(expected_name, None)
     if find_x is None:
-        find_x = Alias(
-            symbol.container, name=expected_name, alias_with=current
-        )
+        find_x = symbol.container.addAlias(expected_name, alias_with=current)
 
     return find_x
 
