@@ -121,7 +121,7 @@ class Backend(ABC):
 
         return gams_string, dirty_names
 
-    def prepare_summary(self, working_directory: str):
+    def prepare_summary(self, working_directory: str) -> pd.DataFrame:
         from gamspy._model import ModelStatus
 
         with open(

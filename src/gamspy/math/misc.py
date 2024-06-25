@@ -24,11 +24,11 @@ class MathOp:
         self.op_name = op_name
         self.elements = elements
 
-    def gamsRepr(self):
+    def gamsRepr(self) -> str:
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
         return f"{self.op_name}({operands_str})"
 
-    def _find_variables(self):
+    def _find_variables(self) -> list[str]:
         variables = []
         for elem in self.elements:
             if isinstance(elem, gp.Variable):
