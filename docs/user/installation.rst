@@ -47,12 +47,12 @@ Installing or updating your license
 A GAMSPy license is a 36 character identification number which is sent to you via e-mail. 
 In order to install your license, all you need to do is to run::
 
-    gamspy install license <path_to_your_license_file>
+    gamspy install license <your_license_number>
 
 For machines that are not connected to the internet, to install a license with the information of the node,
 one can run::
 
-    gamspy install license -i <path_to_your_license_file>
+    gamspy install license -i <your_license_number>
 
 GAMS/Gurobi-Link
 ================
