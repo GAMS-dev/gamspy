@@ -5,18 +5,20 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols as symbols
+import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-class ExtinsicFunction(operable.Operable):
+class ExtrinsicFunction(operable.Operable):
     """Extrinsic function registered by the user."""
 
     def __init__(self, name: str):
         self.name = name
-        self.args: tuple | None = None
+        self.args: tuple = ()
 
     def __len__(self):
         return len(self.__str__())
@@ -69,6 +71,18 @@ class ExtinsicFunction(operable.Operable):
         """
         return self.gamsRepr()
 
+    def _find_variables(self) -> list[str]:
+        variables = []
+        for elem in self.args:
+            if isinstance(elem, symbols.Variable):
+                variables.append(elem.name)
+            elif isinstance(elem, implicits.ImplicitVariable):
+                variables.append(elem.parent.name)
+            elif isinstance(elem, expression.Expression):
+                variables += elem._find_variables()
+
+        return variables
+
 
 class ExtrinsicLibrary:
     """
@@ -106,6 +120,6 @@ class ExtrinsicLibrary:
 
     def __getattr__(self, name):
         if name in self.functions:
-            return ExtinsicFunction(name)
+            return ExtrinsicFunction(name)
 
         return self.__getattribute__(name)
