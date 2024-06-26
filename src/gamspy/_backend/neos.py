@@ -29,6 +29,8 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
+    import io
+
     from gamspy import Container, Model
 
 
@@ -328,6 +330,7 @@ class NeosClient:
 
     def submit_job(
         self,
+        output: io.TextIOWrapper | None,
         xml_path: str = "neos.xml",
         is_blocking: bool = True,
         working_directory: str = ".",
@@ -381,11 +384,13 @@ class NeosClient:
                 msg, offset = self.neos.getIntermediateResults(
                     job_number, job_password, offset
                 )
-                logger.info(msg.data.decode())
+                if output is not None:
+                    output.write(msg.data.decode())
                 status = self.neos.getJobStatus(job_number, job_password)
 
             msg = self.neos.getFinalResults(job_number, job_password)
-            logger.info(msg.data.decode())
+            if output is not None:
+                output.write(msg.data.decode())
 
         return job_number, job_password
 
@@ -396,6 +401,7 @@ class NEOSServer(backend.Backend):
         container: Container,
         options: Options,
         client: NeosClient | None,
+        output: io.TextIOWrapper | None,
         model: Model,
     ) -> None:
         if client is None:
@@ -403,7 +409,7 @@ class NEOSServer(backend.Backend):
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 
-        super().__init__(container, model, "in.gdx", "output.gdx", options)
+        super().__init__(container, model, options, output)
 
         self.client = client
         self.job_name = self.get_job_name()
@@ -414,15 +420,17 @@ class NEOSServer(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def solve(self, keep_flags: bool = False):
+    def run(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to NEOS Server
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(
+            "in.gdx", "output.gdx", keep_flags
+        )
 
         # Run the model
-        self.run(gams_string)
+        self.execute_gams(gams_string)
 
         if self.is_async():
             return None
@@ -435,7 +443,7 @@ class NEOSServer(backend.Backend):
 
         return summary
 
-    def run(self, gams_string: str):
+    def execute_gams(self, gams_string: str):
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
@@ -451,6 +459,7 @@ class NEOSServer(backend.Backend):
         )
 
         job_number, job_password = self.client.submit_job(
+            output=self.output,
             is_blocking=self.client.is_blocking,
             working_directory=self.container.working_directory,
         )
@@ -463,7 +472,7 @@ class NEOSServer(backend.Backend):
             )
 
             shutil.move(
-                os.path.join(self.container.working_directory, self.gdx_out),
+                os.path.join(self.container.working_directory, "output.gdx"),
                 self.container._gdx_out,
             )
 

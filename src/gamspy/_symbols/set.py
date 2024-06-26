@@ -504,7 +504,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._run()
+                self.container._synch_with_gams()
 
             container.miro_protect = previous_state
 
@@ -536,7 +536,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self._assignment = statement
 
         self._is_dirty = True
-        self.container._run()
+        self.container._synch_with_gams()
 
     @property
     def records(self):
@@ -584,7 +584,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
         super().setRecords(records, uels_on_axes)
-        self.container._run()
+        self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """

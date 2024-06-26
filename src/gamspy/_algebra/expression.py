@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
-import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._symbols as syms
+import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._extrinsic import ExtrinsicFunction
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
@@ -63,7 +63,10 @@ class Expression(operable.Operable):
     """
 
     def __init__(
-        self, left: OperandType, data: str | MathOp, right: OperandType
+        self,
+        left: OperandType,
+        data: str | MathOp | ExtrinsicFunction,
+        right: OperandType,
     ):
         self.left = left
         self.data = data
@@ -73,12 +76,12 @@ class Expression(operable.Operable):
         self.representation = self._create_representation()
         self.where = condition.Condition(self)
 
-    def _create_representation(self):
+    def _create_representation(self) -> str:
         left_str, right_str = self._get_operand_representations()
         out_str = self._create_output_str(left_str, right_str)
 
         # Adapt to GAMS quirks
-        if isinstance(self.left, (domain.Domain, syms.Set, syms.Alias)):
+        if isinstance(self.left, (domain.Domain, symbols.Set, symbols.Alias)):
             return out_str[1:-1]
 
         if self.data in ["=", ".."] and out_str[0] == "(":
@@ -215,10 +218,12 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if hasattr(node, "data") and isinstance(node.data, MathOp):
+                if hasattr(node, "data") and isinstance(
+                    node.data, (MathOp, ExtrinsicFunction)
+                ):
                     variables += node.data._find_variables()
 
-                if isinstance(node, gp.Variable):
+                if isinstance(node, symbols.Variable):
                     variables.append(node.name)
                 elif isinstance(node, implicits.ImplicitVariable):
                     variables.append(node.parent.name)
@@ -232,14 +237,14 @@ class Expression(operable.Operable):
 
         return list(set(variables))
 
-    def _fix_equalities(self):
+    def _fix_equalities(self) -> None:
         # Equality operations on Parameter and Variable objects generate
         # GAMS equality signs: =g=, =e=, =l=. If these signs appear on
         # assignments, replace them with regular equality ops.
-        EQ_MAP = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
+        EQ_MAP: dict[Any, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         stack = []
 
-        node = self
+        node: Expression | None = self
         while True:
             if node is not None:
                 stack.append(node)

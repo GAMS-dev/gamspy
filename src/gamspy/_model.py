@@ -283,7 +283,7 @@ class Model:
 
         self._infeasibility_tolerance: float | None = None
 
-        self.container._run()
+        self.container._synch_with_gams()
 
     def __repr__(self) -> str:
         return f"<Model `{self.name}` ({hex(id(self))})>"
@@ -583,7 +583,7 @@ class Model:
         modifiables : List[Parameter | ImplicitParameter]
         freeze_options : dict, optional
         """
-        self.container._run()
+        self.container._synch_with_gams()
 
         self.instance = ModelInstance(
             self.container, self, modifiables, freeze_options
@@ -670,7 +670,7 @@ class Model:
             self,
         )
 
-        summary = runner.solve()
+        summary = runner.run()
 
         if IS_MIRO_INIT:
             self.container._write_default_gdx_miro()

@@ -113,42 +113,50 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    license = args.name
+    is_alp = not os.path.isfile(license)
+
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
-    command = [
-        os.path.join(gamspy_base_dir, "gamsgetkey"),
-        args.name,
-        "-u",
-        "1234",
-    ]
+    if is_alp:
+        command = [
+            os.path.join(gamspy_base_dir, "gamsgetkey"),
+            license,
+            "-u",
+            "1234",
+        ]
 
-    if args.node_specific:
-        command.append("-i")
+        if args.node_specific:
+            command.append("-i")
+            process = subprocess.run(
+                os.path.join(gamspy_base_dir, "gamsprobe"),
+                text=True,
+                capture_output=True,
+            )
+
+            if process.returncode:
+                raise ValidationError(process.stderr)
+
+            node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
+            with open(node_info_path, "w") as file:
+                file.write(process.stdout)
+
+            command.append(node_info_path)
+
         process = subprocess.run(
-            os.path.join(gamspy_base_dir, "gamsprobe"),
+            command,
             text=True,
             capture_output=True,
         )
-
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
-        with open(node_info_path, "w") as file:
+        with open(
+            os.path.join(gamspy_base_dir, "user_license.txt"), "w"
+        ) as file:
             file.write(process.stdout)
-
-        command.append(node_info_path)
-
-    process = subprocess.run(
-        command,
-        text=True,
-        capture_output=True,
-    )
-    if process.returncode:
-        raise ValidationError(process.stderr)
-
-    with open(os.path.join(gamspy_base_dir, "user_license.txt"), "w") as file:
-        file.write(process.stdout)
+    else:
+        shutil.copy(license, gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def uninstall_license():

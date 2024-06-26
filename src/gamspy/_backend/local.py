@@ -24,14 +24,15 @@ class Local(backend.Backend):
         output: io.TextIOWrapper | None = None,
         model: Model | None = None,
     ) -> None:
-        super().__init__(
-            container, model, container._gdx_in, container._gdx_out, options
-        )
-        self.output = output
+        super().__init__(container, model, options, output)
         self.job_name = self.get_job_name()
+        self.gms_file = self.job_name + ".gms"
+        self.pf_file = self.job_name + ".pf"
 
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = self.job_name + ".log"
+            self.container._gdx_in = self.job_name + "in.gdx"
+            self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         trace_file_path = os.path.join(
@@ -41,7 +42,7 @@ class Local(backend.Backend):
 
         extra_options = {
             "trace": trace_file_path,
-            "input": job_name + ".gms",
+            "input": self.gms_file,
             "output": job_name + ".lst",
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
@@ -59,33 +60,34 @@ class Local(backend.Backend):
     def is_async(self):
         return False
 
-    def solve(self, keep_flags: bool = False):
+    def run(self, keep_flags: bool = False):
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string, dirty_names = self.preprocess(
+            self.container._gdx_in, self.container._gdx_out, keep_flags
+        )
 
         # Run the model
-        self.run(gams_string)
+        self.execute_gams(gams_string)
 
         # Synchronize GAMSPy with checkpoint and return a summary
         summary = self.postprocess(dirty_names)
 
         return summary
 
-    def run(self, gams_string: str):
+    def execute_gams(self, gams_string: str):
         # Write gms file
-        with open(self.job_name + ".gms", "w") as gams_file:
+        with open(self.gms_file, "w") as gams_file:
             gams_file.write(gams_string)
 
         # Write pf file
         extra_options = self._prepare_extra_options(self.job_name)
         self.options._set_extra_options(extra_options)
 
-        pf_file = self.job_name + ".pf"
-        self.options.export(pf_file, self.output)
+        self.options.export(self.pf_file, self.output)
 
         try:
             self.container._job = self.job_name
-            self.container._send_job(self.job_name, pf_file, self.output)
+            self.container._send_job(self.job_name, self.pf_file, self.output)
 
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
