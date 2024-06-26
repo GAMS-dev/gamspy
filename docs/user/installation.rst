@@ -44,15 +44,23 @@ For more information about GAMS licenses and how to get a new license, check
 
 Installing or updating your license
 ===================================
-A GAMSPy license is a 36 character identification number which is sent to you via e-mail. 
+A GAMSPy license is a either an ASCII file of six lines or 36 character identification number which is sent to you via e-mail. 
 In order to install your license, all you need to do is to run::
 
-    gamspy install license <path_to_your_license_file>
+    gamspy install license <path_to_ascii_file or identification number>
 
 For machines that are not connected to the internet, to install a license with the information of the node,
 one can run::
 
     gamspy install license -i <path_to_your_license_file>
+
+This option is only available for licenses in identification number format.
+
+Uninstalling your license
+=========================
+If you don't want to use your own license, you can uninstall your license with the following command: ::
+
+    gamspy uninstall license
 
 GAMS/Gurobi-Link
 ================

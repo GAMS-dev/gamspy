@@ -117,6 +117,9 @@ def open_connection(
 
     start = time.time()
     while True:
+        if process.poll() is not None:
+            raise ValidationError(process.communicate()[0])
+
         try:
             new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             new_socket.connect(address)
