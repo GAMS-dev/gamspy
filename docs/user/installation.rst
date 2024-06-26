@@ -52,7 +52,7 @@ In order to install your license, all you need to do is to run::
 For machines that are not connected to the internet, to install a license with the information of the node,
 one can run::
 
-    gamspy install license -i <path_to_your_license_file>
+    gamspy install license -i <your_license_number>
 
 This option is only available for licenses in identification number format.
 
