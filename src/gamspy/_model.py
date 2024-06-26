@@ -294,7 +294,7 @@ class Model:
             f" {self.sense}\n  Equations: {self.equations}"
         )
 
-    def _generate_obj_var_and_equation(self):
+    def _generate_obj_var_and_equation(self) -> tuple[Variable, Equation]:
         variable = gp.Variable._constructor_bypass(
             self.container,
             f"{Model._generate_prefix}variable_{self._auto_id}",
@@ -310,7 +310,7 @@ class Model:
 
     def _set_objective_variable(
         self,
-        assignment: None | (Variable | Operation | Expression) = None,
+        assignment: None | Variable | Operation | Expression = None,
     ) -> Variable | None:
         """
         Returns objective variable. If the assignment is an Expression
@@ -398,7 +398,12 @@ class Model:
 
         return assignment
 
-    def _validate_model(self, equations, problem, sense=None) -> tuple:
+    def _validate_model(
+        self,
+        equations: list[Equation],
+        problem: Problem | str,
+        sense: str | Sense | None = None,
+    ) -> tuple[Problem, Sense | None]:
         if isinstance(problem, str):
             if problem.upper() not in gp.Problem.values():
                 raise ValueError(
@@ -424,9 +429,7 @@ class Model:
                 not isinstance(equation, gp.Equation) for equation in equations
             )
         ):
-            raise TypeError(
-                "equations must be list   self.clieof Equation objects"
-            )
+            raise TypeError("equations must be list of Equation objects")
 
         return problem, sense
 
@@ -583,8 +586,6 @@ class Model:
         modifiables : List[Parameter | ImplicitParameter]
         freeze_options : dict, optional
         """
-        self.container._synch_with_gams()
-
         self.instance = ModelInstance(
             self.container, self, modifiables, freeze_options
         )

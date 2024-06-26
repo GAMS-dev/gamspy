@@ -78,7 +78,8 @@ class ModelInstanceSuite(unittest.TestCase):
         for b_value, result in zip(bmult_list, results):
             bmult.setRecords(b_value)
             transport.solve(model_instance_options={"solver": "conopt"})
-            self.assertAlmostEqual(z.records["level"][0], result, places=2)
+            self.assertAlmostEqual(z.toValue(), result, places=2)
+            self.assertAlmostEqual(transport.objective_value, result, places=2)
 
         transport.unfreeze()
         self.assertFalse(transport._is_frozen)
@@ -117,11 +118,11 @@ class ModelInstanceSuite(unittest.TestCase):
 
         transport.freeze(modifiables=[x.up])
         transport.solve(model_instance_options={"solver": "conopt"})
-        self.assertAlmostEqual(z.records["level"][0], 153.675, places=3)
+        self.assertAlmostEqual(transport.objective_value, 153.675, places=3)
 
         x.records.loc[1, "upper"] = 0
         transport.solve(model_instance_options={"solver": "conopt"})
-        self.assertAlmostEqual(z.records["level"][0], 156.375, places=3)
+        self.assertAlmostEqual(transport.objective_value, 156.375, places=3)
 
         transport.unfreeze()
 
@@ -166,7 +167,6 @@ class ModelInstanceSuite(unittest.TestCase):
 
         self.assertEqual(MPSADJ.records["level"].tolist()[0], 0)
         mm.unfreeze()
-        m.close()
 
 
 def model_instance_suite():
