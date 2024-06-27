@@ -22,7 +22,7 @@ from gamspy import (
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_condition_on_expression(self):
@@ -98,7 +98,7 @@ class ConditionSuite(unittest.TestCase):
         markets = ["mexico-df", "monterrey", "guadalaja"]
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(
             m,
@@ -319,7 +319,7 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
@@ -344,7 +344,7 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
@@ -377,7 +377,7 @@ class ConditionSuite(unittest.TestCase):
         )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
@@ -467,7 +467,7 @@ class ConditionSuite(unittest.TestCase):
 
     def test_operator_comparison_in_condition(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])

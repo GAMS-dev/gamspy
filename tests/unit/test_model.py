@@ -20,7 +20,7 @@ from gamspy.exceptions import ValidationError
 class ModelSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -254,7 +254,7 @@ class ModelSuite(unittest.TestCase):
 
     def test_feasibility(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -357,7 +357,7 @@ class ModelSuite(unittest.TestCase):
 
     def test_compute_infeasibilities(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(

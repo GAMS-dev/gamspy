@@ -11,7 +11,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_utils(self):

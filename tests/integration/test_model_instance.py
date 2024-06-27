@@ -33,7 +33,7 @@ class ModelInstanceSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_change(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
@@ -99,7 +99,7 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertFalse(transport._is_frozen)
 
     def test_variable_change(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 
@@ -141,7 +141,7 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.unfreeze()
 
     def test_fx(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         INCOME0 = Parameter(
             m, name="INCOME0", description="notional income level", records=3.5
         )
@@ -182,7 +182,7 @@ class ModelInstanceSuite(unittest.TestCase):
         mm.unfreeze()
 
     def test_validations(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
 

@@ -25,7 +25,7 @@ from gamspy.math import sqr
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -64,7 +64,7 @@ class EquationSuite(unittest.TestCase):
 
         # Equation and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -333,7 +333,7 @@ class EquationSuite(unittest.TestCase):
             )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -535,7 +535,7 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, "i", records=[f"i{i}" for i in range(10)])
         x = Variable(m, "x", domain=[i])
@@ -587,7 +587,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_changed_domain(self):
         cont = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         s = Set(cont, "s")
@@ -599,7 +599,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_assignment(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(self.m, "i")
@@ -610,7 +610,7 @@ class EquationSuite(unittest.TestCase):
             a[j] = 5
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)

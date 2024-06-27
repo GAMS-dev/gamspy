@@ -44,7 +44,7 @@ k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 print("Number of circles =", k)
 
 c = Container(
-    system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+    system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
 )
 
 # Set

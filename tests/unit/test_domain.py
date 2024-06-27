@@ -10,7 +10,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 class DomainSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_domain(self):
@@ -28,7 +28,7 @@ class DomainSuite(unittest.TestCase):
 
     def test_domain_forwarding(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, name="i")
         _ = Parameter(

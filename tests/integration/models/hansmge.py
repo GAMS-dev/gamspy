@@ -170,7 +170,7 @@ $endIf
 
 solve HANSEN using mcp;
 """
-    m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+    m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
     m.addGamsCode(hansen_mpsge, import_symbols=["HH"])
     demands = m["HH"].toList()
     assert isclose(demands[0][1], 5.1549, rel_tol=1e-4)

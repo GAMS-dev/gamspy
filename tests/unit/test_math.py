@@ -12,7 +12,7 @@ from gamspy.exceptions import ValidationError
 class MathSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.markets = ["new-york", "chicago", "topeka"]
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
@@ -260,7 +260,7 @@ class MathSuite(unittest.TestCase):
 
     def test_math_2(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -352,7 +352,7 @@ class MathSuite(unittest.TestCase):
 
     def test_logical(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])

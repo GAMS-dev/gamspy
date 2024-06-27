@@ -31,7 +31,7 @@ except Exception:
 class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -48,7 +48,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_engine(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -121,7 +121,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_no_config(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -155,7 +155,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_extra_files(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -214,7 +214,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_solve_twice(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -255,7 +255,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_summary(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -288,7 +288,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_non_blocking(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])

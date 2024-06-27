@@ -9,7 +9,7 @@ from gamspy import Container, Parameter, Set, Variable
 class MagicsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.markets = ["new-york", "chicago", "topeka"]
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]

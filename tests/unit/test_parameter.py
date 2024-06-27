@@ -12,7 +12,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 class ParameterSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -51,7 +51,7 @@ class ParameterSuite(unittest.TestCase):
 
         # Parameter and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -111,7 +111,7 @@ class ParameterSuite(unittest.TestCase):
         )
 
         cont = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         s = Set(cont, "s")
@@ -123,7 +123,7 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_assignment(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(self.m, "i")
@@ -199,7 +199,7 @@ class ParameterSuite(unittest.TestCase):
 
     def test_undef(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         _ = Parameter(
             m, name="rho", records=[np.nan]
@@ -228,7 +228,7 @@ class ParameterSuite(unittest.TestCase):
 
     def test_domain_verification(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i1 = Set(m, "i1", records=["i1", "i2"])
         a1 = Parameter(m, "a1", domain=i1, records=[("i1", 1), ("i2", 2)])
