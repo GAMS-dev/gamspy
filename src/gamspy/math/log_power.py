@@ -79,14 +79,15 @@ def log_beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
 
     Examples
     --------
+    >>> import math
     >>> from gamspy import Container, Parameter
     >>> from gamspy.math import log_beta
     >>> m = Container()
     >>> a = Parameter(m, "a", records=3.8)
     >>> b = Parameter(m, "b")
     >>> b[...] = log_beta(a,5)
-    >>> b.toValue()
-    -5.45446741772822
+    >>> math.isclose(b.toValue(), -5.45446741772822)
+    True
 
     """
     return expression.Expression(None, MathOp("logBeta", (x, y)), None)
