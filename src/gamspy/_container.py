@@ -135,6 +135,15 @@ def open_connection(
     return new_socket, process
 
 
+def get_system_directory(system_directory: str | None) -> str:
+    system_directory = os.getenv("GAMSPY_GAMS_SYSDIR", system_directory)
+
+    if system_directory is None:
+        system_directory = utils._get_gamspy_base_directory()
+
+    return system_directory
+
+
 class Container(gt.Container):
     """
     A container is an object that holds all symbols and operates on them.
@@ -180,11 +189,7 @@ class Container(gt.Container):
 
         self._is_socket_open = True
 
-        system_directory = (
-            system_directory
-            if system_directory
-            else utils._get_gamspy_base_directory()
-        )
+        system_directory = get_system_directory(system_directory)
 
         self._unsaved_statements: list = []
         self.miro_protect = miro_protect

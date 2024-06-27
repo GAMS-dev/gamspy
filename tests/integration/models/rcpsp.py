@@ -51,7 +51,7 @@ from gamspy import (
 # Create model with GAMSPy
 def build_abstract_model():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     j = Set(

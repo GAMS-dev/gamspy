@@ -11,7 +11,7 @@ from gamspy.exceptions import ValidationError
 class AliasSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_alias_creation(self):
@@ -112,7 +112,7 @@ class AliasSuite(unittest.TestCase):
         self.m.write("test.gdx")
 
         bla = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         bla.read("test.gdx")
         self.assertEqual(

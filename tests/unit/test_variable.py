@@ -12,7 +12,7 @@ from gamspy.exceptions import ValidationError
 class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_variable_creation(self):
@@ -39,7 +39,7 @@ class VariableSuite(unittest.TestCase):
 
         # Variable and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         # Same name, different domain forwarding
