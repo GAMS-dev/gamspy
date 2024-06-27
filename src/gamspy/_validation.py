@@ -13,6 +13,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
+    from gamspy._model import Problem
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
@@ -344,7 +345,12 @@ def validate_model_name(name: str) -> str:
     return name
 
 
-def validate_solver_args(solver, problem, options, output):
+def validate_solver_args(
+    solver: str | None,
+    problem: Problem | str,
+    options: Options | None,
+    output: io.TextIOWrapper | None,
+) -> None:
     # Check validity of solver
     if solver is not None:
         if not isinstance(solver, str):

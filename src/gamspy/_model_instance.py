@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
 from gams import (
@@ -21,7 +21,7 @@ import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._options import ModelInstanceOptions, Options
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Model, Parameter
@@ -79,7 +79,7 @@ class ModelInstance:
         container: Container,
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: Options | dict | None = None,
+        freeze_options: Options | None = None,
     ):
         self.container = container
         self.job_name = container._job
@@ -93,6 +93,7 @@ class ModelInstance:
             system_directory=container.system_directory,
         )
         self.model = model
+        assert self.model._is_frozen
 
         self.checkpoint = GamsCheckpoint(container.workspace, self.save_file)
         self.instance = self.checkpoint.add_modelinstance()
@@ -122,12 +123,8 @@ class ModelInstance:
 
         self.container._send_job(self.job_name, self.pf_file)
 
-    def instantiate(
-        self, model: Model, freeze_options: Options | dict | None = None
-    ):
+    def instantiate(self, model: Model, options: Options | None = None):
         modifiers = self._create_modifiers()
-
-        options = self._prepare_freeze_options(freeze_options)
 
         solve_string = f"{model.name} using {model.problem}"
 
@@ -137,15 +134,17 @@ class ModelInstance:
         if model._objective_variable is not None:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
-        self.instance.instantiate(solve_string, modifiers, options)
+        gams_options = self._prepare_gams_options(options)
+        self.instance.instantiate(solve_string, modifiers, gams_options)
 
     def solve(
         self,
+        solver: str | None,
         given_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         # get options from dict
-        options, update_type = self._prepare_options(given_options)
+        options, update_type = self._prepare_options(solver, given_options)
 
         # update sync_db
         self.container.write(self.instance.sync_db._gmd)
@@ -166,7 +165,10 @@ class ModelInstance:
 
                 self.instance_container.write(self.instance.sync_db._gmd)
 
-        self.instance.solve(update_type, output, mi_opt=options)
+        try:
+            self.instance.solve(update_type, output, mi_opt=options)
+        except GamsException as e:
+            raise GamspyException(e.value) from e
         self._update_main_container()
 
         # update model status
@@ -176,6 +178,19 @@ class ModelInstance:
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
     ) -> list[Parameter | ImplicitParameter]:
+        if not isinstance(modifiables, Iterable):
+            raise ValidationError(
+                "Modifiables must be iterable (i.e. list, tuple etc.)."
+            )
+
+        if any(
+            not isinstance(symbol, (gp.Parameter, implicits.ImplicitParameter))
+            for symbol in modifiables
+        ):
+            raise ValidationError(
+                "Type of a modifiable must be either Parameter or a Variable attribute (e.g. variable.up)"
+            )
+
         will_be_modified: list[Parameter | ImplicitParameter] = []
         for symbol in modifiables:
             if isinstance(symbol, implicits.ImplicitParameter):
@@ -200,37 +215,37 @@ class ModelInstance:
 
         return will_be_modified
 
-    def _prepare_freeze_options(
+    def _prepare_gams_options(
         self, given_options: Options | dict | None
     ) -> GamsOptions:
-        if isinstance(given_options, Options):
-            given_options = given_options._get_gams_compatible_options()
-
         options = GamsOptions(self.model.container.workspace)
-
         if given_options is None:
             return options
 
-        for key, value in given_options.items():
+        options_dict = given_options._get_gams_compatible_options()
+
+        for key, value in options_dict.items():
             setattr(options, key, value)
 
         return options
 
     def _prepare_options(
-        self, given_options: ModelInstanceOptions | dict | None
+        self,
+        solver: str | None,
+        given_options: ModelInstanceOptions | dict | None,
     ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
-
-        if given_options is None:
-            return None, update_type
-
         options = GamsModelInstanceOpt()
 
-        for key, value in given_options.items():
-            setattr(options, key, value)
+        if solver is not None:
+            options.solver = solver
 
-            if key == "update_type":
-                update_type = value
+        if given_options is not None:
+            for key, value in given_options.items():
+                setattr(options, key, value)
+
+                if key == "update_type":
+                    update_type = value
 
         return options, update_type
 
@@ -324,6 +339,13 @@ class ModelInstance:
         for name in temp.data:
             if name in self.container.data:
                 self.container[name].records = temp[name].records
+
+            if name in [symbol.name for symbol in self.modifiables]:
+                _ = gp.Variable(
+                    self.container,
+                    name + "_var",
+                    records=temp[name + "_var"].records,
+                )
 
         if self.model._objective_variable is not None:
             self.model.objective_value = temp[

@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.2
+-------------
+- General
+  - Set the records of objective value in model instance solves. 
+- Testing
+  - Add model instance tests that check the objective value.
+
 GAMSPy 0.13.1
 -------------
 - General

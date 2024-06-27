@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
 from gams import SymbolUpdateType
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from gamspy.exceptions import ValidationError
 
@@ -70,6 +70,8 @@ option_map = {
 
 
 class Options(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    
     cns: Optional[str] = None
     dnlp: Optional[str] = None
     emp: Optional[str] = None
@@ -120,7 +122,7 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
-    def _get_gams_compatible_options(self, output: io.TextIOWrapper | None) -> dict:
+    def _get_gams_compatible_options(self, output: io.TextIOWrapper | None = None) -> dict:
         gamspy_options = self.model_dump(exclude_none=True)
         if "allow_suffix_in_equation" in gamspy_options:
             allows_suffix = gamspy_options["allow_suffix_in_equation"]
@@ -212,6 +214,42 @@ class Options(BaseModel):
         """Set extra options of the backend"""
         self._extra_options = options
 
+    @staticmethod
+    def from_file(path: str) -> Options:
+        """
+        Generates an Options object with the key-value pairs in a file.
+        The file in given path must consist of one key-value pair in each line.
+
+        Parameters
+        ----------
+        path : str
+            Path to the option file.
+
+        Returns
+        -------
+        Options
+
+        Raises
+        ------
+        ValidationError
+            In case the given path is not a file.
+        """
+        if not os.path.isfile(path):
+            raise ValidationError(f"No such file in the given path: {path}")
+        
+        attributes = dict()
+        with open(path) as file:
+            lines = file.readlines()
+
+            for line in lines:
+                if line == "\n" or line == "":
+                    continue
+
+                key, value = line.split("=")
+                attributes[key.strip()] = value.strip()
+        
+        return Options(**attributes)
+
     def export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
         all_options = dict()
         # Solver options
@@ -244,8 +282,7 @@ update_type_map = {
 
 
 class ModelInstanceOptions(BaseModel):
-    solver: Optional[str] = None
-    opt_file: int = -1
+    opt_file: int = 123
     no_match_limit: int = 0
     debug: bool = False
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
@@ -256,4 +293,4 @@ class ModelInstanceOptions(BaseModel):
         dictionary = self.model_dump()
         dictionary["update_type"] = update_type_map[dictionary["update_type"]]
 
-        return dictionary
+        return dictionary.items()
