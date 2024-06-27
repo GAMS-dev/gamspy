@@ -348,7 +348,7 @@ class ModelSuite(unittest.TestCase):
         test_model = Model(
             self.m,
             name="test_model",
-            equations=(supply, demand),
+            equations=[supply, demand],
             problem="LP",
             sense="min",
             objective=Sum((i, j), c[i, j] * x[i, j]),

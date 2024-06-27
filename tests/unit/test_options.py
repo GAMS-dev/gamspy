@@ -39,6 +39,9 @@ class OptionsSuite(unittest.TestCase):
 
     def test_options(self):
         with self.assertRaises(ValidationError):
+            _ = Options(unknown_option=5)
+
+        with self.assertRaises(ValidationError):
             _ = Options(hold_fixed_variables=5)
 
         options = Options(hold_fixed_variables=True)
@@ -206,6 +209,14 @@ class OptionsSuite(unittest.TestCase):
         listing_file_name = os.path.join("tmp", "listing.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
+
+    def test_from_file(self):
+        option_file = os.path.join("tmp", "option_file")
+        with open(option_file, "w") as file:
+            file.write("lp = conopt")
+
+        options = Options.from_file(option_file)
+        self.assertEqual(options.lp, "conopt")
 
 
 def options_suite():

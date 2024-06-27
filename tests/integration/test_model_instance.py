@@ -7,12 +7,15 @@ from gamspy import (
     Container,
     Equation,
     Model,
+    ModelInstanceOptions,
+    Options,
     Parameter,
     Sense,
     Set,
     Sum,
     Variable,
 )
+from gamspy.exceptions import ValidationError
 
 
 class ModelInstanceSuite(unittest.TestCase):
@@ -76,10 +79,21 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.freeze(modifiables=[bmult])
 
         for b_value, result in zip(bmult_list, results):
-            bmult.setRecords(b_value)
-            transport.solve(model_instance_options={"solver": "conopt"})
+            bmult[...] = b_value
+            transport.solve(solver="conopt")
+            self.assertTrue("bmult_var" in m.data)
             self.assertAlmostEqual(z.toValue(), result, places=2)
             self.assertAlmostEqual(transport.objective_value, result, places=2)
+
+        # different solver
+        transport.solve(solver="cplex")
+        self.assertAlmostEqual(
+            transport.objective_value, 199.77750000000003, places=2
+        )
+
+        # invalid solver
+        with self.assertRaises(ValidationError):
+            transport.solve(solver="blablabla")
 
         transport.unfreeze()
         self.assertFalse(transport._is_frozen)
@@ -117,11 +131,11 @@ class ModelInstanceSuite(unittest.TestCase):
         )
 
         transport.freeze(modifiables=[x.up])
-        transport.solve(model_instance_options={"solver": "conopt"})
+        transport.solve(solver="conopt")
         self.assertAlmostEqual(transport.objective_value, 153.675, places=3)
 
         x.records.loc[1, "upper"] = 0
-        transport.solve(model_instance_options={"solver": "conopt"})
+        transport.solve(solver="conopt")
         self.assertAlmostEqual(transport.objective_value, 156.375, places=3)
 
         transport.unfreeze()
@@ -161,12 +175,68 @@ class ModelInstanceSuite(unittest.TestCase):
 
         self.assertEqual(MPSADJ.records["level"].tolist()[0], 1.5)
 
-        IADJ.records = None
         MPSADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
         mm.solve()
 
         self.assertEqual(MPSADJ.records["level"].tolist()[0], 0)
         mm.unfreeze()
+
+    def test_validations(self):
+        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        i = Set(m, name="i", records=["seattle", "san-diego"])
+        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+
+        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(m, name="c", domain=[i, j])
+        bmult = Parameter(m, name="bmult", records=1)
+        c[i, j] = 90 * d[i, j] / 1000
+
+        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        z = Variable(m, name="z")
+
+        cost = Equation(m, name="cost")
+        supply = Equation(m, name="supply", domain=[i])
+        demand = Equation(m, name="demand", domain=[j])
+
+        cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=z,
+        )
+
+        # modifiables is not an iterable.
+        with self.assertRaises(ValidationError):
+            transport.freeze(modifiables=bmult)
+
+        # provide a set as a modifiable
+        with self.assertRaises(ValidationError):
+            transport.freeze(modifiables=[i])
+
+        transport.freeze(modifiables=[x.up], options=Options(lp="conopt"))
+
+        # Test model instance options
+        transport.solve(
+            solver="conopt",
+            model_instance_options=ModelInstanceOptions(debug=True),
+        )
+        self.assertAlmostEqual(transport.objective_value, 153.675, places=3)
+        self.assertTrue(os.path.exists("dict.txt"))
+        self.assertTrue(os.path.exists("gams.gms"))
+
+        # Test solver options
+        transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
+        self.assertTrue(
+            os.path.exists(os.path.join(m.working_directory, "conopt.123"))
+        )
 
 
 def model_instance_suite():
