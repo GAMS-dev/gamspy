@@ -329,6 +329,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.l[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
+
         """
         return self._l
 
@@ -344,6 +357,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.m[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 7.0, -inf, inf, 1.0], ['san-diego', 0.0, 18.0, -inf, inf, 1.0]]
+
         """
         return self._m
 
@@ -359,6 +385,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.lo[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 0.0, 7.0, inf, 1.0], ['san-diego', 0.0, 0.0, 18.0, inf, 1.0]]
+
         """
         return self._lo
 
@@ -374,6 +413,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.up[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 0.0, -inf, 7.0, 1.0], ['san-diego', 0.0, 0.0, -inf, 18.0, 1.0]]
+
         """
         return self._up
 
@@ -389,6 +441,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.scale[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 0.0, -inf, inf, 7.0], ['san-diego', 0.0, 0.0, -inf, inf, 18.0]]
+
         """
         return self._s
 
@@ -404,6 +469,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.fx[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 7.0, 0.0, 7.0, 7.0, 1.0], ['san-diego', 18.0, 0.0, 18.0, 18.0, 1.0]]
+
         """
         return self._fx
 
@@ -419,6 +497,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i, type="integer")
+        >>> x.prior[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 0.0, 0.0, inf, 7.0], ['san-diego', 0.0, 0.0, 0.0, inf, 18.0]]
+
         """
         return self._prior
 
@@ -434,6 +525,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i, type="integer")
+        >>> x.stage[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 0.0, 0.0, 0.0, inf, 7.0], ['san-diego', 0.0, 0.0, 0.0, inf, 18.0]]
+
         """
         return self._stage
 
@@ -448,6 +552,18 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         pd.DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> x = gp.Variable(m, name="x")
+        >>> x.l[...] = -10
+        >>> x.lo[...] = 5
+        >>> x.compute_infeasibilities().values.tolist()
+        [[-10.0, 0.0, 5.0, inf, 1.0, 15.0]]
+
         """
         return utils._calculate_infeasibilities(self)
 
@@ -459,6 +575,19 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=i, records=np.array([7, 18]))
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.fx[i] = d[i]
+        >>> x.records.values.tolist()
+        [['seattle', 7.0, 0.0, 7.0, 7.0, 1.0], ['san-diego', 18.0, 0.0, 18.0, 18.0, 1.0]]
+
         """
         return self._records
 
@@ -485,6 +614,29 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        """
+        Main convenience method to set standard pandas.DataFrame formatted
+        records. If uels_on_axes=True setRecords will assume that all domain
+        information is contained in the axes of the pandas object – data will be
+        flattened (if necessary).
+
+        Parameters
+        ----------
+        records : Any
+        uels_on_axes : bool, optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> x = gp.Variable(m, name="x", domain=i)
+        >>> x.setRecords(records=np.array([7, 18]))
+        >>> x.records.values.tolist()
+        [['seattle', 7.0, 0.0, -inf, inf, 1.0], ['san-diego', 18.0, 0.0, -inf, inf, 1.0]]
+
+        """
         super().setRecords(records, uels_on_axes)
         self.container._synch_with_gams()
 
@@ -501,6 +653,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ----------
         var_type : str
             The type of variable
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> x = gp.Variable(m, name="x", domain=i, type="positive")
+        >>> x.type = "negative"
+        >>> x.type
+        'negative'
+
         """
         given_type = cast_type(var_type)
         gt.Variable.type.fset(self, given_type)
@@ -512,6 +675,16 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> x = gp.Variable(m, name="x", domain=i, type="positive")
+        >>> x.gamsRepr()
+        'x'
+
         """
         return self.name
 

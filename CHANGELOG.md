@@ -16,6 +16,7 @@ GAMSPy 0.13.1
   - Add support for old way of installing a license. 
 - Documentation
   - Update model documentation to show how to redirect NEOS output to a file.
+  - Add examples to all public functions in API Reference.
 - Testing
   - Add a new model (knapsack) to the model library.
 

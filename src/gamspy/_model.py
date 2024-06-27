@@ -530,6 +530,26 @@ class Model:
         dict[str, pd.DataFrame]
             Dictionary of infeasibilities where equation names are keys and
             infeasibilities are values
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["i1", "i2"])
+        >>> j = gp.Set(m, name="j", records=["j1", "j2", "j3"])
+        >>> a = gp.Parameter(m, name="a", domain=i, records=[("i1", 350), ("i2", 600)])
+        >>> b = gp.Parameter(m, name="b", domain=j, records=[("j1", 400), ("j2", 450), ("j3", 420)])
+        >>> x = gp.Variable(m, name="x", domain=[i,j], type="Positive")
+        >>> s = gp.Equation(m, name="s", domain=i)
+        >>> d = gp.Equation(m, name="d", domain=j)
+        >>> s[i] = gp.Sum(j, x[i, j]) <= a[i]
+        >>> d[j] = gp.Sum(i, x[i, j]) >= b[j]
+        >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="min", objective=gp.Sum((i, j), x[i, j]))
+        >>> summary = my_model.solve()
+        >>> infeasibilities = my_model.compute_infeasibilities()
+        >>> infeasibilities["s"].infeasibility.item()
+        320.0
+
         """
         infeas_dict = {}
 
@@ -587,6 +607,24 @@ class Model:
         ----------
         modifiables : List[Parameter | ImplicitParameter]
         freeze_options : dict, optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> a = gp.Parameter(m, name="a", records=10)
+        >>> x = gp.Variable(m, name="x")
+        >>> e = gp.Equation(m, name="e", definition= x <= a)
+        >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="max", objective=x)
+        >>> solved = my_model.solve()
+        >>> x.toValue()
+        10.0
+        >>> my_model.freeze(modifiables=[a])
+        >>> a.setRecords(35)
+        >>> solved = my_model.solve()
+        >>> x.toValue()
+        35.0
+
         """
         self._is_frozen = True
         self.instance = ModelInstance(
@@ -642,6 +680,16 @@ class Model:
             In case problem is not in possible problem types
         ValueError
             In case sense is different than "MIN" or "MAX"
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = gp.Variable(m, "v")
+        >>> e = gp.Equation(m, "e", definition= v == 5)
+        >>> my_model = gp.Model(m, "my_model", "LP", [e], "max", v)
+        >>> solved = my_model.solve()
+
         """
         validation.validate_solver_args(solver, self.problem, options, output)
         validation.validate_model(self)

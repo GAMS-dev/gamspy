@@ -45,8 +45,8 @@ class MathSuite(unittest.TestCase):
         self.assertRaises(ValueError, gams_math.centropy, v[i], b[i], -1)
 
         # cvPower
-        op2 = gams_math.cv_power(b[i], 3)
-        self.assertEqual(op2.gamsRepr(), "( cvPower(b(i),3) )")
+        op2 = gams_math.cv_power(3, b[i])
+        self.assertEqual(op2.gamsRepr(), "( cvPower(3,b(i)) )")
 
         # rPower
         op2 = gams_math.rpower(b[i], 3)
@@ -206,8 +206,8 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( div0(b(i),3) )")
 
         # factorial
-        op2 = gams_math.factorial(b[i])
-        self.assertEqual(op2.gamsRepr(), "( fact(b(i)) )")
+        op2 = gams_math.factorial(5)
+        self.assertEqual(op2.gamsRepr(), "( fact(5) )")
 
         # fractional
         op2 = gams_math.fractional(b[i])
@@ -312,8 +312,8 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.ncpVUsin(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpVUsin(a(i),a(i),0) )")
 
-        op1 = gams_math.poly(a[i], 3, 5)
-        self.assertEqual(op1.gamsRepr(), "( poly(a(i),3,5) )")
+        op1 = gams_math.poly(a[i], 3, 5, 7)
+        self.assertEqual(op1.gamsRepr(), "( poly(a(i),3,5,7) )")
 
         op1 = gams_math.rand_binomial(1, 2)
         self.assertEqual(op1.gamsRepr(), "( randBinomial(1,2) )")

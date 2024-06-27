@@ -518,7 +518,6 @@ class Job(Endpoint):
                 headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
-            response_data = json.loads(response_data)
 
             if r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
@@ -528,10 +527,12 @@ class Job(Endpoint):
                     "Getting logs failed with status code: "
                     + str(r.status)
                     + ". "
-                    + response_data["message"]
+                    + response_data
                     + ".",
                     r.status,
                 )
+
+            response_data = json.loads(response_data)
             stdout_data = response_data["message"]
             break
 
