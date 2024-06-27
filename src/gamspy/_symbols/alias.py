@@ -170,6 +170,16 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", domain=["*"], records=['i1','i2'])
+        >>> j = gp.Alias(m, "j", i)
+        >>> j.gamsRepr()
+        'j'
+
         """
         return self.name
 
@@ -180,5 +190,15 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Alias(m, "j", i)
+        >>> j.getDeclaration()
+        'Alias(i,j);'
+
         """
         return f"Alias({self.alias_with.name},{self.name});"

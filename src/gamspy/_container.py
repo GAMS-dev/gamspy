@@ -687,6 +687,14 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> gams_code = m.generateGamsString()
+
         """
         if not show_raw:
             return self._gams_string
@@ -1145,6 +1153,15 @@ class Container(gt.Container):
         Returns
         -------
         list[Equation]
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> eq1 = gp.Equation(m, name="eq1")
+        >>> eq2 = gp.Equation(m, name="eq2")
+        >>> equation_objects = m.getEquations()
+
         """
         equations = [
             equation
@@ -1220,6 +1237,14 @@ class Container(gt.Container):
         Returns
         -------
         str | None
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="canning plants")
+        >>> gams_file_name = f"{m.gamsJobName()}.gms"
+
         """
         return self._job
 
@@ -1230,6 +1255,14 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="canning plants")
+        >>> gdx_path = m.gdxInputPath()
+
         """
         return self._gdx_in
 
@@ -1240,6 +1273,16 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"], description="canning plants")
+        >>> ii = gp.Set(m, name="ii", domain=i, description="seattle plant")
+        >>> ii['seattle'] = True
+        >>> gdx_path = m.gdxOutputPath()
+
         """
         return self._gdx_out
 

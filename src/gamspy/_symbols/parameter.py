@@ -307,6 +307,18 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=[i])
+        >>> d.setRecords(np.array([10, 25]))
+        >>> d.records.values.tolist()
+        [['seattle', 10.0], ['san-diego', 25.0]]
+
         """
         if not self._is_dirty:
             return self._records
@@ -349,6 +361,28 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        """
+        Main convenience method to set standard pandas.DataFrame formatted
+        records. If uels_on_axes=True setRecords will assume that all domain
+        information is contained in the axes of the pandas object – data will be
+        flattened (if necessary).
+
+        Parameters
+        ----------
+        records : Any
+        uels_on_axes : bool, optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> i.setRecords(["seattle", "san-diego"])
+        >>> i.records.values.tolist()
+        [['seattle', ''], ['san-diego', '']]
+
+        """
         super().setRecords(records, uels_on_axes)
         self.container._synch_with_gams()
 
@@ -359,6 +393,16 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> d = gp.Parameter(m, "d", domain=i)
+        >>> d.gamsRepr()
+        'd'
+
         """
         return self.name
 
