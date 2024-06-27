@@ -2,8 +2,8 @@
 
 .. _knapsack:
 
-import sys
-==========
+Binary knapsack model
+=====================
 
 :download:`knapsack.py <../../../tests/integration/models/knapsack.py>` 
 
