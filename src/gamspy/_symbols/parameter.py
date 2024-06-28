@@ -91,7 +91,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj._synchronize = True
 
         obj.where = condition.Condition(obj)
@@ -207,8 +206,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             self.container.miro_protect = previous_state
         else:
-            self._is_dirty = False
-
             if name is not None:
                 name = validation.validate_name(name)
 
@@ -278,8 +275,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self._is_dirty = True
-        self.container._synch_with_gams()
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -320,11 +317,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         [['seattle', 10.0], ['san-diego', 25.0]]
 
         """
-        if not self._is_dirty:
-            return self._records
-
-        self.container._synch_with_gams()
-
         return self._records
 
     @records.setter
@@ -384,7 +376,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """

@@ -123,7 +123,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._is_dirty = False
         obj._synchronize = True
 
         # create attributes
@@ -243,7 +242,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         else:
             type = cast_type(type)
-            self._is_dirty = False
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -638,7 +636,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def type(self):

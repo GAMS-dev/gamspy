@@ -82,4 +82,3 @@ class Symbol:
         for elem, forwarding in zip(self.domain, domain_forwarding):
             if hasattr(elem, "modified") and forwarding:
                 elem.modified = False
-                elem._is_dirty = True

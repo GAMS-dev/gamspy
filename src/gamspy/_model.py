@@ -364,7 +364,6 @@ class Model:
             self.container._add_statement(statement)
             equation._definition = statement
             equation.modified = False
-            equation._is_dirty = False
             variable.modified = False
             self.equations.append(equation)
 
@@ -392,7 +391,6 @@ class Model:
             self.container._add_statement(statement)
             equation._definition = statement
             equation.modified = False
-            equation._is_dirty = False
             variable.modified = False
             self.equations.append(equation)
 
@@ -433,7 +431,7 @@ class Model:
         ):
             raise TypeError("equations must be list of Equation objects")
 
-        return problem, sense
+        return problem, sense  # type: ignore
 
     def _append_solve_string(self) -> None:
         solve_string = f"solve {self.name} using {self.problem}"
@@ -496,30 +494,6 @@ class Model:
 
         utils._close_gdx_handle(gdx_handle)
         self.container._temp_container.data = {}
-
-    def _make_variable_and_equations_dirty(self):
-        if (
-            self._objective_variable is not None
-            and not self._objective_variable.name.startswith(
-                Model._generate_prefix
-            )
-        ):
-            self._objective_variable._is_dirty = True
-
-        for equation in self.equations:
-            if not equation.name.startswith(Model._generate_prefix):
-                equation._is_dirty = True
-
-            if equation._definition is not None:
-                variables = equation._definition._find_variables()
-                for name in variables:
-                    if not name.startswith(Model._generate_prefix):
-                        self.container[name]._is_dirty = True
-
-        if self._matches:
-            for equation, variable in self._matches.items():
-                equation._is_dirty = True
-                variable._is_dirty = True
 
     def compute_infeasibilities(self) -> dict[str, pd.DataFrame]:
         """
@@ -710,7 +684,6 @@ class Model:
 
         self._append_solve_string()
         self._create_model_attributes()
-        self._make_variable_and_equations_dirty()
 
         runner = backend_factory(
             self.container,

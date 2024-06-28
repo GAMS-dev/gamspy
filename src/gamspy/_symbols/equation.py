@@ -138,7 +138,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj._definition = None
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
@@ -269,7 +268,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         else:
             type = cast_type(type)
-            self._is_dirty = False
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -345,9 +343,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         domain = validation.validate_domain(self, indices)
 
         self._set_definition(domain, rhs)
-        self._is_dirty = True
 
-        self.container._synch_with_gams()
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
@@ -822,7 +820,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         """
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def type(self):

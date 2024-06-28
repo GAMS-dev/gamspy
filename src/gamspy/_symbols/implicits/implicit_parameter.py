@@ -71,8 +71,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.parent._is_dirty = True
-        self.container._synch_with_gams()
+        if self.parent.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def dimension(self):

@@ -136,7 +136,7 @@ class AliasSuite(unittest.TestCase):
         _ = self.m.addSet(
             "s", domain=[i], description="sources", records=["s"]
         )
-        _, modified_names = self.m._get_touched_symbol_names()
+        modified_names = self.m._get_touched_symbol_names()
         self.assertEqual(modified_names, [])
 
 

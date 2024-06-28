@@ -287,7 +287,6 @@ class VariableSuite(unittest.TestCase):
             x.getAssignment(),
             "x.l(k) = 5;",
         )
-        self.assertFalse(x._is_dirty)
 
     def test_scalar_attr_assignment(self):
         a = Variable(self.m, "a")

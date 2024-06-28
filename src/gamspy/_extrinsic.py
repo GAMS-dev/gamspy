@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._symbols as symbols
-import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -70,18 +68,6 @@ class ExtrinsicFunction(operable.Operable):
         str
         """
         return self.gamsRepr()
-
-    def _find_variables(self) -> list[str]:
-        variables = []
-        for elem in self.args:
-            if isinstance(elem, symbols.Variable):
-                variables.append(elem.name)
-            elif isinstance(elem, implicits.ImplicitVariable):
-                variables.append(elem.parent.name)
-            elif isinstance(elem, expression.Expression):
-                variables += elem._find_variables()
-
-        return variables
 
 
 class ExtrinsicLibrary:

@@ -34,18 +34,6 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
-    def _extract_variables(self):
-        if isinstance(self.expression, expression.Expression):
-            return self.expression._find_variables()
-
-        if isinstance(self.expression, implicits.ImplicitVariable):
-            return [self.expression.parent.name]
-
-        if isinstance(self.expression, Operation):
-            return self.expression._extract_variables()
-
-        return []
-
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
             item = self.domain[0]

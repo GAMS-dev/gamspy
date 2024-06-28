@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import gamspy as gp
 import gamspy._algebra.expression as expression
-import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -27,18 +25,6 @@ class MathOp:
     def gamsRepr(self) -> str:
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
         return f"{self.op_name}({operands_str})"
-
-    def _find_variables(self) -> list[str]:
-        variables = []
-        for elem in self.elements:
-            if isinstance(elem, gp.Variable):
-                variables.append(elem.name)
-            elif isinstance(elem, implicits.ImplicitVariable):
-                variables.append(elem.parent.name)
-            elif isinstance(elem, expression.Expression):
-                variables += elem._find_variables()
-
-        return variables
 
     def __str__(self):
         return self.gamsRepr()

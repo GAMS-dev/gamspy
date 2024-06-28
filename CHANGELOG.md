@@ -6,6 +6,7 @@ GAMSPy 0.13.2
 - General
   - Set the records of objective value in model instance solves. 
   - Allow using an environment variable to set the GAMS system directory (given environment variable will override the system directory even if the user provides a system directory argument to Container).
+  - Use gdxSymbols commandline option instead of manually marking symbols dirty.
 - Documentation
   - Redirect model library page to gamspy-examples Github repo.
 - Testing
