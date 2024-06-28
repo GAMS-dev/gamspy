@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import gams.transfer as gt
 from gams.core import gdx
 
+import gamspy._model as model
 import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
-    from gamspy import Alias, Equation, Set, Variable
+    from gamspy import Alias, Container, Equation, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -245,6 +246,21 @@ def isin(symbol, sequence: Sequence) -> bool:
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
     return arrvals[0][0]
+
+
+def _get_symbol_names_from_gdx(container: Container) -> list[str]:
+    gdx_handle = _open_gdx_file(container.system_directory, container._gdx_out)
+    _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
+
+    symbol_names = []
+    for i in range(1, symbol_count + 1):
+        _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
+        if not symbol_name.startswith(model.Model._generate_prefix):
+            symbol_names.append(symbol_name)
+
+    _close_gdx_handle(gdx_handle)
+
+    return symbol_names
 
 
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:

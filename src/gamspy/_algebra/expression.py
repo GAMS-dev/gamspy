@@ -7,7 +7,6 @@ import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._symbols as symbols
-import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
 from gamspy.exceptions import ValidationError
@@ -15,7 +14,6 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     import gamspy._algebra.expression as expression
-    from gamspy import Variable
     from gamspy._algebra.operation import Operation
     from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
     from gamspy._symbols.symbol import Symbol
@@ -205,37 +203,6 @@ class Expression(operable.Operable):
 
         """
         return self.gamsRepr()
-
-    def _find_variables(self) -> list[Variable]:
-        stack = []
-        variables: list[Variable] = []
-
-        node: OperandType = self
-        while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)
-            elif stack:
-                node = stack.pop()
-
-                if hasattr(node, "data") and isinstance(
-                    node.data, (MathOp, ExtrinsicFunction)
-                ):
-                    variables += node.data._find_variables()
-
-                if isinstance(node, symbols.Variable):
-                    variables.append(node.name)
-                elif isinstance(node, implicits.ImplicitVariable):
-                    variables.append(node.parent.name)
-                elif isinstance(node, operation.Operation):
-                    operation_variables = node._extract_variables()
-                    variables += operation_variables
-
-                node = getattr(node, "right", None)
-            else:
-                break  # pragma: no cover
-
-        return list(set(variables))
 
     def _fix_equalities(self) -> None:
         # Equality operations on Parameter and Variable objects generate

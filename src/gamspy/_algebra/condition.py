@@ -58,7 +58,6 @@ class Condition:
         self._symbol.container._add_statement(statement)
 
         if isinstance(self._symbol, ImplicitSymbol):
-            self._symbol.container[self._symbol.parent.name]._is_dirty = True
             self._symbol.parent._assignment = statement
 
         if isinstance(self._symbol, implicits.ImplicitEquation):

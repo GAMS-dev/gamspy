@@ -542,8 +542,6 @@ class EquationSuite(unittest.TestCase):
         a = Equation(m, "a", "regular", [i])
         a[i] = x[i] == 5
 
-        self.assertFalse(a._is_dirty)
-
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
         x = Variable(

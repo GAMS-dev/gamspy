@@ -65,11 +65,9 @@ class SolveSuite(unittest.TestCase):
             self.m, name="k", records=["seattle", "san-diego", "california"]
         )
         k["seattle"] = False
-        self.assertFalse(k._is_dirty)
         self.assertEqual(
             k.records.loc[0, :].values.tolist(), ["san-diego", ""]
         )
-        self.assertFalse(k._is_dirty)
 
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
@@ -78,7 +76,6 @@ class SolveSuite(unittest.TestCase):
         e = Parameter(self.m, name="e")
 
         c[i, j] = 90 * d[i, j] / 1000
-        self.assertFalse(c._is_dirty)
         self.assertEqual(
             c.records.values.tolist(),
             [
@@ -90,10 +87,7 @@ class SolveSuite(unittest.TestCase):
                 ["san-diego", "topeka", 0.126],
             ],
         )
-        self.assertFalse(c._is_dirty)
-
         e[...] = 5
-        self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
 
         with self.assertRaises(TypeError):
@@ -1063,14 +1057,6 @@ class SolveSuite(unittest.TestCase):
         
         self.assertEqual(f.getAssignment(), "f = 5;")
             
-    def test_variable_discovery(self):
-        x = self.m.addVariable('x')
-        l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
-        self.assertTrue('x' in l2.equations[0]._definition._find_variables())
-        
-        e = Equation(self.m, "e", definition=(x+5) == 0)
-        self.assertTrue('x' in e._definition._find_variables())
-        
     def test_invalid_arguments(self):
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),

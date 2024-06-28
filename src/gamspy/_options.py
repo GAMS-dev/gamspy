@@ -318,6 +318,7 @@ class Options(BaseModel):
             1  # # In case GAMS version differs on backend
         )
         gams_options["traceopt"] = 3
+        gams_options["gdxSymbols"] = "newOrChanged"
 
         if self.log_file:
             if output is not None:

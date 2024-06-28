@@ -175,8 +175,6 @@ class SetSuite(unittest.TestCase):
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
 
-        self.assertFalse(k._is_dirty)
-
     def test_lag_and_lead(self):
         set = Set(
             self.m, name="S", records=["a", "b", "c"], description="Test text"

@@ -63,7 +63,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
@@ -124,8 +123,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             self.modified = True
             self.alias_with = alias_with
         else:
-            self._is_dirty = False
-
             if name is not None:
                 name = validation.validate_name(name)
             else:

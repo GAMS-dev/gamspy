@@ -481,7 +481,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
@@ -600,7 +599,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container.miro_protect = previous_state
 
         else:
-            self._is_dirty = False
             self.where = condition.Condition(self)
 
             if name is not None:
@@ -669,8 +667,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self._is_dirty = True
-        self.container._synch_with_gams()
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def records(self):
@@ -752,7 +750,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
 
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """
