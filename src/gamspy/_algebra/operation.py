@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -36,17 +35,14 @@ class Operation(operable.Operable):
 
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
-            item = self.domain[0]
-            index_str = item.gamsRepr()
+            domain = self.domain[0]
+            representaiton = domain.gamsRepr()
+            if isinstance(domain, expression.Expression):
+                # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
+                # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
+                return representaiton[1:-1]
 
-            if isinstance(item, expression.Expression) and isinstance(
-                item.left, implicits.ImplicitSet
-            ):
-                # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
-                # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
-                index_str = index_str[1:-1]
-
-            return index_str
+            return representaiton
 
         return (
             "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"

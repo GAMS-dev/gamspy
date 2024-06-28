@@ -3,10 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import gamspy._algebra.condition as condition
-import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._symbols as symbols
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
 from gamspy.exceptions import ValidationError
@@ -66,9 +64,18 @@ class Expression(operable.Operable):
         data: str | MathOp | ExtrinsicFunction,
         right: OperandType,
     ):
-        self.left = left
+        self.left = (
+            utils._map_special_values(left)
+            if isinstance(left, float)
+            else left
+        )
         self.data = data
-        self.right = right
+        self.right = (
+            utils._map_special_values(right)
+            if isinstance(right, float)
+            else right
+        )
+
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
         self.representation = self._create_representation()
@@ -79,9 +86,6 @@ class Expression(operable.Operable):
         out_str = self._create_output_str(left_str, right_str)
 
         # Adapt to GAMS quirks
-        if isinstance(self.left, (domain.Domain, symbols.Set, symbols.Alias)):
-            return out_str[1:-1]
-
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
@@ -91,12 +95,6 @@ class Expression(operable.Operable):
         return out_str
 
     def _get_operand_representations(self) -> tuple[str, str]:
-        if isinstance(self.left, float):
-            self.left = utils._map_special_values(self.left)
-
-        if isinstance(self.right, float):
-            self.right = utils._map_special_values(self.right)
-
         if self.left is None:
             left_str = ""
         else:
