@@ -50,7 +50,10 @@ option_map = {
     "node_limit": "nodlim",
     "absolute_optimality_gap": "optca",
     "relative_optimality_gap": "optcr",
+    "monitor_process_tree_memory": "procTreeMemMonitor",
+    "memory_tick_interval": "procTreeMemTicks",
     "profile": "profile",
+    "profile_file": "profileFile",
     "profile_tolerance": "profiletol",
     "time_limit": "reslim",
     "savepoint": "savepoint",
@@ -142,8 +145,14 @@ class Options(BaseModel):
         Absolute Optimality criterion solver default
     relative_optimality_gap: float | None
         Relative Optimality criterion solver default
+    memory_tick_interval: float | None
+        Wait interval between memory monitor checks: ticks = milliseconds
+    monitor_process_tree_memory: bool | None
+        Monitor the memory used by the GAMS process tree
     profile: int | None
         Execution profiling
+    profile_file: str
+        Write profile information to this file
     profile_tolerance: float | None
         Minimum time a statement must use to appear in profile generated output
     redirect_log_to_stdout: Optional[bool] = False
@@ -254,7 +263,10 @@ class Options(BaseModel):
     node_limit: Optional[int] = None
     absolute_optimality_gap: Optional[float] = None
     relative_optimality_gap: Optional[float] = None
+    monitor_process_tree_memory: Optional[bool] = None
+    memory_tick_interval: Optional[float] = None
     profile: Optional[int] = None
+    profile_file: Optional[str] = None
     profile_tolerance: Optional[float] = None
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None

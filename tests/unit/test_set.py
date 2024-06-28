@@ -146,16 +146,16 @@ class SetSuite(unittest.TestCase):
         i = Set(self.m, "i", records=self.canning_plants)
         k = Set(self.m, "k", records=self.canning_plants)
         union = i + k
-        self.assertEqual(union.gamsRepr(), "i + k")
+        self.assertEqual(union.gamsRepr(), "(i + k)")
 
         intersection = i * k
-        self.assertEqual(intersection.gamsRepr(), "i * k")
+        self.assertEqual(intersection.gamsRepr(), "(i * k)")
 
         complement = ~i
         self.assertEqual(complement.gamsRepr(), "( not i)")
 
         difference = i - k
-        self.assertEqual(difference.gamsRepr(), "i - k")
+        self.assertEqual(difference.gamsRepr(), "(i - k)")
 
     def test_dynamic_sets(self):
         m = Container(
