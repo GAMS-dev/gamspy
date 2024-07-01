@@ -81,9 +81,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         return self._stage
 
     def __neg__(self):
-        return implicits.ImplicitVariable(
-            self.parent, name=f"-{self.name}", domain=self.domain
-        )
+        return expression.Expression(None, "-", self)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)

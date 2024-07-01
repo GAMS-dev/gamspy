@@ -299,12 +299,12 @@ class Model:
     def _generate_obj_var_and_equation(self) -> tuple[Variable, Equation]:
         variable = gp.Variable._constructor_bypass(
             self.container,
-            f"{Model._generate_prefix}variable_{self._auto_id}",
+            f"{self.name}_objective_variable",
             domain=[],
         )
         equation = gp.Equation._constructor_bypass(
             self.container,
-            f"{Model._generate_prefix}equation_{self._auto_id}",
+            f"{self.name}_objective",
             domain=[],
         )
 
@@ -433,7 +433,7 @@ class Model:
 
         return problem, sense  # type: ignore
 
-    def _append_solve_string(self) -> None:
+    def _generate_solve_string(self) -> str:
         solve_string = f"solve {self.name} using {self.problem}"
 
         if self.sense:
@@ -446,7 +446,11 @@ class Model:
         if self._objective_variable is not None:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        self.container._add_statement(solve_string + ";\n")
+        return solve_string + ";"
+
+    def _append_solve_string(self) -> None:
+        solve_string = self._generate_solve_string()
+        self.container._add_statement(solve_string + "\n")
 
     def _create_model_attributes(self) -> None:
         self.container._add_statement("$offListing")
@@ -756,3 +760,64 @@ class Model:
         model_str += ";"
 
         return model_str
+
+    def toGams(self, path: str) -> None:
+        """
+        Generates GAMS model under path/<model_name>.gms
+
+        Parameters
+        ----------
+        path : str
+            Path to the directory which will contain the GAMS model.
+        """
+        os.makedirs(path, exist_ok=True)
+
+        def sort_names(name):
+            PRECEDENCE = {
+                gp.Set: 1,
+                gp.Alias: 2,
+                gp.Parameter: 3,
+                gp.Variable: 4,
+                gp.Equation: 5,
+            }
+
+            return PRECEDENCE[type(self.container[name])]
+
+        all_symbols = []
+        definitions = []
+        for equation in self.equations:
+            definitions.append(equation._definition.getDeclaration())
+            symbols = equation._definition._find_all_symbols()
+
+            for symbol in symbols:
+                if symbol not in all_symbols:
+                    all_symbols.append(symbol)
+
+        all_needed_symbols = sorted(all_symbols, key=sort_names)
+        loadable_symbols = [
+            name
+            for name in all_needed_symbols
+            if not isinstance(self.container[name], gp.Alias)
+        ]
+        gdx_path = os.path.join(path, self.name + "_data.gdx")
+        self.container.write(gdx_path)
+
+        strings = [
+            self.container[name].getDeclaration()
+            for name in all_needed_symbols
+        ]
+        strings.append(f"$gdxIn {os.path.abspath(gdx_path)}")
+        strings.append(f'$loadDC {",".join(loadable_symbols)}')
+        strings.append("$gdxIn")
+        strings += definitions
+        strings.append(self.getDeclaration())
+        solve_string = self._generate_solve_string()
+        strings.append(solve_string)
+
+        gams_string = "\n".join(strings)
+        with open(os.path.join(path, self.name + ".gms"), "w") as file:
+            file.write(gams_string)
+
+        logger.info(
+            f'GAMS model has been generated under {os.path.join(path, self.name + ".gms")}'
+        )

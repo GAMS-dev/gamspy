@@ -707,7 +707,6 @@ class GAMSEngine(backend.Backend):
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess(
             os.path.basename(self.container._gdx_in),
-            os.path.basename(self.container._gdx_out),
             keep_flags,
         )
 

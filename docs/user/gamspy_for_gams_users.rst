@@ -252,20 +252,19 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
 Automatic Conversion of a GAMSPy Model to GAMS
 ----------------------------------------------
 
-Existing GAMSPy models can be translated to a GAMS model automatically by using ``Container.toGams()``. In order to 
-do the conversion, ``debugging_level`` of Container must be set to "keep": ::
+Existing GAMSPy models can be translated to a GAMS model automatically by using ``Model.toGams()``: ::
 
     import gamspy as gp
 
-    m = gp.Container(debugging_level="keep")
+    m = gp.Container()
     i = gp.Set(m, "i", records=["i1", "i2"])
     a = gp.Parameter(m, "a", domain=i)
     ...
     ...
-    rest of your model
+    your_model = gp.Model(m, "your_model", equations=<your_equations>)
     ...
     ...
 
-    m.toGams(path=<gams_model_path>)
+    your_model.toGams(path=<gams_model_path>)
 
-The generated GAMS model can be found under <gams_model_path>/model.gms
+The generated GAMS model can be found under <gams_model_path>/<model_name>.gms

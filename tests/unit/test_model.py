@@ -98,6 +98,8 @@ class ModelSuite(unittest.TestCase):
                 "cost",
                 "supply",
                 "demand",
+                "test_model_objective_variable",
+                "test_model_objective",
             ],
         )
         self.assertEqual(test_model.objective_value, 153.675)
@@ -448,7 +450,10 @@ class ModelSuite(unittest.TestCase):
             "scale",
             "infeasibility",
         ]
-        self.assertEqual(list(infeasibilities.keys()), ["supply", "demand"])
+        self.assertEqual(
+            list(infeasibilities.keys()),
+            ["supply", "demand", "transport_objective"],
+        )
         self.assertEqual(list(infeasibilities["supply"].columns), columns)
         self.assertEqual(
             infeasibilities["supply"].values.tolist(),

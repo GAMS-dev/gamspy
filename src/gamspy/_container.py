@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import atexit
-import glob
-import logging
 import os
 import platform
 import shutil
@@ -26,16 +24,7 @@ from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
-
-logger = logging.getLogger("CONTAINER")
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 if TYPE_CHECKING:
     import io
@@ -58,7 +47,6 @@ if TYPE_CHECKING:
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
 
 debugging_map = {
     "delete": DebugLevel.Off,
@@ -535,9 +523,11 @@ class Container(gt.Container):
     def _generate_gams_string(
         self,
         gdx_in: str,
-        gdx_out: str,
         modified_names: list[str],
     ) -> str:
+        LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
+
         string = "$onMultiR\n$onUNDF\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
@@ -552,7 +542,7 @@ class Container(gt.Container):
 
         for symbol_name in modified_names:
             symbol = self[symbol_name]
-            if isinstance(symbol, Symbol) and not symbol_name.startswith(
+            if isinstance(symbol, LOADABLE) and not symbol_name.startswith(
                 gp.Model._generate_prefix
             ):
                 if (
@@ -1029,6 +1019,7 @@ class Container(gt.Container):
         True
 
         """
+        os.makedirs(working_directory, exist_ok=True)
         m = Container(working_directory=working_directory)
         if m.working_directory == self.working_directory:
             raise ValidationError(
@@ -1263,38 +1254,3 @@ class Container(gt.Container):
 
         """
         return self._gdx_out
-
-    def toGams(self, path: str) -> None:
-        """
-        Generates GAMS model under path/model.gms
-
-        Parameters
-        ----------
-        path : str
-            Path to the directory which will contain the GAMS model.
-
-        Raises
-        ------
-        ValidationError
-            In case debugging level is different than "keep".
-        """
-        if self._debugging_level != DebugLevel.KeepFiles:
-            raise ValidationError(
-                "In order to convert your GAMSPy model to GAMS, the debugging_level argument of Container must be set to `keep`."
-            )
-
-        try:
-            os.makedirs(path)
-        except OSError as e:
-            raise ValidationError(e.strerror) from e
-
-        gdx_files = glob.glob(os.path.join(self.working_directory, "_*in.gdx"))
-        for file in gdx_files:
-            shutil.copy(file, path)
-
-        with open(os.path.join(path, "model.gms"), "w") as file:
-            file.write(self.generateGamsString())
-
-        logging.info(
-            f'GAMS model has been generated under {os.path.join(path, "model.gms")}'
-        )

@@ -63,9 +63,7 @@ class Local(backend.Backend):
 
     def run(self, keep_flags: bool = False):
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess(
-            self.container._gdx_in, self.container._gdx_out, keep_flags
-        )
+        gams_string = self.preprocess(self.container._gdx_in, keep_flags)
 
         # Run the model
         self.execute_gams(gams_string)

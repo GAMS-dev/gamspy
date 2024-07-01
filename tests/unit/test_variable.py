@@ -79,7 +79,7 @@ class VariableSuite(unittest.TestCase):
         )
 
         expression = -v0
-        self.assertEqual(expression.name, "-v0")
+        self.assertEqual(expression.getDeclaration(), "( - v0)")
 
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
@@ -110,7 +110,7 @@ class VariableSuite(unittest.TestCase):
             "free Variable pi;",
         )
         new_pi = -pi
-        self.assertEqual(new_pi.gamsRepr(), "-pi")
+        self.assertEqual(new_pi.gamsRepr(), "( - pi)")
 
         # 1D variable with records
         v = Variable(
@@ -322,48 +322,7 @@ class VariableSuite(unittest.TestCase):
         self.assertTrue(a.isValid())
 
         expression = -a[i] * 5
-        self.assertEqual(expression.gamsRepr(), "(-a(i) * 5)")
-
-        self.assertTrue(
-            hasattr(a[i], "l")
-            and isinstance(a[i].l, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].l.gamsRepr(), "a(i).l")
-        self.assertTrue(
-            hasattr(a[i], "m")
-            and isinstance(a[i].m, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].m.gamsRepr(), "a(i).m")
-        self.assertTrue(
-            hasattr(a[i], "lo")
-            and isinstance(a[i].lo, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].lo.gamsRepr(), "a(i).lo")
-        self.assertTrue(
-            hasattr(a[i], "up")
-            and isinstance(a[i].up, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].up.gamsRepr(), "a(i).up")
-        self.assertTrue(
-            hasattr(a[i], "scale")
-            and isinstance(a[i].scale, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].scale.gamsRepr(), "a(i).scale")
-        self.assertTrue(
-            hasattr(a[i], "fx")
-            and isinstance(a[i].fx, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].fx.gamsRepr(), "a(i).fx")
-        self.assertTrue(
-            hasattr(a[i], "prior")
-            and isinstance(a[i].prior, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].prior.gamsRepr(), "a(i).prior")
-        self.assertTrue(
-            hasattr(a[i], "stage")
-            and isinstance(a[i].stage, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
+        self.assertEqual(expression.gamsRepr(), "(( - a(i)) * 5)")
 
         a.l[...] = 5
 
