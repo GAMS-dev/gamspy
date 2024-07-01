@@ -425,7 +425,7 @@ class NEOSServer(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess("in.gdx", "output.gdx", keep_flags)
+        gams_string = self.preprocess("in.gdx", keep_flags)
 
         # Run the model
         self.execute_gams(gams_string)

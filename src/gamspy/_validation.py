@@ -39,12 +39,12 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
 
     while domain != "*":
         if isinstance(domain, str):
-            path.append(domain)
+            path.insert(0, domain)
         else:
-            path.append(domain.name)
+            path.insert(0, domain.name)
 
         if isinstance(domain, symbols.Alias):
-            path.append(domain.alias_with.name)
+            path.insert(0, domain.alias_with.name)
 
         domain = "*" if isinstance(domain, str) else domain.domain[0]
 

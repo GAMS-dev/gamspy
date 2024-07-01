@@ -37,11 +37,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._assignment = None
 
     def __neg__(self) -> ImplicitParameter:
-        return ImplicitParameter(
-            parent=self.parent,
-            name=f"-{self.name}",
-            domain=self.domain,
-        )
+        return expression.Expression(None, "-", self)
 
     def __invert__(self):
         return expression.Expression("", "not", self)

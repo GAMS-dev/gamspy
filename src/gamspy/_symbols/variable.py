@@ -295,9 +295,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
 
     def __neg__(self):
-        return implicits.ImplicitVariable(
-            self, name=f"-{self.name}", domain=self.domain
-        )
+        return expression.Expression(None, "-", self)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)

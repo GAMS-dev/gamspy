@@ -11,13 +11,14 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Set
 
 
-class Alias(gt.Alias, operable.Operable, SetMixin):
+class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     """
     Represents an Alias symbol in GAMS.
     https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet

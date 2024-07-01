@@ -292,9 +292,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return expression.Expression(self, op, other)
 
     def __neg__(self):
-        return implicits.ImplicitParameter(
-            self, name=f"-{self.name}", domain=self._domain
-        )
+        return expression.Expression(None, "-", self)
 
     @property
     def records(self):

@@ -102,14 +102,14 @@ class Backend(ABC):
 
         return job_name
 
-    def preprocess(self, gdx_in: str, gdx_out: str, keep_flags: bool = False):
+    def preprocess(self, gdx_in: str, keep_flags: bool = False):
         modified_names = self.container._get_touched_symbol_names()
 
         if len(modified_names) != 0:
             self.container.write(self.container._gdx_in, modified_names)
 
         gams_string = self.container._generate_gams_string(
-            gdx_in, gdx_out, modified_names
+            gdx_in, modified_names
         )
 
         if not keep_flags:
