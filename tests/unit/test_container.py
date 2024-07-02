@@ -227,13 +227,9 @@ class ContainerSuite(unittest.TestCase):
         )
         i = Set(m, "i", records=["i1", "i2"])
         i["i1"] = False
-        m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        m.addGamsCode("scalar piHalf / [pi/2] /;")
         self.assertTrue("piHalf" in m.data)
         self.assertEqual(m["piHalf"].records.values[0][0], 1.5707963267948966)
-
-        pi = Parameter(m, "pi")
-        with self.assertRaises(ValidationError):
-            m.addGamsCode("scalar pi / pi /;", import_symbols=[pi])
 
     def test_add_gams_code_on_actual_models(self):
         links = {
