@@ -28,7 +28,7 @@ except Exception:
 class NeosSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -45,7 +45,7 @@ class NeosSuite(unittest.TestCase):
 
     def test_neos_blocking(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -87,7 +87,7 @@ class NeosSuite(unittest.TestCase):
 
     def test_no_client(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=self.canning_plants)
@@ -120,7 +120,7 @@ class NeosSuite(unittest.TestCase):
 
     def test_different_solver(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -161,7 +161,7 @@ class NeosSuite(unittest.TestCase):
 
     def test_neos_non_blocking(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -204,7 +204,7 @@ class NeosSuite(unittest.TestCase):
         )
 
         container = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             load_from=f"tmp{os.sep}my_out_directory/output.gdx",
         )
         self.assertTrue("x" in container.data)

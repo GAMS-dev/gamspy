@@ -143,7 +143,7 @@ def main():
 
     # Model's container
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Sets

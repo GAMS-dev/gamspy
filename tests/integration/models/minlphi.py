@@ -131,7 +131,7 @@ from gamspy.math import sqr
 
 def main():
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # SETS #

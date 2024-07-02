@@ -33,7 +33,7 @@ from gamspy import (
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Read from MeanVarMip.gdx the data needed to run the mean-variance model

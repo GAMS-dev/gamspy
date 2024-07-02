@@ -339,10 +339,14 @@ be turned on by providing the ``FeasOpt`` argument in ``solver_options``, which 
 There are also facilities of other solvers such as BARON, COPT, Gurobi, Lindo etc. which can be enabled in the same way.
 To see all facilities, refer to the `solver manuals <https://gams.com/latest/docs/S_MAIN.html>`_.
 
-Performance Optimization
-------------------------
+===========
+Performance
+===========
 
-he state synchronization of symbols between GAMS and GAMSPy can be manipulated to improve performance in certain cases.
+Selective Synchronization
+-------------------------
+
+The state synchronization of symbols between GAMS and GAMSPy can be manipulated to improve performance in certain cases.
 GAMSPy by default synchronizes all declared symbols with GAMS state but symbols can be excluded from this synchronization
 on demand by setting ``.synchronize`` property to False. For example, while calculating Fibonacci numbers, it is not 
 necessary to synchronize the records of symbol ``f`` with GAMS in every iteration. 
@@ -364,3 +368,24 @@ necessary to synchronize the records of symbol ``f`` with GAMS in every iteratio
 By disabling the synchronization of ``f``, the state of ``f`` is synchronized with GAMS only at the end of the loop instead
 of 999 times. 
 
+Profiling
+---------
+
+GAMSPy has several options to allow profiling of the executed GAMS codes. ``profile`` option controls whether an execution 
+profile will be generated in the listing file. Alternatively, profiling information can be directred to a file of your choosing
+by using ``profile_file``. ``monitor_process_tree_memory`` option allows GAMS to record the high-memory mark for the GAMS 
+process tree. ``memory_tick_interval`` can be used to set the wait interval in milliseconds between checks of the GAMS process 
+tree memory usage. 
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(options=Options(profile_file="<file_path>", monitor_process_tree_memory=True))

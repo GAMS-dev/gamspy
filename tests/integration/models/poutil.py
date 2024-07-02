@@ -50,7 +50,7 @@ from gamspy import (
 
 def main():
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     power_forecast_recs = np.array(

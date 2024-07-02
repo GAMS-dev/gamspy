@@ -12,7 +12,7 @@ from gamspy.exceptions import ValidationError
 class MathSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.markets = ["new-york", "chicago", "topeka"]
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
@@ -45,8 +45,8 @@ class MathSuite(unittest.TestCase):
         self.assertRaises(ValueError, gams_math.centropy, v[i], b[i], -1)
 
         # cvPower
-        op2 = gams_math.cv_power(b[i], 3)
-        self.assertEqual(op2.gamsRepr(), "( cvPower(b(i),3) )")
+        op2 = gams_math.cv_power(3, b[i])
+        self.assertEqual(op2.gamsRepr(), "( cvPower(3,b(i)) )")
 
         # rPower
         op2 = gams_math.rpower(b[i], 3)
@@ -206,8 +206,8 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( div0(b(i),3) )")
 
         # factorial
-        op2 = gams_math.factorial(b[i])
-        self.assertEqual(op2.gamsRepr(), "( fact(b(i)) )")
+        op2 = gams_math.factorial(5)
+        self.assertEqual(op2.gamsRepr(), "( fact(5) )")
 
         # fractional
         op2 = gams_math.fractional(b[i])
@@ -260,7 +260,7 @@ class MathSuite(unittest.TestCase):
 
     def test_math_2(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
@@ -312,8 +312,8 @@ class MathSuite(unittest.TestCase):
         op1 = gams_math.ncpVUsin(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpVUsin(a(i),a(i),0) )")
 
-        op1 = gams_math.poly(a[i], 3, 5)
-        self.assertEqual(op1.gamsRepr(), "( poly(a(i),3,5) )")
+        op1 = gams_math.poly(a[i], 3, 5, 7)
+        self.assertEqual(op1.gamsRepr(), "( poly(a(i),3,5,7) )")
 
         op1 = gams_math.rand_binomial(1, 2)
         self.assertEqual(op1.gamsRepr(), "( randBinomial(1,2) )")
@@ -352,7 +352,7 @@ class MathSuite(unittest.TestCase):
 
     def test_logical(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])

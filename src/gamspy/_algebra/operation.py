@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -34,31 +33,16 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
-    def _extract_variables(self):
-        if isinstance(self.expression, expression.Expression):
-            return self.expression._find_variables()
-
-        if isinstance(self.expression, implicits.ImplicitVariable):
-            return [self.expression.parent.name]
-
-        if isinstance(self.expression, Operation):
-            return self.expression._extract_variables()
-
-        return []
-
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
-            item = self.domain[0]
-            index_str = item.gamsRepr()
+            domain = self.domain[0]
+            representaiton = domain.gamsRepr()
+            if isinstance(domain, expression.Expression):
+                # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
+                # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
+                return representaiton[1:-1]
 
-            if isinstance(item, expression.Expression) and isinstance(
-                item.left, implicits.ImplicitSet
-            ):
-                # sum((tt(t)) $ (ord(t) <= pMinDown(g,t1)), ...) ->
-                # sum(tt(t) $ (ord(t) <= pMinDown(g,t1)), ...)
-                index_str = index_str[1:-1]
-
-            return index_str
+            return representaiton
 
         return (
             "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
@@ -122,10 +106,12 @@ class Sum(Operation):
 
     Examples
     --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Sum(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> e[...] = gp.Sum(i, 3) <= v
     """
 
     def __init__(
@@ -134,6 +120,28 @@ class Sum(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "sum")
+
+    def gamsRepr(self):
+        """
+        Representation of the Sum operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Sum
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Sum(i, c[i]*v[i]).gamsRepr()
+        'sum(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
 
 
 class Product(Operation):
@@ -147,10 +155,12 @@ class Product(Operation):
 
     Examples
     --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Product(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> e[...] = gp.Product(i, 3) <= v
     """
 
     def __init__(
@@ -159,6 +169,28 @@ class Product(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
+
+    def gamsRepr(self):
+        """
+        Representation of the Product operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Product
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Product(i, c[i]*v[i]).gamsRepr()
+        'prod(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
 
 
 class Smin(Operation):
@@ -172,10 +204,12 @@ class Smin(Operation):
 
     Examples
     --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Smin(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> e[...] = gp.Smin(i, 3) <= v
     """
 
     def __init__(
@@ -184,6 +218,28 @@ class Smin(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smin")
+
+    def gamsRepr(self):
+        """
+        Representation of the Smin operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Smin
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Smin(i, c[i]*v[i]).gamsRepr()
+        'smin(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
 
 
 class Smax(Operation):
@@ -197,10 +253,12 @@ class Smax(Operation):
 
     Examples
     --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq", domain=[i])
-    >>> e[i] = gp.Smax(i, 3) <= v
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> e[...] = gp.Smax(i, 3) <= v
     """
 
     def __init__(
@@ -209,6 +267,28 @@ class Smax(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
+
+    def gamsRepr(self):
+        """
+        Representation of the Smax operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Smax
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Smax(i, c[i]*v[i]).gamsRepr()
+        'smax(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
 
 
 class Ord(operable.Operable):
@@ -250,6 +330,22 @@ class Ord(operable.Operable):
         return expression.Expression(self, "ne", other)
 
     def gamsRepr(self) -> str:
+        """
+        Representation of the Ord operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Ord
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> Ord(i).gamsRepr()
+        'ord(i)'
+
+        """
         return f"ord({self._set.name})"
 
 
@@ -301,4 +397,20 @@ class Card(operable.Operable):
         )
 
     def gamsRepr(self) -> str:
+        """
+        Representation of the Card operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Card
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> Card(i).gamsRepr()
+        'card(i)'
+
+        """
         return f"card({self._symbol.name})"

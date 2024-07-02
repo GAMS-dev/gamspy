@@ -13,6 +13,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
+    from gamspy._model import Problem
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
@@ -38,12 +39,12 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
 
     while domain != "*":
         if isinstance(domain, str):
-            path.append(domain)
+            path.insert(0, domain)
         else:
-            path.append(domain.name)
+            path.insert(0, domain.name)
 
         if isinstance(domain, symbols.Alias):
-            path.append(domain.alias_with.name)
+            path.insert(0, domain.alias_with.name)
 
         domain = "*" if isinstance(domain, str) else domain.domain[0]
 
@@ -344,7 +345,12 @@ def validate_model_name(name: str) -> str:
     return name
 
 
-def validate_solver_args(solver, problem, options, output):
+def validate_solver_args(
+    solver: str | None,
+    problem: Problem | str,
+    options: Options | None,
+    output: io.TextIOWrapper | None,
+) -> None:
     # Check validity of solver
     if solver is not None:
         if not isinstance(solver, str):

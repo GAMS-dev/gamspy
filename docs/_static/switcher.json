@@ -5,7 +5,12 @@
         "url": "https://gamspy.readthedocs.io/en/latest/"
     },
     {
-        "name": "0.13.1 (stable)",
+        "name": "0.13.2 (stable)",
+        "version": "v0.13.2",
+        "url": "https://gamspy.readthedocs.io/en/v0.13.2/"
+    },
+    {
+        "name": "0.13.1",
         "version": "v0.13.1",
         "url": "https://gamspy.readthedocs.io/en/v0.13.1/"
     },

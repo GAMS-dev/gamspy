@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import io
 import os
-import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
 from gams import (
@@ -22,14 +21,14 @@ import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._options import ModelInstanceOptions, Options
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Model, Parameter
     from gamspy._symbols.implicits import ImplicitParameter
 
 
-variable_map = {
+VARIABLE_MAP = {
     "binary": VarType.Binary,
     "integer": VarType.Integer,
     "positive": VarType.Positive,
@@ -42,7 +41,7 @@ variable_map = {
 }
 
 
-equation_map = {
+EQUATION_MAP = {
     "eq": EquType.E,
     "leq": EquType.L,
     "geq": EquType.G,
@@ -51,7 +50,7 @@ equation_map = {
     "cone": EquType.C,
 }
 
-update_action_map = {
+UPDATE_ACTION_MAP = {
     "l": UpdateAction.Primal,
     "m": UpdateAction.Dual,
     "up": UpdateAction.Upper,
@@ -80,50 +79,52 @@ class ModelInstance:
         container: Container,
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: Options | dict | None = None,
+        freeze_options: Options | None = None,
     ):
         self.container = container
-        save_file = self._create_restart_file()
-        restart_from = GamsCheckpoint(container.workspace, save_file)
+        self.job_name = container._job
+        self.gms_file = self.job_name + ".gms"
+        self.pf_file = self.job_name + ".pf"
+        self.save_file = self.job_name + ".g00"
+        self._create_restart_file()
 
         self.modifiables = self._init_modifiables(modifiables)
         self.instance_container = gt.Container(
             system_directory=container.system_directory,
         )
         self.model = model
+        assert self.model._is_frozen
 
-        self.checkpoint = restart_from
+        self.checkpoint = GamsCheckpoint(container.workspace, self.save_file)
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
 
     def _create_restart_file(self):
-        job_id = f"_instance_restart_{uuid.uuid4()}"
-        job_name = os.path.join(self.container.working_directory, job_id)
-        with open(job_name + ".gms", "w") as gams_file:
+        with open(self.gms_file, "w") as gams_file:
             gams_file.write("")
 
-        options = GamsOptions(self.container.workspace)
-        options._input = job_name + ".gms"
-        options._sysdir = utils._get_gamspy_base_directory()
+        options = Options()
         scrdir = os.path.join(self.container.working_directory, "225a")
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._writeoutput = 0
-        options.previouswork = 1
-        options._logoption = 0
-        options._save = job_name + ".g00"
+        extra_options = {
+            "input": self.gms_file,
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "writeoutput": 0,
+            "logoption": 0,
+            "previouswork": 1,
+            "license": utils._get_license_path(
+                self.container.system_directory
+            ),
+            "save": self.save_file,
+        }
+        options._set_extra_options(extra_options)
+        options.export(self.pf_file)
 
-        pf_file = job_name + ".pf"
-        options.export(pf_file)
+        self.container._send_job(self.job_name, self.pf_file)
 
-        self.container._send_job(job_name, pf_file)
-
-        return job_name + ".g00"
-
-    def instantiate(
-        self, model: Model, freeze_options: Options | dict | None = None
-    ):
-        options = self._prepare_freeze_options(freeze_options)
+    def instantiate(self, model: Model, options: Options | None = None):
+        modifiers = self._create_modifiers()
 
         solve_string = f"{model.name} using {model.problem}"
 
@@ -133,27 +134,27 @@ class ModelInstance:
         if model._objective_variable is not None:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
-        modifiers = self._create_modifiers()
-
-        self.instance.instantiate(solve_string, modifiers, options)
+        gams_options = self._prepare_gams_options(options)
+        self.instance.instantiate(solve_string, modifiers, gams_options)
 
     def solve(
         self,
+        solver: str | None,
         given_options: ModelInstanceOptions | dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         # get options from dict
-        options, update_type = self._prepare_options(given_options)
+        options, update_type = self._prepare_options(solver, given_options)
 
         # update sync_db
         self.container.write(self.instance.sync_db._gmd)
 
-        for modifiable in self.modifiables:
+        for symbol in self.modifiables:
             if (
-                isinstance(modifiable, implicits.ImplicitParameter)
-                and modifiable.parent.records is not None
+                isinstance(symbol, implicits.ImplicitParameter)
+                and symbol.parent.records is not None
             ):
-                parent_name, attr = modifiable.name.split(".")
+                parent_name, attr = symbol.name.split(".")
                 attr_name = "_".join([parent_name, attr])
 
                 columns = self._get_columns_to_drop(attr)
@@ -164,12 +165,10 @@ class ModelInstance:
 
                 self.instance_container.write(self.instance.sync_db._gmd)
 
-        # solve
-        self.instance.solve(
-            update_type=update_type, output=output, mi_opt=options
-        )
-
-        # update main container
+        try:
+            self.instance.solve(update_type, output, mi_opt=options)
+        except GamsException as e:
+            raise GamspyException(e.value) from e
         self._update_main_container()
 
         # update model status
@@ -179,61 +178,74 @@ class ModelInstance:
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
     ) -> list[Parameter | ImplicitParameter]:
+        if not isinstance(modifiables, Iterable):
+            raise ValidationError(
+                "Modifiables must be iterable (i.e. list, tuple etc.)."
+            )
+
+        if any(
+            not isinstance(symbol, (gp.Parameter, implicits.ImplicitParameter))
+            for symbol in modifiables
+        ):
+            raise ValidationError(
+                "Type of a modifiable must be either Parameter or a Variable attribute (e.g. variable.up)"
+            )
+
         will_be_modified: list[Parameter | ImplicitParameter] = []
-        for modifiable in modifiables:
-            if isinstance(modifiable, implicits.ImplicitParameter):
-                attr_name = modifiable.name.split(".")[-1]
+        for symbol in modifiables:
+            if isinstance(symbol, implicits.ImplicitParameter):
+                attr_name = symbol.name.split(".")[-1]
 
-                # If the modifiable attr is fx, then modify level, lower and upper.
+                # If the symbol attr is fx, then modify level, lower and upper.
                 if attr_name == "fx":
-                    if not utils.isin(modifiable.parent.l, will_be_modified):
-                        will_be_modified.append(modifiable.parent.l)
+                    if not utils.isin(symbol.parent.l, will_be_modified):
+                        will_be_modified.append(symbol.parent.l)
 
-                    if not utils.isin(modifiable.parent.lo, will_be_modified):
-                        will_be_modified.append(modifiable.parent.lo)
+                    if not utils.isin(symbol.parent.lo, will_be_modified):
+                        will_be_modified.append(symbol.parent.lo)
 
-                    if not utils.isin(modifiable.parent.up, will_be_modified):
-                        will_be_modified.append(modifiable.parent.up)
+                    if not utils.isin(symbol.parent.up, will_be_modified):
+                        will_be_modified.append(symbol.parent.up)
                 else:
                     # if fx already added level, lower or upper, do not add again.
-                    if not utils.isin(modifiable, will_be_modified):
-                        will_be_modified.append(modifiable)
+                    if not utils.isin(symbol, will_be_modified):
+                        will_be_modified.append(symbol)
             else:
-                will_be_modified.append(modifiable)
+                will_be_modified.append(symbol)
 
         return will_be_modified
 
-    def _prepare_freeze_options(
+    def _prepare_gams_options(
         self, given_options: Options | dict | None
     ) -> GamsOptions:
-        if isinstance(given_options, Options):
-            given_options = given_options._get_gams_compatible_options()
-
         options = GamsOptions(self.model.container.workspace)
-
         if given_options is None:
             return options
 
-        for key, value in given_options.items():
+        options_dict = given_options._get_gams_compatible_options()
+
+        for key, value in options_dict.items():
             setattr(options, key, value)
 
         return options
 
     def _prepare_options(
-        self, given_options: ModelInstanceOptions | dict | None
+        self,
+        solver: str | None,
+        given_options: ModelInstanceOptions | dict | None,
     ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
-
-        if given_options is None:
-            return None, update_type
-
         options = GamsModelInstanceOpt()
 
-        for key, value in given_options.items():
-            setattr(options, key, value)
+        if solver is not None:
+            options.solver = solver
 
-            if key == "update_type":
-                update_type = value
+        if given_options is not None:
+            for key, value in given_options.items():
+                setattr(options, key, value)
+
+                if key == "update_type":
+                    update_type = value
 
         return options, update_type
 
@@ -256,46 +268,44 @@ class ModelInstance:
     def _create_modifiers(self):
         modifiers = []
 
-        for modifiable in self.modifiables:
-            if isinstance(modifiable, gp.Parameter):
+        for symbol in self.modifiables:
+            if isinstance(symbol, gp.Parameter):
                 modifiers.append(
                     GamsModifier(
                         self.instance.sync_db.add_parameter(
-                            modifiable.name,
-                            modifiable.dimension,
-                            modifiable.description,
+                            symbol.name,
+                            symbol.dimension,
+                            symbol.description,
                         )
                     )
                 )
 
-            elif isinstance(modifiable, implicits.ImplicitParameter):
-                attribute = modifiable.name.split(".")[-1]
-                update_action = update_action_map[attribute]
+            elif isinstance(symbol, implicits.ImplicitParameter):
+                attribute = symbol.name.split(".")[-1]
+                update_action = UPDATE_ACTION_MAP[attribute]
 
                 try:
-                    sync_db_symbol = self.instance.sync_db[
-                        modifiable.parent.name
-                    ]
+                    sync_db_symbol = self.instance.sync_db[symbol.parent.name]
                 except GamsException:
-                    if isinstance(modifiable.parent, gp.Variable):
+                    if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.instance.sync_db.add_variable(
-                            modifiable.parent.name,
-                            modifiable.parent.dimension,
-                            variable_map[modifiable.parent.type],
+                            symbol.parent.name,
+                            symbol.parent.dimension,
+                            VARIABLE_MAP[symbol.parent.type],
                         )
 
-                    elif isinstance(modifiable.parent, gp.Equation):
+                    elif isinstance(symbol.parent, gp.Equation):
                         sync_db_symbol = self.instance.sync_db.add_equation(
-                            modifiable.parent.name,
-                            modifiable.parent.dimension,
-                            equation_map[modifiable.parent.type],
+                            symbol.parent.name,
+                            symbol.parent.dimension,
+                            EQUATION_MAP[symbol.parent.type],
                         )
 
-                attr_name = "_".join(modifiable.name.split("."))
+                attr_name = "_".join(symbol.name.split("."))
 
                 domain = (
-                    ["*"] * modifiable.parent.dimension
-                    if modifiable.parent.dimension
+                    ["*"] * symbol.parent.dimension
+                    if symbol.parent.dimension
                     else None
                 )
                 _ = gt.Parameter(
@@ -306,7 +316,7 @@ class ModelInstance:
 
                 data_symbol = self.instance.sync_db.add_parameter(
                     attr_name,
-                    modifiable.parent.dimension,
+                    symbol.parent.dimension,
                 )
 
                 modifiers.append(
@@ -314,15 +324,11 @@ class ModelInstance:
                 )
             else:
                 raise ValidationError(
-                    f"Symbol type {type(modifiable)} cannot be modified in a"
+                    f"Symbol type {type(symbol)} cannot be modified in a"
                     " frozen solve"
                 )
 
         return modifiers
-
-    @property
-    def solver_status(self):
-        return self.instance.solver_status
 
     def _update_main_container(self):
         temp = gt.Container(
@@ -333,3 +339,15 @@ class ModelInstance:
         for name in temp.data:
             if name in self.container.data:
                 self.container[name].records = temp[name].records
+
+            if name in [symbol.name for symbol in self.modifiables]:
+                _ = gp.Variable(
+                    self.container,
+                    name + "_var",
+                    records=temp[name + "_var"].records,
+                )
+
+        if self.model._objective_variable is not None:
+            self.model.objective_value = temp[
+                self.model._objective_variable.name
+            ].toValue()

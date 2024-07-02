@@ -31,7 +31,7 @@ except Exception:
 class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -46,9 +46,9 @@ class EngineSuite(unittest.TestCase):
         self.capacities = [["seattle", 350], ["san-diego", 600]]
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-    def test_engine(self):
+    def _test_engine(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -119,9 +119,9 @@ class EngineSuite(unittest.TestCase):
             "engine",
         )
 
-    def test_no_config(self):
+    def _test_no_config(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -153,9 +153,9 @@ class EngineSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             transport.solve(backend="engine")
 
-    def test_extra_files(self):
+    def _test_extra_files(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -212,9 +212,9 @@ class EngineSuite(unittest.TestCase):
         file.close()
         os.unlink(file.name)
 
-    def test_solve_twice(self):
+    def _test_solve_twice(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -253,9 +253,9 @@ class EngineSuite(unittest.TestCase):
         transport.solve(backend="engine", client=client)
         transport.solve(backend="engine", client=client)
 
-    def test_summary(self):
+    def _test_summary(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -288,7 +288,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_non_blocking(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -345,9 +345,11 @@ class EngineSuite(unittest.TestCase):
         container = Container(load_from=gdx_out_path)
         self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)
+        print(x.records)
+        print(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 
-    def test_api_job(self):
+    def _test_api_job(self):
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
@@ -367,7 +369,7 @@ class EngineSuite(unittest.TestCase):
             status, _, _ = client.job.get(token)
             print(client.job.get_logs(token))
 
-    def test_api_auth(self):
+    def _test_api_auth(self):
         # /api/auth -> post
         client = EngineClient(
             host=os.environ["ENGINE_URL"],

@@ -34,7 +34,7 @@ from gamspy import (
 def main():
     # Define container
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/Corporate.gdx",
     )
 

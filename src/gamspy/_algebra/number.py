@@ -33,5 +33,12 @@ class Number(operable.Operable):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> gp.Number(2.0).gamsRepr()
+        '2.0'
+
         """
         return f"{self._value}"

@@ -39,7 +39,7 @@ from gamspy.math import sqr
 def main():
     # Define container
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Bond data. Prices, coupons and maturities from the Danish market

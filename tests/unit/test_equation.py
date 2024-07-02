@@ -25,7 +25,7 @@ from gamspy.math import sqr
 class EquationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -64,7 +64,7 @@ class EquationSuite(unittest.TestCase):
 
         # Equation and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -333,7 +333,7 @@ class EquationSuite(unittest.TestCase):
             )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
@@ -473,77 +473,6 @@ class EquationSuite(unittest.TestCase):
         a.stage = 5
         self.assertEqual(a._assignment.getDeclaration(), "a.stage = 5;")
 
-    def test_implicit_equation(self):
-        i = Set(self.m, "i", records=[f"i{i}" for i in range(10)])
-        x = Variable(self.m, "x", domain=[i])
-        a = Equation(self.m, "a", "regular", [i])
-
-        self.assertTrue(
-            hasattr(a[i], "l")
-            and isinstance(a[i].l, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].l.gamsRepr(), "a(i).l")
-        self.assertTrue(
-            hasattr(a[i], "m")
-            and isinstance(a[i].m, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].m.gamsRepr(), "a(i).m")
-        self.assertTrue(
-            hasattr(a[i], "lo")
-            and isinstance(a[i].lo, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].lo.gamsRepr(), "a(i).lo")
-        self.assertTrue(
-            hasattr(a[i], "up")
-            and isinstance(a[i].up, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].up.gamsRepr(), "a(i).up")
-        self.assertTrue(
-            hasattr(a[i], "scale")
-            and isinstance(a[i].scale, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].scale.gamsRepr(), "a(i).scale")
-        self.assertTrue(
-            hasattr(a[i], "stage")
-            and isinstance(a[i].stage, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].stage.gamsRepr(), "a(i).stage")
-        self.assertTrue(
-            hasattr(a[i], "range")
-            and isinstance(a[i].range, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].range.gamsRepr(), "a(i).range")
-        self.assertTrue(
-            hasattr(a[i], "slacklo")
-            and isinstance(a[i].slacklo, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].slacklo.gamsRepr(), "a(i).slacklo")
-        self.assertTrue(
-            hasattr(a[i], "slackup")
-            and isinstance(a[i].slackup, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].slackup.gamsRepr(), "a(i).slackup")
-        self.assertTrue(
-            hasattr(a[i], "slack")
-            and isinstance(a[i].slack, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].slack.gamsRepr(), "a(i).slack")
-        self.assertTrue(
-            hasattr(a[i], "infeas")
-            and isinstance(a[i].infeas, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].infeas.gamsRepr(), "a(i).infeas")
-
-        m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
-        )
-        i = Set(m, "i", records=[f"i{i}" for i in range(10)])
-        x = Variable(m, "x", domain=[i])
-        a = Equation(m, "a", "regular", [i])
-        a[i] = x[i] == 5
-
-        self.assertFalse(a._is_dirty)
-
     def test_mcp_equation(self):
         c = Parameter(self.m, name="c", domain=[], records=0.5)
         x = Variable(
@@ -587,7 +516,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_changed_domain(self):
         cont = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         s = Set(cont, "s")
@@ -599,7 +528,7 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_assignment(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(self.m, "i")
@@ -610,7 +539,7 @@ class EquationSuite(unittest.TestCase):
             a[j] = 5
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)

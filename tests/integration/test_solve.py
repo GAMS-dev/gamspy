@@ -33,7 +33,7 @@ from gamspy.math import sqr
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        self.m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         self.canning_plants = ['seattle', 'san-diego']
         self.markets = ['new-york', 'chicago', 'topeka']
         self.distances = [
@@ -65,11 +65,9 @@ class SolveSuite(unittest.TestCase):
             self.m, name="k", records=["seattle", "san-diego", "california"]
         )
         k["seattle"] = False
-        self.assertFalse(k._is_dirty)
         self.assertEqual(
             k.records.loc[0, :].values.tolist(), ["san-diego", ""]
         )
-        self.assertFalse(k._is_dirty)
 
         a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         b = Parameter(self.m, name="b", domain=[j], records=self.demands)
@@ -78,7 +76,6 @@ class SolveSuite(unittest.TestCase):
         e = Parameter(self.m, name="e")
 
         c[i, j] = 90 * d[i, j] / 1000
-        self.assertFalse(c._is_dirty)
         self.assertEqual(
             c.records.values.tolist(),
             [
@@ -90,10 +87,7 @@ class SolveSuite(unittest.TestCase):
                 ["san-diego", "topeka", 0.126],
             ],
         )
-        self.assertFalse(c._is_dirty)
-
         e[...] = 5
-        self.assertFalse(e._is_dirty)
         self.assertEqual(e.records.values.tolist(), [[5.0]])
 
         with self.assertRaises(TypeError):
@@ -308,13 +302,13 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(TypeError, transport.solve, None, 5)
 
         # Try to solve invalid model
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
     def test_interrupt(self):
-        cont = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        cont = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         power_forecast_recs = np.array(
             [
@@ -823,7 +817,7 @@ class SolveSuite(unittest.TestCase):
             pass
 
     def test_solver_options(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -865,7 +859,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_ellipsis(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -911,7 +905,7 @@ class SolveSuite(unittest.TestCase):
             c[..., ...] = 5
         
     def test_slice(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         i2 = Set(m, name="i2", records=self.canning_plants)
@@ -952,7 +946,7 @@ class SolveSuite(unittest.TestCase):
         error_test[:] = Sum(ntd, error[ntd])
         
     def test_max_line_length(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -984,7 +978,7 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         
     def test_summary(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1015,7 +1009,7 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1041,7 +1035,7 @@ class SolveSuite(unittest.TestCase):
             c[b[j]] = 90 * d[i, j] / 1000
             
     def test_after_exception(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         x = Variable(m, "x", type="positive")
         e = Equation(m, "e", definition=x <= x + 1)
         t = Model(
@@ -1063,17 +1057,9 @@ class SolveSuite(unittest.TestCase):
         
         self.assertEqual(f.getAssignment(), "f = 5;")
             
-    def test_variable_discovery(self):
-        x = self.m.addVariable('x')
-        l2 = self.m.addModel('l2', problem=Problem.QCP, sense=Sense.MIN, objective=sqr(x - 1) + sqr(x-2))
-        self.assertTrue('x' in l2.equations[0]._definition._find_variables())
-        
-        e = Equation(self.m, "e", definition=(x+5) == 0)
-        self.assertTrue('x' in e._definition._find_variables())
-        
     def test_invalid_arguments(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             
         )
 
