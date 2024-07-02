@@ -182,9 +182,6 @@ class Container(gt.Container):
         self._unsaved_statements: list = []
         self.miro_protect = miro_protect
 
-        # import symbols from arbitrary gams code
-        self._import_symbols: list[str] = []
-
         super().__init__(system_directory=system_directory)
 
         self._debugging_level = self._get_debugging_level(debugging_level)
@@ -333,9 +330,7 @@ class Container(gt.Container):
             symbols,
         )
 
-    def addGamsCode(
-        self, gams_code: str, import_symbols: list[str] = []
-    ) -> None:
+    def addGamsCode(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
@@ -343,27 +338,17 @@ class Container(gt.Container):
         ----------
         gams_code : str
             Gams code that you want to insert.
-        import_symbols : list[str], optional
-            Symbols to be imported to the container from GAMS.
 
         Examples
         --------
         >>> from gamspy import Container
         >>> m = Container()
-        >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
         >>> m["piHalf"].toValue()
         1.5707963267948966
 
         """
-        if import_symbols is not None and (
-            not isinstance(import_symbols, list)
-            or any(not isinstance(symbol, str) for symbol in import_symbols)
-        ):
-            raise ValidationError("import_symbols must be a list of strings")
-
-        self._import_symbols = import_symbols
         self._add_statement(gams_code)
-
         self._synch_with_gams()
 
     def _add_statement(self, statement) -> None:
