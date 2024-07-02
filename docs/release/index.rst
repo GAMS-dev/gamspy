@@ -34,3 +34,4 @@ Release Notes
    release_0.12.7
    release_0.13.0
    release_0.13.1
+   release_0.13.2

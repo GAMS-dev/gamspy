@@ -29,6 +29,6 @@ details are found in :ref:`reference`.
    :maxdepth: 1
 
    faq
-   model_library
+   Model Library <https://github.com/GAMS-dev/gamspy-examples>
    gamspy_for_gams_users
    license

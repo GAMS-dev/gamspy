@@ -37,11 +37,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._assignment = None
 
     def __neg__(self) -> ImplicitParameter:
-        return ImplicitParameter(
-            parent=self.parent,
-            name=f"-{self.name}",
-            domain=self.domain,
-        )
+        return expression.Expression(None, "-", self)
 
     def __invert__(self):
         return expression.Expression("", "not", self)
@@ -71,8 +67,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.parent._is_dirty = True
-        self.container._synch_with_gams()
+        if self.parent.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def dimension(self):

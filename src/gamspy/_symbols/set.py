@@ -32,6 +32,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set position values")
+        >>> attr[i,"position"]  =  i.pos
+        >>> attr.records.values.tolist()
+        [['seattle', 'position', 1.0], ['san-diego', 'position', 2.0], ['new-york', 'position', 3.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.pos")
 
@@ -43,6 +54,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set order values")
+        >>> attr[i,"order"]  =  i.ord
+        >>> attr.records.values.tolist()
+        [['seattle', 'order', 1.0], ['san-diego', 'order', 2.0], ['new-york', 'order', 3.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.ord")
 
@@ -54,6 +76,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set off values")
+        >>> attr[i,"off"]  =  i.off
+        >>> attr.records.values.tolist()
+        [['san-diego', 'off', 1.0], ['new-york', 'off', 2.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.off")
 
@@ -66,6 +99,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set reverse values")
+        >>> attr[i,"reverse"]  =  i.rev
+        >>> attr.records.values.tolist()
+        [['seattle', 'reverse', 2.0], ['san-diego', 'reverse', 1.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.rev")
 
@@ -77,6 +121,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set uel_pos values")
+        >>> attr[i,"uel_position"]  =  i.uel
+        >>> attr.records.values.tolist()
+        [['seattle', 'uel_position', 1.0], ['san-diego', 'uel_position', 2.0], ['new-york', 'uel_position', 3.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.uel")
 
@@ -88,6 +143,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set length values")
+        >>> attr[i,"length"]  =  i.len
+        >>> attr.records.values.tolist()
+        [['seattle', 'length', 7.0], ['san-diego', 'length', 9.0], ['new-york', 'length', 8.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.len")
 
@@ -99,6 +165,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=[("seattle", "Wisconsin"), ("san-diego", ""), ("new-york", " ")], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set element text length values")
+        >>> attr[i,"text_length"]  =  i.tlen
+        >>> attr.records.values.tolist()
+        [['seattle', 'text_length', 9.0], ['new-york', 'text_length', 1.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tlen")
 
@@ -113,6 +190,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["12", "20", "-13.4"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set val values")
+        >>> attr[i,"value"]  =  i.val
+        >>> attr.records.values.tolist()
+        [['12', 'value', 12.0], ['20', 'value', 20.0], ['-13.4', 'value', -13.4]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.val")
 
@@ -127,6 +215,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=[("seattle", "12"), ("san-diego", ""), ("new-york", "-13.4")], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"], description = "Set text values")
+        >>> attr[i,"text_value"]  =  i.tval
+        >>> attr.records.values.tolist()
+        [['seattle', 'text_value', 12.0], ['new-york', 'text_value', -13.4]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.tval")
 
@@ -138,6 +237,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"])
+        >>> attr[i,"is_first"]  =  i.first
+        >>> attr.records.values.tolist()
+        [['seattle', 'is_first', 1.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.first")
 
@@ -149,6 +259,17 @@ class SetMixin:
         Returns
         -------
         ImplicitSet
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego", "new-york"], description="canning plants")
+        >>> attr = gp.Parameter(m, "attr", domain = [i, "*"])
+        >>> attr[i,"is_last"]  =  i.last
+        >>> attr.records.values.tolist()
+        [['new-york', 'is_last', 1.0]]
+
         """
         return implicits.ImplicitSet(self, name=f"{self.name}.last")
 
@@ -265,6 +386,19 @@ class SetMixin:
         Returns
         -------
         Expression
+
+        Examples
+        --------
+        >>> import gamspy as gp
+
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> j = gp.Set(m, name="j", records=["new-york", "seattle"])
+        >>> attr = gp.Parameter(m, "attr", domain = [i, j])
+        >>> attr[i,j]  =  i.sameAs(j)
+        >>> attr.records.values.tolist()
+        [['seattle', 'seattle', 1.0]]
+
         """
         return gp.math.same_as(self, other)
 
@@ -347,7 +481,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
@@ -466,7 +599,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container.miro_protect = previous_state
 
         else:
-            self._is_dirty = False
             self.where = condition.Condition(self)
 
             if name is not None:
@@ -535,8 +667,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self._is_dirty = True
-        self.container._synch_with_gams()
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def records(self):
@@ -546,6 +678,17 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Returns
         -------
         DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> i.setRecords(["seattle", "san-diego"])
+        >>> i.records.values.tolist()
+        [['seattle', ''], ['san-diego', '']]
+
         """
         return self._records
 
@@ -583,8 +726,33 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        """
+        Main convenience method to set standard pandas.DataFrame formatted
+        records. If uels_on_axes=True setRecords will assume that all domain
+        information is contained in the axes of the pandas object – data will be
+        flattened (if necessary).
+
+        Parameters
+        ----------
+        records : Any
+        uels_on_axes : bool, optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> i.setRecords(["seattle", "san-diego"])
+        >>> i.records.values.tolist()
+        [['seattle', ''], ['san-diego', '']]
+
+        """
+
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """
@@ -593,6 +761,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", domain=["*"], records=['i1','i2'])
+        >>> i.gamsRepr()
+        'i'
+
         """
         return self.name
 

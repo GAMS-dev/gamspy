@@ -40,7 +40,7 @@ from gamspy.math import Max as gams_max
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     gf_c = gr_c * gg_c

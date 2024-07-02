@@ -38,7 +38,7 @@ from gamspy.math import sqr
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=gdx_file,
     )
 

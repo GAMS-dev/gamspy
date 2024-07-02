@@ -1,3 +1,14 @@
+"""
+## LICENSETYPE: Demo
+## MODELTYPE: MIP
+
+
+Binary knapsack model
+
+Given a set of items i (each with weight w and profit/utility u) and a weight limit (capacity) c of a backpack/knapsack
+the task is to select a subset of these items that maximizes the overall utility while not exceeding the capacity c.
+"""
+
 import math
 import sys
 from pathlib import Path
@@ -19,7 +30,7 @@ from gamspy import (
 m = Container()
 i = Set(m, "i", description="items")
 p = Parameter(m, "p", description="profits", domain=i)
-w = Parameter(m, "p", description="weights", domain=i)
+w = Parameter(m, "w", description="weights", domain=i)
 c = Parameter(m, "c", description="capacity")
 x = Variable(m, "x", domain=i, description="chosen", type=VariableType.BINARY)
 
@@ -75,7 +86,7 @@ c.setRecords(capacity)
 # Run solve and display results
 knapsack.solve(output=sys.stdout)
 print(f"Objective function value = {knapsack.objective_value}")
-assert math.isclose(knapsack.objective_value, 269.0, rel_tol=0.001)
+assert math.isclose(knapsack.objective_value, 295.0, rel_tol=0.001)
 levels = list(x.records["level"])
 print(
     f'Chosen items = {", ".join([j for ix, j in enumerate(items) if levels[ix] == 1.0])}'

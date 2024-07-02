@@ -3,22 +3,20 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import gamspy._algebra.condition as condition
-import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._symbols as symbols
-import gamspy._symbols.implicits as implicits
+import gamspy._symbols as syms
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     import gamspy._algebra.expression as expression
-    from gamspy import Variable
     from gamspy._algebra.operation import Operation
-    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
-    from gamspy._symbols.symbol import Symbol
 
     OperandType = Optional[
         Union[
@@ -68,9 +66,18 @@ class Expression(operable.Operable):
         data: str | MathOp | ExtrinsicFunction,
         right: OperandType,
     ):
-        self.left = left
+        self.left = (
+            utils._map_special_values(left)
+            if isinstance(left, float)
+            else left
+        )
         self.data = data
-        self.right = right
+        self.right = (
+            utils._map_special_values(right)
+            if isinstance(right, float)
+            else right
+        )
+
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
         self.representation = self._create_representation()
@@ -81,9 +88,6 @@ class Expression(operable.Operable):
         out_str = self._create_output_str(left_str, right_str)
 
         # Adapt to GAMS quirks
-        if isinstance(self.left, (domain.Domain, symbols.Set, symbols.Alias)):
-            return out_str[1:-1]
-
         if self.data in ["=", ".."] and out_str[0] == "(":
             # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
             # voycap(j,k)$vc(j,k).. sum(.)   -> valid
@@ -93,12 +97,6 @@ class Expression(operable.Operable):
         return out_str
 
     def _get_operand_representations(self) -> tuple[str, str]:
-        if isinstance(self.left, float):
-            self.left = utils._map_special_values(self.left)
-
-        if isinstance(self.right, float):
-            self.right = utils._map_special_values(self.right)
-
         if self.left is None:
             left_str = ""
         else:
@@ -206,37 +204,6 @@ class Expression(operable.Operable):
         """
         return self.gamsRepr()
 
-    def _find_variables(self) -> list[Variable]:
-        stack = []
-        variables: list[Variable] = []
-
-        node: OperandType = self
-        while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)
-            elif stack:
-                node = stack.pop()
-
-                if hasattr(node, "data") and isinstance(
-                    node.data, (MathOp, ExtrinsicFunction)
-                ):
-                    variables += node.data._find_variables()
-
-                if isinstance(node, symbols.Variable):
-                    variables.append(node.name)
-                elif isinstance(node, implicits.ImplicitVariable):
-                    variables.append(node.parent.name)
-                elif isinstance(node, operation.Operation):
-                    operation_variables = node._extract_variables()
-                    variables += operation_variables
-
-                node = getattr(node, "right", None)
-            else:
-                break  # pragma: no cover
-
-        return list(set(variables))
-
     def _fix_equalities(self) -> None:
         # Equality operations on Parameter and Variable objects generate
         # GAMS equality signs: =g=, =e=, =l=. If these signs appear on
@@ -265,3 +232,56 @@ class Expression(operable.Operable):
                 break  # pragma: no cover
 
         self.representation = self._create_representation()
+
+    def _find_all_symbols(self) -> list[str]:
+        symbols = []
+        stack = []
+
+        node = self
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = getattr(node, "left", None)
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, Symbol):
+                    for elem in node.domain:
+                        path = validation.get_domain_path(elem)
+                        for name in path:
+                            if name not in symbols:
+                                symbols.append(name)
+
+                    name = (
+                        node.alias_with.name
+                        if isinstance(node, syms.Alias)
+                        else node.name
+                    )
+
+                    if name not in symbols:
+                        symbols.append(name)
+                elif isinstance(node, ImplicitSymbol):
+                    for elem in node.domain:
+                        if not isinstance(elem, Symbol):
+                            continue
+
+                        path = validation.get_domain_path(elem)
+                        for name in path:
+                            if name not in symbols:
+                                symbols.append(name)
+
+                    if node.name not in symbols:
+                        symbols.append(node.name)
+                elif isinstance(node, Expression) and isinstance(
+                    node.data, MathOp
+                ):
+                    stack += list(node.data.elements)
+                if isinstance(node, operation.Operation):
+                    stack += node.domain
+                    node = node.expression
+                else:
+                    node = getattr(node, "right", None)
+            else:
+                break  # pragma: no cover
+
+        return symbols

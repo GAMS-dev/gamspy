@@ -38,7 +38,7 @@ from gamspy.math import Round, power
 
 def main():
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/tforss.gdx",
     )
 
