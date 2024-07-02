@@ -56,6 +56,15 @@ one can run::
 
 This option is only available for licenses in identification number format.
 
+.. note::
+    
+    GAMS and GAMSPy licenses are different which means one cannot use an existing GAMS license for GAMSPy.
+    We are giving GAMSPy licenses away for free if you already have a full GAMS license (and in many other cases). 
+    One should contact support @gams.com (with their GAMS license) to arrange for the delivery of such a GAMSPy license.
+    If you were already using a GAMS license for GAMSPy before v0.13.0, please contract support@gams.com to arrange
+    a GAMSPy license.
+
+
 Uninstalling your license
 =========================
 If you don't want to use your own license, you can uninstall your license with the following command: ::

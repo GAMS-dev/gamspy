@@ -9,6 +9,7 @@ GAMSPy 0.13.0
 
   - Adjust debugging page according to the new .gms generation rules.
   - Update installation page to adjust to the new licensing scheme.
+  - Add a note about the new licensing scheme (GAMS license != GAMSPy license).
 
 - Testing
 
