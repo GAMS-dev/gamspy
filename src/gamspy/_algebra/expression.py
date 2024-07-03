@@ -233,14 +233,14 @@ class Expression(operable.Operable):
         self.representation = self._create_representation()
 
     def _find_all_symbols(self) -> list[str]:
-        symbols = []
+        symbols: list[str] = []
         stack = []
 
         node = self
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)
+                node = getattr(node, "left", None)  # type: ignore
             elif stack:
                 node = stack.pop()
 
@@ -270,6 +270,36 @@ class Expression(operable.Operable):
                     node.data, MathOp
                 ):
                     stack += list(node.data.elements)
+                if isinstance(node, operation.Operation):
+                    stack += node.domain
+                    node = node.expression
+                else:
+                    node = getattr(node, "right", None)
+            else:
+                break  # pragma: no cover
+
+        return symbols
+
+    def _find_symbols_in_conditions(self) -> list[str]:
+        symbols: list[str] = []
+        stack = []
+
+        node = self
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = getattr(node, "left", None)  # type: ignore
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, Expression) and node.data == "$":
+                    condition = node.right
+
+                    if isinstance(condition, Expression):
+                        symbols += condition._find_all_symbols()
+                    elif isinstance(condition, ImplicitSymbol):
+                        symbols.append(condition.parent.name)
+
                 if isinstance(node, operation.Operation):
                     stack += node.domain
                     node = node.expression

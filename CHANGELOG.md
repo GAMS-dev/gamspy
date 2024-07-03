@@ -9,6 +9,7 @@ GAMSPy 0.13.3
   - Fix the order issue for Alias in toGams function.
 - Testing
   - Update model library tests according to the new default solvers.
+  - Add a test to verify that modifiable symbols cannot be in conditions for model instance runs.
 
 GAMSPy 0.13.2
 -------------
