@@ -119,7 +119,8 @@ or if you want to list all available solvers, you can run the following::
 The same information can also be reached programmatically via utils module of GAMSPy::
     
     import gamspy as gp
-    print(gp.utils.getInstalledSolvers())
+    import gamspy_base
+    print(gp.utils.getInstalledSolvers(gamspy_base.directory))
     print(gp.utils.getAvailableSolvers())
 
 .. note::

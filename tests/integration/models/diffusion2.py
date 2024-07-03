@@ -650,7 +650,7 @@ def main():
     )
 
     for tu in time.toList():
-        Diffusion2.solve()
+        Diffusion2.solve(solver="CONOPT")
         print(f"\t --- \t Time interval = {tu} \t --- \n")
         print(t.pivot().round(4))
         print("\n")

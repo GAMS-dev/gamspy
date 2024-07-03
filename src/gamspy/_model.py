@@ -137,17 +137,17 @@ INTERRUPT_STATUS = [
     SolveStatus.ResourceInterrupt,
     SolveStatus.EvaluationInterrupt,
     SolveStatus.UserInterrupt,
-]
-
-ERROR_STATUS = [
-    SolveStatus.CapabilityError,
-    SolveStatus.LicenseError,
-    SolveStatus.SetupError,
-    SolveStatus.SolverError,
-    SolveStatus.InternalError,
-    SolveStatus.SystemError,
     SolveStatus.TerminatedBySolver,
 ]
+
+ERROR_STATUS = {
+    SolveStatus.CapabilityError: "The solver does not have the capability required by the model.",
+    SolveStatus.LicenseError: "The solver cannot find the appropriate license key needed to use a specific subsolver.",
+    SolveStatus.SetupError: "The solver encountered a fatal failure during problem set-up time.",
+    SolveStatus.SolverError: "The solver encountered a fatal error.",
+    SolveStatus.InternalError: "The solver encountered an internal fatal error.",
+    SolveStatus.SystemError: "This indicates a completely unknown or unexpected error condition.",
+}
 
 
 # GAMS name -> GAMSPy name
@@ -489,8 +489,7 @@ class Model:
                 elif status in ERROR_STATUS:
                     raise GamspyException(
                         f"The model `{self.name}` was not solved successfully!"
-                        f" Solve status: {status.name}. "
-                        "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus",
+                        f" Solve status: {status.name}. {ERROR_STATUS[status]}",
                         status.value,
                     )
             else:
@@ -669,7 +668,13 @@ class Model:
         >>> solved = my_model.solve()
 
         """
-        validation.validate_solver_args(solver, self.problem, options, output)
+        validation.validate_solver_args(
+            self.container.system_directory,
+            solver,
+            self.problem,
+            options,
+            output,
+        )
         validation.validate_model(self)
 
         if options is None:
