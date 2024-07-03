@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
@@ -245,30 +244,25 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, Symbol):
-                    for elem in node.domain:
-                        path = validation.get_domain_path(elem)
-                        for name in path:
-                            if name not in symbols:
-                                symbols.append(name)
+                if isinstance(node, (Symbol, ImplicitSymbol)):
+                    for index, elem in enumerate(node.domain):
+                        if isinstance(elem, (Symbol, ImplicitSymbol)):
+                            path = validation.get_domain_path(elem)
+                            for name in path:
+                                if name not in symbols and " " not in name:
+                                    symbols.append(name)
 
-                    name = (
-                        node.alias_with.name
-                        if isinstance(node, syms.Alias)
-                        else node.name
-                    )
-
-                    if name not in symbols:
-                        symbols.append(name)
-                elif isinstance(node, ImplicitSymbol):
-                    for elem in node.domain:
-                        if not isinstance(elem, Symbol):
-                            continue
-
-                        path = validation.get_domain_path(elem)
-                        for name in path:
-                            if name not in symbols:
-                                symbols.append(name)
+                        if (
+                            isinstance(node, ImplicitSymbol)
+                            and isinstance(elem, str)
+                            and elem != "*"
+                        ):
+                            symbol = node.parent.domain[index]
+                            if (
+                                not isinstance(symbol, str)
+                                and symbol.name not in symbols
+                            ):
+                                symbols.append(symbol.name)
 
                     if node.name not in symbols:
                         symbols.append(node.name)

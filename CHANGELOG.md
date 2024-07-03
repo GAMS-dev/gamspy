@@ -6,6 +6,7 @@ GAMSPy 0.13.3
 - General
   - Change default solvers to 'CONOPT', 'CONVERT', 'CPLEX', 'GUSS', 'IPOPT', 'IPOPTH', 'KESTREL', 'NLPEC', 'PATH', and 'SHOT'
   - Fix the version of gamspy_base when "gamspy update" command is being executed.
+  - Fix the order issue for Alias in toGams function.
 - Testing
   - Update model library tests according to the new default solvers.
 
