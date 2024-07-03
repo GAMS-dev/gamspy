@@ -297,7 +297,7 @@ def update():
             [
                 "pip",
                 "install",
-                "gamspy-base",
+                f"gamspy-base=={gamspy_base.__version__}",
                 "--force-reinstall",
             ],
             check=True,
