@@ -88,12 +88,13 @@ class ModelInstance:
         self.save_file = self.job_name + ".g00"
         self._create_restart_file()
 
+        self.model = model
+        assert self.model._is_frozen
+
         self.modifiables = self._init_modifiables(modifiables)
         self.instance_container = gt.Container(
             system_directory=container.system_directory,
         )
-        self.model = model
-        assert self.model._is_frozen
 
         self.checkpoint = GamsCheckpoint(container.workspace, self.save_file)
         self.instance = self.checkpoint.add_modelinstance()
@@ -191,9 +192,20 @@ class ModelInstance:
                 "Type of a modifiable must be either Parameter or a Variable attribute (e.g. variable.up)"
             )
 
+        symbols_in_conditions = []
+        for equation in self.model.equations:
+            symbols_in_conditions += (
+                equation._definition._find_symbols_in_conditions()
+            )
+
         will_be_modified: list[Parameter | ImplicitParameter] = []
         for symbol in modifiables:
             if isinstance(symbol, implicits.ImplicitParameter):
+                if symbol.parent.name in symbols_in_conditions:
+                    raise ValidationError(
+                        f"Modifiable symbol `{symbol.parent.name}` cannot be in a condition."
+                    )
+
                 attr_name = symbol.name.split(".")[-1]
 
                 # If the symbol attr is fx, then modify level, lower and upper.
@@ -211,6 +223,10 @@ class ModelInstance:
                     if not utils.isin(symbol, will_be_modified):
                         will_be_modified.append(symbol)
             else:
+                if symbol.name in symbols_in_conditions:
+                    raise ValidationError(
+                        f"Modifiable symbol `{symbol.name}` cannot be in a condition."
+                    )
                 will_be_modified.append(symbol)
 
         return will_be_modified
@@ -222,7 +238,7 @@ class ModelInstance:
         if given_options is None:
             return options
 
-        options_dict = given_options._get_gams_compatible_options()
+        options_dict = given_options._get_gams_compatible_options()  # type: ignore
 
         for key, value in options_dict.items():
             setattr(options, key, value)
