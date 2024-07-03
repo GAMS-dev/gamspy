@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.3
+-------------
+- General
+  - Change default solvers to 'CONOPT', 'CONVERT', 'CPLEX', 'GUSS', 'IPOPT', 'IPOPTH', 'KESTREL', 'NLPEC', 'PATH', and 'SHOT'
+- Testing
+  - Update model library tests according to the new default solvers.
+
 GAMSPy 0.13.2
 -------------
 - General

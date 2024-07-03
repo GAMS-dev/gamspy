@@ -88,11 +88,11 @@ def main():
         objective=j,
     )
 
-    control3.solve()
+    control3.solve(solver="conopt")
 
     import math
 
-    assert math.isclose(control3.objective_value, 0, rel_tol=0.001)
+    assert math.isclose(control3.objective_value, 0)
 
 
 if __name__ == "__main__":

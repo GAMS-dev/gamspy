@@ -14,16 +14,11 @@ class ModelsSuite(unittest.TestCase):
         print()
         for idx, path in enumerate(paths):
             print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
-            try:
-                process = subprocess.run(
-                    ["python", path], check=True, capture_output=True
-                )
+            process = subprocess.run(["python", path], capture_output=True)
+            print(process.stdout.decode())
+            print(process.stderr.decode())
 
-                self.assertTrue(process.returncode == 0)
-            except subprocess.CalledProcessError as e:
-                print("(x)")
-                print(f"Output: {e.stderr.decode('utf-8')}")
-                exit(1)
+            self.assertTrue(process.returncode == 0)
 
 
 def gams_models_suite():

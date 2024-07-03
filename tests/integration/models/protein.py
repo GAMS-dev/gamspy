@@ -197,7 +197,10 @@ def main():
         objective=eobj,
     )
 
-    protein.solve(options=Options(time_limit=60000, iteration_limit=80000))
+    protein.solve(
+        solver="CONOPT",
+        options=Options(time_limit=60000, iteration_limit=80000),
+    )
 
     print(
         "Objective Function Value:  ", round(protein.objective_value, 4), "\n"
