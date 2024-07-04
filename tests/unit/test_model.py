@@ -36,6 +36,12 @@ class ModelSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_model(self):
+        # No equations or matches
+        self.assertRaises(ValidationError, Model, self.m)
+
+        # Empty name
+        self.assertRaises(ValueError, Model, self.m, "")
+
         i = Set(
             self.m,
             name="i",

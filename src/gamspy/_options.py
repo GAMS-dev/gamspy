@@ -306,20 +306,12 @@ class Options(BaseModel):
                 Path(gamspy_options["listing_file"]).parent.absolute(),
                 exist_ok=True,
             )
-            if not os.path.isabs(gamspy_options["listing_file"]):
-                gamspy_options["listing_file"] = os.path.abspath(
-                    gamspy_options["listing_file"]
-                )
 
         if "log_file" in gamspy_options:
             os.makedirs(
                 Path(gamspy_options["log_file"]).parent.absolute(),
                 exist_ok=True,
             )
-            if not os.path.isabs(gamspy_options["log_file"]):
-                gamspy_options["log_file"] = os.path.abspath(
-                    gamspy_options["log_file"]
-                )
 
         gams_options = dict()
         for key, value in gamspy_options.items():

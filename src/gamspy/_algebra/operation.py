@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -315,6 +316,11 @@ class Ord(operable.Operable):
     """
 
     def __init__(self, set: Set | Alias):
+        if not isinstance(set, (syms.Set, syms.Alias)):
+            raise ValidationError(
+                "Ord operation is only for Set and Alias objects!"
+            )
+
         self._set = set
 
     def __eq__(self, other) -> Expression:  # type: ignore

@@ -42,7 +42,9 @@ class EquationSuite(unittest.TestCase):
 
     def test_equation_creation(self):
         # no name is fine now
-        _ = Equation(self.m)
+        e1 = Equation(self.m)
+        with self.assertRaises(ValidationError):
+            _ = e1.getDefinition()
 
         # non-str type name
         self.assertRaises(TypeError, Equation, self.m, 5)

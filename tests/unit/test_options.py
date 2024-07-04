@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 
+import gamspy.exceptions as exceptions
 import gamspy.math as math
 from gamspy import (
     Container,
@@ -206,17 +207,20 @@ class OptionsSuite(unittest.TestCase):
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
-        listing_file_name = os.path.join("tmp", "listing.lst")
+        listing_file_name = os.path.join("tmp", "listing2.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
     def test_from_file(self):
         option_file = os.path.join("tmp", "option_file")
         with open(option_file, "w") as file:
-            file.write("lp = conopt")
+            file.write("lp = conopt\n\n")
 
         options = Options.from_file(option_file)
         self.assertEqual(options.lp, "conopt")
+
+        with self.assertRaises(exceptions.ValidationError):
+            _ = Options.from_file("unknown_path")
 
     def test_profile(self):
         # Set
@@ -297,19 +301,17 @@ class OptionsSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
+
+        profile_path = os.path.join("tmp", "bla.profile")
         transport.solve(
             output=sys.stdout,
             options=Options(
                 profile=1,
-                profile_file="bla.profile",
+                profile_file=profile_path,
                 monitor_process_tree_memory=True,
             ),
         )
-        self.assertTrue(
-            os.path.exists(
-                os.path.join(self.m.working_directory, "bla.profile")
-            )
-        )
+        self.assertTrue(os.path.exists(profile_path))
 
 
 def options_suite():

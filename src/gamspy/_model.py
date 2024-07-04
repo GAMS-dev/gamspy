@@ -242,13 +242,17 @@ class Model:
             self.name = self._auto_id
 
         self.container = container
+        self._matches = matches
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
         self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
-        self._matches = matches
         self._limited_variables = limited_variables
+
+        if not self.equations and not self._matches:
+            raise ValidationError("Model requires at least one equation.")
+
         self.container._add_statement(self)
 
         # allow freezing
