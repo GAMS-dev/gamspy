@@ -52,6 +52,18 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(k.toList(), ["k1"])
         self.assertEqual(j.toList(), ["j1"])
 
+        k2 = Set(m, name="k2")
+        j2 = Set(m, name="j2")
+        _ = Set(
+            m,
+            name="p3",
+            domain=[k2, j2],
+            domain_forwarding=[True, True],
+            records=[("k2", "j2")],
+        )
+        self.assertEqual(k2.toList(), ["k2"])
+        self.assertEqual(j2.toList(), ["j2"])
+
     def test_domain_validation(self):
         times = Set(self.m, "times", records=["release", "duration"])
         job = Set(self.m, "job", records=["job1", "job2"])

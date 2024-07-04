@@ -28,7 +28,10 @@ class SetSuite(unittest.TestCase):
 
     def test_set_creation(self):
         # no name is fine now
-        _ = Set(self.m)
+        i = Set(self.m)
+        self.assertEqual(len(i), 0)
+        with self.assertRaises(ValidationError):
+            _ = i.getAssignment()
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)

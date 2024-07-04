@@ -107,12 +107,8 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         for _ in range(int(num_lines) + 1):
             _ = lines.pop(0)
 
-        solvers.append(solver)
-
-    try:
-        solvers.remove("GUSS")
-    except ValueError:
-        ...
+        if solver != "GUSS":
+            solvers.append(solver)
 
     return solvers
 
@@ -287,8 +283,7 @@ def _get_gamspy_base_directory() -> str:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    gamspy_base_directory = gamspy_base.__path__[0]
-    return gamspy_base_directory
+    return gamspy_base.directory
 
 
 def _get_license_path(system_directory: str) -> str:

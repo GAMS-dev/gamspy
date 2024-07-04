@@ -15,7 +15,7 @@ class GamspyException(Exception):
     def __init__(self, message: str, return_code: int | None = None) -> None:
         super().__init__(message)
         self.message = message
-        self.rc = return_code
+        self.return_code = return_code
 
 
 class NeosClientException(Exception):
@@ -36,12 +36,9 @@ class EngineException(GamspyException):
         message: str,
         return_code: int,
         status_code: int | None = None,
-        gams_exit_code: int | None = None,
     ) -> None:
-        self.message = message
-        self.return_code = return_code
+        super().__init__(message, return_code)
         self.status_code = status_code
-        self.gams_exit_code = gams_exit_code
 
     def __str__(self) -> str:
         return self.message
@@ -113,6 +110,6 @@ def customize_exception(
 
                 index += 1
     except FileNotFoundError:
-        return ""
+        return error_message
 
     return error_message

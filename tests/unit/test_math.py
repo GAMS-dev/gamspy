@@ -43,10 +43,13 @@ class MathSuite(unittest.TestCase):
         op2 = gams_math.centropy(v[i], b[i], 1e-15)
         self.assertEqual(op2.gamsRepr(), "( centropy(v(i),b(i),1e-15) )")
         self.assertRaises(ValueError, gams_math.centropy, v[i], b[i], -1)
+        self.assertRaises(TypeError, gams_math.centropy, v[i], b[i], s1)
 
         # cvPower
         op2 = gams_math.cv_power(3, b[i])
         self.assertEqual(op2.gamsRepr(), "( cvPower(3,b(i)) )")
+        self.assertRaises(ValueError, gams_math.cv_power, s1, b[i])
+        self.assertRaises(ValueError, gams_math.cv_power, -1, b[i])
 
         # rPower
         op2 = gams_math.rpower(b[i], 3)
@@ -55,6 +58,8 @@ class MathSuite(unittest.TestCase):
         # signPower
         op2 = gams_math.sign_power(b[i], 3)
         self.assertEqual(op2.gamsRepr(), "( signPower(b(i),3) )")
+        self.assertRaises(ValueError, gams_math.sign_power, b[i], s1)
+        self.assertRaises(ValueError, gams_math.sign_power, b[i], -5)
 
         # vcPower
         op2 = gams_math.vc_power(b[i], 3)
@@ -134,6 +139,7 @@ class MathSuite(unittest.TestCase):
         op2 = gams_math.Round(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))
         self.assertEqual(op2.gamsRepr(), "( round(b(i),0) )")
+        self.assertRaises(ValidationError, gams_math.Round, b[i], s1)
 
         # sin
         op2 = gams_math.sin(b[i])
@@ -208,6 +214,7 @@ class MathSuite(unittest.TestCase):
         # factorial
         op2 = gams_math.factorial(5)
         self.assertEqual(op2.gamsRepr(), "( fact(5) )")
+        self.assertRaises(ValidationError, gams_math.factorial, s1)
 
         # fractional
         op2 = gams_math.fractional(b[i])
@@ -264,6 +271,7 @@ class MathSuite(unittest.TestCase):
         )
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
+        s1 = Parameter(m, "s1", records=5)
 
         op1 = gams_math.entropy(1)
         self.assertEqual(op1.gamsRepr(), "( entropy(1) )")
@@ -302,18 +310,26 @@ class MathSuite(unittest.TestCase):
 
         op1 = gams_math.ncp_cm(a[i], a[i], 3)
         self.assertEqual(op1.gamsRepr(), "( ncpCM(a(i),a(i),3) )")
+        self.assertRaises(ValidationError, gams_math.ncp_cm, a[i], a[i], s1)
+        self.assertRaises(ValidationError, gams_math.ncp_cm, a[i], a[i], -5)
 
         op1 = gams_math.ncp_f(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpF(a(i),a(i),0) )")
+        self.assertRaises(ValidationError, gams_math.ncp_f, a[i], a[i], s1)
+        self.assertRaises(ValidationError, gams_math.ncp_f, a[i], a[i], -5)
 
         op1 = gams_math.ncpVUpow(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpVUpow(a(i),a(i),0) )")
+        self.assertRaises(ValidationError, gams_math.ncpVUpow, a[i], a[i], s1)
 
         op1 = gams_math.ncpVUsin(a[i], a[i])
         self.assertEqual(op1.gamsRepr(), "( ncpVUsin(a(i),a(i),0) )")
+        self.assertRaises(ValidationError, gams_math.ncpVUsin, a[i], a[i], s1)
 
         op1 = gams_math.poly(a[i], 3, 5, 7)
         self.assertEqual(op1.gamsRepr(), "( poly(a(i),3,5,7) )")
+        self.assertRaises(ValidationError, gams_math.poly, a[i], 3)
+        self.assertRaises(ValidationError, gams_math.poly, a[i], 3, 5, s1)
 
         op1 = gams_math.rand_binomial(1, 2)
         self.assertEqual(op1.gamsRepr(), "( randBinomial(1,2) )")

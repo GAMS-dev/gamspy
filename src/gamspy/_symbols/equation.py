@@ -347,9 +347,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         if self.synchronize:
             self.container._synch_with_gams()
 
-    def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "=e=", other)
-
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
         marginal = self._create_attr("m")

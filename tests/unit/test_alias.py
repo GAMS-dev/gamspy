@@ -17,7 +17,10 @@ class AliasSuite(unittest.TestCase):
     def test_alias_creation(self):
         i = Set(self.m, "i")
 
-        # no name
+        a = Alias(self.m, alias_with=i)
+        self.assertEqual(len(a), 0)
+
+        # no alias
         self.assertRaises(TypeError, Alias, self.m)
 
         # non-str type name
@@ -36,6 +39,18 @@ class AliasSuite(unittest.TestCase):
         j1 = Alias(self.m, "j", i)
         j2 = Alias(self.m, "j", i)
         self.assertEqual(id(j1), id(j2))
+
+        # len of Alias
+        i2 = Set(self.m, records=["i1", "i2"])
+        k2 = Alias(self.m, alias_with=i2)
+        self.assertEqual(len(k2), 2)
+
+        # synch
+        with self.assertRaises(ValidationError):
+            k2.synchronize = True
+
+        with self.assertRaises(ValidationError):
+            _ = k2.synchronize
 
     def test_alias_attributes(self):
         i = Set(self.m, "i")

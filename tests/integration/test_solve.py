@@ -1052,6 +1052,7 @@ class SolveSuite(unittest.TestCase):
             t.solve()
         except GamspyException:
             pass
+        
         f = Parameter(m, "f")
         f[...] = 5
         
@@ -1144,12 +1145,14 @@ class SolveSuite(unittest.TestCase):
         # solver is not installed
         with self.assertRaises(ValidationError):
             transport.solve(solver="SNOPT")
+        
+        # solver is not capable of solving this problem type
+        with self.assertRaises(ValidationError):
+            transport.solve(solver="PATH")
 
+        # we do not accept dict anymore
         with self.assertRaises(TypeError):
             transport.solve(options={"bla": "bla"})
-            
-        with self.assertRaises(TypeError):
-            transport.solve(output={"bla": "bla"})
             
     def test_marking_updated_symbols(self):
         import gamspy as gp

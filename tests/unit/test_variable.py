@@ -17,7 +17,9 @@ class VariableSuite(unittest.TestCase):
 
     def test_variable_creation(self):
         # no name is fine now
-        _ = Variable(self.m)
+        v = Variable(self.m)
+        with self.assertRaises(ValidationError):
+            _ = v.getAssignment()
 
         # non-str type name
         self.assertRaises(TypeError, Variable, self.m, 5)
@@ -51,6 +53,10 @@ class VariableSuite(unittest.TestCase):
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Variable(m, "var1", domain=[set1])
+
+        # Incorrect type
+        with self.assertRaises(ValueError):
+            _ = Variable(m, type="Blabla")
 
     def test_variable_string(self):
         # Check if the name is reserved
