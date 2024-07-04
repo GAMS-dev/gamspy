@@ -33,7 +33,7 @@ test-leg-3.8:
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
-    - when: neve
+    - when: never
 
 test-deg-3.8:
   stage: test
