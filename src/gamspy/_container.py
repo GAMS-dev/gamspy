@@ -342,8 +342,8 @@ class Container(gt.Container):
         >>> from gamspy import Container
         >>> m = Container()
         >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
-        >>> float(m["piHalf"].toValue())
-        1.5707963267948966
+        >>> m["piHalf"].toValue()
+        np.float64(1.5707963267948966)
 
         """
         self._add_statement(gams_code)

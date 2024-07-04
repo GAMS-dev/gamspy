@@ -61,7 +61,7 @@ def abs(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = abs(a)
     >>> b.toValue()
-    3.8
+    np.float64(3.8)
 
     """
     return expression.Expression(None, MathOp("abs", (x,)), None)
@@ -84,7 +84,7 @@ def ceil(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = ceil(a)
     >>> b.toValue()
-    4.0
+    np.float64(4.0)
 
     """
     return expression.Expression(None, MathOp("ceil", (x,)), None)
@@ -114,7 +114,7 @@ def div(
     >>> b = Parameter(m, "b")
     >>> b[...] = div(a, 3)
     >>> b.toValue()
-    70.0
+    np.float64(70.0)
 
     """
     return expression.Expression(
@@ -146,7 +146,7 @@ def div0(
     >>> b = Parameter(m, "b")
     >>> b[...] = div0(a, 0)
     >>> b.toValue()
-    1e+299
+    np.float64(1e+299)
 
     """
     return expression.Expression(
@@ -227,7 +227,7 @@ def floor(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = floor(a)
     >>> b.toValue()
-    3.0
+    np.float64(3.0)
 
     """
     return expression.Expression(None, MathOp("floor", (x,)), None)
@@ -250,7 +250,7 @@ def fractional(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = fractional(a)
     >>> b.toValue()
-    0.8999999999999999
+    np.float64(0.8999999999999999)
 
     """
     return expression.Expression(None, MathOp("frac", (x,)), None)
@@ -321,7 +321,7 @@ def mod(x: float | Symbol, y: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = mod(a, 3)
     >>> b.toValue()
-    2.0
+    np.float64(2.0)
 
     """
     return expression.Expression(None, MathOp("mod", (x, y)), None)
@@ -349,7 +349,7 @@ def Round(x: float | Symbol, num_decimals: int = 0) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = Round(div(a, 3), 2)
     >>> b.toValue()
-    66.67
+    np.float64(66.67)
 
     """
     if not isinstance(num_decimals, int):
@@ -410,7 +410,7 @@ def slexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = slexp(a)
     >>> b.toValue()
-    20.085536923187668
+    np.float64(20.085536923187668)
 
     """
     return expression.Expression(None, MathOp("slexp", (x, S)), None)
@@ -438,7 +438,7 @@ def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = sqexp(a)
     >>> b.toValue()
-    20.085536923187668
+    np.float64(20.085536923187668)
 
     """
     return expression.Expression(None, MathOp("sqexp", (x, S)), None)
@@ -485,7 +485,7 @@ def truncate(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = truncate(a)
     >>> b.toValue()
-    3.0
+    np.float64(3.0)
 
     """
     return expression.Expression(None, MathOp("trunc", (x,)), None)
@@ -513,7 +513,7 @@ def beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = beta(a, 1)
     >>> b.toValue()
-    0.3333333333333333
+    np.float64(0.3333333333333333)
 
     """
     return expression.Expression(None, MathOp("beta", (x, y)), None)
@@ -544,7 +544,7 @@ def regularized_beta(
     >>> b = Parameter(m, "b")
     >>> b[...] = regularized_beta(0.5, a, 1)
     >>> b.toValue()
-    0.12500000000000003
+    np.float64(0.12500000000000003)
 
     """
     return expression.Expression(None, MathOp("betaReg", (x, y, z)), None)
@@ -738,7 +738,7 @@ def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = ncp_cm(1, y, 0.5)
     >>> b.toValue()
-    0.9365359944785137
+    np.float64(0.9365359944785137)
 
     """
     if not isinstance(z, (int, float)):
@@ -773,7 +773,7 @@ def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = ncp_f(1, y, 0.5)
     >>> b.toValue()
-    -0.5505102572168221
+    np.float64(-0.5505102572168221)
 
     """
     if not isinstance(z, (int, float)):
@@ -814,7 +814,7 @@ def ncpVUpow(
     >>> b = Parameter(m, "b")
     >>> b[...] = ncpVUpow(1, y, 0.5)
     >>> b.toValue()
-    1.0
+    np.float64(1.0)
 
     """
     if not isinstance(mu, (int, float)):
@@ -848,7 +848,7 @@ def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = ncpVUsin(1, y, 0.5)
     >>> b.toValue()
-    1.0
+    np.float64(1.0)
 
     """
     if not isinstance(mu, (int, float)):
@@ -1226,7 +1226,7 @@ def bool_and(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_and(a > 10, b < 5)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("bool_and", (x, y)), None)
@@ -1255,7 +1255,7 @@ def bool_eqv(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_eqv(a > 10, b < 5)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("bool_eqv", (x, y)), None)
@@ -1284,7 +1284,7 @@ def bool_imp(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_imp(a < 10, b > 5)
     >>> c.toValue()
-    1.0
+    np.float64(1.0)
 
     """
     return expression.Expression(None, MathOp("bool_imp", (x, y)), None)
@@ -1312,7 +1312,7 @@ def bool_not(x: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_not(a > 10)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("bool_not", (x,)), None)
@@ -1341,7 +1341,7 @@ def bool_or(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_or(a > 15, b < 5)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("bool_or", (x, y)), None)
@@ -1370,7 +1370,7 @@ def bool_xor(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = bool_xor(a < 15, b > 5)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("bool_xor", (x, y)), None)
@@ -1399,7 +1399,7 @@ def rel_eq(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_eq(a, b)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("rel_eq", (x, y)), None)
@@ -1428,7 +1428,7 @@ def rel_ge(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_ge(a, b)
     >>> c.toValue()
-    1.0
+    np.float64(1.0)
 
     """
     return expression.Expression(None, MathOp("rel_ge", (x, y)), None)
@@ -1457,7 +1457,7 @@ def rel_gt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_gt(a, b)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("rel_gt", (x, y)), None)
@@ -1486,7 +1486,7 @@ def rel_le(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_le(a, b)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("rel_le", (x, y)), None)
@@ -1515,7 +1515,7 @@ def rel_lt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_lt(a, b)
     >>> c.toValue()
-    1.0
+    np.float64(1.0)
 
     """
     return expression.Expression(None, MathOp("rel_lt", (x, y)), None)
@@ -1544,7 +1544,7 @@ def rel_ne(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     >>> c = Parameter(m, "c")
     >>> c[...] = rel_ne(a, b)
     >>> c.toValue()
-    0.0
+    np.float64(0.0)
 
     """
     return expression.Expression(None, MathOp("rel_ne", (x, y)), None)

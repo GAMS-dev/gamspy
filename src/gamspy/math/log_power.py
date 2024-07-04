@@ -31,7 +31,7 @@ def exp(x: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = exp(a)
     >>> b.toValue()
-    44.701184493300815
+    np.float64(44.701184493300815)
 
     """
     return expression.Expression(None, MathOp("exp", (x,)), None)
@@ -58,7 +58,7 @@ def log(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = log(a)
     >>> b.toValue()
-    1.33500106673234
+    np.float64(1.33500106673234)
 
     """
     return expression.Expression(None, MathOp("log", (x,)), None)
@@ -139,7 +139,7 @@ def logit(x: int | float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = logit(a)
     >>> b.toValue()
-    1.3862943611198908
+    np.float64(1.3862943611198908)
 
     """
     return expression.Expression(None, MathOp("logit", (x,)), None)
@@ -166,7 +166,7 @@ def log2(x: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = log2(a)
     >>> b.toValue()
-    1.9259994185562224
+    np.float64(1.9259994185562224)
 
     """
     return expression.Expression(None, MathOp("log2", (x,)), None)
@@ -193,7 +193,7 @@ def log10(x: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = log10(a)
     >>> b.toValue()
-    0.5797835966168101
+    np.float64(0.5797835966168101)
 
     """
     return expression.Expression(None, MathOp("log10", (x,)), None)
@@ -221,7 +221,7 @@ def power(base: float | Symbol, exponent: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = power(a, 3)
     >>> b.toValue()
-    54.87199999999999
+    np.float64(54.87199999999999)
 
     """
     return expression.Expression(None, MathOp("power", (base, exponent)), None)
@@ -351,7 +351,7 @@ def sllog10(x: int | float | Symbol, S: int | float = 1.0e-150) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = sllog10(a)
     >>> b.toValue()
-    0.5797835966168101
+    np.float64(0.5797835966168101)
 
     """
     return expression.Expression(None, MathOp("sllog10", (x, S)), None)
@@ -379,7 +379,7 @@ def sqlog10(x: int | float | Symbol, S: int | float = 1.0e-150) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = sqlog10(a)
     >>> b.toValue()
-    0.5797835966168101
+    np.float64(0.5797835966168101)
 
     """
     return expression.Expression(None, MathOp("sqlog10", (x, S)), None)
@@ -434,7 +434,7 @@ def sqr(x: float | Symbol) -> Expression:
     >>> b = Parameter(m, "b")
     >>> b[...] = sqr(a)
     >>> b.toValue()
-    16.0
+    np.float64(16.0)
 
     """
     return expression.Expression(None, MathOp("sqr", (x,)), None)

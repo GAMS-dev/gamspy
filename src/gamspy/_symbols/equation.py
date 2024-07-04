@@ -424,7 +424,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.l
         >>> repr.toValue()
-        10.0
+        np.float64(10.0)
 
         """
         return self._l
@@ -455,7 +455,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.m
         >>> repr.toValue()
-        5.0
+        np.float64(5.0)
 
         """
         return self._m
@@ -486,7 +486,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.lo
         >>> repr.toValue()
-        -inf
+        np.float64(-inf)
 
         """
         return self._lo
@@ -517,7 +517,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.up
         >>> repr.toValue()
-        10.0
+        np.float64(10.0)
 
         """
         return self._up
@@ -548,7 +548,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.scale
         >>> repr.toValue()
-        1.0
+        np.float64(1.0)
 
         """
         return self._s
@@ -579,7 +579,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.stage
         >>> repr.toValue()
-        1.0
+        np.float64(1.0)
 
         """
         return self._stage
@@ -610,7 +610,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.range
         >>> repr.toValue()
-        inf
+        np.float64(inf)
 
         """
         return self._range
@@ -637,7 +637,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.slacklo
         >>> repr.toValue()
-        inf
+        np.float64(inf)
 
         """
         return self._slacklo
@@ -664,7 +664,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.slackup
         >>> repr.toValue()
-        0.0
+        np.float64(0.0)
 
         """
         return self._slackup
@@ -691,7 +691,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.slack
         >>> repr.toValue()
-        0.0
+        np.float64(0.0)
 
         """
         return self._slack
@@ -718,7 +718,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> repr = Parameter(m, "repr")
         >>> repr[...] = eq.infeas
         >>> repr.toValue()
-        0.0
+        np.float64(0.0)
 
         """
         return self._infeas
@@ -764,7 +764,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> eq[...] = 2*x1 + 3*x2 <= 10
         >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
         >>> eq.toValue()
-        10.0
+        np.float64(10.0)
 
         """
         return self._records
@@ -813,7 +813,7 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         >>> eq = Equation(m, "eq")
         >>> eq.setRecords(5)
         >>> eq.toValue()
-        5.0
+        np.float64(5.0)
 
         """
         super().setRecords(records, uels_on_axes)
