@@ -171,11 +171,11 @@ def main():
         sense=Sense.MIN,
         objective=objf,
     )
-    reservoir.solve()
+    reservoir.solve(solver="CONOPT")
 
     import math
 
-    assert math.isclose(reservoir.objective_value, 81.0, abs_tol=1e-1)
+    assert math.isclose(reservoir.objective_value, 81.0)
 
     print("Objective Function Value: ", reservoir.objective_value)
 

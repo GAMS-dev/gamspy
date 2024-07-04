@@ -34,7 +34,7 @@ def get_dimension(
 
 
 def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
-    path = []
+    path: list[str] = []
     domain = symbol
 
     while domain != "*":
@@ -346,6 +346,7 @@ def validate_model_name(name: str) -> str:
 
 
 def validate_solver_args(
+    system_directory: str,
     solver: str | None,
     problem: Problem | str,
     options: Options | None,
@@ -356,23 +357,15 @@ def validate_solver_args(
         if not isinstance(solver, str):
             raise TypeError("`solver` argument must be a string.")
 
-        installed_solvers = utils.getInstalledSolvers()
+        installed_solvers = utils.getInstalledSolvers(system_directory)
         if solver.upper() not in installed_solvers:
-            available_solvers = utils.getAvailableSolvers()
-            if solver.upper() not in available_solvers:
-                raise ValidationError(
-                    f"`{solver}` is not a valid solver option. All possible"
-                    f" solvers: {available_solvers}. You can install a new"
-                    " solver with `gamspy install solver <solver_name>`"
-                )
-
             raise ValidationError(
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
                 f" {solver.lower()}`"
             )
 
-        capabilities = utils.getSolverCapabilities()
+        capabilities = utils.getSolverCapabilities(system_directory)
         if str(problem) not in capabilities[solver.upper()]:
             raise ValidationError(
                 f"Given solver `{solver}` is not capable of solving given"

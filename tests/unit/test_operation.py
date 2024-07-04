@@ -104,6 +104,9 @@ class OperationSuite(unittest.TestCase):
         )
 
         # Ord, Card
+        with self.assertRaises(ValidationError):
+            _ = Ord("bla")
+
         expression = Ord(i) == Ord(j)
         self.assertEqual(expression.gamsRepr(), "(ord(i) eq ord(j))")
         expression = Ord(i) != Ord(j)

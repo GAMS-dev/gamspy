@@ -29,7 +29,9 @@ class ParameterSuite(unittest.TestCase):
 
     def test_parameter_creation(self):
         # no name is fine
-        _ = Parameter(self.m)
+        a = Parameter(self.m)
+        with self.assertRaises(ValidationError):
+            _ = a.getAssignment()
 
         # non-str type name
         self.assertRaises(TypeError, Parameter, self.m, 5)

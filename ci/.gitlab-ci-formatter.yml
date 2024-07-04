@@ -7,7 +7,7 @@ run_formatter:
     - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - pip install ruff==0.4.4
+    - pip install ruff==0.5.0
     - ruff format src/gamspy --check
     - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
     - ruff format tests --check

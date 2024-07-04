@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
-import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
@@ -234,41 +233,36 @@ class Expression(operable.Operable):
         self.representation = self._create_representation()
 
     def _find_all_symbols(self) -> list[str]:
-        symbols = []
+        symbols: list[str] = []
         stack = []
 
         node = self
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)
+                node = getattr(node, "left", None)  # type: ignore
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, Symbol):
-                    for elem in node.domain:
-                        path = validation.get_domain_path(elem)
-                        for name in path:
-                            if name not in symbols:
-                                symbols.append(name)
+                if isinstance(node, (Symbol, ImplicitSymbol)):
+                    for index, elem in enumerate(node.domain):
+                        if isinstance(elem, (Symbol, ImplicitSymbol)):
+                            path = validation.get_domain_path(elem)
+                            for name in path:
+                                if name not in symbols and " " not in name:
+                                    symbols.append(name)
 
-                    name = (
-                        node.alias_with.name
-                        if isinstance(node, syms.Alias)
-                        else node.name
-                    )
-
-                    if name not in symbols:
-                        symbols.append(name)
-                elif isinstance(node, ImplicitSymbol):
-                    for elem in node.domain:
-                        if not isinstance(elem, Symbol):
-                            continue
-
-                        path = validation.get_domain_path(elem)
-                        for name in path:
-                            if name not in symbols:
-                                symbols.append(name)
+                        if (
+                            isinstance(node, ImplicitSymbol)
+                            and isinstance(elem, str)
+                            and elem != "*"
+                        ):
+                            symbol = node.parent.domain[index]
+                            if (
+                                not isinstance(symbol, str)
+                                and symbol.name not in symbols
+                            ):
+                                symbols.append(symbol.name)
 
                     if node.name not in symbols:
                         symbols.append(node.name)
@@ -276,6 +270,36 @@ class Expression(operable.Operable):
                     node.data, MathOp
                 ):
                     stack += list(node.data.elements)
+                if isinstance(node, operation.Operation):
+                    stack += node.domain
+                    node = node.expression
+                else:
+                    node = getattr(node, "right", None)
+            else:
+                break  # pragma: no cover
+
+        return symbols
+
+    def _find_symbols_in_conditions(self) -> list[str]:
+        symbols: list[str] = []
+        stack = []
+
+        node = self
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = getattr(node, "left", None)  # type: ignore
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, Expression) and node.data == "$":
+                    condition = node.right
+
+                    if isinstance(condition, Expression):
+                        symbols += condition._find_all_symbols()
+                    elif isinstance(condition, ImplicitSymbol):
+                        symbols.append(condition.parent.name)
+
                 if isinstance(node, operation.Operation):
                     stack += node.domain
                     node = node.expression

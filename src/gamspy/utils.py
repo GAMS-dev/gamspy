@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -27,66 +28,48 @@ SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NEGINF: "-INF",
 }
 
-SOLVER_CAPABILITIES = {
-    "BARON": [
-        "LP",
-        "MIP",
-        "NLP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-        "GLOBAL",
-    ],
-    "CBC": ["LP", "MIP"],
-    "CONOPT3": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "CONOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "COPT": ["LP", "MIP", "QCP", "MIQCP"],
-    "CPLEX": ["LP", "MIP", "QCP", "MIQCP"],
-    "DICOPT": ["MINLP", "MIQCP"],
-    "GUROBI": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "GUSS": [
-        "LP",
-        "MIP",
-        "NLP",
-        "MCP",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "IPOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "HIGHS": ["LP", "MIP"],
-    "KNITRO": [
-        "LP",
-        "NLP",
-        "MCP",
-        "MPEC",
-        "CNS",
-        "DNLP",
-        "MINLP",
-        "QCP",
-        "MIQCP",
-    ],
-    "MINOS": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "MOSEK": ["LP", "MIP", "NLP", "DNLP", "MINLP", "QCP", "MIQCP"],
-    "NLPEC": ["MCP", "MPEC"],
-    "PATH": ["MCP", "CNS"],
-    "SBB": ["MINLP", "MIQCP"],
-    "SCIP": ["MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP", "GLOBAL"],
-    "SHOT": ["MINLP", "MIQCP"],
-    "SNOPT": ["LP", "NLP", "CNS", "DNLP", "QCP"],
-    "XPRESS": ["LP", "MIP", "NLP", "CNS", "DNLP", "MINLP", "QCP", "MIQCP"],
-}
+CAPABILITIES_FILE = (
+    "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
+)
 
 
-def getSolverCapabilities() -> dict[str, list[str]]:
-    return SOLVER_CAPABILITIES
+def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
+    """
+    Returns a dictionary where keys are the solvers and values are the
+    capabilities of the solver.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    dict[str, list[str]]
+    """
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    capabilities: dict[str, list[str]] = dict()
+
+    with open(capabilities_path) as file:
+        lines = file.read().splitlines()
+
+    while True:
+        line = lines.pop(0)
+        if line.startswith("*") or line == "":
+            continue
+        if line == "DEFAULTS":
+            break
+
+        solver, _, _, _, _, _, num_lines, *problem_types = line.split()
+
+        for _ in range(int(num_lines) + 1):
+            _ = lines.pop(0)
+
+        capabilities[solver] = problem_types
+
+    return capabilities
 
 
-def getInstalledSolvers() -> list[str]:
+def getInstalledSolvers(system_directory: str) -> list[str]:
     """
     Returns the list of installed solvers
 
@@ -101,44 +84,33 @@ def getInstalledSolvers() -> list[str]:
 
     Examples
     --------
+    >>> import gamspy_base
     >>> import gamspy.utils as utils
-    >>> installed_solvers = utils.getInstalledSolvers()
+    >>> installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
 
     """
-    import platform
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    solvers: list[str] = []
 
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
+    with open(capabilities_path) as file:
+        lines = file.read().splitlines()
 
-    solver_names = []
-    capabilities_file = {"Windows": "gmscmpNT.txt", "rest": "gmscmpun.txt"}
-    user_platform = "Windows" if platform.system() == "Windows" else "rest"
+    while True:
+        line = lines.pop(0)
+        if line.startswith("*") or line == "":
+            continue
+        if line == "DEFAULTS":
+            break
 
-    with open(
-        gamspy_base.directory + os.sep + capabilities_file[user_platform],
-        encoding="utf-8",
-    ) as capabilities:
-        for line in capabilities:
-            if line == "DEFAULTS\n":
-                break
+        solver, _, _, _, _, _, num_lines, *_ = line.split()
 
-            if line.isupper():
-                solver_names.append(line.split(" ")[0])
+        for _ in range(int(num_lines) + 1):
+            _ = lines.pop(0)
 
-    try:
-        solver_names.remove("SCENSOLVER")
-    except ValueError:
-        pass
+        if solver != "GUSS":
+            solvers.append(solver)
 
-    try:
-        solver_names.remove("GUSS")
-    except ValueError:
-        pass
-
-    return sorted(solver_names)
+    return solvers
 
 
 def getAvailableSolvers() -> list[str]:
@@ -311,8 +283,7 @@ def _get_gamspy_base_directory() -> str:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    gamspy_base_directory = gamspy_base.__path__[0]
-    return gamspy_base_directory
+    return gamspy_base.directory
 
 
 def _get_license_path(system_directory: str) -> str:

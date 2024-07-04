@@ -20,6 +20,7 @@ import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._model_instance import ModelInstance
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -137,17 +138,17 @@ INTERRUPT_STATUS = [
     SolveStatus.ResourceInterrupt,
     SolveStatus.EvaluationInterrupt,
     SolveStatus.UserInterrupt,
-]
-
-ERROR_STATUS = [
-    SolveStatus.CapabilityError,
-    SolveStatus.LicenseError,
-    SolveStatus.SetupError,
-    SolveStatus.SolverError,
-    SolveStatus.InternalError,
-    SolveStatus.SystemError,
     SolveStatus.TerminatedBySolver,
 ]
+
+ERROR_STATUS = {
+    SolveStatus.CapabilityError: "The solver does not have the capability required by the model.",
+    SolveStatus.LicenseError: "The solver cannot find the appropriate license key needed to use a specific subsolver.",
+    SolveStatus.SetupError: "The solver encountered a fatal failure during problem set-up time.",
+    SolveStatus.SolverError: "The solver encountered a fatal error.",
+    SolveStatus.InternalError: "The solver encountered an internal fatal error.",
+    SolveStatus.SystemError: "This indicates a completely unknown or unexpected error condition.",
+}
 
 
 # GAMS name -> GAMSPy name
@@ -241,13 +242,17 @@ class Model:
             self.name = self._auto_id
 
         self.container = container
+        self._matches = matches
         self.problem, self.sense = self._validate_model(
             equations, problem, sense
         )
         self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
-        self._matches = matches
         self._limited_variables = limited_variables
+
+        if not self.equations and not self._matches:
+            raise ValidationError("Model requires at least one equation.")
+
         self.container._add_statement(self)
 
         # allow freezing
@@ -489,8 +494,7 @@ class Model:
                 elif status in ERROR_STATUS:
                     raise GamspyException(
                         f"The model `{self.name}` was not solved successfully!"
-                        f" Solve status: {status.name}. "
-                        "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus",
+                        f" Solve status: {status.name}. {ERROR_STATUS[status]}",
                         status.value,
                     )
             else:
@@ -669,7 +673,13 @@ class Model:
         >>> solved = my_model.solve()
 
         """
-        validation.validate_solver_args(solver, self.problem, options, output)
+        validation.validate_solver_args(
+            self.container.system_directory,
+            solver,
+            self.problem,
+            options,
+            output,
+        )
         validation.validate_model(self)
 
         if options is None:
@@ -761,7 +771,7 @@ class Model:
 
         return model_str
 
-    def toGams(self, path: str) -> None:
+    def toGams(self, path: str, skip_endogenous_records: bool = False) -> None:
         """
         Generates GAMS model under path/<model_name>.gms
 
@@ -775,13 +785,21 @@ class Model:
         def sort_names(name):
             PRECEDENCE = {
                 gp.Set: 1,
-                gp.Alias: 2,
+                gp.Alias: 1,
                 gp.Parameter: 3,
                 gp.Variable: 4,
                 gp.Equation: 5,
             }
 
-            return PRECEDENCE[type(self.container[name])]
+            symbol = self.container[name]
+            precedence = PRECEDENCE[type(symbol)]
+
+            if isinstance(symbol, gp.Set) and any(
+                not isinstance(elem, str) for elem in symbol.domain
+            ):
+                precedence = 2
+
+            return precedence
 
         all_symbols = []
         definitions = []
@@ -793,22 +811,47 @@ class Model:
                 if symbol not in all_symbols:
                     all_symbols.append(symbol)
 
+        if self._matches:
+            for equation, variable in self._matches.items():
+                if (
+                    equation.name not in all_symbols
+                    and not skip_endogenous_records
+                ):
+                    symbols = equation._definition._find_all_symbols()
+                    for symbol in symbols:
+                        if symbol not in all_symbols:
+                            all_symbols.append(symbol)
+
+                    if equation.name not in all_symbols:
+                        all_symbols.append(equation.name)
+
+                    definitions.append(equation._definition.getDeclaration())
+
+                if (
+                    variable.name not in all_symbols
+                    and not skip_endogenous_records
+                ):
+                    for elem in variable.domain:
+                        if not isinstance(elem, Symbol):
+                            continue
+
+                        elem_path = validation.get_domain_path(elem)
+                        for name in elem_path:
+                            if name not in all_symbols:
+                                all_symbols.append(name)
+
+                    if variable.name not in all_symbols:
+                        all_symbols.append(variable.name)
+
         all_needed_symbols = sorted(all_symbols, key=sort_names)
-        loadable_symbols = [
-            name
-            for name in all_needed_symbols
-            if not isinstance(self.container[name], gp.Alias)
-        ]
         gdx_path = os.path.join(path, self.name + "_data.gdx")
-        self.container.write(gdx_path)
+        self.container.write(gdx_path, all_needed_symbols)
 
         strings = [
             self.container[name].getDeclaration()
             for name in all_needed_symbols
         ]
-        strings.append(f"$gdxIn {os.path.abspath(gdx_path)}")
-        strings.append(f'$loadDC {",".join(loadable_symbols)}')
-        strings.append("$gdxIn")
+        strings.append(f"$gdxLoadAll {os.path.abspath(gdx_path)}")
         strings += definitions
         strings.append(self.getDeclaration())
         solve_string = self._generate_solve_string()

@@ -381,7 +381,7 @@ def main():
     Pw.up[i, t] = WD[t, "w"] * Wcap[i] / Sbase
     Pw.lo[i, t] = 0
 
-    loadflow.solve()
+    loadflow.solve(solver="CONOPT")
 
     # Reporting Parameters
     report = Parameter(m, name="report", domain=[t, i, "*"])

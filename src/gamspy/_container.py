@@ -96,7 +96,7 @@ def open_connection(
             f"incrementalMode={address[1]}",
             f"procdir={process_directory}",
             f"license={license_path}",
-            f"curdir={working_directory}",
+            f"curdir={os.getcwd()}",
         ],
         text=True,
         stdout=subprocess.PIPE,
@@ -240,7 +240,7 @@ class Container(gt.Container):
                 output.write(data)
 
         try:
-            response = self._socket.recv(2)
+            response = self._socket.recv(128)
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while receiving output from GAMS server: {e}",
@@ -254,9 +254,7 @@ class Container(gt.Container):
             self._stop_socket()
             return
         try:
-            return_code = int(
-                response[: response.find(b"\x00")].decode("utf-8")
-            )
+            return_code = int(response.decode("utf-8").split("#", 1)[0])
         except ValueError as e:
             raise GamspyException(
                 "Did not receive any return code from GAMS backend. Check"

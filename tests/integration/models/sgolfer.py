@@ -38,7 +38,7 @@ from gamspy import (
 from gamspy.math import Max as gams_max
 
 
-def main(gr_c=8, gg_c=4, nw_c=10, mip=False):
+def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
     cont = Container(
         system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
