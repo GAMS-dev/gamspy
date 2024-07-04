@@ -342,7 +342,7 @@ class Container(gt.Container):
         >>> from gamspy import Container
         >>> m = Container()
         >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
-        >>> m["piHalf"].toValue()
+        >>> float(m["piHalf"].toValue())
         1.5707963267948966
 
         """
