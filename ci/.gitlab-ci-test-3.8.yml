@@ -31,9 +31,9 @@ test-leg-3.8:
     paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: never
+    - when: on_success
 
 test-deg-3.8:
   stage: test
@@ -59,7 +59,7 @@ test-deg-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
     - when: never
 
@@ -87,9 +87,9 @@ test-dac-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
+    - if: $CI_COMMIT_BRANCH == "master"
+      when: never
+    - when: on_success
 
 test-wei-3.8:
   stage: test
@@ -117,6 +117,6 @@ test-wei-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
     - when: never
