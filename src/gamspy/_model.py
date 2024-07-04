@@ -599,12 +599,12 @@ class Model:
         >>> e = gp.Equation(m, name="e", definition= x <= a)
         >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="max", objective=x)
         >>> solved = my_model.solve()
-        >>> x.toValue()
+        >>> float(x.toValue())
         10.0
         >>> my_model.freeze(modifiables=[a])
         >>> a.setRecords(35)
         >>> solved = my_model.solve()
-        >>> x.toValue()
+        >>> float(x.toValue())
         35.0
 
         """
