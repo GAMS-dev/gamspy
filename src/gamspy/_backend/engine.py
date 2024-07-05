@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import DebugLevel, GamsEngineConfiguration
+from gams import GamsEngineConfiguration
 from gams.control.workspace import GamsException
 
 import gamspy._backend.backend as backend
@@ -732,9 +732,6 @@ class GAMSEngine(backend.Backend):
         return summary
 
     def execute_gams(self, gams_string: str):
-        if self.container._debugging_level == DebugLevel.KeepFiles:
-            self.options.log_file = os.path.basename(self.job_name) + ".log"
-
         extra_options = {
             "gdx": os.path.basename(self.container._gdx_out),
             "trace": "trace.txt",
@@ -742,7 +739,7 @@ class GAMSEngine(backend.Backend):
             "input": os.path.basename(self.gms_file),
         }
         self.options._set_extra_options(extra_options)
-        self.options.export(self.pf_file)
+        self.options.export(self.pf_file, self.output)
 
         with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)

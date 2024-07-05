@@ -203,7 +203,7 @@ class Container(gt.Container):
             raise TypeError(
                 f"`options` must be of type Option but found {type(options)}"
             )
-        self._options = Options() if options is None else options
+        self._options = options
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -279,8 +279,12 @@ class Container(gt.Container):
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
-            while self._process.poll() is None:
-                ...
+            self._process.stdout = subprocess.DEVNULL
+            self._process.stderr = subprocess.DEVNULL
+            if platform.system() == "Windows":
+                self._process.send_signal(signal.SIGTERM)
+            else:
+                self._process.send_signal(signal.SIGINT)
 
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
@@ -491,7 +495,8 @@ class Container(gt.Container):
     def _synch_with_gams(
         self, keep_flags: bool = False
     ) -> pd.DataFrame | None:
-        runner = backend_factory(self, self._options)
+        options = Options() if self._options is None else self._options
+        runner = backend_factory(self, options)
         summary = runner.run(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:

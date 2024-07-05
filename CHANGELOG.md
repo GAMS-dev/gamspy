@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.4
+-------------
+- General
+  - Fix hanging issue on Windows for GAMS Engine backend.
+
 GAMSPy 0.13.3
 -------------
 - General

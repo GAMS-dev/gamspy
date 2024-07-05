@@ -683,7 +683,11 @@ class Model:
         validation.validate_model(self)
 
         if options is None:
-            options = self.container._options
+            options = (
+                self.container._options
+                if self.container._options
+                else gp.Options()
+            )
 
         options._set_solver_options(
             self.container.working_directory,
