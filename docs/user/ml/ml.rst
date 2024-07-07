@@ -1,6 +1,6 @@
-****************
-Machine Learning
-****************
+***************************
+GAMSPy and Machine Learning
+***************************
 
 .. meta::
    :description: GAMSPy User Guide
@@ -10,7 +10,7 @@ GAMSPy heralds a new era of possibilities, offering a bridge between machine
 learning and optimization that was previously challenging to traverse with GAMS
 alone. Here's why GAMSPy stands out as the ultimate choice:
 
-* Versatility in Solver Selection: You can try different solvers
+* Versatility in Solver Selection
 
 * It provides a strong algebraic language allows you to play with how neural network is implemented
 
@@ -26,3 +26,4 @@ alone. Here's why GAMSPy stands out as the ultimate choice:
    :maxdepth: 1
 
    ./introduction
+   ./ols
