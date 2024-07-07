@@ -113,42 +113,50 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    license = args.name
+    is_alp = not os.path.isfile(license)
+
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
-    command = [
-        os.path.join(gamspy_base_dir, "gamsgetkey"),
-        args.name,
-        "-u",
-        "1234",
-    ]
+    if is_alp:
+        command = [
+            os.path.join(gamspy_base_dir, "gamsgetkey"),
+            license,
+            "-u",
+            "1234",
+        ]
 
-    if args.node_specific:
-        command.append("-i")
+        if args.node_specific:
+            command.append("-i")
+            process = subprocess.run(
+                os.path.join(gamspy_base_dir, "gamsprobe"),
+                text=True,
+                capture_output=True,
+            )
+
+            if process.returncode:
+                raise ValidationError(process.stderr)
+
+            node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
+            with open(node_info_path, "w") as file:
+                file.write(process.stdout)
+
+            command.append(node_info_path)
+
         process = subprocess.run(
-            os.path.join(gamspy_base_dir, "gamsprobe"),
+            command,
             text=True,
             capture_output=True,
         )
-
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
-        with open(node_info_path, "w") as file:
+        with open(
+            os.path.join(gamspy_base_dir, "user_license.txt"), "w"
+        ) as file:
             file.write(process.stdout)
-
-        command.append(node_info_path)
-
-    process = subprocess.run(
-        command,
-        text=True,
-        capture_output=True,
-    )
-    if process.returncode:
-        raise ValidationError(process.stderr)
-
-    with open(os.path.join(gamspy_base_dir, "user_license.txt"), "w") as file:
-        file.write(process.stdout)
+    else:
+        shutil.copy(license, gamspy_base_dir + os.sep + "user_license.txt")
 
 
 def uninstall_license():
@@ -165,11 +173,7 @@ def install_solver(args: argparse.Namespace):
             f" solvers that can be installed: {utils.getAvailableSolvers()}"
         )
 
-    try:
-        import gamspy_base
-    except ModuleNotFoundError as e:
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
+    import gamspy_base
 
     if not args.skip_pip_install:
         # install specified solver
@@ -207,20 +211,11 @@ def install_solver(args: argparse.Namespace):
     solver_lib = importlib.import_module(f"gamspy_{solver_name}")
 
     file_paths = solver_lib.file_paths
-    if solver_name == "scip":
-        mosek_lib = importlib.import_module("gamspy_mosek")
-        file_paths += mosek_lib.file_paths
-
     for file in file_paths:
         shutil.copy(file, gamspy_base_dir)
 
     files = solver_lib.files
-    if solver_name == "scip":
-        files += mosek_lib.files
-
     verbatims = [solver_lib.verbatim]
-    if solver_name == "scip":
-        verbatims.append(mosek_lib.verbatim)
     append_dist_info(files, gamspy_base_dir)
     add_solver_entry(gamspy_base_dir, solver_name, verbatims)
 
@@ -248,13 +243,20 @@ def append_dist_info(files, gamspy_base_dir: str):
 
 
 def uninstall_solver(args: argparse.Namespace):
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "You must install gamspy_base to use this command!"
+        ) from e
+
     solver_name = args.name.lower()
 
-    if solver_name.upper() not in utils.getInstalledSolvers():
+    installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+    if solver_name.upper() not in installed_solvers:
         raise ValidationError(
             f'Given solver name ("{solver_name}") is not valid. Installed'
-            " solvers solvers that can be uninstalled:"
-            f" {utils.getInstalledSolvers()}"
+            f" solvers solvers that can be uninstalled: {installed_solvers}"
         )
 
     if not args.skip_pip_uninstall:
@@ -281,14 +283,21 @@ def install(args: argparse.Namespace):
 
 
 def update():
-    prev_installed_solvers = utils.getInstalledSolvers()
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "You must install gamspy_base to use this command!"
+        ) from e
+
+    prev_installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
 
     try:
         _ = subprocess.run(
             [
                 "pip",
                 "install",
-                "gamspy-base",
+                f"gamspy-base=={gamspy_base.__version__}",
                 "--force-reinstall",
             ],
             check=True,
@@ -298,9 +307,7 @@ def update():
             f"Could not uninstall gamspy-base: {e.output}"
         ) from e
 
-    import gamspy_base
-
-    new_installed_solvers = utils.getInstalledSolvers()
+    new_installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
 
     solvers_to_update = []
     for solver in prev_installed_solvers:
@@ -326,10 +333,17 @@ def update():
 
 
 def list_solvers(args: argparse.Namespace):
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        raise ValidationError(
+            "You must install gamspy_base to use this command!"
+        ) from e
+
     component = args.component
 
     if component == "solvers":
-        capabilities = utils.getSolverCapabilities()
+        capabilities = utils.getSolverCapabilities(gamspy_base.directory)
         if args.all:
             solvers = utils.getAvailableSolvers()
             print(f"Available solvers: {solvers}\n")
@@ -341,7 +355,7 @@ def list_solvers(args: argparse.Namespace):
                     ...
             return
 
-        solvers = utils.getInstalledSolvers()
+        solvers = utils.getInstalledSolvers(gamspy_base.directory)
         print(f"Installed solvers: {solvers}\n")
         print("Model types that can be solved with the solver:\n")
         for solver in solvers:

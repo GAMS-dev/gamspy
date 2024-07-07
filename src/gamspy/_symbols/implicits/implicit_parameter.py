@@ -41,13 +41,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._assignment = None
 
     def __neg__(self) -> ImplicitParameter:
-        return ImplicitParameter(
-            parent=self.parent,
-            name=f"-{self.name}",
-            domain=self.domain,
-            permutation=self.permutation,
-            scalar_domains=self._scalar_domains,
-        )
+        return expression.Expression(None, "-", self)
 
     def __invert__(self):
         return expression.Expression("", "not", self)
@@ -85,8 +79,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        self.parent._is_dirty = True
-        self.container._synch_with_gams()
+        if self.parent.synchronize:
+            self.container._synch_with_gams()
 
     def __eq__(self, other):  # type: ignore
         op = "eq"

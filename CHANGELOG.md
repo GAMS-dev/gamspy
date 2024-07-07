@@ -1,12 +1,53 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.4
+-------------
+- General
+  - Fix hanging issue on Windows for GAMS Engine backend.
+
+GAMSPy 0.13.3
+-------------
+- General
+  - Change default solvers to 'CONOPT', 'CONVERT', 'CPLEX', 'GUSS', 'IPOPT', 'IPOPTH', 'KESTREL', 'NLPEC', 'PATH', and 'SHOT'
+  - Fix the version of gamspy_base when "gamspy update" command is being executed.
+  - Fix the order issue for Alias in toGams function.
+  - Add exponential backoff for GAMS Engine logout api.
+  - Add symbol validation for Ord operation.
+- Testing
+  - Update model library tests according to the new default solvers.
+  - Add a test to verify that modifiable symbols cannot be in conditions for model instance runs.
+  - Add new tests for symbol validation.
+
+GAMSPy 0.13.2
+-------------
+- General
+  - Set the records of objective value in model instance solves. 
+  - Allow using an environment variable to set the GAMS system directory (given environment variable will override the system directory even if the user provides a system directory argument to Container).
+  - Use gdxSymbols commandline option instead of manually marking symbols dirty.
+  - Add memory_tick_interval, monitor_process_tree_memory, and profile_file options.
+  - Change the way to generate GAMS model from a GAMSPy model.
+  - Remove import_symbols argument for addGamsCode since it is not needed anymore.
+- Documentation
+  - Redirect model library page to gamspy-examples Github repo.
+  - Update toGams docs.
+  - Update doctest of addGamsCode.
+- Testing
+  - Add model instance tests that check the objective value.
+  - Update system directory test to adjust to the environment variable support.
+  - Add tests for profiling options.
+
 GAMSPy 0.13.1
 -------------
 - General
   - Support output redirection for NEOS backend.
+  - Support GAMSPy to GAMS automatic conversion.
+  - Add support for old way of installing a license. 
 - Documentation
   - Update model documentation to show how to redirect NEOS output to a file.
+  - Add examples to all public functions in API Reference.
+- Testing
+  - Add a new model (knapsack) to the model library.
 
 GAMSPy 0.13.0
 -------------

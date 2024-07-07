@@ -50,7 +50,7 @@ from gamspy.math import uniformInt
 
 def main(mt=2016, mg=17, mindt=10, maxdt=40):
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     if mindt > maxdt:

@@ -40,19 +40,36 @@ Licensing
 ---------
 GAMSPy comes with a free demo license which lets you generate and solve small models.
 For more information about GAMS licenses and how to get a new license, check 
-`GAMS Licensing <https://www.gams.com/latest/docs/UG_License.html>`_.
+`GAMS Licensing <https://www.gams.com/sales/licensing>`_.
 
 Installing or updating your license
 ===================================
-A GAMSPy license is a 36 character identification number which is sent to you via e-mail. 
+A GAMSPy license is a either an ASCII file of six lines or 36 character identification number which is sent to you via e-mail. 
 In order to install your license, all you need to do is to run::
 
-    gamspy install license <path_to_your_license_file>
+    gamspy install license <path_to_ascii_file or identification number>
 
 For machines that are not connected to the internet, to install a license with the information of the node,
 one can run::
 
-    gamspy install license -i <path_to_your_license_file>
+    gamspy install license -i <your_license_number>
+
+This option is only available for licenses in identification number format.
+
+.. note::
+    
+    GAMS and GAMSPy licenses are different which means one cannot use an existing GAMS license for GAMSPy.
+    We are giving GAMSPy licenses away for free if you already have a full GAMS license (and in many other cases). 
+    One should contact support@gams.com (with their GAMS license) to arrange for the delivery of such a GAMSPy license.
+    If you were already using a GAMS license for GAMSPy before v0.13.0, please contract support@gams.com to arrange
+    a GAMSPy license.
+
+
+Uninstalling your license
+=========================
+If you don't want to use your own license, you can uninstall your license with the following command: ::
+
+    gamspy uninstall license
 
 GAMS/Gurobi-Link
 ================
@@ -86,13 +103,12 @@ Then, you can run the gamspy command as usual::
 Solvers
 -------
 
-GAMSPy comes with 6 default solvers (CPLEX, CONOPT, PATH, NLPEC, SBB, and CONVERT) and
-more solvers can be installed on demand.
+GAMSPy comes with default solvers and more solvers can be installed on demand.
 
 Listing Solvers
 ===============
 
-In order to list the installed solvers, you can run either::
+In order to list the installed solvers on your machine, you can run either::
 
     gamspy list solvers
 
@@ -103,8 +119,12 @@ or if you want to list all available solvers, you can run the following::
 The same information can also be reached programmatically via utils module of GAMSPy::
     
     import gamspy as gp
-    print(gp.utils.getInstalledSolvers())
+    import gamspy_base
+    print(gp.utils.getInstalledSolvers(gamspy_base.directory))
     print(gp.utils.getAvailableSolvers())
+
+.. note::
+    All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
 
 
 Installing/Uninstalling New Solvers

@@ -11,7 +11,7 @@ from gamspy.exceptions import ValidationError
 class SetSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -28,7 +28,10 @@ class SetSuite(unittest.TestCase):
 
     def test_set_creation(self):
         # no name is fine now
-        _ = Set(self.m)
+        i = Set(self.m)
+        self.assertEqual(len(i), 0)
+        with self.assertRaises(ValidationError):
+            _ = i.getAssignment()
 
         # non-str type name
         self.assertRaises(TypeError, Set, self.m, 5)
@@ -50,7 +53,7 @@ class SetSuite(unittest.TestCase):
 
         # Set and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
@@ -104,7 +107,7 @@ class SetSuite(unittest.TestCase):
 
     def test_records_assignment(self):
         new_cont = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(self.m, "i")
         j = Set(self.m, "j", domain=[i])
@@ -146,20 +149,20 @@ class SetSuite(unittest.TestCase):
         i = Set(self.m, "i", records=self.canning_plants)
         k = Set(self.m, "k", records=self.canning_plants)
         union = i + k
-        self.assertEqual(union.gamsRepr(), "i + k")
+        self.assertEqual(union.gamsRepr(), "(i + k)")
 
         intersection = i * k
-        self.assertEqual(intersection.gamsRepr(), "i * k")
+        self.assertEqual(intersection.gamsRepr(), "(i * k)")
 
         complement = ~i
         self.assertEqual(complement.gamsRepr(), "( not i)")
 
         difference = i - k
-        self.assertEqual(difference.gamsRepr(), "i - k")
+        self.assertEqual(difference.gamsRepr(), "(i - k)")
 
     def test_dynamic_sets(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
@@ -170,12 +173,10 @@ class SetSuite(unittest.TestCase):
         )
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
-
-        self.assertFalse(k._is_dirty)
 
     def test_lag_and_lead(self):
         set = Set(
@@ -214,7 +215,7 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
@@ -248,7 +249,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(j.sameAs(i).gamsRepr(), "( sameAs(j,i) )")
 
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, "i", records=["1", "2", "3"])
         p = Parameter(m, "p", [i])
@@ -279,7 +280,7 @@ class SetSuite(unittest.TestCase):
 
     def test_domain_verification(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i1 = Set(m, "i1", records=["i1", "i2"])
         i2 = Set(m, "i2", records=["i1"], domain=i1)

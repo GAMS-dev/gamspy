@@ -138,7 +138,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj._definition = None
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
@@ -272,7 +271,6 @@ class Equation(gt.Equation, operable.Operable, Symbol):
 
         else:
             type = cast_type(type)
-            self._is_dirty = False
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -348,12 +346,9 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         domain = validation.validate_domain(self, indices)
 
         self._set_definition(domain, rhs)
-        self._is_dirty = True
 
-        self.container._synch_with_gams()
-
-    def __eq__(self, other):  # type: ignore
-        return expression.Expression(self, "=e=", other)
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
@@ -418,6 +413,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.l
+        >>> repr.toValue()
+        np.float64(10.0)
+
         """
         return self._l
 
@@ -433,6 +444,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.m
+        >>> repr.toValue()
+        np.float64(5.0)
+
         """
         return self._m
 
@@ -448,6 +475,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.lo
+        >>> repr.toValue()
+        np.float64(-inf)
+
         """
         return self._lo
 
@@ -463,6 +506,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.up
+        >>> repr.toValue()
+        np.float64(10.0)
+
         """
         return self._up
 
@@ -478,6 +537,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.scale
+        >>> repr.toValue()
+        np.float64(1.0)
+
         """
         return self._s
 
@@ -493,6 +568,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.stage
+        >>> repr.toValue()
+        np.float64(1.0)
+
         """
         return self._stage
 
@@ -508,6 +599,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.range
+        >>> repr.toValue()
+        np.float64(inf)
+
         """
         return self._range
 
@@ -519,6 +626,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.slacklo
+        >>> repr.toValue()
+        np.float64(inf)
+
         """
         return self._slacklo
 
@@ -530,6 +653,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.slackup
+        >>> repr.toValue()
+        np.float64(0.0)
+
         """
         return self._slackup
 
@@ -541,6 +680,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.slack
+        >>> repr.toValue()
+        np.float64(0.0)
+
         """
         return self._slack
 
@@ -552,6 +707,22 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         ImplicitParameter
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> repr = Parameter(m, "repr")
+        >>> repr[...] = eq.infeas
+        >>> repr.toValue()
+        np.float64(0.0)
+
         """
         return self._infeas
 
@@ -562,6 +733,17 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         pd.DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> e = gp.Equation(m, "e")
+        >>> e.l[...] = -10
+        >>> e.lo[...] = 5
+        >>> e.compute_infeasibilities().values.tolist()
+        [[-10.0, 0.0, 5.0, 0.0, 1.0, 10.0]]
+
         """
         return utils._calculate_infeasibilities(self)
 
@@ -573,6 +755,20 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         DataFrame
+
+        Examples
+        --------
+        >>> from gamspy import Container, Parameter, Variable, Equation, Model
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq[...] = 2*x1 + 3*x2 <= 10
+        >>> solved_model = Model(m, "my_model", equations=[eq], objective=10*x1 + 6*x2, sense="MAX").solve()
+        >>> eq.toValue()
+        np.float64(10.0)
+
         """
         return self._records
 
@@ -599,8 +795,34 @@ class Equation(gt.Equation, operable.Operable, Symbol):
                 symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        """
+        Main convenience method to set standard pandas.DataFrame formatted
+        records. If uels_on_axes=True setRecords will assume that all domain
+        information is contained in the axes of the pandas object – data will be
+        flattened (if necessary).
+
+        Parameters
+        ----------
+        records : Any
+        uels_on_axes : bool, optional
+
+        Examples
+        --------
+        >>> from gamspy import Container, Variable, Equation
+        >>> m = Container()
+        >>> x1 = Variable(m, "x1", type="Positive")
+        >>> x2 = Variable(m, "x2", type="Positive")
+        >>> z = Variable(m, "z")
+        >>> eq = Equation(m, "eq")
+        >>> eq.setRecords(5)
+        >>> eq.toValue()
+        np.float64(5.0)
+
+        """
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def type(self):
@@ -631,6 +853,16 @@ class Equation(gt.Equation, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> e = gp.Equation(m, "e", domain=[i])
+        >>> e.gamsRepr()
+        'e'
+
         """
         return self.name
 

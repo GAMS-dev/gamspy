@@ -52,7 +52,7 @@ from gamspy.math import sqr
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     n_rec = int(sys.argv[1]) if len(sys.argv) > 1 else 400

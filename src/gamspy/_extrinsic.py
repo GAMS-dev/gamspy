@@ -12,12 +12,12 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
 
 
-class ExtinsicFunction(operable.Operable):
+class ExtrinsicFunction(operable.Operable):
     """Extrinsic function registered by the user."""
 
     def __init__(self, name: str):
         self.name = name
-        self.args: tuple | None = None
+        self.args: tuple = ()
         self.domain: list[Set | Alias] = []
 
     def __len__(self):
@@ -108,6 +108,6 @@ class ExtrinsicLibrary:
 
     def __getattr__(self, name):
         if name in self.functions:
-            return ExtinsicFunction(name)
+            return ExtrinsicFunction(name)
 
         return self.__getattribute__(name)

@@ -29,7 +29,7 @@ from gamspy import (
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     n = 500
@@ -197,7 +197,10 @@ def main():
         objective=eobj,
     )
 
-    protein.solve(options=Options(time_limit=60000, iteration_limit=80000))
+    protein.solve(
+        solver="CONOPT",
+        options=Options(time_limit=60000, iteration_limit=80000),
+    )
 
     print(
         "Objective Function Value:  ", round(protein.objective_value, 4), "\n"

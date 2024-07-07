@@ -215,7 +215,7 @@ def data_records():
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # SETS #
@@ -381,7 +381,7 @@ def main():
     Pw.up[i, t] = WD[t, "w"] * Wcap[i] / Sbase
     Pw.lo[i, t] = 0
 
-    loadflow.solve()
+    loadflow.solve(solver="CONOPT")
 
     # Reporting Parameters
     report = Parameter(m, name="report", domain=[t, i, "*"])

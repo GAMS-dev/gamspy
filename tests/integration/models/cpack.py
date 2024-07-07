@@ -44,7 +44,7 @@ k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 print("Number of circles =", k)
 
 c = Container(
-    system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+    system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
 )
 
 # Set
@@ -97,9 +97,10 @@ m = Model(
 
 # solve with a good global solver
 print("Starting solve, be patient (log only shown afterwards)...")
-m.solve(options=Options(relative_optimality_gap=0.01))
+m.solve(solver="scip", options=Options(relative_optimality_gap=0.01))
 
-assert math.isclose(m.objective_value, 0.3702, rel_tol=0.001)
+print(f"{m.objective_value=}")
+assert math.isclose(m.objective_value, 0.3701919131257)
 
 rval = r.records.loc[0, "level"]
 print("Maximized radius:", rval)

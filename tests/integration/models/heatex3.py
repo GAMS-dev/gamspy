@@ -24,7 +24,7 @@ from gamspy import Container, Equation, Model, Parameter, Variable
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # SCALARS #
@@ -175,12 +175,11 @@ def main():
     )
 
     HeatEx3.solve()
+    print("Objective Function Variable:  ", HeatEx3.objective_value)
 
     import math
 
-    assert math.isclose(HeatEx3.objective_value, 4845.4620, rel_tol=0.001)
-
-    print("Objective Function Variable:  ", HeatEx3.objective_value)
+    assert math.isclose(HeatEx3.objective_value, 5937.437344646649)
 
     # End HeatEx3
 

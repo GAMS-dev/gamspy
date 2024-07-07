@@ -486,7 +486,7 @@ def data_records():
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # SETS #
@@ -650,7 +650,7 @@ def main():
     )
 
     for tu in time.toList():
-        Diffusion2.solve()
+        Diffusion2.solve(solver="CONOPT")
         print(f"\t --- \t Time interval = {tu} \t --- \n")
         print(t.pivot().round(4))
         print("\n")

@@ -45,7 +45,7 @@ def main():
     NUM_DRAWS = 11
 
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Sets

@@ -91,7 +91,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj._synchronize = True
 
         obj.where = condition.Condition(obj)
@@ -210,8 +209,6 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             self.container.miro_protect = previous_state
         else:
-            self._is_dirty = False
-
             if name is not None:
                 name = validation.validate_name(name)
 
@@ -283,8 +280,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self._is_dirty = True
-        self.container._synch_with_gams()
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -300,9 +297,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return expression.Expression(self, op, other)
 
     def __neg__(self):
-        return implicits.ImplicitParameter(
-            self, name=f"-{self.name}", domain=self._domain
-        )
+        return expression.Expression(None, "-", self)
 
     @property
     def T(self) -> implicits.ImplicitParameter:
@@ -352,12 +347,19 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         DataFrame
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
+        >>> d = gp.Parameter(m, name="d", domain=[i])
+        >>> d.setRecords(np.array([10, 25]))
+        >>> d.records.values.tolist()
+        [['seattle', 10.0], ['san-diego', 25.0]]
+
         """
-        if not self._is_dirty:
-            return self._records
-
-        self.container._synch_with_gams()
-
         return self._records
 
     @records.setter
@@ -394,8 +396,32 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 symbol._requires_state_check = True
 
     def setRecords(self, records: Any, uels_on_axes: bool = False) -> None:
+        """
+        Main convenience method to set standard pandas.DataFrame formatted
+        records. If uels_on_axes=True setRecords will assume that all domain
+        information is contained in the axes of the pandas object – data will be
+        flattened (if necessary).
+
+        Parameters
+        ----------
+        records : Any
+        uels_on_axes : bool, optional
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> import numpy as np
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> i.setRecords(["seattle", "san-diego"])
+        >>> i.records.values.tolist()
+        [['seattle', ''], ['san-diego', '']]
+
+        """
         super().setRecords(records, uels_on_axes)
-        self.container._synch_with_gams()
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     def gamsRepr(self) -> str:
         """
@@ -404,6 +430,16 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> d = gp.Parameter(m, "d", domain=i)
+        >>> d.gamsRepr()
+        'd'
+
         """
         representation = self.name
         if self.domain:

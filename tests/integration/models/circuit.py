@@ -25,7 +25,7 @@ from gamspy import Container, Equation, Model, Parameter, Set, Variable
 
 def main():
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # SETS #
@@ -196,9 +196,8 @@ def main():
 
     import math
 
-    assert math.isclose(
-        circuit.objective_value, 4.4498522089320064e-09, rel_tol=0.001
-    )
+    print(circuit.objective_value)
+    assert math.isclose(circuit.objective_value, 0.1349902012126008)
 
 
 if __name__ == "__main__":

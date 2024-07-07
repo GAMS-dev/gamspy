@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 import time
 import unittest
@@ -31,7 +32,7 @@ except Exception:
 class EngineSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -48,7 +49,8 @@ class EngineSuite(unittest.TestCase):
 
     def test_engine(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
+            debugging_level="keep",
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -77,6 +79,14 @@ class EngineSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
+        with self.assertRaises(ValidationError):
+            _ = EngineClient(
+                host="blabla_dummy_host",
+                username=os.environ["ENGINE_USER"],
+                password=os.environ["ENGINE_PASSWORD"],
+                namespace="stupid_namespace",
+            )
+
         client = EngineClient(
             host=os.environ["ENGINE_URL"],
             username=os.environ["ENGINE_USER"],
@@ -88,7 +98,7 @@ class EngineSuite(unittest.TestCase):
             isinstance(client._get_engine_config(), GamsEngineConfiguration)
         )
 
-        transport.solve(backend="engine", client=client)
+        transport.solve(backend="engine", client=client, output=sys.stdout)
 
         self.assertEqual(transport.objective_value, 153.675)
 
@@ -121,7 +131,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_no_config(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -155,7 +165,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_extra_files(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -214,7 +224,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_solve_twice(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -255,7 +265,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_summary(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -288,7 +298,7 @@ class EngineSuite(unittest.TestCase):
 
     def test_non_blocking(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -345,6 +355,8 @@ class EngineSuite(unittest.TestCase):
         container = Container(load_from=gdx_out_path)
         self.assertTrue("x" in container.data)
         x.setRecords(container["x"].records)
+        print(x.records)
+        print(container["x"].records)
         self.assertTrue(x.records.equals(container["x"].records))
 
     def test_api_job(self):
@@ -367,6 +379,8 @@ class EngineSuite(unittest.TestCase):
             status, _, _ = client.job.get(token)
             print(client.job.get_logs(token))
 
+        client.job.delete_results(token)
+
     def test_api_auth(self):
         # /api/auth -> post
         client = EngineClient(
@@ -375,6 +389,9 @@ class EngineSuite(unittest.TestCase):
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
         )
+
+        with self.assertRaises(ValidationError):
+            _ = client.auth.post(scope=["Blabla"])
 
         token = client.auth.post(scope=["JOBS", "AUTH"])
         self.assertTrue(token is not None and isinstance(token, str))
@@ -388,6 +405,8 @@ class EngineSuite(unittest.TestCase):
         )
 
         # /api/auth/login -> post
+        with self.assertRaises(ValidationError):
+            _ = client.auth.login(scope=["Blabla"])
         jwt_token = client.auth.login(scope=["JOBS", "AUTH"])
         time.sleep(1)
 
@@ -409,8 +428,8 @@ class EngineSuite(unittest.TestCase):
             status, _, _ = client.job.get(token)
 
         # /api/auth/logout -> post
-        # message = client.auth.logout()
-        # self.assertTrue(message is not None and isinstance(message, str))
+        message = client.auth.logout()
+        self.assertTrue(message is not None and isinstance(message, str))
 
 
 def engine_suite():

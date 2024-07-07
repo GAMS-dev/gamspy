@@ -106,7 +106,7 @@ from gamspy.math import abs, centropy, exp, log
 
 def main(is_centropy=False):
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     SAM_recs = np.array(

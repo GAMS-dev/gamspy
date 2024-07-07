@@ -33,27 +33,6 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         domain : list[Set | str]
         """
         super().__init__(parent, name, domain, permutation, scalar_domains)
-        self._l, self._m, self._lo, self._up, self._s = self._init_attributes()
-        self._fx = self._create_attr("fx")
-        self._prior = self._create_attr("prior")
-        self._stage = self._create_attr("stage")
-
-    def _create_attr(self, attr_name: str):
-        return implicits.ImplicitParameter(
-            self.parent,
-            name=f"{self.parent.name}.{attr_name}",
-            domain=self.domain,
-            permutation=self.permutation,
-            scalar_domains=self._scalar_domains,
-        )
-
-    def _init_attributes(self):
-        level = self._create_attr("l")
-        marginal = self._create_attr("m")
-        lower = self._create_attr("lo")
-        upper = self._create_attr("up")
-        scale = self._create_attr("scale")
-        return level, marginal, lower, upper, scale
 
     def __getitem__(self, indices: list | str) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
@@ -101,46 +80,8 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         dims[-2] = x
         return permute(self, dims)
 
-    @property
-    def l(self) -> implicits.ImplicitParameter:  # noqa: E741, E743
-        return self._l
-
-    @property
-    def m(self) -> implicits.ImplicitParameter:
-        return self._m
-
-    @property
-    def lo(self) -> implicits.ImplicitParameter:
-        return self._lo
-
-    @property
-    def up(self) -> implicits.ImplicitParameter:
-        return self._up
-
-    @property
-    def scale(self) -> implicits.ImplicitParameter:
-        return self._s
-
-    @property
-    def fx(self) -> implicits.ImplicitParameter:
-        return self._fx
-
-    @property
-    def prior(self) -> implicits.ImplicitParameter:
-        return self._prior
-
-    @property
-    def stage(self) -> implicits.ImplicitParameter:
-        return self._stage
-
     def __neg__(self):
-        return implicits.ImplicitVariable(
-            self.parent,
-            name=f"-{self.name}",
-            domain=self.domain,
-            permutation=self.permutation,
-            scalar_domains=self._scalar_domains,
-        )
+        return expression.Expression(None, "-", self)
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)

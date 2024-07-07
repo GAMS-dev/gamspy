@@ -11,13 +11,14 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
 import gamspy._validation as validation
 from gamspy._symbols.set import SetMixin
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Set
 
 
-class Alias(gt.Alias, operable.Operable, SetMixin):
+class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     """
     Represents an Alias symbol in GAMS.
     https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet
@@ -63,7 +64,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         container.data.update({name: obj})
 
         # gamspy attributes
-        obj._is_dirty = False
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
@@ -124,8 +124,6 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
             self.modified = True
             self.alias_with = alias_with
         else:
-            self._is_dirty = False
-
             if name is not None:
                 name = validation.validate_name(name)
             else:
@@ -170,6 +168,16 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", domain=["*"], records=['i1','i2'])
+        >>> j = gp.Alias(m, "j", i)
+        >>> j.gamsRepr()
+        'j'
+
         """
         return self.name
 
@@ -180,5 +188,15 @@ class Alias(gt.Alias, operable.Operable, SetMixin):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Alias(m, "j", i)
+        >>> j.getDeclaration()
+        'Alias(i,j);'
+
         """
         return f"Alias({self.alias_with.name},{self.name});"

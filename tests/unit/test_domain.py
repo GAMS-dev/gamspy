@@ -10,7 +10,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 class DomainSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_domain(self):
@@ -28,7 +28,7 @@ class DomainSuite(unittest.TestCase):
 
     def test_domain_forwarding(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         i = Set(m, name="i")
         _ = Parameter(
@@ -39,6 +39,30 @@ class DomainSuite(unittest.TestCase):
             records=[["i1", 1]],
         )
         self.assertEqual(i.toList(), ["i1"])
+
+        k = Set(m, name="k")
+        j = Set(m, name="j")
+        _ = Parameter(
+            m,
+            name="p2",
+            domain=[k, j],
+            domain_forwarding=[True, True],
+            records=[["k1", "j1", 1]],
+        )
+        self.assertEqual(k.toList(), ["k1"])
+        self.assertEqual(j.toList(), ["j1"])
+
+        k2 = Set(m, name="k2")
+        j2 = Set(m, name="j2")
+        _ = Set(
+            m,
+            name="p3",
+            domain=[k2, j2],
+            domain_forwarding=[True, True],
+            records=[("k2", "j2")],
+        )
+        self.assertEqual(k2.toList(), ["k2"])
+        self.assertEqual(j2.toList(), ["j2"])
 
     def test_domain_validation(self):
         times = Set(self.m, "times", records=["release", "duration"])

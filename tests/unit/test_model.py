@@ -20,7 +20,7 @@ from gamspy.exceptions import ValidationError
 class ModelSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -36,6 +36,12 @@ class ModelSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_model(self):
+        # No equations or matches
+        self.assertRaises(ValidationError, Model, self.m)
+
+        # Empty name
+        self.assertRaises(ValueError, Model, self.m, "")
+
         i = Set(
             self.m,
             name="i",
@@ -98,6 +104,8 @@ class ModelSuite(unittest.TestCase):
                 "cost",
                 "supply",
                 "demand",
+                "test_model_objective_variable",
+                "test_model_objective",
             ],
         )
         self.assertEqual(test_model.objective_value, 153.675)
@@ -254,7 +262,7 @@ class ModelSuite(unittest.TestCase):
 
     def test_feasibility(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
@@ -348,7 +356,7 @@ class ModelSuite(unittest.TestCase):
         test_model = Model(
             self.m,
             name="test_model",
-            equations=(supply, demand),
+            equations=[supply, demand],
             problem="LP",
             sense="min",
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -357,7 +365,7 @@ class ModelSuite(unittest.TestCase):
 
     def test_compute_infeasibilities(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         i = Set(
@@ -448,7 +456,10 @@ class ModelSuite(unittest.TestCase):
             "scale",
             "infeasibility",
         ]
-        self.assertEqual(list(infeasibilities.keys()), ["supply", "demand"])
+        self.assertEqual(
+            list(infeasibilities.keys()),
+            ["supply", "demand", "transport_objective"],
+        )
         self.assertEqual(list(infeasibilities["supply"].columns), columns)
         self.assertEqual(
             infeasibilities["supply"].values.tolist(),

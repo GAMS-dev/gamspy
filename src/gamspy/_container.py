@@ -24,7 +24,6 @@ from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -48,7 +47,6 @@ if TYPE_CHECKING:
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
 
 debugging_map = {
     "delete": DebugLevel.Off,
@@ -83,7 +81,9 @@ def find_free_address():
         return s.getsockname()
 
 
-def open_connection(system_directory: str, working_directory: str):
+def open_connection(
+    system_directory: str, working_directory: str
+) -> tuple[socket.socket, subprocess.Popen]:
     license_path = utils._get_license_path(system_directory)
     process_directory = os.path.join(working_directory, "225a")
     os.makedirs(process_directory, exist_ok=True)
@@ -96,7 +96,7 @@ def open_connection(system_directory: str, working_directory: str):
             f"incrementalMode={address[1]}",
             f"procdir={process_directory}",
             f"license={license_path}",
-            f"curdir={working_directory}",
+            f"curdir={os.getcwd()}",
         ],
         text=True,
         stdout=subprocess.PIPE,
@@ -105,6 +105,9 @@ def open_connection(system_directory: str, working_directory: str):
 
     start = time.time()
     while True:
+        if process.poll() is not None:
+            raise ValidationError(process.communicate()[0])
+
         try:
             new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             new_socket.connect(address)
@@ -118,6 +121,15 @@ def open_connection(system_directory: str, working_directory: str):
                 ) from e
 
     return new_socket, process
+
+
+def get_system_directory(system_directory: str | None) -> str:
+    system_directory = os.getenv("GAMSPY_GAMS_SYSDIR", system_directory)
+
+    if system_directory is None:
+        system_directory = utils._get_gamspy_base_directory()
+
+    return system_directory
 
 
 class Container(gt.Container):
@@ -165,17 +177,10 @@ class Container(gt.Container):
 
         self._is_socket_open = True
 
-        system_directory = (
-            system_directory
-            if system_directory
-            else utils._get_gamspy_base_directory()
-        )
+        system_directory = get_system_directory(system_directory)
 
         self._unsaved_statements: list = []
         self.miro_protect = miro_protect
-
-        # import symbols from arbitrary gams code
-        self._import_symbols: list[str] = []
 
         super().__init__(system_directory=system_directory)
 
@@ -198,7 +203,7 @@ class Container(gt.Container):
             raise TypeError(
                 f"`options` must be of type Option but found {type(options)}"
             )
-        self._options = Options() if options is None else options
+        self._options = options
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -235,7 +240,7 @@ class Container(gt.Container):
                 output.write(data)
 
         try:
-            response = self._socket.recv(2)
+            response = self._socket.recv(128)
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while receiving output from GAMS server: {e}",
@@ -249,9 +254,7 @@ class Container(gt.Container):
             self._stop_socket()
             return
         try:
-            return_code = int(
-                response[: response.find(b"\x00")].decode("utf-8")
-            )
+            return_code = int(response.decode("utf-8").split("#", 1)[0])
         except ValueError as e:
             raise GamspyException(
                 "Did not receive any return code from GAMS backend. Check"
@@ -276,8 +279,12 @@ class Container(gt.Container):
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
-            while self._process.poll() is None:
-                ...
+            self._process.stdout = subprocess.DEVNULL
+            self._process.stderr = subprocess.DEVNULL
+            if platform.system() == "Windows":
+                self._process.send_signal(signal.SIGTERM)
+            else:
+                self._process.send_signal(signal.SIGINT)
 
     def __repr__(self):
         return f"<Container ({hex(id(self))})>"
@@ -296,7 +303,7 @@ class Container(gt.Container):
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
 
-    def _get_debugging_level(self, debugging_level: str):
+    def _get_debugging_level(self, debugging_level: str) -> int:
         if (
             not isinstance(debugging_level, str)
             or debugging_level not in debugging_map
@@ -308,7 +315,7 @@ class Container(gt.Container):
 
         return debugging_map[debugging_level]
 
-    def _write_default_gdx_miro(self):
+    def _write_default_gdx_miro(self) -> None:
         # create data_<model>/default.gdx
         symbols = self._miro_input_symbols + self._miro_output_symbols
 
@@ -320,17 +327,12 @@ class Container(gt.Container):
         except FileExistsError:
             pass
 
-        for name in symbols:
-            self[name]._is_dirty = False
-
         super().write(
             os.path.join(data_path, "default.gdx"),
             symbols,
         )
 
-    def addGamsCode(
-        self, gams_code: str, import_symbols: list[str] = []
-    ) -> None:
+    def addGamsCode(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file
 
@@ -338,27 +340,17 @@ class Container(gt.Container):
         ----------
         gams_code : str
             Gams code that you want to insert.
-        import_symbols : list[str], optional
-            Symbols to be imported to the container from GAMS.
 
         Examples
         --------
         >>> from gamspy import Container
         >>> m = Container()
-        >>> m.addGamsCode("scalar piHalf / [pi/2] /;", import_symbols=["piHalf"])
+        >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
         >>> m["piHalf"].toValue()
-        1.5707963267948966
+        np.float64(1.5707963267948966)
 
         """
-        if import_symbols is not None and (
-            not isinstance(import_symbols, list)
-            or any(not isinstance(symbol, str) for symbol in import_symbols)
-        ):
-            raise ValidationError("import_symbols must be a list of strings")
-
-        self._import_symbols = import_symbols
         self._add_statement(gams_code)
-
         self._synch_with_gams()
 
     def _add_statement(self, statement) -> None:
@@ -431,7 +423,7 @@ class Container(gt.Container):
                     gtp_symbol._description,
                 )
 
-    def _delete_autogenerated_symbols(self):
+    def _delete_autogenerated_symbols(self) -> None:
         """
         Removes autogenerated model attributes, objective variable and equation from
         the container
@@ -467,12 +459,10 @@ class Container(gt.Container):
         return symbol_names
 
     def _setup_paths(self) -> tuple[str, str, str]:
-        suffix = uuid.uuid4()
-        job = os.path.join(self.working_directory, "_" + str(uuid.uuid4()))
-        gdx_in = os.path.join(self.working_directory, f"_gdx_in_{suffix}.gdx")
-        gdx_out = os.path.join(
-            self.working_directory, f"_gdx_out_{suffix}.gdx"
-        )
+        suffix = "_" + str(uuid.uuid4())
+        job = os.path.join(self.working_directory, suffix)
+        gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
+        gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")
 
         return job, gdx_in, gdx_out
 
@@ -484,16 +474,12 @@ class Container(gt.Container):
 
         return names
 
-    def _get_touched_symbol_names(self) -> tuple[list[str], list[str]]:
-        dirty_names = []
+    def _get_touched_symbol_names(self) -> list[str]:
         modified_names = []
 
         for name, symbol in self:
             if isinstance(symbol, gp.UniverseAlias):
                 continue
-
-            if symbol._is_dirty and symbol.synchronize:
-                dirty_names.append(name)
 
             if symbol.modified:
                 if (
@@ -504,12 +490,13 @@ class Container(gt.Container):
 
                 modified_names.append(name)
 
-        return dirty_names, modified_names
+        return modified_names
 
     def _synch_with_gams(
         self, keep_flags: bool = False
     ) -> pd.DataFrame | None:
-        runner = backend_factory(self, self._options)
+        options = Options() if self._options is None else self._options
+        runner = backend_factory(self, options)
         summary = runner.run(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:
@@ -521,26 +508,14 @@ class Container(gt.Container):
 
         return summary
 
-    def _get_unload_symbols_str(
-        self, dirty_names: list[str], gdx_out: str
-    ) -> str:
-        # Write dirty names, import symbols and autogenerated names to gdx
-        autogenerated_names = self._get_autogenerated_symbol_names()
-        unload_names = dirty_names + autogenerated_names + self._import_symbols
-
-        if len(unload_names) == 0:
-            return ""
-
-        unload_str = ",".join(unload_names)
-        return f"execute_unload '{gdx_out}' {unload_str};\n"
-
     def _generate_gams_string(
         self,
         gdx_in: str,
-        gdx_out: str,
-        dirty_names: list[str],
         modified_names: list[str],
     ) -> str:
+        LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
+        MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
+
         string = "$onMultiR\n$onUNDF\n"
         for statement in self._unsaved_statements:
             if isinstance(statement, str):
@@ -555,7 +530,7 @@ class Container(gt.Container):
 
         for symbol_name in modified_names:
             symbol = self[symbol_name]
-            if isinstance(symbol, Symbol) and not symbol_name.startswith(
+            if isinstance(symbol, LOADABLE) and not symbol_name.startswith(
                 gp.Model._generate_prefix
             ):
                 if (
@@ -572,7 +547,6 @@ class Container(gt.Container):
             string += "$gdxIn\n"
 
         string += "$offUNDF\n"
-        string += self._get_unload_symbols_str(dirty_names, gdx_out)
 
         if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
             string += miro.get_unload_output_str(self)
@@ -581,7 +555,7 @@ class Container(gt.Container):
 
         return string
 
-    def close(self):
+    def close(self) -> None:
         """Stops the socket and releases resources."""
         self._stop_socket()
 
@@ -592,7 +566,7 @@ class Container(gt.Container):
         load_records: bool = True,
         mode: str | None = None,
         encoding: str | None = None,
-    ):
+    ) -> None:
         """
         Reads specified symbols from the gdx file. If symbol_names are
         not provided, it reads all symbols from the gdx file.
@@ -627,7 +601,7 @@ class Container(gt.Container):
         compress: bool = False,
         mode: str | None = None,
         eps_to_zero: bool = True,
-    ):
+    ) -> None:
         """
         Writes specified symbols to the gdx file. If symbol_names are
         not provided, it writes all symbols to the gdx file.
@@ -648,11 +622,6 @@ class Container(gt.Container):
         >>> m.write("test.gdx")
 
         """
-        dirty_names, _ = self._get_touched_symbol_names()
-
-        if dirty_names:
-            self._synch_with_gams(keep_flags=True)
-
         super().write(
             write_to,
             symbol_names,
@@ -674,6 +643,14 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i")
+        >>> gams_code = m.generateGamsString()
+
         """
         if not show_raw:
             return self._gams_string
@@ -684,7 +661,7 @@ class Container(gt.Container):
         self,
         load_from: str,
         symbol_names: list[str] | None = None,
-    ):
+    ) -> None:
         """
         Loads data of the given symbols from a gdx file. If no
         symbol names are given, data of all symbols are loaded.
@@ -1030,6 +1007,7 @@ class Container(gt.Container):
         True
 
         """
+        os.makedirs(working_directory, exist_ok=True)
         m = Container(working_directory=working_directory)
         if m.working_directory == self.working_directory:
             raise ValidationError(
@@ -1132,6 +1110,15 @@ class Container(gt.Container):
         Returns
         -------
         list[Equation]
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> eq1 = gp.Equation(m, name="eq1")
+        >>> eq2 = gp.Equation(m, name="eq2")
+        >>> equation_objects = m.getEquations()
+
         """
         equations = [
             equation
@@ -1157,7 +1144,7 @@ class Container(gt.Container):
                 self[name]._records = updated_records
 
                 if updated_records is not None:
-                    self[name]._domain_labels = self[name].domain_names
+                    self[name].domain_labels = self[name].domain_names
             else:
                 self.read(load_from, [name])
 
@@ -1207,6 +1194,14 @@ class Container(gt.Container):
         Returns
         -------
         str | None
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="canning plants")
+        >>> gams_file_name = f"{m.gamsJobName()}.gms"
+
         """
         return self._job
 
@@ -1217,6 +1212,14 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=["seattle", "san-diego"], description="canning plants")
+        >>> gdx_path = m.gdxInputPath()
+
         """
         return self._gdx_in
 
@@ -1227,5 +1230,15 @@ class Container(gt.Container):
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"], description="canning plants")
+        >>> ii = gp.Set(m, name="ii", domain=i, description="seattle plant")
+        >>> ii['seattle'] = True
+        >>> gdx_path = m.gdxOutputPath()
+
         """
         return self._gdx_out

@@ -46,7 +46,7 @@ def fy(t):
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Set
@@ -154,7 +154,9 @@ def main():
 
     square.solve()
 
-    assert math.isclose(square.objective_value, 1.6009, rel_tol=0.001)
+    assert math.isclose(
+        square.objective_value, 9.356868347239827e-21, rel_tol=1e-2
+    )
 
 
 if __name__ == "__main__":

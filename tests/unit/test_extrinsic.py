@@ -5,6 +5,7 @@ import platform
 import unittest
 
 from gamspy import Container, Parameter
+from gamspy.exceptions import ValidationError
 
 
 def get_default_platform():
@@ -20,7 +21,7 @@ def get_default_platform():
 class ExtrinsicSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_extrinsic_functions(self):
@@ -42,6 +43,10 @@ class ExtrinsicSuite(unittest.TestCase):
             },
         )
 
+        # if attribute is not in functions, call the default getattr function of Python
+        with self.assertRaises(AttributeError):
+            _ = trilib.bla
+
         # Test extrinsic function with no argument
         d = Parameter(self.m, "d")
         d[...] = trilib.myPi
@@ -51,6 +56,10 @@ class ExtrinsicSuite(unittest.TestCase):
         d2 = Parameter(self.m, "d2")
         d2[...] = trilib.myCos(90)
         self.assertEqual(int(d2.toValue()), 0)
+
+        # External functions do not accept keyword arguments
+        with self.assertRaises(ValidationError):
+            d2[...] = trilib.myCos(degree=90)
 
         # Test the interaction with other components
         d3 = Parameter(self.m, "d3")

@@ -23,7 +23,7 @@ from gamspy.exceptions import ValidationError
 class OperationSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -104,6 +104,9 @@ class OperationSuite(unittest.TestCase):
         )
 
         # Ord, Card
+        with self.assertRaises(ValidationError):
+            _ = Ord("bla")
+
         expression = Ord(i) == Ord(j)
         self.assertEqual(expression.gamsRepr(), "(ord(i) eq ord(j))")
         expression = Ord(i) != Ord(j)
@@ -127,7 +130,7 @@ class OperationSuite(unittest.TestCase):
     def test_operation_indices(self):
         # Test operation index
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         mt = 2016
         mg = 17
@@ -173,7 +176,7 @@ class OperationSuite(unittest.TestCase):
 
     def test_operation_overloads(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         c = Set(m, "c")
         s = Set(m, "s")

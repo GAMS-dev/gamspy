@@ -62,5 +62,15 @@ class Domain:
         Returns
         -------
         str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Domain
+        >>> m = Container()
+        >>> X = Set(m, name="x", records=[f"I{i}" for i in range(1, 22)])
+        >>> Y = Set(m, name="y", records=[f"J{j}" for j in range(1, 22)])
+        >>> Domain(X, Y).gamsRepr()
+        '(x,y)'
+
         """
         return utils._get_domain_str(self.sets)

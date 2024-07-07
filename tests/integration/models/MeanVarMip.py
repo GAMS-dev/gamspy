@@ -33,7 +33,7 @@ from gamspy import (
 
 def main():
     m = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Read from MeanVarMip.gdx the data needed to run the mean-variance model
@@ -172,7 +172,7 @@ def main():
             break
         lamda[...] = lamda_loop
         MeanVarMip.solve(
-            options=Options(minlp="SBB", relative_optimality_gap=0)
+            options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
         MeanVarianceMIP += f"{round(lamda_loop,1)},{round(MeanVarMip.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
@@ -281,7 +281,7 @@ def main():
             break
         lamda[...] = lamda_loop
         MeanVarWithCost.solve(
-            options=Options(minlp="SBB", relative_optimality_gap=0)
+            options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
         MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(MeanVarWithCost.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x0_recs = [
@@ -424,7 +424,7 @@ def main():
             break
         lamda[...] = lamda_loop
         MeanVarRevision.solve(
-            options=Options(minlp="SBB", relative_optimality_gap=0)
+            options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
         MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(MeanVarRevision.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]

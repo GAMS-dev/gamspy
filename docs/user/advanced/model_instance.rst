@@ -12,8 +12,8 @@ and doing a hot start (in case of a continuous model like LP) without the use of
 The ``freeze`` call will enable the frozen solve mode and query the symbol information of the modifiable symbols. The ``solve`` method uses this data 
 to update the model instance. After the model instance has been updated, the model is passed to the selected solver. After the completion of the solve method, 
 the container will contain the primal and dual solution of the model just solved.  Moreover, the parameters that are modifiable are also accessible 
-in database with the name of the GamsParameter plus "_var". The Marginal of this GamsVariable can provide sensitivity information about the 
-parameter setting. The status of the solve is accessible through the model_status and solver_status properties.
+in database with the name of the Parameter plus "_var". The marginal of this Variable can provide sensitivity information about the 
+parameter setting. The status of the solve is accessible through the ``Model.model_status``, ``Model.solver_status`` and ``Model.objective_value`` attributes.
 
 ::
 

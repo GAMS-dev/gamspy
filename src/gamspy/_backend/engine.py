@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import DebugLevel, GamsEngineConfiguration
+from gams import GamsEngineConfiguration
 from gams.control.workspace import GamsException
 
 import gamspy._backend.backend as backend
@@ -224,24 +224,32 @@ class Auth(Endpoint):
         str
             message
         """
-        r = self._http.request(
-            "POST",
-            self.client._engine_config.host + "/auth/logout",
-            headers=self.get_request_headers(),
-        )
+        message = ""
+        for attempt_number in range(MAX_REQUEST_ATTEMPS):
+            r = self._http.request(
+                "POST",
+                self.client._engine_config.host + "/auth/logout",
+                headers=self.get_request_headers(),
+            )
 
-        if r.status == 200:
-            response_data = r.data.decode("utf-8", errors="replace")
-            info = json.loads(response_data)
-            return info["message"]
-        elif r.status == 400:
-            raise EngineClientException("Bad request!")
-        elif r.status == 401:
-            raise EngineClientException("Unauthorized!")
-        elif r.status == 500:
-            raise EngineClientException("Internal error!")
-        else:
-            raise GamspyException(f"Unrecognized status code {r.status}")
+            if r.status == 200:
+                response_data = r.data.decode("utf-8", errors="replace")
+                info = json.loads(response_data)
+                message = info["message"]
+                break
+            elif r.status == 400:
+                raise EngineClientException("Bad request!")
+            elif r.status == 401:
+                raise EngineClientException("Unauthorized!")
+            elif r.status == 429:
+                time.sleep(2**attempt_number)  # retry with exponential backoff
+                continue
+            elif r.status == 500:
+                raise EngineClientException("Internal error!")
+            else:
+                raise GamspyException(f"Unrecognized status code {r.status}")
+
+        return message
 
 
 class Job(Endpoint):
@@ -518,7 +526,6 @@ class Job(Endpoint):
                 headers=self.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
-            response_data = json.loads(response_data)
 
             if r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
@@ -528,10 +535,12 @@ class Job(Endpoint):
                     "Getting logs failed with status code: "
                     + str(r.status)
                     + ". "
-                    + response_data["message"]
+                    + response_data
                     + ".",
                     r.status,
                 )
+
+            response_data = json.loads(response_data)
             stdout_data = response_data["message"]
             break
 
@@ -688,14 +697,7 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
-        super().__init__(
-            container,
-            model,
-            os.path.basename(container._gdx_in),
-            os.path.basename(container._gdx_out),
-            options,
-            output,
-        )
+        super().__init__(container, model, options, output)
         self.client = client
 
         self.job_name = self.get_job_name()
@@ -711,7 +713,10 @@ class GAMSEngine(backend.Backend):
         self._create_restart_file()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string, dirty_names = self.preprocess(keep_flags)
+        gams_string = self.preprocess(
+            os.path.basename(self.container._gdx_in),
+            keep_flags,
+        )
 
         self.execute_gams(gams_string)
 
@@ -719,24 +724,22 @@ class GAMSEngine(backend.Backend):
             return None
 
         # Synchronize GAMSPy with checkpoint and return a summary
-        summary = self.postprocess(dirty_names)
+        summary = self.postprocess()
 
         # Run another dummy job to synchronize GAMS and GAMSPy state
-        self._sync(dirty_names)
+        self._sync()
 
         return summary
 
     def execute_gams(self, gams_string: str):
-        if self.container._debugging_level == DebugLevel.KeepFiles:
-            self.options.log_file = os.path.basename(self.job_name) + ".log"
-
         extra_options = {
+            "gdx": os.path.basename(self.container._gdx_out),
             "trace": "trace.txt",
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
         }
         self.options._set_extra_options(extra_options)
-        self.options.export(self.pf_file)
+        self.options.export(self.pf_file, self.output)
 
         with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)
@@ -793,12 +796,15 @@ class GAMSEngine(backend.Backend):
                 )
 
                 self.model._update_model_attributes()
+
+                if self.client.remove_results:
+                    self.client.job.delete_results(token)
         finally:
             self.container._unsaved_statements = []
             self.container._delete_autogenerated_symbols()
 
-    def postprocess(self, dirty_names: list[str]):
-        symbols = dirty_names + self.container._import_symbols
+    def postprocess(self):
+        symbols = utils._get_symbol_names_from_gdx(self.container)
 
         if len(symbols) != 0:
             self.container._load_records_from_gdx(
@@ -817,6 +823,7 @@ class GAMSEngine(backend.Backend):
         scrdir = os.path.join(self.container.working_directory, "225a")
 
         extra_options = {
+            "gdx": self.container._gdx_out,
             "trace": trace_file_path,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
@@ -844,7 +851,8 @@ class GAMSEngine(backend.Backend):
 
         self.container._send_job(self.job_name, self.pf_file)
 
-    def _sync(self, dirty_names: list[str]):
+    def _sync(self):
+        dirty_names = utils._get_symbol_names_from_gdx(self.container)
         dirty_str = ",".join(dirty_names)
         with open(self.gms_file, "w") as gams_file:
             gams_file.write(

@@ -4,6 +4,7 @@ import os
 import sys
 import unittest
 
+import gamspy.exceptions as exceptions
 import gamspy.math as math
 from gamspy import (
     Container,
@@ -22,7 +23,7 @@ from pydantic import ValidationError
 class OptionsSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None)
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
         )
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
@@ -38,6 +39,9 @@ class OptionsSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_options(self):
+        with self.assertRaises(ValidationError):
+            _ = Options(unknown_option=5)
+
         with self.assertRaises(ValidationError):
             _ = Options(hold_fixed_variables=5)
 
@@ -82,7 +86,7 @@ class OptionsSuite(unittest.TestCase):
 
     def test_seed(self):
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             options=Options(seed=1),
         )
         p1 = Parameter(m, "p1")
@@ -95,7 +99,7 @@ class OptionsSuite(unittest.TestCase):
 
         # change seed
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             options=Options(seed=5),
         )
         p1 = Parameter(m, "p1")
@@ -109,7 +113,7 @@ class OptionsSuite(unittest.TestCase):
     def test_global_options(self):
         options = Options(lp="conopt")
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             debugging_level="keep",
             options=options,
         )
@@ -203,9 +207,111 @@ class OptionsSuite(unittest.TestCase):
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
 
-        listing_file_name = os.path.join("tmp", "listing.lst")
+        listing_file_name = os.path.join("tmp", "listing2.lst")
         transport.solve(options=Options(listing_file=listing_file_name))
         self.assertTrue(os.path.exists(listing_file_name))
+
+    def test_from_file(self):
+        option_file = os.path.join("tmp", "option_file")
+        with open(option_file, "w") as file:
+            file.write("lp = conopt\n\n")
+
+        options = Options.from_file(option_file)
+        self.assertEqual(options.lp, "conopt")
+
+        with self.assertRaises(exceptions.ValidationError):
+            _ = Options.from_file("unknown_path")
+
+    def test_profile(self):
+        # Set
+        i = Set(
+            self.m,
+            name="i",
+            records=self.canning_plants,
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=self.markets,
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        profile_path = os.path.join("tmp", "bla.profile")
+        transport.solve(
+            output=sys.stdout,
+            options=Options(
+                profile=1,
+                profile_file=profile_path,
+                monitor_process_tree_memory=True,
+            ),
+        )
+        self.assertTrue(os.path.exists(profile_path))
 
 
 def options_suite():

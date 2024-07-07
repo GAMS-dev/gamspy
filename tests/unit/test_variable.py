@@ -12,12 +12,14 @@ from gamspy.exceptions import ValidationError
 class VariableSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
     def test_variable_creation(self):
         # no name is fine now
-        _ = Variable(self.m)
+        v = Variable(self.m)
+        with self.assertRaises(ValidationError):
+            _ = v.getAssignment()
 
         # non-str type name
         self.assertRaises(TypeError, Variable, self.m, 5)
@@ -39,7 +41,7 @@ class VariableSuite(unittest.TestCase):
 
         # Variable and domain containers are different
         m = Container(
-            system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
 
         # Same name, different domain forwarding
@@ -51,6 +53,10 @@ class VariableSuite(unittest.TestCase):
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Variable(m, "var1", domain=[set1])
+
+        # Incorrect type
+        with self.assertRaises(ValueError):
+            _ = Variable(m, type="Blabla")
 
     def test_variable_string(self):
         # Check if the name is reserved
@@ -79,7 +85,7 @@ class VariableSuite(unittest.TestCase):
         )
 
         expression = -v0
-        self.assertEqual(expression.name, "-v0")
+        self.assertEqual(expression.getDeclaration(), "( - v0)")
 
         # Variable one domain
         v1 = Variable(self.m, name="v1", domain=[i])
@@ -110,7 +116,7 @@ class VariableSuite(unittest.TestCase):
             "free Variable pi;",
         )
         new_pi = -pi
-        self.assertEqual(new_pi.gamsRepr(), "-pi")
+        self.assertEqual(new_pi.gamsRepr(), "( - pi)")
 
         # 1D variable with records
         v = Variable(
@@ -287,7 +293,6 @@ class VariableSuite(unittest.TestCase):
             x.getAssignment(),
             "x.l(k) = 5;",
         )
-        self.assertFalse(x._is_dirty)
 
     def test_scalar_attr_assignment(self):
         a = Variable(self.m, "a")
@@ -323,7 +328,7 @@ class VariableSuite(unittest.TestCase):
         self.assertTrue(a.isValid())
 
         expression = -a[i] * 5
-        self.assertEqual(expression.gamsRepr(), "(-a(i) * 5)")
+        self.assertEqual(expression.gamsRepr(), "(( - a(i)) * 5)")
 
         self.assertTrue(
             hasattr(a[i], "l")

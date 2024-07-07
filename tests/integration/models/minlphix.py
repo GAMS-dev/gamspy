@@ -104,7 +104,7 @@ from gamspy.math import sqrt
 
 def main():
     cont = Container(
-        system_directory=os.getenv("SYSTEM_DIRECTORY", None),
+        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
     )
 
     # Set
@@ -767,7 +767,7 @@ def main():
 
     import math
 
-    assert math.isclose(skip.objective_value, 316.6927, rel_tol=0.001)
+    assert math.isclose(skip.objective_value, 316.6926941764859)
 
     print("Best integer solution found:", skip.objective_value)
 
