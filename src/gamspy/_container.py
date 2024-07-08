@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 from gams import DebugLevel, GamsWorkspace
-from gams.core import gdx
 
 import gamspy as gp
 import gamspy._miro as miro
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     import io
     from typing import Any, Literal
 
-    import pandas as pd
+    from pandas import DataFrame
 
     from gamspy import (
         Alias,
@@ -57,24 +56,18 @@ debugging_map = {
 TIMEOUT = 30
 
 
-def is_network_license() -> bool:
-    base_directory = utils._get_gamspy_base_directory()
-    user_license_path = os.path.join(base_directory, "user_license.txt")
+def is_network_license(system_directory: str) -> bool:
+    user_license_path = os.path.join(system_directory, "user_license.txt")
     if not os.path.exists(user_license_path):
         return False
 
     with open(user_license_path) as file:
         lines = file.readlines()
-        if "+" not in lines[0]:
-            return False
 
-        if lines[4][47] == "N":
-            return True
-
-    return False
+    return bool("+" in lines[0] and lines[4][47] == "N")
 
 
-def find_free_address():
+def find_free_address() -> tuple[str, int]:
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("127.0.0.1", 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -170,7 +163,6 @@ class Container(gt.Container):
         options: Options | None = None,
         miro_protect: bool = True,
     ):
-        self._network_license = is_network_license()
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
@@ -183,6 +175,7 @@ class Container(gt.Container):
         self.miro_protect = miro_protect
 
         super().__init__(system_directory=system_directory)
+        self._network_license = is_network_license(self.system_directory)
 
         self._debugging_level = self._get_debugging_level(debugging_level)
         self.workspace = GamsWorkspace(
@@ -217,6 +210,33 @@ class Container(gt.Container):
             self.read(load_from)
             self._synch_with_gams()
 
+    def __repr__(self):
+        return f"<Container ({hex(id(self))})>"
+
+    def __str__(self):
+        if len(self):
+            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
+
+        return f"<Empty Container ({hex(id(self))})>"
+
+    def __del__(self):
+        try:
+            self._stop_socket()
+        except (Exception, ConnectionResetError):
+            ...
+
+    def _stop_socket(self):
+        if hasattr(self, "_socket") and self._is_socket_open:
+            self._socket.sendall("stop".encode("ascii"))
+            self._is_socket_open = False
+
+            self._process.stdout = subprocess.DEVNULL
+            self._process.stderr = subprocess.DEVNULL
+            if platform.system() == "Windows":
+                self._process.send_signal(signal.SIGTERM)
+            else:
+                self._process.send_signal(signal.SIGINT)
+
     def _send_job(
         self,
         job_name: str,
@@ -246,13 +266,9 @@ class Container(gt.Container):
                 f"There was an error while receiving output from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
-            if platform.system() == "Windows":
-                self._process.send_signal(signal.SIGTERM)
-            else:
-                self._process.send_signal(signal.SIGINT)
-
             self._stop_socket()
             return
+
         try:
             return_code = int(response.decode("utf-8").split("#", 1)[0])
         except ValueError as e:
@@ -261,39 +277,12 @@ class Container(gt.Container):
                 f" {job_name + '.lst'}."
             ) from e
 
-        if return_code != 0:
+        if return_code:
             raise GamspyException(
                 f"Job failed! Return code is {return_code}. Check:"
                 f" {job_name + '.lst'} for more details.",
                 return_code=return_code,
             )
-
-    def __del__(self):
-        try:
-            self._stop_socket()
-        except (Exception, ConnectionResetError):
-            ...
-
-    def _stop_socket(self):
-        if hasattr(self, "_socket") and self._is_socket_open:
-            self._socket.sendall("stop".encode("ascii"))
-            self._is_socket_open = False
-
-            self._process.stdout = subprocess.DEVNULL
-            self._process.stderr = subprocess.DEVNULL
-            if platform.system() == "Windows":
-                self._process.send_signal(signal.SIGTERM)
-            else:
-                self._process.send_signal(signal.SIGINT)
-
-    def __repr__(self):
-        return f"<Container ({hex(id(self))})>"
-
-    def __str__(self):
-        if len(self):
-            return f"<Container ({hex(id(self))}) with {len(self)} symbols: {self.data.keys()}>"
-
-        return f"<Empty Container ({hex(id(self))})>"
 
     def _write_miro_files(self):
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
@@ -331,27 +320,6 @@ class Container(gt.Container):
             os.path.join(data_path, "default.gdx"),
             symbols,
         )
-
-    def addGamsCode(self, gams_code: str) -> None:
-        """
-        Adds an arbitrary GAMS code to the generate .gms file
-
-        Parameters
-        ----------
-        gams_code : str
-            Gams code that you want to insert.
-
-        Examples
-        --------
-        >>> from gamspy import Container
-        >>> m = Container()
-        >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
-        >>> m["piHalf"].toValue()
-        np.float64(1.5707963267948966)
-
-        """
-        self._add_statement(gams_code)
-        self._synch_with_gams()
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
@@ -434,29 +402,15 @@ class Container(gt.Container):
             if name in self.data:
                 del self.data[name]
 
-    def _get_symbol_names_from_gdx(self, load_from: str) -> list[str]:
-        gdx_handle = utils._open_gdx_file(self.system_directory, load_from)
-        _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
-
-        symbol_names = []
-        for i in range(1, symbol_count + 1):
-            _, symbol_name, _, _ = gdx.gdxSymbolInfo(gdx_handle, i)
-            if not symbol_name.startswith(gp.Model._generate_prefix):
-                symbol_names.append(symbol_name)
-
-        utils._close_gdx_handle(gdx_handle)
-
-        return symbol_names
-
     def _get_symbol_names_to_load(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
+        self, load_from: str, names: list[str] | None
     ) -> list[str]:
-        if symbol_names is None:
-            symbol_names = self._get_symbol_names_from_gdx(load_from)
+        if names is None:
+            names = utils._get_symbol_names_from_gdx(
+                self.system_directory, load_from
+            )
 
-        return symbol_names
+        return names
 
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + str(uuid.uuid4())
@@ -492,9 +446,7 @@ class Container(gt.Container):
 
         return modified_names
 
-    def _synch_with_gams(
-        self, keep_flags: bool = False
-    ) -> pd.DataFrame | None:
+    def _synch_with_gams(self, keep_flags: bool = False) -> DataFrame | None:
         options = Options() if self._options is None else self._options
         runner = backend_factory(self, options)
         summary = runner.run(keep_flags=keep_flags)
@@ -528,22 +480,21 @@ class Container(gt.Container):
         if modified_names:
             string += f"$gdxIn {gdx_in}\n"
 
-        for symbol_name in modified_names:
-            symbol = self[symbol_name]
-            if isinstance(symbol, LOADABLE) and not symbol_name.startswith(
-                gp.Model._generate_prefix
-            ):
-                if (
-                    isinstance(symbol, MIRO_INPUT_TYPES)
-                    and symbol._is_miro_input
-                    and not IS_MIRO_INIT
-                    and MIRO_GDX_IN
+            for symbol_name in modified_names:
+                symbol = self[symbol_name]
+                if isinstance(symbol, LOADABLE) and not symbol_name.startswith(
+                    gp.Model._generate_prefix
                 ):
-                    string += miro.get_load_input_str(symbol_name, gdx_in)
-                else:
-                    string += f"$loadDC {symbol_name}\n"
+                    if (
+                        isinstance(symbol, MIRO_INPUT_TYPES)
+                        and symbol._is_miro_input
+                        and not IS_MIRO_INIT
+                        and MIRO_GDX_IN
+                    ):
+                        string += miro.get_load_input_str(symbol_name, gdx_in)
+                    else:
+                        string += f"$loadDC {symbol_name}\n"
 
-        if modified_names:
             string += "$gdxIn\n"
 
         string += "$offUNDF\n"
@@ -555,9 +506,34 @@ class Container(gt.Container):
 
         return string
 
-    def close(self) -> None:
-        """Stops the socket and releases resources."""
-        self._stop_socket()
+    def _load_records_from_gdx(
+        self,
+        load_from: str,
+        symbol_names: list[str] | None = None,
+        user_invoked: bool = False,
+    ):
+        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
+
+        self._temp_container.read(load_from, symbol_names)
+
+        for name in symbol_names:
+            if name in self.data:
+                updated_records = self._temp_container[name].records
+
+                self[name]._records = updated_records
+
+                if updated_records is not None:
+                    self[name].domain_labels = self[name].domain_names
+            else:
+                self.read(load_from, [name])
+
+            if user_invoked:
+                self[name].modified = True
+
+        self._temp_container.data = {}
+
+        if user_invoked:
+            self._synch_with_gams()
 
     def read(
         self,
@@ -686,6 +662,31 @@ class Container(gt.Container):
 
         """
         self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
+
+    def addGamsCode(self, gams_code: str) -> None:
+        """
+        Adds an arbitrary GAMS code to the generate .gms file
+
+        Parameters
+        ----------
+        gams_code : str
+            Gams code that you want to insert.
+
+        Examples
+        --------
+        >>> from gamspy import Container
+        >>> m = Container()
+        >>> m.addGamsCode("scalar piHalf / [pi/2] /;")
+        >>> m["piHalf"].toValue()
+        np.float64(1.5707963267948966)
+
+        """
+        self._add_statement(gams_code)
+        self._synch_with_gams()
+
+    def close(self) -> None:
+        """Stops the socket and releases resources."""
+        self._stop_socket()
 
     def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
         """
@@ -1126,35 +1127,6 @@ class Container(gt.Container):
             if not equation.startswith(gp.Model._generate_prefix)
         ]
         return self.getSymbols(equations)
-
-    def _load_records_from_gdx(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-        user_invoked: bool = False,
-    ):
-        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
-
-        self._temp_container.read(load_from, symbol_names)
-
-        for name in symbol_names:
-            if name in self.data:
-                updated_records = self._temp_container[name].records
-
-                self[name]._records = updated_records
-
-                if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
-            else:
-                self.read(load_from, [name])
-
-            if user_invoked:
-                self[name].modified = True
-
-        self._temp_container.data = {}
-
-        if user_invoked:
-            self._synch_with_gams()
 
     def importExtrinsicLibrary(
         self, lib_path: str, functions: dict[str, str]
