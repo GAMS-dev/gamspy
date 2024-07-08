@@ -428,8 +428,10 @@ class EngineSuite(unittest.TestCase):
             status, _, _ = client.job.get(token)
 
         # /api/auth/logout -> post
-        message = client.auth.logout()
-        self.assertTrue(message is not None and isinstance(message, str))
+        # logout only on Python 3.12 to avoid unauthorized calls on parallel jobs.
+        if sys.version_info.minor == 12:
+            message = client.auth.logout()
+            self.assertTrue(message is not None and isinstance(message, str))
 
 
 def engine_suite():
