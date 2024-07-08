@@ -3,8 +3,6 @@ from __future__ import annotations
 import io
 import logging
 import os
-import platform
-import signal
 import uuid
 from collections.abc import Sequence
 from enum import Enum
@@ -19,8 +17,8 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._convert import GamsConverter
 from gamspy._model_instance import ModelInstance
-from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -37,6 +35,7 @@ if TYPE_CHECKING:
     from gamspy._symbols.implicits import ImplicitParameter
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
+
 logger = logging.getLogger("MODEL")
 logger.setLevel(logging.INFO)
 stream_handler = logging.StreamHandler()
@@ -243,7 +242,7 @@ class Model:
 
         self.container = container
         self._matches = matches
-        self.problem, self.sense = self._validate_model(
+        self.problem, self.sense = validation.validate_model(
             equations, problem, sense
         )
         self.equations = list(equations)
@@ -570,11 +569,6 @@ class Model:
         ValidationError
             If the job is not initialized
         """
-        if platform.system() == "Windows":
-            self.container._process.send_signal(signal.SIGTERM)
-        else:
-            self.container._process.send_signal(signal.SIGINT)
-
         self.container._stop_socket()
 
     def freeze(
@@ -680,7 +674,7 @@ class Model:
             options,
             output,
         )
-        validation.validate_model(self)
+        validation.validate_equations(self)
 
         if options is None:
             options = (
@@ -775,7 +769,7 @@ class Model:
 
         return model_str
 
-    def toGams(self, path: str, skip_endogenous_records: bool = False) -> None:
+    def toGams(self, path: str) -> None:
         """
         Generates GAMS model under path/<model_name>.gms
 
@@ -784,87 +778,5 @@ class Model:
         path : str
             Path to the directory which will contain the GAMS model.
         """
-        os.makedirs(path, exist_ok=True)
-
-        def sort_names(name):
-            PRECEDENCE = {
-                gp.Set: 1,
-                gp.Alias: 1,
-                gp.Parameter: 3,
-                gp.Variable: 4,
-                gp.Equation: 5,
-            }
-
-            symbol = self.container[name]
-            precedence = PRECEDENCE[type(symbol)]
-
-            if isinstance(symbol, gp.Set) and any(
-                not isinstance(elem, str) for elem in symbol.domain
-            ):
-                precedence = 2
-
-            return precedence
-
-        all_symbols = []
-        definitions = []
-        for equation in self.equations:
-            definitions.append(equation._definition.getDeclaration())
-            symbols = equation._definition._find_all_symbols()
-
-            for symbol in symbols:
-                if symbol not in all_symbols:
-                    all_symbols.append(symbol)
-
-        if self._matches:
-            for equation, variable in self._matches.items():
-                if (
-                    equation.name not in all_symbols
-                    and not skip_endogenous_records
-                ):
-                    symbols = equation._definition._find_all_symbols()
-                    for symbol in symbols:
-                        if symbol not in all_symbols:
-                            all_symbols.append(symbol)
-
-                    if equation.name not in all_symbols:
-                        all_symbols.append(equation.name)
-
-                    definitions.append(equation._definition.getDeclaration())
-
-                if (
-                    variable.name not in all_symbols
-                    and not skip_endogenous_records
-                ):
-                    for elem in variable.domain:
-                        if not isinstance(elem, Symbol):
-                            continue
-
-                        elem_path = validation.get_domain_path(elem)
-                        for name in elem_path:
-                            if name not in all_symbols:
-                                all_symbols.append(name)
-
-                    if variable.name not in all_symbols:
-                        all_symbols.append(variable.name)
-
-        all_needed_symbols = sorted(all_symbols, key=sort_names)
-        gdx_path = os.path.join(path, self.name + "_data.gdx")
-        self.container.write(gdx_path, all_needed_symbols)
-
-        strings = [
-            self.container[name].getDeclaration()
-            for name in all_needed_symbols
-        ]
-        strings.append(f"$gdxLoadAll {os.path.abspath(gdx_path)}")
-        strings += definitions
-        strings.append(self.getDeclaration())
-        solve_string = self._generate_solve_string()
-        strings.append(solve_string)
-
-        gams_string = "\n".join(strings)
-        with open(os.path.join(path, self.name + ".gms"), "w") as file:
-            file.write(gams_string)
-
-        logger.info(
-            f'GAMS model has been generated under {os.path.join(path, self.name + ".gms")}'
-        )
+        converter = GamsConverter(self, path)
+        converter.convert()

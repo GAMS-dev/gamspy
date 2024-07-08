@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
@@ -8,12 +9,12 @@ from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._model import Problem, Sense
 from gamspy._options import Options
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
-    from gamspy._model import Problem
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
 
 
@@ -320,6 +321,42 @@ def validate_name(word: str) -> str:
     return word
 
 
+def validate_model(
+    equations: Sequence[Equation],
+    problem: Problem | str,
+    sense: str | Sense | None = None,
+) -> tuple[Problem, Sense | None]:
+    if isinstance(problem, str):
+        if problem.upper() not in Problem.values():
+            raise ValueError(
+                f"Allowed problem types: {Problem.values()} but found"
+                f" {problem}."
+            )
+
+        problem = Problem(problem.upper())
+
+    if isinstance(sense, str):
+        if sense.upper() not in Sense.values():
+            raise ValueError(
+                f"Allowed sense values: {Sense.values()} but found"
+                f" {sense}."
+            )
+
+        sense = Sense(sense.upper())
+
+    if (
+        problem not in [Problem.CNS, Problem.MCP]
+        and not isinstance(equations, Sequence)
+        or any(
+            not isinstance(equation, symbols.Equation)
+            for equation in equations
+        )
+    ):
+        raise TypeError("equations must be list of Equation objects")
+
+    return problem, sense  # type: ignore
+
+
 def validate_model_name(name: str) -> str:
     if len(name) == 0:
         raise ValueError("Model name must be at least one character.")
@@ -388,7 +425,7 @@ def validate_solver_args(
         )
 
 
-def validate_model(model: Model):
+def validate_equations(model: Model):
     for equation in model.equations:
         if equation._definition is None:
             raise ValidationError(
