@@ -339,7 +339,6 @@ class Options(BaseModel):
 
     def _set_solver_options(
         self,
-        working_directory: str,
         solver: str | None,
         problem: Problem,
         solver_options: dict | None,
@@ -355,7 +354,7 @@ class Options(BaseModel):
                 )
 
             solver_file_name = os.path.join(
-                working_directory, f"{solver.lower()}.123"
+                os.getcwd(), f"{solver.lower()}.123"
             )
 
             with open(solver_file_name, "w", encoding="utf-8") as solver_file:
