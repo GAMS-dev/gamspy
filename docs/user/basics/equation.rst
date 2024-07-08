@@ -24,7 +24,7 @@ they get a :ref:`definition <equation_definition>`. Finally, in order
 to be considered, they have to be added to an instance of :ref:`gamspy.Model <model>` through
 the ``equations`` argument of its constructor. A handy shortcut to retrieve all equations
 contained in a :ref:`gamspy.Container <container>` is the
-:meth:`getEquations()<gamspy.Container.getEquations>` method.
+:meth:`getEquations() <gamspy.Container.getEquations>` method.
 
 .. _equation_declaration:
 
@@ -32,7 +32,7 @@ Equation Declaration
 --------------------
 
 A GAMSPy equation must be declared before it may
-be referenced by creating an instance of ``gamspy.Equation``.
+be referenced by creating an instance of :meth:`Equation <gamspy.Equation>`.
 The declaration of an equation is similar to a set, parameter,
 or variable, in that it requires a container, an optional name, a domain (if applicable),
 and an optional description. For a complete list of available arguments, see
@@ -79,7 +79,7 @@ After declaring equations they have to be defined. The definition of an
 equation specifies its algebraic structure by using sets, parameters,
 logical operators and functions. A definition is made
 by assigning an expression of the form ``expression [==|>=|<=] expression``
-to the Python variable that references the ``gamspy.Equation`` instance. For
+to the Python variable that references the :meth:`Equation <gamspy.Equation>` instance. For
 indexed equations, the index operator is used to specify the domain::
     
     equation[index_list] = expression [==|>=|<=] expression
@@ -219,7 +219,7 @@ explicitly::
 Logic Equations
 ^^^^^^^^^^^^^^^
 
-Logic equations defined by using ``type="boolean"`` in the ``Equation`` constructor
+Logic equations defined by using ``type="boolean"`` in the :meth:`Equation <gamspy.Equation>` constructor
 use boolean algebra and have to evaluate to ``True`` (or ``1``) to be feasible. Most
 boolean functions can be used with the a Python operator as well as an equivalent method
 from :meth:`gamspy.math<gamspy.math>`, but some do exist in the latter only. The following

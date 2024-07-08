@@ -193,7 +193,7 @@ class SolveSuite(unittest.TestCase):
             objective=z2,
         )
         transport2.solve()
-        second_z2_value = z2.records["level"].values[0]
+        second_z2_value = z2.toValue()
         self.assertAlmostEqual(second_z2_value, 768.375, 3)
 
     def test_solve(self):
