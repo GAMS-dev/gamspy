@@ -391,7 +391,7 @@ class Expression(operable.Operable):
                         symbols.append(condition.parent.name)
 
                 if isinstance(node, operation.Operation):
-                    stack += node.domain
+                    stack += node.op_domain
                     node = node.expression
                 else:
                     node = getattr(node, "right", None)
