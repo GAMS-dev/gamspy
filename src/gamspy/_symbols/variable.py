@@ -727,7 +727,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
         >>> x = gp.Variable(m, name="x", domain=i, type="positive")
         >>> x.gamsRepr()
-        'x'
+        'x(i)'
 
         """
         representation = self.name

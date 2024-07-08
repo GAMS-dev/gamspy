@@ -438,7 +438,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> d = gp.Parameter(m, "d", domain=i)
         >>> d.gamsRepr()
-        'd'
+        'd(i)'
 
         """
         representation = self.name

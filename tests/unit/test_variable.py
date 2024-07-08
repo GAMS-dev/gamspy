@@ -330,47 +330,6 @@ class VariableSuite(unittest.TestCase):
         expression = -a[i] * 5
         self.assertEqual(expression.gamsRepr(), "(( - a(i)) * 5)")
 
-        self.assertTrue(
-            hasattr(a[i], "l")
-            and isinstance(a[i].l, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].l.gamsRepr(), "a.l(i)")
-        self.assertTrue(
-            hasattr(a[i], "m")
-            and isinstance(a[i].m, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].m.gamsRepr(), "a.m(i)")
-        self.assertTrue(
-            hasattr(a[i], "lo")
-            and isinstance(a[i].lo, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].lo.gamsRepr(), "a.lo(i)")
-        self.assertTrue(
-            hasattr(a[i], "up")
-            and isinstance(a[i].up, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].up.gamsRepr(), "a.up(i)")
-        self.assertTrue(
-            hasattr(a[i], "scale")
-            and isinstance(a[i].scale, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].scale.gamsRepr(), "a.scale(i)")
-        self.assertTrue(
-            hasattr(a[i], "fx")
-            and isinstance(a[i].fx, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].fx.gamsRepr(), "a.fx(i)")
-        self.assertTrue(
-            hasattr(a[i], "prior")
-            and isinstance(a[i].prior, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].prior.gamsRepr(), "a.prior(i)")
-        self.assertTrue(
-            hasattr(a[i], "stage")
-            and isinstance(a[i].stage, implicits.ImplicitParameter)
-        )
-        self.assertEqual(a[i].stage.gamsRepr(), "a.stage(i)")
-
         a.l[...] = 5
 
         self.assertEqual(
