@@ -113,6 +113,8 @@ class AliasSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
     def test_universe_alias(self):
+        gdx_path = os.path.join("tmp", "test.gdx")
+
         h = UniverseAlias(self.m, "h")
         self.assertEqual(len(h), 0)
         _ = Set(self.m, "i", records=["i1", "i2"])
@@ -124,12 +126,12 @@ class AliasSuite(unittest.TestCase):
 
         self.assertEqual(len(h), 4)
 
-        self.m.write("test.gdx")
+        self.m.write(gdx_path)
 
         bla = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
-        bla.read("test.gdx")
+        bla.read(gdx_path)
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
         )
