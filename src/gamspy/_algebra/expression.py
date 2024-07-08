@@ -331,7 +331,10 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, (Symbol, ImplicitSymbol)):
+                if isinstance(node, ImplicitSymbol):
+                    stack.append(node.parent)
+
+                if isinstance(node, (ImplicitSymbol, Symbol)):
                     for index, elem in enumerate(node.domain):
                         if isinstance(elem, (Symbol, ImplicitSymbol)):
                             path = validation.get_domain_path(elem)
@@ -358,7 +361,7 @@ class Expression(operable.Operable):
                 ):
                     stack += list(node.data.elements)
                 if isinstance(node, operation.Operation):
-                    stack += node.domain
+                    stack += node.op_domain
                     node = node.expression
                 else:
                     node = getattr(node, "right", None)
