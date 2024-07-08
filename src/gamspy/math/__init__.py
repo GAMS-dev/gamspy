@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from gamspy.math.activation import (
+    relu_with_binary_var,
+    relu_with_complementarity_var,
+)
 from gamspy.math.log_power import (
     cv_power,
     exp,
@@ -190,4 +194,6 @@ __all__ = [
     "rel_lt",
     "rel_ne",
     "_generate_dims",
+    "relu_with_binary_var",
+    "relu_with_complementarity_var",
 ]
