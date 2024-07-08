@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.5
+-------------
+- Documentation
+  - Add links to the api reference for symbols and functions mentioned in the documentation.
+
 GAMSPy 0.13.4
 -------------
 - General

@@ -39,8 +39,7 @@ assigned members to the sets as follows:
 They are labels, but are often referred to as elements or members. The optional ``description`` 
 may be used to describe the set for future reference and to ease readability.
 
-Besides using the ``Set()`` class directly, one can also facilitate the ``addSet()`` method 
-of the :meth:`gamspy.Container` class: ::
+Besides using the :meth:`Set <gamspy.Set>` class directly, one can also facilitate the :meth:`addSet <gamspy.Container.addSet>` function: ::
 
     from gamspy import Container
     m = Container()
@@ -304,7 +303,7 @@ Projection and Aggregation of Sets
 -----------------------------------
 
 In GAMSPy aggregation operations on sets may be performed with an assignment and 
-the :meth:`gamspy.Sum` operator. Assignments and the sum operator are introduced 
+the :meth:`Sum <gamspy.Sum>` operator. Assignments and the sum operator are introduced 
 and discussed in detail in chapter :ref:`indexed-operations`. Here we only show how 
 they may be used in the context of sets to perform projections and aggregations. 
 The following example serves as illustration. ::
@@ -352,7 +351,7 @@ from the set ``ijk`` to the set ``ij1a`` where the three-tuples of the first set
 onto the pairs of the second set, such that the dimension ``k`` is eliminated. This means 
 that the four elements ``"i1.j1.k1"``, ``"i1.j1.k2"``, ``"i1.j1.k3"`` and ``"i1.j1.k4"`` of 
 the set ``ijk`` are all mapped to the element ``"i1.j1"`` of the set ``ij1a``. Note that in 
-this context, the result of the :meth:`gamspy.Sum` operation is not a number but a set. The 
+this context, the result of the :meth:`Sum <gamspy.Sum>` operation is not a number but a set. The 
 second and third assignments are aggregations, where the number of elements of the two sets 
 are computed. As already mentioned, the result of the first aggregation is 24 and the result 
 of the second aggregation is 6 = 24 / 4.
@@ -365,7 +364,7 @@ Singleton Sets
 A singleton set in GAMSPy is a special set that has at most one element (zero elements 
 are allowed as well). Like other sets, singleton sets may have a domain with several 
 dimensions. Singleton sets are declared with the boolean ``is_singleton`` in the 
-:meth:`gamspy.Set` class (or the :meth:`gamspy.Container` class). ::
+:meth:`Set <gamspy.Set>` class (or the :meth:`Container <gamspy.Container>` class). ::
 
     from gamspy import Container, Set
     
@@ -486,7 +485,7 @@ any entry whatsoever is allowed in this position. In the second position element
 ``r`` must appear, they are domain checked, as usual.
 
 The second example illustrates how the universal set is introduced in a model with an 
-:meth:`gamspy.UniverseAlias` statement: ::
+:meth:`UniverseAlias <gamspy.UniverseAlias>` statement: ::
     
     from gamspy import Container, Set, UniverseAlias
     
@@ -495,7 +494,7 @@ The second example illustrates how the universal set is introduced in a model wi
     r = UniverseAlias(m, name = "new_universe")
     k = Set(m, name = "k", domain = r, records = "Chicago")
 
-The :meth:`gamspy.UniverseAlias` statement links the universal set with the set name 
+The :meth:`UniverseAlias <gamspy.UniverseAlias>` statement links the universal set with the set name 
 ``new_universe``. Set ``k`` is a subset of the universal set and ``Chicago`` is declared to 
 be an element of ``k``. Any item may be added freely to ``k``.
 
@@ -569,7 +568,7 @@ Most commonly whole sets are referenced as in the following examples: ::
 
 The parameter ``k`` is declared over the set ``i``, in the assignment statement in the next line 
 all elements of the set ``i`` are assigned the value 4. The scalar ``z`` is defined to be the 
-:meth:`gamspy.Sum` of all values of the parameter k(i).
+:meth:`Sum <gamspy.Sum>` of all values of the parameter k(i).
 
 Referencing a Single Element
 ----------------------------
@@ -600,13 +599,13 @@ the parameter ``k`` remain unchanged. For examples using conditionals and tuples
 Set Attributes
 ==============
 
-A GAMSPy set has several attributes attached to it. For a complete list see :meth:`gamspy.Set`. 
+A GAMSPy set has several attributes attached to it. For a complete list see :meth:`Set <gamspy.Set>`. 
 The attributes may be accessed like in the following example: ::
 
     data[set_name] = set_name.attribute
 
 Here ``data`` is a parameter, ``set_name`` is the name of the set and ``.attribute`` is one of 
-the attributes listed in :meth:`gamspy.Set`. The following example serves as illustration: ::
+the attributes listed in :meth:`Set <gamspy.Set>`. The following example serves as illustration: ::
 
     from gamspy import Container, Set, Parameter
 
@@ -694,7 +693,7 @@ This is illustrated in the following example:
 
         Display i;
 
-The ``domain_forwarding = True`` in the declaration of :meth:`gamspy.Parameter` ``d`` 
+The ``domain_forwarding = True`` in the declaration of :meth:`Parameter <gamspy.Parameter>` ``d`` 
 forces set elements to be recursively included in all parent sets. Here set ``i`` 
 will therefore contain all elements which define the first dimension of symbol ``d`` 
 and set ``j`` will contain all elements which define the second dimension of symbol 
@@ -978,8 +977,8 @@ conditional assignments. Conditional assignments in the context of dynamic sets 
 discussed in depth in the next section.
 
 .. note::
-    The indexed operation :meth:`gamspy.Sum` may be used for set unions. Similarly, 
-    the indexed operation :meth:`gamspy.Product` may be used for set intersections. 
+    The indexed operation :meth:`Sum <gamspy.Sum>` may be used for set unions. Similarly, 
+    the indexed operation :meth:`Product <gamspy.Product>` may be used for set intersections. 
     For examples see section :ref:`conditional-indexed-operations-with-dynamic-sets` below.
 
 
@@ -1033,7 +1032,7 @@ Note that instead of using ``subitem1`` in ``where[]`` we could also write: ::
 In the next example of a conditional assignment, a dynamic set features in the 
 logical condition on the right-hand side. The first statement clears the set 
 ``subitem2`` of any previously assigned members and the second statement assigns 
-all members of ``subitem1`` to ``subitem2`` using :meth:`gamspy.Number`. The 
+all members of ``subitem1`` to ``subitem2`` using :meth:`Number <gamspy.Number>`. The 
 following conditional assignment will have the same result: ::
 
     subitem2[item] = False
@@ -1110,7 +1109,7 @@ We wish to find the longest distance that we can travel given that we have a lim
 
 The dynamic set ``can_do`` contains all connections that are less than 3500 miles. 
 The scalar ``maxd`` is defined by a conditional assignment where the indexed operation 
-:meth:`gamspy.Smax` scans all entries of the parameter ``d`` whose label combinations 
+:meth:`Smax <gamspy.Smax>` scans all entries of the parameter ``d`` whose label combinations 
 are members of the set ``can_do`` and chooses the largest value. ::
 
     In [1]: can_do.pivot(index = "i", columns = "j")
@@ -1202,7 +1201,7 @@ The full power of indexed operators becomes apparent with multi-dimensional dyna
 The assignment above is used to create the set of departments that sell items supplied 
 by ``"parker"``. Note that the set ``g03`` is a subset of the set ``dep``. Its members 
 are specified by assignment, hence it is a dynamic set. Note that the assignment is made 
-to a set, therefore the indexed operator :meth:`gamspy.Sum` refers to a set union (and 
+to a set, therefore the indexed operator :meth:`Sum <gamspy.Sum>` refers to a set union (and 
 not to an addition as would be the case if the assignment were made to a parameter). 
 The indexed operation is controlled by the two-dimensional set ``supply`` with the label 
 ``"parker"`` in the second index position. This logical condition is True for all members 
@@ -1223,7 +1222,7 @@ desired departments: ::
     
     g11[dep] = Product(sales[dep,item], supply[item,"parker"]);
 
-Note that the indexed operation :meth:`gamspy.Product` refers to set intersections in the 
+Note that the indexed operation :meth:`Product <gamspy.Product>` refers to set intersections in the 
 context of assignments to dynamic sets. From all departments linked with items only those 
 are included where *all* items sold are supplied by ``"parker"``. This means that 
 departments that additionally sell items that are not supplied by ``"parker"`` are 
@@ -1326,7 +1325,7 @@ more sets are listed. The order of the elements in any one set is the same as th
 those elements in the unique element list. This means that the order of a set may not be 
 what it appears to be if some of the labels were used in an earlier definition. The internal 
 GAMS order of the labels can be made visible with the ``getUELs()`` method of the 
-:meth:`gamspy.Container` class. A good rule of thumb is that if the user wants a set to be 
+:meth:`Container <gamspy.Container>` class. A good rule of thumb is that if the user wants a set to be 
 ordered and the labels in the set have not been used already, then they will be ordered.
 
 In the example below we show ordered and unordered sets and the map showing the order. The 

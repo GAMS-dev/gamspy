@@ -141,7 +141,7 @@ def main():
         master.solve(options=Options(relative_optimality_gap=0))
         pricing.solve(options=Options(relative_optimality_gap=0))
 
-        if z.records["level"].values[0] >= -0.001:
+        if z.toValue() >= -0.001:
             break
 
         aip[i, pi] = gams_math.Round(y.l[i])

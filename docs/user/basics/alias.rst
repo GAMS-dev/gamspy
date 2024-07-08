@@ -57,7 +57,7 @@ as the ``alias_with`` property. We can see this behavior in the following exampl
     Out[2]: 'i'
 
 .. warning::
-    If an alias is to be used for the *universal set*, the :meth:`gamspy.UniverseAlias` 
+    If an alias is to be used for the *universal set*, the :meth:`UniverseAlias <gamspy.UniverseAlias>` 
     class has to be used. More about this in :ref:`the-universal-set`.
 
 
