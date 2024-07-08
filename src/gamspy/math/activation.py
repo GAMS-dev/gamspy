@@ -107,7 +107,7 @@ def relu_with_binary_var(
         eq[2][...] = y <= sigma * default_ub
         y.lo[...] = 0
 
-    return y
+    return y, sigma
 
 
 def relu_with_complementarity_var(

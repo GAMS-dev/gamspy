@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import sys
 import unittest
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gams_math
-from gamspy import Container, Equation, Parameter, Set, Variable
+import numpy as np
+from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 
 
@@ -465,6 +467,114 @@ class MathSuite(unittest.TestCase):
 
         op2 = gams_math.rel_ne(sumc[o, p], op[o, p])
         self.assertEqual(op2.gamsRepr(), "( rel_ne(sumc(o,p),op(o,p)) )")
+
+    def test_relu(self, relu_type=gams_math.relu_with_binary_var):
+        m = Container(
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
+        )
+
+        i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
+
+        budget = 200
+
+        c = Parameter(
+            m,
+            name="c",
+            records=[("i1", 100), ("i2", 50), ("i3", 90)],
+            description="min investment before operation",
+            domain=[i],
+        )
+
+        g = Parameter(
+            m,
+            name="g",
+            records=[("i1", 2), ("i2", 1.2), ("i3", 1.5)],
+            description="gain per unit after min investment",
+            domain=[i],
+        )
+
+        x = Variable(
+            m,
+            name="x",
+            description="investment in plant i",
+            domain=[i],
+            type="Positive",
+        )
+
+        y, _ = gams_math.relu_with_binary_var(
+            x - c, default_lb=-100, default_ub=200
+        )
+
+        total_budget = Equation(m, name="check_budget")
+        total_budget[...] = Sum(i, x[i]) <= budget
+
+        budget = Model(
+            m,
+            name="budget",
+            equations=m.getEquations(),
+            problem="MIP",
+            sense="max",
+            objective=Sum(i, y[i] * g[i]),
+        )
+        budget.solve(output=sys.stdout)
+        self.assertTrue(np.isclose(budget.objective_value, 200.0))
+
+    def test_relu_2(self):
+        m = Container(
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
+        )
+
+        i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
+
+        budget = 200
+
+        c = Parameter(
+            m,
+            name="c",
+            records=[("i1", 100), ("i2", 50), ("i3", 90)],
+            description="min investment before operation",
+            domain=[i],
+        )
+
+        g = Parameter(
+            m,
+            name="g",
+            records=[("i1", 2), ("i2", 1.2), ("i3", 1.5)],
+            description="gain per unit after min investment",
+            domain=[i],
+        )
+
+        x = Variable(
+            m,
+            name="x",
+            description="investment in plant i",
+            domain=[i],
+            type="Positive",
+        )
+
+        y = gams_math.relu_with_complementarity_var(
+            x - c, default_lb=-100, default_ub=200
+        )
+
+        total_budget = Equation(m, name="check_budget")
+        total_budget[...] = Sum(i, x[i]) <= budget
+
+        budget = Model(
+            m,
+            name="budget",
+            equations=m.getEquations(),
+            problem="NLP",
+            sense="max",
+            objective=Sum(i, y[i] * g[i]),
+        )
+        # give solver a different starting point, since solver is local
+        # it will stop at a local optimum
+        y.l["i1"] = 0
+        y.l["i2"] = 200
+        y.l["i3"] = 0
+        budget.solve(output=sys.stdout)
+
+        self.assertTrue(np.isclose(budget.objective_value, 180.0))
 
 
 def math_suite():
