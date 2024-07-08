@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
-    from gamspy import Alias, Container, Equation, Set, Variable
+    from gamspy import Alias, Equation, Set, Variable
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -220,8 +220,10 @@ def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     return arrvals[0][0]
 
 
-def _get_symbol_names_from_gdx(container: Container) -> list[str]:
-    gdx_handle = _open_gdx_file(container.system_directory, container._gdx_out)
+def _get_symbol_names_from_gdx(
+    system_directory: str, load_from: str
+) -> list[str]:
+    gdx_handle = _open_gdx_file(system_directory, load_from)
     _, symbol_count, _ = gdx.gdxSystemInfo(gdx_handle)
 
     symbol_names = []
