@@ -756,6 +756,33 @@ class MiroSuite(unittest.TestCase):
             },
         )
 
+    def test_non_init(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro5_gdxin_.gdx"
+        )
+        miro_gdx_out = os.path.join(
+            directory, "miro_models", "_miro5_gdxout_.gdx"
+        )
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["MIRO"] = "0"
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+        subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
+
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    directory + os.sep + "miro_models" + os.sep + "miro5.py",
+                ],
+                env=subprocess_env,
+                check=True,
+                capture_output=True,
+            )
+        except Exception as e:
+            self.fail(e)
+
 
 def miro_suite():
     suite = unittest.TestSuite()
