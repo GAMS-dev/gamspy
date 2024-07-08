@@ -238,7 +238,7 @@ class ModelInstanceSuite(unittest.TestCase):
         # Test solver options
         transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
         self.assertTrue(
-            os.path.exists(os.path.join(m.working_directory, "conopt.123"))
+            os.path.exists(os.path.join(os.getcwd(), "conopt.123"))
         )
 
     def test_modifiable_in_condition(self):

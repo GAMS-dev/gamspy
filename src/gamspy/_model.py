@@ -684,7 +684,6 @@ class Model:
             )
 
         options._set_solver_options(
-            self.container.working_directory,
             solver=solver,
             problem=self.problem,
             solver_options=solver_options,
