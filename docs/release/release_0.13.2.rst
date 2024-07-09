@@ -7,7 +7,7 @@ GAMSPy 0.13.2
   - Allow using an environment variable to set the GAMS system directory (given environment variable will override the system directory even if the user provides a system directory argument to Container).
   - Use gdxSymbols commandline option instead of manually marking symbols dirty.
   - Add memory_tick_interval, monitor_process_tree_memory, and profile_file options.
-  - Change the way to generate GAMS model from a GAMSPy model.
+  - Change the way to generate a GAMS model from a GAMSPy model.
   - Remove import_symbols argument for addGamsCode since it is not needed anymore.
 
 - Documentation

@@ -13,4 +13,3 @@ Testing
   - Adapt generateGamsString tests to new the gdx load logic. 
   - Add test for the solver capability bug.
   - Test explicit expert synchronization for symbols.
-  

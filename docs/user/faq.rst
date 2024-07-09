@@ -4,8 +4,8 @@
 Frequently Asked Questions
 ****************************
 
-Which solvers GAMSPy support?
------------------------------
+Which solvers does GAMSPy support?
+-----------------------------------
 At the moment, GAMSPy supports 21 solvers:
 
 - NLPEC
@@ -259,12 +259,12 @@ you want to use the GAMSPy ``Parameter``, as changes to a Python variable are no
 reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, will
 be evaluated by the second solve statement.
 
-Why does Windows Defender blocks gamspy.exe executable?
+Why does Windows Defender block the gamspy.exe executable?
 -------------------------------------------------------
 
 When you execute `pip install gamspy`, it creates an executable on your machine (e.g. gamspy.exe on Windows) 
 which acts like a regular commandline script. This means that it cannot be signed by us. Therefore, Windows Defender 
-sometimes think that it is probably a malware. Because of this issue, when you run commands such as `gamspy install license <license_path>`, 
+sometimes thinks that it is probably a malware. Because of this issue, when you run commands such as `gamspy install license <license_path>`, 
 Windows Defender blocks the executable. A workaround is to run `python -m gamspy install license <license_path>`. Another way
 is to whitelist gamspy.exe executable on your machine. Since GAMSPy is open source, to make sure about the safety of the executable, 
 one can check the following script which GAMSPy uses: `script <https://github.com/GAMS-dev/gamspy/blob/develop/src/gamspy/_cli/cmdline.py>`_.

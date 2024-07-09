@@ -24,7 +24,7 @@ Keeping the amount of data as small as possible will certainly help. The reader 
 always be kept aware of all the assumptions made during data manipulation in order to be 
 able to reproduce the results of a study.
 
-This chapter deals with the data type *parameter*. Data for *parameters* can be enetered 
+This chapter deals with the data type *parameter*. Data for *parameters* can be entered 
 in scalar and in list oriented format. 
 
 
@@ -90,7 +90,7 @@ over. Finally, the value assigned to the record defined by the set element or el
 tuple. 
 
 Besides using the :meth:`Parameter <gamspy.Parameter>` class directly, one can also facilitate the 
-``addParameter()`` method of the :meth:`Container <gamspy.Container>` class: ::
+:meth:`addParameter <gamspy.Container.addParameter>` method of the :meth:`Container <gamspy.Container>` class: ::
 
     dd = AddParameter("dd", domain = j, description = "distribution of demand",
                       records = [["mexico-df", 55], 
@@ -145,7 +145,7 @@ can be created using simple data frames or tuples in a pandas MultiIndex object.
 
 It is also possible to define an empty parameter at declaration and fill it with data 
 (e.g. from other sources like databases or spreadsheets) later on using the 
-``setRecords()`` method of the :meth:`Parameter <gamspy.Parameter>` class: ::
+:meth:`setRecords <gamspy.Parameter.setRecords>` method of the :meth:`Parameter <gamspy.Parameter>` class: ::
 
     from gamspy import Container
 

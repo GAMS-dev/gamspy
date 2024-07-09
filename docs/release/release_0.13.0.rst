@@ -3,7 +3,7 @@ GAMSPy 0.13.0
 
 - General
 
-  - Communicate with GAMS executable via socket instead of spawning a new job everytime.
+  - Communicate with GAMS executable via socket instead of spawning a new job every time.
 
 - Documentation
 
