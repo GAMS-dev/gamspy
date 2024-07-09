@@ -339,9 +339,6 @@ be turned on by providing the ``FeasOpt`` argument in ``solver_options``, which 
 There are also facilities of other solvers such as BARON, COPT, Gurobi, Lindo etc. which can be enabled in the same way.
 To see all facilities, refer to the `solver manuals <https://gams.com/latest/docs/S_MAIN.html>`_.
 
-===========
-Performance
-===========
 
 Selective Synchronization
 -------------------------

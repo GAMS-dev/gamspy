@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import sys
 import tempfile
 import time
@@ -429,7 +430,7 @@ class EngineSuite(unittest.TestCase):
 
         # /api/auth/logout -> post
         # logout only on Python 3.12 to avoid unauthorized calls on parallel jobs.
-        if sys.version_info.minor == 12:
+        if platform.system() == "Linux" and sys.version_info.minor == 12:
             message = client.auth.logout()
             self.assertTrue(message is not None and isinstance(message, str))
 

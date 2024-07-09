@@ -5,6 +5,7 @@ GAMSPy 0.13.5
 -------------
 - Documentation
   - Add links to the api reference for symbols and functions mentioned in the documentation.
+  - Minor documentation corrections.
 - Testing
   - Logout from GAMS Engine only on Python 3.12 to avoid unauthorized calls on parallel jobs.
 
