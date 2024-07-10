@@ -255,9 +255,11 @@ class Container(gt.Container):
                 data = self._process.stdout.readline()
                 if data.startswith("--- Job ") and "elapsed" in data:
                     output.write(data)
+                    output.flush()
                     break
 
                 output.write(data)
+                output.flush()
 
         try:
             response = self._socket.recv(128)
