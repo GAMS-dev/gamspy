@@ -337,6 +337,7 @@ class Options(BaseModel):
 
         return gams_options
 
+
     def _set_solver_options(
         self,
         solver: str | None,

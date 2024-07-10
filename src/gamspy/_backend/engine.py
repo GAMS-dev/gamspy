@@ -5,6 +5,7 @@ import io
 import json
 import logging
 import os
+import shutil
 import tempfile
 import time
 import urllib.parse
@@ -428,6 +429,7 @@ class Job(Endpoint):
                             if not data:
                                 break
                             out.write(data)
+                            out.flush()
 
                     r.release_conn()
 
@@ -795,6 +797,16 @@ class GAMSEngine(backend.Backend):
                     token, self.container.working_directory
                 )
 
+                engine_output_path = os.path.join(
+                    self.container.working_directory, "log_stdout.txt"
+                )
+
+                if self.options.log_file:
+                    # logoption = 2 | 4
+                    shutil.move(engine_output_path, self.options.log_file)
+                else:
+                    os.remove(engine_output_path)  # logoption = 0 | 3
+
                 self.model._update_model_attributes()
 
                 if self.client.remove_results:
@@ -849,7 +861,7 @@ class GAMSEngine(backend.Backend):
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
         options._extra_options["save"] = self.restart_file
-        options.export(self.pf_file, self.output)
+        options.export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 
@@ -866,7 +878,7 @@ class GAMSEngine(backend.Backend):
         options = Options()
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
-        options.export(self.pf_file, self.output)
+        options.export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 
