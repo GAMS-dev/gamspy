@@ -1,6 +1,6 @@
-******************************
-Ordinary Least Squares Example
-******************************
+******************
+Regression Example
+******************
 
 
 .. meta::
@@ -13,10 +13,17 @@ it's often beneficial to start with simpler models to understand your system
 better. One of the simplest methods for regression is ordinary least squares
 (OLS).
 
+To learn more about `Ordinary Least Squares <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_.
+
 In the following example, we have a training set consisting of 100
 observations, each with two features. We create our labels by multiplying the
 first feature by 3, the second feature by 4, and then adding 22. Afterwards, we
 add some noise to our labels.
+
+
+:math:`y = 3* x_0 + 4 * x_1 + 22 + \epsilon`
+
+:math:`\epsilon \sim \mathcal{U}(0, 10)`
 
 To find the relationship between labels and observations using OLS in GAMSPy,
 you can follow these steps:
@@ -66,14 +73,17 @@ you can follow these steps:
    # 1     3.936441
    # 2    26.795031
 
-You can see the estimated coefficients are close to their original values. In
+
+Version with L2 regularization
+==============================
+
+You can see the estimated coefficients were close to their original values. In
 this example, the problem is well-formed; however, in some cases, it is
 necessary to add regularization terms to improve the model's performance or to
 handle ill-posed problems. Regularization helps prevent overfitting by adding a
 penalty to the objective function, encouraging simpler models with smaller
 coefficient values.
 
-Version with L2 regularization:
 
 .. code-block:: python
 
