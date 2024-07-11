@@ -534,8 +534,8 @@ in the universe node ``"*"``. This particular domain tree may be represented as 
           |
           - j - jj - jjj 
 
-Observe that the universal set is assumed to be ordered and operators for ordered sets such 
-:ref:`ord <card_ord>`, :ref:`lag and lead <lag_lead>` may be applied to any sets aliased with 
+Observe that the universal set is assumed to be ordered and operators for ordered sets such as 
+:meth:`Ord <gamspy.Ord>` and :meth:`Lag/Lead <gamspy.Set.lag>` may be applied to any sets aliased with 
 the universal set.
 
 
