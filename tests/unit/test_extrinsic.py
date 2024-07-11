@@ -25,6 +25,16 @@ class ExtrinsicSuite(unittest.TestCase):
         )
 
     def test_extrinsic_functions(self):
+        # Invalid path
+        with self.assertRaises(FileNotFoundError):
+            _ = self.m.importExtrinsicLibrary(
+                "blablablalib.so",
+                functions={
+                    "myPi": "Pi",
+                    "myCos": "Cosine",
+                },
+            )
+
         names = {
             "linux": "libtricclib64.so",
             "mac_x86_64": "libtricclib64x86.dylib",

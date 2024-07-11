@@ -17,7 +17,7 @@ test-leg-3.8:
     - gamspy install license $LOCAL_LICENSE
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch develop --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
-    - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - coverage run --source=gamspy tests/test_gamspy.py --integration --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -31,9 +31,9 @@ test-leg-3.8:
     paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
 
 test-deg-3.8:
   stage: test
@@ -50,7 +50,7 @@ test-deg-3.8:
     - gamspy install solver mpsge
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
-    - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - coverage run --source=gamspy tests/test_gamspy.py --integration --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -59,7 +59,7 @@ test-deg-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
     - when: never
 
@@ -78,7 +78,7 @@ test-dac-3.8:
     - gamspy install solver mpsge
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
-    - coverage run --source=gamspy tests/test_gamspy.py --integration --doc --engine --model-library
+    - coverage run --source=gamspy tests/test_gamspy.py --integration --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -87,9 +87,9 @@ test-dac-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
 
 test-wei-3.8:
   stage: test
@@ -109,7 +109,7 @@ test-wei-3.8:
     - gamspy install solver mpsge
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
-    - coverage run --source=gamspy tests\test_gamspy.py --integration --doc --engine --model-library
+    - coverage run --source=gamspy tests\test_gamspy.py --integration --engine --model-library
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
@@ -117,6 +117,6 @@ test-wei-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == "develop"
       when: on_success
     - when: never

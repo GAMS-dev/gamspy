@@ -46,7 +46,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.13.3")
+        self.assertEqual(gamspy.__version__, "0.13.4")
 
 
 class DocsSuite(unittest.TestCase):
@@ -218,13 +218,20 @@ def main():
     miro_paths = [
         f"tests{os.sep}conf_test_gamspy",
         f"tests{os.sep}integration{os.sep}conf_test_miro",
+        f"tests{os.sep}integration{os.sep}miro_models{os.sep}conf_miro5",
     ]
     for path in miro_paths:
         if os.path.exists(path):
             shutil.rmtree(path)
 
-    if os.path.exists("miro.log"):
-        os.remove("miro.log")
+    misc_paths = [
+        "miro.log",
+        "gams.gms",
+        "HANSEN.GEN",
+    ]
+    for path in misc_paths:
+        if os.path.exists(path):
+            os.remove(path)
 
     shutil.rmtree("tmp")
 

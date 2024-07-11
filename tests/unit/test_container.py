@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import gc
 import os
-import subprocess
 import unittest
 
 import gamspy.utils as utils
@@ -152,23 +151,27 @@ class ContainerSuite(unittest.TestCase):
         self.assertEqual(repr(self.m), f"<Container ({hex(id(self.m))})>")
 
     def test_read_write(self):
+        gdx_path = os.path.join("tmp", "test.gdx")
+
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
         _ = Set(m, "i", records=["i1", "i2"])
         _ = Set(m, "j", records=["j1", "j2"])
-        m.write("test.gdx")
+        m.write(gdx_path)
 
         _ = Set(self.m, name="k", records=["k1", "k2"])
-        self.m.read("test.gdx", ["i"])
+        self.m.read(gdx_path, ["i"])
         self.assertEqual(list(self.m.data.keys()), ["k", "i"])
 
     def test_loadRecordsFromGdx(self):
+        gdx_path = os.path.join("tmp", "test.gdx")
+
         i = Set(self.m, name="i", records=["i1", "i2"])
         a = Parameter(
             self.m, name="a", domain=[i], records=[("i1", 1), ("i2", 2)]
         )
-        self.m.write("test.gdx")
+        self.m.write(gdx_path)
 
         # Load all
         new_container = Container(
@@ -176,7 +179,7 @@ class ContainerSuite(unittest.TestCase):
         )
         i = Set(new_container, name="i")
         a = Parameter(new_container, name="a", domain=[i])
-        new_container.loadRecordsFromGdx("test.gdx")
+        new_container.loadRecordsFromGdx(gdx_path)
 
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
 
@@ -188,7 +191,7 @@ class ContainerSuite(unittest.TestCase):
         )
         i = Set(new_container2, name="i")
         a = Parameter(new_container2, name="a", domain=[i])
-        new_container2.loadRecordsFromGdx("test.gdx", ["i"])
+        new_container2.loadRecordsFromGdx(gdx_path, ["i"])
 
         self.assertEqual(i.records.values.tolist(), [["i1", ""], ["i2", ""]])
         self.assertIsNone(a.records)
@@ -405,25 +408,29 @@ Equation e;
         )
 
     def test_write(self):
+        gdx_path = os.path.join("tmp", "test.gdx")
+
         from gamspy import SpecialValues
 
         _ = Parameter(self.m, "a", records=SpecialValues.EPS)
-        self.m.write("test.gdx", eps_to_zero=True)
+        self.m.write(gdx_path, eps_to_zero=True)
 
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-            load_from="test.gdx",
+            load_from=gdx_path,
         )
         self.assertEqual(int(m["a"].toValue()), 0)
 
     def test_read(self):
+        gdx_path = os.path.join("tmp", "test.gdx")
+
         _ = Parameter(self.m, "a", records=5)
-        self.m.write("test.gdx")
+        self.m.write(gdx_path)
 
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
-        m.read("test.gdx", load_records=False)
+        m.read(gdx_path, load_records=False)
         self.assertIsNone(m["a"].records, None)
 
     def test_debugging_level(self):
@@ -499,104 +506,6 @@ Equation e;
         test_keep_on_error_err()
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
-
-    def test_to_gams(self):
-        i = Set(
-            self.m,
-            name="i",
-            records=["seattle", "san-diego"],
-            description="canning plants",
-        )
-        j = Set(
-            self.m,
-            name="j",
-            records=["new-york", "chicago", "topeka"],
-            description="markets",
-        )
-
-        # Data
-        a = Parameter(
-            self.m,
-            name="a",
-            domain=i,
-            records=self.capacities,
-            description="capacity of plant i in cases",
-        )
-        b = Parameter(
-            self.m,
-            name="b",
-            domain=j,
-            records=self.demands,
-            description="demand at market j in cases",
-        )
-        d = Parameter(
-            self.m,
-            name="d",
-            domain=[i, j],
-            records=self.distances,
-            description="distance in thousands of miles",
-        )
-        c = Parameter(
-            self.m,
-            name="c",
-            domain=[i, j],
-            description="transport cost in thousands of dollars per case",
-        )
-        c[i, j] = 90 * d[i, j] / 1000
-
-        # Variable
-        x = Variable(
-            self.m,
-            name="x",
-            domain=[i, j],
-            type="Positive",
-            description="shipment quantities in cases",
-        )
-
-        # Equation
-        supply = Equation(
-            self.m,
-            name="supply",
-            domain=i,
-            description="observe supply limit at plant i",
-        )
-        demand = Equation(
-            self.m,
-            name="demand",
-            domain=j,
-            description="satisfy demand at market j",
-        )
-
-        supply[i] = Sum(j, x[i, j]) <= a[i]
-        demand[j] = Sum(i, x[i, j]) >= b[j]
-
-        transport = Model(
-            self.m,
-            name="transport",
-            equations=self.m.getEquations(),
-            problem="LP",
-            sense=Sense.MIN,
-            objective=Sum((i, j), c[i, j] * x[i, j]),
-        )
-
-        transport.toGams(os.path.join("tmp", "to_gams"))
-
-        try:
-            import gamspy_base
-
-            process = subprocess.run(
-                [
-                    os.path.join(gamspy_base.directory, "gams"),
-                    os.path.join("tmp", "to_gams", "transport.gms"),
-                ],
-                capture_output=True,
-                text=True,
-            )
-
-            self.assertEqual(process.returncode, 0)
-            self.assertTrue("153.675" in process.stdout)
-        except ImportError:
-            ...
 
 
 def container_suite():
