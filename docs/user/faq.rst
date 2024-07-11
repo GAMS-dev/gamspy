@@ -6,28 +6,36 @@ Frequently Asked Questions
 
 Which solvers GAMSPy support?
 -----------------------------
-At the moment, GAMSPy supports 21 solvers:
+At the moment, GAMSPy supports 29 solvers:
 
-- NLPEC
-- SBB
 - CONOPT
 - CONVERT
 - CPLEX
-- PATH
-- BARON
-- CONOPT4
-- COPT
-- DICOPT
-- GUROBI
-- HIGHS
 - IPOPT
 - IPOPTH
+- KESTREL
+- NLPEC
+- PATH
+- SHOT
+- BARON
+- CBC
+- CONOPT3
+- COPT
+- DICOPT
+- EXAMINER
+- EXAMINER2
+- GUROBI
+- HIGHS
 - KNITRO
+- MILES
 - MINOS
 - MOSEK
+- MPSGE
+- PATHNLP
+- SBB
 - SCIP
-- SHOT
 - SNOPT
+- SOPLEX
 - XPRESS
 
 The list can also be accessed from commandline by executing: ::
@@ -53,25 +61,25 @@ The listing of default solver for each problem type is below:
 +---------+----------------+
 | RMIP    | CPLEX          |
 +---------+----------------+
-| NLP     | CONOPT         |
+| NLP     | IPOPTH         |
 +---------+----------------+
 | MCP     | PATH           |
 +---------+----------------+
 | MPEC    | NLPEC          |
 +---------+----------------+
-| CNS     | CONOPT         |
+| CNS     | PATH           |
 +---------+----------------+
-| DNLP    | CONOPT         |
+| DNLP    | IPOPTH         |
 +---------+----------------+
-| RMINLP  | CONOPT         |
+| RMINLP  | IPOPTH         |
 +---------+----------------+
-| MINLP   | SBB            |
+| MINLP   | SHOT           |
 +---------+----------------+
-| QCP     | CONOPT         |
+| QCP     | IPOPTH         |
 +---------+----------------+
-| MIQCP   | SBB            |
+| MIQCP   | SHOT           |
 +---------+----------------+
-| RMIQCP  | CONOPT         |
+| RMIQCP  | IPOPTH         |
 +---------+----------------+
 | EMP     | CONVERT        |
 +---------+----------------+
