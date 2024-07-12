@@ -28,6 +28,7 @@ class Local(backend.Backend):
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
+        self.trace_file = self.job_name + ".txt"
 
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = self.job_name + ".log"
@@ -35,14 +36,11 @@ class Local(backend.Backend):
             self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
-        trace_file_path = os.path.join(
-            self.container.working_directory, "trace.txt"
-        )
-        scrdir = os.path.join(self.container.working_directory, "225a")
+        scrdir = self.container.process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,
-            "trace": trace_file_path,
+            "trace": self.trace_file,
             "input": self.gms_file,
             "output": job_name + ".lst",
             "sysdir": self.container.system_directory,
@@ -118,6 +116,6 @@ class Local(backend.Backend):
         miro.load_miro_symbol_records(self.container)
 
         if self.model is not None:
-            return self.prepare_summary(self.container.working_directory)
+            return self.prepare_summary(self.trace_file)
 
         return None

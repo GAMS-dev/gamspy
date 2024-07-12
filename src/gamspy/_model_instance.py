@@ -105,7 +105,7 @@ class ModelInstance:
             gams_file.write("")
 
         options = Options()
-        scrdir = os.path.join(self.container.working_directory, "225a")
+        scrdir = self.container.process_directory
         extra_options = {
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
