@@ -706,6 +706,7 @@ class GAMSEngine(backend.Backend):
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
+        self.trace_file = self.job_name + ".txt"
 
     def is_async(self):
         return not self.client.is_blocking
@@ -736,7 +737,7 @@ class GAMSEngine(backend.Backend):
     def execute_gams(self, gams_string: str):
         extra_options = {
             "gdx": os.path.basename(self.container._gdx_out),
-            "trace": "trace.txt",
+            "trace": os.path.basename(self.trace_file),
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
         }
@@ -828,17 +829,14 @@ class GAMSEngine(backend.Backend):
         if self.client.remove_results or self.model is None:
             return None
 
-        return self.prepare_summary(self.container.working_directory)
+        return self.prepare_summary(self.trace_file)
 
     def _prepare_dummy_options(self) -> dict:
-        trace_file_path = os.path.join(
-            self.container.working_directory, "trace.txt"
-        )
-        scrdir = os.path.join(self.container.working_directory, "225a")
+        scrdir = self.container.process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,
-            "trace": trace_file_path,
+            "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,

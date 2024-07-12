@@ -416,6 +416,7 @@ class NEOSServer(backend.Backend):
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
         self.restart_file = self.job_name + ".g00"
+        self.trace_file = self.job_name + ".txt"
 
     def is_async(self):
         return not self.client.is_blocking
@@ -445,7 +446,10 @@ class NEOSServer(backend.Backend):
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
-        extra_options = {"gdx": "output.gdx", "trace": "trace.txt"}
+        extra_options = {
+            "gdx": "output.gdx",
+            "trace": os.path.basename(self.trace_file),
+        }
         self.options._set_extra_options(extra_options)
 
         self.client._prepare_xml(
@@ -498,19 +502,16 @@ class NEOSServer(backend.Backend):
             )
 
         if self.client.is_blocking and self.model is not None:
-            return self.prepare_summary(self.container.working_directory)
+            return self.prepare_summary(self.trace_file)
 
         return None
 
     def _prepare_dummy_options(self) -> dict:
-        trace_file_path = os.path.join(
-            self.container.working_directory, "trace.txt"
-        )
-        scrdir = os.path.join(self.container.working_directory, "225a")
+        scrdir = self.container.process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,
-            "trace": trace_file_path,
+            "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,

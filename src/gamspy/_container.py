@@ -8,6 +8,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 from contextlib import closing
@@ -75,11 +76,9 @@ def find_free_address() -> tuple[str, int]:
 
 
 def open_connection(
-    system_directory: str, working_directory: str
+    system_directory: str, process_directory: str
 ) -> tuple[socket.socket, subprocess.Popen]:
     license_path = utils._get_license_path(system_directory)
-    process_directory = os.path.join(working_directory, "225a")
-    os.makedirs(process_directory, exist_ok=True)
 
     address = find_free_address()
     process = subprocess.Popen(
@@ -185,6 +184,7 @@ class Container(gt.Container):
         )
 
         self.working_directory = self.workspace.working_directory
+        self.process_directory = tempfile.mkdtemp(dir=self.working_directory)
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()
 
@@ -203,7 +203,7 @@ class Container(gt.Container):
         self._miro_output_symbols: list[str] = []
 
         self._socket, self._process = open_connection(
-            self.system_directory, self.working_directory
+            self.system_directory, self.process_directory
         )
 
         if load_from is not None:

@@ -1,34 +1,131 @@
 # flake8: noqa
 # fmt: off
+
 from __future__ import annotations
 
+import concurrent.futures
+import math
 import os
 import sys
 import time
 import unittest
 
-import numpy as np
-import pandas as pd
-
 import gamspy._validation as validation
-from gamspy import Card
-from gamspy import Container
-from gamspy import Equation
-from gamspy import Model
-from gamspy import ModelStatus
-from gamspy import SolveStatus
-from gamspy import Options
-from gamspy import Ord
-from gamspy import Parameter
-from gamspy import Problem
-from gamspy import Sense
-from gamspy import Set
-from gamspy import Smax
-from gamspy import Sum
-from gamspy import Variable
-from gamspy.exceptions import GamspyException
-from gamspy.exceptions import ValidationError
-from gamspy.math import sqr
+import numpy as np
+from gamspy import (
+    Card,
+    Container,
+    Equation,
+    Model,
+    ModelStatus,
+    Options,
+    Ord,
+    Parameter,
+    Sense,
+    Set,
+    Smax,
+    SolveStatus,
+    Sum,
+    Variable,
+)
+from gamspy.exceptions import GamspyException, ValidationError
+
+
+def transport(f_value):
+    m = Container()
+
+    # Prepare data
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    # Set
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+
+    # Data
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    f = Parameter(m, name="f", records=f_value)
+    c[i, j] = f * d[i, j] / 1000
+
+    # Variable
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    transport.solve()
+
+    return transport.objective_value
 
 
 class SolveSuite(unittest.TestCase):
@@ -1237,6 +1334,13 @@ class SolveSuite(unittest.TestCase):
         model.solve()
         self.assertIsNotNone(w.records)
         self.assertIsNotNone(loss.records)
+
+    def test_multiprocessing(self):
+        f_values = [90, 120, 150, 180]
+        expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            for expected, objective in zip(expected_values, executor.map(transport, f_values)):
+                self.assertTrue(math.isclose(expected, objective))
 
     
 
