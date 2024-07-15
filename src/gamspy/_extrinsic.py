@@ -69,6 +69,16 @@ class ExtrinsicFunction(operable.Operable):
         """
         return self.gamsRepr()
 
+    def latexRepr(self) -> str:
+        """
+        Representation of this ExtrinsicFunction in Latex.
+
+        Returns
+        -------
+        str
+        """
+        return self.gamsRepr()
+
 
 class ExtrinsicLibrary:
     """

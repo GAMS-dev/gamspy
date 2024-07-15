@@ -1,0 +1,91 @@
+\documentclass[11pt]{article}
+\usepackage{a4wide}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
+\usepackage{xcolor}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section*{Symbols}
+
+
+\subsection*{Sets}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+w & * & weapons\\
+t & * & targets\\
+\hline
+\end{tabularx}
+\subsection*{Parameters}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+td & w,t & target data\\
+wa & w & weapons availability\\
+tm & t & minimum number of weapons per target\\
+mv & t & military value of target\\
+\hline
+\end{tabularx}
+\subsection*{Variables}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+x & w,t & weapons assignment\\
+war\_objective\_variable &  & \\
+\hline
+\end{tabularx}
+\subsection*{Equations}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+maxw & w & weapons balance\\
+minw & t & minimum number of weapons required per target\\
+war\_objective &  & \\
+\hline
+\end{tabularx}
+\section*{Equation Definitions}
+\subsubsection*{\begin{math}\text{maxw}_{w}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{t} ~ | ~ \text{td}_{\text{w},\text{t}}} \text{x}_{\text{w},\text{t}} \leq \text{wa}_{\text{w}}
+\end{math}
+\hfill
+\begin{math}
+\forall w
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{minw}_{t}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{w} ~ | ~ \text{td}_{\text{w},\text{t}}} \text{x}_{\text{w},\text{t}} \geq \text{tm}_{\text{t}}
+\end{math}
+\hfill
+\begin{math}
+\forall t ~ | ~ \text{tm}_{\text{t}} 
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{war\_objective}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{t}} \text{mv}_{\text{t}} \cdot 1 - \displaystyle \prod_{\text{w} ~ | ~ \text{td}_{\text{w},\text{t}}}  rPower((1 - td(w,t)),x(w,t))  = \text{war\_objective\_variable}
+\end{math}
+\vspace{5pt}
+\hrule
+\bigskip
+\begin{math}\text{x}_{\text{w},\text{t}}\geq 0 ~ \forall w,t\\\end{math}
+\end{document}

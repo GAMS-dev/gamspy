@@ -1,0 +1,127 @@
+\documentclass[11pt]{article}
+\usepackage{a4wide}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
+\usepackage{xcolor}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section*{Symbols}
+
+
+\subsection*{Sets}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+i & * & corner points of square\\
+\hline
+\end{tabularx}
+\subsection*{Parameters}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+\hline
+\end{tabularx}
+\subsection*{Variables}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+t & i & position of square corner points on curve\\
+x &  & x-coordinate of lower-left corner of square (=fx(t('1')))\\
+y &  & y-coordinate of lower-left corner of square (=fy(t('1')))\\
+a &  & horizontal distance between lower-left and lower-right corner of square\\
+b &  & vertical distance between lower-left and lower-right corner of square\\
+square\_objective\_variable &  & \\
+\hline
+\end{tabularx}
+\subsection*{Equations}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+e1x &  & define x-coordinate of lower-left corner\\
+e1y &  & define y-coordinate of lower-left corner\\
+e2x &  & define x-coordinate of lower-right corner\\
+e2y &  & define y-coordinate of lower-right corner\\
+e3x &  & define x-coordinate of upper-left corner\\
+e3y &  & define y-coordinate of upper-left corner\\
+e4x &  & define x-coordinate of upper-right corner\\
+e4y &  & define y-coordinate of upper-right corner\\
+square\_objective &  & \\
+\hline
+\end{tabularx}
+\section*{Equation Definitions}
+\subsubsection*{\begin{math}\text{e1x}\end{math}}
+\begin{math}
+ sin(t("1"))  \cdot  cos((t("1") - (t("1") * t("1"))))  = \text{x}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e1y}\end{math}}
+\begin{math}
+\text{t}_{*} \cdot  sin(t("1"))  = \text{y}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e2x}\end{math}}
+\begin{math}
+ sin(t("2"))  \cdot  cos((t("2") - (t("2") * t("2"))))  = \text{x} + \text{a}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e2y}\end{math}}
+\begin{math}
+\text{t}_{*} \cdot  sin(t("2"))  = \text{y} + \text{b}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e3x}\end{math}}
+\begin{math}
+ sin(t("3"))  \cdot  cos((t("3") - (t("3") * t("3"))))  = \text{x} - \text{b}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e3y}\end{math}}
+\begin{math}
+\text{t}_{*} \cdot  sin(t("3"))  = \text{y} + \text{a}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e4x}\end{math}}
+\begin{math}
+ sin(t("4"))  \cdot  cos((t("4") - (t("4") * t("4"))))  = \text{x} + \text{a} - \text{b}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{e4y}\end{math}}
+\begin{math}
+\text{t}_{*} \cdot  sin(t("4"))  = \text{y} + \text{a} + \text{b}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{square\_objective}\end{math}}
+\begin{math}
+ power(a,2)  +  power(b,2)  = \text{square\_objective\_variable}
+\end{math}
+\vspace{5pt}
+\hrule
+\bigskip
+\begin{math}\text{a}\geq 0 ~ \forall \\\end{math}
+\begin{math}\text{b}\geq 0 ~ \forall \\\end{math}
+\end{document}

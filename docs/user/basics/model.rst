@@ -587,3 +587,23 @@ In addition to solve options, user can specify solver options to be used by the 
     
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
+Exporting Model To Latex
+------------------------
+GAMSPy models can be exported to a .tex file in a LaTex format by using :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
+The generated .tex file can automatically be compiled into a PDF file by using ``pdflatex`` ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+
+    m = Container()
+    
+    ...
+    ...
+    Definition of your model
+    ...
+    ...
+
+    model = Model(m, "my_model", equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model.toLatex(path=<latex_path>, generate_pdf=True)
+
+.. note::
+    In order to generate a pdf file from tex file, one has to install pdflatex to their system and add it to the path.

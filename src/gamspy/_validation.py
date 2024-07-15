@@ -345,7 +345,7 @@ def validate_model(
         sense = Sense(sense.upper())
 
     if (
-        problem not in [Problem.CNS, Problem.MCP]
+        problem not in (Problem.CNS, Problem.MCP)
         and not isinstance(equations, Sequence)
         or any(
             not isinstance(equation, symbols.Equation)
@@ -353,6 +353,9 @@ def validate_model(
         )
     ):
         raise TypeError("equations must be list of Equation objects")
+
+    if problem in (Problem.CNS, Problem.MCP) and sense is not None:
+        raise ValueError("Cannot set `sense` argument for MCP and CNS models.")
 
     return problem, sense  # type: ignore
 

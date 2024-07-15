@@ -43,6 +43,7 @@ class Local(backend.Backend):
             "trace": self.trace_file,
             "input": self.gms_file,
             "output": job_name + ".lst",
+            "optdir": self.container.working_directory,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
