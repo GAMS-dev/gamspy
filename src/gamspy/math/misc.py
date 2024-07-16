@@ -446,7 +446,7 @@ def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     return expression.Expression(None, MathOp("sqexp", (x, S)), None)
 
 
-def sqrt(x: (int | float | Symbol), safe_cancel=False) -> Expression:
+def sqrt(x: int | float | Symbol, safe_cancel: bool = False) -> Expression:
     """
     Square root of ``x``
 

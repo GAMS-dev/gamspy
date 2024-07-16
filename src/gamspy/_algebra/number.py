@@ -1,12 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import gamspy._algebra.condition as condition
 import gamspy._algebra.operable as operable
-
-if TYPE_CHECKING:
-    from gamspy import Alias, Set
 
 
 class Number(operable.Operable):
@@ -30,7 +25,7 @@ class Number(operable.Operable):
     def __init__(self, value: int | float):
         self._value = value
         self.where = condition.Condition(self)
-        self.domain: list[Set | Alias] = []
+        self.domain: list = []
 
     def gamsRepr(self) -> str:
         """
