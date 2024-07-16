@@ -89,10 +89,15 @@ class ImplicitSymbol(ABC):
 
         name = self.name.replace("_", "\_")
         representation = f"\\text{{{name}}}"
+        domain = list(self.domain)
 
-        if self.domain:
+        if hasattr(self, "_scalar_domains"):
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
+
+        if domain:
             set_strs = []
-            for elem in self.domain:
+            for elem in domain:
                 if isinstance(elem, (gt.Set, gt.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):

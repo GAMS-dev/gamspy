@@ -168,7 +168,7 @@ class Operation(operable.Operable):
 
         indices = []
         condition = None
-        for index in self.domain:
+        for index in self.op_domain:
             if isinstance(index, expression.Expression) and index.data == "$":
                 indices.append(index.left)
                 condition = index.right

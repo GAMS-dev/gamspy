@@ -39,10 +39,15 @@ class Symbol:
         """
         name = self.name.replace("_", "\_")
         representation = f"\\text{{{name}}}"
+        domain = list(self.domain)
 
-        if self.domain and self.domain != ["*"]:
+        if hasattr(self, "_scalar_domains"):
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
+
+        if domain and domain != ["*"]:
             set_strs = []
-            for elem in self.domain:
+            for elem in domain:
                 if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
