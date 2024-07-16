@@ -241,7 +241,7 @@ class OperationSuite(unittest.TestCase):
                 ...
 
     def test_operation_no_index(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         c = Set(m, "c")
         s = Set(m, "s")
         a = Parameter(m, "a", domain=[c, s])
@@ -250,7 +250,7 @@ class OperationSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: -Sum([], a[c, s] * p[c]))
 
     def test_operation_scalar_domain_update(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         c = Set(m, name="c")
         s = Set(m, name="s")
         s2 = Alias(m, name="s2", alias_with=s)
@@ -259,7 +259,7 @@ class OperationSuite(unittest.TestCase):
         self.assertEqual(expr1.gamsRepr(), "sum(c,5.2)")
 
     def test_operation_extract_vars(self):
-        m = Container(system_directory=os.getenv("SYSTEM_DIRECTORY", None))
+        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         s = Set(m, name="s")
         c = Set(m, name="c")
         p = Variable(m, "p", type="Positive", domain=[s, c])
