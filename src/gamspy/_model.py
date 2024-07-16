@@ -17,7 +17,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
-from gamspy._convert import GamsConverter
+from gamspy._convert import GamsConverter, LatexConverter
 from gamspy._model_instance import ModelInstance
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -684,6 +684,7 @@ class Model:
             )
 
         options._set_solver_options(
+            working_directory=self.container.working_directory,
             solver=solver,
             problem=self.problem,
             solver_options=solver_options,
@@ -779,3 +780,18 @@ class Model:
         """
         converter = GamsConverter(self, path)
         converter.convert()
+
+    def toLatex(self, path: str, generate_pdf: bool = False) -> None:
+        """
+        Generates a latex file that contains the model definition under path/<model_name>.gms
+
+        Parameters
+        ----------
+        path : str
+            Path to the directory which will contain the .tex file.
+        """
+        converter = LatexConverter(self, path)
+        converter.convert()
+
+        if generate_pdf:
+            converter.to_pdf()

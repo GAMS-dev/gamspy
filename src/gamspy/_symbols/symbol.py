@@ -19,6 +19,40 @@ class Symbol:
             "A symbol cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
+    def gamsRepr(self: SymbolType) -> str:
+        """
+        Representation of the symbol in GAMS language.
+
+        Returns
+        -------
+        str
+        """
+        return self.name
+
+    def latexRepr(self: SymbolType):
+        """
+        Representation of symbol in Latex.
+
+        Returns
+        -------
+        str
+        """
+        name = self.name.replace("_", "\_")
+        representation = f"\\text{{{name}}}"
+
+        if self.domain and self.domain != ["*"]:
+            set_strs = []
+            for elem in self.domain:
+                if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+                    set_strs.append(elem.latexRepr())
+                elif isinstance(elem, str):
+                    set_strs.append("*")
+
+            domain_str = ",".join(set_strs)
+            representation = f"{representation}_{{{domain_str}}}"
+
+        return representation
+
     @property
     def synchronize(self: SymbolType) -> bool:
         """

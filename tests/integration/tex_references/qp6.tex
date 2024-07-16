@@ -1,0 +1,75 @@
+\documentclass[11pt]{article}
+\usepackage{a4wide}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
+\usepackage{xcolor}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section*{Symbols}
+
+
+\subsection*{Sets}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+stocks & stocks & 170 selected stocks\\
+s & stocks & selected stocks\\
+days & days & 100 days from 95-11-27 to 96-04-29\\
+d & days & selected days\\
+\hline
+\end{tabularx}
+\subsection*{Parameters}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+dev & stocks,days & deviations\\
+mean & stocks & mean of daily return\\
+totmean &  & total mean return\\
+\hline
+\end{tabularx}
+\subsection*{Variables}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+m\_wdef & days & \\
+m\_retcon &  & \\
+m\_budget &  & \\
+w & days & intermediate variables\\
+x & stocks & investments\\
+\hline
+\end{tabularx}
+\subsection*{Equations}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+d\_x & stocks & \\
+d\_w & days & \\
+retcon &  & returns constraint\\
+budget &  & \\
+wdef & days & \\
+\hline
+\end{tabularx}
+\section*{Equation Definitions}
+
+\bigskip
+\begin{math}\text{m\_retcon}\geq 0 ~ \forall \\\end{math}
+\begin{math}\text{x}_{\text{stocks}_{*}}\geq 0 ~ \forall stocks\\\end{math}
+\end{document}

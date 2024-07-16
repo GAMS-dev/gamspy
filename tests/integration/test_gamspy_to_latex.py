@@ -1,6 +1,5 @@
 import math
 import os
-import subprocess
 import unittest
 
 import gamspy.math as gams_math
@@ -48,7 +47,7 @@ def data_records():
     return data_recs
 
 
-class GamspyToGamsSuite(unittest.TestCase):
+class GamspyToLatexSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
@@ -140,26 +139,21 @@ class GamspyToGamsSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        transport.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "transport.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "transport.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        transport.toLatex(output_path, generate_pdf=False)
+        # self.assertTrue(
+        #     os.path.exists(os.path.join(output_path, "transport.pdf"))
+        # )
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "transport.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
+        with open(os.path.join(output_path, "transport.tex")) as file:
+            generated_tex = file.read()
 
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("153.675"))
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_mip_cutstock(self):
         i = Set(
@@ -271,25 +265,18 @@ class GamspyToGamsSuite(unittest.TestCase):
 
         master.solve(options=Options(relative_optimality_gap=0))
 
-        master.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "master.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "master.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        master.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "master.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("452.25"))
+        with open(os.path.join(output_path, "master.tex")) as file:
+            generated_tex = file.read()
+
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_nlp_weapons(self):
         td_data = pd.DataFrame(
@@ -511,25 +498,18 @@ class GamspyToGamsSuite(unittest.TestCase):
 
         war.solve()
 
-        war.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "war.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "war.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        war.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "war.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("1735.569579"))
+        with open(os.path.join(output_path, "war.tex")) as file:
+            generated_tex = file.read()
+
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_mcp_qp6(self):
         this = os.path.abspath(os.path.dirname(__file__))
@@ -633,26 +613,18 @@ class GamspyToGamsSuite(unittest.TestCase):
 
         qp6.solve()
 
-        qp6.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "qp6.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "qp6.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        qp6.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "qp6.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
+        with open(os.path.join(output_path, "qp6.tex")) as file:
+            generated_tex = file.read()
 
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("8.499300"))
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_dnlp_inscribedsquare(self):
         def fx(t):
@@ -781,26 +753,18 @@ class GamspyToGamsSuite(unittest.TestCase):
 
         square.solve()
 
-        square.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "square.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "square.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        square.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "square.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
+        with open(os.path.join(output_path, "square.tex")) as file:
+            generated_tex = file.read()
 
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("9.80076"))
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_minlp_minlphix(self):
         cont = Container(
@@ -1487,27 +1451,18 @@ class GamspyToGamsSuite(unittest.TestCase):
 
         skip.solve(options=Options(domain_violation_limit=100))
 
-        skip.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "skip.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                "domlim=100",
-                f'output={os.path.join("tmp", "to_gams", "skip.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        skip.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "skip.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
+        with open(os.path.join(output_path, "skip.tex")) as file:
+            generated_tex = file.read()
 
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            print(f"{objective=}")
+        self.assertEqual(reference_tex, generated_tex)
 
     def test_qcp_EDsensitivity(self):
         m = Container()
@@ -1557,69 +1512,25 @@ class GamspyToGamsSuite(unittest.TestCase):
             report[cc, "OF"] = ECD.objective_value
             report[cc, "load"] = load
 
-        ECD.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "ECD.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "ECD.lst")}',
-            ],
-            capture_output=True,
-            text=True,
+        output_path = os.path.join("tmp", "to_latex")
+        ECD.toLatex(os.path.join("tmp", "to_latex"))
+        reference_path = os.path.join(
+            "tests", "integration", "tex_references", "ECD.tex"
         )
+        with open(reference_path) as file:
+            reference_tex = file.read()
 
-        self.assertEqual(process.returncode, 0)
+        with open(os.path.join(output_path, "ECD.tex")) as file:
+            generated_tex = file.read()
 
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(objective.startswith("911044.089"))
-
-    def test_set_attributes(self):
-        ct = Container()
-        s = ct.addSet("s", records=[1, 2])
-        x = ct.addVariable("x", type="positive", domain=s)
-        eq = ct.addEquation("eq", domain=s)
-        eq[s].where[~s.first] = x[s] >= 1
-
-        m = ct.addModel(
-            problem="LP",
-            name="test",
-            sense=Sense.MIN,
-            equations=[eq],
-            objective=Sum(s, x[s]),
-        )
-
-        m.toGams(os.path.join("tmp", "to_gams"))
-
-        process = subprocess.run(
-            [
-                os.path.join(self.m.system_directory, "gams"),
-                os.path.join("tmp", "to_gams", "test.gms"),
-                "traceopt=2",
-                "trace=trace.txt",
-                f'output={os.path.join("tmp", "to_gams", "test.lst")}',
-            ],
-            capture_output=True,
-            text=True,
-        )
-
-        self.assertEqual(process.returncode, 0)
-
-        with open("trace.txt") as trace:
-            lines = trace.read().splitlines()
-            objective = lines[-1].split("//")[0].split(" ")[-3]
-            self.assertTrue(float(objective) == 1)
+        self.assertEqual(reference_tex, generated_tex)
 
 
-def gamspy_to_gams_suite():
+def gamspy_to_latex_suite():
     suite = unittest.TestSuite()
     tests = [
-        GamspyToGamsSuite(name)
-        for name in dir(GamspyToGamsSuite)
+        GamspyToLatexSuite(name)
+        for name in dir(GamspyToLatexSuite)
         if name.startswith("test_")
     ]
     suite.addTests(tests)
@@ -1629,4 +1540,4 @@ def gamspy_to_gams_suite():
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
-    runner.run(gamspy_to_gams_suite())
+    runner.run(gamspy_to_latex_suite())

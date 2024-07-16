@@ -159,7 +159,8 @@ Model has a function named ``solve`` that allows user to solve the specified mod
     e2[...] = <definition_of_the_equation>
     
     model = Model(m, "dummy", equations=[e1,e2], problem=Problem.LP, sense=Sense.Max, objective=z)
-    model.solve(solver="CONOPT", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
+    summary = model.solve(solver="CONOPT", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
+    print(summary)
 
 In most cases, calling the ``solve`` function of your model without any parameters is sufficient. 
 In this scenario, the default solver depending on the problem type, default options will be used. But for users
@@ -172,6 +173,8 @@ If you want to get all available solvers that you can install and use, the follo
 the list of solvers that are available.::
 
     gamspy list solvers -a
+
+``solve`` function returns a Pandas DataFrame which contains the summary of the solve.  
 
 Redirecting Output
 ------------------
@@ -489,11 +492,17 @@ Here is the list of options and their descriptions:
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | relative_optimality_gap           | Relative Optimality criterion solver default                                      | float                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| memory_tick_interval              | Wait interval between memory monitor checks: ticks = milliseconds                 | float                                                                                     |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| monitor_process_tree_memory       | Monitor the memory used by the GAMS process tree                                  | bool                                                                                      |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | profile                           | Execution profiling                                                               | 0: No profiling                                                                           |
 |                                   |                                                                                   |                                                                                           |
 |                                   |                                                                                   | 1: Minimum profiling                                                                      |
 |                                   |                                                                                   |                                                                                           |
 |                                   |                                                                                   | 2: Profiling depth for nested control structures                                          |
++-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
+| profile_file                      | Write profile information to this file                                            | str                                                                                       |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | profile_tolerance                 | Minimum time a statement must use to appear in profile generated output           | float                                                                                     |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
@@ -578,3 +587,23 @@ In addition to solve options, user can specify solver options to be used by the 
     
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
+Exporting Model To Latex
+------------------------
+GAMSPy models can be exported to a .tex file in a LaTex format by using :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
+The generated .tex file can automatically be compiled into a PDF file by using ``pdflatex`` ::
+
+    from gamspy import Container, Variable, Equation, Model, Sense, Problem
+
+    m = Container()
+    
+    ...
+    ...
+    Definition of your model
+    ...
+    ...
+
+    model = Model(m, "my_model", equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model.toLatex(path=<latex_path>, generate_pdf=True)
+
+.. note::
+    In order to generate a pdf file from tex file, one has to install pdflatex to their system and add it to the path.

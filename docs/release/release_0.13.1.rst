@@ -5,7 +5,7 @@ GAMSPy 0.13.1
 
   - Support output redirection for NEOS backend.
   - Support GAMSPy to GAMS automatic conversion.
-  - Add support for old way of installing a license. 
+  - Add support for the old way of installing a license. 
 
 - Documentation
 

@@ -20,11 +20,11 @@ Container
 Symbol Creation
 ===============
 
-The ``Container`` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
+The :meth:`Container <gamspy.Container>` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
 and constraints, providing a structured approach for optimization problems. Every symbol in your optimization problem 
-should belong to a ``Container``.
+should belong to a :meth:`Container <gamspy.Container>`.
 
-All added symbols to a ``Container`` can be accessed by indexing into the ``Container``::
+All added symbols to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
     
     from gamspy import Container, Set
     m = Container()
@@ -59,11 +59,11 @@ An alternative way to create a symbol in GAMSPy and adding it to the container i
 Reading and Writing Symbols
 ===========================
 
-The ``Container`` class offers I/O functions for reading and writing symbols.
+The :meth:`Container <gamspy.Container>` class offers I/O functions for reading and writing symbols.
 
 Writing
 -------
-Symbols created within a specific ``Container`` can be saved to a GDX file using the ``write`` function.
+Symbols created within a specific :meth:`Container <gamspy.Container>` can be saved to a GDX file using the :meth:`write <gamspy.Container.write>` function.
 
 .. code-block:: python
     
@@ -75,9 +75,9 @@ Symbols created within a specific ``Container`` can be saved to a GDX file using
 
 Reading
 -------
-Symbol records can be read from a GDX file by either specifying the `load_from` argument during the ``Container`` construction or by using the ``read`` function.
+Symbol records can be read from a GDX file by either specifying the `load_from` argument during the :meth:`Container <gamspy.Container>` construction or by using the :meth:`read <gamspy.Container.read>` function.
 
-To create a ``Container`` with symbols from a GDX file, use the `load_from` argument:
+To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, use the `load_from` argument:
 
 .. code-block:: python
 
@@ -87,7 +87,7 @@ To create a ``Container`` with symbols from a GDX file, use the `load_from` argu
 
 We can verify that symbol ``i`` is in the container ``m``.
 
-Alternatively, you can use the ``read`` function to populate the container.
+Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to populate the container.
 
 .. code-block:: python
 
@@ -95,3 +95,19 @@ Alternatively, you can use the ``read`` function to populate the container.
     m = Container()
     m.read("data.gdx")
     print(m.listSymbols())
+
+Loading Records to An Existing Symbol
+-------------------------------------
+
+One can load the records of a symbol from a GDX file if the symbol is already declared by using :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>`.
+
+.. code-block:: python
+
+    from gamspy import Container
+    m = Container()
+    i = Set(m, name="i")
+    m.loadRecordsFromGdx("data.gdx")
+    print(i.records)
+
+The only difference between :meth:`read <gamspy.Container.read>` and :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` is that while :meth:`read <gamspy.Container.read>` creates the symbol in the :meth:`Container <gamspy.Container>`
+if it does not already exist, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` requires the symbol to be declared beforehand.

@@ -22,10 +22,10 @@ if TYPE_CHECKING:
             int,
             float,
             str,
-            Operation,
-            expression.Expression,
             Symbol,
             ImplicitSymbol,
+            Operation,
+            expression.Expression,
             MathOp,
         ]
     ]
@@ -160,6 +160,61 @@ class Expression(operable.Operable):
     def _replace_operator(self, operator: str):
         self.data = operator
         self.representation = self._create_representation()
+
+    def latexRepr(self) -> str:
+        """
+        Representation of this Expression in Latex.
+
+        Returns
+        -------
+        str
+        """
+        data_map = {
+            "=g=": "\\geq",
+            "=l=": "\\leq",
+            "=e=": "=",
+            "*": "\\cdot",
+            "and": "\\wedge",
+            "or": "\\vee",
+            "xor": "\\oplus",
+            "$": "|",
+        }
+
+        if isinstance(self.left, float):
+            self.left = utils._map_special_values(self.left)
+
+        if isinstance(self.right, float):
+            self.right = utils._map_special_values(self.right)
+
+        if self.left is None:
+            left_str = ""
+        else:
+            left_str = (
+                str(self.left)
+                if isinstance(self.left, (int, float, str))
+                else self.left.latexRepr()
+            )
+
+        if self.right is None:
+            right_str = ""
+        else:
+            right_str = (
+                str(self.right)
+                if isinstance(self.right, (int, float, str))
+                else self.right.latexRepr()
+            )
+
+        data = self.data
+        if isinstance(self.data, str):
+            data = data_map.get(self.data, self.data)
+
+        data_str = (
+            str(data)
+            if isinstance(data, (int, float, str))
+            else data.latexRepr()
+        )
+
+        return f"{left_str} {data_str} {right_str}"
 
     def gamsRepr(self) -> str:
         """

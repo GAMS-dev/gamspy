@@ -1,0 +1,397 @@
+\documentclass[11pt]{article}
+\usepackage{a4wide}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
+\usepackage{xcolor}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section*{Symbols}
+
+
+\subsection*{Sets}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+i & * & condensers-columns\\
+zcrhx & i,j & condenser to reboiler allowable matches\\
+j & * & reboilers\\
+zcr & i,j & reboiler-condenser pairs\\
+m & * & intermediates\\
+pm & i,m & products\\
+fm & i,m & feeds\\
+zlead & i & leading columns in superstructure\\
+n & * & index\\
+cu & * & cold utilities\\
+hu & * & hot utilities\\
+zlim & i,j & direction of heat integration\\
+\hline
+\end{tabularx}
+\subsection*{Parameters}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+tcout &  & outlet temperature of cold water\\
+tcin &  & inlet temperature of cold water\\
+u &  & large number for logical constraints\\
+spltfrc & i,m & split fraction of distillation columns\\
+totflow &  & total flow to superstructure\\
+kf & i,n & coeff. for heat duty temperature fits\\
+tcmin & i & minimum condenser temperatures\\
+dtmin &  & minimum temperature approach\\
+thu & hu & hot utility temperatures\\
+af & i,n & coeff. for column temperature fits\\
+uint &  & upper bound for integer logical\\
+alpha &  & one over payout time factor in years\\
+fc & i & fixed charge for distillation columns\\
+vc & i & variable charge for distillation columns\\
+fchx &  & fixed charge for heat exchangers scaled\\
+vchx &  & variable charge for heat exchangers scaled\\
+htc &  & overall heat transfer coefficient\\
+beta &  & income tax correction factor\\
+costcw &  & cooling water cost coefficient\\
+costhu & hu & hot utility cost coefficients\\
+\hline
+\end{tabularx}
+\subsection*{Variables}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+tc & i & condenser temperature for column with cond. i\\
+tr & j & reboiler temperature for column with reb. j\\
+ycol & i & columns in superstructure\\
+lmtd & i & lmtd for cooling water exchanges\\
+sl1 & i & artificial slack variable for lmtd equalities\\
+sl2 & i & artificial slack variable for lmtd equalities\\
+s1 & i & artificial slack variable for reb-con equalities\\
+s2 & i & artificial slack variable for reb-con equalities\\
+s3 & i & artificial slack variable for duty equalities\\
+s4 & i & artificial slack variable for duty equalities\\
+f & i & flowrates to columns\\
+qc & i & condenser duties for column i\\
+qr & j & reboiler duties for column with reboiler j\\
+qcr & i,j & heat integration heat transfer\\
+qcu & i,cu & cold utility heat transfer\\
+qhu & hu,j & hot utility heat transfer\\
+yhx & i,j & heat integration matches condenser i reboiler j\\
+yhu & hu,j & hot utility matches hot utility hu reboiler j\\
+ycu & i,cu & cold utility matches condenser i cold util cu\\
+skip\_objective\_variable &  & \\
+\hline
+\end{tabularx}
+\subsection*{Equations}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+tctrlo & i,j & prevent division by 0 in the objective\\
+lmtdlo & i & prevent division by 0 in the objective\\
+lmtdsn & i & nonlinear form of lmtd definition\\
+tempset & i & sets temperatures of inactive columns to 0 (milp)\\
+artrex1 & i & relaxes artificial slack variables (nlp)\\
+artrex2 & i & relaxes artificial slack variables (nlp)\\
+material & m & material balances for each intermediate product\\
+feed &  & feed to superstructure\\
+matlog & i & material balance logical constraints\\
+duty & i & heat duty definition of condenser i\\
+rebcon & i,j & equates condenser and reboiler duties\\
+conheat & i & condenser heat balances\\
+rebheat & j & reboiler heat balances\\
+dtminlp & j & minimum temp approach for low pressure steam\\
+dtminc & i & minimum temp allowable for each condenser\\
+trtcdef & i,j & relates reboiler and condenser temps of columns\\
+dtmincr & i,j & minimum temp approach for heat integration\\
+dtminex & j & minimum temp approach for exhaust steam\\
+hxclog & i,j & logical constraint for heat balances\\
+hxhulog & hu,j & logical constraint for heat balances\\
+hxculog & i,cu & logical constraint for heat balances\\
+qcqrlog & i & logical constraint for con-reb duties\\
+sequen & m & restricts superstructure to a single sequence\\
+lead &  & sequence control\\
+limutil & j & limits columns to have a single hot utility\\
+hidirect & i,j & requires a single direction of heat integration\\
+heat & i & logical integer constraint\\
+skip\_objective &  & \\
+\hline
+\end{tabularx}
+\section*{Equation Definitions}
+\subsubsection*{\begin{math}\text{tctrlo}_{i,j}\end{math}}
+\begin{math}
+\text{tc}_{\text{i}} - \text{tr}_{\text{j}} + 1 - \text{ycol}_{\text{i}} \geq 1
+\end{math}
+\hfill
+\begin{math}
+\forall zcrhx
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{lmtdlo}_{i}\end{math}}
+\begin{math}
+\text{lmtd}_{\text{i}} \geq 2 \cdot \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{lmtdsn}_{i}\end{math}}
+\begin{math}
+\text{lmtd}_{\text{i}} = 0.6666666666666666 \cdot  \sqrt{((tc(i) - tcin) * (tc(i) - tcout))}  + 0.16666666666666666 \cdot \text{tc}_{\text{i}} - \text{tcin} + \text{tc}_{\text{i}} - \text{tcout} + \text{sl1}_{\text{i}} - \text{sl2}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{tempset}_{i}\end{math}}
+\begin{math}
+\text{tc}_{\text{i}} + \text{lmtd}_{\text{i}} + \displaystyle \sum_{\text{zcr}_{\text{i},\text{j}}} \text{tr}_{\text{j}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{artrex1}_{i}\end{math}}
+\begin{math}
+\text{s1}_{\text{i}} + \text{s2}_{\text{i}} + \text{sl1}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{artrex2}_{i}\end{math}}
+\begin{math}
+\text{s3}_{\text{i}} + \text{s4}_{\text{i}} + \text{sl2}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{material}_{m}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{pm}_{\text{i},\text{m}}} \text{spltfrc}_{\text{i},\text{m}} \cdot \text{f}_{\text{i}} = \displaystyle \sum_{\text{fm}_{\text{i},\text{m}}} \text{f}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall m
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{feed}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{zlead}_{\text{i}}} \text{f}_{\text{i}} = \text{totflow}
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{matlog}_{i}\end{math}}
+\begin{math}
+\text{f}_{\text{i}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{duty}_{i}\end{math}}
+\begin{math}
+\text{qc}_{\text{i}} = \text{kf}_{\text{i},*} + \text{kf}_{\text{i},*} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} + \text{s3}_{\text{i}} - \text{s4}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{rebcon}_{i,j}\end{math}}
+\begin{math}
+\text{qr}_{\text{j}} = \text{qc}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall zcr
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{conheat}_{i}\end{math}}
+\begin{math}
+\text{qc}_{\text{i}} = \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{qcr}_{\text{i},\text{j}} + \displaystyle \sum_{\text{cu}} \text{qcu}_{\text{i},\text{cu}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{rebheat}_{j}\end{math}}
+\begin{math}
+\text{qr}_{\text{j}} = \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{qcr}_{\text{i},\text{j}} + \displaystyle \sum_{\text{hu}} \text{qhu}_{\text{hu},\text{j}}
+\end{math}
+\hfill
+\begin{math}
+\forall j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{dtminlp}_{j}\end{math}}
+\begin{math}
+\text{dtmin} - \text{thu}_{*} - \text{tr}_{\text{j}} \leq 0
+\end{math}
+\hfill
+\begin{math}
+\forall j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{dtminc}_{i}\end{math}}
+\begin{math}
+\text{tcmin}_{\text{i}} - \text{tc}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{trtcdef}_{i,j}\end{math}}
+\begin{math}
+\text{tr}_{\text{j}} = \text{af}_{\text{i},*} + \text{af}_{\text{i},*} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} + \text{s1}_{\text{i}} - \text{s2}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall zcr
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{dtmincr}_{i,j}\end{math}}
+\begin{math}
+\text{tr}_{\text{j}} - \text{tc}_{\text{i}} - \text{u} \cdot 1 - \text{yhx}_{\text{i},\text{j}} + \text{dtmin} \leq 0
+\end{math}
+\hfill
+\begin{math}
+\forall zcrhx
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{dtminex}_{j}\end{math}}
+\begin{math}
+\text{dtmin} - \text{thu}_{*} - \text{tr}_{\text{j}} - \text{u} \cdot 1 - \text{yhu}_{*,\text{j}} \leq 0
+\end{math}
+\hfill
+\begin{math}
+\forall j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{hxclog}_{i,j}\end{math}}
+\begin{math}
+\text{qcr}_{\text{i},\text{j}} \leq \text{u} \cdot \text{yhx}_{\text{i},\text{j}}
+\end{math}
+\hfill
+\begin{math}
+\forall zcrhx
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{hxhulog}_{hu,j}\end{math}}
+\begin{math}
+\text{qhu}_{\text{hu},\text{j}} \leq \text{u} \cdot \text{yhu}_{\text{hu},\text{j}}
+\end{math}
+\hfill
+\begin{math}
+\forall hu,j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{hxculog}_{i,cu}\end{math}}
+\begin{math}
+\text{qcu}_{\text{i},\text{cu}} \leq \text{u} \cdot \text{ycu}_{\text{i},\text{cu}}
+\end{math}
+\hfill
+\begin{math}
+\forall i,cu
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{qcqrlog}_{i}\end{math}}
+\begin{math}
+\text{qc}_{\text{i}} + \displaystyle \sum_{\text{j} ~ | ~ \text{zcr}_{\text{i},\text{j}}} \text{qr}_{\text{j}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{sequen}_{m}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{pm}_{\text{i},\text{m}}} \text{ycol}_{\text{i}} = \displaystyle \sum_{\text{fm}_{\text{i},\text{m}}} \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall m
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{lead}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{zlead}_{\text{i}}} \text{ycol}_{\text{i}} = 1
+\end{math}
+\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{limutil}_{j}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{hu}} \text{yhu}_{\text{hu},\text{j}} \leq 1
+\end{math}
+\hfill
+\begin{math}
+\forall j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{hidirect}_{i,j}\end{math}}
+\begin{math}
+\text{yhx}_{\text{i},\text{j}} + \displaystyle \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} \text{yhx}_{\text{ip},\text{jp}} \leq 1
+\end{math}
+\hfill
+\begin{math}
+\forall zlim
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{heat}_{i}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{yhx}_{\text{i},\text{j}} + \displaystyle \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} \text{yhx}_{\text{ip},\text{jp}} + \displaystyle \sum_{\text{hu},\text{zcr}_{\text{i},\text{j}}} \text{yhu}_{\text{hu},\text{j}} + \displaystyle \sum_{\text{cu}} \text{ycu}_{\text{i},\text{cu}} \leq \text{uint} \cdot \text{ycol}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{skip\_objective}\end{math}}
+\begin{math}
+\text{alpha} \cdot \displaystyle \sum_{\text{i}} \text{fc}_{\text{i}} \cdot \text{ycol}_{\text{i}} + \text{vc}_{\text{i}} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} \cdot \text{f}_{\text{i}} + \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{fchx} \cdot \text{yhx}_{\text{i},\text{j}} + \text{vchx} / \text{htc} \cdot \text{qcr}_{\text{i},\text{j}} / \text{tc}_{\text{i}} - \text{tr}_{\text{j}} + 1 - \text{ycol}_{\text{i}} + \displaystyle \sum_{\text{i},\text{cu}} \text{fchx} \cdot \text{ycu}_{\text{i},\text{cu}} + \text{vchx} / \text{htc} \cdot \text{qcu}_{\text{i},\text{cu}} / \text{lmtd}_{\text{i}} + 1 - \text{ycol}_{\text{i}} + \displaystyle \sum_{\text{hu},\text{j}} \text{fchx} \cdot \text{yhu}_{\text{hu},\text{j}} + \text{vchx} / \text{htc} \cdot \text{qhu}_{\text{hu},\text{j}} / \text{thu}_{\text{hu}} - \text{tr}_{\text{j}} + \text{beta} \cdot \displaystyle \sum_{\text{i},\text{cu}} \text{costcw} \cdot \text{qcu}_{\text{i},\text{cu}} + \displaystyle \sum_{\text{hu},\text{j}} \text{costhu}_{\text{hu}} \cdot \text{qhu}_{\text{hu},\text{j}} = \text{skip\_objective\_variable}
+\end{math}
+\vspace{5pt}
+\hrule
+\bigskip
+\begin{math}\text{tc}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{tr}_{\text{j}}\geq 0 ~ \forall j\\\end{math}
+\begin{math}\text{ycol}_{\text{i}}\in \{0,1\} ~ \forall i\\\end{math}
+\begin{math}\text{lmtd}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{sl1}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{sl2}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{s1}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{s2}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{s3}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{s4}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{f}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{qc}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
+\begin{math}\text{qr}_{\text{j}}\geq 0 ~ \forall j\\\end{math}
+\begin{math}\text{qcr}_{\text{i},\text{j}}\geq 0 ~ \forall i,j\\\end{math}
+\begin{math}\text{qcu}_{\text{i},\text{cu}}\geq 0 ~ \forall i,cu\\\end{math}
+\begin{math}\text{qhu}_{\text{hu},\text{j}}\geq 0 ~ \forall hu,j\\\end{math}
+\begin{math}\text{yhx}_{\text{i},\text{j}}\in \{0,1\} ~ \forall i,j\\\end{math}
+\begin{math}\text{yhu}_{\text{hu},\text{j}}\in \{0,1\} ~ \forall hu,j\\\end{math}
+\begin{math}\text{ycu}_{\text{i},\text{cu}}\in \{0,1\} ~ \forall i,cu\\\end{math}
+\end{document}
