@@ -73,6 +73,51 @@ def relu_with_binary_var(
     default_lb: float = -(10**6),
     default_ub: float = 10**6,
 ):
+    """
+    Implements the ReLU activation function using binary variables. The ReLU
+    function is defined as ReLU(x) = max(x, 0). This implementation **generates**
+    one binary variable and one positive variable. The binary variable is
+    necessary to represent the mathematical relationship, while the positive
+    variable serves as the activation variable. Both the binary and positive
+    variables share the same domain as the input.
+
+    This function utilizes the bounds from the variables if provided. If not,
+    it defaults to the bounds defined by ``default_lb`` and ``default_ub``.
+    Providing tighter and **correct** bounds can enhance the quality of linear
+    relaxations.
+
+    Returns activation variable and binary variable in order.
+
+    Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L5>`_
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+    default_ub : float
+    default_lb : float
+
+    Returns
+    -------
+    tuple[Variable, Variable]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.math.activation import relu_with_binary_var
+    >>> m = Container()
+    >>> i = Set(m, "i", records=range(3))
+    >>> x = Variable(m, "x", domain=[i])
+    >>> y, b = relu_with_binary_var(x) # mostly, you can ignore b
+    >>> y.type
+    'positive'
+    >>> b.type
+    'binary'
+    >>> y.domain # i many activation variables
+    [<Set `i` (0x...)>]
+    >>> b.domain # i many binary variables
+    [<Set `i` (0x...)>]
+    """
+
     domain = x.domain
     sigma = x.container.addVariable(
         _get_random_name("bin"),
