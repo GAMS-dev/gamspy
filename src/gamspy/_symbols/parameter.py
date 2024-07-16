@@ -258,7 +258,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         if self._is_miro_input and self.container.miro_protect:
             raise ValidationError(
-                "Cannot assign to protected miro input symbols. `miro_protect`"
+                f"Cannot assign to protected miro input symbol {self.name}. `miro_protect`"
                 " attribute of the container can be set to False to allow"
                 " assigning to MIRO input symbols"
             )
