@@ -117,12 +117,10 @@ class Backend(ABC):
 
         return gams_string
 
-    def prepare_summary(self, working_directory: str) -> pd.DataFrame:
+    def prepare_summary(self, trace_file: str) -> pd.DataFrame:
         from gamspy._model import ModelStatus
 
-        with open(
-            os.path.join(working_directory, "trace.txt"), encoding="utf-8"
-        ) as file:
+        with open(trace_file, encoding="utf-8") as file:
             line = file.readlines()[-1]
             (
                 _,

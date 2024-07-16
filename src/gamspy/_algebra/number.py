@@ -43,3 +43,13 @@ class Number(operable.Operable):
 
         """
         return f"{self._value}"
+
+    def latexRepr(self) -> str:
+        """
+        Representation of this Number in Latex.
+
+        Returns
+        -------
+        str
+        """
+        return f"{self._value}"

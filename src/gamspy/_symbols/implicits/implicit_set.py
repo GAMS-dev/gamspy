@@ -27,13 +27,12 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self,
         parent: Set | Alias,
         name: str,
-        domain: list[Set | str] | None = None,
+        domain: list[Set | str] = ["*"],
         scalar_domains: list[tuple[int, Set]] | None = None,
+        extension: str | None = None,
     ) -> None:
-        if domain is None:
-            domain = ["*"]
-
         super().__init__(parent, name, domain, scalar_domains)
+        self.extension = extension
 
     def __invert__(self) -> Expression:
         return expression.Expression("", "not", self)
@@ -50,6 +49,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
     def gamsRepr(self) -> str:
         representation = self.name
+
+        if self.extension is not None:
+            representation += f"{self.extension}"
 
         if self.domain != ["*"]:
             domain = list(self.domain)

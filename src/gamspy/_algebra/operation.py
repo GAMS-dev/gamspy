@@ -156,6 +156,38 @@ class Operation(operable.Operable):
 
         return output
 
+    def latexRepr(self) -> str:
+        """
+        Representation of this operation in Latex.
+
+        Returns
+        -------
+        str
+        """
+        op_map = {"sum": "sum", "prod": "prod", "smax": "max", "smin": "min"}
+
+        indices = []
+        condition = None
+        for index in self.domain:
+            if isinstance(index, expression.Expression) and index.data == "$":
+                indices.append(index.left)
+                condition = index.right
+            else:
+                indices.append(index)
+
+        index_str = ",".join([index.latexRepr() for index in indices])
+
+        if condition is not None:
+            index_str += " ~ | ~ " + condition.latexRepr()
+
+        expression_str = (
+            str(self.expression)
+            if isinstance(self.expression, (int, float, str))
+            else self.expression.latexRepr()
+        )
+        representation = f"\\displaystyle \\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        return representation
+
 
 class Sum(Operation):
     """
@@ -456,6 +488,16 @@ class Ord(operable.Operable):
         """
         return f"ord({self._set.name})"
 
+    def latexRepr(self) -> str:
+        """
+        Representation of Ord function in Latex.
+
+        Returns
+        -------
+        str
+        """
+        return f"ord({self._set.name})"
+
 
 class Card(operable.Operable):
     """
@@ -485,6 +527,11 @@ class Card(operable.Operable):
         self,
         symbol: Set | Alias | Parameter,
     ) -> None:
+        if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
+            raise ValidationError(
+                "Ord operation is only for Set and Alias objects!"
+            )
+
         self._symbol = symbol
         self.domain: list[Set | Alias] = []
 
@@ -523,3 +570,13 @@ class Card(operable.Operable):
 
         """
         return f"card({self._symbol.name})"
+
+    def latexRepr(self) -> str:
+        """
+        Representation of Card function in Latex.
+
+        Returns
+        -------
+        str
+        """
+        return f"ord({self._set.name})"

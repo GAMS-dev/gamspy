@@ -147,7 +147,7 @@ expressions. For example, if several expressions are required to be TRUE simulta
 be connected with the python bitwise operator ``&``. For all available bitwise operators in python 
 read more `here <https://www.w3schools.com/python/gloss_python_bitwise_operators.asp>`_. Another 
 way to construct complex logical conditions is by nesting them. For details, see subsection 
-`Nested Conditions <nested-conditions>`_ below.
+:ref:`nested-conditions` below.
 
 The following somewhat artificial examples serve as illustrations. ::
 
@@ -219,7 +219,7 @@ parameters ``s``, ``v`` and ``t``. This holds for all labels except for ``i5``. 
 
 These examples demonstrate the power of the ``where`` operator combined with bitwise operators. 
 Even more complex logical conditions are possible; see subsection 
-`Mixed Logical Conditions <mixed-logical-conditions>`_ below for details.
+:ref:`Mixed Logical Conditions <mixed-logical-conditions>` below for details.
 
 Set Membership and Set Functions
 ---------------------------------
@@ -260,15 +260,15 @@ the assignment to the members of the subset ``j`` since only they satisfy the co
 ``j[i]``. The values for ``t['i4']`` and ``t['i5']`` remain unchanged. In this case, this 
 means that they are zero (by default). Note that there is an alternative formulation for 
 this type of conditional assignment; for details see subsection 
-`Filtering Sets in Assignments <filtering-sets-in-assignments>`_ below.
+:ref:`filtering-sets-in-assignments` below.
 
 .. note::
     Only the membership of subsets and dynamic sets may be used as logical conditions.
 
 The use of set membership as a logical condition is an extremely powerful feature of GAMSPy, 
-see section `Conditional Equations <conditional-equations>`_ below for more examples.
+see section :ref:`Conditional Equations <conditional-equations>` below for more examples.
 
-Logical conditions may contain the method `<sameas>`_ or set `operators <card_ord>`_ 
+Logical conditions may contain the method :meth:`SameAs <gamspy.math.sameAs>` or set :meth:`operators <gamspy.Card>` 
 that return particular values depending on the position of elements in sets, the size of 
 sets or the comparison of set elements to each other or text strings. In the following 
 example we have two sets of cities and we want to know how many of them feature in both 
@@ -321,51 +321,12 @@ Mixed Logical Conditions
 
 The building blocks introduced in the subsections above may be combined to generate more complex 
 logical conditions. These may contain standard arithmetic operations, 
-`numerical relational operations <numerical-relational-operators>`_ and 
-`logical/bitwise operations <bitwise-operators>`_. All operations, their symbols and their order 
-of precedence are given below. Note that 1 denotes the highest order of precedence and 7 denotes 
-the lowest order of precedence. As usual, the default order of precedence holds only in the 
-absence of parentheses and operators (symbols) on the same level are evaluated from left to right.
-
-=================================  ========================================  ======================  =====================
-Type of Operation                  Operation                                 Operator                Order of precedence
-=================================  ========================================  ======================  =====================
-Standard arithmetic operation      Exponentiation, Floor division             \*\*, //               1
-Standard arithmetic operation      Multiplication, Division                   \*, /                  2
-Standard arithmetic operation      Unary operators: Plus, Minus               +, -                   3
-Standard arithmetic operation      Binary operators: Addition, Subtraction    +, -                   3
-Numerical Relational operation     All                                        <, <=, ==, !=, >=, >   4
-Logical operation                  Negation                                   ~                      5
-Logical operation                  Logical Conjunction                        &                      6
-Logical operation                  All other logical operations               \|, ^, <<, >>          7
-=================================  ========================================  ======================  =====================
+:ref:`numerical-relational-operators` and 
+:ref:`bitwise-operators`. The operator precedence is the same with `Python's operator precedence <https://docs.python.org/3/reference/expressions.html#operator-precedence>`_.
 
 .. note::
     We recommend to use parentheses rather than relying on the order of precedence of operators. 
     Parentheses prevent errors and make the intention clear.
-
-Consider the following example: ::
-
-    x - 5*y & z - 5
-    (x - (5*y)) & (z-5)
-
-These two complex logical conditions are equivalent. However, the parentheses make the second 
-expression easier to understand.
-
-Some simple examples of complex logical conditions, their numerical values, and their logical 
-values are given below.
-
-=============================  ================  ==============
-Logical Condition              Numerical Value   Logical Value
-=============================  ================  ==============
-(1 < 2) + (3 < 4)              2                 TRUE
-(2 < 1) & (3 < 4)              0                 FALSE
-(4*5 - 3) + (10/8)             18.25             TRUE
-(4*5 - 3) \| (10 - 8)          1                 TRUE
-(4 & 5) + (2*3 <= 6)           2                 TRUE
-(4 & 0) + (2*3 < 6)            0                 FALSE
-=============================  ================  ==============
-
 
 .. _nested-conditions:
 
@@ -431,7 +392,7 @@ formulation.
 Note that if the logical condition in an assignment statement refers to set membership, 
 then under certain conditions the restriction may be expressed without the use of the 
 ``where`` operator. For details, see section 
-`Filtering Sets in Assignments <filtering-sets-in-assignments>`_ below.
+:ref:`filtering-sets-in-assignments` below.
 
 .. _where-on-the-left:
 
@@ -539,10 +500,10 @@ parameter ``supc``.
 In indexed operations the logical condition is often a set. This set is called the 
 *conditional set* and assignments are made only for labels that are elements of the 
 conditional set. This concept plays an important role in 
-`dynamic sets <dynamic-sets>`_. 
+:ref:`dynamic-sets`. 
 
 Multi-dimensional sets are introduced in section 
-`Multi-Dimensional Sets <multi-dimensional-sets>`_. In the example used there a 
+:ref:`multi-dimensional-sets`. In the example used there a 
 two-dimensional set is used to define the mapping between countries and ports. 
 Another typical example for a multi-dimensional set is a set-to-set mapping that 
 defines the relationship between states and regions. This is useful for aggregating 
@@ -607,7 +568,7 @@ alternative is more difficult to read.
 Note that if the logical condition in the context of indexed operations refers to set 
 membership, then under certain conditions the restriction may be expressed without the use of 
 the ``where`` operator. For details, see section 
-`Filtering Controlling Indices in Indexed Operations <filtering-controlling-indices-in-indexed-operations>`_ 
+:ref:`filtering-controlling-indices-in-indexed-operations` 
 below.
 
 
@@ -624,7 +585,7 @@ Dollar Operators within the Algebra of Equations
 ---------------------------------------------------
 
 A ``where`` operator in the algebraic formulation of an equation is analogous to the ``where`` 
-on the right of assignments, as presented in section `where[] on the Right <where-on-the-right>`_. 
+on the right of assignments, as presented in section :ref:`where-on-the-right`. 
 Assuming that "the right" means the right of the ``'='`` then the analogy is even closer. As in 
 the context of assignments, an if-else operation is implied. It is used to exclude parts of the 
 definition from some of the generated constraints. ::
@@ -675,7 +636,7 @@ Control over the Domain of Definition
 In case constraints should only be included in the model if particular conditions are met, 
 a ``where`` condition in the domain of definition of an equation may be used to model this 
 restriction. Such a ``where`` condition is analogous to the 
-`where[] control on the left <where-on-the-left>`_ of assignments. Assuming that "the left" 
+:ref:`where-on-the-left` of assignments. Assuming that "the left" 
 means the left of the ``'='`` then the analogy is even closer.
 
 .. note::
@@ -708,7 +669,7 @@ the generated equations ``eq1`` and ``eq2`` will be identical. However, if ``b``
 Note that if the logical condition in the domain of definition of an equation refers to set 
 membership, then under certain conditions the restriction may be expressed without the use of 
 the ``where`` operator. For details, see section 
-`Filtering the Domain of Definition <filtering-the-domain-of-definition>`_ below.
+:ref:`filtering-the-domain-of-definition` below.
 
 
 Filtering Sets
@@ -729,9 +690,9 @@ In this statement the assignment has been filtered through the condition without
 operator by using the subset ``j`` as the domain for the parameters ``u`` and ``s``. This 
 formulation is cleaner and easier to understand. It is particularly useful in the context of 
 multi-dimensional sets (tuples), and it may be used in 
-`assignments <filtering-sets-in-assignments>`_, 
-`indexed operations <filtering-controlling-indices-in-indexed-operations>`_ and the 
-`domain of definition <filtering-the-domain-of-definition>`_ of equations.
+:ref:`filtering-sets-in-assignments`, 
+:ref:`filtering-controlling-indices-in-indexed-operations` and the 
+:ref:`filtering-the-domain-of-definition` of equations.
 
 
 .. _filtering-sets-in-assignments:
@@ -896,8 +857,8 @@ Filtering the Domain of Definition
 ----------------------------------------------------
 
 The rules for filtering sets that we have introduced in subsections 
-`Filtering Sets in Assignments <filtering-sets-in-assignments>`_ and 
-`Filtering Controlling Indices in Indexed Operations <filtering-controlling-indices-in-indexed-operations>`_  
+:ref:`filtering-sets-in-assignments` and 
+:ref:`filtering-controlling-indices-in-indexed-operations`  
 also apply in the context of equation domains. We continue with the parcel transport example introduced 
 above and add a :meth:`binary variable <binary-variables>` ``bin``, the parameter ``bigM`` and the 
 equation ``connect`` to the model. Recall that ``shipped[i,j]`` is a variable and ``r[i,j]`` is a set. ::

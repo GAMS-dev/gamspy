@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import sys
 import tempfile
 import time
@@ -13,6 +14,7 @@ from gamspy import (
     EngineClient,
     Equation,
     Model,
+    Options,
     Parameter,
     Sense,
     Set,
@@ -128,6 +130,67 @@ class EngineSuite(unittest.TestCase):
             None,
             "engine",
         )
+
+    def test_logoption(self):
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
+
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        # logoption=2
+        log_file_path = os.path.join("tmp", "bla.log")
+        transport.solve(
+            backend="engine",
+            client=client,
+            options=Options(log_file=log_file_path),
+        )
+        self.assertTrue(os.path.exists(log_file_path))
+
+        # logoption=3
+        transport.solve(backend="engine", client=client, output=sys.stdout)
+        self.assertFalse(
+            os.path.exists(
+                os.path.join(self.m.working_directory, "log_stdout.txt")
+            )
+        )
+
+        # logoption=4
+        log_file_path = os.path.join("tmp", "bla2.log")
+        transport.solve(
+            backend="engine",
+            client=client,
+            output=sys.stdout,
+            options=Options(log_file=log_file_path),
+        )
+        self.assertTrue(os.path.exists(log_file_path))
 
     def test_no_config(self):
         m = Container(
@@ -428,8 +491,10 @@ class EngineSuite(unittest.TestCase):
             status, _, _ = client.job.get(token)
 
         # /api/auth/logout -> post
-        message = client.auth.logout()
-        self.assertTrue(message is not None and isinstance(message, str))
+        # logout only on Python 3.12 to avoid unauthorized calls on parallel jobs.
+        if platform.system() == "Linux" and sys.version_info.minor == 12:
+            message = client.auth.logout()
+            self.assertTrue(message is not None and isinstance(message, str))
 
 
 def engine_suite():

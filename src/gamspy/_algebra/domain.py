@@ -74,3 +74,13 @@ class Domain:
 
         """
         return utils._get_domain_str(self.sets)
+
+    def latexRepr(self) -> str:
+        """
+        Representation of this Domain in Latex.
+
+        Returns
+        -------
+        str
+        """
+        return utils._get_domain_str(self.sets)[1:-1]

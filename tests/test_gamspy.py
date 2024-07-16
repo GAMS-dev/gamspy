@@ -12,6 +12,7 @@ import gamspy
 from integration.test_cmd_script import cmd_suite
 from integration.test_engine import engine_suite
 from integration.test_gamspy_to_gams import gamspy_to_gams_suite
+from integration.test_gamspy_to_latex import gamspy_to_latex_suite
 from integration.test_miro import miro_suite
 from integration.test_model_instance import model_instance_suite
 from integration.test_models import gams_models_suite
@@ -47,7 +48,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.13.4")
+        self.assertEqual(gamspy.__version__, "0.13.5")
 
 
 class DocsSuite(unittest.TestCase):
@@ -121,6 +122,7 @@ def run_integration_tests(
 ):
     integration_suites = [
         gamspy_to_gams_suite,
+        gamspy_to_latex_suite,
         solve_suite,
         model_instance_suite,
         cmd_suite,

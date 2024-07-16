@@ -46,7 +46,7 @@ that domain lists and descriptions are allowed and recommended ::
     i = Variable(m, name = "i", domain = t, description = "investment (trillion rupees per year)")
     utility = Variable(m, "utility", description = "utility measure")
 
-The :meth:`Variable() <gamspy.Variable>` class indicates that this is a variable 
+The :meth:`Variable <gamspy.Variable>` class indicates that this is a variable 
 statement. ``name`` is the optional internal name of the variable in GAMSPy, it is an 
 *identifier*. In the optional ``domain`` list the set or sets may be specified 
 over which an indexed variable is declared. The optional ``description`` may be 

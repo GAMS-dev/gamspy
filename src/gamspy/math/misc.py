@@ -28,6 +28,27 @@ class MathOp:
         operands_str = ",".join([_stringify(elem) for elem in self.elements])
         return f"{self.op_name}({operands_str})"
 
+    def latexRepr(self) -> str:
+        """
+        Representation of this MathOp in Latex.
+
+        Returns
+        -------
+        str
+        """
+        op_map = {
+            "sqrt": "\\sqrt",
+            "floor": "\\floor",
+            "ceil": "\\lceil",
+            "abs": "\\lvert",
+        }
+
+        operands_str = ",".join([_stringify(elem) for elem in self.elements])
+        if self.op_name in op_map:
+            return f"{op_map[self.op_name]}{{{operands_str}}}"
+
+        return f"{self.op_name}({operands_str})"
+
     def __str__(self):
         return self.gamsRepr()
 

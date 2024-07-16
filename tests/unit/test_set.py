@@ -186,27 +186,27 @@ class SetSuite(unittest.TestCase):
 
         # Circular lag
         new_set = set.lag(n=5, type="circular")
-        self.assertEqual(new_set.name, "S -- 5")
+        self.assertEqual(new_set.gamsRepr(), "S -- 5")
         new_set = alias.lag(n=5, type="circular")
-        self.assertEqual(new_set.name, "A -- 5")
+        self.assertEqual(new_set.gamsRepr(), "A -- 5")
 
         # Circular lead
         new_set = set.lead(n=5, type="circular")
-        self.assertEqual(new_set.name, "S ++ 5")
+        self.assertEqual(new_set.gamsRepr(), "S ++ 5")
         new_set = alias.lead(n=5, type="circular")
-        self.assertEqual(new_set.name, "A ++ 5")
+        self.assertEqual(new_set.gamsRepr(), "A ++ 5")
 
         # Linear lag
         new_set = set.lag(n=5, type="linear")
-        self.assertEqual(new_set.name, "S - 5")
+        self.assertEqual(new_set.gamsRepr(), "S - 5")
         new_set = alias.lag(n=5, type="linear")
-        self.assertEqual(new_set.name, "A - 5")
+        self.assertEqual(new_set.gamsRepr(), "A - 5")
 
         # Linear lead
         new_set = set.lead(n=5, type="linear")
-        self.assertEqual(new_set.name, "S + 5")
+        self.assertEqual(new_set.gamsRepr(), "S + 5")
         new_set = alias.lead(n=5, type="linear")
-        self.assertEqual(new_set.name, "A + 5")
+        self.assertEqual(new_set.gamsRepr(), "A + 5")
 
         # Incorrect type
         self.assertRaises(ValueError, set.lead, 5, "bla")

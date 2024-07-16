@@ -80,6 +80,16 @@ class ModelSuite(unittest.TestCase):
         demand = Equation(self.m, name="demand", domain=[j])
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
+        with self.assertRaises(ValueError):
+            _ = Model(
+                self.m,
+                name="test_model",
+                equations=[supply, demand],
+                problem="MCP",
+                sense="min",
+                objective=Sum((i, j), c[i, j] * x[i, j]),
+            )
+
         # Model with implicit objective
         test_model = Model(
             self.m,
@@ -304,7 +314,7 @@ class ModelSuite(unittest.TestCase):
         )
 
         self.assertRaises(
-            ValidationError,
+            ValueError,
             Model,
             m,
             "transport2",

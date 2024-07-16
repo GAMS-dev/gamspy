@@ -1,0 +1,90 @@
+\documentclass[11pt]{article}
+\usepackage{a4wide}
+\usepackage[american]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tabularx}
+\usepackage{ltablex}
+\keepXColumns
+\usepackage{xcolor}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\section*{Symbols}
+
+
+\subsection*{Sets}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+i & * & canning plants\\
+j & * & markets\\
+\hline
+\end{tabularx}
+\subsection*{Parameters}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+a & i & capacity of plant i in cases\\
+b & j & demand at market j in cases\\
+c & i,j & transport cost in thousands of dollars per case\\
+\hline
+\end{tabularx}
+\subsection*{Variables}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+x & i,j & shipment quantities in cases\\
+transport\_objective\_variable &  & \\
+\hline
+\end{tabularx}
+\subsection*{Equations}
+\begin{tabularx}{\textwidth}{| l | l | X |}
+\hline
+\textbf{Name} & \textbf{Domains} & \textbf{Description}\\
+\hline
+\endhead
+
+supply & i & observe supply limit at plant i\\
+demand & j & satisfy demand at market j\\
+transport\_objective &  & \\
+\hline
+\end{tabularx}
+\section*{Equation Definitions}
+\subsubsection*{\begin{math}\text{supply}_{i}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{j}} \text{x}_{\text{i},\text{j}} \leq \text{a}_{\text{i}}
+\end{math}
+\hfill
+\begin{math}
+\forall i
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{demand}_{j}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{i}} \text{x}_{\text{i},\text{j}} \geq \text{b}_{\text{j}}
+\end{math}
+\hfill
+\begin{math}
+\forall j
+\end{math}\vspace{5pt}
+\hrule
+\subsubsection*{\begin{math}\text{transport\_objective}\end{math}}
+\begin{math}
+\displaystyle \sum_{\text{i},\text{j}} \text{c}_{\text{i},\text{j}} \cdot \text{x}_{\text{i},\text{j}} = \text{transport\_objective\_variable}
+\end{math}
+\vspace{5pt}
+\hrule
+\bigskip
+\begin{math}\text{x}_{\text{i},\text{j}}\geq 0 ~ \forall i,j\\\end{math}
+\end{document}
