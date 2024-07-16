@@ -42,7 +42,13 @@ class ModelInstanceSuite(unittest.TestCase):
 
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            is_miro_input=True,
+        )
         c = Parameter(m, name="c", domain=[i, j])
         bmult = Parameter(m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
