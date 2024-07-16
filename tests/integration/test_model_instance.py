@@ -85,6 +85,10 @@ class ModelInstanceSuite(unittest.TestCase):
             bmult[...] = b_value
             transport.solve(solver="conopt")
             self.assertTrue("bmult_var" in m.data)
+            self.assertTrue(
+                x.records.columns.to_list()
+                == ["i", "j", "level", "marginal", "lower", "upper", "scale"]
+            )
             self.assertAlmostEqual(z.toValue(), result, places=2)
             self.assertAlmostEqual(transport.objective_value, result, places=2)
 

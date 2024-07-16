@@ -1,6 +1,13 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.6
+-------------
+- General
+  - Fix model instance record columns.
+- Testing
+  - Add a test to verify the columns of symbols in model instance solves.
+
 GAMSPy 0.13.5
 -------------
 - General

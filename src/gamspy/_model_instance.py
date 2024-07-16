@@ -355,6 +355,9 @@ class ModelInstance:
         for name in temp.data:
             if name in self.container.data:
                 self.container[name].records = temp[name].records
+                self.container[name].domain_labels = self.container[
+                    name
+                ].domain_names
 
             if name in [symbol.name for symbol in self.modifiables]:
                 _ = gp.Variable(
