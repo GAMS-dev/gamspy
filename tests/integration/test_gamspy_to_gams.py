@@ -1578,6 +1578,42 @@ class GamspyToGamsSuite(unittest.TestCase):
             objective = lines[-1].split("//")[0].split(" ")[-3]
             self.assertTrue(objective.startswith("911044.089"))
 
+    def test_set_attributes(self):
+        ct = Container()
+        s = ct.addSet("s", records=[1, 2])
+        x = ct.addVariable("x", type="positive", domain=s)
+        eq = ct.addEquation("eq", domain=s)
+        eq[s].where[~s.first] = x[s] >= 1
+
+        m = ct.addModel(
+            problem="LP",
+            name="test",
+            sense=Sense.MIN,
+            equations=[eq],
+            objective=Sum(s, x[s]),
+        )
+
+        m.toGams(os.path.join("tmp", "to_gams"))
+
+        process = subprocess.run(
+            [
+                os.path.join(self.m.system_directory, "gams"),
+                os.path.join("tmp", "to_gams", "test.gms"),
+                "traceopt=2",
+                "trace=trace.txt",
+                f'output={os.path.join("tmp", "to_gams", "test.lst")}',
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(process.returncode, 0)
+
+        with open("trace.txt") as trace:
+            lines = trace.read().splitlines()
+            objective = lines[-1].split("//")[0].split(" ")[-3]
+            self.assertTrue(float(objective) == 1)
+
 
 def gamspy_to_gams_suite():
     suite = unittest.TestSuite()
