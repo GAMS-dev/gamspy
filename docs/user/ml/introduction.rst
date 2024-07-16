@@ -197,10 +197,10 @@ However, you are limited to 20 dimensions as GAMS supports up to 20 dimensions:
 Matrix Multiplication
 =====================
 
-We tried to follow matrix multiplication rules of PyTorch, ``torch.matmul``,
+We tried to follow matrix multiplication rules of PyTorch, 
+`torch.matmul <https://pytorch.org/docs/stable/generated/torch.matmul.html>`_ ,
 therefore, you are not limited to only rank-2 tensor multiplications. GAMSPy
-symbols and expressions support matrix multiplication by overriding ``@``
-operator.
+symbols and expressions support matrix multiplication by overriding ``@`` operator.
 
 .. admonition:: Information
 
@@ -320,7 +320,8 @@ Vector norms are essential to many machine learning applications. For example,
 in ordinary least squares method, one minimizes the squared residuals which can
 be formulated as minimizing the vector size of the residuals.
 
-In the simple example, we can use `vector_norm` to get length of a vector.
+In the simple example, we can use :meth:`vector_norm <gamspy.math.vector_norm>`
+to get length of a vector.
 
 .. code-block:: python
 
@@ -390,8 +391,9 @@ allowing the use of a Quadratically Constrained Programming (QCP) model type.
 Normally, this approach wouldn't work in GAMSPy because the square and square
 root operations do not cancel each other automatically. However, the
 `vector_norm` operation is an exception. When the conditions are correct,
-`vector_norm` marks the `sqrt` function as cancellable, effectively allowing the
-minimization of the squared norm within a QCP model.
+:meth:`vector_norm <gamspy.math.vector_norm>` marks the :meth:`sqrt <gamspy.math.sqrt>`
+function as cancellable, effectively allowing the minimization of the squared
+norm within a QCP model.
 
 This enhanced functionality simplifies the optimization process and broadens
 the applicability of the `vector_norm` function in various modeling scenarios.
@@ -401,7 +403,7 @@ the applicability of the `vector_norm` function in various modeling scenarios.
 
    import gamspy as gp
    import numpy as np
-   from gamspy.math import vector_norm, square
+   from gamspy.math import vector_norm
 
    m = gp.Container()
    i = gp.Set(m, name="i", records=["i1", "i2"])
@@ -426,8 +428,8 @@ Permute
 -------
 
 Another very common operation that is often required is permutation. The
-`permute` function takes an input `x` and `dims` where the `x` is one of the
-following:
+:meth:`permute <gamspy.math.permute>` function takes an input `x` and `dims`
+where the `x` is one of the following:
 
 - Parameter
 - ImplicitParameter
@@ -503,9 +505,9 @@ If you need to just permute last two dimensions, aka transpose, you can use
 Trace
 -----
 
-The `trace` function calculates the trace of a given input array `x`. Although
-less common in machine learning, this function can still be useful in various
-applications.
+The :meth:`trace <gamspy.math.trace>` function calculates the trace of a given
+input array `x`. Although less common in machine learning, this function can
+still be useful in various applications.
 
 
 - **Default Behavior**: By default, the function computes the trace along the
