@@ -36,7 +36,7 @@ is much easier than:
 In this context, m represents the batch dimension, i denotes the feature dimension of layer 2,
 and j represents the feature dimension of layer 3.
 
-Considering common operations in ML domain we have implemented:
+GAMSPy provides the following features for ML workloads:
 
 * Implicit default domains
 * Easy matrix declaration
@@ -53,10 +53,9 @@ more information about the features in their own respective pages.
 Implicit default domains
 ========================
 
-We have extended GAMSPy to make it work without explicitly specifying the
-indices. Let a, b, c be variables (e.g. matrices). When symbols are accessed
-without specific domains, the domains specified when declaring the symbol is
-used implicitly.
+GAMSPy can work without explicitly specifying the indices. Let a, b, c be
+variables (e.g. matrices). When symbols are accessed without specific domains,
+the domains specified when declaring the symbol is used implicitly.
 
 .. code-block:: python
 
@@ -72,13 +71,13 @@ used implicitly.
    c = gp.Variable(m, name="c", domain=[i, j])
    assign_1 = gp.Equation(m, name="assign_1", domain=[i, j, k])
 
-The following works now:
+The following expression works without specifying the indices:
 
 .. code-block:: python
 
    assign_1[...] = a == b + c
 
-where in the old times you would have to at least:
+If you prefer ellipsis syntax:
 
 
 .. code-block:: python
@@ -86,7 +85,7 @@ where in the old times you would have to at least:
    assign_1[...] = a[...] == b[...] + c[...]
 
 
-or
+Or if you want to be specific:
 
 .. code-block:: python
 
@@ -208,7 +207,7 @@ operator.
 
    When performing matrix multiplication, the actual computation is not carried
    out immediately. Instead, an expression is generated. This approach is taken
-   because matrix multiplication is computationally intensive, and since the
+   because matrix multiplication is computationally expensive, and since the
    elements involved include variables in addition to numbers, certain libraries
    and optimization techniques cannot be used to accelerate the process. By
    delegating this task to GAMS rather than handling it directly in Python, we
