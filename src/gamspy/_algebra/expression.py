@@ -120,29 +120,25 @@ class Expression(operable.Operable):
 
         self._right_domain = right_domain
         set_to_index = {}
-        for i, d in enumerate(left_domain):
-            if isinstance(d, str):
-                continue  # string domains are fixed and they do not count
 
-            if d not in set_to_index:
-                set_to_index[d] = []
+        for domain_char, domain_ptr in (
+            ("l", left_domain),
+            ("r", right_domain),
+        ):
+            for i, d in enumerate(domain_ptr):
+                if isinstance(d, str):
+                    continue  # string domains are fixed and they do not count
 
-            set_to_index[d].append(("l", i))
+                if d not in set_to_index:
+                    set_to_index[d] = []
 
-        for i, d in enumerate(right_domain):
-            if isinstance(d, str):
-                continue  # string domains are fixed and they do not count
-
-            if d not in set_to_index:
-                set_to_index[d] = []
-
-            set_to_index[d].append(("r", i))
+                set_to_index[d].append((domain_char, i))
 
         shadow_domain = []
         result_domain = []
         for d in [*left_domain, *right_domain]:
             if isinstance(d, str):
-                continue  # string domains are fixed and they do not count
+                continue
 
             if d not in result_domain:
                 result_domain.append(d)

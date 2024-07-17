@@ -6,7 +6,6 @@ import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
-import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
@@ -75,23 +74,6 @@ class Operation(operable.Operable):
             return Operation(
                 self.op_domain, self.expression[domain], self._op_name
             )
-
-    def _extract_variables(self):
-        from gamspy import Variable
-
-        if isinstance(self.expression, expression.Expression):
-            return self.expression._find_variables()
-
-        if isinstance(self.expression, implicits.ImplicitVariable):
-            return [self.expression.parent.name]
-
-        if isinstance(self.expression, Variable):
-            return [self.expression.name]
-
-        if isinstance(self.expression, Operation):
-            return self.expression._extract_variables()
-
-        return []
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:

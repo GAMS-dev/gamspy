@@ -78,7 +78,7 @@ def vector_norm(
     >>> vec = gp.Parameter(m, "vec", domain=[i], records=[("i1", 3), ("i2", 4)])
     >>> vlen = gp.Parameter(m, "vlen", domain=[])
     >>> vlen[...] = gp.math.vector_norm(vec)
-    >>> math.isclose(vlen.records.iloc[0, 0], 5, rel_tol=1e-4)
+    >>> math.isclose(vlen.toValue(), 5, rel_tol=1e-4)
     True
 
     """
@@ -136,20 +136,22 @@ def vector_norm(
 
             sum_domain = dim
 
-    # TODO: Fix typing issues in lines that contain type: ignore
     if ord == 2:
         return gamspy.math.sqrt(
             operation.Sum(sum_domain, gamspy.math.sqr(x[domain])),
             safe_cancel=True,
         )
     elif even:
-        return operation.Sum(sum_domain, x[domain] ** ord) ** (1 / ord)
+        return gamspy.math.rpower(
+            operation.Sum(sum_domain, x[domain] ** ord), (1 / ord)
+        )
     elif ord == 1:
         return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
     else:
-        return operation.Sum(
-            sum_domain, gamspy.math.abs(x[domain]) ** ord
-        ) ** (1 / ord)
+        return gamspy.math.rpower(
+            operation.Sum(sum_domain, gamspy.math.abs(x[domain]) ** ord),
+            (1 / ord),
+        )
 
 
 def next_alias(symbol: Alias | Set) -> Alias:
@@ -291,7 +293,7 @@ def trace(
 
     Returns
     -------
-    "Operation"
+    Operation
 
     Examples
     --------

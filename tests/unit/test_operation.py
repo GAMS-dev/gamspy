@@ -261,27 +261,6 @@ class OperationSuite(unittest.TestCase):
         expr1 = Sum([c], 5.2)[:]  # this should be fine
         self.assertEqual(expr1.gamsRepr(), "sum(c,5.2)")
 
-    def test_operation_extract_vars(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
-        s = Set(m, name="s")
-        c = Set(m, name="c")
-        p = Variable(m, "p", type="Positive", domain=[s, c])
-
-        expr1 = Sum(c, p[s, c])
-        self.assertIn("p", expr1._extract_variables())
-
-        expr2 = Sum(c, p)
-        self.assertIn("p", expr2._extract_variables())
-
-        expr3 = Sum(s, Sum(c, p))
-        self.assertIn("p", expr3._extract_variables())
-
-        expr4 = Sum(s, Sum(c, p[s, c]))
-        self.assertIn("p", expr4._extract_variables())
-
-        expr5 = Sum(s, 2)
-        self.assertEqual(expr5._extract_variables(), [])
-
 
 def operation_suite():
     suite = unittest.TestSuite()
