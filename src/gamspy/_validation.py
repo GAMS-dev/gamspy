@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from collections.abc import Sequence
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
@@ -322,7 +322,7 @@ def validate_name(word: str) -> str:
 
 
 def validate_model(
-    equations: Sequence[Equation],
+    equations: Iterable[Equation],
     problem: Problem | str,
     sense: str | Sense | None = None,
 ) -> tuple[Problem, Sense | None]:
@@ -346,7 +346,7 @@ def validate_model(
 
     if (
         problem not in (Problem.CNS, Problem.MCP)
-        and not isinstance(equations, Sequence)
+        and not isinstance(equations, Iterable)
         or any(
             not isinstance(equation, symbols.Equation)
             for equation in equations
