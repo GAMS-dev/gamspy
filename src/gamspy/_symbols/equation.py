@@ -17,7 +17,6 @@ from gams.transfer._internals import (
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._algebra.expression as expression
-import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -56,7 +55,7 @@ class EquationType(Enum):
         return self.value
 
 
-class Equation(gt.Equation, operable.Operable, Symbol):
+class Equation(gt.Equation, Symbol):
     """
     Represents an Equation symbol in GAMS.
     https://www.gams.com/latest/docs/UG_Equations.html

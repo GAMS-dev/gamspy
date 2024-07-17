@@ -348,7 +348,7 @@ class ModelSuite(unittest.TestCase):
             name="cost",
             description="define objective function",
         )
-        cost.expr = Sum((i, j), c[i, j] * x[i, j]) == z
+        cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
 
         # Equation definition with an index
         supply = Equation(
@@ -362,16 +362,25 @@ class ModelSuite(unittest.TestCase):
         demand = Equation(self.m, name="demand", domain=[j])
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        # Model with implicit objective
         test_model = Model(
             self.m,
             name="test_model",
-            equations=[supply, demand],
+            equations=(supply, demand),
             problem="LP",
             sense="min",
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
         test_model.solve()
+
+        test_model2 = Model(
+            self.m,
+            name="test_model2",
+            equations=set(self.m.getEquations()) - {cost},
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        test_model2.solve()
 
     def test_compute_infeasibilities(self):
         m = Container(
