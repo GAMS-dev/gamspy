@@ -272,7 +272,7 @@ class Container(gt.Container):
             return
 
         try:
-            return_code = int(response.decode("utf-8").split("#", 1)[0])
+            return_code = int(response.decode("Windows-1252").split("#", 1)[0])
         except ValueError as e:
             raise GamspyException(
                 "Did not receive any return code from GAMS backend. Check"
