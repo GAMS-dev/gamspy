@@ -85,7 +85,9 @@ class GamsConverter(Converter):
         strings = [*declarations, load_str, *definitions, solve_string]
 
         gams_string = "\n".join(strings)
-        with open(self.gms_path, "w") as file:  # Write the GAMS code
+        with open(
+            self.gms_path, "w", encoding="utf-8"
+        ) as file:  # Write the GAMS code
             file.write(gams_string)
 
         logger.info(
@@ -167,7 +169,9 @@ class LatexConverter(Converter):
         latex_strs.append(self.footer)
 
         latex_str = "\n".join(latex_strs)
-        with open(self.tex_path, "w") as file:  # Write the TEX file
+        with open(
+            self.tex_path, "w", encoding="utf-8"
+        ) as file:  # Write the TEX file
             file.write(latex_str)
 
         logger.info(

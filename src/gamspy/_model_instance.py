@@ -101,7 +101,7 @@ class ModelInstance:
         self.instantiate(model, freeze_options)
 
     def _create_restart_file(self):
-        with open(self.gms_file, "w") as gams_file:
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
         options = Options()

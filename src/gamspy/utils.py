@@ -49,7 +49,7 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     capabilities: dict[str, list[str]] = dict()
 
-    with open(capabilities_path) as file:
+    with open(capabilities_path, encoding="utf-8") as file:
         lines = file.read().splitlines()
 
     while True:
@@ -92,7 +92,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     solvers: list[str] = []
 
-    with open(capabilities_path) as file:
+    with open(capabilities_path, encoding="utf-8") as file:
         lines = file.read().splitlines()
 
     while True:

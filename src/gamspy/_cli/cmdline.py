@@ -138,7 +138,7 @@ def install_license(args: argparse.Namespace):
                 raise ValidationError(process.stderr)
 
             node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
-            with open(node_info_path, "w") as file:
+            with open(node_info_path, "w", encoding="utf-8") as file:
                 file.write(process.stdout)
 
             command.append(node_info_path)
@@ -152,7 +152,9 @@ def install_license(args: argparse.Namespace):
             raise ValidationError(process.stderr)
 
         with open(
-            os.path.join(gamspy_base_dir, "user_license.txt"), "w"
+            os.path.join(gamspy_base_dir, "user_license.txt"),
+            "w",
+            encoding="utf-8",
         ) as file:
             file.write(process.stdout)
     else:
@@ -444,7 +446,7 @@ def show_license():
     lice_path = (
         userlice_path if os.path.exists(userlice_path) else demolice_path
     )
-    with open(lice_path) as license_file:
+    with open(lice_path, encoding="utf-8") as license_file:
         print(license_file.read())
 
 

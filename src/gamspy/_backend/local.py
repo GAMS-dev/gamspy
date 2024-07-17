@@ -74,7 +74,7 @@ class Local(backend.Backend):
 
     def execute_gams(self, gams_string: str):
         # Write gms file
-        with open(self.gms_file, "w") as gams_file:
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write(gams_string)
 
         # Write pf file
