@@ -315,7 +315,8 @@ class MatrixSuite(unittest.TestCase):
         c2 = a[i, j] @ b[j, k]
         self.assertEqual(c2.domain, [i, k])
         c = Parameter(self.m, name="c", domain=[i, k])
-        c[...] = (a @ b)[i, k]  # TODO check this, this would not work o.w
+        # reindexing is required in this case
+        c[...] = (a @ b)[i, k]
         c_recs = c.toDense()
         self.assertTrue(np.allclose(c_recs, a_recs @ b_recs))
 
@@ -676,6 +677,15 @@ class MatrixSuite(unittest.TestCase):
         self.assertTrue(math.isclose(c.records.iloc[1, 1], 25, rel_tol=1e-5))
         self.assertTrue(math.isclose(c.records.iloc[2, 1], 13, rel_tol=1e-5))
 
+    def test_vector_norm_3(self):
+        i = Set(self.m, name="i", records=["i1", "i2"])
+        n = Set(self.m, name="n", records=["n1", "n2"])
+        a = Variable(self.m, name="a", domain=[n, i])
+
+        self.assertEqual(vector_norm(a[:, "i1"]).domain, [])
+        self.assertEqual(vector_norm(a["n1", :]).domain, [])
+        self.assertRaises(ValidationError, lambda: vector_norm(a["n1", "i1"]))
+
     def test_vector_norm_dim(self):
         i = Set(self.m, name="i", records=["i1", "i2"])
         a = Variable(self.m, name="a", domain=[i])
@@ -684,11 +694,6 @@ class MatrixSuite(unittest.TestCase):
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=[0, i]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=["asd"]))
         self.assertRaises(ValidationError, lambda: vector_norm(a, dim=2))
-
-        # Todo fix this
-        # vector_norm(a[:, "i1"]) # Fail
-        # vector_norm(a["n1", :]) # Fail
-        # vector_norm(a["n1", "i1"]) # Fail
 
     def test_literal_indexing(self):
         i = Set(self.m, name="i", records=["i1", "i2"])

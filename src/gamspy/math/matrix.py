@@ -85,17 +85,6 @@ def vector_norm(
     import gamspy._algebra.operation as operation
     from gamspy._symbols.alias import Alias
 
-    # cases:
-    #            inf norm        max(abs(x))
-    #           -inf norm        min(abs(x))
-    #            0 norm          counting number of non-zeros
-    #            integer norm
-    #            float norm
-
-    # TODO discuss adding an eager option and calculating
-    # not supported norms only for the data that is not dependent
-    # on variables
-
     if isinstance(ord, float):
         if ord.is_integer():
             ord = int(ord)
@@ -107,6 +96,10 @@ def vector_norm(
 
     even = isinstance(ord, int) and ord % 2 == 0
     domain = x.domain
+
+    if len(domain) == 0:
+        raise ValidationError("Provided argument is a scalar")
+
     sum_domain = domain
     if dim is not None:
         if not isinstance(dim, Iterable):
