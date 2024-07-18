@@ -262,7 +262,7 @@ class Container(gt.Container):
                 output.flush()
 
         try:
-            response = self._socket.recv(128)
+            response = self._socket.recv(4)
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while receiving output from GAMS server: {e}",
@@ -272,7 +272,7 @@ class Container(gt.Container):
             return
 
         try:
-            return_code = int(response.decode("Windows-1252").split("#", 1)[0])
+            return_code = int(response[: response.find(b"#")].decode("ascii"))
         except ValueError as e:
             raise GamspyException(
                 "Did not receive any return code from GAMS backend. Check"
