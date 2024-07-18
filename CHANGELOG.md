@@ -7,7 +7,7 @@ GAMSPy 0.13.6
   - Make all file read and writes with utf-8 encoding.
   - Fix model instance record columns.
   - Allow all iterables for equations argument of model.
-  - Parse socket message as Windows-1252 instead of utf-8.
+  - Fix the bug in socket connection messages.
 - Testing
   - Add a test to verify the columns of symbols in model instance solves.
   - Test set difference for model equations argument.
