@@ -198,9 +198,6 @@ def next_alias(symbol: Alias | Set) -> Alias:
 class Dim:
     dims: list[int]
 
-    def __init__(self, dims):
-        self.dims = dims
-
 
 def dim(dims: list[int]) -> Dim:
     """Returns an array where each element
@@ -238,7 +235,7 @@ def dim(dims: list[int]) -> Dim:
         if not isinstance(x, int):
             raise ValidationError("Dimensions must be integers")
 
-    return Dim(dims=dims)
+    return Dim(dims=dims)  # type: ignore
 
 
 def _generate_dims(m: Container, dims: list[int]) -> list[Alias | Set]:
