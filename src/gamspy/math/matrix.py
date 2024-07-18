@@ -140,11 +140,11 @@ def vector_norm(
         )
     elif ord == 1:
         return operation.Sum(sum_domain, gamspy.math.abs(x[domain]))
-    else:
-        return gamspy.math.rpower(
-            operation.Sum(sum_domain, gamspy.math.abs(x[domain]) ** ord),
-            (1 / ord),
-        )
+
+    return gamspy.math.rpower(
+        operation.Sum(sum_domain, gamspy.math.abs(x[domain]) ** ord),
+        (1 / ord),
+    )
 
 
 def next_alias(symbol: Alias | Set) -> Alias:
@@ -405,8 +405,8 @@ def permute(
             permutation=dims,
             scalar_domains=x._scalar_domains,
         )
-    else:
-        raise GamspyException(f"permute not implemented for {type(x)}")
+
+    raise GamspyException(f"permute not implemented for {type(x)}")
 
 
 def _validate_matrix_mult_dims(left, right):
@@ -560,8 +560,8 @@ def _validate_matrix_mult_dims(left, right):
             [*right.domain[:-2], sum_domain, right_domain],
             sum_domain,
         )
-    else:
-        raise ValidationError(
-            f"Matrix multiplication for left dim: {left_len},"
-            f" right dim: {right_len} not implemented"
-        )
+
+    raise ValidationError(
+        f"Matrix multiplication for left dim: {left_len},"
+        f" right dim: {right_len} not implemented"
+    )
