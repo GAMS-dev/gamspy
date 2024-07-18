@@ -38,3 +38,4 @@ Release Notes
    release_0.13.3
    release_0.13.4
    release_0.13.5
+   release_0.13.6
