@@ -527,7 +527,7 @@ class NEOSServer(backend.Backend):
         return extra_options
 
     def _create_restart_file(self):
-        with open(self.gms_file, "w") as gams_file:
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
         options = Options()
@@ -543,7 +543,7 @@ class NEOSServer(backend.Backend):
             self.container.system_directory, self.container._gdx_out
         )
         dirty_str = ",".join(symbols)
-        with open(self.gms_file, "w") as gams_file:
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write(
                 f'execute_load "{self.container._gdx_out}", {dirty_str};'
             )

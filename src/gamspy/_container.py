@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import atexit
+import logging
 import os
 import platform
 import shutil
@@ -48,13 +49,13 @@ IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
-debugging_map = {
-    "delete": DebugLevel.Off,
-    "keep_on_error": DebugLevel.KeepFilesOnError,
-    "keep": DebugLevel.KeepFiles,
-}
-
-TIMEOUT = 30
+logger = logging.getLogger("MODEL")
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 def is_network_license(system_directory: str) -> bool:
@@ -78,6 +79,7 @@ def find_free_address() -> tuple[str, int]:
 def open_connection(
     system_directory: str, process_directory: str
 ) -> tuple[socket.socket, subprocess.Popen]:
+    TIMEOUT = 30
     license_path = utils._get_license_path(system_directory)
 
     address = find_free_address()
@@ -122,6 +124,60 @@ def get_system_directory(system_directory: str | None) -> str:
         system_directory = utils._get_gamspy_base_directory()
 
     return system_directory
+
+
+def check_response(response: bytes, job_name: str) -> None:
+    GAMS_STATUS = {
+        1: "Solver is to be called, the system should never return this number.",
+        2: "There was a compilation error.",
+        3: "There was an execution error.",
+        4: "System limits were reached.",
+        5: "There was a file error.",
+        6: "There was a parameter error.",
+        7: "There was a licensing error.",
+        8: "There was a GAMS system error.",
+        9: "GAMS could not be started.",
+        10: "Out of memory.",
+        11: "Out of disk.",
+        109: "Could not create process/scratch directory.",
+        110: "Too many process/scratch directories.",
+        112: "Could not delete the process/scratch directory.",
+        113: "Could not write the script gamsnext.",
+        114: "Could not write the parameter file.",
+        115: "Could not read environment variable.",
+        400: "Could not spawn the GAMS language compiler (gamscmex).",
+        401: "Current directory (curdir) does not exist.",
+        402: "Cannot set current directory (curdir).",
+        404: "Blank in system directory (UNIX only).",
+        405: "Blank in current directory (UNIX only).",
+        406: "Blank in scratch extension (scrext)",
+        407: "Unexpected cmexRC.",
+        408: "Could not find the process directory (procdir).",
+        409: "CMEX library not be found (experimental).",
+        410: "Entry point in CMEX library could not be found (experimental).",
+        411: "Blank in process directory (UNIX only).",
+        412: "Blank in scratch directory (UNIX only).",
+        909: "Cannot add path / unknown UNIX environment / cannot set environment variable.",
+        1000: "Driver error: incorrect command line parameters for gams.",
+        2000: "Driver error: internal error: cannot install interrupt handler.",
+        3000: "Driver error: problems getting current directory.",
+        4000: "Driver error: internal error: GAMS compile and execute module not found.",
+        5000: "Driver error: internal error: cannot load option handling library.",
+    }
+
+    try:
+        return_code = int(response[: response.find(b"#")].decode("ascii"))
+    except (ValueError, UnicodeError) as e:
+        raise GamspyException(
+            "Error while getting the return code from GAMS backend"
+        ) from e
+
+    if return_code in GAMS_STATUS:
+        raise GamspyException(
+            f"The model was not solved successfully! {GAMS_STATUS[return_code]}"
+            f' Check {job_name + ".lst"} for more information.',
+            return_code,
+        )
 
 
 class Container(gt.Container):
@@ -243,6 +299,7 @@ class Container(gt.Container):
         pf_file: str,
         output: io.TextIOWrapper | None = None,
     ):
+        # Send pf file
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
         except ConnectionError as e:
@@ -250,6 +307,7 @@ class Container(gt.Container):
                 f"There was an error while sending pf file name to GAMS server: {e}",
             ) from e
 
+        # Read output
         if output is not None:
             while True:
                 data = self._process.stdout.readline()
@@ -261,30 +319,18 @@ class Container(gt.Container):
                 output.write(data)
                 output.flush()
 
+        # Receive response
         try:
-            response = self._socket.recv(128)
+            response = self._socket.recv(4)
         except ConnectionError as e:
             raise GamspyException(
-                f"There was an error while receiving output from GAMS server: {e}",
+                f"There was an error while receiving response from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
             self._stop_socket()
             return
 
-        try:
-            return_code = int(response.decode("utf-8").split("#", 1)[0])
-        except ValueError as e:
-            raise GamspyException(
-                "Did not receive any return code from GAMS backend. Check"
-                f" {job_name + '.lst'}."
-            ) from e
-
-        if return_code:
-            raise GamspyException(
-                f"Job failed! Return code is {return_code}. Check:"
-                f" {job_name + '.lst'} for more details.",
-                return_code=return_code,
-            )
+        check_response(response, job_name)
 
     def _write_miro_files(self):
         if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
@@ -295,16 +341,21 @@ class Container(gt.Container):
         encoder.write_json()
 
     def _get_debugging_level(self, debugging_level: str) -> int:
+        DEBUGGING_MAP = {
+            "delete": DebugLevel.Off,
+            "keep_on_error": DebugLevel.KeepFilesOnError,
+            "keep": DebugLevel.KeepFiles,
+        }
         if (
             not isinstance(debugging_level, str)
-            or debugging_level not in debugging_map
+            or debugging_level not in DEBUGGING_MAP
         ):
             raise ValidationError(
                 "Debugging level must be one of 'delete', 'keep',"
                 " 'keep_on_error'"
             )
 
-        return debugging_map[debugging_level]
+        return DEBUGGING_MAP[debugging_level]
 
     def _write_default_gdx_miro(self) -> None:
         # create data_<model>/default.gdx

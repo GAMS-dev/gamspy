@@ -391,7 +391,7 @@ class Options(BaseModel):
             raise ValidationError(f"No such file in the given path: {path}")
         
         attributes = dict()
-        with open(path) as file:
+        with open(path, encoding="utf-8") as file:
             lines = file.readlines()
 
             for line in lines:
@@ -422,7 +422,7 @@ class Options(BaseModel):
         all_options.update(**user_options)
 
         # Generate pf file
-        with open(pf_file, "w") as file:
+        with open(pf_file, "w", encoding="utf-8") as file:
             file.write("\n".join([f"{key} = {value}" for key, value in all_options.items()]))
 
 

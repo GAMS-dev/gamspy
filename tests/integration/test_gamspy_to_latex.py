@@ -147,10 +147,12 @@ class GamspyToLatexSuite(unittest.TestCase):
         reference_path = os.path.join(
             "tests", "integration", "tex_references", "transport.tex"
         )
-        with open(reference_path) as file:
+        with open(reference_path, encoding="utf-8") as file:
             reference_tex = file.read()
 
-        with open(os.path.join(output_path, "transport.tex")) as file:
+        with open(
+            os.path.join(output_path, "transport.tex"), encoding="utf-8"
+        ) as file:
             generated_tex = file.read()
 
         self.assertEqual(reference_tex, generated_tex)
