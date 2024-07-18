@@ -42,7 +42,13 @@ class ModelInstanceSuite(unittest.TestCase):
 
         a = Parameter(m, name="a", domain=[i], records=self.capacities)
         b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            is_miro_input=True,
+        )
         c = Parameter(m, name="c", domain=[i, j])
         bmult = Parameter(m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
@@ -85,6 +91,10 @@ class ModelInstanceSuite(unittest.TestCase):
             bmult[...] = b_value
             transport.solve(solver="conopt")
             self.assertTrue("bmult_var" in m.data)
+            self.assertTrue(
+                x.records.columns.to_list()
+                == ["i", "j", "level", "marginal", "lower", "upper", "scale"]
+            )
             self.assertAlmostEqual(z.toValue(), result, places=2)
             self.assertAlmostEqual(transport.objective_value, result, places=2)
 

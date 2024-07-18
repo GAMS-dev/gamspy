@@ -49,7 +49,7 @@ class ValidationError(Exception):
     """An error while validating data."""
 
 
-CHUNK_SIZE = 4
+CHUNK_SIZE = 8
 FRAME = "=" * 14
 
 

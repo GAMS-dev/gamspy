@@ -101,7 +101,7 @@ class ModelInstance:
         self.instantiate(model, freeze_options)
 
     def _create_restart_file(self):
-        with open(self.gms_file, "w") as gams_file:
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
             gams_file.write("")
 
         options = Options()
@@ -352,9 +352,14 @@ class ModelInstance:
         )
         temp.read(self.instance.sync_db._gmd)
 
+        prev_state = self.container.miro_protect
         for name in temp.data:
             if name in self.container.data:
+                self.container.miro_protect = False
                 self.container[name].records = temp[name].records
+                self.container[name].domain_labels = self.container[
+                    name
+                ].domain_names
 
             if name in [symbol.name for symbol in self.modifiables]:
                 _ = gp.Variable(
@@ -362,6 +367,7 @@ class ModelInstance:
                     name + "_var",
                     records=temp[name + "_var"].records,
                 )
+        self.container.miro_protect = prev_state
 
         if self.model._objective_variable is not None:
             self.model.objective_value = temp[

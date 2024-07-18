@@ -319,7 +319,11 @@ class MiroJSONEncoder:
         except FileExistsError:
             pass
 
-        with open(os.path.join(conf_path, f"{filename}_io.json"), "w") as conf:
+        with open(
+            os.path.join(conf_path, f"{filename}_io.json"),
+            "w",
+            encoding="utf-8",
+        ) as conf:
             conf.write(json.dumps(miro_dict, indent=4))
 
         return miro_dict
