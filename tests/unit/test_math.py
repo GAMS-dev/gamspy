@@ -552,9 +552,7 @@ class MathSuite(unittest.TestCase):
             type="Positive",
         )
 
-        y = gams_math.relu_with_complementarity_var(
-            x - c, default_lb=-100, default_ub=200
-        )
+        y = gams_math.relu_with_complementarity_var(x - c)
 
         total_budget = Equation(m, name="check_budget")
         total_budget[...] = Sum(i, x[i]) <= budget
