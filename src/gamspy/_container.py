@@ -718,7 +718,8 @@ class Container(gt.Container):
 
     def addGamsCode(self, gams_code: str) -> None:
         """
-        Adds an arbitrary GAMS code to the generate .gms file
+        Adds an arbitrary GAMS code to the generate .gms file.
+        Using addGAMSCode might result in a license error if no professional 08/09 license is used.
 
         Parameters
         ----------

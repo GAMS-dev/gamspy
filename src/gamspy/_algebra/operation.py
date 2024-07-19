@@ -37,13 +37,13 @@ class Operation(operable.Operable):
     def _get_index_str(self) -> str:
         if len(self.domain) == 1:
             domain = self.domain[0]
-            representaiton = domain.gamsRepr()
-            if isinstance(domain, expression.Expression):
+            representation = domain.gamsRepr()
+            if isinstance(domain, condition.Condition):
                 # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
                 # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
-                return representaiton[1:-1]
+                return representation[1:-1]
 
-            return representaiton
+            return representation
 
         return (
             "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
@@ -106,18 +106,18 @@ class Operation(operable.Operable):
         op_map = {"sum": "sum", "prod": "prod", "smax": "max", "smin": "min"}
 
         indices = []
-        condition = None
+        given_condition = None
         for index in self.domain:
-            if isinstance(index, expression.Expression) and index.data == "$":
-                indices.append(index.left)
-                condition = index.right
+            if isinstance(index, condition.Condition):
+                indices.append(index.conditioning_on)
+                given_condition = index.condition
             else:
                 indices.append(index)
 
         index_str = ",".join([index.latexRepr() for index in indices])
 
-        if condition is not None:
-            index_str += " ~ | ~ " + condition.latexRepr()
+        if given_condition is not None:
+            index_str += " ~ | ~ " + given_condition.latexRepr()
 
         expression_str = (
             str(self.expression)
@@ -354,6 +354,7 @@ class Ord(operable.Operable):
             )
 
         self._set = set
+        self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -427,10 +428,11 @@ class Card(operable.Operable):
     ) -> None:
         if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
             raise ValidationError(
-                "Ord operation is only for Set and Alias objects!"
+                "Card operation is only for Set, Alias and Parameter objects!"
             )
 
         self._symbol = symbol
+        self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -476,4 +478,4 @@ class Card(operable.Operable):
         -------
         str
         """
-        return f"ord({self._set.name})"
+        return f"card({self._symbol.name})"
