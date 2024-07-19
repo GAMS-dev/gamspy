@@ -574,6 +574,41 @@ class MathSuite(unittest.TestCase):
 
         self.assertTrue(np.isclose(budget.objective_value, 180.0))
 
+    def test_log_softmax(self):
+        m = Container(
+            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
+        )
+
+        labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
+        for i in range(30):
+            labels[str(i), str(i % 3)] = 1
+
+        x = Variable(m, name="x", domain=gams_math.dim([30, 3]))
+
+        x.lo[...] = -5
+        x.up[...] = 5
+
+        p = Parameter(m, name="p", domain=gams_math.dim([30, 3]))
+
+        # log_softmax requires bare value
+        self.assertRaises(ValidationError, gams_math.log_softmax, x - p)
+        self.assertRaises(ValidationError, gams_math.log_softmax, x[...])
+        # dim out of bounds
+        self.assertRaises(IndexError, gams_math.log_softmax, x, 2)
+
+        # this uses LSE in background
+        y = gams_math.log_softmax(x)
+        self.assertTrue("lseMax" in m.getEquations()[0].getDefinition())
+
+        # this cannot use LSE in background
+        gams_math.log_softmax(x, 0)
+        self.assertTrue("lseMax" not in m.getEquations()[1].getDefinition())
+
+        nll = Variable(m, name="nll")
+
+        set_loss = Equation(m, name="set_loss")
+        set_loss[...] = nll == Sum(labels[y.domain], -y)
+
 
 def math_suite():
     suite = unittest.TestSuite()

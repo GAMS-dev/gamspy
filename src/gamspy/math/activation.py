@@ -249,6 +249,7 @@ def log_softmax(x: Variable, dim: int = -1):
     Parameters
     ----------
     x : Variable
+    dim : int
 
     Returns
     -------
@@ -300,5 +301,66 @@ def log_softmax(x: Variable, dim: int = -1):
         ]
         sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
         eq[...] = y[...] == x - gamspy.math.log(sum_expr)
+
+    return y
+
+
+def softmax(x: Variable, dim: int = -1):
+    """
+    Implements the softmax activation function. This function strictly requires
+    a GAMSPy Variable, `y = softmax(x)`. The ``dim`` parameter specifies the
+    index of the softmax dimension. If not provided, the softmax is calculated
+    for the last dimension. This function is implemented for completeness;
+    however, in many cases, you can use :meth:`log_softmax <gamspy.math.log_softmax>`
+    for better numerical stability.
+
+    Use :meth:`log_softmax <gamspy.math.log_softmax>` if you need to take the
+    logarithm of the softmax function.
+
+    Returns the activation variable.
+
+    Parameters
+    ----------
+    x : Variable
+    dim : int
+
+    Returns
+    -------
+    Variable
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable
+    >>> from gamspy.math import dim
+    >>> from gamspy.math.activation import softmax
+    >>> m = Container()
+    >>> x = Variable(m, "x", domain=dim([500, 10]))
+    >>> y = softmax(x)
+    >>> y.domain
+    [<Set `DenseDim500_1` (0x...)>, <Set `DenseDim10_1` (0x...)>]
+    """
+    if not isinstance(x, Variable):
+        raise ValidationError("softmax expects a variable")
+
+    if dim < 0:
+        dim = len(x.domain) + dim
+
+    sum_domain = next_alias(x.domain[dim])
+    expr_domain = [
+        d if i != dim else sum_domain for (i, d) in enumerate(x.domain)
+    ]
+
+    y = x.container.addVariable(
+        _get_random_name("y"),
+        domain=x.domain,
+    )
+
+    eq = x.container.addEquation(
+        _get_random_name("eq"),
+        domain=x.domain,
+    )
+
+    sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
+    eq[...] = y[...] == gamspy.math.exp(x) / sum_expr
 
     return y
