@@ -31,8 +31,13 @@ def simple_log_softmax(x: np.ndarray):
     return np.log(np.exp(x) / np.exp(x).sum())
 
 
-def verify_output(x_rec, y_recs):
+def simple_softmax(x: np.ndarray):
+    return np.exp(x) / np.exp(x).sum()
+
+
+def verify_output(x_rec, y_recs, y2_recs):
     expected_results = simple_log_softmax(np.array([5.0, -5.0, -5.0]))
+    expected_results_2 = simple_softmax(np.array([5.0, -5.0, -5.0]))
 
     for _, row in x_rec.iterrows():
         expected = str(int(row["DenseDim5_1"]) % 3)
@@ -47,6 +52,13 @@ def verify_output(x_rec, y_recs):
             assert np.isclose(row["level"], expected_results[0])
         else:
             assert np.isclose(row["level"], expected_results[1])
+
+    for _, row in y2_recs.iterrows():
+        expected = str(int(row["DenseDim5_1"]) % 3)
+        if row["DenseDim3_1"] == expected:
+            assert np.isclose(row["level"], expected_results_2[0])
+        else:
+            assert np.isclose(row["level"], expected_results_2[1])
 
 
 def main():
@@ -65,6 +77,7 @@ def main():
     x.up[...] = 5
 
     y = gp.math.log_softmax(x)
+    y2 = gp.math.softmax(x)
 
     nll = Variable(m, name="nll")  # negative log likelihood loss
 
@@ -80,7 +93,7 @@ def main():
         objective=nll,
     )
     classification.solve(output=sys.stdout)
-    verify_output(x.records, y.records)
+    verify_output(x.records, y.records, y2.records)
 
 
 if __name__ == "__main__":
