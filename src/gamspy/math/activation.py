@@ -31,6 +31,8 @@ import gamspy._symbols.implicits as implicits
 import gamspy.math
 from gamspy._symbols.parameter import Parameter
 from gamspy._symbols.variable import Variable
+from gamspy.exceptions import ValidationError
+from gamspy.math.matrix import next_alias
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
@@ -222,5 +224,81 @@ def relu_with_complementarity_var(
         y.up[...] = gamspy.math.Max(0, x.up[...])
     else:
         y.lo[...] = 0
+
+    return y
+
+
+def log_softmax(x: Variable, dim: int = -1):
+    """
+    Implements the log_softmax activation function. This function strictly
+    requires a GAMSPy Variable, `y = log_softmax(x)`. The ``dim`` parameter
+    specifies the **index** of the softmax dimension. If not provided, it
+    calculates log_softmax for the last dimension. This function is preferred
+    over the :meth:`softmax <gamspy.math.softmax>` function because, when
+    the softmax dimension has 20 or fewer elements, it uses the
+    :meth:`lse_max <gamspy.math.lse_max>` (log-sum-exp) intrinsic function for
+    improved numerical stability which usually leads to faster solve times.
+
+    To learn more about `Log-Sum-Exp trick <https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/>`_ .
+
+    This function is usually combined with Negative Log Likelihood loss for
+    classification problems.
+
+    Returns the activation variable.
+
+    Parameters
+    ----------
+    x : Variable
+
+    Returns
+    -------
+    Variable
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable
+    >>> from gamspy.math import dim
+    >>> from gamspy.math.activation import log_softmax
+    >>> m = Container()
+    >>> x = Variable(m, "x", domain=dim([500, 10]))
+    >>> y = log_softmax(x) # uses LSE because 10 <= 20
+    >>> y.domain
+    [<Set `DenseDim500_1` (0x...)>, <Set `DenseDim10_1` (0x...)>]
+    >>> y2 = log_softmax(x, dim=0) # cannot use LSE because 500 > 20
+    """
+    if not isinstance(x, Variable):
+        raise ValidationError("log_softmax expects a variable")
+
+    if dim < 0:
+        dim = len(x.domain) + dim
+
+    sum_domain = next_alias(x.domain[dim])
+
+    y = x.container.addVariable(
+        _get_random_name("y"),
+        domain=x.domain,
+    )
+
+    eq = x.container.addEquation(
+        _get_random_name("eq"),
+        domain=x.domain,
+    )
+
+    if len(sum_domain) != 0 and len(sum_domain) <= 20:
+        # Use built-in LSE if possible
+        scalars = [rec for rec in sum_domain.records["uni"]]
+        variables = []
+        for scalar in scalars:
+            expr_domain = [*x.domain[:dim], scalar, *x.domain[dim + 1 :]]
+            variables.append(x[expr_domain])
+
+        log_sum_exp = gamspy.math.lse_max(*variables)
+        eq[...] = y[...] == x - log_sum_exp
+    else:
+        expr_domain = [
+            d if i != dim else sum_domain for (i, d) in enumerate(x.domain)
+        ]
+        sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
+        eq[...] = y[...] == x - gamspy.math.log(sum_expr)
 
     return y

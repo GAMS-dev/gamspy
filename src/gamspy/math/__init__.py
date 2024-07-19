@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from gamspy.math.activation import (
+    log_softmax,
     relu_with_binary_var,
     relu_with_complementarity_var,
 )
@@ -196,4 +197,5 @@ __all__ = [
     "_generate_dims",
     "relu_with_binary_var",
     "relu_with_complementarity_var",
+    "log_softmax",
 ]
