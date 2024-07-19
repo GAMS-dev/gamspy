@@ -492,8 +492,7 @@ class Model:
                     )
                 elif status in ERROR_STATUS:
                     raise GamspyException(
-                        f"The model `{self.name}` was not solved successfully!"
-                        f" Solve status: {status.name}. {ERROR_STATUS[status]}",
+                        f"Solve status: {status.name}. {ERROR_STATUS[status]}",
                         status.value,
                     )
             else:

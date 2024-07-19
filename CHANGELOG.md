@@ -1,6 +1,17 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.7
+-------------
+- General
+  - Support .where syntax for Card and Ord.
+  - Return condition on where operations on the right instead of expression.
+- Documentation
+  - Fix docstirng of the Card operation.
+  - Add warning about non-professional licenses in addGamsCode docstring.
+- Testing
+  - Add tests for .where syntax for Card and Ord.
+
 GAMSPy 0.13.6
 -------------
 - General

@@ -236,6 +236,23 @@ class OperationSuite(unittest.TestCase):
             if e:
                 ...
 
+    def test_condition(self):
+        m = Container()
+        jj = Set(m, "jj", records=[f"n{idx}" for idx in range(1, 11)])
+        depot = Set(m, "depot", domain=jj, records=["n10"])
+
+        card_j = Parameter(m, "card_j", domain=jj)
+        card_j[jj] = Card(jj).where[depot[jj]]
+        self.assertEqual(
+            card_j.getAssignment(), "card_j(jj) = (card(jj) $ depot(jj));"
+        )
+
+        ord_j = Parameter(m, "ord_j", domain=jj)
+        ord_j[jj] = Ord(jj).where[depot[jj]]
+        self.assertEqual(
+            ord_j.getAssignment(), "ord_j(jj) = (ord(jj) $ depot(jj));"
+        )
+
 
 def operation_suite():
     suite = unittest.TestSuite()
