@@ -37,3 +37,4 @@ alone. Here's why GAMSPy stands out as the ultimate choice:
    ./introduction
    ./ols
    ./logistic
+   ./nn

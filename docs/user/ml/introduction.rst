@@ -195,6 +195,8 @@ However, you are limited to 20 dimensions as GAMS supports up to 20 dimensions:
    z = gp.Variable(m, name="z", domain=dim(list(range(1, 100))))
 
 
+.. _matrix-multiplication:
+
 Matrix Multiplication
 =====================
 
@@ -545,6 +547,7 @@ still be useful in various applications.
    #    value
    # 0    9.0
 
+.. _activation-functions:
 
 Activation Functions
 --------------------
@@ -584,7 +587,7 @@ necessarily mean it will train faster.
 
 If you are embedding a pre-trained neural network using
 :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`,
-you can maintain your model as a Mixed-Integer Programming (MIP) model,
+you can maintain your model as a Mixed-Integer Programming (``MIP``) model,
 provided you do not introduce nonlinearities elsewhere.
 
 
