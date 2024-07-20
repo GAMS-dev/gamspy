@@ -604,7 +604,7 @@ To read more about `classification of models
    batch = 128
    m = Container()
    x = Variable(m, "x", domain=dim([batch, 10]))
-   y, _ = relu_with_binary_var(x)
+   y = relu_with_binary_var(x)
 
    y2 = log_softmax(x) # this creates variable and equations for you
 

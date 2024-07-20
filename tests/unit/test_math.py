@@ -468,7 +468,7 @@ class MathSuite(unittest.TestCase):
         op2 = gams_math.rel_ne(sumc[o, p], op[o, p])
         self.assertEqual(op2.gamsRepr(), "( rel_ne(sumc(o,p),op(o,p)) )")
 
-    def test_relu(self, relu_type=gams_math.relu_with_binary_var):
+    def test_relu(self):
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
@@ -501,9 +501,14 @@ class MathSuite(unittest.TestCase):
             type="Positive",
         )
 
-        y, _ = gams_math.relu_with_binary_var(
+        y = gams_math.relu_with_binary_var(
             x - c, default_lb=-100, default_ub=200
         )
+
+        y, b = gams_math.relu_with_binary_var(
+            x - c, default_lb=-100, default_ub=200, return_binary_var=True
+        )
+        self.assertEqual(b.type, "binary")
 
         total_budget = Equation(m, name="check_budget")
         total_budget[...] = Sum(i, x[i]) <= budget

@@ -74,6 +74,7 @@ def relu_with_binary_var(
     ),
     default_lb: float = -(10**6),
     default_ub: float = 10**6,
+    return_binary_var: bool = False,
 ):
     """
     Implements the ReLU activation function using binary variables. The ReLU
@@ -89,7 +90,8 @@ def relu_with_binary_var(
     and ``default_ub``. Providing tighter and **correct** bounds can enhance
     the quality of linear relaxations.
 
-    Returns activation variable and binary variable in order.
+    Returns activation variable if ``return_binary_var`` is False,
+    otherwise returns activation and binary variable in order.
 
     Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L5>`_
 
@@ -98,6 +100,7 @@ def relu_with_binary_var(
     x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
     default_ub : float
     default_lb : float
+    return_binary_var: bool
 
     Returns
     -------
@@ -110,9 +113,10 @@ def relu_with_binary_var(
     >>> m = Container()
     >>> i = Set(m, "i", records=range(3))
     >>> x = Variable(m, "x", domain=[i])
-    >>> y, b = relu_with_binary_var(x) # mostly, you can ignore b
+    >>> y = relu_with_binary_var(x)
     >>> y.type
     'positive'
+    >>> y, b = relu_with_binary_var(x, return_binary_var=True)
     >>> b.type
     'binary'
     >>> y.domain # i many activation variables
@@ -155,7 +159,10 @@ def relu_with_binary_var(
         eq[2][...] = y <= sigma * default_ub
         y.lo[...] = 0
 
-    return y, sigma
+    if return_binary_var:
+        return y, sigma
+    else:
+        return y
 
 
 def relu_with_complementarity_var(
