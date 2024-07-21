@@ -18,7 +18,7 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import ValidationError
 from gamspy.math import sqr
 
 
@@ -320,18 +320,14 @@ class EquationSuite(unittest.TestCase):
         )
 
         # eq[bla] with different domain
-        with self.assertRaises(GamspyException):
-            bla3 = Equation(
+        with self.assertRaises(ValidationError):
+            _ = Equation(
                 self.m,
                 name="bla3",
                 domain=[i, j],
                 description="observe supply limit at plant i",
-                definition=Sum((i, j), x[i, j]) <= a[i],
+                definition=x[i, j] <= a[i],
                 definition_domain=[i, "bla"],
-            )
-            self.assertEqual(
-                bla3.getDefinition(),
-                'bla3(i,"bla") .. sum((i,j),x(i,j)) =l= a(i);',
             )
 
         m = Container(

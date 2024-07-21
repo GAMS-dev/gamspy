@@ -296,6 +296,25 @@ class ParameterSuite(unittest.TestCase):
         f.synchronize = True
         self.assertEqual(f.records.value.tolist(), [1.0, 1.0, 2.0])
 
+    def test_control_domain(self):
+        i = Set(self.m, "i", records=["i1", "i2"])
+        j = Set(self.m, "j", records=["j1", "j2"])
+
+        a = Parameter(self.m, "a", domain=i)
+        b = Parameter(self.m, "b", domain=j, records=[("j1", 1), ("j2", 2)])
+
+        with self.assertRaises(ValidationError):
+            a[i] = b[j]
+
+        with self.assertRaises(ValidationError):
+            a[i.lead(1)] = b[j]
+
+        with self.assertRaises(ValidationError):
+            a[i] = b[j.lead(1)]
+
+        with self.assertRaises(ValidationError):
+            a[i.lead(1)] = b[j.lead(1)]
+
 
 def parameter_suite():
     suite = unittest.TestSuite()

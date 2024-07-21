@@ -258,11 +258,11 @@ class Expression(operable.Operable):
         EQ_MAP: dict[Any, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         stack = []
 
-        node: Expression | None = self
+        node = self
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)
+                node = getattr(node, "left", None)  # type: ignore
             elif stack:
                 node = stack.pop()
 
@@ -270,9 +270,9 @@ class Expression(operable.Operable):
                     node._replace_operator(EQ_MAP[node.data])
 
                 if isinstance(node, operation.Operation) and isinstance(
-                    node.expression, Expression
+                    node.rhs, Expression
                 ):
-                    node.expression._fix_equalities()
+                    node.rhs._fix_equalities()
 
                 node = getattr(node, "right", None)
             else:
@@ -321,7 +321,7 @@ class Expression(operable.Operable):
 
                 if isinstance(node, operation.Operation):
                     stack += node.domain
-                    node = node.expression
+                    node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
                     node = node.condition
@@ -354,10 +354,49 @@ class Expression(operable.Operable):
 
                 if isinstance(node, operation.Operation):
                     stack += node.domain
-                    node = node.expression
+                    node = node.rhs
                 else:
                     node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
         return symbols
+
+    def _validate_definition(self, control_stack):
+        stack = []
+
+        node = self.right
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = getattr(node, "left", None)  # type: ignore
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, operation.Operation):
+                    node.validate_operation(control_stack)
+                    for elem in node.raw_domain:
+                        if elem in control_stack:
+                            raise ValidationError(
+                                f"Set `{elem}` is already in control!"
+                            )
+                elif isinstance(node, ImplicitSymbol):
+                    for elem in node.domain:
+                        if (
+                            isinstance(elem, Symbol)
+                            and elem not in control_stack
+                        ):
+                            raise ValidationError(
+                                f"Uncontrolled set `{elem}` entered as constant!"
+                            )
+                        elif (
+                            isinstance(elem, ImplicitSymbol)
+                            and elem.parent not in control_stack
+                        ):
+                            raise ValidationError(
+                                f"Uncontrolled set `{elem.parent}` entered as constant!"
+                            )
+
+                node = getattr(node, "right", None)
+            else:
+                break  # pragma: no cover

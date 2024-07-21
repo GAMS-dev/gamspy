@@ -6,6 +6,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
+import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
@@ -71,6 +72,11 @@ class Condition(operable.Operable):
 
         lhs = Condition(self.conditioning_on, condition)
         statement = expression.Expression(lhs, op_type, rhs)
+
+        if isinstance(self.conditioning_on, ImplicitSymbol):
+            statement._validate_definition(
+                utils._unpack(self.conditioning_on.domain)
+            )
 
         self.conditioning_on.container._add_statement(statement)
 
