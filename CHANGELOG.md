@@ -9,7 +9,7 @@ GAMSPy 0.13.7
   - Support custom streams for output redirection.
   - Catch set is already under control errors early.
 - Documentation
-  - Fix docstirng of the Card operation.
+  - Fix docstring of the Card operation.
   - Add warning about non-professional licenses in addGamsCode docstring.
   - Add an example to show how to redirect output to a custom stream.
 - Testing
