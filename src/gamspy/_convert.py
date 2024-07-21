@@ -249,11 +249,13 @@ class LatexConverter(Converter):
                 domain_str = ",".join(
                     [
                         symbol.name
-                        for symbol in equation._definition.left.left.domain
+                        for symbol in equation._definition.left.conditioning_on.domain
                     ]
                 )
                 domain_str = f"\\hfill\n\\begin{{math}}\n\\forall {domain_str}"
-                constraint_str = equation._definition.left.right.latexRepr()
+                constraint_str = (
+                    equation._definition.left.condition.latexRepr()
+                )
                 equation_str += (
                     f"{domain_str} ~ | ~ {constraint_str} \n\\end{{math}}"
                 )

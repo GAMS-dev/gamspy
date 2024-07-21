@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import logging
 import math
 import os
 import sys
@@ -349,6 +350,28 @@ class SolveSuite(unittest.TestCase):
                 output=file,
             )
 
+        # Redirect output to logger
+        logger = logging.getLogger("TEST_LOGGER")
+        logger.setLevel(logging.INFO)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+        
+        class CustomOutput:
+            def write(self, data):
+                logger.info(data.strip())
+
+            def flush(self): ...
+
+        custom_output = CustomOutput()
+
+        _ = transport.solve(
+            options=Options(time_limit=100),
+            output=custom_output,
+        )
+
         self.assertTrue(os.path.exists(redirection_path))
         self.assertTrue(transport.status == ModelStatus.OptimalGlobal)
         self.assertTrue(transport.solve_status == SolveStatus.NormalCompletion)
@@ -364,9 +387,9 @@ class SolveSuite(unittest.TestCase):
             "bla",
         )
 
-        from gamspy._model import attribute_map
+        from gamspy._model import ATTRIBUTE_MAP
 
-        for attr_name in attribute_map.values():
+        for attr_name in ATTRIBUTE_MAP.values():
             self.assertTrue(hasattr(transport, attr_name))
 
             # Make sure model attributes are not in the container
@@ -1342,7 +1365,6 @@ class SolveSuite(unittest.TestCase):
             for expected, objective in zip(expected_values, executor.map(transport, f_values)):
                 self.assertTrue(math.isclose(expected, objective))
 
-    
 
 def solve_suite():
     suite = unittest.TestSuite()

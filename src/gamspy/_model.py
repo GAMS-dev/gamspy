@@ -151,7 +151,7 @@ ERROR_STATUS = {
 
 
 # GAMS name -> GAMSPy name
-attribute_map = {
+ATTRIBUTE_MAP = {
     "domUsd": "num_domain_violations",
     "etAlg": "algorithm_time",
     "etSolve": "total_solve_time",
@@ -402,41 +402,6 @@ class Model:
 
         return assignment
 
-    def _validate_model(
-        self,
-        equations: Iterable[Equation],
-        problem: Problem | str,
-        sense: str | Sense | None = None,
-    ) -> tuple[Problem, Sense | None]:
-        if isinstance(problem, str):
-            if problem.upper() not in gp.Problem.values():
-                raise ValueError(
-                    f"Allowed problem types: {gp.Problem.values()} but found"
-                    f" {problem}."
-                )
-
-            problem = gp.Problem(problem.upper())
-
-        if isinstance(sense, str):
-            if sense.upper() not in gp.Sense.values():
-                raise ValueError(
-                    f"Allowed sense values: {gp.Sense.values()} but found"
-                    f" {sense}."
-                )
-
-            sense = gp.Sense(sense.upper())
-
-        if (
-            problem not in [Problem.CNS, Problem.MCP]
-            and not isinstance(equations, Iterable)
-            or any(
-                not isinstance(equation, gp.Equation) for equation in equations
-            )
-        ):
-            raise TypeError("equations must be list of Equation objects")
-
-        return problem, sense  # type: ignore
-
     def _generate_solve_string(self) -> str:
         solve_string = f"solve {self.name} using {self.problem}"
 
@@ -458,7 +423,7 @@ class Model:
 
     def _create_model_attributes(self) -> None:
         self.container._add_statement("$offListing")
-        for attr_name in attribute_map:
+        for attr_name in ATTRIBUTE_MAP:
             symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
             _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
 
@@ -473,7 +438,7 @@ class Model:
             self.container.system_directory, self.container._gdx_out
         )
 
-        for gams_attr, python_attr in attribute_map.items():
+        for gams_attr, python_attr in ATTRIBUTE_MAP.items():
             symbol_name = f"{self._generate_prefix}{gams_attr}_{self._auto_id}"
             data = utils._get_scalar_data(
                 container._gams2np, gdx_handle, symbol_name
@@ -492,8 +457,7 @@ class Model:
                     )
                 elif status in ERROR_STATUS:
                     raise GamspyException(
-                        f"The model `{self.name}` was not solved successfully!"
-                        f" Solve status: {status.name}. {ERROR_STATUS[status]}",
+                        f"Solve status: {status.name}. {ERROR_STATUS[status]}",
                         status.value,
                     )
             else:

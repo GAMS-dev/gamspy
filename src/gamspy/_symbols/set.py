@@ -14,6 +14,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
@@ -671,6 +672,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             "=",
             rhs,
         )
+
+        statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._assignment = statement

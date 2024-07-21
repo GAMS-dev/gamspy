@@ -179,8 +179,9 @@ the list of solvers that are available.::
 Redirecting Output
 ------------------
 
-The output of GAMS after solving the model can be redirected to a file or to standard input by
-specifying the output parameter of the ``solve``.::
+The output of GAMS after solving the model can be redirected to a file, to standard input or to any 
+custom stream that supports ``write`` and ``flush`` operations by specifying the output parameter of 
+the ``solve``.::
     
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
     import sys
@@ -201,6 +202,16 @@ specifying the output parameter of the ``solve``.::
     # redirect output to a file
     with open("my_out_file", "w") as file:
         model.solve(output=file)
+
+    # redirect to custom stream
+    class MyStream:
+        def write(self, data):
+            logger.info(data.strip())
+
+        def flush(self): ...
+    
+    my_stream = MySteam()
+    model.solve(output=my_stream)
 
 Solving Locally
 ---------------
