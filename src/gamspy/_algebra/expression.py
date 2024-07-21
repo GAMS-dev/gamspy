@@ -79,42 +79,26 @@ class Expression(operable.Operable):
 
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
-        self.representation = self._create_representation()
+        self.representation = self._create_output_str()
         self.where = condition.Condition(self)
 
-    def _create_representation(self) -> str:
-        left_str, right_str = self._get_operand_representations()
-        out_str = self._create_output_str(left_str, right_str)
-
-        # Adapt to GAMS quirks
-        if self.data in ["=", ".."] and out_str[0] == "(":
-            # (voycap(j,k)$vc(j,k)).. sum(.) -> not valid
-            # voycap(j,k)$vc(j,k).. sum(.)   -> valid
-            match_index = utils._get_matching_paranthesis_indices(out_str)
-            out_str = out_str[1:match_index] + out_str[match_index + 1 :]
-
-        return out_str
-
     def _get_operand_representations(self) -> tuple[str, str]:
-        if self.left is None:
-            left_str = ""
-        else:
+        left_str, right_str = "", ""
+        if self.left is not None:
             left_str = (
                 str(self.left)
                 if isinstance(self.left, (int, float, str))
                 else self.left.gamsRepr()
             )
 
-        if self.right is None:
-            right_str = ""
-        else:
+        if self.right is not None:
             right_str = (
                 str(self.right)
                 if isinstance(self.right, (int, float, str))
                 else self.right.gamsRepr()
             )
 
-        # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0)); -> not valid
+        # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0));   -> not valid
         # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
         if isinstance(self.left, (int, float)) and self.left < 0:
             left_str = f"({left_str})"
@@ -122,9 +106,18 @@ class Expression(operable.Operable):
         if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
+        # (voycap(j,k)$vc(j,k)) .. sum(.) -> not valid
+        #  voycap(j,k)$vc(j,k)  .. sum(.) -> valid
+        if self.data in ["..", "="] and isinstance(
+            self.left, condition.Condition
+        ):
+            left_str = left_str[1:-1]
+
         return left_str, right_str
 
-    def _create_output_str(self, left_str: str, right_str: str) -> str:
+    def _create_output_str(self) -> str:
+        left_str, right_str = self._get_operand_representations()
+
         # get around 80000 line length limitation in GAMS
         length = len(left_str) + len(self.data) + len(right_str)
         if length >= GMS_MAX_LINE_LENGTH - LINE_LENGTH_OFFSET:
@@ -159,7 +152,7 @@ class Expression(operable.Operable):
 
     def _replace_operator(self, operator: str):
         self.data = operator
-        self.representation = self._create_representation()
+        self.representation = self._create_output_str()
 
     def latexRepr(self) -> str:
         """
@@ -265,11 +258,11 @@ class Expression(operable.Operable):
         EQ_MAP: dict[Any, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         stack = []
 
-        node: Expression | None = self
+        node = self
         while True:
             if node is not None:
                 stack.append(node)
-                node = getattr(node, "left", None)
+                node = getattr(node, "left", None)  # type: ignore
             elif stack:
                 node = stack.pop()
 
@@ -277,15 +270,15 @@ class Expression(operable.Operable):
                     node._replace_operator(EQ_MAP[node.data])
 
                 if isinstance(node, operation.Operation) and isinstance(
-                    node.expression, Expression
+                    node.rhs, Expression
                 ):
-                    node.expression._fix_equalities()
+                    node.rhs._fix_equalities()
 
                 node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
-        self.representation = self._create_representation()
+        self.representation = self._create_output_str()
 
     def _find_all_symbols(self) -> list[str]:
         symbols: list[str] = []
@@ -325,9 +318,13 @@ class Expression(operable.Operable):
                     node.data, MathOp
                 ):
                     stack += list(node.data.elements)
+
                 if isinstance(node, operation.Operation):
                     stack += node.domain
-                    node = node.expression
+                    node = node.rhs
+                elif isinstance(node, condition.Condition):
+                    stack.append(node.conditioning_on)
+                    node = node.condition
                 else:
                     node = getattr(node, "right", None)
             else:
@@ -347,20 +344,59 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, Expression) and node.data == "$":
-                    condition = node.right
+                if isinstance(node, condition.Condition):
+                    given_condition = node.condition
 
-                    if isinstance(condition, Expression):
-                        symbols += condition._find_all_symbols()
-                    elif isinstance(condition, ImplicitSymbol):
-                        symbols.append(condition.parent.name)
+                    if isinstance(given_condition, Expression):
+                        symbols += given_condition._find_all_symbols()
+                    elif isinstance(given_condition, ImplicitSymbol):
+                        symbols.append(given_condition.parent.name)
 
                 if isinstance(node, operation.Operation):
                     stack += node.domain
-                    node = node.expression
+                    node = node.rhs
                 else:
                     node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
 
         return symbols
+
+    def _validate_definition(self, control_stack):
+        stack = []
+
+        node = self.right
+        while True:
+            if node is not None:
+                stack.append(node)
+                node = getattr(node, "left", None)  # type: ignore
+            elif stack:
+                node = stack.pop()
+
+                if isinstance(node, operation.Operation):
+                    node.validate_operation(control_stack)
+                    for elem in node.raw_domain:
+                        if elem in control_stack:
+                            raise ValidationError(
+                                f"Set `{elem}` is already in control!"
+                            )
+                elif isinstance(node, ImplicitSymbol):
+                    for elem in node.domain:
+                        if (
+                            isinstance(elem, Symbol)
+                            and elem not in control_stack
+                        ):
+                            raise ValidationError(
+                                f"Uncontrolled set `{elem}` entered as constant!"
+                            )
+                        elif (
+                            isinstance(elem, ImplicitSymbol)
+                            and elem.parent not in control_stack
+                        ):
+                            raise ValidationError(
+                                f"Uncontrolled set `{elem.parent}` entered as constant!"
+                            )
+
+                node = getattr(node, "right", None)
+            else:
+                break  # pragma: no cover

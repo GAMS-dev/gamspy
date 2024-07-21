@@ -370,9 +370,10 @@ class Equation(gt.Equation, Symbol):
             self._definition = None  # type: ignore
             return None
 
-        domain = (
-            self._definition_domain if self._definition_domain else self.domain
-        )
+        domain = self.domain
+        if self._definition_domain is not None:
+            domain = validation.validate_domain(self, self._definition_domain)
+
         self._set_definition(domain, assignment)
 
     def _set_definition(self, domain, rhs):
@@ -397,6 +398,8 @@ class Equation(gt.Equation, Symbol):
             "..",
             rhs,
         )
+
+        statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)
         self._definition = statement
