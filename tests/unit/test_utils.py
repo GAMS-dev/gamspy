@@ -15,16 +15,6 @@ class UtilsSuite(unittest.TestCase):
         )
 
     def test_utils(self):
-        string = "(bla))"
-        self.assertRaises(
-            AssertionError, utils._get_matching_paranthesis_indices, string
-        )
-
-        string2 = "((bla)"
-        self.assertRaises(
-            AssertionError, utils._get_matching_paranthesis_indices, string2
-        )
-
         i = Set(self.m, "i", records=["i1", "i2"])
         self.assertEqual(utils._get_domain_str([i, "b", "*"]), '(i,"b",*)')
         self.assertRaises(ValidationError, utils._get_domain_str, [5])

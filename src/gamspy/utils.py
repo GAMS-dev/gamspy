@@ -417,38 +417,21 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     return "(" + ",".join(set_strs) + ")"
 
 
-def _get_matching_paranthesis_indices(string: str) -> int:
-    """
-    Stack based paranthesis matcher.
+def _unpack(domain: list[Set | Alias | ImplicitSet]):
+    unpacked = []
+    for elem in domain:
+        if isinstance(elem, implicits.ImplicitSet):
+            if elem.extension is not None:
+                unpacked.append(elem.parent)
+            else:
+                members = []
+                for member in elem.domain:
+                    if isinstance(member, implicits.ImplicitSet):
+                        members.append(member.parent)
+                    else:
+                        members.append(member)
+                unpacked += [*members, elem.parent]
+        else:
+            unpacked.append(elem)
 
-    Parameters
-    ----------
-    string : str
-
-    Returns
-    -------
-    int
-
-    Raises
-    ------
-    Exception
-        In case there are more closing paranthesis than opening parantheses
-    Exception
-        In case there are more opening paranthesis than closing parantheses
-    """
-    stack = []  # stack of indices of opening parentheses
-    matching_indices = {}
-
-    for index, character in enumerate(string):
-        if character == "(":
-            stack.append(index)
-        if character == ")":
-            try:
-                matching_indices[stack.pop()] = index
-            except IndexError as e:
-                raise AssertionError("Too many closing parentheses!") from e
-
-    if stack:
-        raise AssertionError("Too many opening parentheses!")
-
-    return matching_indices[0]
+    return unpacked

@@ -1342,7 +1342,6 @@ class SolveSuite(unittest.TestCase):
             for expected, objective in zip(expected_values, executor.map(transport, f_values)):
                 self.assertTrue(math.isclose(expected, objective))
 
-    
 
 def solve_suite():
     suite = unittest.TestSuite()
