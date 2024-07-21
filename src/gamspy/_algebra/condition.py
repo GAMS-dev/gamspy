@@ -10,7 +10,7 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Parameter, Set
+    from gamspy import Alias, Parameter, Set, Variable
     from gamspy._algebra.domain import Domain
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.number import Number
@@ -40,6 +40,7 @@ class Condition(operable.Operable):
         | Set
         | Alias
         | Parameter
+        | Variable
         | Expression
         | Operation
         | Domain
@@ -90,7 +91,6 @@ class Condition(operable.Operable):
 
     def gamsRepr(self) -> str:
         assert self.condition is not None
-
         return f"({self.conditioning_on.gamsRepr()} $ {self.condition.gamsRepr()})"
 
     def getDeclaration(self) -> str:
