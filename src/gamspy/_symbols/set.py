@@ -564,6 +564,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if isinstance(domain, (gp.Set, gp.Alias, str)):
             domain = [domain]
 
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
+
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):

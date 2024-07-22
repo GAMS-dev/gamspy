@@ -63,8 +63,8 @@ class OperationSuite(unittest.TestCase):
         sum_op = Sum(j, x[i, j]) <= a[i]
         self.assertEqual(sum_op.gamsRepr(), "sum(j,x(i,j)) =l= a(i)")
 
-        expression = Sum(a[i], True)
-        self.assertEqual(expression.gamsRepr(), "sum(a(i),yes)")
+        expression = Sum(i, True)
+        self.assertEqual(expression.gamsRepr(), "sum(i,yes)")
 
         # Operation with two indices
         sum_op = Sum((i, j), c[i, j] * x[i, j]) == z
@@ -124,6 +124,13 @@ class OperationSuite(unittest.TestCase):
         self.assertEqual(expression.gamsRepr(), "(card(i) <= 5)")
         expression = Card(i) >= 5
         self.assertEqual(expression.gamsRepr(), "(card(i) >= 5)")
+
+        sum_op = Sum((i, j), c[i, j] * x[i, j])
+        expression = sum_op != sum_op
+        self.assertEqual(
+            expression.gamsRepr(),
+            "(sum((i,j),(c(i,j) * x(i,j))) ne sum((i,j),(c(i,j) * x(i,j))))",
+        )
 
     def test_operation_indices(self):
         # Test operation index

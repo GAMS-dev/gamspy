@@ -700,16 +700,16 @@ class Model:
         for equation in self.equations:
             if self._matches:
                 if equation not in self._matches:
-                    equations.append(equation.gamsRepr())
+                    equations.append(equation.name)
             else:
-                equations.append(equation.gamsRepr())
+                equations.append(equation.name)
 
         equations_str = ",".join(equations)
 
         if self._matches:
             matches_str = ",".join(
                 [
-                    f"{equation.gamsRepr()}.{variable.gamsRepr()}"
+                    f"{equation.name}.{variable.name}"
                     for equation, variable in self._matches.items()
                 ]
             )

@@ -20,7 +20,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     ----------
     container : Container
     name : str
-    domain : List[Set | str], optional
+    domain : list[Set | str], optional
     """
 
     def __init__(
@@ -28,9 +28,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         parent: Set | Alias,
         name: str,
         domain: list[Set | str] = ["*"],
+        scalar_domains: list[tuple[int, Set]] | None = None,
         extension: str | None = None,
     ) -> None:
-        super().__init__(parent, name, domain)
+        super().__init__(parent, name, domain, scalar_domains)
         self.extension = extension
 
     def __invert__(self) -> Expression:
@@ -53,6 +54,10 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
             representation += f"{self.extension}"
 
         if self.domain != ["*"]:
-            representation += utils._get_domain_str(self.domain)
+            domain = list(self.domain)
+            for i, d in self._scalar_domains:
+                domain.insert(i, d)
+
+            representation += utils._get_domain_str(domain)
 
         return representation

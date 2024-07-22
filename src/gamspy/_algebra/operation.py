@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Sequence
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -8,6 +8,7 @@ import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -43,8 +44,8 @@ class Operation(operable.Operable):
         ),
         op_name: str,
     ):
-        self.domain = utils._to_list(domain)
-        assert len(self.domain) > 0, "Operation requires at least one index"
+        self.op_domain = utils._to_list(domain)
+        assert len(self.op_domain) > 0, "Operation requires at least one index"
         self.rhs = rhs
         self._op_name = op_name
         self.raw_domain = self.get_raw_domain()
@@ -52,9 +53,40 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
+        self._bare_op_domain = utils.get_set(self.op_domain)
+        self.container = self.raw_domain[0].container
+        self.domain: list[Set | Alias] = []
+
+        self._operation_indices = []
+        if isinstance(rhs, condition.Condition):
+            rhs = rhs.conditioning_on
+
+        if not isinstance(rhs, (bool, float, int)):
+            for i, x in enumerate(rhs.domain):
+                try:
+                    sum_index = self._bare_op_domain.index(x)
+                    self._operation_indices.append((i, sum_index))
+                except ValueError:
+                    self.domain.append(x)
+
+        self.dimension = validation.get_dimension(self.domain)
+        controlled_domain = [d for d in self._bare_op_domain]
+        controlled_domain.extend(getattr(rhs, "controlled_domain", []))
+        self.controlled_domain = list(set(controlled_domain))
+
+    def __getitem__(self, indices: Sequence | str):
+        domain = validation.validate_domain(self, indices)
+        for index, sum_index in self._operation_indices:
+            domain.insert(index, self._bare_op_domain[sum_index])
+
+        if isinstance(self.rhs, (bool, float, int)):
+            return Operation(self.op_domain, self.rhs, self._op_name)
+        else:
+            return Operation(self.op_domain, self.rhs[domain], self._op_name)
+
     def get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
         raw_domain = []
-        for elem in self.domain:
+        for elem in self.op_domain:
             if isinstance(elem, condition.Condition):
                 if isinstance(elem.conditioning_on, implicits.ImplicitSet):
                     raw_domain.append(elem.conditioning_on.parent)
@@ -90,10 +122,10 @@ class Operation(operable.Operable):
             self.rhs.validate_operation(stack)
 
     def _get_index_str(self) -> str:
-        if len(self.domain) == 1:
-            domain = self.domain[0]
-            representation = domain.gamsRepr()
-            if isinstance(domain, condition.Condition):
+        if len(self.op_domain) == 1:
+            op_domain = self.op_domain[0]
+            representation = op_domain.gamsRepr()
+            if isinstance(op_domain, condition.Condition):
                 # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
                 # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
                 return representation[1:-1]
@@ -101,7 +133,9 @@ class Operation(operable.Operable):
             return representation
 
         return (
-            "(" + ",".join([index.gamsRepr() for index in self.domain]) + ")"
+            "("
+            + ",".join([index.gamsRepr() for index in self.op_domain])
+            + ")"
         )
 
     def __eq__(self, other):  # type: ignore
@@ -139,7 +173,7 @@ class Operation(operable.Operable):
 
         expression_str = (
             str(self.rhs)
-            if isinstance(self.rhs, (int, str))
+            if isinstance(self.rhs, (bool, float, int, str))
             else self.rhs.gamsRepr()
         )
 
@@ -162,7 +196,7 @@ class Operation(operable.Operable):
 
         indices = []
         given_condition = None
-        for index in self.domain:
+        for index in self.op_domain:
             if isinstance(index, condition.Condition):
                 indices.append(index.conditioning_on)
                 given_condition = index.condition
@@ -176,7 +210,7 @@ class Operation(operable.Operable):
 
         expression_str = (
             str(self.rhs)
-            if isinstance(self.rhs, (int, str))
+            if isinstance(self.rhs, (int, float, str))
             else self.rhs.latexRepr()
         )
         representation = f"\\displaystyle \\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
@@ -189,8 +223,17 @@ class Sum(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    domain : Set | Alias | tuple[Set | Alias], Domain, Expression
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -199,7 +242,8 @@ class Sum(Operation):
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq")
-    >>> e[...] = gp.Sum(i, 3) <= v
+    >>> d = gp.Parameter(m, "d", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Sum(i, d[i]) <= v
     """
 
     def __init__(
@@ -239,7 +283,16 @@ class Product(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -248,7 +301,8 @@ class Product(Operation):
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq")
-    >>> e[...] = gp.Product(i, 3) <= v
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Product(i, p[i]) <= v
     """
 
     def __init__(
@@ -288,7 +342,16 @@ class Smin(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -297,7 +360,8 @@ class Smin(Operation):
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq")
-    >>> e[...] = gp.Smin(i, 3) <= v
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Smin(i, p[i]) <= v
     """
 
     def __init__(
@@ -337,7 +401,16 @@ class Smax(Operation):
     Parameters
     ----------
     domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
-    expression : Expression | int | bool
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
 
     Examples
     --------
@@ -346,7 +419,8 @@ class Smax(Operation):
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", type="eq")
-    >>> e[...] = gp.Smax(i, 3) <= v
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Smax(i, p[i]) <= v
     """
 
     def __init__(
@@ -409,6 +483,7 @@ class Ord(operable.Operable):
             )
 
         self._set = set
+        self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore
@@ -487,6 +562,7 @@ class Card(operable.Operable):
             )
 
         self._symbol = symbol
+        self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore

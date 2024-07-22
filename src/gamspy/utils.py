@@ -18,7 +18,14 @@ if TYPE_CHECKING:
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
 
-    from gamspy import Alias, Equation, Set, Variable
+    from gamspy import (
+        Alias,
+        Domain,
+        Equation,
+        Expression,
+        Set,
+        Variable,
+    )
     from gamspy._symbols.implicits import ImplicitSet
 
 SPECIAL_VALUE_MAP = {
@@ -75,7 +82,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
 
     Raises
     ------
@@ -119,7 +126,7 @@ def getAvailableSolvers() -> list[str]:
 
     Returns
     -------
-    List[str]
+    list[str]
 
     Raises
     ------
@@ -415,6 +422,66 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
             )
 
     return "(" + ",".join(set_strs) + ")"
+
+
+def _permute_domain(domain, dims):
+    """
+    Returns a new array where original domain's dimensions are permuted.
+
+    Parameters
+    ----------
+    domain : list[Set | str]
+    dims : list[int]
+
+    Returns
+    -------
+    list[Set | str]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> k = gp.Set(m, "k")
+    >>> domain = [i, j, k]
+    >>> new_domain = gp.utils._permute_domain(domain, [2, 0, 1])
+    >>> new_domain[0] is domain[2]
+    True
+    >>> new_domain[1] is domain[0]
+    True
+    >>> new_domain[2] is domain[1]
+    True
+
+    """
+    new_domain = [domain[dim] for dim in dims]
+    return new_domain
+
+
+def set_base_eq(set_a, set_b):
+    """
+    Checks if two sets are equal considering aliases as equal as well
+    """
+    set_a = getattr(set_a, "alias_with", set_a)
+    set_b = getattr(set_b, "alias_with", set_b)
+    return set_a == set_b
+
+
+# TODO either add description or make private
+def get_set(domain: list[Set | Alias | Domain | Expression]):
+    res = []
+    for el in domain:
+        if hasattr(el, "left"):
+            if hasattr(el.left, "sets"):
+                res.extend(el.left.sets)
+            else:
+                res.append(el.left)
+        elif hasattr(el, "sets"):
+            res.extend(el.sets)
+        else:
+            res.append(el)
+
+    return res
 
 
 def _unpack(domain: list[Set | Alias | ImplicitSet]):

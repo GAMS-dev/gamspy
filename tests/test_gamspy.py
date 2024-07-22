@@ -26,6 +26,7 @@ from unit.test_equation import equation_suite
 from unit.test_extrinsic import extrinsic_suite
 from unit.test_magics import magics_suite
 from unit.test_math import math_suite
+from unit.test_matrix import matrix_suite
 from unit.test_model import model_suite
 from unit.test_operation import operation_suite
 from unit.test_options import options_suite
@@ -79,6 +80,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}_symbols{os.sep}set.py",
             f"{root}{os.sep}_symbols{os.sep}universe_alias.py",
             f"{root}{os.sep}_symbols{os.sep}variable.py",
+            f"{root}{os.sep}math{os.sep}matrix.py",
             f"{root}{os.sep}math{os.sep}log_power.py",
             f"{root}{os.sep}math{os.sep}misc.py",
             f"{root}{os.sep}math{os.sep}probability.py",
@@ -168,6 +170,7 @@ def main():
         gamspy_suite,
         container_suite,
         math_suite,
+        matrix_suite,
         utils_suite,
         set_suite,
         alias_suite,

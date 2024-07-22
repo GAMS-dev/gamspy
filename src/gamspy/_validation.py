@@ -58,9 +58,14 @@ def validate_dimension(
 ):
     dimension = get_dimension(domain)
 
+    entity_name = (
+        f"symbol {symbol.name}"
+        if hasattr(symbol, "name")
+        else symbol.__class__.__name__
+    )
     if dimension != symbol.dimension:
         raise ValidationError(
-            f"The symbol {symbol.name} is referenced with"
+            f"The {entity_name} is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"
             f" given dimension is {dimension}"
@@ -137,6 +142,17 @@ def _transform_given_indices(
     validate_type(given_domain)
 
     if len(domain) == 0:
+        # If scalar, only correct indexing is [:] or [...]
+        if len(given_domain) != 1:
+            raise ValidationError(
+                "Scalar values can only be indexed by '[:]' or '[...]'"
+            )
+
+        if not isinstance(given_domain[0], (type(...), slice)):
+            raise ValidationError(
+                "Scalar values can only be indexed by '[:]' or '[...]'"
+            )
+
         return new_domain
 
     if len([item for item in given_domain if isinstance(item, type(...))]) > 1:

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import gamspy._algebra.condition as condition
+import gamspy._algebra.domain as domain
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._validation as validation
@@ -15,6 +17,7 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     import gamspy._algebra.expression as expression
+    from gamspy import Alias, Set
     from gamspy._algebra.operation import Operation
 
     OperandType = Optional[
@@ -32,6 +35,11 @@ if TYPE_CHECKING:
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
+
+
+@dataclass
+class DomainPlaceHolder:
+    indices: list[tuple[str, int]]
 
 
 class Expression(operable.Operable):
@@ -81,6 +89,83 @@ class Expression(operable.Operable):
             right._fix_equalities()
         self.representation = self._create_output_str()
         self.where = condition.Condition(self)
+        self._create_domain()
+        left_control = getattr(left, "controlled_domain", [])
+        right_control = getattr(right, "controlled_domain", [])
+        self.controlled_domain: list[Set | Alias] = list(
+            set([*left_control, *right_control])
+        )
+        self.container = None
+        if left is not None and hasattr(left, "container"):
+            self.container = left.container
+        elif right is not None and hasattr(right, "container"):
+            self.container = right.container
+
+    def _create_domain(self):
+        for loc, result in [
+            (self.left, "_left_domain"),
+            (self.right, "_right_domain"),
+        ]:
+            if isinstance(loc, condition.Condition):
+                loc = loc.conditioning_on
+
+            if loc is None or isinstance(loc, (int, float, str)):
+                result_domain = []  # left is a scalar
+            elif isinstance(loc, domain.Domain):
+                result_domain = loc.sets
+            else:
+                result_domain = loc.domain
+
+            setattr(self, result, result_domain)
+
+        left_domain = self._left_domain
+        right_domain = self._right_domain
+
+        set_to_index = {}
+
+        for domain_char, domain_ptr in (
+            ("l", left_domain),
+            ("r", right_domain),
+        ):
+            for i, d in enumerate(domain_ptr):
+                if isinstance(d, str):
+                    continue  # string domains are fixed and they do not count
+
+                if d not in set_to_index:
+                    set_to_index[d] = []
+
+                set_to_index[d].append((domain_char, i))
+
+        shadow_domain = []
+        result_domain = []
+        for d in [*left_domain, *right_domain]:
+            if isinstance(d, str):
+                continue
+
+            if d not in result_domain:
+                result_domain.append(d)
+                indices = set_to_index[d]
+                shadow_domain.append(DomainPlaceHolder(indices=indices))
+
+        self._shadow_domain = shadow_domain
+        self.domain = result_domain
+        self.dimension = validation.get_dimension(self.domain)
+
+    def __getitem__(self, indices):
+        indices = validation.validate_domain(self, indices)
+        left_domain = [d for d in self._left_domain]
+        right_domain = [d for d in self._right_domain]
+        for i, s in enumerate(indices):
+            for lr, pos in self._shadow_domain[i].indices:
+                if lr == "l":
+                    left_domain[pos] = s
+                else:
+                    right_domain[pos] = s
+
+        left = self.left[left_domain] if left_domain else self.left
+        right = self.right[right_domain] if right_domain else self.right
+
+        return Expression(left, self.data, right)
 
     def _get_operand_representations(self) -> tuple[str, str]:
         left_str, right_str = "", ""
@@ -292,7 +377,10 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, (Symbol, ImplicitSymbol)):
+                if isinstance(node, ImplicitSymbol):
+                    stack.append(node.parent)
+
+                if isinstance(node, (ImplicitSymbol, Symbol)):
                     for index, elem in enumerate(node.domain):
                         if isinstance(elem, (Symbol, ImplicitSymbol)):
                             path = validation.get_domain_path(elem)
@@ -320,7 +408,7 @@ class Expression(operable.Operable):
                     stack += list(node.data.elements)
 
                 if isinstance(node, operation.Operation):
-                    stack += node.domain
+                    stack += node.op_domain
                     node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
@@ -353,7 +441,7 @@ class Expression(operable.Operable):
                         symbols.append(given_condition.parent.name)
 
                 if isinstance(node, operation.Operation):
-                    stack += node.domain
+                    stack += node.op_domain
                     node = node.rhs
                 else:
                     node = getattr(node, "right", None)
