@@ -435,7 +435,6 @@ update_type_map = {
 
 
 class ModelInstanceOptions(BaseModel):
-    opt_file: int = 123
     no_match_limit: int = 0
     debug: bool = False
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
