@@ -76,6 +76,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             rhs,
         )
 
+        statement._validate_definition(domain)
+
         self.container._add_statement(statement)
         self.parent._assignment = statement
 

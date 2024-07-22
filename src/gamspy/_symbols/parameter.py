@@ -277,6 +277,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             rhs,
         )
 
+        statement._validate_definition(utils._unpack(domain))
+
         self.container._add_statement(statement)
         self._assignment = statement
 

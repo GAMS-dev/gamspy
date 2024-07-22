@@ -3,10 +3,12 @@ from __future__ import annotations
 import os
 import unittest
 
+import pandas as pd
 from gamspy import (
     Alias,
     Card,
     Container,
+    Domain,
     Equation,
     Ord,
     Parameter,
@@ -243,23 +245,103 @@ class OperationSuite(unittest.TestCase):
             if e:
                 ...
 
-    def test_operation_no_index(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
-        c = Set(m, "c")
-        s = Set(m, "s")
-        a = Parameter(m, "a", domain=[c, s])
-        p = Variable(m, "p", type="Positive", domain=c)
+    def test_condition(self):
+        m = Container()
+        jj = Set(m, "jj", records=[f"n{idx}" for idx in range(1, 11)])
+        depot = Set(m, "depot", domain=jj, records=["n10"])
 
-        self.assertRaises(ValidationError, lambda: -Sum([], a[c, s] * p[c]))
+        card_j = Parameter(m, "card_j", domain=jj)
+        card_j[jj] = Card(jj).where[depot[jj]]
+        self.assertEqual(
+            card_j.getAssignment(), "card_j(jj) = (card(jj) $ depot(jj));"
+        )
 
-    def test_operation_scalar_domain_update(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
-        c = Set(m, name="c")
-        s = Set(m, name="s")
-        s2 = Alias(m, name="s2", alias_with=s)
-        self.assertRaises(ValidationError, lambda: Sum([c], 5.2)[s2])
-        expr1 = Sum([c], 5.2)[:]  # this should be fine
-        self.assertEqual(expr1.gamsRepr(), "sum(c,5.2)")
+        ord_j = Parameter(m, "ord_j", domain=jj)
+        ord_j[jj] = Ord(jj).where[depot[jj]]
+        self.assertEqual(
+            ord_j.getAssignment(), "ord_j(jj) = (ord(jj) $ depot(jj));"
+        )
+
+    def test_control_domain(self):
+        i = Set(self.m, "i", records=[f"i{idx}" for idx in range(1, 4)])
+        j = Set(self.m, "j", records=[f"j{idx}" for idx in range(1, 4)])
+
+        a = Parameter(self.m, "a")
+        b = Parameter(self.m, "b", domain=[i, j])
+
+        # Assignment
+        with self.assertRaises(ValidationError):
+            b[i, j] = Sum(i, 1)
+
+        # Operation inside operation
+        with self.assertRaises(ValidationError):
+            a[...] = Sum(i, Sum(i, 1)) + Sum((i, j), 1)
+
+        # Condition
+        x = Variable(self.m, "k", domain=i)
+        silly = Equation(self.m, "silly")
+        silly[...] = Sum(i, x[i]) >= Card(i)
+
+        c = Parameter(self.m, name="c", domain=[i])
+
+        with self.assertRaises(ValidationError):
+            c[i] = Sum(Domain(i, j).where[i.sameAs(j)], 1)
+
+        # Condition
+        tm_data = pd.DataFrame(
+            [
+                ["1", 30],
+                ["6", 100],
+                ["10", 40],
+                ["14", 50],
+                ["15", 70],
+                ["16", 35],
+                ["20", 10],
+            ]
+        )
+
+        # Sets
+        w = Set(
+            self.m,
+            name="w",
+            records=["icbm", "mrbm-1", "lr-bomber", "f-bomber", "mrbm-2"],
+            description="weapons",
+        )
+        t = Set(
+            self.m,
+            name="t",
+            records=[str(i) for i in range(1, 21)],
+            description="targets",
+        )
+
+        # Parameters
+        tm = Parameter(
+            self.m,
+            name="tm",
+            domain=t,
+            records=tm_data,
+            description="minimum number of weapons per target",
+        )
+
+        # Variables
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[w, t],
+            type="Positive",
+            description="weapons assignment",
+        )
+
+        # Equations
+        minw = Equation(
+            self.m,
+            name="minw",
+            domain=t,
+            description="minimum number of weapons required per target",
+        )
+
+        with self.assertRaises(ValidationError):
+            minw[t].where[tm[t]] = Sum(t, tm[t]) >= tm[t]
 
 
 def operation_suite():

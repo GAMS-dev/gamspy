@@ -368,7 +368,7 @@ def validate_model(
             for equation in equations
         )
     ):
-        raise TypeError("equations must be list of Equation objects")
+        raise TypeError("`equations` must be an Iterable of Equation objects")
 
     if problem in (Problem.CNS, Problem.MCP) and sense is not None:
         raise ValueError("Cannot set `sense` argument for MCP and CNS models.")
@@ -437,10 +437,14 @@ def validate_solver_args(
         )
 
     # Check validity of output
-    if output is not None and not isinstance(output, io.TextIOBase):
+    if (
+        output is not None
+        and not hasattr(output, "write")
+        and not hasattr(output, "flush")
+    ):
         raise TypeError(
-            "`output` must be of type io.TextIOWrapper but found"
-            f" {type(output)}"
+            "`output` must write and flush operations but found"
+            f" {type(output)} which does not support them."
         )
 
 

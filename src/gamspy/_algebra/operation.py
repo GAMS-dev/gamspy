@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Sequence
 
 import gamspy._algebra.condition as condition
+import gamspy._algebra.domain as domain
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._symbols as syms
+import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
@@ -13,45 +15,51 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gams.transfer import Alias, Parameter, Set
 
-    from gamspy import Variable
     from gamspy._algebra import Domain
+    from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
+    from gamspy._symbols.implicits import (
+        ImplicitParameter,
+        ImplicitSet,
+        ImplicitVariable,
+    )
 
 
 class Operation(operable.Operable):
     def __init__(
         self,
-        domain: Set | Alias | Sequence[Set | Alias] | Domain | Expression,
-        expression: (
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | tuple[Set | Alias]
+        | Domain
+        | Condition,
+        rhs: (
             Expression
+            | Operation
             | ImplicitVariable
             | ImplicitParameter
             | int
             | bool
-            | float
-            | Variable
-            | Parameter
-            | Operation
         ),
         op_name: str,
     ):
         self.op_domain = utils._to_list(domain)
-        if len(self.op_domain) == 0:
-            raise ValidationError("Operation requires at least one index")
-
-        self._bare_op_domain = utils.get_set(self.op_domain)
-        self.expression = expression
+        assert len(self.op_domain) > 0, "Operation requires at least one index"
+        self.rhs = rhs
         self._op_name = op_name
-        self.container = self._bare_op_domain[0].container
+        self.raw_domain = self.get_raw_domain()
 
         # allow conditions
         self.where = condition.Condition(self)
+
+        self._bare_op_domain = utils.get_set(self.op_domain)
+        self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 
         self._operation_indices = []
-        if not isinstance(expression, (bool, float, int)):
-            for i, x in enumerate(expression.domain):
+        if not isinstance(rhs, (bool, float, int)):
+            for i, x in enumerate(rhs.domain):
                 try:
                     sum_index = self._bare_op_domain.index(x)
                     self._operation_indices.append((i, sum_index))
@@ -60,7 +68,7 @@ class Operation(operable.Operable):
 
         self.dimension = validation.get_dimension(self.domain)
         controlled_domain = [d for d in self._bare_op_domain]
-        controlled_domain.extend(getattr(expression, "controlled_domain", []))
+        controlled_domain.extend(getattr(rhs, "controlled_domain", []))
         self.controlled_domain = list(set(controlled_domain))
 
     def __getitem__(self, indices: Sequence | str):
@@ -68,23 +76,58 @@ class Operation(operable.Operable):
         for index, sum_index in self._operation_indices:
             domain.insert(index, self._bare_op_domain[sum_index])
 
-        if isinstance(self.expression, (bool, float, int)):
-            return Operation(self.op_domain, self.expression, self._op_name)
+        if isinstance(self.rhs, (bool, float, int)):
+            return Operation(self.op_domain, self.rhs, self._op_name)
         else:
-            return Operation(
-                self.op_domain, self.expression[domain], self._op_name
-            )
+            return Operation(self.op_domain, self.rhs[domain], self._op_name)
+
+    def get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
+        raw_domain = []
+        for elem in self.op_domain:
+            if isinstance(elem, condition.Condition):
+                if isinstance(elem.conditioning_on, implicits.ImplicitSet):
+                    raw_domain.append(elem.conditioning_on.parent)
+                elif isinstance(elem.conditioning_on, (syms.Set, syms.Alias)):
+                    raw_domain.append(elem.conditioning_on)
+                elif isinstance(elem.conditioning_on, domain.Domain):
+                    raw_domain += elem.conditioning_on.sets
+            elif isinstance(elem, domain.Domain):
+                raw_domain += elem.sets
+            elif isinstance(elem, implicits.ImplicitSet):
+                raw_domain.append(elem)
+            else:
+                raw_domain.append(elem)
+
+        return raw_domain
+
+    def validate_operation(self, control_stack):
+        for elem in self.raw_domain:
+            if isinstance(elem, implicits.ImplicitSet):
+                control_stack += [
+                    member
+                    for member in elem.domain
+                    if member not in control_stack
+                ]
+
+            if elem in control_stack:
+                raise ValidationError(f"Set {elem} is already in control")
+
+        stack = control_stack + self.raw_domain
+        if isinstance(self.rhs, expression.Expression):
+            self.rhs._validate_definition(stack)
+        elif isinstance(self.rhs, Operation):
+            self.rhs.validate_operation(stack)
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:
             op_domain = self.op_domain[0]
-            representaiton = op_domain.gamsRepr()
-            if isinstance(op_domain, expression.Expression):
+            representation = op_domain.gamsRepr()
+            if isinstance(op_domain, condition.Condition):
                 # sum((l(root,s,s1,s2) $ od(root,s)),1); -> not valid
                 # sum(l(root,s,s1,s2) $ od(root,s),1); -> valid
-                return representaiton[1:-1]
+                return representation[1:-1]
 
-            return representaiton
+            return representation
 
         return (
             "("
@@ -117,18 +160,18 @@ class Operation(operable.Operable):
         output += index_str
         output += ","
 
-        if isinstance(self.expression, float):
-            self.expression = utils._map_special_values(self.expression)
+        if isinstance(self.rhs, float):
+            self.rhs = utils._map_special_values(self.rhs)
 
-        if isinstance(self.expression, bool):
-            self.expression = (
-                "yes" if self.expression is True else "no"  # type: ignore
+        if isinstance(self.rhs, bool):
+            self.rhs = (
+                "yes" if self.rhs is True else "no"  # type: ignore
             )
 
         expression_str = (
-            str(self.expression)
-            if isinstance(self.expression, (bool, float, int, str))
-            else self.expression.gamsRepr()
+            str(self.rhs)
+            if isinstance(self.rhs, (bool, float, int, str))
+            else self.rhs.gamsRepr()
         )
 
         output += expression_str
@@ -149,23 +192,23 @@ class Operation(operable.Operable):
         op_map = {"sum": "sum", "prod": "prod", "smax": "max", "smin": "min"}
 
         indices = []
-        condition = None
+        given_condition = None
         for index in self.op_domain:
-            if isinstance(index, expression.Expression) and index.data == "$":
-                indices.append(index.left)
-                condition = index.right
+            if isinstance(index, condition.Condition):
+                indices.append(index.conditioning_on)
+                given_condition = index.condition
             else:
                 indices.append(index)
 
         index_str = ",".join([index.latexRepr() for index in indices])
 
-        if condition is not None:
-            index_str += " ~ | ~ " + condition.latexRepr()
+        if given_condition is not None:
+            index_str += " ~ | ~ " + given_condition.latexRepr()
 
         expression_str = (
-            str(self.expression)
-            if isinstance(self.expression, (int, float, str))
-            else self.expression.latexRepr()
+            str(self.rhs)
+            if isinstance(self.rhs, (int, float, str))
+            else self.rhs.latexRepr()
         )
         representation = f"\\displaystyle \\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
         return representation
@@ -438,6 +481,7 @@ class Ord(operable.Operable):
 
         self._set = set
         self.domain: list[Set | Alias] = []
+        self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -511,11 +555,12 @@ class Card(operable.Operable):
     ) -> None:
         if not isinstance(symbol, (syms.Set, syms.Alias, syms.Parameter)):
             raise ValidationError(
-                "Ord operation is only for Set and Alias objects!"
+                "Card operation is only for Set, Alias and Parameter objects!"
             )
 
         self._symbol = symbol
         self.domain: list[Set | Alias] = []
+        self.where = condition.Condition(self)
 
     def __eq__(self, other) -> Expression:  # type: ignore
         return expression.Expression(self, "eq", other)
@@ -561,4 +606,4 @@ class Card(operable.Operable):
         -------
         str
         """
-        return f"ord({self._set.name})"
+        return f"card({self._symbol.name})"
