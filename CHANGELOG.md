@@ -3,8 +3,18 @@ GAMSPy CHANGELOG
 
 GAMSPy 0.13.8
 -------------
+- General
+  - Introduce matrix multiplication operator `@`.
+  - Add most common activation functions for machine learning.
+  - Improve domain checking.
 - Documentation
+  - Add GAMSPy and Machine Learning section.
+  - Add ML examples.
   - Give more information about the restrictions of frozen solve.
+- Testing
+  - Add tests for different cases of matrix multiplication.
+  - Add tests for activation functions.
+  - Add tests for domain checking.
 
 
 GAMSPy 0.13.7
