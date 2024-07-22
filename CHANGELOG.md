@@ -1,6 +1,12 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.13.8
+-------------
+- Documentation
+  - Give more information about the restrictions of frozen solve.
+
+
 GAMSPy 0.13.7
 -------------
 - General
