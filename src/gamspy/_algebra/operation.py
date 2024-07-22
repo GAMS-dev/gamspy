@@ -58,6 +58,9 @@ class Operation(operable.Operable):
         self.domain: list[Set | Alias] = []
 
         self._operation_indices = []
+        if isinstance(rhs, condition.Condition):
+            rhs = rhs.conditioning_on
+
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):
                 try:
