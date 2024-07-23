@@ -7,6 +7,7 @@ GAMSPy 0.13.8
   - Introduce matrix multiplication operator `@`.
   - Add most common activation functions for machine learning.
   - Improve domain checking.
+  - Write division with frac in toLatex function.
 - Documentation
   - Add GAMSPy and Machine Learning section.
   - Add ML examples.
