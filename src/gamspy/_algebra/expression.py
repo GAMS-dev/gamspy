@@ -292,6 +292,9 @@ class Expression(operable.Operable):
             else data.latexRepr()
         )
 
+        if self.data == "/":
+            return f"\\frac{{{left_str}}}{{{right_str}}}"
+
         return f"{left_str} {data_str} {right_str}"
 
     def gamsRepr(self) -> str:
