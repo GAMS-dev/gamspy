@@ -22,3 +22,7 @@ Usage
      - -a
      - 
      - Skips the pip install command in case the package was manually installed.
+   * - -\-port 
+     - 
+     - 
+     - Sets the port to communicate with GAMS license server.

@@ -521,43 +521,52 @@ class Container(gt.Container):
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
         MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
 
-        string = "$onMultiR\n$onUNDF\n"
+        strings = ["$onMultiR", "$onUNDF"]
         for statement in self._unsaved_statements:
-            if isinstance(statement, str):
-                string += statement + "\n"
-            elif isinstance(statement, gp.UniverseAlias):
+            if isinstance(statement, gp.UniverseAlias):
                 continue
+
+            if isinstance(statement, str):
+                strings.append(statement)
             else:
-                string += statement.getDeclaration() + "\n"
+                strings.append(statement.getDeclaration())
 
         if modified_names:
-            string += f"$gdxIn {gdx_in}\n"
-
-            for symbol_name in modified_names:
-                symbol = self[symbol_name]
-                if isinstance(symbol, LOADABLE) and not symbol_name.startswith(
+            loadables = []
+            for name in modified_names:
+                symbol = self[name]
+                if isinstance(symbol, LOADABLE) and not name.startswith(
                     gp.Model._generate_prefix
                 ):
+                    loadables.append(symbol)
+
+            if loadables:
+                strings.append(f"$gdxIn {gdx_in}")
+                for loadable in loadables:
                     if (
-                        isinstance(symbol, MIRO_INPUT_TYPES)
-                        and symbol._is_miro_input
+                        isinstance(loadable, MIRO_INPUT_TYPES)
+                        and loadable._is_miro_input
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        string += miro.get_load_input_str(symbol_name, gdx_in)
+                        miro_load = miro.get_load_input_str(
+                            loadable.name, gdx_in
+                        )
+                        strings.append(miro_load)
                     else:
-                        string += f"$loadDC {symbol_name}\n"
+                        strings.append(f"$loadDC {loadable.name}")
 
-            string += "$gdxIn\n"
+                strings.append("$gdxIn")
 
-        string += "$offUNDF\n"
+        strings.append("$offUNDF")
 
         if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
-            string += miro.get_unload_output_str(self)
+            strings.append(miro.get_unload_output_str(self))
 
-        self._gams_string += string
+        gams_string = "\n".join(strings)
+        self._gams_string += gams_string + "\n"
 
-        return string
+        return gams_string
 
     def _load_records_from_gdx(
         self,
