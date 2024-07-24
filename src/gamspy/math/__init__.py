@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from gamspy.math.activation import (
+    log_softmax,
+    relu_with_binary_var,
+    relu_with_complementarity_var,
+    softmax,
+)
 from gamspy.math.log_power import (
     cv_power,
     exp,
@@ -16,6 +22,15 @@ from gamspy.math.log_power import (
     sqlog10,
     sqr,
     vc_power,
+)
+from gamspy.math.matrix import (
+    Dim,
+    _generate_dims,
+    dim,
+    next_alias,
+    permute,
+    trace,
+    vector_norm,
 )
 from gamspy.math.misc import (
     Max,
@@ -112,6 +127,12 @@ __all__ = [
     "log_beta",
     "log_gamma",
     "logit",
+    "permute",
+    "trace",
+    "vector_norm",
+    "dim",
+    "Dim",
+    "next_alias",
     "abs",
     "ceil",
     "dist",
@@ -174,4 +195,9 @@ __all__ = [
     "rel_le",
     "rel_lt",
     "rel_ne",
+    "_generate_dims",
+    "relu_with_binary_var",
+    "relu_with_complementarity_var",
+    "log_softmax",
+    "softmax",
 ]

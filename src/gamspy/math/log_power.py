@@ -7,6 +7,7 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operable import Operable
     from gamspy._symbols.symbol import Symbol
 
 
@@ -199,7 +200,7 @@ def log10(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("log10", (x,)), None)
 
 
-def power(base: float | Symbol, exponent: float | Symbol) -> Expression:
+def power(base: float | Operable, exponent: float | Symbol) -> Expression:
     """
     Base to the exponent power (i.e. ``base ^ exponent``)
 
@@ -261,7 +262,7 @@ def cv_power(base: float, exponent: float | Symbol) -> Expression:
     )
 
 
-def rpower(base: float | Symbol, exponent: float | Symbol):
+def rpower(base: float | Symbol | Operable, exponent: float | Symbol):
     """
     Returns ``x^y`` for ``x > 0`` and also for ``x = 0`` and restricted values of ``y`` (Error if ``x < 0``)
 

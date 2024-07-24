@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import uuid
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import gams.transfer as gt
 import pandas as pd
@@ -169,6 +169,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if isinstance(domain, (gp.Set, gp.Alias, str)):
             domain = [domain]
 
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
+
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
@@ -243,7 +246,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             container.miro_protect = previous_state
 
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitParameter:
+    def __getitem__(
+        self, indices: Sequence | str
+    ) -> implicits.ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitParameter(self, name=self.name, domain=domain)
@@ -295,6 +300,46 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __neg__(self):
         return expression.Expression(None, "-", self)
+
+    @property
+    def T(self) -> implicits.ImplicitParameter:
+        """See gamspy.Parameter.t"""
+        return self.t()
+
+    def t(self) -> implicits.ImplicitParameter:
+        """Returns an ImplicitParameter derived from this
+        parameter by swapping its last two indices. This operation
+        does not generate a new parameter in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Parameter(m, "v", domain=[i, j])
+        >>> v_t = v.t()
+        >>> v_t.domain # doctest: +ELLIPSIS
+        [<Set `j` (0x...)>, <Set `i` (0x...)>]
+        >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        gamspy.exceptions.ValidationError:
+        >>> v_t["j1", "i1"].gamsRepr()
+        'v("i1","j1")'
+
+        """
+        from gamspy.math.matrix import permute
+
+        dims = [x for x in range(len(self.domain))]
+        if len(dims) < 2:
+            raise ValidationError(
+                "Parameter must contain at least 2 dimensions to transpose"
+            )
+
+        x = dims[-1]
+        dims[-1] = dims[-2]
+        dims[-2] = x
+        return permute(self, dims)
 
     @property
     def records(self):
@@ -395,10 +440,14 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> d = gp.Parameter(m, "d", domain=i)
         >>> d.gamsRepr()
-        'd'
+        'd(i)'
 
         """
-        return self.name
+        representation = self.name
+        if self.domain:
+            representation += self._get_domain_str()
+
+        return representation
 
     def getDeclaration(self) -> str:
         """

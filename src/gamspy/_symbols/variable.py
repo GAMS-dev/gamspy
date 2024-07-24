@@ -4,7 +4,7 @@ import builtins
 import itertools
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import gams.transfer as gt
 import pandas as pd
@@ -149,8 +149,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         is_miro_output: bool = False,
     ):
         if not isinstance(container, gp.Container):
+            invalid_type = builtins.type(container)
             raise TypeError(
-                f"Container must of type `Container` but found {builtins.type(container)}"
+                f"Container must of type `Container` but found {invalid_type}"
             )
 
         if name is None:
@@ -195,6 +196,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         if isinstance(domain, (gp.Set, gp.Alias, str)):
             domain = [domain]
+
+        if isinstance(domain, gp.math.Dim):
+            domain = gp.math._generate_dims(container, domain.dims)
 
         # does symbol exist
         has_symbol = False
@@ -289,7 +293,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
             container.miro_protect = True
 
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitVariable:
+    def __getitem__(
+        self, indices: Sequence | str
+    ) -> implicits.ImplicitVariable:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitVariable(self, name=self.name, domain=domain)
@@ -299,6 +305,46 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
+
+    @property
+    def T(self) -> implicits.ImplicitVariable:
+        """See gamspy.Variable.t"""
+        return self.t()
+
+    def t(self) -> implicits.ImplicitVariable:
+        """Returns an ImplicitVariable derived from this
+        variable by swapping its last two indices. This operation
+        does not generate a new variable in GAMS.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Variable(m, "v", domain=[i, j])
+        >>> v_t = v.t()
+        >>> v_t.domain # doctest: +ELLIPSIS
+        [<Set `j` (0x...)>, <Set `i` (0x...)>]
+        >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        gamspy.exceptions.ValidationError:
+        >>> v_t["j1", "i1"].gamsRepr()
+        'v("i1","j1")'
+
+        """
+        from gamspy.math.matrix import permute
+
+        dims = [x for x in range(len(self.domain))]
+        if len(dims) < 2:
+            raise ValidationError(
+                "Variable must contain at least 2 dimensions to transpose"
+            )
+
+        x = dims[-1]
+        dims[-1] = dims[-2]
+        dims[-2] = x
+        return permute(self, dims)
 
     def _init_attributes(self):
         level = self._create_attr("l")
@@ -681,10 +727,14 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> i = gp.Set(m, name="i", records=["seattle", "san-diego"])
         >>> x = gp.Variable(m, name="x", domain=i, type="positive")
         >>> x.gamsRepr()
-        'x'
+        'x(i)'
 
         """
-        return self.name
+        representation = self.name
+        if self.domain:
+            representation += self._get_domain_str()
+
+        return representation
 
     def getDeclaration(self) -> str:
         """

@@ -67,6 +67,16 @@ class Operable:
 
     @typing.no_type_check
     def __pow__(self: OperableType, other: OperableType):
+        if (
+            isinstance(other, int)
+            and other == 2
+            and isinstance(self, expression.Expression)
+            and isinstance(self.data, gamspy_math.misc.MathOp)
+            and self.data.op_name == "sqrt"
+            and self.data.safe_cancel
+        ):
+            return self.data.elements[0]
+
         if isinstance(other, int):
             return gamspy_math.power(self, other)
         elif isinstance(other, float):
@@ -112,3 +122,15 @@ class Operable:
     # ~ -> not
     def __invert__(self: OperableType):
         return expression.Expression("", "not", self)
+
+    # a @ b
+    def __matmul__(self, other):
+        import gamspy._algebra.operation as operation
+        from gamspy.math.matrix import _validate_matrix_mult_dims
+
+        left_domain, right_domain, sum_domain = _validate_matrix_mult_dims(
+            self, other
+        )
+        return operation.Sum(
+            [sum_domain], self[left_domain] * other[right_domain]
+        )

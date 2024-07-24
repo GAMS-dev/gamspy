@@ -16,18 +16,20 @@ MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
 def get_load_input_str(statement: str, gdx_in: str) -> str:
-    string = "$gdxIn\n"  # close the old one
-    string += f"$gdxIn {MIRO_GDX_IN}\n"  # open the new one
-    string += f"$loadDC {statement}\n"
-    string += "$gdxIn\n"  # close the new one
-    string += f"$gdxIn {gdx_in}\n"
+    strings = [
+        "$gdxIn",  # close the old one
+        f"$gdxIn {MIRO_GDX_IN}",  # open the new one
+        f"$loadDC {statement}",
+        "$gdxIn",  # close the new one
+        f"$gdxIn {gdx_in}",  # reopen the previous one
+    ]
 
-    return string
+    return "\n".join(strings)
 
 
 def get_unload_output_str(container: Container) -> str:
     unload_str = ",".join(container._miro_output_symbols)
-    return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}\n"
+    return f"execute_unload '{MIRO_GDX_OUT}' {unload_str}"
 
 
 def load_miro_symbol_records(container: Container):
