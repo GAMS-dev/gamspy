@@ -103,6 +103,11 @@ def get_args():
         action="store_true",
         help="Whether the license is node-specific license.",
     )
+    install_group.add_argument(
+        "--port",
+        default=1234,
+        help="The port number to communicate with license server. Defaults is 1234.",
+    )
 
     list_group = parser.add_argument_group(
         "list solvers", description="`gamspy list solvers` options"
@@ -113,7 +118,23 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    if args.name is None:
+        raise ValidationError(
+            "License is missing: `gamspy install license <your_license>`"
+        )
+
     license = args.name
+    if isinstance(license, str):
+        if len(license) != 36:
+            raise ValidationError(
+                f"License id is a 36 character string but {len(license)} character string ({license}) provided."
+            )
+    else:
+        if not os.path.isfile(license):
+            raise ValidationError(
+                f"Given path to the license ({license}) is not valid."
+            )
+
     is_alp = not os.path.isfile(license)
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
@@ -123,7 +144,7 @@ def install_license(args: argparse.Namespace):
             os.path.join(gamspy_base_dir, "gamsgetkey"),
             license,
             "-u",
-            "1234",
+            str(args.port),
         ]
 
         if args.node_specific:
@@ -158,7 +179,7 @@ def install_license(args: argparse.Namespace):
         ) as file:
             file.write(process.stdout)
     else:
-        shutil.copy(license, gamspy_base_dir + os.sep + "user_license.txt")
+        shutil.copy(license, os.path.join(gamspy_base_dir, "user_license.txt"))
 
 
 def uninstall_license():
@@ -167,6 +188,11 @@ def uninstall_license():
 
 
 def install_solver(args: argparse.Namespace):
+    if args.name is None:
+        raise ValidationError(
+            "Solver name is missing: `gamspy install solver <solver_name>`"
+        )
+
     solver_name = args.name.lower()
 
     if solver_name.upper() not in utils.getAvailableSolvers():
@@ -252,6 +278,11 @@ def uninstall_solver(args: argparse.Namespace):
             "You must install gamspy_base to use this command!"
         ) from e
 
+    if args.name is None:
+        raise ValidationError(
+            "Solver name is missing: `gamspy uninstall solver <solver_name>`"
+        )
+
     solver_name = args.name.lower()
 
     installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
@@ -282,6 +313,10 @@ def install(args: argparse.Namespace):
         install_license(args)
     elif args.component == "solver":
         install_solver(args)
+    else:
+        raise ValidationError(
+            "`gamspy install` requires a third argument (license or solver)."
+        )
 
 
 def update():
@@ -466,6 +501,10 @@ def uninstall(args: argparse.Namespace):
         uninstall_license()
     elif args.component == "solver":
         uninstall_solver(args)
+    else:
+        raise ValidationError(
+            "`gamspy uninstall` requires a third argument (license or solver)."
+        )
 
 
 def print_version():
