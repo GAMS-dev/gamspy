@@ -292,7 +292,7 @@ class Model:
         self.container._synch_with_gams()
 
     def __repr__(self) -> str:
-        return f"<Model `{self.name}` ({hex(id(self))})>"
+        return f"Model(container={repr(self.container)}, name={self.name}, problem={self.problem}, equations={self.equations}, sense={self.sense}, objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
 
     def __str__(self) -> str:
         return (

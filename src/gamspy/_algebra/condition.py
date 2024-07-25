@@ -89,6 +89,9 @@ class Condition(operable.Operable):
 
         self.conditioning_on.container._synch_with_gams()
 
+    def __repr__(self) -> str:
+        return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
+
     def gamsRepr(self) -> str:
         assert self.condition is not None
         return f"({self.conditioning_on.gamsRepr()} $ {self.condition.gamsRepr()})"

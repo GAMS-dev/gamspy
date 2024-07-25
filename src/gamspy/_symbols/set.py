@@ -684,6 +684,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if self.synchronize:
             self.container._synch_with_gams()
 
+    def __repr__(self) -> str:
+        return f"Set(container={repr(self.container)}, name={self.name}, domain={self.domain})"
+
     @property
     def records(self):
         """

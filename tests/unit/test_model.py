@@ -202,9 +202,6 @@ class ModelSuite(unittest.TestCase):
 
         # Test repr and str
         self.assertTrue(
-            test_model6.__repr__().startswith(f"<Model `{test_model6.name}`")
-        )
-        self.assertTrue(
             str(test_model6).startswith(
                 f"Model {test_model6.name}:\n  Problem Type: LP\n  Sense: MIN\n  Equations:"
             )

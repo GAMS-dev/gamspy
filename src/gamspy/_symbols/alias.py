@@ -148,6 +148,9 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             "Alias cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
+    def __repr__(self) -> str:
+        return f"Alias(container={repr(self.container)}, name={self.name}, alias_with={self.alias_with})"
+
     @property
     def synchronize(self):
         raise ValidationError(

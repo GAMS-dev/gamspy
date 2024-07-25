@@ -27,6 +27,9 @@ class Number(operable.Operable):
         self.where = condition.Condition(self)
         self.domain: list = []
 
+    def __repr__(self) -> str:
+        return f"Number(value={self._value})"
+
     def gamsRepr(self) -> str:
         """
         Representation of this Number in GAMS language.
