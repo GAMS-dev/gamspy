@@ -17,6 +17,7 @@ GAMSPy 0.13.8
   - Add tests for different cases of matrix multiplication.
   - Add tests for activation functions.
   - Add tests for domain checking.
+  - Shorten refrigerator example model by folding repetitive code into loops.
 
 
 GAMSPy 0.13.7
