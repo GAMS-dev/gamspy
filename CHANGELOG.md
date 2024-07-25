@@ -1,7 +1,7 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 0.13.8
+GAMSPy 0.14.0
 -------------
 - General
   - Introduce matrix multiplication operator `@`.
