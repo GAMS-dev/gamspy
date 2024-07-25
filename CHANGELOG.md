@@ -1,6 +1,16 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.1
+-------------
+- General
+  - Add SOS1 ReLU implementation
+- Documentation
+  - Add API docs for SOS1 ReLU implementation
+- Testing
+  - Add tests for SOS1 ReLU implementation
+
+
 GAMSPy 0.14.0
 -------------
 - General

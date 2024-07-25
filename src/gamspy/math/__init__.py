@@ -4,6 +4,7 @@ from gamspy.math.activation import (
     log_softmax,
     relu_with_binary_var,
     relu_with_complementarity_var,
+    relu_with_sos1_var,
     softmax,
 )
 from gamspy.math.log_power import (
@@ -196,6 +197,7 @@ __all__ = [
     "rel_lt",
     "rel_ne",
     "_generate_dims",
+    "relu_with_sos1_var",
     "relu_with_binary_var",
     "relu_with_complementarity_var",
     "log_softmax",
