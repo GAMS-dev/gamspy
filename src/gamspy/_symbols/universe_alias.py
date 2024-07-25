@@ -106,4 +106,4 @@ class UniverseAlias(gt.UniverseAlias):
         return 0
 
     def __repr__(self) -> str:
-        return f"UniverseAlias(container={repr(self.container)}, name={self.name})"
+        return f"UniverseAlias(name={self.name})"
