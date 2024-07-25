@@ -5,6 +5,7 @@ GAMSPy 0.14.1
 -------------
 - General
   - Add SOS1 ReLU implementation
+  - Add __repr__ to all GAMSPy language constructs for better debugging.
 - Documentation
   - Add API docs for SOS1 ReLU implementation
 - Testing

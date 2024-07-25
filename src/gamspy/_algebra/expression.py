@@ -235,6 +235,9 @@ class Expression(operable.Operable):
             "https://gamspy.readthedocs.io/en/latest/user/gamspy_for_gams_users.html#logical-operations"
         )
 
+    def __repr__(self) -> str:
+        return f"Expression(left={self.left}, data={self.data}, right={self.right})"
+
     def _replace_operator(self, operator: str):
         self.data = operator
         self.representation = self._create_output_str()

@@ -41,6 +41,9 @@ class Domain:
         self.container = self._find_container()  # type: ignore
         self.where = condition.Condition(self)
 
+    def __repr__(self) -> str:
+        return f"Domain(sets={self.sets})"
+
     def _sanity_check(self, sets: tuple[Set | Alias | ImplicitSet, ...]):
         if len(sets) < 2:
             raise ValidationError("Domain requires at least 2 sets")

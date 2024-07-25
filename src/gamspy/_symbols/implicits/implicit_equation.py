@@ -30,6 +30,9 @@ class ImplicitEquation(ImplicitSymbol):
         super().__init__(parent, name, domain)
         self.type = type
 
+    def __repr__(self) -> str:
+        return f"ImplicitEquation(parent={self.parent}, name={self.name}, domain={self.domain}, type={self.type})"
+
     def gamsRepr(self) -> str:
         representation = f"{self.name}"
         domain = list(self.domain)

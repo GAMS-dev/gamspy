@@ -266,8 +266,8 @@ class Container(gt.Container):
             self.read(load_from)
             self._synch_with_gams()
 
-    def __repr__(self):
-        return f"<Container ({hex(id(self))})>"
+    def __repr__(self) -> str:
+        return f"Container(system_directory={self.system_directory}, working_directory={self.working_directory}, debugging_level={self._debugging_level})"
 
     def __str__(self):
         if len(self):
