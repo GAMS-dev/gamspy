@@ -307,7 +307,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return expression.Expression(self, "=e=", other)
 
     def __repr__(self) -> str:
-        return f"Variable(container={repr(self.container)}, name={self.name}, domain={self.domain}, type={self.type})"
+        return f"Variable(name={self.name}, domain={self.domain}, type={self.type})"
 
     @property
     def T(self) -> implicits.ImplicitVariable:
