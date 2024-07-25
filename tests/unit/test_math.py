@@ -8,6 +8,7 @@ import gamspy._algebra.expression as expression
 import gamspy.math as gams_math
 import numpy as np
 from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
+from gamspy._symbols.implicits import ImplicitVariable
 from gamspy.exceptions import ValidationError
 
 
@@ -468,7 +469,7 @@ class MathSuite(unittest.TestCase):
         op2 = gams_math.rel_ne(sumc[o, p], op[o, p])
         self.assertEqual(op2.gamsRepr(), "( rel_ne(sumc(o,p),op(o,p)) )")
 
-    def test_relu(self):
+    def test_relu(self, relu_type=gams_math.relu_with_binary_var):
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
@@ -501,14 +502,20 @@ class MathSuite(unittest.TestCase):
             type="Positive",
         )
 
-        y = gams_math.relu_with_binary_var(
-            x - c, default_lb=-100, default_ub=200
-        )
+        if relu_type == gams_math.relu_with_binary_var:
+            y = relu_type(x - c, default_lb=-100, default_ub=200)
 
-        y, b = gams_math.relu_with_binary_var(
-            x - c, default_lb=-100, default_ub=200, return_binary_var=True
-        )
-        self.assertEqual(b.type, "binary")
+            y, b = relu_type(
+                x - c, default_lb=-100, default_ub=200, return_binary_var=True
+            )
+            self.assertEqual(b.type, "binary")
+        else:
+            y = relu_type(x - c)
+            y, s = relu_type(x - c, return_slack_var=True)
+            self.assertTrue(isinstance(y, ImplicitVariable))
+            self.assertTrue(isinstance(s, ImplicitVariable))
+            self.assertTrue(id(y.parent) == id(s.parent))
+            self.assertEqual(len(y.parent.domain), len((x - c).domain) + 1)
 
         total_budget = Equation(m, name="check_budget")
         total_budget[...] = Sum(i, x[i]) <= budget
@@ -578,6 +585,9 @@ class MathSuite(unittest.TestCase):
         budget.solve(output=sys.stdout)
 
         self.assertTrue(np.isclose(budget.objective_value, 180.0))
+
+    def test_relu_3(self):
+        self.test_relu(gams_math.relu_with_sos1_var)
 
     def test_log_softmax(self):
         m = Container(

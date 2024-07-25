@@ -31,7 +31,9 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         scalar_domains: list[tuple[int, Set]] | None = None,
         extension: str | None = None,
     ) -> None:
-        super().__init__(parent, name, domain, scalar_domains)
+        super().__init__(
+            parent, name, domain, parent_scalar_domains=scalar_domains
+        )
         self.extension = extension
 
     def __invert__(self) -> Expression:

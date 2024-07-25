@@ -63,6 +63,95 @@ def _get_ub(x: Variable, default_ub: float):
     return ub
 
 
+def relu_with_sos1_var(
+    x: (
+        Parameter
+        | Variable
+        | implicits.ImplicitParameter
+        | implicits.ImplicitVariable
+        | Expression
+        | Operation
+    ),
+    return_slack_var: bool = False,
+):
+    """
+    Implements the ReLU activation function using
+    `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
+    The ReLU function is defined as ReLU(x) = max(x, 0). This implementation
+    **generates** one SOS1 type variable which is necessary to represent the
+    mathematical relationship and this SOS1 variable contains the activation
+    variable and slack variable.
+
+    Unlike ``relu_with_binary_var``, this function does not require lower and
+    upper bounds for the formulation. It is claimed that when providing tight
+    bounds is not straightforward, using ``relu_with_sos1_var`` might perform
+    better than ``relu_with_binary_var``, as the relaxation of
+    ``relu_with_binary_var`` can be weak.
+
+    Usage of SOS1 variables require MIP or MINLP and a solver that supports SOS1
+    variables. Main intended use case of this function is embedding the trained
+    neural network into MIP models, we do not suggest using it in training since
+    you would need a MINLP solver that support SOS1 variables.
+
+    Returns activation variable if ``return_slack_var`` is False, otherwise
+    returns activation and slack variable in order. Since activation variable
+    and slack variable are the same variable only separated by the last domain
+    this function returns ImplicitVariable instead of Variable.
+
+    Based on paper:
+    `PySCIPOpt-ML: Embedding trained machine learning models into mixed-integer programs. <https://arxiv.org/pdf/2312.08074>`_
+
+    Parameters
+    ----------
+    x : Parameter | Variable | implicits.ImplicitParameter | implicits.ImplicitVariable | Expression | Operation
+    return_slack_var: bool
+
+    Returns
+    -------
+    implicits.ImplicitVariable | tuple[implicits.ImplicitVariable, implicits.ImplicitVariable]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.math.activation import relu_with_sos1_var
+    >>> m = Container()
+    >>> i = Set(m, "i", records=range(3))
+    >>> x = Variable(m, "x", domain=[i])
+    >>> y = relu_with_sos1_var(x)
+    >>> y, s = relu_with_sos1_var(x, return_slack_var=True)
+    >>> y.domain # implicit activation variable has the same domain
+    [<Set `i` (0x...)>]
+    >>> s.domain # implicit slack variable has the same domain as well
+    [<Set `i` (0x...)>]
+    >>> y.gamsRepr() # In the background that y and s are parts of the same variable
+    'sos1_223e5a9f_330d_4580_972a_76c0dcce4b0b(i,"0")'
+    >>> s.gamsRepr()
+    'sos1_223e5a9f_330d_4580_972a_76c0dcce4b0b(i,"1")'
+    >>> id(y.parent) == id(s.parent)
+    True
+    """
+    domain = x.domain
+    last_dim = gamspy.math._generate_dims(x.container, [2])[0]
+
+    y = x.container.addVariable(
+        _get_random_name("sos1"), type="sos1", domain=[*domain, last_dim]
+    )
+    eq = x.container.addEquation(
+        _get_random_name("eq"),
+        domain=domain,
+    )
+
+    activation_domain = [*domain, "0"]
+    sos1_var_domain = [*domain, "1"]
+
+    eq[...] = y[activation_domain] == x + y[sos1_var_domain]
+
+    if return_slack_var:
+        return y[activation_domain], y[sos1_var_domain]
+
+    return y[activation_domain]
+
+
 def relu_with_binary_var(
     x: (
         Parameter
@@ -104,7 +193,7 @@ def relu_with_binary_var(
 
     Returns
     -------
-    tuple[Variable, Variable]
+    Variable | tuple[Variable, Variable]
 
     Examples
     --------
