@@ -91,7 +91,7 @@ def main():
     ObjDef = d_bar / gams_math.sqrt(PortVariance)
 
     # Put strictly positive bound on Variance to keep the model out of trouble:
-    PortVariance.lo[...] = 0.001
+    PortVariance.lo = 0.001
 
     Sharpe = Model(
         m,

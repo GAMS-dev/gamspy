@@ -54,7 +54,7 @@ def main():
         objective=eq3,
     )
 
-    x.up[...] = 0.3
+    x.up = 0.3
     MIP1.solve()
 
     print("Objective Function Value:  ", round(MIP1.objective_value, 4))

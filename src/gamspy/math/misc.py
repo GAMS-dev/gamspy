@@ -892,9 +892,10 @@ def poly(x, *args) -> Expression:
     -------
     Expression
 
-    Exceptions
-    ----------
-    ValidationError: If the number of arguments (args) is less than 3 or if any of args is not an integer or a float.
+    Raises
+    ------
+    ValidationError
+        If the number of arguments (args) is less than 3 or if any of args is not an integer or a float.
 
     Examples
     --------

@@ -542,7 +542,7 @@ def main():
 
     # Initial values
     t.l[x, y] = 0.0
-    Q.l[...] = 0.0
+    Q.l = 0.0
 
     # EQUATIONS #
     temp = Equation(

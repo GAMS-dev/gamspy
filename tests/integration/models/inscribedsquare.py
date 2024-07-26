@@ -147,10 +147,10 @@ def main():
     )
 
     t.l[i] = -math.pi + (Ord(i) - 1) * 2 * math.pi / Card(i)
-    x.l[...] = fx(t.l["1"])
-    y.l[...] = fy(t.l["1"])
-    a.l[...] = 1
-    b.l[...] = 1
+    x.l = fx(t.l["1"])
+    y.l = fy(t.l["1"])
+    a.l = 1
+    b.l = 1
 
     square.solve()
 

@@ -591,7 +591,7 @@ In addition to solve options, user can specify solver options to be used by the 
     ...
 
     model = Model(m, "my_model", equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
-    model.solve(solver="CONOPT", solver_options=solver_options={"rtmaxv": "1.e12"})
+    model.solve(solver="CONOPT", solver_options={"rtmaxv": "1.e12"})
 
     
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_

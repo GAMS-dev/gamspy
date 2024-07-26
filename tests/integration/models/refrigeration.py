@@ -85,8 +85,8 @@ def main():
 
     # Bounds on variables:
     for v in m.getVariables():
-        v.lo[...] = 0.001
-        v.up[...] = 5
+        v.lo = 0.001
+        v.up = 5
 
     refrigeration = Model(
         m,

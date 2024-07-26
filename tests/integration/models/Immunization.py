@@ -332,9 +332,9 @@ def main():
     )
     ImmunizationTwo.solve()
 
-    DurationMatch.l[...] = DurationMatch.l / PV_Liab
+    DurationMatch.l = DurationMatch.l / PV_Liab
 
-    ConvexityMatch.l[...] = ConvexityMatch.l / PV_Liab
+    ConvexityMatch.l = ConvexityMatch.l / PV_Liab
 
     x_results.append(x.records.level.tolist())
     print("PresentValueMatch: ", PresentValueMatch.records.level[0])

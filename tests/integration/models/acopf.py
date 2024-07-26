@@ -1098,7 +1098,7 @@ def main():
         * (V_real.l[j] * V_real.l[i] + V_imag.l[j] * V_imag.l[i])
     )
 
-    V_objcost.l[...] = Sum(
+    V_objcost.l = Sum(
         gen,
         costcoef[gen, "2"] * V_P.l[gen] * baseMVA
         + costcoef[gen, "1"] * sqr(V_P.l[gen] * baseMVA),
@@ -1122,7 +1122,7 @@ def main():
     )
 
     if args.obj.casefold() == "linear":
-        V_objcost.l[...] = Sum(
+        V_objcost.l = Sum(
             gen.where[(status[gen]) & (costmodel[gen] == 2)],
             costcoef[gen, "0"] + costcoef[gen, "1"] * V_P.l[gen] * baseMVA,
         ) + Sum(
@@ -1131,7 +1131,7 @@ def main():
         )
 
     else:
-        V_objcost.l[...] = Sum(
+        V_objcost.l = Sum(
             gen.where[status[gen] & (costmodel[gen] == 2)],
             costcoef[gen, "0"]
             + costcoef[gen, "1"] * V_P.l[gen] * baseMVA

@@ -1,11 +1,11 @@
 .. _examples:
 
-****************************
+**************************
 Frequently Asked Questions
-****************************
+**************************
 
 Which solvers does GAMSPy support?
------------------------------
+----------------------------------
 At the moment, GAMSPy supports 29 solvers:
 
 - CONOPT
@@ -86,7 +86,7 @@ The listing of default solver for each problem type is below:
 
 
 Why can't I redefine a GAMSPy symbol?
---------------------------------------
+-------------------------------------
 
 Trying to run the following lines of code will raise an error.
 
@@ -105,7 +105,7 @@ is fixed once it was declared.
 
 
 Why do I need a GAMSPy ``Alias``?
-----------------------------------
+---------------------------------
 
 Consider the following example code::
 
@@ -169,7 +169,7 @@ Only by declaring ``j`` an ``Alias`` of ``i`` you will get the desired outcome::
 
 
 Do I use a ``Parameter`` or a Python variable to represent scalar parameters?
-------------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 .. code-block::
 
@@ -192,7 +192,7 @@ is equivalent to::
 
 
 Which functionalities available in GAMS are not (yet) accessible in GAMSPy?
-----------------------------------------------------------------------------
+---------------------------------------------------------------------------
 
 While GAMSPy provides a powerful interface for utilizing GAMS within Python, there are some 
 features from the original GAMS language that are not yet fully accessible in GAMSPy. 
@@ -219,7 +219,7 @@ set to bridge the gap between GAMS and GAMSPy. If you have specific features or 
 you would like to see in GAMSPy, feel free to share your feedback with us.
 
 How are GAMS and GAMSPy related?
----------------------------------
+--------------------------------
 
 **Dependency**
 
@@ -268,7 +268,7 @@ reflected in the generated GAMSPy model. Changes to a GAMSPy symbol, however, wi
 be evaluated by the second solve statement.
 
 Why does Windows Defender block the gamspy.exe executable?
--------------------------------------------------------
+----------------------------------------------------------
 
 When you execute `pip install gamspy`, it creates an executable on your machine (e.g. gamspy.exe on Windows) 
 which acts like a regular commandline script. This means that it cannot be signed by us. Therefore, Windows Defender 

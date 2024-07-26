@@ -8,21 +8,14 @@
 Container
 *********
 
-.. code-block:: python
-    
-    from gamspy import Container, Set
-    
-    m = Container()
-    i = Set(m, "i", records = ["seattle", "san-diego"])
-    j = Set(m, "j", records = ["new-york", "chicago", "topeka"])
+The :meth:`Container <gamspy.Container>` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
+and constraints, providing a structured approach for optimization problems. 
 
 ===============
 Symbol Creation
 ===============
 
-The :meth:`Container <gamspy.Container>` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
-and constraints, providing a structured approach for optimization problems. Every symbol in your optimization problem 
-should belong to a :meth:`Container <gamspy.Container>`.
+Every symbol in your optimization problem must belong to a :meth:`Container <gamspy.Container>`.
 
 All added symbols to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
     
@@ -96,8 +89,8 @@ Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to 
     m.read("data.gdx")
     print(m.listSymbols())
 
-Loading Records to An Existing Symbol
--------------------------------------
+Loading Records to Existing Symbols
+-----------------------------------
 
 One can load the records of a symbol from a GDX file if the symbol is already declared by using :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>`.
 
@@ -111,3 +104,11 @@ One can load the records of a symbol from a GDX file if the symbol is already de
 
 The only difference between :meth:`read <gamspy.Container.read>` and :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` is that while :meth:`read <gamspy.Container.read>` creates the symbol in the :meth:`Container <gamspy.Container>`
 if it does not already exist, :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>` requires the symbol to be declared beforehand.
+
+=================================
+Generating the Executed GAMS Code
+=================================
+
+One can check the GAMS code which is executed so far at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
+This mechanism is exposed for avid GAMS users who want to see what's being executed behind the scenes. :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging`
+page includes more details. 
