@@ -10,6 +10,7 @@ GAMSPy 0.14.1
   - Allow indexing on alias symbols.
   - Add reference_file option.
   - Add selective loading for solve statements.
+  - Change default port to communicate with license server to 443.
 - Documentation
   - Add API docs for SOS1 ReLU implementation.
   - Explain the working directory - debugging level relationship.
