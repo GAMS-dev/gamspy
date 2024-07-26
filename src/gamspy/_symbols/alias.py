@@ -8,8 +8,11 @@ from gams.core.gdx import GMS_DT_ALIAS
 
 import gamspy as gp
 import gamspy._algebra.condition as condition
+import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
+import gamspy.utils as utils
 from gamspy._symbols.set import SetMixin
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
@@ -150,6 +153,32 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def __repr__(self) -> str:
         return f"Alias(name={self.name}, alias_with={self.alias_with})"
+
+    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
+        domain = validation.validate_domain(self, indices)
+
+        return implicits.ImplicitSet(self, name=self.name, domain=domain)
+
+    def __setitem__(self, indices: tuple | str, rhs):
+        # self[domain] = rhs
+        domain = validation.validate_domain(self, indices)
+
+        if isinstance(rhs, bool):
+            rhs = "yes" if rhs is True else "no"  # type: ignore
+
+        statement = expression.Expression(
+            implicits.ImplicitSet(self, name=self.name, domain=domain),
+            "=",
+            rhs,
+        )
+
+        statement._validate_definition(utils._unpack(domain))
+
+        self.container._add_statement(statement)
+        self._assignment = statement
+
+        if self.synchronize:
+            self.container._synch_with_gams()
 
     @property
     def synchronize(self):

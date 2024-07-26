@@ -7,12 +7,14 @@ GAMSPy 0.14.1
   - Add SOS1 ReLU implementation.
   - Add __repr__ to all GAMSPy language constructs for better debugging.
   - Give a warning in case the domain is not initialized by the time there is an attribute assigment.
+  - Allow indexing on alias symbols.
 - Documentation
   - Add API docs for SOS1 ReLU implementation.
   - Explain the working directory - debugging level relationship.
 - Testing
   - Add tests for SOS1 ReLU implementation.
   - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
+  - Add tests for indexing on alias symbols.
 
 
 GAMSPy 0.14.0
