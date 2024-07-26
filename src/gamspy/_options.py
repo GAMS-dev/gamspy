@@ -55,6 +55,7 @@ option_map = {
     "profile": "profile",
     "profile_file": "profileFile",
     "profile_tolerance": "profiletol",
+    "reference_file": "reference",
     "time_limit": "reslim",
     "savepoint": "savepoint",
     "seed": "seed",
@@ -155,8 +156,8 @@ class Options(BaseModel):
         Write profile information to this file
     profile_tolerance: float | None
         Minimum time a statement must use to appear in profile generated output
-    redirect_log_to_stdout: Optional[bool] = False
-        description
+    reference_file: str | None
+        Symbol reference file
     time_limit: float | None
         Wall-clock time limit for solver
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
@@ -268,6 +269,7 @@ class Options(BaseModel):
     profile: Optional[int] = None
     profile_file: Optional[str] = None
     profile_tolerance: Optional[float] = None
+    reference_file: Optional[str] = None 
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
