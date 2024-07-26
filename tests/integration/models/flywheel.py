@@ -39,17 +39,17 @@ def main():
     e2[...] = 0.419 - (x1**2) * (x3**2) / 10000000 >= 0
 
     # Bounds on variables:
-    x1.lo[...] = 0
-    x1.up[...] = 36
-    x2.lo[...] = 0
-    x2.up[...] = 5
-    x3.lo[...] = 0
-    x3.up[...] = 125
+    x1.lo = 0
+    x1.up = 36
+    x2.lo = 0
+    x2.up = 5
+    x3.lo = 0
+    x3.up = 125
 
     # Initial point:
-    x1.l[...] = 22.3
-    x2.l[...] = 0.5
-    x3.l[...] = 125
+    x1.l = 22.3
+    x2.l = 0.5
+    x3.l = 125
 
     flywheel = Model(
         m,

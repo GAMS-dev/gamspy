@@ -153,47 +153,47 @@ def main():
         objective=profit,
     )
 
-    rangey.lo[...] = 0.9
-    rangey.up[...] = 1.1
-    rangey.l[...] = 1
-    rangem.lo[...] = 0.9
-    rangem.up[...] = 1.1
-    rangem.l[...] = 1
-    ranged.lo[...] = 0.9
-    ranged.up[...] = 1.1
-    ranged.l[...] = 1
-    rangef.lo[...] = 0.9
-    rangef.up[...] = 1.1
-    rangef.l[...] = 1
+    rangey.lo = 0.9
+    rangey.up = 1.1
+    rangey.l = 1
+    rangem.lo = 0.9
+    rangem.up = 1.1
+    rangem.l = 1
+    ranged.lo = 0.9
+    ranged.up = 1.1
+    ranged.l = 1
+    rangef.lo = 0.9
+    rangef.up = 1.1
+    rangef.l = 1
 
-    strength.lo[...] = 85
-    strength.up[...] = 93
-    octane.lo[...] = 90
-    octane.up[...] = 95
-    ratio.lo[...] = 3
-    ratio.up[...] = 12
-    dilute.lo[...] = 1.2
-    dilute.up[...] = 4
-    f4.lo[...] = 145
-    f4.up[...] = 162
-    olefin.lo[...] = 10
-    olefin.up[...] = 2000
-    isor.up[...] = 16000
-    acid.up[...] = 120
-    alkylate.up[...] = 5000
-    isom.up[...] = 2000
+    strength.lo = 85
+    strength.up = 93
+    octane.lo = 90
+    octane.up = 95
+    ratio.lo = 3
+    ratio.up = 12
+    dilute.lo = 1.2
+    dilute.up = 4
+    f4.lo = 145
+    f4.up = 162
+    olefin.lo = 10
+    olefin.up = 2000
+    isor.up = 16000
+    acid.up = 120
+    alkylate.up = 5000
+    isom.up = 2000
 
-    olefin.l[...] = 1745
-    isor.l[...] = 12000
-    acid.l[...] = 110
-    alkylate.l[...] = 3048
-    isom.l[...] = 1974
-    strength.l[...] = 89.2
-    octane.l[...] = 92.8
-    ratio.l[...] = 8
-    dilute.l[...] = 3.6
-    f4.l[...] = 145
-    profit.l[...] = 872
+    olefin.l = 1745
+    isor.l = 12000
+    acid.l = 110
+    alkylate.l = 3048
+    isom.l = 1974
+    strength.l = 89.2
+    octane.l = 92.8
+    ratio.l = 8
+    dilute.l = 3.6
+    f4.l = 145
+    profit.l = 872
 
     process.solve()
     print(f"Profit in model 'process': {profit.records.level[0]:.2f}")

@@ -192,7 +192,7 @@ def build_abstract_model():
             Domain(j, t).where[tw[j, t] & lastJob[j]], x[j, t] * (Ord(t) - 1)
         ),
     )
-    makespan.lo[...] = 0
+    makespan.lo = 0
 
     return dict(
         m=m,

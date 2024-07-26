@@ -4,12 +4,14 @@ GAMSPy CHANGELOG
 GAMSPy 0.14.1
 -------------
 - General
-  - Add SOS1 ReLU implementation
+  - Add SOS1 ReLU implementation.
   - Add __repr__ to all GAMSPy language constructs for better debugging.
 - Documentation
-  - Add API docs for SOS1 ReLU implementation
+  - Add API docs for SOS1 ReLU implementation.
+  - Explain the working directory - debugging level relationship.
 - Testing
-  - Add tests for SOS1 ReLU implementation
+  - Add tests for SOS1 ReLU implementation.
+  - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
 
 
 GAMSPy 0.14.0

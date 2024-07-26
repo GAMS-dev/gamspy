@@ -132,7 +132,7 @@ def main():
     y.fx["n0"] = a_y
     x.fx[f"n{N}"] = b_x
     y.fx[f"n{N}"] = b_y
-    unit.fx[...] = 1
+    unit.fx = 1
 
     spring.solve()
 

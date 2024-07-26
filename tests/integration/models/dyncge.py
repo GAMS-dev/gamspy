@@ -1034,25 +1034,25 @@ def main():
     pe.l[i] = 1
     pm.l[i] = 1
     pd.l[i] = 1
-    pk.l[...] = 1
-    epsilon.l[...] = 1
-    Sp.l[...] = Sp00
-    Td.l[...] = Td00
+    pk.l = 1
+    epsilon.l = 1
+    Sp.l = Sp00
+    Td.l = Td00
     Tz.l[j] = Tz00[j]
     Tm.l[i] = Tm00[i]
     FF.l[h] = FF00[h]
-    III.l[...] = III00
+    III.l = III00
     II.l[j] = II00[j]
 
     # ---------------------------------------------------------------
     # Numeraire
-    PRICE.fx[...] = 1
+    PRICE.fx = 1
 
     # Initial factor endowments and exogenous variables
     FF.fx[h_mob] = FF00[h_mob]
     KK.fx[j] = KK00[j]
     Xg.fx[i] = Xg00[i]
-    Sf.fx[...] = Sf00
+    Sf.fx = Sf00
 
     # ===============================================================
     # Defining and solving the model --------------------------------
@@ -1116,7 +1116,7 @@ def main():
         KK.fx[j] = (1 - dep) * KK.l[j] + II.l[j]
         if int(iteration) < 30:
             Xg.fx[i] = Xg0[i, str(int(iteration) + 1)]
-            Sf.fx[...] = Sf0[str(int(iteration) + 1)]
+            Sf.fx = Sf0[str(int(iteration) + 1)]
 
     # ===============================================================
     # Aftermath Computation

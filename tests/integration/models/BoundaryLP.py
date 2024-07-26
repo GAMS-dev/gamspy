@@ -57,12 +57,12 @@ def main():
         objective=of,
     )
 
-    x1.lo[...] = 0
-    x1.up[...] = 5
-    x2.lo[...] = 0
-    x2.up[...] = 3
-    x3.lo[...] = 0
-    x3.up[...] = 2
+    x1.lo = 0
+    x1.up = 5
+    x2.lo = 0
+    x2.up = 3
+    x3.lo = 0
+    x3.up = 2
 
     LP1.solve()
 

@@ -126,8 +126,8 @@ def main():
         <= beta
     )
 
-    t.lo[...] = 1
-    v.fx[...] = 2
+    t.lo = 1
+    v.fx = 2
 
     fir_socp = Model(
         m,

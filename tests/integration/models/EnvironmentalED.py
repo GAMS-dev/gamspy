@@ -136,7 +136,7 @@ def main():
     END3.solve()
     report[gen, "penalty"] = P.l[gen]
 
-    TE.up[...] = 90000
+    TE.up = 90000
     END1.solve()
 
     import math

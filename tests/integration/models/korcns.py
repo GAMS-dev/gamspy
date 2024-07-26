@@ -703,24 +703,24 @@ def main():
         ),
     )
 
-    er.l[...] = 1.0000
-    pr.l[...] = 0.0000
-    pindex.l[...] = 1.0000
-    gr.l[...] = 194.0449
-    tariff.l[...] = 28.6572
-    indtax.l[...] = 65.2754
-    netsub.l[...] = 0.0000
-    gdtot.l[...] = 141.1519
-    hhsav.l[...] = 61.4089
-    govsav.l[...] = 52.8930
-    deprecia.l[...] = 0.0000
-    savings.l[...] = 159.1419
-    invest.l[...] = 159.1419
-    fsav.l[...] = 39.1744
-    fbor.l[...] = 58.7590
-    remit.l[...] = 0.0000
-    tothhtax.l[...] = 100.1122
-    y.l[...] = 1123.5941
+    er.l = 1.0000
+    pr.l = 0.0000
+    pindex.l = 1.0000
+    gr.l = 194.0449
+    tariff.l = 28.6572
+    indtax.l = 65.2754
+    netsub.l = 0.0000
+    gdtot.l = 141.1519
+    hhsav.l = 61.4089
+    govsav.l = 52.8930
+    deprecia.l = 0.0000
+    savings.l = 159.1419
+    invest.l = 159.1419
+    fsav.l = 39.1744
+    fbor.l = 58.7590
+    remit.l = 0.0000
+    tothhtax.l = 100.1122
+    y.l = 1123.5941
 
     labres1 = Parameter(
         cont,
@@ -819,7 +819,7 @@ def main():
     xxd.lo[it] = 0.01
     wa.lo[lc] = 0.01
     intr.lo[i] = 0.01
-    y.lo[...] = 0.01
+    y.lo = 0.01
     e.lo[it] = 0.01
     l.lo[i, lc].where[l.l[i, lc] != 0] = 0.01
 
@@ -1089,13 +1089,13 @@ def main():
         i.where[cles[i, "lab_hh"]], cd[i] ** cles[i, "lab_hh"]
     )
 
-    er.fx[...] = er.l
-    fsav.fx[...] = fsav.l
-    remit.fx[...] = remit.l
-    fbor.fx[...] = fbor.l
-    pindex.fx[...] = pindex.l
+    er.fx = er.l
+    fsav.fx = fsav.l
+    remit.fx = remit.l
+    fbor.fx = fbor.l
+    pindex.fx = pindex.l
     mps.fx[hh] = mps.l[hh]
-    gdtot.fx[...] = gdtot.l
+    gdtot.fx = gdtot.l
     ls.fx[lc] = ls.l[lc]
 
     model1 = Model(
