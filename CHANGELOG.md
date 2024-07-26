@@ -9,6 +9,7 @@ GAMSPy 0.14.1
   - Give a warning in case the domain is not initialized by the time there is an attribute assigment.
   - Allow indexing on alias symbols.
   - Add reference_file option.
+  - Add selective loading for solve statements.
 - Documentation
   - Add API docs for SOS1 ReLU implementation.
   - Explain the working directory - debugging level relationship.
@@ -16,6 +17,7 @@ GAMSPy 0.14.1
   - Add tests for SOS1 ReLU implementation.
   - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
   - Add tests for indexing on alias symbols.
+  - Test selective loading for solve statements.
 
 
 GAMSPy 0.14.0

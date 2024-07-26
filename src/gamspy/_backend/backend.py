@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from gamspy._backend.engine import EngineClient, GAMSEngine
     from gamspy._backend.local import Local
     from gamspy._backend.neos import NeosClient, NEOSServer
+    from gamspy._symbols.symbol import Symbol
 
 SOLVE_STATUS = [
     "",
@@ -53,19 +54,34 @@ def backend_factory(
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
     model: Model | None = None,
+    load_symbols: list[Symbol] | None = None,
 ) -> Local | GAMSEngine | NEOSServer:
     if backend == "neos":
         from gamspy._backend.neos import NEOSServer
 
-        return NEOSServer(container, options, client, output, model)  # type: ignore
+        return NEOSServer(
+            container,
+            options,
+            client,  # type: ignore
+            output,
+            model,
+            load_symbols,
+        )
     elif backend == "engine":
         from gamspy._backend.engine import GAMSEngine
 
-        return GAMSEngine(container, client, options, output, model)  # type: ignore
+        return GAMSEngine(
+            container,
+            client,  # type: ignore
+            options,
+            output,
+            model,
+            load_symbols,
+        )
     elif backend == "local":
         from gamspy._backend.local import Local
 
-        return Local(container, options, output, model)
+        return Local(container, options, output, model, load_symbols)
 
     raise ValidationError(
         f"`{backend}` is not a valid backend. Possible backends:"
@@ -80,11 +96,15 @@ class Backend(ABC):
         model: Model,
         options: Options,
         output: io.TextIOWrapper | None,
+        load_symbols: list[Symbol] | None,
     ):
         self.container = container
         self.model = model
         self.options = options
         self.output = output
+        self.load_symbols = load_symbols
+        if load_symbols is not None:
+            self.load_symbols = [symbol.name for symbol in load_symbols]
 
     @abstractmethod
     def is_async(self): ...

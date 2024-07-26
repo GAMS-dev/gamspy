@@ -1365,6 +1365,46 @@ class SolveSuite(unittest.TestCase):
             for expected, objective in zip(expected_values, executor.map(transport, f_values)):
                 self.assertTrue(math.isclose(expected, objective))
 
+    def test_selective_loading(self):
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
+
+        cost = Equation(self.m, name="cost")
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
+
+        cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective=z,
+        )
+        transport.solve(load_symbols=[])
+
+        self.assertIsNone(x.records)
+        self.assertIsNone(supply.records)
+        self.assertEqual(transport.objective_value, 153.675)
+
+        transport.solve(load_symbols=[x])
+
+        self.assertIsNotNone(x.records)
+        self.assertIsNone(supply.records)
+        self.assertEqual(transport.objective_value, 153.675)
+
 
 def solve_suite():
     suite = unittest.TestSuite()

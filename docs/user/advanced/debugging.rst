@@ -372,6 +372,45 @@ necessary to synchronize the records of symbol ``f`` with GAMS in every iteratio
 By disabling the synchronization of ``f``, the state of ``f`` is synchronized with GAMS only at the end of the loop instead
 of 999 times. 
 
+Selective Loading on Solve
+--------------------------
+One can pick and choose the symbols that will be updated with new records on a solve statement. For certain models where you 
+are only interested in the objective value, loading the records of all symbols is unnecessary. In order to increase the performance 
+by avoiding the load of symbols, one can specify ``load_symbols`` which are list of symbol objects. For example, in order to not load
+any of the symbol's records, you can do the following:
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(load_symbols=[])
+
+This would prevent from loading the records of symbols. If ``load_symbols`` are not specified, records of all symbols will be loaded.
+Particular symbols can be loaded as follows:
+
+.. code-block:: python
+
+    from gamspy import Container, Options
+    m = Container()
+    ....
+    ....
+    ....
+    x = Variable(m, "x")
+    specify your model here
+    ....
+    ....
+    ....
+    model.solve(load_symbols=[x])
+
+This example would only load the records of ``x``.
+
 Profiling
 ---------
 
