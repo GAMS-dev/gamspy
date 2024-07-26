@@ -105,8 +105,7 @@ def get_args():
     )
     install_group.add_argument(
         "--port",
-        default=1234,
-        help="The port number to communicate with license server. Defaults is 1234.",
+        help="The port number to communicate with license server. Defaults is 443.",
     )
 
     list_group = parser.add_argument_group(
@@ -140,12 +139,11 @@ def install_license(args: argparse.Namespace):
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
     if is_alp:
-        command = [
-            os.path.join(gamspy_base_dir, "gamsgetkey"),
-            license,
-            "-u",
-            str(args.port),
-        ]
+        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
+
+        if args.port:
+            command.append("-u")
+            command.append(str(args.port))
 
         if args.node_specific:
             command.append("-i")

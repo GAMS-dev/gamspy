@@ -111,7 +111,7 @@ def open_connection(
 
             if end - start > TIMEOUT:
                 raise GamspyException(
-                    "Timeout while establishing the connection with socket."
+                    f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
                 ) from e
 
     return new_socket, process
