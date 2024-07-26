@@ -11,6 +11,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._model import Problem, Sense
 from gamspy._options import Options
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -407,6 +408,7 @@ def validate_solver_args(
     problem: Problem | str,
     options: Options | None,
     output: io.TextIOWrapper | None,
+    load_symbols: list[str] | None,
 ) -> None:
     # Check validity of solver
     if solver is not None:
@@ -446,6 +448,19 @@ def validate_solver_args(
             "`output` must write and flush operations but found"
             f" {type(output)} which does not support them."
         )
+
+    # Check validity of load_symbols
+    if load_symbols is not None:
+        if not isinstance(load_symbols, list):
+            raise ValidationError(
+                f"`load_symbols` must be list of Symbol objects. Given type: {type(load_symbols)}"
+            )
+
+        for elem in load_symbols:
+            if not isinstance(elem, Symbol):
+                raise ValidationError(
+                    f"Elements of `load_symbols` must be of type Symbol but found {elem}"
+                )
 
 
 def validate_equations(model: Model):
