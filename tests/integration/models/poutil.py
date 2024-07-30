@@ -473,8 +473,8 @@ def main():
         description="indicator for segment b (for zone prices)",
     )
 
-    alpha.up[...] = Smax(t, PowerForecast[t])
-    beta.up[...] = alpha.up
+    alpha.up = Smax(t, PowerForecast[t])
+    beta.up = alpha.up
     pLFC.up[t] = pLFCref
 
     # Equations

@@ -33,6 +33,8 @@ class ImplicitSymbol(ABC):
         else:
             parent_scalar_domains = list(parent_scalar_domains)
 
+        self.parent_scalar_domains = parent_scalar_domains
+
         self.fix_domain_scalars(parent_scalar_domains)
 
     def fix_domain_scalars(self, parent_scalar_domains):

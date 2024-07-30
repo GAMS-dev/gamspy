@@ -4,7 +4,15 @@ import os
 import unittest
 
 import pandas as pd
-from gamspy import Alias, Container, Equation, Set, UniverseAlias
+from gamspy import (
+    Alias,
+    Container,
+    Equation,
+    Ord,
+    Parameter,
+    Set,
+    UniverseAlias,
+)
 from gamspy.exceptions import ValidationError
 
 
@@ -155,6 +163,49 @@ class AliasSuite(unittest.TestCase):
         )
         modified_names = self.m._get_touched_symbol_names()
         self.assertEqual(modified_names, [])
+
+    def test_indexing(self):
+        row = Set(
+            self.m, "row", records=[("r-" + str(i), i) for i in range(1, 11)]
+        )
+        col = Set(
+            self.m, "col", records=[("c-" + str(i), i) for i in range(1, 11)]
+        )
+
+        r = Parameter(
+            self.m,
+            "r",
+            domain=row,
+            records=[
+                [record, 4]
+                if record in row.records["uni"][:7].values
+                else [record, 5]
+                for record in row.records["uni"]
+            ],
+        )
+        c = Parameter(
+            self.m,
+            "c",
+            domain=col,
+            records=[
+                [record, 3]
+                if record in col.records["uni"][:5].values
+                else [record, 2]
+                for record in col.records["uni"]
+            ],
+        )
+
+        a = Parameter(self.m, "a", domain=[row, col])
+
+        dyn_col = Set(self.m, name="dyn_col", domain=[col])
+        dyn_col_alias = Alias(self.m, name="dyn_col_alias", alias_with=dyn_col)
+        dyn_col[col] = Ord(col) < 5
+
+        a[row, dyn_col_alias[col]] = 13.2 + r[row] * c[dyn_col_alias]
+        self.assertEqual(
+            a.getAssignment(),
+            "a(row,dyn_col_alias(col)) = (13.2 + (r(row) * c(dyn_col_alias)));",
+        )
 
 
 def alias_suite():

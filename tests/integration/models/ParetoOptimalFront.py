@@ -60,10 +60,10 @@ def main():
     eq3[...] = 2 * x1 + 3 * x2 <= 10
     eq4[...] = 2 * x1 - x2 >= 0
 
-    x1.lo[...] = 1
-    x1.up[...] = 2
-    x2.lo[...] = 1
-    x2.up[...] = 3
+    x1.lo = 1
+    x1.up = 2
+    x2.lo = 1
+    x2.up = 3
 
     pareto1 = Model(
         m,
@@ -102,7 +102,7 @@ def main():
         E[...] = (ranges["OF2max"] - ranges["OF2min"]) * (idx) / (
             Card(counter) - 1
         ) + ranges["OF2min"]
-        of2.lo[...] = E
+        of2.lo = E
         pareto1.solve()
         report[c, "OF1"] = of1.l
         report[c, "OF2"] = of2.l

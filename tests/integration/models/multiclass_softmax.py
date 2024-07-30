@@ -73,8 +73,8 @@ def main():
 
     x = Variable(m, name="x", domain=gp.math.dim([batch_size, 3]))
 
-    x.lo[...] = -5
-    x.up[...] = 5
+    x.lo = -5
+    x.up = 5
 
     y = gp.math.log_softmax(x)
     y2 = gp.math.softmax(x)

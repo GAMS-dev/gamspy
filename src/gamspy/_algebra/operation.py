@@ -62,7 +62,7 @@ class Operation(operable.Operable):
             rhs = rhs.conditioning_on
 
         if not isinstance(rhs, (bool, float, int)):
-            for i, x in enumerate(rhs.domain):
+            for i, x in enumerate(rhs.domain):  # type: ignore
                 try:
                     sum_index = self._bare_op_domain.index(x)
                     self._operation_indices.append((i, sum_index))
@@ -253,6 +253,9 @@ class Sum(Operation):
     ):
         super().__init__(domain, expression, "sum")
 
+    def __repr__(self) -> str:
+        return f"Sum(domain={self.domain}, expression={self.rhs})"
+
     def gamsRepr(self):
         """
         Representation of the Sum operation in GAMS language.
@@ -311,6 +314,9 @@ class Product(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "prod")
+
+    def __repr__(self) -> str:
+        return f"Product(domain={self.domain}, expression={self.rhs})"
 
     def gamsRepr(self):
         """
@@ -371,6 +377,9 @@ class Smin(Operation):
     ):
         super().__init__(domain, expression, "smin")
 
+    def __repr__(self) -> str:
+        return f"Smin(domain={self.domain}, expression={self.rhs})"
+
     def gamsRepr(self):
         """
         Representation of the Smin operation in GAMS language.
@@ -429,6 +438,9 @@ class Smax(Operation):
         expression: Expression | int | bool,
     ):
         super().__init__(domain, expression, "smax")
+
+    def __repr__(self) -> str:
+        return f"Smax(domain={self.domain}, expression={self.rhs})"
 
     def gamsRepr(self):
         """

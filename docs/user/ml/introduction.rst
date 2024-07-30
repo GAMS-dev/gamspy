@@ -562,6 +562,7 @@ we have implemented the following activation functions:
 
 - :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
 - :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
+- :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
 - :meth:`softmax <gamspy.math.softmax>`
 - :meth:`log_softmax <gamspy.math.log_softmax>`
 

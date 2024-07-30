@@ -140,7 +140,7 @@ def main():
         Elim[...] = (report["maxTE"] - report["minTE"]) * (idx) / (
             Card(counter) - 1
         ) + report["minTE"]
-        TE.up[...] = Elim
+        TE.up = Elim
         END1.solve()
         rep[cc, "TC"] = TC.l
         rep[cc, "TE"] = TE.l

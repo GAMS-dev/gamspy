@@ -244,7 +244,7 @@ def _generate_dims(m: Container, dims: list[int]) -> list[Alias | Set]:
         expected_name = f"DenseDim{x}_1"
         find_x = m.data.get(expected_name, None)
         if find_x is None:
-            find_x = Set(m, name=expected_name, records=range(x))
+            find_x = m.addSet(name=expected_name, records=range(x))
 
         while find_x in sets_so_far:
             find_x = next_alias(find_x)

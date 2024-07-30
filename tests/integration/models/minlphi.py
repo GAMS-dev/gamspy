@@ -1472,7 +1472,7 @@ def main():
     ycol.l[i] = ycolp[i]
 
     # set an arbitrary initial lower bound
-    zoal.l[...] = -10e6
+    zoal.l = -10e6
 
     # ======================================================================
     # give the continuous variables a starting point for 1st nlp
@@ -1539,7 +1539,7 @@ def main():
         yhup[hu, j] = yhu.l[hu, j]
         ycup[i, cu] = ycu.l[i, cu]
         ycolp[i] = ycol.l[i]
-        zoal.lo[...] = zoal.l
+        zoal.lo = zoal.l
 
         # ======================================================================
         # the current levels of the lmtds are moved away from zero
@@ -1601,9 +1601,9 @@ def main():
         # store the smallest nlp objective value for upper bound on master
         # ======================================================================
         zoaup[...] = gams_math.Min(zoaup, zoau.l)
-        zoal.up[...] = zoaup
+        zoal.up = zoaup
         #  protect against numerical errors introduced by the solver
-        zoal.lo[...] = gams_math.Min(zoal.lo, zoal.up)
+        zoal.lo = gams_math.Min(zoal.lo, zoal.up)
 
         #  now solve the milp master problem
         master.solve()

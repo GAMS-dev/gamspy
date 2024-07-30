@@ -105,8 +105,7 @@ def get_args():
     )
     install_group.add_argument(
         "--port",
-        default=1234,
-        help="The port number to communicate with license server. Defaults is 1234.",
+        help="The port number to communicate with license server. Defaults is 443.",
     )
 
     list_group = parser.add_argument_group(
@@ -124,28 +123,22 @@ def install_license(args: argparse.Namespace):
         )
 
     license = args.name
-    if isinstance(license, str):
-        if len(license) != 36:
-            raise ValidationError(
-                f"License id is a 36 character string but {len(license)} character string ({license}) provided."
-            )
-    else:
-        if not os.path.isfile(license):
-            raise ValidationError(
-                f"Given path to the license ({license}) is not valid."
-            )
-
     is_alp = not os.path.isfile(license)
+
+    if is_alp and len(license) != 36:
+        raise ValidationError(
+            f"License id is a 36 character string or an absolute path to the "
+            f"license file but {len(license)} character string ({license}) provided."
+        )
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
     if is_alp:
-        command = [
-            os.path.join(gamspy_base_dir, "gamsgetkey"),
-            license,
-            "-u",
-            str(args.port),
-        ]
+        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
+
+        if args.port:
+            command.append("-u")
+            command.append(str(args.port))
 
         if args.node_specific:
             command.append("-i")

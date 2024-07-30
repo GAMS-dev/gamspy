@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
+import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -15,6 +17,14 @@ from gamspy.math.matrix import permute
 if TYPE_CHECKING:
     from gamspy import Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
+
+logger = logging.getLogger("GAMSPy")
+logger.setLevel(logging.WARNING)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.WARNING)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 class ImplicitParameter(ImplicitSymbol, operable.Operable):
@@ -58,6 +68,14 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         )
 
     def __setitem__(self, indices: list | str, rhs: Expression) -> None:
+        if (
+            isinstance(self.parent, (syms.Variable, syms.Equation))
+            and len(self.parent.domain) > 0
+            and all(len(elem) == 0 for elem in self.parent.domain)
+        ):
+            logger.warning(
+                f"Domain was not initialized. Default values for {self.gamsRepr()} will be used."
+            )
         # self[domain] = rhs
         domain = validation._transform_given_indices(self.domain, indices)
 
@@ -95,6 +113,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
+
+    def __repr__(self) -> str:
+        return f"ImplicitParameter(parent={self.parent}, name={self.name}, domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
     @property
     def T(self) -> ImplicitParameter:

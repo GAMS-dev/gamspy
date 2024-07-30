@@ -157,7 +157,7 @@ def main():
     molesum[...] = Sum(i, x[i]) == 1.0
 
     # Simple Bounds of variables
-    z.lo[...] = 0.001
+    z.lo = 0.001
     x.lo["1"] = 0.001
     x.lo["2"] = 0.001
     x.lo["3"] = 0.001

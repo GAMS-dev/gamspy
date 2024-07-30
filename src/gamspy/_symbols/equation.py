@@ -349,6 +349,9 @@ class Equation(gt.Equation, Symbol):
         if self.synchronize:
             self.container._synch_with_gams()
 
+    def __repr__(self) -> str:
+        return f"Equation(name={self.name}, type={self.type}, domain={self.domain})"
+
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
         marginal = self._create_attr("m")

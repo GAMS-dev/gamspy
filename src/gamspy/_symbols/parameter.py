@@ -301,6 +301,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __neg__(self):
         return expression.Expression(None, "-", self)
 
+    def __repr__(self) -> str:
+        return f"Parameter(name={self.name}, domain={self.domain})"
+
     @property
     def T(self) -> implicits.ImplicitParameter:
         """See gamspy.Parameter.t"""

@@ -138,10 +138,10 @@ def main():
     p.lo[i] = 0.1
     l.up[i] = 1
     k.up[i] = 1
-    pk.lo[...] = 0.25
-    pk.up[...] = 4
-    pi.lo[...] = 0.25
-    pi.up[...] = 4
+    pk.lo = 0.25
+    pk.up = 4
+    pi.lo = 0.25
+    pi.up = 4
     v.up[i] = 100
     vv.lo[i] = 0.001
 
@@ -164,10 +164,10 @@ def main():
     m.l[t] = 0
     g.l[t] = mew[t] + xsi[t] * m.l[t]
     h.l[t] = gam[t] - alp[t] * e.l[t]
-    pd.l[...] = 0.3
+    pd.l = 0.3
     p.l[i] = 3
-    pk.l[...] = 3.5
-    pi.l[...] = pk.l / plab
+    pk.l = 3.5
+    pi.l = pk.l / plab
 
     vv.l[i].where[sig[i]] = (pi.l * (1 - deli[i]) / deli[i]) ** (
         -rho[i] / (1 + rho[i])
@@ -185,7 +185,7 @@ def main():
         + deli[i].where[sig[i] == 0]
     ) / efy[i]
     v.l[i] = pk.l * k.l[i] + plab * l.l[i]
-    pd.lo[...] = 0.01
+    pd.lo = 0.01
     p.lo[i] = 0.1
 
     chenrad.solve()

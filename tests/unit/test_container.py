@@ -148,7 +148,6 @@ class ContainerSuite(unittest.TestCase):
             str(self.m),
             f"<Container ({hex(id(self.m))}) with {len(self.m)} symbols: {self.m.data.keys()}>",
         )
-        self.assertEqual(repr(self.m), f"<Container ({hex(id(self.m))})>")
 
     def test_read_write(self):
         gdx_path = os.path.join("tmp", "test.gdx")

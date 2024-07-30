@@ -14,6 +14,31 @@ if TYPE_CHECKING:
 
 
 class UniverseAlias(gt.UniverseAlias):
+    """
+    Represents a UniverseAlias symbol in GAMS.
+
+    Parameters
+    ----------
+    container : Container
+    name : str
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> universe = gp.UniverseAlias(m)
+    >>> universe.records
+    Empty DataFrame
+    Columns: [uni]
+    Index: []
+    >>> i = gp.Set(m, "i", records=['i1', 'i2'])
+    >>> universe.records
+        uni
+    0  i1
+    1  i2
+
+    """
+
     @classmethod
     def _constructor_bypass(cls, container: Container, name: str):
         # create new symbol object
@@ -64,30 +89,6 @@ class UniverseAlias(gt.UniverseAlias):
             return object.__new__(cls)
 
     def __init__(self, container: Container, name: str = "universe"):
-        """
-        Represents a UniverseAlias symbol in GAMS.
-
-        Parameters
-        ----------
-        container : Container
-        name : str
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> universe = gp.UniverseAlias(m, "universe")
-        >>> universe.records
-        Empty DataFrame
-        Columns: [uni]
-        Index: []
-        >>> i = gp.Set(m, "i", records=['i1', 'i2'])
-        >>> universe.records
-          uni
-        0  i1
-        1  i2
-
-        """
         # check if the name is a reserved word
         name = validation.validate_name(name)
 
@@ -104,3 +105,6 @@ class UniverseAlias(gt.UniverseAlias):
             return len(self.records.index)
 
         return 0
+
+    def __repr__(self) -> str:
+        return f"UniverseAlias(name={self.name})"

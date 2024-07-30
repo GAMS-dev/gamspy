@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from gamspy._backend.neos import NeosClient
     from gamspy._options import ModelInstanceOptions, Options
     from gamspy._symbols.implicits import ImplicitParameter
+    from gamspy._symbols.symbol import Symbol
 
 IS_MIRO_INIT = os.getenv("MIRO", False)
 
@@ -292,7 +293,7 @@ class Model:
         self.container._synch_with_gams()
 
     def __repr__(self) -> str:
-        return f"<Model `{self.name}` ({hex(id(self))})>"
+        return f"Model(name={self.name}, problem={self.problem}, equations={self.equations}, sense={self.sense}, objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
 
     def __str__(self) -> str:
         return (
@@ -585,6 +586,7 @@ class Model:
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
+        load_symbols: list[Symbol] | None = None,
     ) -> pd.DataFrame | None:
         """
         Solves the model with given options.
@@ -637,6 +639,7 @@ class Model:
             self.problem,
             options,
             output,
+            load_symbols,
         )
         validation.validate_equations(self)
 
@@ -668,6 +671,7 @@ class Model:
             backend,
             client,
             self,
+            load_symbols,
         )
 
         summary = runner.run()

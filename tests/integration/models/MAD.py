@@ -213,7 +213,7 @@ def main():
         MU_TARGET[...] = mu_target
 
         MeanVariance.solve()
-        z.l[...] = gams_math.sqrt(z.l)
+        z.l = gams_math.sqrt(z.l)
 
         output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
