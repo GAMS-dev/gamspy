@@ -473,7 +473,7 @@ generated.
    mat2.gamsRepr()
    # 'mat(i,j)'
    mat2.domain
-   # [<Set `j` (0x...)>, <Set `i` (0x...)>]
+   # [Set(name=j, domain=['*']), Set(name=i, domain=['*'])]
 
    mat2["i1", "j2"] # This would raise an exception
 
@@ -663,16 +663,16 @@ alias to its alias. You can see the following code snippet for the example.
 
    expr = a + b
    expr.domain
-   # [<Set `i` (0x...)>, <Set `j` (0x...)>, <Set `k` (0x...)>]
+   # [Set(name=i, domain=['*']), Set(name=j, domain=['*']), Set(name=k, domain=['*'])]
 
    expr2 = c + b
    expr2.domain
-   # [<Set `i` (0x...)>, <Set `k` (0x...)>, <Set `j` (0x...)>]
+   # [Set(name=i, domain=['*']), Set(name=k, domain=['*']), Set(name=j, domain=['*'])]
 
 
    expr3 = expr @ expr2
    expr3.domain
-   # [<Set `i` (0x...)>, <Alias `AliasOfj_2` (0x...)>, <Set `j` (0x...)>]
+   # [Set(name=i, domain=['*']), Alias(name=AliasOfj_2, alias_with=Set(name=j, domain=['*'])), Set(name=j, domain=['*'])]
    expr3.gamsRepr()
    # 'sum(k,((a(i,AliasOfj_2) + b(k,AliasOfj_2)) * (c(i,k) + b(k,j))))'
 

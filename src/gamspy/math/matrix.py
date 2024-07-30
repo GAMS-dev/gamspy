@@ -224,11 +224,11 @@ def dim(dims: list[int]) -> Dim:
     >>> a
     Dim(dims=[10, 20])
     >>> par = gp.Parameter(m, name="par", domain=a) # now two sets are generated
-    >>> par.domain # doctest: +ELLIPSIS
-    [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
+    >>> par.domain
+    [Set(name=DenseDim10_1, domain=['*']), Set(name=DenseDim20_1, domain=['*'])]
     >>> par2 = gp.Parameter(m, name="par2", domain=a) # same 2 sets are used
-    >>> par2.domain # doctest: +ELLIPSIS
-    [<Set `DenseDim10_1` (0x...)>, <Set `DenseDim20_1` (0x...)>]
+    >>> par2.domain
+    [Set(name=DenseDim10_1, domain=['*']), Set(name=DenseDim20_1, domain=['*'])]
 
     """
     for x in dims:
@@ -347,8 +347,8 @@ def permute(
     >>> k = gp.Set(m, name="k")
     >>> p = gp.Parameter(m, name="p", domain=[i, j, k])
     >>> p2 = gp.math.permute(p, [2, 0, 1])
-    >>> p2.domain # doctest: +ELLIPSIS
-    [<Set `k` (0x...)>, <Set `i` (0x...)>, <Set `j` (0x...)>]
+    >>> p2.domain
+    [Set(name=k, domain=['*']), Set(name=i, domain=['*']), Set(name=j, domain=['*'])]
 
     """
     # TODO Accept permuting expressions!

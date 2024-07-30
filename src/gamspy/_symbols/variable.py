@@ -327,8 +327,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> j = gp.Set(m, "j", records=['j1','j2'])
         >>> v = gp.Variable(m, "v", domain=[i, j])
         >>> v_t = v.t()
-        >>> v_t.domain # doctest: +ELLIPSIS
-        [<Set `j` (0x...)>, <Set `i` (0x...)>]
+        >>> v_t.domain
+        [Set(name=j, domain=['*']), Set(name=i, domain=['*'])]
         >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         gamspy.exceptions.ValidationError:

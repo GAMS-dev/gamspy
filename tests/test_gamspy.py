@@ -85,6 +85,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}math{os.sep}misc.py",
             f"{root}{os.sep}math{os.sep}probability.py",
             f"{root}{os.sep}math{os.sep}trigonometric.py",
+            f"{root}{os.sep}math{os.sep}activation.py",
         ]
 
         for file in api_files:

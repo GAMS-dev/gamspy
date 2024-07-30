@@ -33,7 +33,7 @@ class UniverseAlias(gt.UniverseAlias):
     Index: []
     >>> i = gp.Set(m, "i", records=['i1', 'i2'])
     >>> universe.records
-        uni
+      uni
     0  i1
     1  i2
 

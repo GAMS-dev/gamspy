@@ -120,15 +120,14 @@ def relu_with_sos1_var(
     >>> y = relu_with_sos1_var(x)
     >>> y, s = relu_with_sos1_var(x, return_slack_var=True)
     >>> y.domain # implicit activation variable has the same domain
-    [<Set `i` (0x...)>]
+    [Set(name=i, domain=['*'])]
     >>> s.domain # implicit slack variable has the same domain as well
-    [<Set `i` (0x...)>]
-    >>> y.gamsRepr() # In the background that y and s are parts of the same variable
-    'sos1_223e5a9f_330d_4580_972a_76c0dcce4b0b(i,"0")'
-    >>> s.gamsRepr()
-    'sos1_223e5a9f_330d_4580_972a_76c0dcce4b0b(i,"1")'
+    [Set(name=i, domain=['*'])]
+    >>> y.name == s.name # In the background that y and s are parts of the same variable
+    True
     >>> id(y.parent) == id(s.parent)
     True
+
     """
     domain = x.domain
     last_dim = gamspy.math._generate_dims(x.container, [2])[0]
@@ -209,9 +208,10 @@ def relu_with_binary_var(
     >>> b.type
     'binary'
     >>> y.domain # i many activation variables
-    [<Set `i` (0x...)>]
+    [Set(name=i, domain=['*'])]
     >>> b.domain # i many binary variables
-    [<Set `i` (0x...)>]
+    [Set(name=i, domain=['*'])]
+
     """
 
     domain = x.domain
@@ -294,6 +294,7 @@ def relu_with_complementarity_var(
     >>> y = relu_with_complementarity_var(x)
     >>> y.type
     'positive'
+
     """
     domain = x.domain
 
@@ -360,8 +361,9 @@ def log_softmax(x: Variable, dim: int = -1):
     >>> x = Variable(m, "x", domain=dim([500, 10]))
     >>> y = log_softmax(x) # uses LSE because 10 <= 20
     >>> y.domain
-    [<Set `DenseDim500_1` (0x...)>, <Set `DenseDim10_1` (0x...)>]
+    [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
     >>> y2 = log_softmax(x, dim=0) # cannot use LSE because 500 > 20
+
     """
     if not isinstance(x, Variable):
         raise ValidationError("log_softmax expects a variable")
@@ -433,7 +435,8 @@ def softmax(x: Variable, dim: int = -1):
     >>> x = Variable(m, "x", domain=dim([500, 10]))
     >>> y = softmax(x)
     >>> y.domain
-    [<Set `DenseDim500_1` (0x...)>, <Set `DenseDim10_1` (0x...)>]
+    [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
+
     """
     if not isinstance(x, Variable):
         raise ValidationError("softmax expects a variable")
