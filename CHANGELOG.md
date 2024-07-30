@@ -19,6 +19,7 @@ GAMSPy 0.14.1
   - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
   - Add tests for indexing on alias symbols.
   - Test selective loading for solve statements.
+  - Add a new model (coex) to the model library.
 
 
 GAMSPy 0.14.0
