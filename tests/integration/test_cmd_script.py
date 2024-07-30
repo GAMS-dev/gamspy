@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import time
 import unittest
@@ -30,11 +31,11 @@ class CmdSuite(unittest.TestCase):
             check=True,
         )
 
-        self.assertTrue(
-            os.path.exists(
-                os.path.join(gamspy_base_directory, "user_license.txt")
-            )
+        user_license_path = os.path.join(
+            gamspy_base_directory, "user_license.txt"
         )
+
+        self.assertTrue(os.path.exists(user_license_path))
 
         m = Container()
         self.assertTrue(m._network_license)
@@ -68,6 +69,30 @@ class CmdSuite(unittest.TestCase):
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
             )
+
+        tmp_license_path = os.path.join("tmp", "user_license.txt")
+        shutil.copy(user_license_path, tmp_license_path)
+
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "uninstall",
+                "license",
+            ],
+            check=True,
+        )
+
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                tmp_license_path,
+            ],
+            check=True,
+        )
+
+        self.assertTrue(os.path.exists(user_license_path))
 
     def test_uninstall_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()

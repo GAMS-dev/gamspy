@@ -11,6 +11,7 @@ GAMSPy 0.14.1
   - Add reference_file option.
   - Add selective loading for solve statements.
   - Change default port to communicate with license server to 443.
+  - Fix installing licenses from a path.
 - Documentation
   - Add API docs for SOS1 ReLU implementation.
   - Explain the working directory - debugging level relationship.
@@ -19,6 +20,7 @@ GAMSPy 0.14.1
   - Shorten attribute assignments in model library (variable.l[...] = ... -> variable.l = ...).
   - Add tests for indexing on alias symbols.
   - Test selective loading for solve statements.
+  - Add new install license tests.
   - Add a new model (coex) to the model library.
 
 

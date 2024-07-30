@@ -123,18 +123,13 @@ def install_license(args: argparse.Namespace):
         )
 
     license = args.name
-    if isinstance(license, str):
-        if len(license) != 36:
-            raise ValidationError(
-                f"License id is a 36 character string but {len(license)} character string ({license}) provided."
-            )
-    else:
-        if not os.path.isfile(license):
-            raise ValidationError(
-                f"Given path to the license ({license}) is not valid."
-            )
-
     is_alp = not os.path.isfile(license)
+
+    if is_alp and len(license) != 36:
+        raise ValidationError(
+            f"License id is a 36 character string or an absolute path to the "
+            f"license file but {len(license)} character string ({license}) provided."
+        )
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
 
