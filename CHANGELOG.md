@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.2
+-------------
+- General
+  - Add generate_name_dict option..
+
 GAMSPy 0.14.1
 -------------
 - General
