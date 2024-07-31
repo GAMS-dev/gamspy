@@ -418,6 +418,17 @@ class Model:
 
         return solve_string + ";"
 
+    def _add_model_attr_options(self, options: gp.Options) -> None:
+        MODEL_ATTR_OPTION_MAP = {"generate_name_dict": "dictfile"}
+        for key, value in options.model_dump(exclude_none=True).items():
+            if key not in MODEL_ATTR_OPTION_MAP:
+                continue
+
+            value = int(value) if isinstance(value, bool) else value
+            self.container._add_statement(
+                f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
+            )
+
     def _append_solve_string(self) -> None:
         solve_string = self._generate_solve_string()
         self.container._add_statement(solve_string + "\n")
@@ -656,6 +667,8 @@ class Model:
             problem=self.problem,
             solver_options=solver_options,
         )
+
+        self._add_model_attr_options(options)
 
         if self._is_frozen:
             self.instance.solve(solver, model_instance_options, output)
