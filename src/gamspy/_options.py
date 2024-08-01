@@ -72,6 +72,8 @@ OPTION_MAP = {
     "report_underflow": "zeroresrep",
 }
 
+MODEL_ATTR_OPTION_MAP = {"generate_name_dict": "dictfile"}
+
 class Options(BaseModel):
     """
     Options class to set GAMS options for the model.

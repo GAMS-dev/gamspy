@@ -140,7 +140,10 @@ class GamspyToGamsSuite(unittest.TestCase):
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
-        transport.toGams(os.path.join("tmp", "to_gams"))
+        transport.toGams(
+            os.path.join("tmp", "to_gams"),
+            options=Options(generate_name_dict=False, lp="CPLEX"),
+        )
 
         process = subprocess.run(
             [

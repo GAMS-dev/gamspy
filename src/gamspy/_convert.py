@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
+from gamspy._options import MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
 logger = logging.getLogger("CONVERTER")
@@ -71,26 +72,51 @@ class GamsConverter(Converter):
 
         return all_needed_symbols
 
-    def convert(self):
+    def convert(self, options: Options | None = None):
         """Generates .gms and .gdx file"""
         symbols = self.get_all_symbols()
 
         # Write the symbol data first
         self.container.write(self.gdx_path, symbols)
 
+        # 1. Declarations
         declarations = [
             self.container[name].getDeclaration() for name in symbols
         ]
-        definitions = self.get_definitions()
-        load_str = f"$gdxLoadAll {os.path.abspath(self.gdx_path)}"
-        declarations.append(self.model.getDeclaration())
-        solve_string = self.model._generate_solve_string()
-        strings = [*declarations, load_str, *definitions, solve_string]
 
+        # 2. Load the data from gdx
+        load_str = f"$gdxLoadAll {os.path.abspath(self.gdx_path)}"
+
+        # 3. Definitions
+        definitions = self.get_definitions()
+        declarations.append(self.model.getDeclaration())
+
+        # 4. Model attribute options
+        options_strs = []
+        if options is not None:
+            options.export(os.path.join(self.path, f"{self.model.name}.pf"))
+            for key, value in options.model_dump(exclude_none=True).items():
+                if key not in MODEL_ATTR_OPTION_MAP:
+                    continue
+
+                value = int(value) if isinstance(value, bool) else value
+                options_strs.append(
+                    f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};"
+                )
+
+        # 5. Solve string
+        solve_string = self.model._generate_solve_string()
+        strings = [
+            *declarations,
+            load_str,
+            *definitions,
+            *options_strs,
+            solve_string,
+        ]
+
+        # Write the GAMS code
         gams_string = "\n".join(strings)
-        with open(
-            self.gms_path, "w", encoding="utf-8"
-        ) as file:  # Write the GAMS code
+        with open(self.gms_path, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
         logger.info(
