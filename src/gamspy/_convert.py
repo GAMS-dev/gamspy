@@ -64,16 +64,19 @@ class GamsConverter(Converter):
 
     def get_all_symbols(self) -> list[str]:
         all_symbols = get_symbols(self.model)
-        all_needed_symbols = sorted(all_symbols, key=self.sort_names)
+
+        all_needed_symbols = sorted(
+            all_symbols, key=list(self.container.data.keys()).index
+        )
 
         return all_needed_symbols
 
     def convert(self):
         """Generates .gms and .gdx file"""
         symbols = self.get_all_symbols()
-        self.container.write(
-            self.gdx_path, symbols
-        )  # Write the symbol data first
+
+        # Write the symbol data first
+        self.container.write(self.gdx_path, symbols)
 
         declarations = [
             self.container[name].getDeclaration() for name in symbols
@@ -93,25 +96,6 @@ class GamsConverter(Converter):
         logger.info(
             f'GAMS model has been generated under {os.path.join(self.path, self.model.name + ".gms")}'
         )
-
-    def sort_names(self, name: str) -> int:
-        PRECEDENCE = {
-            syms.Set: 1,
-            syms.Alias: 1,
-            syms.Parameter: 3,
-            syms.Variable: 4,
-            syms.Equation: 5,
-        }
-
-        symbol = self.container[name]
-        precedence = PRECEDENCE[type(symbol)]
-
-        if isinstance(symbol, syms.Set) and any(
-            not isinstance(elem, str) for elem in symbol.domain
-        ):
-            precedence = 2
-
-        return precedence
 
 
 TABLE_HEADER = """\\begin{tabularx}{\\textwidth}{| l | l | X |}
