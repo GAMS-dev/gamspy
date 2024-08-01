@@ -284,7 +284,7 @@ class Options(BaseModel):
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Optional[Literal[0, 1, 2]] = None
+    report_solution: Optional[Literal[0, 1, 2]] = 0
     show_os_memory: Optional[Literal[0, 1, 2]] = None
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None

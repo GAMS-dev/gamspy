@@ -4,7 +4,8 @@ GAMSPy CHANGELOG
 GAMSPy 0.14.2
 -------------
 - General
-  - Add generate_name_dict option..
+  - Add generate_name_dict option.
+  - Disable solution report by default.
 
 GAMSPy 0.14.1
 -------------
