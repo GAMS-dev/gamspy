@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
 logger = logging.getLogger("CONVERTER")
@@ -64,54 +65,67 @@ class GamsConverter(Converter):
 
     def get_all_symbols(self) -> list[str]:
         all_symbols = get_symbols(self.model)
-        all_needed_symbols = sorted(all_symbols, key=self.sort_names)
+
+        all_needed_symbols = sorted(
+            all_symbols, key=list(self.container.data.keys()).index
+        )
 
         return all_needed_symbols
 
-    def convert(self):
+    def convert(self, options: Options | None = None):
         """Generates .gms and .gdx file"""
         symbols = self.get_all_symbols()
-        self.container.write(
-            self.gdx_path, symbols
-        )  # Write the symbol data first
 
+        # Write the symbol data first
+        self.container.write(self.gdx_path, symbols)
+
+        # 1. Declarations
         declarations = [
             self.container[name].getDeclaration() for name in symbols
         ]
-        definitions = self.get_definitions()
-        load_str = f"$gdxLoadAll {os.path.abspath(self.gdx_path)}"
-        declarations.append(self.model.getDeclaration())
-        solve_string = self.model._generate_solve_string()
-        strings = [*declarations, load_str, *definitions, solve_string]
 
+        # 2. Load the data from gdx
+        load_str = f"$gdxLoadAll {os.path.abspath(self.gdx_path)}"
+
+        # 3. Definitions
+        definitions = self.get_definitions()
+        declarations.append(self.model.getDeclaration())
+
+        # 4. Model attribute options
+        options_strs = []
+        if options is not None:
+            options.export(os.path.join(self.path, f"{self.model.name}.pf"))
+            for key, value in options.model_dump(exclude_none=True).items():
+                if key in MODEL_ATTR_OPTION_MAP:
+                    if isinstance(value, bool):
+                        value = int(value)
+                    elif isinstance(value, str):
+                        value = f"'{value}'"
+
+                    options_strs.append(
+                        f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};"
+                    )
+                elif key in EXECUTION_OPTIONS:
+                    options_strs.append(f"{EXECUTION_OPTIONS[key]} '{value}'")
+
+        # 5. Solve string
+        solve_string = self.model._generate_solve_string()
+        strings = [
+            *declarations,
+            load_str,
+            *definitions,
+            *options_strs,
+            solve_string,
+        ]
+
+        # Write the GAMS code
         gams_string = "\n".join(strings)
-        with open(
-            self.gms_path, "w", encoding="utf-8"
-        ) as file:  # Write the GAMS code
+        with open(self.gms_path, "w", encoding="utf-8") as file:
             file.write(gams_string)
 
         logger.info(
             f'GAMS model has been generated under {os.path.join(self.path, self.model.name + ".gms")}'
         )
-
-    def sort_names(self, name: str) -> int:
-        PRECEDENCE = {
-            syms.Set: 1,
-            syms.Alias: 1,
-            syms.Parameter: 3,
-            syms.Variable: 4,
-            syms.Equation: 5,
-        }
-
-        symbol = self.container[name]
-        precedence = PRECEDENCE[type(symbol)]
-
-        if isinstance(symbol, syms.Set) and any(
-            not isinstance(elem, str) for elem in symbol.domain
-        ):
-            precedence = 2
-
-        return precedence
 
 
 TABLE_HEADER = """\\begin{tabularx}{\\textwidth}{| l | l | X |}

@@ -19,6 +19,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._convert import GamsConverter, LatexConverter
 from gamspy._model_instance import ModelInstance
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
-    from gamspy._options import ModelInstanceOptions, Options
+    from gamspy._options import ModelInstanceOptions
     from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._symbols.symbol import Symbol
 
@@ -418,6 +419,22 @@ class Model:
 
         return solve_string + ";"
 
+    def _add_model_attr_options(self, options: Options) -> None:
+        for key, value in options.model_dump(exclude_none=True).items():
+            if key in MODEL_ATTR_OPTION_MAP:
+                if isinstance(value, bool):
+                    value = int(value)
+                elif isinstance(value, str):
+                    value = f"'{value}'"
+
+                self.container._add_statement(
+                    f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
+                )
+            elif key in EXECUTION_OPTIONS:
+                self.container._add_statement(
+                    f"{EXECUTION_OPTIONS[key]} '{value}';\n"
+                )
+
     def _append_solve_string(self) -> None:
         solve_string = self._generate_solve_string()
         self.container._add_statement(solve_string + "\n")
@@ -657,6 +674,8 @@ class Model:
             solver_options=solver_options,
         )
 
+        self._add_model_attr_options(options)
+
         if self._is_frozen:
             self.instance.solve(solver, model_instance_options, output)
             return None
@@ -737,7 +756,7 @@ class Model:
 
         return model_str
 
-    def toGams(self, path: str) -> None:
+    def toGams(self, path: str, options: Options | None = None) -> None:
         """
         Generates GAMS model under path/<model_name>.gms
 
@@ -746,8 +765,13 @@ class Model:
         path : str
             Path to the directory which will contain the GAMS model.
         """
+        if options is not None and not isinstance(options, gp.Options):
+            raise ValidationError(
+                f"`options` must be of type gp.Options of found {type(options)}"
+            )
+
         converter = GamsConverter(self, path)
-        converter.convert()
+        converter.convert(options=options)
 
     def toLatex(self, path: str, generate_pdf: bool = False) -> None:
         """
