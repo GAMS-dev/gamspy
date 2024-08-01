@@ -8,6 +8,7 @@ GAMSPy 0.14.2
   - Disable solution report by default.
   - Fix the order of equations in toGams utility.
   - Allow options in toGams.
+  - Add loadpoint option to start from a solution.
 
 GAMSPy 0.14.1
 -------------

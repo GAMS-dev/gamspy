@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 import gamspy._symbols as syms
 import gamspy._symbols.implicits as implicits
-from gamspy._options import MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
 logger = logging.getLogger("CONVERTER")
@@ -96,13 +96,17 @@ class GamsConverter(Converter):
         if options is not None:
             options.export(os.path.join(self.path, f"{self.model.name}.pf"))
             for key, value in options.model_dump(exclude_none=True).items():
-                if key not in MODEL_ATTR_OPTION_MAP:
-                    continue
+                if key in MODEL_ATTR_OPTION_MAP:
+                    if isinstance(value, bool):
+                        value = int(value)
+                    elif isinstance(value, str):
+                        value = f"'{value}'"
 
-                value = int(value) if isinstance(value, bool) else value
-                options_strs.append(
-                    f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};"
-                )
+                    options_strs.append(
+                        f"{self.model.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};"
+                    )
+                elif key in EXECUTION_OPTIONS:
+                    options_strs.append(f"{EXECUTION_OPTIONS[key]} '{value}'")
 
         # 5. Solve string
         solve_string = self.model._generate_solve_string()
