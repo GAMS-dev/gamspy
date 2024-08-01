@@ -73,6 +73,7 @@ OPTION_MAP = {
 }
 
 MODEL_ATTR_OPTION_MAP = {"generate_name_dict": "dictfile"}
+EXECUTION_OPTIONS = {"loadpoint": "execute_loadpoint"}
 
 class Options(BaseModel):
     """
@@ -146,6 +147,8 @@ class Options(BaseModel):
         Controls keeping or deletion of process directory and scratch files
     listing_file: str | None
         Listing file name
+    loadpoint: str | None
+        Path to the loadpoint GDX file that contains starting point records.
     log_file: str | None
         Log file name
     variable_listing_limit: int | None
@@ -271,6 +274,7 @@ class Options(BaseModel):
     iteration_limit: Optional[int] = None
     keep_temporary_files: Optional[int] = None
     listing_file: Optional[str] = None
+    loadpoint: Optional[str] = None
     log_file: Optional[str] = None
     variable_listing_limit: Optional[int] = None
     equation_listing_limit: Optional[int] = None

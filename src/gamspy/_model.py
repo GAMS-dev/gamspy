@@ -19,7 +19,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._convert import GamsConverter, LatexConverter
 from gamspy._model_instance import ModelInstance
-from gamspy._options import MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -421,13 +421,19 @@ class Model:
 
     def _add_model_attr_options(self, options: Options) -> None:
         for key, value in options.model_dump(exclude_none=True).items():
-            if key not in MODEL_ATTR_OPTION_MAP:
-                continue
+            if key in MODEL_ATTR_OPTION_MAP:
+                if isinstance(value, bool):
+                    value = int(value)
+                elif isinstance(value, str):
+                    value = f"'{value}'"
 
-            value = int(value) if isinstance(value, bool) else value
-            self.container._add_statement(
-                f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
-            )
+                self.container._add_statement(
+                    f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
+                )
+            elif key in EXECUTION_OPTIONS:
+                self.container._add_statement(
+                    f"{EXECUTION_OPTIONS[key]} '{value}';\n"
+                )
 
     def _append_solve_string(self) -> None:
         solve_string = self._generate_solve_string()
