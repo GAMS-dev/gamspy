@@ -9,6 +9,7 @@ GAMSPy 0.14.2
   - Fix the order of equations in toGams utility.
   - Allow options in toGams.
   - Add loadpoint option to start from a solution.
+  - Upgrade gamspy_base and gamsapi to 47.4.0.
 
 GAMSPy 0.14.1
 -------------
