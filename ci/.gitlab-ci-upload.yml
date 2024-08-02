@@ -1,8 +1,8 @@
 upload-wheel:
   stage: upload
-  when: on_success
-  tags: [linux]
-  image: python:3.8
+  needs: []
+  tags: [puma]
+  image: python:3.12
   script:
     - pip install virtualenv
     - virtualenv venv

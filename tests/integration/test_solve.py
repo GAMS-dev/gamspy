@@ -1158,6 +1158,16 @@ class SolveSuite(unittest.TestCase):
         m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
         x = Variable(m, "x", type="positive")
         e = Equation(m, "e", definition=x <= x + 1)
+        with self.assertRaises(ValidationError):
+            t = Model(
+                m,
+                name="t",
+                equations=[e],
+                problem="LP",
+                sense=Sense.MIN,
+                objective=x,
+            )
+        x.type = "free"
         t = Model(
             m,
             name="t",
@@ -1166,6 +1176,8 @@ class SolveSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=x,
         )
+
+        x.type = "positive"
         x.lo[...] = 0
         try:
             # This must fail because `Objective variable is not a free variable`

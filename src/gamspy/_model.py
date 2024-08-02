@@ -249,6 +249,14 @@ class Model:
         )
         self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
+        if (
+            self._objective_variable is not None
+            and self._objective_variable.type.lower() != "free"
+        ):
+            raise ValidationError(
+                f"Objective variable `{self._objective_variable}` must be a free variable"
+            )
+
         self._limited_variables = limited_variables
 
         if not self.equations and not self._matches:
