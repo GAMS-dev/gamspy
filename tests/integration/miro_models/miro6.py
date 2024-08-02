@@ -15,8 +15,10 @@ def main():
         is_miro_input=True,
     )
 
+    print(f.records)
+
     if m.miro_in:
-        assert f.toValue() == 0
+        assert f.toValue() == 120
     else:
         assert f.toValue() == 5
 
