@@ -1,6 +1,14 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.3
+-------------
+- General
+  - Add container.miro_in flag to expose the environment.
+- Testing
+  - Add test for container.miro_in flag.
+
+
 GAMSPy 0.14.2
 -------------
 - General

@@ -1,0 +1,20 @@
+{
+    "modelTitle": "GAMSPy App",
+    "inputSymbols": {
+        "i6": {
+            "alias": "i6",
+            "symtype": "set",
+            "headers": {
+                "i5": {
+                    "type": "string",
+                    "alias": "i5"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        }
+    },
+    "outputSymbols": {}
+}
