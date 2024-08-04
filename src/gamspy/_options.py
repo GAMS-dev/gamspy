@@ -151,9 +151,9 @@ class Options(BaseModel):
         Path to the loadpoint GDX file that contains starting point records.
     log_file: str | None
         Log file name
-    variable_listing_limit: int | None
+    variable_listing_limit: int
         Maximum number of columns listed in one variable block
-    equation_listing_limit: int | None
+    equation_listing_limit: int
         Maximum number of rows listed in one equation block
     node_limit: int | None
         Node limit in branch and bound tree
@@ -276,8 +276,8 @@ class Options(BaseModel):
     listing_file: Optional[str] = None
     loadpoint: Optional[str] = None
     log_file: Optional[str] = None
-    variable_listing_limit: Optional[int] = None
-    equation_listing_limit: Optional[int] = None
+    variable_listing_limit: int = 0
+    equation_listing_limit: int = 0
     node_limit: Optional[int] = None
     absolute_optimality_gap: Optional[float] = None
     relative_optimality_gap: Optional[float] = None
@@ -290,7 +290,7 @@ class Options(BaseModel):
     time_limit: Optional[float] = None
     savepoint: Optional[Literal[0, 1, 2, 3, 4]] = None
     seed: Optional[int] = None
-    report_solution: Optional[Literal[0, 1, 2]] = 0
+    report_solution: Literal[0, 1, 2] = 0
     show_os_memory: Optional[Literal[0, 1, 2]] = None
     solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None

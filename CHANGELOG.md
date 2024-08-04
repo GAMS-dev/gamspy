@@ -1,6 +1,15 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.3
+-------------
+- General
+  - Add getEquationListing function to be able to inspect generated equations.
+- Testing
+  - Add tests for getEquationListing function.
+- Documentation
+  - Add docs for getEquationListing.
+
 GAMSPy 0.14.2
 -------------
 - General
