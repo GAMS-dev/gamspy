@@ -122,6 +122,9 @@ class Local(backend.Backend):
         miro.load_miro_symbol_records(self.container)
 
         if self.model is not None:
+            if self.options.equation_listing_limit:
+                utils._parse_generated_equations(self.model, self.job_name)
+
             return self.prepare_summary(self.trace_file)
 
         return None

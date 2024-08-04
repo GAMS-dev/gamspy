@@ -533,6 +533,24 @@ class Model:
 
         return infeas_dict
 
+    def getEquationListing(self, n: int | None = None) -> list[str]:
+        """
+        Returns the generated equations.
+
+        Parameters
+        ----------
+        n : int | None, optional
+
+        Returns
+        -------
+        list[str]
+        """
+        listings = []
+        for equation in self.equations:
+            listings += equation.getEquationListing()
+
+        return listings[:n]
+
     @property
     def infeasibility_tolerance(self) -> float | None:
         """

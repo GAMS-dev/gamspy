@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         Domain,
         Equation,
         Expression,
+        Model,
         Set,
         Variable,
     )
@@ -502,3 +503,42 @@ def _unpack(domain: list[Set | Alias | ImplicitSet]):
             unpacked.append(elem)
 
     return unpacked
+
+
+def _parse_generated_equations(model: Model, job_name: str) -> None:
+    with open(job_name + ".lst") as file:
+        lines = file.readlines()
+        lines = [line.strip() for line in lines]
+        lines = [line for line in lines if line != "\n" and line != ""]
+
+    equation_listing_start_idx = 0
+    for idx, line in enumerate(lines):
+        if line.startswith("Equation Listing"):
+            equation_listing_start_idx = idx
+            break
+
+    lines = lines[equation_listing_start_idx + 1 :]
+
+    equation_listing_end_idx = 0
+    for idx, line in enumerate(lines):
+        if line.startswith(
+            "G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m"
+        ):
+            equation_listing_end_idx = idx
+            break
+
+    lines = lines[: equation_listing_end_idx - 1]
+
+    idx = 0
+    for equation in model.equations:
+        while not lines[idx].startswith(f"---- {equation.name}"):
+            idx += 1
+
+        idx += 1
+        equation_listing = []
+
+        while idx < len(lines) and lines[idx].startswith(equation.name):
+            equation_listing.append(lines[idx])
+            idx += 1
+
+        equation._equation_listing = equation_listing
