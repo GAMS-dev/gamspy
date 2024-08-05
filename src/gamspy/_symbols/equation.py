@@ -4,7 +4,7 @@ import builtins
 import itertools
 import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Sequence
 
 import gams.transfer as gt
 import pandas as pd
@@ -751,6 +751,61 @@ class Equation(gt.Equation, Symbol):
 
         """
         return utils._calculate_infeasibilities(self)
+
+    def getEquationListing(
+        self,
+        n: int | None = None,
+        elements: Sequence[Sequence[str]] | None = None,
+    ) -> list[str]:
+        """
+        Returns the generated equations.
+
+        Parameters
+        ----------
+        n : int | None, optional
+            Number of equations to be returned.
+        elements : Sequence[Sequence[str]] | None, optional
+            Elements to be gathered.
+
+        Returns
+        -------
+        list[str]
+
+        Raises
+        ------
+        ValidationError
+            In case the model is not solved yet with equation_listing_limit option.
+        ValidationError
+            In case the length of the elements is different than the dimension of the equation.
+        """
+        if not hasattr(self, "_equation_listing"):
+            raise ValidationError(
+                "The model must be solved with `equation_listing_limit` option for this functionality to work."
+            )
+
+        listings = self._equation_listing if elements is None else []
+
+        if elements is not None:
+            for listing in self._equation_listing:
+                lhs, _ = listing.split("..")
+                # symbol(elem1, elem2)
+                _, domain = lhs[:-1].split("(")
+                sets = domain.split(",")  # ["elem1", "elem2"]
+
+                if len(elements) != len(sets):
+                    raise ValidationError(
+                        f"Filter size {len(elements)} must be equal to the domain size {len(sets)}"
+                    )
+
+                matches = 0
+                for filter, set in zip(elements, sets):
+                    if set in filter or filter == []:
+                        matches += 1
+
+                if matches == len(sets):
+                    listings.append(listing)
+
+        return listings[:n]
 
     @property
     def records(self):

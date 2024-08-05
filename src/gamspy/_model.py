@@ -4,7 +4,6 @@ import io
 import logging
 import os
 import uuid
-from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -532,6 +531,24 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
         return infeas_dict
+
+    def getEquationListing(self, n: int | None = None) -> list[str]:
+        """
+        Returns the generated equations.
+
+        Parameters
+        ----------
+        n : int | None, optional
+
+        Returns
+        -------
+        list[str]
+        """
+        listings = []
+        for equation in self.equations:
+            listings += equation.getEquationListing()
+
+        return listings[:n]
 
     @property
     def infeasibility_tolerance(self) -> float | None:

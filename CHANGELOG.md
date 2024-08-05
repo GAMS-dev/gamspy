@@ -5,9 +5,12 @@ GAMSPy 0.14.3
 -------------
 - General
   - Add container.miro_in flag to expose the environment.
+  - Add getEquationListing function to be able to inspect generated equations.
 - Testing
   - Add test for container.miro_in flag.
-
+  - Add tests for getEquationListing function.
+- Documentation
+  - Add docs for getEquationListing.
 
 GAMSPy 0.14.2
 -------------
