@@ -731,7 +731,7 @@ class Equation(gt.Equation, Symbol):
         """
         return self._infeas
 
-    def compute_infeasibilities(self) -> pd.DataFrame:
+    def computeInfeasibilities(self) -> pd.DataFrame:
         """
         Computes infeasabilities of the equation
 
@@ -746,24 +746,29 @@ class Equation(gt.Equation, Symbol):
         >>> e = gp.Equation(m, "e")
         >>> e.l[...] = -10
         >>> e.lo[...] = 5
-        >>> e.compute_infeasibilities().values.tolist()
+        >>> e.computeInfeasibilities().values.tolist()
         [[-10.0, 0.0, 5.0, 0.0, 1.0, 10.0]]
 
         """
         return utils._calculate_infeasibilities(self)
 
     def getEquationListing(
-        self, n: int | None = None, elements: list[list[str]] | None = None
+        self,
+        n: int | None = None,
+        filters: list[list[str]] | None = None,
+        infeasibility_threshold: float | None = None,
     ) -> list[str]:
         """
         Returns the generated equations.
 
         Parameters
         ----------
-        n : int | None, optional
+        n : int, optional
             Number of equations to be returned.
-        elements : list[list[str]] | None, optional
-            Elements to be gathered.
+        filters : list[list[str]], optional
+            Filters to be used.
+        infeasibility_threshold: float, optional
+            Filters out equations with infeasibilities that are above this value.
 
         Returns
         -------
@@ -774,36 +779,48 @@ class Equation(gt.Equation, Symbol):
         ValidationError
             In case the model is not solved yet with equation_listing_limit option.
         ValidationError
-            In case the length of the elements is different than the dimension of the equation.
+            In case the length of the filters is different than the dimension of the equation.
         """
         if not hasattr(self, "_equation_listing"):
             raise ValidationError(
                 "The model must be solved with `equation_listing_limit` option for this functionality to work."
             )
 
-        listings = self._equation_listing if elements is None else []
+        listings = self._equation_listing if filters is None else []
 
-        if elements is not None:
+        if filters is not None:
             for listing in self._equation_listing:
                 lhs, _ = listing.split("..")
                 # symbol(elem1, elem2)
                 _, domain = lhs[:-1].split("(")
                 sets = domain.split(",")  # ["elem1", "elem2"]
 
-                if len(elements) != len(sets):
+                if len(filters) != len(sets):
                     raise ValidationError(
-                        f"Filter size {len(elements)} must be equal to the domain size {len(sets)}"
+                        f"Filter size {len(filters)} must be equal to the domain size {len(sets)}"
                     )
 
                 matches = 0
-                for filter, set in zip(elements, sets):
-                    if set in filter or filter == []:
+                for user_filter, set in zip(filters, sets):
+                    if set in user_filter or user_filter == []:
                         matches += 1
 
+                # infeasibility = float(listing.split("INFES = ")[-1][:-6])
                 if matches == len(sets):
                     listings.append(listing)
 
-        return listings[:n]
+        def infeasibility_filter(listing):
+            infeasibility = listing.split("INFES = ")
+
+            if infeasibility_threshold is None:
+                return True
+
+            return (
+                len(infeasibility) == 2
+                and float(infeasibility[-1][:-6]) < infeasibility_threshold
+            )
+
+        return list(filter(infeasibility_filter, listings))[:n]
 
     @property
     def records(self):

@@ -590,7 +590,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def stage(self, value: int | float | Expression):
         self._stage[...] = value
 
-    def compute_infeasibilities(self) -> pd.DataFrame:
+    def computeInfeasibilities(self) -> pd.DataFrame:
         """
         Computes infeasabilities of the variable
 
@@ -606,11 +606,67 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> x = gp.Variable(m, name="x")
         >>> x.l[...] = -10
         >>> x.lo[...] = 5
-        >>> x.compute_infeasibilities().values.tolist()
+        >>> x.computeInfeasibilities().values.tolist()
         [[-10.0, 0.0, 5.0, inf, 1.0, 15.0]]
 
         """
         return utils._calculate_infeasibilities(self)
+
+    def getVariableListing(
+        self,
+        n: int | None = None,
+        filters: list[list[str]] | None = None,
+    ) -> list[str]:
+        """
+        Returns the generated equations.
+
+        Parameters
+        ----------
+        n : int, optional
+            Number of equations to be returned.
+        filters : list[list[str]], optional
+            Filters to be used.
+
+        Returns
+        -------
+        list[str]
+
+        Raises
+        ------
+        ValidationError
+            In case the model is not solved yet with equation_listing_limit option.
+        ValidationError
+            In case the length of the filters is different than the dimension of the equation.
+        """
+        if not hasattr(self, "_column_listing"):
+            raise ValidationError(
+                "The model must be solved with `variable_listing_limit` option for this functionality to work."
+            )
+
+        listings = self._column_listing if filters is None else []
+
+        if filters is not None:
+            for listing in self._column_listing:
+                lhs, *_ = listing.split("\n")
+                # symbol(elem1, elem2)
+                _, domain = lhs[:-1].split("(")
+                sets = domain.split(",")  # ["elem1", "elem2"]
+
+                if len(filters) != len(sets):
+                    raise ValidationError(
+                        f"Filter size {len(filters)} must be equal to the domain size {len(sets)}"
+                    )
+
+                matches = 0
+                for user_filter, set in zip(filters, sets):
+                    if set in user_filter or user_filter == []:
+                        matches += 1
+
+                # infeasibility = float(listing.split("INFES = ")[-1][:-6])
+                if matches == len(sets):
+                    listings.append(listing)
+
+        return listings[:n]
 
     @property
     def records(self):
