@@ -390,7 +390,7 @@ class Options(BaseModel):
         self._extra_options = options
 
     @staticmethod
-    def from_file(path: str) -> Options:
+    def fromFile(path: str) -> Options:
         """
         Generates an Options object with the key-value pairs in a file.
         The file in given path must consist of one key-value pair in each line.

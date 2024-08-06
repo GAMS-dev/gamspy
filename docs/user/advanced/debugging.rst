@@ -260,16 +260,22 @@ The code snippet above prints the GAMS statement for the symbol ``i``::
 
     'eq .. sum(i,a(i)) =l= z;'
 
+Inspecting the Generated Equations and Variables
+------------------------------------------------
+The user may determine whether the model generated is the the model that the user has intended by studying the
+equation listing and variable listing. For more information about how this can be done, see 
+:ref:`inspecting_generated_equations` and :ref:`inspecting_generated_variables`.
+
 Inspecting Misbehaving (Infeasible) Models
 ------------------------------------------
 
 Infeasibility is always a possible outcome when solving models. Infeasibilities in a model can be calculated by using
-:meth:`gamspy.Model.compute_infeasibilities()`. This would list the infeasibilities in all equations of the model.
+:meth:`gamspy.Model.computeInfeasibilities`. This would list the infeasibilities in all equations of the model.
 Infeasibilities in a single equation as well as infeasibilities in a single variable can be computed with
-:meth:`gamspy.Equation.compute_infeasibilities()`, :meth:`gamspy.Variable.compute_infeasibilities()` respectively.
+:meth:`gamspy.Equation.computeInfeasibilities`, :meth:`gamspy.Variable.computeInfeasibilities` respectively.
 The infeasibilities are computed by finding the distance of level to the nearest bound (i.e. lower bound or upper bound).
-While the compute_infeasibilities function of a model returns a dictionary where keys are the names of the equations and
-values are the infeasibilities as Pandas DataFrames, compute_infeasibilities function of a variable or an equation, returns
+While the computeInfeasibilities function of a model returns a dictionary where keys are the names of the equations and
+values are the infeasibilities as Pandas DataFrames, computeInfeasibilities function of a variable or an equation, returns
 a Pandas dataframe with infeasibilities.
 
 .. code-block:: python
@@ -284,7 +290,7 @@ a Pandas dataframe with infeasibilities.
     ....
     ....
     model.solve()
-    print(model.compute_infeasibilities())
+    print(model.computeInfeasibilities())
 
 
 

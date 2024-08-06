@@ -6,11 +6,16 @@ GAMSPy 0.14.3
 - General
   - Add container.in_miro flag to expose the environment.
   - Add getEquationListing function to be able to inspect generated equations.
+  - Add infeasibility threshold filter for equation listings.
+  - Add getVariableListing function to be able to inspect generated variables.
 - Testing
   - Add test for container.in_miro flag.
   - Add tests for getEquationListing function.
+  - Add tests for getVariableListing function.
+  - Test infeasibility threshold.
 - Documentation
   - Add docs for getEquationListing.
+  - Add docs for getVariableListing.
 
 GAMSPy 0.14.2
 -------------

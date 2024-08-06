@@ -53,7 +53,7 @@ class Operation(operable.Operable):
         # allow conditions
         self.where = condition.Condition(self)
 
-        self._bare_op_domain = utils.get_set(self.op_domain)
+        self._bare_op_domain = utils._get_set(self.op_domain)
         self.container = self.raw_domain[0].container
         self.domain: list[Set | Alias] = []
 

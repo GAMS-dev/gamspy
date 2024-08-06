@@ -56,3 +56,5 @@ so that it does not have to be specified for each run. ::
     gamspy run miro --model <path_to_your_model>
 
 This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. 
+
+

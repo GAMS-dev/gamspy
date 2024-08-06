@@ -846,7 +846,7 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(len(maxw.getEquationListing()), 5)
 
         self.assertEqual(
-            len(maxw.getEquationListing(elements=[["f-bomber"]])), 1
+            len(maxw.getEquationListing(filters=[["f-bomber"]])), 1
         )
 
         self.assertEqual(len(maxw.getEquationListing(n=2)), 2)
@@ -1229,11 +1229,11 @@ class EquationSuite(unittest.TestCase):
 
         mexss.solve(options=Options(equation_listing_limit=100))
         self.assertEqual(
-            len(mr.getEquationListing(elements=[["steel"], ["monterrey"]])), 1
+            len(mr.getEquationListing(filters=[["steel"], ["monterrey"]])), 1
         )
 
         self.assertEqual(
-            len(mr.getEquationListing(elements=[["steel"], []])), 3
+            len(mr.getEquationListing(filters=[["steel"], []])), 3
         )
 
 

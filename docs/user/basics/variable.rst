@@ -679,3 +679,79 @@ generation. Note further, that any model with semi-integer variables requires a 
         forceLBnd = i >= scLow*b
         forceZero = i <= i.up*b
 
+.. _inspecting_generated_variables:
+Inspecting Generated Variables
+------------------------------
+
+The generated variables can be inspected by using :meth:`getVariableListing() <gamspy.Variable.getVariableListing>`
+function after solving the model. The variable listing can be filtered with ``filters`` argument, and the number of 
+variables returned can be limited with ``n`` argument.
+
+For example, in `Mexico Steel sector model <https://github.com/GAMS-dev/gamspy/blob/develop/tests/integration/models/mexss.py>`_ 
+exports variable ``e`` is defined over commodities ``c`` which contain 1 element and steel plants ``i`` which contain 
+5 elements. If one prints the variable listing directly, ``getVariableListing`` would return all five generated variables. ::
+
+  import gamspy as gp
+  m = gp.Container()
+  ...
+  ...
+  model_definition_goes_here
+  ...
+  ...
+  model.solve(options=Options(variable_listing_limit=100))
+  print(e.getVariableListing())
+
+Generated variables: ::
+
+    e(steel,ahmsa)
+                    (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+           -1       mbf(steel,ahmsa)
+            1       me(steel)
+           -8.6876  alam
+         -140       aeps,
+    e(steel,fundidora)
+                    (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+           -1       mbf(steel,fundidora)
+            1       me(steel)
+           -6.8564  alam
+         -140       aeps,
+    e(steel,sicartsa)
+                    (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+           -1       mbf(steel,sicartsa)
+            1       me(steel)
+         -140       aeps,
+    e(steel,hylsa)
+                    (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+           -1       mbf(steel,hylsa)
+            1       me(steel)
+           -6.8564  alam
+         -140       aeps,
+    e(steel,hylsap)
+                    (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+           -1       mbf(steel,hylsap)
+            1       me(steel)
+           -5.126   alam
+         -140       aeps
+
+One can alternatively filter certain variables by using the ``filters`` argument. For example, if one only wants to see 
+the variables for hylsa and ahmsa plants, they can provide the elements as follows: ::
+
+  import gamspy as gp
+  m = gp.Container()
+  ...
+  ...
+  model_definition_goes_here
+  ...
+  ...
+  model.solve(options=Options(variable_listing_limit=100))
+  print(mr.getVariableListing(filters=[[], ['hylsa', 'ahmsa']]))
+
+``filters`` argument is a list of lists where each list specifies the elements to be gathered. 
+If an empty list is given as in the example above, it means all elements. 
+
+Number of variables returned can be filtered with ``n`` argument. For example, if ``n`` is set to 1,
+the function return only the first variable.
+
+.. note::
+
+  Length of the ``filters`` argument must be equal to the dimension of the variable.
