@@ -221,7 +221,7 @@ class Container(gt.Container):
         options: Options | None = None,
         miro_protect: bool = True,
     ):
-        self.miro_in = MIRO_GDX_IN is not None
+        self.in_miro = MIRO_GDX_IN is not None
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)

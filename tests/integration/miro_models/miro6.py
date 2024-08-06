@@ -11,13 +11,13 @@ def main():
         m,
         name="f",
         description="supply of commodity at plant i (in cases)",
-        records=5 if not m.miro_in else None,
+        records=5 if not m.in_miro else None,
         is_miro_input=True,
     )
 
     print(f.records)
 
-    if m.miro_in:
+    if m.in_miro:
         assert f.toValue() == 120
     else:
         assert f.toValue() == 5

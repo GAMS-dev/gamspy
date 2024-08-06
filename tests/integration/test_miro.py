@@ -792,7 +792,7 @@ class MiroSuite(unittest.TestCase):
         subprocess_env = os.environ.copy()
         subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
 
-        # m.miro_in = True
+        # m.in_miro = True
         try:
             subprocess.run(
                 [
@@ -808,7 +808,7 @@ class MiroSuite(unittest.TestCase):
 
         subprocess_env = os.environ.copy()
 
-        # m.miro_in = False
+        # m.in_miro = False
         try:
             subprocess.run(
                 [
