@@ -217,11 +217,11 @@ class OptionsSuite(unittest.TestCase):
         with open(option_file, "w") as file:
             file.write("lp = conopt\n\n")
 
-        options = Options.from_file(option_file)
+        options = Options.fromFile(option_file)
         self.assertEqual(options.lp, "conopt")
 
         with self.assertRaises(exceptions.ValidationError):
-            _ = Options.from_file("unknown_path")
+            _ = Options.fromFile("unknown_path")
 
     def test_profile(self):
         # Set

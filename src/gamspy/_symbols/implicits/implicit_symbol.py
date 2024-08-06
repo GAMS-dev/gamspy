@@ -42,7 +42,7 @@ class ImplicitSymbol(ABC):
             self._scalar_domains = []
             return
 
-        bare_domain = utils.get_set(self.domain)
+        bare_domain = utils._get_set(self.domain)
         domain = []
         scalars = []
         permutation_indices_to_del = []

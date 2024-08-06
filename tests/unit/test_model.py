@@ -381,7 +381,7 @@ class ModelSuite(unittest.TestCase):
         )
         test_model2.solve()
 
-    def test_compute_infeasibilities(self):
+    def test_computeInfeasibilities(self):
         m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
@@ -464,7 +464,7 @@ class ModelSuite(unittest.TestCase):
         b[j] = 1.5 * b[j]
         transport.solve()
 
-        infeasibilities = transport.compute_infeasibilities()
+        infeasibilities = transport.computeInfeasibilities()
         columns = [
             "i",
             "level",
@@ -485,7 +485,7 @@ class ModelSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            x.compute_infeasibilities().values.tolist(),
+            x.computeInfeasibilities().values.tolist(),
             [
                 [
                     "seattle",
@@ -501,7 +501,7 @@ class ModelSuite(unittest.TestCase):
         )
 
         self.assertEqual(
-            supply.compute_infeasibilities().values.tolist(),
+            supply.computeInfeasibilities().values.tolist(),
             [["san-diego", 1000.0, 0.0, float("-inf"), 600.0, 1.0, 400.0]],
         )
 
@@ -898,6 +898,9 @@ class ModelSuite(unittest.TestCase):
 
         mexss.solve(options=Options(equation_listing_limit=100))
         self.assertEqual(len(mexss.getEquationListing()), 74)
+        self.assertEqual(
+            len(mexss.getEquationListing(infeasibility_threshold=2.5)), 2
+        )
 
 
 def model_suite():

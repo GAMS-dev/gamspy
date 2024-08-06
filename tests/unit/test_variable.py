@@ -5,7 +5,18 @@ import unittest
 
 import gamspy._symbols.implicits as implicits
 import pandas as pd
-from gamspy import Container, Equation, Set, Variable, VariableType
+from gamspy import (
+    Container,
+    Equation,
+    Model,
+    Options,
+    Parameter,
+    Sense,
+    Set,
+    Sum,
+    Variable,
+    VariableType,
+)
 from gamspy.exceptions import ValidationError
 
 
@@ -14,6 +25,16 @@ class VariableSuite(unittest.TestCase):
         self.m = Container(
             system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         )
+        self.distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+        self.capacities = [["seattle", 350], ["san-diego", 600]]
+        self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_variable_creation(self):
         # no name is fine now
@@ -388,6 +409,129 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(v.records.level.tolist(), [5.0, 5.0])
         v.synchronize = True
         self.assertEqual(v.records.level.tolist(), [25.0, 25.0])
+
+    def test_variable_listing(self):
+        m = Container()
+
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+        with self.assertRaises(ValidationError):
+            _ = x.getVariableListing()
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport.solve(
+            options=Options(
+                equation_listing_limit=100, variable_listing_limit=100
+            )
+        )
+        self.assertEqual(len(transport.getVariableListing()), 7)
+        self.assertEqual(len(transport.getVariableListing(n=3)), 3)
+        self.assertEqual(
+            transport.getVariableListing(),
+            [
+                "x(seattle,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(new-york)\n        0.225   transport_objective\n",
+                "x(seattle,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(chicago)\n        0.153   transport_objective\n",
+                "x(seattle,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(topeka)\n        0.162   transport_objective\n",
+                "x(san-diego,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(new-york)\n        0.225   transport_objective\n",
+                "x(san-diego,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(chicago)\n        0.162   transport_objective\n",
+                "x(san-diego,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(topeka)\n        0.126   transport_objective\n",
+                "transport_objective_variable\n                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)\n       -1       transport_objective\n",
+            ],
+        )
+        self.assertEqual(
+            len(x.getVariableListing(filters=[["seattle"], []])), 3
+        )
+        self.assertEqual(
+            len(x.getVariableListing(filters=[["seattle"], ["topeka"]])), 1
+        )
+        self.assertEqual(
+            len(x.getVariableListing(filters=[["seattle"], []], n=2)), 2
+        )
+
+        transport2 = Model(
+            m,
+            name="transport2",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport2.solve()
+        with self.assertRaises(ValidationError):
+            _ = transport2.getVariableListing()
 
 
 def variable_suite():

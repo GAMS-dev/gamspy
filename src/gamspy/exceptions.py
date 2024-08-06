@@ -50,7 +50,7 @@ class ValidationError(Exception):
 
 
 CHUNK_SIZE = 8
-FRAME = "=" * 14
+FRAME = "=" * 13
 
 
 def _parse_errors(lines: list[str], index: int) -> str:
@@ -61,17 +61,17 @@ def _parse_errors(lines: list[str], index: int) -> str:
         chunk = lines[temp_index : temp_index + CHUNK_SIZE]
 
         while any("****" in err_line for err_line in chunk):
-            chunk = lines[temp_index : temp_index + CHUNK_SIZE]
             error_lines += chunk
             temp_index += CHUNK_SIZE
+            chunk = lines[temp_index : temp_index + CHUNK_SIZE]
     except IndexError:
         ...
 
     error_message = (
-        f'\n\n{FRAME}\nError Summary\n{FRAME}\n{"".join(error_lines)}'
+        f'\n\n{FRAME}\nError Summary\n{FRAME}{"".join(error_lines)}'
     )
 
-    return error_message
+    return error_message.rstrip()
 
 
 def customize_exception(

@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     from gamspy import (
         Alias,
+        Container,
         Domain,
         Equation,
         Expression,
@@ -243,6 +244,18 @@ def _get_symbol_names_from_gdx(
     _close_gdx_handle(gdx_handle)
 
     return symbol_names
+
+
+def _get_variables_of_model(container: Container):
+    names = _get_symbol_names_from_gdx(
+        container.system_directory, container._gdx_out
+    )
+
+    return [
+        container[name]
+        for name in names
+        if isinstance(container[name], gt.Variable)
+    ]
 
 
 def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
@@ -469,7 +482,7 @@ def set_base_eq(set_a, set_b):
 
 
 # TODO either add description or make private
-def get_set(domain: list[Set | Alias | Domain | Expression]):
+def _get_set(domain: list[Set | Alias | Domain | Expression]):
     res = []
     for el in domain:
         if hasattr(el, "left"):
@@ -542,3 +555,55 @@ def _parse_generated_equations(model: Model, job_name: str) -> None:
             idx += 1
 
         equation._equation_listing = equation_listing
+
+
+def _parse_generated_variables(model: Model, job_name: str) -> None:
+    variables = _get_variables_of_model(model.container)
+    model._variables = variables
+
+    with open(job_name + ".lst") as file:
+        lines = file.readlines()
+
+    variable_listing_start_idx = 0
+    for idx, line in enumerate(lines):
+        if line.startswith("Column Listing"):
+            variable_listing_start_idx = idx
+            break
+
+    variable_listing_start_idx += 3
+
+    lines = lines[variable_listing_start_idx:]
+
+    variable_listing_end_idx = 0
+    for idx, line in enumerate(lines):
+        if line.startswith(
+            "G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m"
+        ):
+            variable_listing_end_idx = idx
+            break
+
+    lines = lines[: variable_listing_end_idx - 1]
+
+    for variable in variables:
+        listings: list[str] = []
+        idx = 0
+        while not lines[idx].startswith(f"---- {variable.name}"):
+            idx += 1
+
+        idx += 2
+        start_index = idx
+        while idx < len(lines):
+            line = lines[idx]
+            if line.startswith("----"):
+                listings = listings[:-1]
+                break
+
+            if line == "\n":
+                listings.append("".join(lines[start_index:idx]))
+                start_index = idx + 1
+
+            idx += 1
+
+        variable._column_listing = listings
+
+    return None

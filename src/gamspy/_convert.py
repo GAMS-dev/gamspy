@@ -195,9 +195,6 @@ class LatexConverter(Converter):
         self.latex_str = latex_str
 
     def to_pdf(self):
-        assert self.path is not None
-        assert self.latex_str
-
         process = subprocess.run(["pdflatex", "-v"])
         if process.returncode:
             raise ValidationError(
