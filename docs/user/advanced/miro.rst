@@ -57,4 +57,24 @@ so that it does not have to be specified for each run. ::
 
 This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. 
 
+When one runs a GAMSPy job from GAMS MIRO, they may not want to perform certain expensive operations such as 
+loading MIRO input data from an Excel workbook since that data is already in the generated gdx file for default values.
+In that case, one can conditionally load the data by using ``in_miro`` attribute of Container. For example: ::
+    
+    import pandas as pd
+    from gamspy import Container, Parameter
+    
+    m = Container()
 
+    f = Parameter(
+        m,
+        name="f",
+        description="supply of commodity at plant i (in cases)",
+        records=pd.read_excel(my_large_xlsx) if not m.in_miro else None,
+        is_miro_input=True,
+    )
+
+    print(f.records) 
+
+The script above would only load the excel file if the GAMSPy script is not run with GAMS MIRO. For large data files 
+this option would help for performance.
