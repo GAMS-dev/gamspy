@@ -19,16 +19,6 @@ class Symbol:
             "A symbol cannot be used as a truth value. Use len(<symbol>.records) instead."
         )
 
-    def gamsRepr(self: SymbolType) -> str:
-        """
-        Representation of the symbol in GAMS language.
-
-        Returns
-        -------
-        str
-        """
-        return self.name
-
     def latexRepr(self: SymbolType):
         """
         Representation of symbol in Latex.

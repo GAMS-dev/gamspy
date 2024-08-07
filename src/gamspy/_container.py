@@ -173,9 +173,12 @@ def check_response(response: bytes, job_name: str) -> None:
         ) from e
 
     if return_code in GAMS_STATUS:
+        try:
+            info = GAMS_STATUS[return_code]
+        except IndexError:
+            info = ""
         raise GamspyException(
-            f"The model was not solved successfully! {GAMS_STATUS[return_code]}"
-            f' Check {job_name + ".lst"} for more information.',
+            f'{info} Check {job_name + ".lst"} for more information.',
             return_code,
         )
 

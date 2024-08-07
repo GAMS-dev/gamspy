@@ -217,11 +217,11 @@ class OptionsSuite(unittest.TestCase):
         with open(option_file, "w") as file:
             file.write("lp = conopt\n\n")
 
-        options = Options.from_file(option_file)
+        options = Options.fromFile(option_file)
         self.assertEqual(options.lp, "conopt")
 
         with self.assertRaises(exceptions.ValidationError):
-            _ = Options.from_file("unknown_path")
+            _ = Options.fromFile("unknown_path")
 
     def test_profile(self):
         # Set
@@ -313,6 +313,98 @@ class OptionsSuite(unittest.TestCase):
             ),
         )
         self.assertTrue(os.path.exists(profile_path))
+
+        # solprint should be 0 by default
+        with open(self.m.gamsJobName() + ".lst") as file:
+            self.assertTrue("---- EQU supply" not in file.read())
+
+    def test_solprint(self):
+        m = Container(options=Options(report_solution=1))
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=self.canning_plants,
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=self.markets,
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport.solve()
+
+        # solprint is 1
+        with open(m.gamsJobName() + ".lst") as file:
+            self.assertTrue("---- EQU supply" in file.read())
 
 
 def options_suite():

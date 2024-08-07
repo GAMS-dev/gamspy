@@ -249,6 +249,14 @@ class Model:
         )
         self.equations = list(equations)
         self._objective_variable = self._set_objective_variable(objective)
+        if (
+            self._objective_variable is not None
+            and self._objective_variable.type.lower() != "free"
+        ):
+            raise ValidationError(
+                f"Objective variable `{self._objective_variable}` must be a free variable"
+            )
+
         self._limited_variables = limited_variables
 
         if not self.equations and not self._matches:
@@ -484,7 +492,7 @@ class Model:
         utils._close_gdx_handle(gdx_handle)
         self.container._temp_container.data = {}
 
-    def compute_infeasibilities(self) -> dict[str, pd.DataFrame]:
+    def computeInfeasibilities(self) -> dict[str, pd.DataFrame]:
         """
         Computes infeasabilities for all equations of the model
 
@@ -509,7 +517,7 @@ class Model:
         >>> d[j] = gp.Sum(i, x[i, j]) >= b[j]
         >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="min", objective=gp.Sum((i, j), x[i, j]))
         >>> summary = my_model.solve()
-        >>> infeasibilities = my_model.compute_infeasibilities()
+        >>> infeasibilities = my_model.computeInfeasibilities()
         >>> infeasibilities["s"].infeasibility.item()
         320.0
 
@@ -524,6 +532,57 @@ class Model:
             infeas_dict[equation.name] = infeas_rows
 
         return infeas_dict
+
+    def getEquationListing(
+        self,
+        n: int | None = None,
+        infeasibility_threshold: float | None = None,
+    ) -> list[str]:
+        """
+        Returns the generated equations.
+
+        Parameters
+        ----------
+        n : int | None, optional
+            Number of equations to be returned.
+        infeasibility_threshold: float, optional
+            Filters out equations with infeasibilities that are above this value.
+
+        Returns
+        -------
+        list[str]
+        """
+        listings = []
+        for equation in self.equations:
+            listings += equation.getEquationListing(
+                infeasibility_threshold=infeasibility_threshold
+            )
+
+        return listings[:n]
+
+    def getVariableListing(self, n: int | None = None) -> list[str]:
+        """
+        Returns the variable listing.
+
+        Parameters
+        ----------
+        n : int | None, optional
+            Number of equations to be returned.
+
+        Returns
+        -------
+        list[str]
+        """
+        if not hasattr(self, "_variables"):
+            raise ValidationError(
+                "The model must be solved with `variable_listing_limit` option for this functionality to work."
+            )
+
+        listings = []
+        for variable in self._variables:
+            listings += variable.getVariableListing()
+
+        return listings[:n]
 
     @property
     def infeasibility_tolerance(self) -> float | None:

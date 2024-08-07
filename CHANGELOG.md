@@ -1,6 +1,20 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.3
+-------------
+- General
+  - Add getEquationListing function to be able to inspect generated equations.
+  - Add infeasibility threshold filter for equation listings.
+  - Add getVariableListing function to be able to inspect generated variables.
+- Testing
+  - Add tests for getEquationListing function.
+  - Add tests for getVariableListing function.
+  - Test infeasibility threshold.
+- Documentation
+  - Add docs for getEquationListing.
+  - Add docs for getVariableListing.
+
 GAMSPy 0.14.2
 -------------
 - General
@@ -9,6 +23,7 @@ GAMSPy 0.14.2
   - Fix the order of equations in toGams utility.
   - Allow options in toGams.
   - Add loadpoint option to start from a solution.
+  - Upgrade gamspy_base and gamsapi to 47.4.0.
 
 GAMSPy 0.14.1
 -------------
