@@ -1,5 +1,9 @@
 GAMSPy CHANGELOG
 ================
+GAMSPy 0.14.4
+-------------
+- General
+  - Parse error message after verifying the return code for engine backend.
 
 GAMSPy 0.14.3
 -------------
