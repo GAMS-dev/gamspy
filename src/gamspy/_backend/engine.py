@@ -153,7 +153,9 @@ class Auth(Endpoint):
         )
 
         response_data = r.data.decode("utf-8", errors="replace")
-        info = json.loads(response_data)
+
+        if r.status in [200, 400, 401, 500]:
+            info = json.loads(response_data)
 
         if r.status == 200:
             return info["token"]
@@ -204,7 +206,8 @@ class Auth(Endpoint):
         )
 
         response_data = r.data.decode("utf-8", errors="replace")
-        info = json.loads(response_data)
+        if r.status in [200, 400, 401, 500]:
+            info = json.loads(response_data)
 
         if r.status == 200:
             return info["token"]
@@ -808,7 +811,10 @@ class GAMSEngine(backend.Backend):
                     # logoption = 2 | 4
                     shutil.move(engine_output_path, self.options.log_file)
                 else:
-                    os.remove(engine_output_path)  # logoption = 0 | 3
+                    try:
+                        os.remove(engine_output_path)  # logoption = 0 | 3
+                    except FileNotFoundError:
+                        ...
 
                 self.model._update_model_attributes()
 
