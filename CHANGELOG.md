@@ -3,27 +3,28 @@ GAMSPy CHANGELOG
 GAMSPy 0.14.4
 -------------
 - General
+  - Add container.in_miro flag to selectively load data.
   - Parse error message after verifying the return code for engine backend.
   - Fix the behaviour of Model if it's declared twice with objective function.
 - Testing
+  - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
+- Documentation
+  - Document in_miro flag.
 
 GAMSPy 0.14.3
 -------------
 - General
-  - Add container.in_miro flag to selectively load data.
   - Add getEquationListing function to be able to inspect generated equations.
   - Add infeasibility threshold filter for equation listings.
   - Add getVariableListing function to be able to inspect generated variables.
 - Testing
-  - Add test for container.in_miro flag.
   - Add tests for getEquationListing function.
   - Add tests for getVariableListing function.
   - Test infeasibility threshold.
 - Documentation
   - Add docs for getEquationListing.
   - Add docs for getVariableListing.
-  - Document in_miro flag.
 
 GAMSPy 0.14.2
 -------------
