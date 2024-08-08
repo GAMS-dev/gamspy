@@ -902,6 +902,51 @@ class ModelSuite(unittest.TestCase):
             len(mexss.getEquationListing(infeasibility_threshold=2.5)), 2
         )
 
+    def test_jupyter_behaviour(self):
+        i = Set(self.m, name="i", records=self.canning_plants)
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
+
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+
+        supply = Equation(self.m, name="supply", domain=[i])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
+        demand = Equation(self.m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+        transport.solve()
+
 
 def model_suite():
     suite = unittest.TestSuite()
