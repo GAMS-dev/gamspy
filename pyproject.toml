@@ -52,9 +52,9 @@ changelog = "https://github.com/GAMS-dev/gamspy/blob/develop/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
-  "ruff >= 0.5.0", 
+  "ruff >= 0.5.6", 
   "pre-commit >= 3.5.0",
-  "mypy >= 1.8.0",
+  "mypy >= 1.11.1",
 ]
 
 test = [
@@ -95,7 +95,7 @@ where = ["src"]
 omit = ["*/_cli/*.py", "__main__.py", "*__init__.py"]
 
 [tool.coverage.report]
-exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:"]
+exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

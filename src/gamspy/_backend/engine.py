@@ -308,16 +308,14 @@ class Job(Endpoint):
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def post(
@@ -382,16 +380,14 @@ class Job(Endpoint):
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def get_results(self, token: str, working_directory: str):
@@ -450,8 +446,7 @@ class Job(Endpoint):
                 raise EngineClientException(
                     "Fatal error while getting the results back from engine. GAMS"
                     f" Engine return code: {r.status}. Error message:"
-                    f" {response_data}",
-                    r.status,
+                    f" {response_data}"
                 )
 
     def delete_results(self, token: str):
@@ -483,7 +478,7 @@ class Job(Endpoint):
                 return
             elif r.status == 403:
                 raise EngineClientException(
-                    "Job data does not exist in GAMS Engine!", r.status
+                    "Job data does not exist in GAMS Engine!"
                 )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
@@ -493,16 +488,14 @@ class Job(Endpoint):
                 "Removing job result failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Removing job result failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def get_logs(self, token: str) -> tuple[str, bool]:
@@ -542,8 +535,7 @@ class Job(Endpoint):
                     + str(r.status)
                     + ". "
                     + response_data
-                    + ".",
-                    r.status,
+                    + "."
                 )
 
             response_data = json.loads(response_data)

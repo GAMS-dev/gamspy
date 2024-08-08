@@ -559,7 +559,7 @@ def _parse_generated_equations(model: Model, job_name: str) -> None:
 
 def _parse_generated_variables(model: Model, job_name: str) -> None:
     variables = _get_variables_of_model(model.container)
-    model._variables = variables
+    model._variables = variables  # type: ignore
 
     with open(job_name + ".lst") as file:
         lines = file.readlines()
