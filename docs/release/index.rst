@@ -7,6 +7,8 @@ Release Notes
 .. toctree::
    :maxdepth: 1
 
+   release_0.14.3
+   release_0.14.2
    release_0.14.1
    release_0.14.0
    release_0.13.7

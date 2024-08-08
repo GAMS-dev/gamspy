@@ -378,7 +378,9 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            self.equations.append(equation)
+
+            if equation.name not in [symbol.name for symbol in self.equations]:
+                self.equations.append(equation)
 
             return variable
 
@@ -405,7 +407,8 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            self.equations.append(equation)
+            if equation.name not in [symbol.name for symbol in self.equations]:
+                self.equations.append(equation)
 
             return variable
 

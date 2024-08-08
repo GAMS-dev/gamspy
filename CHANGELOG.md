@@ -1,5 +1,12 @@
 GAMSPy CHANGELOG
 ================
+GAMSPy 0.14.4
+-------------
+- General
+  - Parse error message after verifying the return code for engine backend.
+  - Fix the behaviour of Model if it's declared twice with objective function.
+- Testing
+  - Add tests to simulate Jupyter Notebook behaviour.
 
 GAMSPy 0.14.3
 -------------

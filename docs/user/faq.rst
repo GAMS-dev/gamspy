@@ -84,6 +84,12 @@ The listing of default solver for each problem type is below:
 | EMP     | CONVERT        |
 +---------+----------------+
 
+The full list of default solvers that comes with GAMSPy can be listed with: ::
+
+    gamspy list solvers
+
+The current default solvers list is: CONOPT, CONVERT, CPLEX, IPOPT, IPOPTH, KESTREL, NLPEC, PATH, and SHOT. 
+But be aware that this list might be subject to change in the future.
 
 Why can't I redefine a GAMSPy symbol?
 -------------------------------------
