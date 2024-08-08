@@ -4,7 +4,6 @@ import io
 import logging
 import os
 import uuid
-from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
