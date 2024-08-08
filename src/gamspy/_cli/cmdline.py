@@ -177,7 +177,11 @@ def install_license(args: argparse.Namespace):
 
 def uninstall_license():
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    os.unlink(gamspy_base_dir + os.sep + "user_license.txt")
+
+    try:
+        os.unlink(os.path.join(gamspy_base_dir, "user_license.txt"))
+    except FileNotFoundError:
+        ...
 
 
 def install_solver(args: argparse.Namespace):

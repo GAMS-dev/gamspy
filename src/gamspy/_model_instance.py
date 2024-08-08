@@ -174,7 +174,7 @@ class ModelInstance:
 
         # update model status
         self.model.status = gp.ModelStatus(self.instance.model_status)
-        self.model.solver_status = self.instance.solver_status
+        self.model.solve_status = self.instance.solver_status
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]

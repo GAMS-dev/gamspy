@@ -207,6 +207,11 @@ class AliasSuite(unittest.TestCase):
             "a(row,dyn_col_alias(col)) = (13.2 + (r(row) * c(dyn_col_alias)));",
         )
 
+        dyn_col_alias["c-1"] = False
+        self.assertEqual(
+            dyn_col_alias.toList(), [f"c-{idx}" for idx in range(2, 5)]
+        )
+
 
 def alias_suite():
     suite = unittest.TestSuite()
