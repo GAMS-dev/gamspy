@@ -22,9 +22,7 @@ from pydantic import ValidationError
 
 class OptionsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -86,7 +84,6 @@ class OptionsSuite(unittest.TestCase):
 
     def test_seed(self):
         m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             options=Options(seed=1),
         )
         p1 = Parameter(m, "p1")
@@ -99,7 +96,6 @@ class OptionsSuite(unittest.TestCase):
 
         # change seed
         m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             options=Options(seed=5),
         )
         p1 = Parameter(m, "p1")
@@ -113,7 +109,6 @@ class OptionsSuite(unittest.TestCase):
     def test_global_options(self):
         options = Options(lp="conopt")
         m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             debugging_level="keep",
             options=options,
         )

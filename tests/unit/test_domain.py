@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 from gamspy import Container, Domain, Parameter, Set, Sum
@@ -9,9 +8,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 class DomainSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_domain(self):
         i = Set(self.m, name="i", records=["seattle", "san-diego"])
@@ -27,9 +24,7 @@ class DomainSuite(unittest.TestCase):
         self.assertRaises(ValidationError, Domain, "i", "j")
 
     def test_domain_forwarding(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(m, name="i")
         _ = Parameter(
             m,

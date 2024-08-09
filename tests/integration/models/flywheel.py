@@ -12,15 +12,11 @@ Berlin, 1987. (Problem 346, page 167)
 
 from __future__ import annotations
 
-import os
-
 from gamspy import Container, Equation, Model, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # VARIABLES #
     x1 = Variable(m, name="x1")

@@ -15,7 +15,6 @@ Indexation model with selective hedging
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from gamspy import (
@@ -37,7 +36,6 @@ from gamspy import (
 def main(output=None):
     # Define container
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute())
         + "/SelectiveHedging.gdx",
     )

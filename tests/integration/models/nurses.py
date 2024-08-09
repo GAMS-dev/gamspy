@@ -14,7 +14,6 @@ The goal of the model is to find an efficient balance between the different obje
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pandas as pd
@@ -116,9 +115,7 @@ def main():
     preprocess_data()
 
     # Define container
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Sets
     n = Set(m, name="n", records=nurses_names, description="Nurses")

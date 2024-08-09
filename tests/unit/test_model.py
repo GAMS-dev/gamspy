@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import pandas as pd
@@ -21,9 +20,7 @@ from gamspy.exceptions import ValidationError
 
 class ModelSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -270,9 +267,7 @@ class ModelSuite(unittest.TestCase):
         )
 
     def test_feasibility(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -382,9 +377,7 @@ class ModelSuite(unittest.TestCase):
         test_model2.solve()
 
     def test_computeInfeasibilities(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(
             m,

@@ -13,8 +13,6 @@ EDC of a total power of 1980 MW using 15 power generating units.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import numpy as np
 from gamspy import (
@@ -337,9 +335,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SETS #
     i = Set(

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import gamspy._symbols.implicits as implicits
@@ -29,9 +28,7 @@ from gamspy.math import sqr
 
 class EquationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -70,9 +67,7 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Equation and domain containers are different
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Equation(m, "eq1", domain=[set1])
@@ -335,9 +330,7 @@ class EquationSuite(unittest.TestCase):
                 definition_domain=[i, "bla"],
             )
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         g = Set(m, name="g", records=[str(i) for i in range(1, 4)])
         t1 = Set(m, name="t1", records=[str(i) for i in range(1, 4)])
         t2 = Set(m, name="t2", records=[str(i) for i in range(1, 4)])
@@ -518,9 +511,7 @@ class EquationSuite(unittest.TestCase):
         model.solve()
 
     def test_changed_domain(self):
-        cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        cont = Container()
 
         s = Set(cont, "s")
         m = Set(cont, "m")
@@ -530,9 +521,7 @@ class EquationSuite(unittest.TestCase):
         self.assertEqual(A.getDeclaration(), "Equation A(*,*);")
 
     def test_equation_assignment(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(self.m, "i")
         j = Set(m, "j")
@@ -541,9 +530,7 @@ class EquationSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             a[j] = 5
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         N = Parameter(m, "N", records=20)
         L = Parameter(m, "L", records=int(N.toValue()) / 2)
         v = Set(m, "v", records=range(0, 1001))

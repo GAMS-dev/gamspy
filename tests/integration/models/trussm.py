@@ -54,8 +54,6 @@ Special Issue on Linear Algebra in Control, Signals and Image Processing.
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 from gamspy import (
     Container,
@@ -72,9 +70,7 @@ from gamspy.math import uniform
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Prepare data
     forces = pd.DataFrame(

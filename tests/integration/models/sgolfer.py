@@ -22,8 +22,6 @@ Satisfaction Problems (SymCon 2003). 2003, pp. 75-85.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Alias,
     Container,
@@ -39,9 +37,7 @@ from gamspy.math import Max as gams_max
 
 
 def main(gr_c=8, gg_c=4, nw_c=10, mip=True):
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     gf_c = gr_c * gg_c
 

@@ -16,16 +16,12 @@ of Nonlinear Programming. John Wiley and Sons, New York, 1968.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import Container, Equation, Model, Problem, Sense, Variable
 from gamspy.math import sqr
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Variables
     olefin = Variable(

@@ -24,7 +24,6 @@ Policy Models. The World Bank, 1988.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import numpy as np
@@ -44,7 +43,6 @@ from gamspy.math import sqr
 
 def main():
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/qdemo7.gdx",
     )
 

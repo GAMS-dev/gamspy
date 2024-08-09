@@ -17,8 +17,6 @@ and Chemical Engineering, vol.11, 1987, pp.503-517.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -34,9 +32,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Set
     nh = Set(

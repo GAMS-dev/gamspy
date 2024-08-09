@@ -15,7 +15,6 @@ March 2012.
 
 from __future__ import annotations
 
-import os
 import time
 
 from gamspy import (
@@ -44,9 +43,7 @@ def main():
     # Otherwise, it takes a lot of time
     NUM_DRAWS = 11
 
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Sets
     i = Set(

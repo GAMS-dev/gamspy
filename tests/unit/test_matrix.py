@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import math
-import os
 import unittest
 
 import gamspy as gp
@@ -14,9 +13,7 @@ from gamspy.math import dim, permute, trace, vector_norm
 
 class MatrixSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_matrix_mult_bad(self):
         i = Set(self.m, name="i", records=["i1", "i2", "i3"])

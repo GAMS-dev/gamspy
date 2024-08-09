@@ -49,9 +49,7 @@ def data_records():
 
 class GamspyToLatexSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
 
     def test_lp_transport(self):
         i = Set(
@@ -518,7 +516,6 @@ class GamspyToLatexSuite(unittest.TestCase):
         gdx_file = os.path.join(this, "models", "qp6.gdx")
 
         cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             load_from=gdx_file,
         )
 
@@ -769,9 +766,7 @@ class GamspyToLatexSuite(unittest.TestCase):
         self.assertEqual(reference_tex, generated_tex)
 
     def test_minlp_minlphix(self):
-        cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        cont = Container()
 
         # Set
         i = Set(

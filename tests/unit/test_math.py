@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import sys
 import unittest
 
@@ -14,9 +13,7 @@ from gamspy.exceptions import ValidationError
 
 class MathSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.markets = ["new-york", "chicago", "topeka"]
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
@@ -269,9 +266,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( binomial(b(i),3) )")
 
     def test_math_2(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(m, "i", records=["1", "2"])
         a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
         s1 = Parameter(m, "s1", records=5)
@@ -370,9 +365,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op3.gamsRepr(), "( rPower(a(i),2.5) )")
 
     def test_logical(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         o = Set(m, "o", records=[f"pos{idx}" for idx in range(1, 11)])
         p = Set(m, "p", records=[f"opt{idx}" for idx in range(1, 6)])
@@ -470,9 +463,7 @@ class MathSuite(unittest.TestCase):
         self.assertEqual(op2.gamsRepr(), "( rel_ne(sumc(o,p),op(o,p)) )")
 
     def test_relu(self, relu_type=gams_math.relu_with_binary_var):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
 
@@ -532,9 +523,7 @@ class MathSuite(unittest.TestCase):
         self.assertTrue(np.isclose(budget.objective_value, 200.0))
 
     def test_relu_2(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["i1", "i2", "i3"], description="plants")
 
@@ -590,9 +579,7 @@ class MathSuite(unittest.TestCase):
         self.test_relu(gams_math.relu_with_sos1_var)
 
     def test_log_softmax(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
         for i in range(30):
@@ -625,9 +612,7 @@ class MathSuite(unittest.TestCase):
         set_loss[...] = nll == Sum(labels[y.domain], -y)
 
     def test_softmax(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         labels = Set(m, name="labels", domain=gams_math.dim([30, 3]))
         for i in range(30):

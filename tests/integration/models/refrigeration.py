@@ -18,15 +18,11 @@ May 2009, pp.21-25.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import Container, Equation, Model, Parameter, Sense, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # VARIABLES #
     x = [Variable(m, name=f"x{i+1}") for i in range(14)]

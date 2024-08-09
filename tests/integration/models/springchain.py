@@ -25,7 +25,6 @@ in Control, Signals and Image Processing.
 from __future__ import annotations
 
 import math
-import os
 
 import pandas as pd
 from gamspy import (
@@ -44,9 +43,7 @@ from gamspy import (
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     N = 10
     NM1 = 9
