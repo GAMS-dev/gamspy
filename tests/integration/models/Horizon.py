@@ -14,8 +14,6 @@ Last modified: Apr 2008.
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 import pandas as pd
 from gamspy import (
@@ -72,9 +70,7 @@ def BondDataTable():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     Time = Set(
         m,

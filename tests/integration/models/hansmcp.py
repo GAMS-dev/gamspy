@@ -16,7 +16,6 @@ Yale University Press, 1973.
 from __future__ import annotations
 
 import math
-import os
 from pathlib import Path
 
 from gamspy import (
@@ -37,9 +36,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     c = Set(m, "c", description="commodities")
     h = Set(m, "h", description="consumers")

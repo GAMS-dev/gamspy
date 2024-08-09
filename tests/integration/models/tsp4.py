@@ -20,7 +20,6 @@ de Wetering, A V, private communication.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -42,7 +41,6 @@ from gamspy.exceptions import GamspyException
 
 def main():
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/tsp4.gdx",
     )
 

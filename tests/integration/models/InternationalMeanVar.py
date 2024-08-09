@@ -31,7 +31,6 @@ We use real data for the 10-year period 1990-01-01 to 2000-01-01,
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -52,7 +51,6 @@ def main():
         str(Path(__file__).parent.absolute()) + "/InternationalMeanVar.gdx"
     )
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=gdx_file,
     )
 

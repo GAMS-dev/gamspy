@@ -21,17 +21,13 @@ numerical test problems. ACM Trans. Math. Software, 16, 1990, pp. 143-151.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Parameter, Variable
 from gamspy.math import sqr
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SCALAR #
     R = Parameter(m, name="R", records=40)

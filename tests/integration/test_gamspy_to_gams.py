@@ -50,9 +50,7 @@ def data_records():
 
 class GamspyToGamsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
 
     def test_lp_transport(self):
         i = Set(
@@ -539,7 +537,6 @@ class GamspyToGamsSuite(unittest.TestCase):
         gdx_file = os.path.join(this, "models", "qp6.gdx")
 
         cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             load_from=gdx_file,
         )
 
@@ -806,9 +803,7 @@ class GamspyToGamsSuite(unittest.TestCase):
             self.assertTrue(objective.startswith("9.80076"))
 
     def test_minlp_minlphix(self):
-        cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        cont = Container()
 
         # Set
         i = Set(

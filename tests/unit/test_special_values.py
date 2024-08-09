@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import gamspy as gp
@@ -9,9 +8,7 @@ from gamspy import Container, Parameter, Set, Variable
 
 class SpecialValuesSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_parameter_special_values(self):
         x = Parameter(self.m, "x", records=5)

@@ -33,9 +33,7 @@ except Exception:
 
 class EngineSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -51,7 +49,6 @@ class EngineSuite(unittest.TestCase):
 
     def test_engine(self):
         m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
             debugging_level="keep",
         )
 
@@ -193,9 +190,7 @@ class EngineSuite(unittest.TestCase):
         self.assertTrue(os.path.exists(log_file_path))
 
     def test_no_config(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -227,9 +222,7 @@ class EngineSuite(unittest.TestCase):
             transport.solve(backend="engine")
 
     def test_extra_files(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -286,9 +279,7 @@ class EngineSuite(unittest.TestCase):
         os.unlink(file.name)
 
     def test_solve_twice(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -327,9 +318,7 @@ class EngineSuite(unittest.TestCase):
         transport.solve(backend="engine", client=client)
 
     def test_summary(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -360,9 +349,7 @@ class EngineSuite(unittest.TestCase):
         self.assertTrue(isinstance(summary, pd.DataFrame))
 
     def test_non_blocking(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])

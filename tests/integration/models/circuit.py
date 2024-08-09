@@ -16,17 +16,13 @@ Application A34, pp.397.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import numpy as np
 from gamspy import Container, Equation, Model, Parameter, Set, Variable
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # SETS #
     n = Set(cont, name="n", records=[f"c{c}" for c in range(1, 5)])

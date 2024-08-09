@@ -22,7 +22,6 @@ Journal of Global Optimization 38 (2007), 79-101.
 from __future__ import annotations
 
 import math
-import os
 import sys
 
 from gamspy import (
@@ -43,9 +42,7 @@ from gamspy.math import sqr
 k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 print("Number of circles =", k)
 
-c = Container(
-    system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-)
+c = Container()
 
 # Set
 i = Set(c, name="i", description="circles", records=[str(i) for i in range(k)])

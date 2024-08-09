@@ -11,6 +11,7 @@ GAMSPy 0.14.4
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
+  - Remove system_directory for tests.
 - Documentation
   - Document in_miro flag.
 

@@ -23,15 +23,11 @@ DOI: doi.org/10.1007/978-3-319-62350-4
 
 from __future__ import annotations
 
-import os
-
 from gamspy import Container, Equation, Model, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Binary Variables
     x1 = Variable(m, name="x1", type="binary")

@@ -18,7 +18,6 @@ de Wetering, A V, private communication.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from gamspy import (
@@ -37,7 +36,6 @@ from gamspy.math import sqr
 
 def main():
     cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/qp6.gdx",
     )
 

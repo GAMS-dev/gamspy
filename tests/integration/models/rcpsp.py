@@ -31,8 +31,6 @@ to optimality (makespan=43).
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Alias,
     Container,
@@ -50,9 +48,7 @@ from gamspy import (
 
 # Create model with GAMSPy
 def build_abstract_model():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     j = Set(
         m,

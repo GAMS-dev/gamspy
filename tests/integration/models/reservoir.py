@@ -17,8 +17,6 @@ Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 from gamspy import (
     Container,
@@ -34,9 +32,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Set
     n = Set(m, name="n", records=["res1", "res2"], description="reservoirs")
