@@ -94,7 +94,6 @@ class Local(backend.Backend):
         except GamspyException as exception:
             self.container.workspace._has_error = True
             message = customize_exception(
-                self.container.working_directory,
                 self.options,
                 self.job_name,
                 exception.return_code,
