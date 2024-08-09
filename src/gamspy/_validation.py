@@ -198,6 +198,7 @@ def validate_domain(
             if isinstance(given, str):
                 if (
                     hasattr(actual, "records")
+                    and len(actual.records) < 1000
                     and not actual.records.isin([given]).sum().any()
                 ):
                     raise ValidationError(
