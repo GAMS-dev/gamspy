@@ -22,3 +22,4 @@ fundamental GAMSPy ideas and philosophy.
    ./debugging
    ./miro
    ./model_instance
+   ./external_equations
