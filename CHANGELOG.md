@@ -14,6 +14,7 @@ GAMSPy 0.14.4
   - Remove system_directory for tests.
 - Documentation
   - Document in_miro flag.
+  - Add docstring for setBaseEqual.
 
 GAMSPy 0.14.3
 -------------

@@ -472,9 +472,31 @@ def _permute_domain(domain, dims):
     return new_domain
 
 
-def set_base_eq(set_a, set_b):
+def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
     """
-    Checks if two sets are equal considering aliases as equal as well
+    Checks if two sets are equal considering aliases as equal as well.
+
+    Parameters
+    ----------
+    set_a : Set | Alias
+    set_b : Set | Alias
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i")
+    >>> j = gp.Set(m, "j")
+    >>> gp.utils.setBaseEqual(i, j)
+    False
+    >>> k = gp.Alias(m, "k", i)
+    >>> gp.utils.setBaseEqual(k, i)
+    True
+
     """
     set_a = getattr(set_a, "alias_with", set_a)
     set_b = getattr(set_b, "alias_with", set_b)

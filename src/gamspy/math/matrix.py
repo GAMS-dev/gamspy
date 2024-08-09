@@ -303,7 +303,7 @@ def trace(
     if len(x.domain) < 2:
         raise ValidationError("Trace requires at least 2 dimensions")
 
-    if not utils.set_base_eq(x.domain[axis1], x.domain[axis2]):
+    if not utils.setBaseEqual(x.domain[axis1], x.domain[axis2]):
         raise ValidationError("Matrix dimensions are not equal")
 
     domain = [i for i in x.domain]
@@ -433,7 +433,7 @@ def _validate_matrix_mult_dims(left, right):
 
     if lr == (1, 1):
         # Dot product
-        if not utils.set_base_eq(left.domain[0], right.domain[0]):
+        if not utils.setBaseEqual(left.domain[0], right.domain[0]):
             raise ValidationError("Dot product requires same domain")
 
         sum_domain = left.domain[0]
@@ -443,7 +443,7 @@ def _validate_matrix_mult_dims(left, right):
         return [sum_domain], [sum_domain], sum_domain
     elif lr == (2, 2):
         # Matrix multiplication
-        if not utils.set_base_eq(left.domain[1], right.domain[0]):
+        if not utils.setBaseEqual(left.domain[1], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
         left_domain = left.domain[0]
@@ -465,10 +465,10 @@ def _validate_matrix_mult_dims(left, right):
         )
     elif lr == (1, 2):
         # Vector matrix, vector 1-prepended
-        if not utils.set_base_eq(left.domain[0], right.domain[0]):
+        if not utils.setBaseEqual(left.domain[0], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
-        if utils.set_base_eq(right.domain[0], right.domain[1]):
+        if utils.setBaseEqual(right.domain[0], right.domain[1]):
             sum_domain = right.domain[1]
             right_domain = right.domain[0]
         else:
@@ -481,7 +481,7 @@ def _validate_matrix_mult_dims(left, right):
         return [sum_domain], [sum_domain, right_domain], sum_domain
     elif lr == (2, 1):
         # Matrix vector, ordinary
-        if not utils.set_base_eq(left.domain[1], right.domain[0]):
+        if not utils.setBaseEqual(left.domain[1], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
         sum_domain = left.domain[1]
@@ -491,7 +491,7 @@ def _validate_matrix_mult_dims(left, right):
         return [left.domain[0], sum_domain], [sum_domain], sum_domain
     elif left_len == 1 and right_len > 2:
         # Vector batched-matrix, vector 1-prepended
-        if not utils.set_base_eq(left.domain[0], right.domain[-2]):
+        if not utils.setBaseEqual(left.domain[0], right.domain[-2]):
             raise ValidationError(dim_no_match_err)
 
         sum_domain = left.domain[0]
@@ -509,7 +509,7 @@ def _validate_matrix_mult_dims(left, right):
         )
     elif left_len > 2 and right_len == 1:
         # batched-matrix vector, ordinary
-        if not utils.set_base_eq(left.domain[-1], right.domain[0]):
+        if not utils.setBaseEqual(left.domain[-1], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
         sum_domain = left.domain[-1]
@@ -525,7 +525,7 @@ def _validate_matrix_mult_dims(left, right):
         )
     elif left_len >= 2 and right_len >= 2:
         # batched-matrix batched-matrix
-        if not utils.set_base_eq(left.domain[-1], right.domain[-2]):
+        if not utils.setBaseEqual(left.domain[-1], right.domain[-2]):
             raise ValidationError(dim_no_match_err)
 
         batch_dim_1 = left.domain[:-2]

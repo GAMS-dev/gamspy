@@ -1,11 +1,11 @@
 .. _conditional_expressions_assignments_equations:
 
-******************************************************
-Conditional Expressions, Assignments and Equations
-******************************************************
+*************************************
+Conditions, Assignments and Equations
+*************************************
 
 Introduction
-=============
+============
 
 This chapter deals with the way in which conditional assignments, expressions and 
 equations are made in GAMS. The index operations already described are very 
@@ -51,7 +51,7 @@ operations and equations. These topics are covered in later sections of this cha
 
 
 Logical Conditions
-===================
+==================
 
 Logical conditions are special expressions that evaluate to either TRUE or 
 FALSE. Logical conditions may be numerical expressions and numerical relations and 
@@ -65,7 +65,7 @@ left-hand side.
     and ``v`` are parameters, and ``i`` and ``j`` are sets.
 
 Numerical Expressions
-----------------------
+---------------------
 
 Numerical expressions may serve as logical conditions: a result of zero is treated as 
 the logical value FALSE and a non-zero result is treated as the logical value TRUE. 
@@ -108,7 +108,7 @@ no assignment is made.
 .. _numerical-relational-operators:    
 
 Numerical Relational Operators
---------------------------------
+------------------------------
 
 `Numerical relational operators <https://www.geeksforgeeks.org/relational-operators-in-python/>`_ 
 compare two numerical expressions and return a logical value. Consider the following 
@@ -140,7 +140,7 @@ equal to 5. If this is the case, an assignment is made, otherwise not.
 .. _bitwise-operators:
 
 Bitwise Operators
-------------------
+-----------------
 
 Bitwise operators can be used to combine two or more logical conditions to build complex logical 
 expressions. For example, if several expressions are required to be TRUE simultaneously, they may 
@@ -222,7 +222,7 @@ Even more complex logical conditions are possible; see subsection
 :ref:`Mixed Logical Conditions <mixed-logical-conditions>` below for details.
 
 Set Membership and Set Functions
----------------------------------
+--------------------------------
 
 Apart from numerical and relational expressions, set membership and functions referencing set 
 elements may be used as a logical condition. Consider the following example as illustration 
@@ -317,7 +317,7 @@ the second assignment ``x`` is fixed for the final element of ``i``.
 .. _mixed-logical-conditions:
 
 Mixed Logical Conditions
--------------------------
+------------------------
 
 The building blocks introduced in the subsections above may be combined to generate more complex 
 logical conditions. These may contain standard arithmetic operations, 
@@ -331,7 +331,7 @@ logical conditions. These may contain standard arithmetic operations,
 .. _nested-conditions:
 
 Nested Conditions
-------------------
+-----------------
 
 An alternative way to model complex logical conditions is by nesting them. The syntax is: ::
 
@@ -397,7 +397,7 @@ then under certain conditions the restriction may be expressed without the use o
 .. _where-on-the-left:
 
 where[] on the Left
---------------------
+-------------------
 
 If the ``where`` condition is on the left-hand side of an assignment, an assignment is 
 made only in case the logical condition is satisfied. If the logical condition is not 
@@ -575,14 +575,14 @@ below.
 .. _conditional-equations:
 
 Conditional Equations
-======================
+=====================
 
 The ``where`` operator is also used for exception handling in equations. The next two subsections 
 discuss the two main uses of ``where`` operators in the context of equations: in the body of an 
 equation and over the domain of definition.
 
 Dollar Operators within the Algebra of Equations
----------------------------------------------------
+------------------------------------------------
 
 A ``where`` operator in the algebraic formulation of an equation is analogous to the ``where`` 
 on the right of assignments, as presented in section :ref:`where-on-the-right`. 
@@ -631,7 +631,7 @@ domain of the summation: for each supply region ``i`` the summation over the dem
 feasible links ``ij[i,j]``.
 
 Control over the Domain of Definition
---------------------------------------
+-------------------------------------
 
 In case constraints should only be included in the model if particular conditions are met, 
 a ``where`` condition in the domain of definition of an equation may be used to model this 
@@ -673,7 +673,7 @@ the ``where`` operator. For details, see section
 
 
 Filtering Sets
-================
+==============
 
 If the logical condition refers to set membership, the restriction modeled with a ``where`` 
 condition may sometimes be achieved without the ``where`` operator. Consider the following 
@@ -698,7 +698,7 @@ multi-dimensional sets (tuples), and it may be used in
 .. _filtering-sets-in-assignments:
 
 Filtering Sets in Assignments
-------------------------------
+-----------------------------
 
 Suppose we want to compute the transportation cost between local collection sites and regional 
 transportation hubs for a fictional parcel delivery service. We define sets for the collection 
@@ -815,7 +815,7 @@ set ``j`` may then appear on the right-hand side.
 .. _filtering-controlling-indices-in-indexed-operations:
 
 Filtering Controlling Indices in Indexed Operations
-----------------------------------------------------
+---------------------------------------------------
 
 Similarly, the controlling indices in indexed operations may be filtered through the conditional set 
 without the use of the ``where`` operator. We continue with the shipping cost example from the last 
@@ -854,7 +854,7 @@ to the reasoning for filtering sets in assignments in the subsection above.
 .. _filtering-the-domain-of-definition:
 
 Filtering the Domain of Definition
-----------------------------------------------------
+----------------------------------
 
 The rules for filtering sets that we have introduced in subsections 
 :ref:`filtering-sets-in-assignments` and 
