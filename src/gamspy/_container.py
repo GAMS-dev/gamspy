@@ -134,7 +134,7 @@ def check_response(response: bytes, job_name: str) -> None:
         4: "System limits were reached.",
         5: "There was a file error.",
         6: "There was a parameter error.",
-        7: "There was a licensing error.",
+        7: "The solve has failed due to a license error. The license you are using may impose model size limits (demo/community license) or you are using a GAMSPy incompatible professional license. Please contact sales@gams.com to find out about license options.",
         8: "There was a GAMS system error.",
         9: "GAMS could not be started.",
         10: "Out of memory.",

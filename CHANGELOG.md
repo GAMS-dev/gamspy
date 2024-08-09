@@ -6,6 +6,7 @@ GAMSPy 0.14.4
   - Add container.in_miro flag to selectively load data.
   - Parse error message after verifying the return code for engine backend.
   - Fix the behaviour of Model if it's declared twice with objective function.
+  - Update the error message of license error.
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
