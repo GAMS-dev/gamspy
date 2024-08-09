@@ -350,6 +350,14 @@ class SolveSuite(unittest.TestCase):
                 output=file,
             )
 
+        # Redirect to an invalid stream
+        class Dummy:
+            def write(self, data):
+                ...
+
+        with self.assertRaises(ValidationError):
+            transport.solve(output=Dummy())
+
         # Redirect output to logger
         logger = logging.getLogger("TEST_LOGGER")
         logger.setLevel(logging.INFO)
@@ -1405,6 +1413,9 @@ class SolveSuite(unittest.TestCase):
             sense="min",
             objective=z,
         )
+        with self.assertRaises(ValidationError):
+            transport.solve(load_symbols=['x'])
+
         transport.solve(load_symbols=[])
 
         self.assertIsNone(x.records)
