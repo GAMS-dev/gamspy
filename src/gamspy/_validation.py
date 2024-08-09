@@ -203,7 +203,7 @@ def validate_domain(
                 ):
                     raise ValidationError(
                         f"Literal index `{given}` was not found in set"
-                        f" `{actual}`"
+                        f" `{actual.name}`"
                     )
             else:
                 validate_one_dimensional_sets(given, actual)
@@ -440,12 +440,10 @@ def validate_solver_args(
         )
 
     # Check validity of output
-    if (
-        output is not None
-        and not hasattr(output, "write")
-        and not hasattr(output, "flush")
+    if output is not None and (
+        not hasattr(output, "write") or not hasattr(output, "flush")
     ):
-        raise TypeError(
+        raise ValidationError(
             "`output` must write and flush operations but found"
             f" {type(output)} which does not support them."
         )
