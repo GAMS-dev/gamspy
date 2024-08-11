@@ -1,4 +1,4 @@
-#define GE_EXPORT
+#define GE_EXPORTS
 #include "geheader.h"
 #include <stdexcept>
 #include <iostream>

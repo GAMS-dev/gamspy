@@ -28,10 +28,10 @@ class ExternalModuleTestSuite(unittest.TestCase):
             directory, "external_module", "build", "libsimple_ext_module"
         )
 
-        self.external_module = None
-        if platform.system() == "Linux":
-            external_module += ".so"
-            self.external_module = external_module
+        if platform.system() == "Darwin" and platform.machine() == "arm64":
+            external_module += "_arm64"
+
+        self.external_module = external_module
 
     def test_sin_cos_example(self):
         if self.external_module is None:
