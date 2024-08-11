@@ -121,14 +121,15 @@ Let's assume we want to represent :math:`y_1 = sin(x_1)` and :math:`y_2 = cos(x_
 
 .. admonition:: A small note on what we are representing
 
-   Actually, instead of representing :math:`y_1 = \sin(x_1)`, we represent it as
-   :math:`\sin(x_1) - y_1 = 0`. When we evaluate the function, we are
-   asked to compute :math:`\sin(x_1) - y_1`. You'll notice that when this expression
+   Actually, instead of representing :math:`y_1 = \sin(x_1)`, we represent it
+   as :math:`\sin(x_1) - y_1 = 0`. When we evaluate the function, we are asked
+   to compute :math:`\sin(x_1) - y_1`. You'll notice that when this expression
    does not equal zero, the equation is not satisfied. However, the solver will
    adjust the values using derivatives to restore feasibility. Therefore, the
-   derivatives are taken with respect to both :math:`x_1` and :math:`y_1`.
-   Specifically, the derivative with respect to :math:`x_1` is :math:`\cos(x_1)`, and
-   the derivative with respect to :math:`y_1` is :math:`-1`.
+   derivative of :math:`\sin(x_1) - y_1` is taken with respect to both
+   :math:`x_1` and :math:`y_1`. Specifically, the derivative with respect to
+   :math:`x_1` is :math:`\cos(x_1)`, and the derivative with respect to
+   :math:`y_1` is :math:`-1`.
 
 
 Finally, we need to provide the name of the external module in the model.
@@ -154,12 +155,18 @@ appropriate file extension based on the operating system: `.DLL` on Windows and
 Programming Interface
 ---------------------
 
-As the rest of the documentation remains unchanged, please refer to the
+The rest of the documentation remains unchanged, so please refer to the
 `Programming Interface
 <https://www.gams.com/latest/docs/UG_ExternalEquations.html#UG_ExternalEquations_ProgrammingInterface>`_
-for further details. In summary, you need to download the
-`geheader.h <https://www.gams.com/latest/testlib_ml/geheader.h>`_
-file and implement the `gefunc` function defined within it. Afterward, compile
-it into a library. We acknowledge that this aspect of implementing external
-equations has a steep learning curve, and we are exploring possible automations
-for certain special cases.
+for more detailed information. In brief, your task is to download the
+`geheader.h <https://www.gams.com/latest/testlib_ml/geheader.h>`_ file and
+implement the `gefunc` function as specified within it. To assist you, we've
+provided `sample external module
+<https://github.com/GAMS-dev/gamspy/tree/develop/tests/integration/external_module>`_.
+Starting with this template is much easier than building everything from
+scratch. The `mylib.cpp` file contains the library code, and a `CMakeLists.txt`
+file is included to help you build the module. The example referenced in the
+documentation can be found in `example.py`. After compiling `mylib.cpp` into a
+library, place the library next to `example.py` and run the script. We
+understand that implementing external equations can be challenging, and we're
+actively exploring automations for specific cases to ease this process.

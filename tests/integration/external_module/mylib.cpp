@@ -12,7 +12,7 @@
  GE_API int GE_CALLCONV
 gefunc( int *icntr, double *x, double *f, double *d, msgcb_t msgcb)
 {
-    int  i, j, findex, dofnc, dodrv, neq, nvar, nz, rc=0;
+    int  findex, dofnc, dodrv, neq, nvar, nz, rc=0;
 
     if ( icntr[I_Mode] == DOINIT ) {
         neq = 2; // We expect 2 external equations
