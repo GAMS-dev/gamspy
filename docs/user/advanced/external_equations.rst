@@ -157,8 +157,8 @@ Programming Interface
 As the rest of the documentation remains unchanged, please refer to the
 `Programming Interface
 <https://www.gams.com/latest/docs/UG_ExternalEquations.html#UG_ExternalEquations_ProgrammingInterface>`_
-for further details. In summary, you need to download the `geheader.h
-<https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/geheader.h?raw=true>`_
+for further details. In summary, you need to download the
+`geheader.h <https://www.gams.com/latest/testlib_ml/geheader.h>`_
 file and implement the `gefunc` function defined within it. Afterward, compile
 it into a library. We acknowledge that this aspect of implementing external
 equations has a steep learning curve, and we are exploring possible automations
