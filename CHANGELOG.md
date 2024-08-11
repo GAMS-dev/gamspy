@@ -8,11 +8,14 @@ GAMSPy 0.14.4
   - Fix the behaviour of Model if it's declared twice with objective function.
   - Update the error message of license error.
   - Fix output stream validation.
+  - Add external equations support.
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
+  - Add tests for external equations support.
 - Documentation
   - Document in_miro flag.
+  - Add section "External Equations" under Advanced documentation.
 
 GAMSPy 0.14.3
 -------------
