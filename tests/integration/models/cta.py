@@ -49,9 +49,7 @@ from gamspy.math import Round
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Sets
     i = Set(m, name="i", description="rows")

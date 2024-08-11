@@ -22,16 +22,12 @@ Section 7.3.5. Test problem 15, page 102.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Problem, Sense, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Variable
     q1 = Variable(m, name="q1")

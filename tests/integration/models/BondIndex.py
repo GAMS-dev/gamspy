@@ -15,7 +15,6 @@ Tracking international bond index - GDX input
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import numpy as np
@@ -32,9 +31,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
     m.read(
         load_from=str(Path(__file__).parent.absolute()) + "/BondIndex.gdx",
         symbol_names=[

@@ -14,9 +14,7 @@ from gamspy.exceptions import ValidationError
 
 class MiroSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_domain_forwarding(self):
         # Only the parameter is miro input

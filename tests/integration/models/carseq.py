@@ -32,8 +32,6 @@ Y. Kodratoff, Ed. Pitmann Publishing, London, Munich, Germany, 290-295, 1988
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
@@ -75,9 +73,7 @@ def main(mip=True):
         id_vars="index", var_name="Category", value_name="Value"
     )
 
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Sets
     p = Set(

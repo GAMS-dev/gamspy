@@ -14,8 +14,6 @@ Ternary System
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -30,9 +28,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SET #
     i = Set(m, name="i", records=["1", "2", "3"], description="components")

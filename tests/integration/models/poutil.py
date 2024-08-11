@@ -29,8 +29,6 @@ Springer, pp. 221-246, 2010.
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 from gamspy import (
     Card,
@@ -49,9 +47,7 @@ from gamspy import (
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     power_forecast_recs = np.array(
         [

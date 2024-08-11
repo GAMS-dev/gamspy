@@ -10,7 +10,6 @@ whole neural network.
 
 from __future__ import annotations
 
-import os
 import sys
 
 import gamspy as gp
@@ -62,9 +61,7 @@ def verify_output(x_rec, y_recs, y2_recs):
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     labels = Set(m, name="labels", domain=gp.math.dim([batch_size, 3]))
     # set random labels

@@ -28,16 +28,12 @@ Optimization, 2002.
 
 from __future__ import annotations
 
-import os
-
 import gamspy as gap
 import pandas as pd
 
 
 def flow_shop(process_time_df, last_machine, last_item):
-    c = gap.Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    c = gap.Container()
 
     # Sets
     i = c.addSet(

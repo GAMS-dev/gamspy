@@ -41,8 +41,6 @@ Processing. 284 (November, 1998).
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Alias,
     Container,
@@ -59,9 +57,7 @@ from gamspy.math import uniform
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     mu = 1e-2
 

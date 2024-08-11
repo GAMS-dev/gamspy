@@ -35,6 +35,6 @@ details are found in :ref:`reference`.
 
 .. toctree::
    :caption: Machine Learning
-   :maxdepth: 1
+   :maxdepth: 2
 
    ml/ml

@@ -36,8 +36,6 @@ the GAMS model library.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import (
     Alias,
@@ -56,9 +54,7 @@ from gamspy import (
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # Set
     i = Set(cont, name="i", records=["1", "2"], description="type of supplier")

@@ -29,7 +29,6 @@ Processing. 284 (November, 1998).
 from __future__ import annotations
 
 import math
-import os
 
 import gamspy.math as gams_math
 from gamspy import (
@@ -48,9 +47,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Set
     i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])

@@ -15,7 +15,6 @@ Last modified: Apr 2008.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import gamspy.math as gams_math
@@ -38,7 +37,6 @@ from gamspy.math import sqr
 def main():
     gdx_file = str(Path(__file__).parent.absolute()) + "/WorldIndices.gdx"
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=gdx_file,
     )
 

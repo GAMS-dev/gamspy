@@ -107,7 +107,6 @@ _______________________
 
 from __future__ import annotations
 
-import os
 from sys import float_info
 
 import gamspy.math as gams_math
@@ -130,9 +129,7 @@ from gamspy.math import sqr
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # SETS #
     # the set of all columns and their condensers in the superstructure

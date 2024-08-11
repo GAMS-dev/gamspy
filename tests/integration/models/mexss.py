@@ -22,8 +22,6 @@ http://www.gams.com/docs/pdf/steel_investment.pdf
 
 from __future__ import annotations
 
-import os
-
 import pandas
 from gamspy import (
     Container,
@@ -38,9 +36,7 @@ from gamspy import (
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # Prepare data
     steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]

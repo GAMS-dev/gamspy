@@ -24,7 +24,6 @@ DOI: doi.org/10.1007/978-3-319-62350-4
 from __future__ import annotations
 
 import math
-import os
 
 import gamspy.math as gams_math
 import pandas as pd
@@ -214,9 +213,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SETS #
     i = Set(

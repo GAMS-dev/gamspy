@@ -26,8 +26,6 @@ Study. Oxford University Press, London, 1986.
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 import pandas as pd
 from gamspy import (
@@ -142,9 +140,7 @@ def main():
     )
 
     # Model's container
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # Sets
     i = Set(

@@ -17,8 +17,6 @@ vol.49, nr. 2, June 2011, pp. 335-358.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import (
     Card,
@@ -35,9 +33,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SETS #
     n = Set(m, name="n", records=["state1"], description="states")

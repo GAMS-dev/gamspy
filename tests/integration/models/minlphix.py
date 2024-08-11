@@ -81,8 +81,6 @@ Associated Reference:
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 import pandas as pd
 from gamspy import (
@@ -103,9 +101,7 @@ from gamspy.math import sqrt
 
 
 def main():
-    cont = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    cont = Container()
 
     # Set
     i = Set(

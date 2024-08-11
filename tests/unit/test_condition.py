@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import gamspy.math as gamspy_math
@@ -21,9 +20,7 @@ from gamspy import (
 
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_condition_on_expression(self):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
@@ -97,9 +94,7 @@ class ConditionSuite(unittest.TestCase):
         steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
         markets = ["mexico-df", "monterrey", "guadalaja"]
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(
             m,
             name="i",
@@ -318,9 +313,7 @@ class ConditionSuite(unittest.TestCase):
             "minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);",
         )
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         o = Set(m, name="o", records=[f"opt{i}" for i in range(1, 6)])
@@ -343,9 +336,7 @@ class ConditionSuite(unittest.TestCase):
             "k(p) $ k(p) = yes;",
         )
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         p = Set(m, name="p", records=[f"pos{i}" for i in range(1, 11)])
         k = Set(m, "k", domain=[p])
         k[p].where[k[p]] = True
@@ -376,9 +367,7 @@ class ConditionSuite(unittest.TestCase):
             [("Product_A", 20), ("Product_B", 25), ("Product_C", 30)]
         )
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(m, name="i", description="products", records=products)
         t = Set(m, name="t", description="time periods", records=time_periods)
 
@@ -466,9 +455,7 @@ class ConditionSuite(unittest.TestCase):
         self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
         c = Parameter(m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1

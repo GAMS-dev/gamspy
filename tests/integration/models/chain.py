@@ -31,7 +31,6 @@ Cesari, L, Optimization - Theory and Applications. Springer Verlag, 1983.
 
 from __future__ import annotations
 
-import os
 import sys
 
 import gamspy.math as gams_math
@@ -51,9 +50,7 @@ from gamspy.math import sqr
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     n_rec = int(sys.argv[1]) if len(sys.argv) > 1 else 400
 

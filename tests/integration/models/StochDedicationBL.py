@@ -16,7 +16,6 @@ Stochastic Dedication model with borrowing and lending variables
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from gamspy import Container, Equation, Model, Sense, Sum, Variable
@@ -25,7 +24,6 @@ from gamspy import Container, Equation, Model, Sense, Sum, Variable
 def main():
     # Define container
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute())
         + "/StochDedicationBL.gdx",
     )

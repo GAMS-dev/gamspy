@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import gamspy._symbols.implicits as implicits
@@ -22,9 +21,7 @@ from gamspy.exceptions import ValidationError
 
 class VariableSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
         self.distances = [
             ["seattle", "new-york", 2.5],
             ["seattle", "chicago", 1.7],
@@ -61,9 +58,7 @@ class VariableSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Variable and domain containers are different
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         # Same name, different domain forwarding
         _ = Variable(self.m, "k")

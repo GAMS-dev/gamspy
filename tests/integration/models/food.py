@@ -51,8 +51,6 @@ and Sons, 1978.
 
 from __future__ import annotations
 
-import os
-
 import gamspy as gp
 import pandas as pd
 
@@ -109,9 +107,7 @@ def main():
 
     maxstore = 1000
 
-    c = gp.Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    c = gp.Container()
 
     # Sets
     m = gp.Set(

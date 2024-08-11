@@ -18,8 +18,6 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 from gamspy import (
     Card,
@@ -37,9 +35,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     td_data = pd.DataFrame(
         [

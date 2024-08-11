@@ -21,16 +21,12 @@ No I-07-04/22-02-2007. Center for Research in Mathematics (CIMAT), Mexico.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # VARIABLES #
     x1 = Variable(m, name="x1")

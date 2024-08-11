@@ -15,8 +15,6 @@ X is the inverse of A.
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 from gamspy import (
     Alias,
@@ -46,9 +44,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SET #
     i = Set(m, name="i", records=[f"i{i}" for i in range(1, 6)])

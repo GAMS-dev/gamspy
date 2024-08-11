@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import pandas as pd
@@ -10,9 +9,7 @@ from gamspy.exceptions import ValidationError
 
 class SetSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -52,9 +49,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(id(j1), id(j2))
 
         # Set and domain containers are different
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         set1 = Set(self.m, "set1")
         with self.assertRaises(ValidationError):
             _ = Set(m, "set2", domain=[set1])
@@ -106,9 +101,7 @@ class SetSuite(unittest.TestCase):
         )
 
     def test_records_assignment(self):
-        new_cont = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        new_cont = Container()
         i = Set(self.m, "i")
         j = Set(self.m, "j", domain=[i])
         k = Set(new_cont, "k")
@@ -161,9 +154,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(difference.gamsRepr(), "(i - k)")
 
     def test_dynamic_sets(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(m, name="i", records=[f"i{idx}" for idx in range(1, 4)])
         i["i1"] = False
 
@@ -172,9 +163,7 @@ class SetSuite(unittest.TestCase):
             'i("i1") = no;',
         )
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         k = Set(m, name="k", records=[f"k{idx}" for idx in range(1, 4)])
         k["k1"] = False
 
@@ -214,9 +203,7 @@ class SetSuite(unittest.TestCase):
         self.assertRaises(ValueError, set.lag, 5, "bla")
         self.assertRaises(ValueError, alias.lag, 5, "bla")
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         s = Set(m, name="s", records=[f"s{i}" for i in range(1, 4)])
         t = Set(m, name="t", records=[f"t{i}" for i in range(1, 6)])
 
@@ -248,9 +235,7 @@ class SetSuite(unittest.TestCase):
         self.assertEqual(i.sameAs(j).gamsRepr(), "( sameAs(i,j) )")
         self.assertEqual(j.sameAs(i).gamsRepr(), "( sameAs(j,i) )")
 
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i = Set(m, "i", records=["1", "2", "3"])
         p = Parameter(m, "p", [i])
         p[i] = i.sameAs("2")
@@ -279,9 +264,7 @@ class SetSuite(unittest.TestCase):
             j6[j1, j2] = j5[j1, j2, j3]
 
     def test_domain_verification(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         i1 = Set(m, "i1", records=["i1", "i2"])
         i2 = Set(m, "i2", records=["i1"], domain=i1)
 

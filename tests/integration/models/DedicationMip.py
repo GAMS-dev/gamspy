@@ -16,8 +16,6 @@ First model - Simple dedication.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
@@ -76,9 +74,7 @@ def BondDataTable():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SET #
     Time = Set(

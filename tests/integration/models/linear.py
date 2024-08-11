@@ -19,8 +19,6 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 86-88.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import pandas as pd
 from gamspy import (
@@ -37,9 +35,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Data
     dat_df = pd.DataFrame(

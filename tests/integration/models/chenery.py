@@ -20,7 +20,6 @@ University Press, New York and Oxford, 1979.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from gamspy import Container, Model, Number, Problem, Sense, Sum
@@ -28,7 +27,6 @@ from gamspy import Container, Model, Number, Problem, Sense, Sum
 
 def main():
     container = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/chenery.gdx",
     )
 
