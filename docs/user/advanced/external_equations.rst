@@ -101,7 +101,7 @@ The variable `x` was designated as the first variable in the external module. In
 subsequent equations, its index must remain consistent, meaning it should still
 be indexed as 1. It is not necessary to include every variable in each equation.
 
-Let's assume we want to represent `y1 = sin(x1)` and `y2 = cos(x2)`
+Let's assume we want to represent :math:`y_1 = sin(x_1)` and :math:`y_2 = cos(x_2)`
 
 .. code-block:: python
 
@@ -117,6 +117,18 @@ Let's assume we want to represent `y1 = sin(x1)` and `y2 = cos(x2)`
 
     eq1[...] = 1*x1 + 3*y1 == 1
     eq2[...] = 2*x2 + 4*y2 == 2
+
+
+.. admonition:: A small note on what we are representing
+
+   Actually, instead of representing :math:`y_1 = \sin(x_1)`, we represent it as
+   :math:`\sin(x_1) - y_1 = 0`. When we evaluate the function, we are
+   asked to compute :math:`\sin(x_1) - y_1`. You'll notice that when this expression
+   does not equal zero, the equation is not satisfied. However, the solver will
+   adjust the values using derivatives to restore feasibility. Therefore, the
+   derivatives are taken with respect to both :math:`x_1` and :math:`y_1`.
+   Specifically, the derivative with respect to :math:`x_1` is :math:`\cos(x_1)`, and
+   the derivative with respect to :math:`y_1` is :math:`-1`.
 
 
 Finally, we need to provide the name of the external module in the model.
@@ -145,8 +157,9 @@ Programming Interface
 As the rest of the documentation remains unchanged, please refer to the
 `Programming Interface
 <https://www.gams.com/latest/docs/UG_ExternalEquations.html#UG_ExternalEquations_ProgrammingInterface>`_
-for further details. In summary, you need to download the `geheader.h` file and
-implement the `gefunc` function defined within it. Afterward, compile it into a
-library. We acknowledge that this aspect of implementing external equations has
-a steep learning curve, and we are exploring possible automations for certain
-special cases.
+for further details. In summary, you need to download the `geheader.h
+<https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/geheader.h?raw=true>`_
+file and implement the `gefunc` function defined within it. Afterward, compile
+it into a library. We acknowledge that this aspect of implementing external
+equations has a steep learning curve, and we are exploring possible automations
+for certain special cases.
