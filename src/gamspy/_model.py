@@ -352,7 +352,7 @@ class Model:
             filename = "f" + str(uuid.uuid4()).replace("-", "_")
             self._external_module_file = filename
             self._external_module = value
-            self.container._add_statement(f"File {filename} /{value}/;")
+            self.container._add_statement(f"File {filename} / '{value}' /;")
 
         if write_model_statement:
             self.container._add_statement(self)
