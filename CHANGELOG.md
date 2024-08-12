@@ -9,11 +9,14 @@ GAMSPy 0.14.4
   - Update the error message of license error.
   - Fix output stream validation.
   - Fix exception on solve in case listing file is specified.
+  - Add support for $= sparse assignment via __lshift__ overload. 
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
   - Remove system_directory for tests.
   - Add a test which specifies the listing file and fails because the license does not allow to run the model.
+  - Add traffic model to the model library.
+  - Add tests for __lshift__ operation.
 - Documentation
   - Document in_miro flag.
   - Add docstring for setBaseEqual.
