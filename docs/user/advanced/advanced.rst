@@ -23,3 +23,4 @@ fundamental GAMSPy ideas and philosophy.
    ./miro
    ./model_instance
    ./external_equations
+   ./extrinsic_functions

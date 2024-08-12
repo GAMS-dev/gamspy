@@ -22,6 +22,7 @@ GAMSPy 0.14.4
   - Document in_miro flag.
   - Add docstring for setBaseEqual.
   - Add section "External Equations" under Advanced documentation.
+  - Add section "Extrinsic Functions" under Advanced documentation.
 
 GAMSPy 0.14.3
 -------------

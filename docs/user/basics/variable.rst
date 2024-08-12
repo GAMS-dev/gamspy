@@ -680,6 +680,7 @@ generation. Note further, that any model with semi-integer variables requires a 
         forceZero = i <= i.up*b
 
 .. _inspecting_generated_variables:
+
 Inspecting Generated Variables
 ------------------------------
 
