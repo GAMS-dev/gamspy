@@ -484,6 +484,7 @@ or to assign an initial value to an equation with non-scalar domain: ::
 
 
 .. _inspecting_generated_equations:
+
 Inspecting Generated Equations
 ------------------------------
 
