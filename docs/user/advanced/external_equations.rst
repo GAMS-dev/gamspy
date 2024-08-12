@@ -23,10 +23,12 @@ embed your relationship in GAMSPy using External Equations.
 External equations do **not** work with all the non-linear solvers. This is
 because external module, the library you would need to implement, is limited to
 providing functionality for evaluating functions (including their first
-derivatives) at a specific point. As a result, solvers that require analysis of
-the algebraic structure of the model instance **cannot** work with external
-equations. This limitation affects deterministic global solvers, as noted in
-the "Global" column of `this table
+derivatives) at a specific point. Some solvers can also benefit from the use of
+second-order derivatives by utilizing the Hessian Vector Product
+:math:`\nabla^2f(x)v` that can be supplied by the external module. As a
+result, solvers that require analysis of the algebraic structure of the model
+instance **cannot** work with external equations. This limitation affects
+deterministic global solvers, as noted in the "Global" column of `this table
 <https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES>`_. However,
 stochastic global solvers are capable of working with external equations.
 
@@ -46,7 +48,7 @@ determined by the external module.
 An **external module** is a library responsible for managing all external
 equations. It defines and handles the relationships between variables specified
 in these equations. For instance, the external module might implement a
-function like `y = sin(x)`.
+function like :math:`y = sin(x)`.
 
 
 Here is an example, how an external equation is defined:
@@ -58,7 +60,7 @@ Here is an example, how an external equation is defined:
     x = gp.Variable(m, "x")
     y = gp.Variable(m, "y")
     eq = gp.Equation(m, "eq", type="external")
-    # This certainly is not a line equation
+    # This certainly is not a linear equation
     eq[...] = 1*x + 2*y == 1
 
 Coefficients indicate the index of the variable within the external module. For

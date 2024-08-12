@@ -33,7 +33,12 @@ gefunc( int *icntr, double *x, double *f, double *d, msgcb_t msgcb)
         else {
             GElog ( icntr, "--- Model has the correct size.");
             // icntr[I_Debug] = 1;
+#if CONST_DERIV == 1
             icntr[I_ConstDeriv] = 1; // signal that we will do constant derivatives
+#endif
+#if HV_PRODUCT == 1
+            icntr[I_HVProd]     = 1; // signal that we will do Hessian-Vector Product
+#endif
         }
         return rc;
     }
@@ -93,6 +98,23 @@ gefunc( int *icntr, double *x, double *f, double *d, msgcb_t msgcb)
         findex = icntr[I_Eqno];
         d[findex + 1] = -1.0;
         rc = 0;
+        return rc;
+    }
+    else if ( icntr[I_Mode] == DOHVPROD ) {
+        GElog ( icntr, "--- Hessian-Vector Product call");
+        findex = icntr[I_Eqno];
+        rc = 0;
+        if ( findex == 1 ) {
+            d[0] = - x[0] * std::sin(x[0]);
+            d[2] = 0;
+        } else if ( findex == 2 ) {
+            d[1] = - x[1] * std::cos(x[1]);
+            d[3] = 0;
+        }
+        else {
+            GEstat( icntr," ** fIndex has unexpected value.");
+            rc = 2;
+        }
         return rc;
     }
     else {
