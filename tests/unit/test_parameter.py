@@ -126,34 +126,6 @@ class ParameterSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             a[j] = 5
 
-        i = Set(self.m, "i", records=["i1", "i2", "i3"])
-        s = Parameter(
-            self.m, "s", domain=i, records=[("i1", 1), ("i2", 2), ("i3", 3)]
-        )
-        t = Parameter(
-            self.m, "t", domain=i, records=[("i1", 0), ("i2", 5), ("i3", 0)]
-        )
-        s[i].where[t[i]] = t[i]
-        self.assertEqual(s.toList(), [("i1", 1.0), ("i2", 5.0), ("i3", 3.0)])
-
-        i2 = Set(self.m, "i2", records=["i1", "i2", "i3"])
-        j2 = Set(m, "j2", records=["j1", "j2", "j3"])
-        s2 = Parameter(
-            self.m, "s2", domain=i2, records=[("i1", 1), ("i2", 2), ("i3", 3)]
-        )
-        t2 = Parameter(
-            self.m, "t2", domain=i2, records=[("i1", 0), ("i2", 5), ("i3", 0)]
-        )
-        t3 = Parameter(
-            m, "t3", domain=j2, records=[("j1", 0), ("j2", 5), ("j3", 0)]
-        )
-        with self.assertRaises(ValidationError):
-            s2[i2] << t3[j2]
-
-        s2[i2] << t2[i2]
-        self.assertEqual(s2.getAssignment(), "s2(i2) $= t2(i2);")
-        self.assertEqual(s2.toList(), [("i1", 1.0), ("i2", 5.0), ("i3", 3.0)])
-
     def test_implicit_parameter_assignment(self):
         m = Container()
         i = Set(

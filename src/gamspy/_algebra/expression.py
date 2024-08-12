@@ -210,7 +210,7 @@ class Expression(operable.Operable):
         else:
             out_str = f"{left_str} {self.data} {right_str}"
 
-        if self.data in ["..", "=", "$="]:
+        if self.data in ["..", "="]:
             return f"{out_str};"
 
         if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:

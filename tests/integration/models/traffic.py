@@ -43,13 +43,13 @@ def main():
         symbol_names=["arc_cost", "trip"],
     )
 
-    arc_cost[i, j, param] << arc_cost[j, i, param]
+    arc_cost[i, j, param].where[arc_cost[j, i, param]] = arc_cost[j, i, param]
 
     ca[i, j] = arc_cost[i, j, "a"]
     cb[i, j] = arc_cost[i, j, "b"]
     ck[i, j] = arc_cost[i, j, "k"]
 
-    trip[i, j] << trip[j, i]
+    trip[i, j].where[trip[j, i]] = trip[j, i]
     trip[i, j] = trip[i, j] * 0.11
 
     a[i, j] = ca[i, j]
