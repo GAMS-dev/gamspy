@@ -91,8 +91,8 @@ def validate_one_dimensional_sets(
         )
     ):
         raise ValidationError(
-            f"`Given set `{given}` is not a valid domain for declared"
-            f" domain `{actual}`"
+            f"`Given set `{given.name}` is not a valid domain for declared"
+            f" domain `{actual.name}`"
         )
 
 

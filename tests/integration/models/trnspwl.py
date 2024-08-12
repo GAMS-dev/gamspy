@@ -187,10 +187,10 @@ def main():
 
     # Start the local NLP solver in a local solution that is not globally
     # optimal
-    x.l["seattle  ", "chicago "] = 25
-    x.l["seattle  ", "topeka  "] = 275
+    x.l["seattle", "chicago"] = 25
+    x.l["seattle", "topeka"] = 275
     x.l["san-diego", "new-york"] = 325
-    x.l["san-diego", "chicago "] = 275
+    x.l["san-diego", "chicago"] = 275
 
     localopt = Parameter(
         m,
