@@ -56,31 +56,6 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __invert__(self):
         return expression.Expression("", "not", self)
 
-    def __lshift__(self, rhs) -> None:
-        if not isinstance(rhs, ImplicitParameter):
-            raise ValidationError(
-                f"Assigned value must be of type ImplicitParameter but given {type(rhs)}"
-            )
-        _ = validation.validate_domain(self, rhs.domain)
-
-        statement = expression.Expression(
-            ImplicitParameter(
-                parent=self.parent,
-                name=self.name,
-                domain=self.domain,
-                permutation=self.permutation,
-                scalar_domains=self._scalar_domains,
-            ),
-            "$=",
-            rhs,
-        )
-
-        self.container._add_statement(statement)
-        self.parent._assignment = statement
-
-        if self.parent.synchronize:
-            self.container._synch_with_gams()
-
     def __getitem__(self, indices: list | str) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 

@@ -10,7 +10,7 @@ GAMSPy 0.14.4
   - Fix output stream validation.
   - Fix exception on solve in case listing file is specified.
   - Add external equations support.
-  - Add support for $= sparse assignment via __lshift__ overload. 
+  - Do not raise exception in case GAMS Engine returns 308 on get_logs call.
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
@@ -18,7 +18,6 @@ GAMSPy 0.14.4
   - Add a test which specifies the listing file and fails because the license does not allow to run the model.
   - Add tests for external equations support.
   - Add traffic model to the model library.
-  - Add tests for __lshift__ operation.
 - Documentation
   - Document in_miro flag.
   - Add docstring for setBaseEqual.

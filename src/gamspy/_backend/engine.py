@@ -529,6 +529,9 @@ class Job(Endpoint):
             if r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
+            elif r.status == 308:
+                response_data = json.loads(response_data)
+                return response_data["message"], True
             elif r.status != 200:
                 raise EngineClientException(
                     "Getting logs failed with status code: "
