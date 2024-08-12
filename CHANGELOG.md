@@ -10,6 +10,7 @@ GAMSPy 0.14.4
   - Fix output stream validation.
   - Fix exception on solve in case listing file is specified.
   - Add support for $= sparse assignment via __lshift__ overload. 
+  - Do not raise exception in case GAMS Engine returns 308 on get_logs call.
 - Testing
   - Add test for container.in_miro flag.
   - Add tests to simulate Jupyter Notebook behaviour.
