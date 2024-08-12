@@ -34,10 +34,6 @@ class ExternalModuleTestSuite(unittest.TestCase):
         self.external_module = external_module
 
     def test_sin_cos_example(self):
-        if self.external_module is None:
-            print("Not implemented for this platform yet")
-            return
-
         y1 = gp.Variable(self.m, "y1")
         y2 = gp.Variable(self.m, "y2")
         x1 = gp.Variable(self.m, "x1")
