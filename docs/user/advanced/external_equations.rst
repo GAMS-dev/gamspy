@@ -80,7 +80,7 @@ a failure:
     eq[...] = 1*x + 2*y == 1
     eq2[...] = 1*x + 2*y == 1 # this should be 2
 
-Leaving an equation index empty also does not work:
+Skipping an equation index also does not work:
 
 .. code-block:: python
 
