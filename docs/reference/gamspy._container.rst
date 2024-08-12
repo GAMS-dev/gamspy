@@ -6,6 +6,6 @@ Container
    :keywords: Reference, Container, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 .. autoclass:: gamspy.Container
-   :members: read, write, generateGamsString, loadRecordsFromGdx, addAlias, addEquation, addModel, addParameter, addSet, addUniverseAlias, addVariable, getSymbols, getSets, getAliases, getParameters, getVariables, getEquations, copy, describeSets, describeAliases, describeParameters, describeVariables, describeEquations, gamsJobName, gdxInputPath, gdxOutputPath, hasSymbols, isValid,, miro_protect, removeSymbols, renameSymbol, summary, working_directory
+   :members: read, write, generateGamsString, loadRecordsFromGdx, addAlias, addEquation, addModel, addParameter, addSet, addUniverseAlias, addVariable, getSymbols, getSets, getAliases, getParameters, getVariables, getEquations, copy, describeSets, describeAliases, describeParameters, describeVariables, describeEquations, importExtrinsicLibrary, gamsJobName, gdxInputPath, gdxOutputPath, hasSymbols, isValid,, miro_protect, removeSymbols, renameSymbol, summary, working_directory
    :undoc-members:
    :show-inheritance:

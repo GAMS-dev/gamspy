@@ -19,7 +19,6 @@ Interfaces 16, 4 (1986), 356-366.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from gamspy import Container, Domain, Model, Sense, Sum
@@ -27,7 +26,6 @@ from gamspy import Container, Domain, Model, Sense, Sum
 
 def main():
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/thai.gdx",
     )
 

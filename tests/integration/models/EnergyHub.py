@@ -23,8 +23,6 @@ DOI: doi.org/10.1007/978-3-319-62350-
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 
@@ -71,9 +69,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SET #
     t = Set(

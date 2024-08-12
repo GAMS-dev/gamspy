@@ -23,8 +23,6 @@ Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
 
 from __future__ import annotations
 
-import os
-
 import pandas as pd
 from gamspy import (
     Card,
@@ -41,9 +39,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Set
     t = Set(

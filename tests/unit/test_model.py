@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import pandas as pd
@@ -21,9 +20,7 @@ from gamspy.exceptions import ValidationError
 
 class ModelSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -270,9 +267,7 @@ class ModelSuite(unittest.TestCase):
         )
 
     def test_feasibility(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(m, name="i", records=["seattle", "san-diego"])
         j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
@@ -382,9 +377,7 @@ class ModelSuite(unittest.TestCase):
         test_model2.solve()
 
     def test_computeInfeasibilities(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
 
         i = Set(
             m,
@@ -901,6 +894,51 @@ class ModelSuite(unittest.TestCase):
         self.assertEqual(
             len(mexss.getEquationListing(infeasibility_threshold=2.5)), 2
         )
+
+    def test_jupyter_behaviour(self):
+        i = Set(self.m, name="i", records=self.canning_plants)
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
+
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        c[i, j] = 90 * d[i, j] / 1000
+
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+
+        supply = Equation(self.m, name="supply", domain=[i])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
+        demand = Equation(self.m, name="demand", domain=[j])
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+        transport.solve()
 
 
 def model_suite():

@@ -23,8 +23,6 @@ DOI: doi.org/10.1007/978-3-319-62350-4
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Card,
     Container,
@@ -39,9 +37,7 @@ from gamspy.math import sqr
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # VARIABLES #
     of1 = Variable(m, name="of1", type="free")

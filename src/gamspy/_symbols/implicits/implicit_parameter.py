@@ -77,7 +77,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 f"Domain was not initialized. Default values for {self.gamsRepr()} will be used."
             )
         # self[domain] = rhs
-        domain = validation._transform_given_indices(self.domain, indices)
+        domain = validation.validate_domain(self, indices)
 
         if isinstance(rhs, float):
             rhs = utils._map_special_values(rhs)  # type: ignore

@@ -17,15 +17,11 @@ Section 5.4.3. Test Problem 2, pages 52-54.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import Container, Equation, Model, Parameter, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SCALARS #
     Tcin = Parameter(

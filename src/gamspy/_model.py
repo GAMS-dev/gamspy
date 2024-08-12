@@ -4,7 +4,6 @@ import io
 import logging
 import os
 import uuid
-from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -209,6 +208,8 @@ class Model:
         Equation - Variable matches for MCP models.
     limited_variables : Iterable, optional
         Allows limiting the domain of variables used in a model.
+    external_module: str, optional
+        The name of the external module in which the external equations are implemented
 
     Examples
     --------
@@ -233,8 +234,9 @@ class Model:
         objective: Variable | Expression | None = None,
         matches: dict[Equation, Variable] | None = None,
         limited_variables: Iterable[Variable] | None = None,
+        external_module: str | None = None,
     ):
-        self._auto_id = str(uuid.uuid4()).replace("-", "_")
+        self._auto_id = "m" + str(uuid.uuid4()).replace("-", "_")
 
         if name is not None:
             name = validation.validate_name(name)
@@ -262,7 +264,14 @@ class Model:
         if not self.equations and not self._matches:
             raise ValidationError("Model requires at least one equation.")
 
-        self.container._add_statement(self)
+        self._external_module_file = None
+        self._external_module = None
+
+        if external_module is not None:
+            self.external_module = external_module
+        else:
+            # To avoid adding it twice
+            self.container._add_statement(self)
 
         # allow freezing
         self._is_frozen = False
@@ -309,6 +318,44 @@ class Model:
             f"Model {self.name}:\n  Problem Type: {self.problem}\n  Sense:"
             f" {self.sense}\n  Equations: {self.equations}"
         )
+
+    @property
+    def external_module(self) -> str | None:
+        """
+        Name of the external module in which the external equations are implemented.
+        By default, this parameter is set to None. When provided, it triggers the
+        opening of the specified file using a File statement and incorporates the
+        file into the model by adding it as an external module.
+
+        This feature requires a solid understanding of programming, compilation,
+        and linking processes. For more information, please refer to the
+        https://www.gams.com/latest/docs/UG_ExternalEquations.html .
+
+        Returns
+        -------
+        str | None
+        """
+        return self._external_module
+
+    @external_module.setter
+    def external_module(self, value: str | None):
+        if self._external_module_file is not None:
+            self.container._add_statement(
+                f"putclose {self._external_module_file};"
+            )
+
+        write_model_statement = value != self._external_module
+        self._external_module = None
+        self._external_module_file = None
+
+        if value is not None:
+            filename = "f" + str(uuid.uuid4()).replace("-", "_")
+            self._external_module_file = filename
+            self._external_module = value
+            self.container._add_statement(f"File {filename} / '{value}' /;")
+
+        if write_model_statement:
+            self.container._add_statement(self)
 
     def _generate_obj_var_and_equation(self) -> tuple[Variable, Equation]:
         variable = gp.Variable._constructor_bypass(
@@ -379,7 +426,9 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            self.equations.append(equation)
+
+            if equation.name not in [symbol.name for symbol in self.equations]:
+                self.equations.append(equation)
 
             return variable
 
@@ -406,7 +455,8 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            self.equations.append(equation)
+            if equation.name not in [symbol.name for symbol in self.equations]:
+                self.equations.append(equation)
 
             return variable
 
@@ -418,7 +468,7 @@ class Model:
         if self.sense:
             if self.sense == gp.Sense.FEASIBILITY:
                 # Set sense as min or max for feasibility
-                self.sense = gp.Sense.MIN
+                self.sense = gp.Sense.MIN  # type: ignore
 
             solve_string += f" {self.sense}"
 
@@ -800,6 +850,11 @@ class Model:
                 ",".join([equations_str, matches_str])
                 if equations
                 else matches_str
+            )
+
+        if self._external_module_file:
+            equations_str = ",".join(
+                [equations_str, self._external_module_file]
             )
 
         if self._limited_variables:

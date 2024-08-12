@@ -14,8 +14,6 @@ Last modified: Apr 2008.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
@@ -38,9 +36,7 @@ from gamspy.math import sqr
 
 def main():
     # Define container
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Bond data. Prices, coupons and maturities from the Danish market
     bond_data_recs = pd.DataFrame(

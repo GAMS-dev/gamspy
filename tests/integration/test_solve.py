@@ -131,7 +131,7 @@ def transport(f_value):
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        self.m = Container()
         self.canning_plants = ['seattle', 'san-diego']
         self.markets = ['new-york', 'chicago', 'topeka']
         self.distances = [
@@ -350,6 +350,14 @@ class SolveSuite(unittest.TestCase):
                 output=file,
             )
 
+        # Redirect to an invalid stream
+        class Dummy:
+            def write(self, data):
+                ...
+
+        with self.assertRaises(ValidationError):
+            transport.solve(output=Dummy())
+
         # Redirect output to logger
         logger = logging.getLogger("TEST_LOGGER")
         logger.setLevel(logging.INFO)
@@ -422,13 +430,13 @@ class SolveSuite(unittest.TestCase):
         self.assertRaises(TypeError, transport.solve, None, 5)
 
         # Try to solve invalid model
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
         cost = Equation(m, "cost")
         model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
         self.assertRaises(Exception, model.solve)
 
     def test_interrupt(self):
-        cont = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        cont = Container()
 
         power_forecast_recs = np.array(
             [
@@ -937,7 +945,7 @@ class SolveSuite(unittest.TestCase):
             pass
 
     def test_solver_options(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -979,7 +987,7 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_ellipsis(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1025,7 +1033,7 @@ class SolveSuite(unittest.TestCase):
             c[..., ...] = 5
         
     def test_slice(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         i2 = Set(m, name="i2", records=self.canning_plants)
@@ -1066,7 +1074,7 @@ class SolveSuite(unittest.TestCase):
         error_test[:] = Sum(ntd, error[ntd])
         
     def test_max_line_length(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1098,7 +1106,7 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         
     def test_summary(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1129,7 +1137,7 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
 
         i = Set(m, name="i", records=self.canning_plants)
         j = Set(m, name="j", records=self.markets)
@@ -1155,7 +1163,7 @@ class SolveSuite(unittest.TestCase):
             c[b[j]] = 90 * d[i, j] / 1000
             
     def test_after_exception(self):
-        m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+        m = Container()
         x = Variable(m, "x", type="positive")
         e = Equation(m, "e", definition=x <= x + 1)
         with self.assertRaises(ValidationError):
@@ -1192,7 +1200,7 @@ class SolveSuite(unittest.TestCase):
             
     def test_invalid_arguments(self):
         m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
+            
             
         )
 
@@ -1405,6 +1413,9 @@ class SolveSuite(unittest.TestCase):
             sense="min",
             objective=z,
         )
+        with self.assertRaises(ValidationError):
+            transport.solve(load_symbols=['x'])
+
         transport.solve(load_symbols=[])
 
         self.assertIsNone(x.records)

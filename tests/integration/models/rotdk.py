@@ -17,8 +17,6 @@ Management Science 44, 11 (1998), 101-110.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Alias,
     Card,
@@ -37,9 +35,7 @@ from gamspy.math import Round, normal, power, uniform
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Set
     s = Set(

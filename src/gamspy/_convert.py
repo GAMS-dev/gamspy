@@ -84,6 +84,15 @@ class GamsConverter(Converter):
             self.container[name].getDeclaration() for name in symbols
         ]
 
+        if self.model.external_module is not None:
+            em_name = self.model._external_module
+            em_file = self.model._external_module_file
+            declarations.append(f"File {em_file} /{em_name}/;")
+            logger.info("Converter will not copy external module files")
+            logger.info(
+                f"You need to ensure your external module is accessible from {self.path}"
+            )
+
         # 2. Load the data from gdx
         load_str = f"$gdxLoadAll {os.path.abspath(self.gdx_path)}"
 

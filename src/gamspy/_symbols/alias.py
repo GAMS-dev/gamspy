@@ -177,7 +177,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        if self.synchronize:
+        if self.alias_with.synchronize:  # type: ignore
             self.container._synch_with_gams()
 
     @property

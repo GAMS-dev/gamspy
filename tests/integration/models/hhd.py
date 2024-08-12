@@ -21,16 +21,12 @@ Application U84, page 65. Application A13, page 360.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Parameter, Variable
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # Variant 1
     # # SCALARS #

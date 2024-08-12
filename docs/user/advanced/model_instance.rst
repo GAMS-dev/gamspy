@@ -19,7 +19,7 @@ can be consisted of :meth:`Parameter <gamspy.Parameter>` and :meth:`Variable <ga
 the model is passed to the selected solver. After the completion of the solve method, the container will contain the primal and dual solution of the model 
 just solved.  Moreover, the parameters that are modifiable are also accessible in database with the name of the Parameter plus "_var". The marginal of 
 this Variable can provide sensitivity information about the parameter setting. The status of the solve is accessible through the ``Model.model_status``, 
-``Model.solver_status`` and ``Model.objective_value`` attributes.
+``Model.solve_status`` and ``Model.objective_value`` attributes.
 
 3. The :meth:`freeze <gamspy.Model.unfreeze>` function unfreezes the model and releases the resources.
 

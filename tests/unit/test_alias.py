@@ -18,9 +18,7 @@ from gamspy.exceptions import ValidationError
 
 class AliasSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_alias_creation(self):
         i = Set(self.m, "i")
@@ -136,9 +134,7 @@ class AliasSuite(unittest.TestCase):
 
         self.m.write(gdx_path)
 
-        bla = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        bla = Container()
         bla.read(gdx_path)
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
@@ -205,6 +201,11 @@ class AliasSuite(unittest.TestCase):
         self.assertEqual(
             a.getAssignment(),
             "a(row,dyn_col_alias(col)) = (13.2 + (r(row) * c(dyn_col_alias)));",
+        )
+
+        dyn_col_alias["c-1"] = False
+        self.assertEqual(
+            dyn_col_alias.toList(), [f"c-{idx}" for idx in range(2, 5)]
         )
 
 

@@ -15,8 +15,6 @@ for water and energy management", Revision 6, February 2003.
 
 from __future__ import annotations
 
-import os
-
 import gamspy.math as gams_math
 import pandas as pd
 from gamspy import (
@@ -101,9 +99,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SETS #
     n = Set(

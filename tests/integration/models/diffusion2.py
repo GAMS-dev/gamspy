@@ -18,8 +18,6 @@ http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 from gamspy import (
     Card,
@@ -485,9 +483,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SETS #
     time = Set(m, name="time", records=[f"t{t}" for t in range(1, 26)])

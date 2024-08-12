@@ -8,7 +8,6 @@ Capacitated Lot-Sizing Problem (CLSP)
 
 from __future__ import annotations
 
-import os
 from itertools import product
 
 import pandas as pd
@@ -77,9 +76,7 @@ def model_data():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
     data = model_data()
 
     # SETS

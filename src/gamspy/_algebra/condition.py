@@ -93,8 +93,7 @@ class Condition(operable.Operable):
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
     def gamsRepr(self) -> str:
-        assert self.condition is not None
-        return f"({self.conditioning_on.gamsRepr()} $ {self.condition.gamsRepr()})"
+        return f"({self.conditioning_on.gamsRepr()} $ {self.condition.gamsRepr()})"  # type: ignore
 
     def getDeclaration(self) -> str:
         return self.gamsRepr()
@@ -107,6 +106,4 @@ class Condition(operable.Operable):
         -------
         str
         """
-        assert self.condition is not None
-
-        return f"{self.conditioning_on.latexRepr()} ~ | ~ {self.condition.latexRepr()}"
+        return f"{self.conditioning_on.latexRepr()} ~ | ~ {self.condition.latexRepr()}"  # type: ignore

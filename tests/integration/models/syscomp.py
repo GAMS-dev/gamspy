@@ -12,8 +12,6 @@ http://www.gams.com/~erwin/lineq.pdf
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 import pandas as pd
 from gamspy import (
@@ -44,9 +42,7 @@ def data_records():
 
 
 def main():
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     # SET #
     i = Set(m, name="i", records=["i1", "i2"])

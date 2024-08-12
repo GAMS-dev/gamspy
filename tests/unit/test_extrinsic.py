@@ -20,9 +20,7 @@ def get_default_platform():
 
 class ExtrinsicSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_extrinsic_functions(self):
         # Invalid path

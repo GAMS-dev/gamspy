@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import pandas as pd
@@ -24,9 +23,7 @@ from gamspy.exceptions import ValidationError
 
 class OperationSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.markets = ["new-york", "chicago", "topeka"]
         self.distances = [
@@ -134,9 +131,7 @@ class OperationSuite(unittest.TestCase):
 
     def test_operation_indices(self):
         # Test operation index
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         mt = 2016
         mg = 17
         maxdt = 40
@@ -180,9 +175,7 @@ class OperationSuite(unittest.TestCase):
         )
 
     def test_operation_overloads(self):
-        m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        m = Container()
         c = Set(m, "c")
         s = Set(m, "s")
         a = Parameter(m, "a", domain=[c, s])

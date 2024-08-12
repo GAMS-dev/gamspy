@@ -153,7 +153,9 @@ class Auth(Endpoint):
         )
 
         response_data = r.data.decode("utf-8", errors="replace")
-        info = json.loads(response_data)
+
+        if r.status in [200, 400, 401, 500]:
+            info = json.loads(response_data)
 
         if r.status == 200:
             return info["token"]
@@ -204,7 +206,8 @@ class Auth(Endpoint):
         )
 
         response_data = r.data.decode("utf-8", errors="replace")
-        info = json.loads(response_data)
+        if r.status in [200, 400, 401, 500]:
+            info = json.loads(response_data)
 
         if r.status == 200:
             return info["token"]
@@ -305,16 +308,14 @@ class Job(Endpoint):
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def post(
@@ -379,16 +380,14 @@ class Job(Endpoint):
                 "Creating job on GAMS Engine failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Creating job on GAMS Engine failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def get_results(self, token: str, working_directory: str):
@@ -447,8 +446,7 @@ class Job(Endpoint):
                 raise EngineClientException(
                     "Fatal error while getting the results back from engine. GAMS"
                     f" Engine return code: {r.status}. Error message:"
-                    f" {response_data}",
-                    r.status,
+                    f" {response_data}"
                 )
 
     def delete_results(self, token: str):
@@ -480,7 +478,7 @@ class Job(Endpoint):
                 return
             elif r.status == 403:
                 raise EngineClientException(
-                    "Job data does not exist in GAMS Engine!", r.status
+                    "Job data does not exist in GAMS Engine!"
                 )
             elif r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
@@ -490,16 +488,14 @@ class Job(Endpoint):
                 "Removing job result failed with status code: "
                 + str(r.status)
                 + ". Message: "
-                + response_data,
-                r.status,
+                + response_data
             )
 
         raise EngineClientException(
             "Removing job result failed after: "
             + str(MAX_REQUEST_ATTEMPS)
             + " attempts. Message: "
-            + response_data,
-            r.status,
+            + response_data
         )
 
     def get_logs(self, token: str) -> tuple[str, bool]:
@@ -533,14 +529,16 @@ class Job(Endpoint):
             if r.status == 429:
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
+            elif r.status == 308:
+                response_data = json.loads(response_data)
+                return response_data["message"], True
             elif r.status != 200:
                 raise EngineClientException(
                     "Getting logs failed with status code: "
                     + str(r.status)
                     + ". "
                     + response_data
-                    + ".",
-                    r.status,
+                    + "."
                 )
 
             response_data = json.loads(response_data)
@@ -808,7 +806,10 @@ class GAMSEngine(backend.Backend):
                     # logoption = 2 | 4
                     shutil.move(engine_output_path, self.options.log_file)
                 else:
-                    os.remove(engine_output_path)  # logoption = 0 | 3
+                    try:
+                        os.remove(engine_output_path)  # logoption = 0 | 3
+                    except FileNotFoundError:
+                        ...
 
                 self.model._update_model_attributes()
 

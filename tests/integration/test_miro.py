@@ -14,9 +14,7 @@ from gamspy.exceptions import ValidationError
 
 class MiroSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_domain_forwarding(self):
         # Only the parameter is miro input
@@ -780,7 +778,46 @@ class MiroSuite(unittest.TestCase):
                 check=True,
                 capture_output=True,
             )
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
+            self.fail(e)
+
+    def test_miro_in(self):
+        directory = str(pathlib.Path(__file__).parent.resolve())
+        miro_gdx_in = os.path.join(
+            directory, "miro_models", "_miro5_gdxin_.gdx"
+        )
+
+        subprocess_env = os.environ.copy()
+        subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
+
+        # m.in_miro = True
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    directory + os.sep + "miro_models" + os.sep + "miro6.py",
+                ],
+                env=subprocess_env,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
+            self.fail(e)
+
+        subprocess_env = os.environ.copy()
+
+        # m.in_miro = False
+        try:
+            subprocess.run(
+                [
+                    sys.executable,
+                    directory + os.sep + "miro_models" + os.sep + "miro6.py",
+                ],
+                env=subprocess_env,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError as e:
             self.fail(e)
 
 

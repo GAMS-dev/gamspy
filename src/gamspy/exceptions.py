@@ -68,14 +68,13 @@ def _parse_errors(lines: list[str], index: int) -> str:
         ...
 
     error_message = (
-        f'\n\n{FRAME}\nError Summary\n{FRAME}{"".join(error_lines)}'
+        f'\n\n{FRAME}\nError Summary\n{FRAME}\n{"".join(error_lines)}'
     )
 
     return error_message.rstrip()
 
 
 def customize_exception(
-    working_directory: str,
     options: Options,
     job_name: str,
     return_code: int | None,
@@ -88,7 +87,7 @@ def customize_exception(
         lst_path = (
             options.listing_file
             if os.path.isabs(options.listing_file)
-            else os.path.join(working_directory, options.listing_file)
+            else os.path.join(os.getcwd(), options.listing_file)
         )
     else:
         lst_path = job_name + ".lst"

@@ -82,8 +82,6 @@ Original version programmed by Sherman Robinson and Andrea Cattaneo.
 
 from __future__ import annotations
 
-import os
-
 import numpy as np
 from gamspy import (
     Alias,
@@ -105,9 +103,7 @@ from gamspy.math import abs, centropy, exp, log
 
 
 def main(is_centropy=False):
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     SAM_recs = np.array(
         [

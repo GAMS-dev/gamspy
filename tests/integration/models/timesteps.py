@@ -31,8 +31,6 @@ data by using method 3.
 
 from __future__ import annotations
 
-import os
-
 from gamspy import (
     Alias,
     Container,
@@ -49,9 +47,7 @@ from gamspy.math import uniformInt
 
 
 def main(mt=2016, mg=17, mindt=10, maxdt=40):
-    m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-    )
+    m = Container()
 
     if mindt > maxdt:
         raise Exception("minimum downtime is larger than maximum downtime")

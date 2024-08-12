@@ -14,11 +14,13 @@ fundamental GAMSPy ideas and philosophy.
    :maxdepth: 1
 
    ./indexing
+   ./assignments
+   ./debugging
    ./card_ord
    ./lag_lead
    ./number
-   ./assignments
    ./special_features
-   ./debugging
    ./miro
    ./model_instance
+   ./external_equations
+   ./extrinsic_functions

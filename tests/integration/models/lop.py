@@ -52,7 +52,6 @@ from gamspy import Variable
 
 def main():
     m = Container(
-        system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
         load_from=str(Path(__file__).parent.absolute()) + "/lop.gdx",
     )
 

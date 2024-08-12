@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import unittest
 
 import gamspy.utils as utils
@@ -10,9 +9,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 class UtilsSuite(unittest.TestCase):
     def setUp(self):
-        self.m = Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None),
-        )
+        self.m = Container()
 
     def test_utils(self):
         i = Set(self.m, "i", records=["i1", "i2"])

@@ -14,7 +14,6 @@ Yale University Press, 1973.
 
 from __future__ import annotations
 
-import os
 from math import isclose
 
 from gamspy import Container
@@ -170,7 +169,7 @@ $endIf
 
 solve HANSEN using mcp;
 """
-    m = Container(system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None))
+    m = Container()
     m.addGamsCode(hansen_mpsge)
     demands = m["HH"].toList()
     assert isclose(demands[0][1], 5.1549, rel_tol=1e-4)
