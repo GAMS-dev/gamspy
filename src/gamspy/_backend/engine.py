@@ -667,6 +667,37 @@ class Job(Endpoint):
 
 
 class EngineClient:
+    """
+    GAMS Engine Client.
+
+    Parameters
+    ----------
+    host : str
+        Host address.
+    username : str | None, optional
+        Username
+    password : str | None, optional
+        Password
+    jwt : str | None, optional
+        JWT Token
+    namespace : str, optional
+        Namespace, by default "global"
+    extra_model_files : list[str], optional
+        extra_model_files, by default []
+    engine_options : dict | None, optional
+        GAMS Engine options, by default None
+    remove_results : bool, optional
+        Whether to remove the results from GAMS Engine Server, by default False
+    is_blocking : bool, optional
+        Synchronous (blocking) or asynchronous, by default True
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> client = gp.EngineClient(host="https://engine.gams.com/api/", username="<username>", password="<password>")
+
+    """
+
     def __init__(
         self,
         host: str,
@@ -698,7 +729,6 @@ class EngineClient:
 
         # Endpoints
         self.job = Job(self)
-
         self.auth = Auth(self)
 
     def _get_engine_config(self):
