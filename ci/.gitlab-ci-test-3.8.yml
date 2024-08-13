@@ -44,7 +44,6 @@ test-deg-3.8:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
     - conda activate "$(pwd)/gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
-    - conda install -c anaconda freetds
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge
@@ -72,7 +71,6 @@ test-dac-3.8:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.8${CI_COMMIT_SHORT_SHA}" python=3.8
     - conda activate "$(pwd)/gamspy-env-3.8${CI_COMMIT_SHORT_SHA}"
-    - conda install -c anaconda freetds
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge

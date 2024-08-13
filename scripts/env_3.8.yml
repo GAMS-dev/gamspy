@@ -1,0 +1,6 @@
+name: darwinenv38
+channels:
+  - anaconda
+dependencies:
+  - freetds
+  - python=3.8

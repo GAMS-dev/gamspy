@@ -1,0 +1,6 @@
+name: darwinenv39
+channels:
+  - anaconda
+dependencies:
+  - freetds
+  - python=3.9

@@ -1,36 +1,24 @@
 import fcntl
-import os
 import platform
 import subprocess
 import sys
+import time
+from contextlib import contextmanager
 
 
-def lock_file(f):
-    fcntl.lockf(f, fcntl.LOCK_EX)
+@contextmanager
+def locker(filename: str):
+    start_time = time.time()
+    with open(filename, "w") as file:
+        fcntl.lockf(file, fcntl.LOCK_EX)
+        yield
+        fcntl.lockf(file, fcntl.LOCK_UN)
 
-
-def unlock_file(f):
-    fcntl.lockf(f, fcntl.LOCK_UN)
-
-
-class AtomicOpen:
-    def __init__(self, path, *args, **kwargs):
-        self.file = open(path, *args, **kwargs)
-        lock_file(self.file)
-
-    def __enter__(self, *args, **kwargs):
-        return self.file
-
-    def __exit__(self, exc_type=None, exc_value=None, traceback=None):
-        self.file.flush()
-        os.fsync(self.file.fileno())
-        unlock_file(self.file)
-        self.file.close()
-
-        if exc_type is not None:
-            return False
-        else:
-            return True
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(
+        f"Start time: {start_time}, End time: {end_time}, Elapsed time: {elapsed_time} seconds"
+    )
 
 
 def main():
@@ -44,9 +32,18 @@ def main():
         sys.stderr.write("python conda_create.py myenv python=3.9\n")
         sys.exit(1)
 
-    with AtomicOpen("/tmp/conda_lock", "w"):
+    with locker("/tmp/conda_lock"):
         subprocess.run(
-            ["conda", "create", "-y", "-p", sys.argv[1], sys.argv[2]],
+            [
+                "conda",
+                "env",
+                "create",
+                "-y",
+                "-f",
+                f"scripts/env_{sys.argv[2].split('=')[-1]}.yml",
+                "-p",
+                sys.argv[1],
+            ],
             check=True,
         )
 
