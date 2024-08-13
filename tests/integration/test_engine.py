@@ -91,6 +91,7 @@ class EngineSuite(unittest.TestCase):
             username=os.environ["ENGINE_USER"],
             password=os.environ["ENGINE_PASSWORD"],
             namespace=os.environ["ENGINE_NAMESPACE"],
+            remove_results=True,
         )
 
         self.assertTrue(
