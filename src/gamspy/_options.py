@@ -426,6 +426,14 @@ class Options(BaseModel):
         return Options(**attributes)
 
     def export(self, pf_file: str, output: io.TextIOWrapper | None = None) -> None:
+        """
+        Exports options to the pf_file. Each line contains a key-value pair.
+
+        Parameters
+        ----------
+        pf_file : str
+        output : io.TextIOWrapper | None, optional
+        """
         all_options = dict()
         # Solver options
         if hasattr(self, "_solver"):

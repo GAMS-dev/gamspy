@@ -7,6 +7,8 @@ GAMSPy 0.14.5
   - Retry login with exponential backoff in GAMS Engine backend.
 - Testing
   - Use contextmanager to create atomic conda environments.
+- Documentation
+  - Fix links in the api reference.
 
 GAMSPy 0.14.4
 -------------

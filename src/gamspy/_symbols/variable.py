@@ -618,12 +618,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         filters: list[list[str]] | None = None,
     ) -> list[str]:
         """
-        Returns the generated equations.
+        Returns the generated variables.
 
         Parameters
         ----------
         n : int, optional
-            Number of equations to be returned.
+            Number of variables to be returned.
         filters : list[list[str]], optional
             Filters to be used.
 
@@ -634,9 +634,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         Raises
         ------
         ValidationError
-            In case the model is not solved yet with equation_listing_limit option.
+            In case the model is not solved yet with variable_listing_limit option.
         ValidationError
-            In case the length of the filters is different than the dimension of the equation.
+            In case the length of the filters is different than the dimension of the variable.
         """
         if not hasattr(self, "_column_listing"):
             raise ValidationError(

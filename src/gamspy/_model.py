@@ -617,7 +617,7 @@ class Model:
         Parameters
         ----------
         n : int | None, optional
-            Number of equations to be returned.
+            Number of variables to be returned.
 
         Returns
         -------
