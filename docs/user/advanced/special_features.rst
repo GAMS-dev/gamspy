@@ -76,6 +76,10 @@ on variables are automatically scaled in the same way as the variable itself.
 .. warning::
     Discrete variables cannot be scaled.
 
+.. note::
+    ``enable_scaling`` option in the solve statement must be set to True to for GAMS to employ 
+    user-specified variable and equation scaling factors.
+
 
 Scaling Equations
 ------------------

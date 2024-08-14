@@ -540,8 +540,8 @@ def _unpack(domain: list[Set | Alias | ImplicitSet]):
     return unpacked
 
 
-def _parse_generated_equations(model: Model, job_name: str) -> None:
-    with open(job_name + ".lst") as file:
+def _parse_generated_equations(model: Model, listing_file: str) -> None:
+    with open(listing_file) as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]
         lines = [line for line in lines if line != "\n" and line != ""]
@@ -579,11 +579,11 @@ def _parse_generated_equations(model: Model, job_name: str) -> None:
         equation._equation_listing = equation_listing
 
 
-def _parse_generated_variables(model: Model, job_name: str) -> None:
+def _parse_generated_variables(model: Model, listing_file: str) -> None:
     variables = _get_variables_of_model(model.container)
     model._variables = variables  # type: ignore
 
-    with open(job_name + ".lst") as file:
+    with open(listing_file) as file:
         lines = file.readlines()
 
     variable_listing_start_idx = 0

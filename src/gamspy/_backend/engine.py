@@ -886,7 +886,15 @@ class GAMSEngine(backend.Backend):
             return None
 
         if self.options.equation_listing_limit:
-            utils._parse_generated_equations(self.model, self.job_name)
+            listing_file = (
+                self.options.listing_file
+                if self.options.listing_file
+                else self.job_name + ".lst"
+            )
+            utils._parse_generated_equations(self.model, listing_file)
+
+        if self.options.variable_listing_limit:
+            utils._parse_generated_variables(self.model, listing_file)
 
         return self.prepare_summary(self.trace_file)
 
