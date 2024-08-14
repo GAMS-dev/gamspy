@@ -31,10 +31,15 @@ alone. Here's why GAMSPy stands out as the ultimate choice:
   * Equations and variables are generated in GAMS not in Python giving GAMSPy a speed advantage
 
 
+We are continuously developing our ML-related features. If you have specific
+needs or require additional information, please feel free to reach out to us at
+machinelearning@gams.com.
+
 .. toctree::
    :maxdepth: 1
 
    ./introduction
+   ./embed_nn
    ./ols
    ./logistic
    ./nn

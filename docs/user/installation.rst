@@ -11,31 +11,6 @@ You can run the following command to install GAMSPy from PyPI::
 
     pip install gamspy
 
-Building from source
---------------------
-
-If you are a MacOS or Linux user (or using a subsystem like WSL in Windows) who is 
-familiar with using the command line, you can continue with building GAMSPy locally 
-by following the instructions below.
-
-Prerequisites
-=============
-
-Building GAMSPy requires the following software installed:
-
-1) Python 3.8.x or newer
-
-2) The GAMSPy source code::
-    
-        git clone git@github.com:GAMS-dev/gamspy.git
-
-Installation
-============
-
-You can install GAMSPy from source with the following command::
-
-    pip install .
-
 Licensing
 ---------
 GAMSPy comes with a free demo license which lets you generate and solve small models.
@@ -146,6 +121,31 @@ If the solvers in your machine are not up-to-date, you can run::
     gamspy update
 
 To update all solvers to a version that is compatible with GAMSPy.
+
+Building from source
+--------------------
+
+If you are a MacOS or Linux user (or using a subsystem like WSL in Windows) who is 
+familiar with using the command line, you can continue with building GAMSPy locally 
+by following the instructions below.
+
+Prerequisites
+=============
+
+Building GAMSPy requires the following software installed:
+
+1) Python 3.8.x or newer
+
+2) The GAMSPy source code::
+    
+        git clone git@github.com:GAMS-dev/gamspy.git
+
+Installation
+============
+
+You can install GAMSPy from source with the following command::
+
+    pip install .
 
 Testing
 -------

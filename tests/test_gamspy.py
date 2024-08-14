@@ -49,7 +49,7 @@ class GamspySuite(unittest.TestCase):
     def test_version(self):
         import gamspy
 
-        self.assertEqual(gamspy.__version__, "0.14.4")
+        self.assertEqual(gamspy.__version__, "0.14.5")
 
 
 class DocsSuite(unittest.TestCase):
@@ -72,6 +72,7 @@ class DocsSuite(unittest.TestCase):
             f"{root}{os.sep}_model.py",
             f"{root}{os.sep}utils.py",
             f"{root}{os.sep}_algebra{os.sep}expression.py",
+            f"{root}{os.sep}_algebra{os.sep}operation.py",
             f"{root}{os.sep}_algebra{os.sep}domain.py",
             f"{root}{os.sep}_algebra{os.sep}number.py",
             f"{root}{os.sep}_symbols{os.sep}symbol.py",

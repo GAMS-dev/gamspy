@@ -46,7 +46,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     @classmethod
     def _constructor_bypass(
-        cls, container: Container, name: str, alias_with: Set
+        cls, container: Container, name: str, alias_with: Set | Alias
     ):
         # create new symbol object
         obj = Alias.__new__(cls, container, name, alias_with)
@@ -77,7 +77,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         cls,
         container: Container,
         name: str | None = None,
-        alias_with: Set | None = None,
+        alias_with: Set | Alias | None = None,
     ):
         if not isinstance(container, gp.Container):
             raise TypeError(
@@ -113,7 +113,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self,
         container: Container,
         name: str | None = None,
-        alias_with: Set | None = None,
+        alias_with: Set | Alias | None = None,
     ):
         # does symbol exist
         has_symbol = False

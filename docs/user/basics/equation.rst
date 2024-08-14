@@ -38,7 +38,7 @@ or variable, in that it requires a container, an optional name, a domain (if app
 and an optional description. For a complete list of available arguments, see
 the :meth:`Equation reference<gamspy.Equation>`.
 
-Below is an example of equation declarations adapted from :ref:`trnsport.py <trnsport>` 
+Below is an example of equation declarations adapted from `trnsport.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnsport/trnsport.py>`_. 
 for illustration:::
 
     from gamspy import Container, Set, Equation
@@ -115,7 +115,7 @@ Scalar Equations
 ^^^^^^^^^^^^^^^^^
 
 A scalar equation will produce one equation in the associated optimization problem.
-The following is an example of a scalar equation definition from the :ref:`ramsey.py <ramsey>`
+The following is an example of a scalar equation definition from the `ramsey.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/ramsey/ramsey.py>`_.
 model::
 
     utility[...] = W == Sum(t, beta[t] * gams_math.log(C[t]))
@@ -147,7 +147,7 @@ of definition of the equation.
       in the GAMS documentation.
 
 The following is an example of indexed equation definitions, again taken from the
-:ref:`trnsport.py <trnsport>` model. Besides the already introduced sets ``i``
+`trnsport.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnsport/trnsport.py>`_ model. Besides the already introduced sets ``i``
 and ``j``, parameters ``a`` and ``b`` are used as well as the :meth:`Sum<gamspy.Sum>` operator::
 
     from gamspy Parameter, Sum
@@ -208,7 +208,7 @@ Using Labels Explicitly in Equations
 
 Sometimes it can be necessary to refer to specific set elements in equations.
 This can be done as with parameters - by using quotes or double quotes around
-the label. Consider the following example from the model :ref:`cta.py<cta>` where
+the label. Consider the following example from the model `cta.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/cta/cta.py>`_ where
 the label ``"total"`` is used on the second index position of the variable ``t``
 explicitly::
 
@@ -286,7 +286,7 @@ Expressions in Equation Definitions
 The arithmetic operators and some of the functions provided by GAMSPy
 may be used in equation definitions. But also certain native Python
 operators can be used. Consider the following example adapted from the model
-:ref:`ramsey.py <ramsey>` demonstrating the use of parentheses and exponentiation::
+`ramsey.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/ramsey/ramsey.py>`_ demonstrating the use of parentheses and exponentiation::
 
     production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
 
@@ -340,7 +340,7 @@ at model setup for exogenous functions and expressions, it is a lot more difficu
 when the terms involve variables. The expression may be evaluated many times when
 the problem is being solved and the undefined result may arise only under certain
 cases. One way to avoid an expression becoming undefined is adding bounds to the
-respective variables. Consider the following example from the :ref:`ramsey.py <ramsey>`
+respective variables. Consider the following example from the `ramsey.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/ramsey/ramsey.py>`_.
 model::
 
     C.lo[t] = 0.001

@@ -16,7 +16,7 @@ the numerical value of the label, they can be used for the same purpose.
 
 
 Ord
-==========
+===
 
 The ``Ord`` operator can be used with one-dimensional sets that are static and
 ordered, as well as corresponding aliases. It returns the relative position of
@@ -73,7 +73,7 @@ upper triangle.
 
 
 Card
-==========
+====
 
 The ``Card`` operator takes any symbol as argument and returns its number of
 records. It can be used in any expression like e.g. equation definitions and

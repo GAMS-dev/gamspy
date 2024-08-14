@@ -9,7 +9,7 @@ Variable
 ********
 
 Introduction
-=============
+============
 
 This chapter covers the declaration and manipulation of GAMSPy 
 :meth:`variables <gamspy.Variable>`. Many concepts from previous chapters apply 
@@ -24,13 +24,13 @@ mathematical programming terminology is that one GAMSPy variable is likely to be
 associated with many columns in the traditional formulation.
 
 Variable Declarations
-======================
+=====================
 
 A GAMSPy variable, like all other identifiers, must be declared before it may be 
 referenced.
 
 The Syntax
------------
+----------
 
 The declaration of a variable is similar to a set or parameter declaration, in 
 that domain lists and descriptions are allowed and recommended ::
@@ -80,7 +80,7 @@ in the GAMS documentation.
 .. _variable-types:
 
 Variable Types
----------------
+--------------
 
 There are nine basic :meth:`variable types <gamspy.VariableType>` that may be used in 
 variable statements: 
@@ -118,10 +118,10 @@ bounds may be changed using variable attributes and assignment statements, see s
 .. _variable-attributes:
 
 Variable Attributes
-=====================
+===================
 
 Introduction
--------------
+------------
 
 While a GAMSPy :ref:`parameter <parameter>` has one number associated with each unique 
 label combination, a variable has several attributes. They represent:
@@ -266,7 +266,7 @@ Infeasibility                infeas     Amount by which a variable is infeasible
 ===========================  =========  =========================================================================================================================================================================================================================================================================================================================================
 
 Bounds on Variables
---------------------
+-------------------
 
 All default bounds set at declaration time may be changed using assignment statements.
 
@@ -288,7 +288,7 @@ such as division by zero. In nonlinear programming it is often necessary to defi
 
 
 Fixing Variables
------------------
+----------------
 
 GAMS allows the user to fix variables through the ``fx`` variable attribute. This is almost 
 equivalent to setting the lower bound and upper bound equal to the fixed value. The attribute 
@@ -298,7 +298,7 @@ the active bounds. Fixed variables can subsequently be freed by changing the low
 bounds.
 
 Activity Levels of Variables
------------------------------
+----------------------------
 
 GAMS allows the user to set the activity levels of variables through the ``l`` variable 
 attribute. These activity levels of the variables prior to the solve statement serve as 
@@ -332,10 +332,10 @@ interpret the activity levels as a feasible integer solution via a solver option
 
 
 Variables in Assignment Statements
-===================================
+==================================
 
 Assigning Values to Variable Attributes
------------------------------------------
+---------------------------------------
 
 Assignment statements operate on one variable attribute at a time, and require the suffix to 
 specify which attribute is being used. Any index list comes after the suffix. ::
@@ -432,7 +432,7 @@ for a full listing of all GAMS model types.
 .. _binary-variables:
 
 Binary Variables
------------------
+----------------
 
 Binary variables can take values of 0 (zero) and 1 (one) only. ::
 
@@ -476,7 +476,7 @@ does not indicate a feasible integer solution (model status ``1`` or ``8``).
 
 
 Integer Variables
-------------------
+-----------------
 
 Integer variables are discrete variables that can take only values between their bounds. 
 The user may change both bounds from the default value. The default lower bound is 0 (zero) 
@@ -509,7 +509,7 @@ The integer variable ``n`` models the number of generators of various types that
 use at any of the time blocks.
 
 Special Order Sets of Type 1 (SOS1)
-------------------------------------
+-----------------------------------
 
 SOS1 variables are a set of variables, such that at most one variable within the group 
 may have a nonzero value. This variable may take any positive value. ::
@@ -569,7 +569,7 @@ solution process needs to impose the restrictions of at most one nonzero level v
 may be present.
 
 Special Order Sets of Type 2 (SOS2)
--------------------------------------
+-----------------------------------
 
 ``SOS2`` variables are a set of variables, such that at most two variables within the 
 set may have nonzero values and these variables have to be adjacent. This requirement 
@@ -601,7 +601,7 @@ solution process needs to impose the restrictions of adjacency and that no more 
 two nonzero level values may be present.
 
 Semi-Continuous Variables
---------------------------
+-------------------------
 
 Semi-continuous variables are either zero or above a given minimum level. This can be 
 expressed algebraically as: either :math:`x = 0` or :math:`L <= x <= U` By default, the lower 
@@ -640,7 +640,7 @@ process needs to impose the discontinuous jump between zero and the threshold va
         forceZero = x <= x.up*b
 
 Semi-Integer Variables
------------------------
+----------------------
 
 Semi-integer variables are either zero or integer and above a given minimum value. This can be 
 expressed algebraically as: either :math:`x = 0` or :math:`x \in {L,...,U}`. By default, the 

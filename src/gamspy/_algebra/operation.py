@@ -48,7 +48,7 @@ class Operation(operable.Operable):
         assert len(self.op_domain) > 0, "Operation requires at least one index"
         self.rhs = rhs
         self._op_name = op_name
-        self.raw_domain = self.get_raw_domain()
+        self.raw_domain = self._get_raw_domain()
 
         # allow conditions
         self.where = condition.Condition(self)
@@ -84,7 +84,7 @@ class Operation(operable.Operable):
         else:
             return Operation(self.op_domain, self.rhs[domain], self._op_name)
 
-    def get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
+    def _get_raw_domain(self) -> list[Set | Alias | ImplicitSet]:
         raw_domain = []
         for elem in self.op_domain:
             if isinstance(elem, condition.Condition):
@@ -103,7 +103,7 @@ class Operation(operable.Operable):
 
         return raw_domain
 
-    def validate_operation(self, control_stack):
+    def _validate_operation(self, control_stack):
         for elem in self.raw_domain:
             if isinstance(elem, implicits.ImplicitSet):
                 control_stack += [
@@ -119,7 +119,7 @@ class Operation(operable.Operable):
         if isinstance(self.rhs, expression.Expression):
             self.rhs._validate_definition(stack)
         elif isinstance(self.rhs, Operation):
-            self.rhs.validate_operation(stack)
+            self.rhs._validate_operation(stack)
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:
@@ -306,6 +306,7 @@ class Product(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Product(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -368,6 +369,7 @@ class Smin(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Smin(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -430,6 +432,7 @@ class Smax(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Smax(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -476,16 +479,11 @@ class Ord(operable.Operable):
     Examples
     --------
     >>> import gamspy as gp
-    >>>
     >>> m = gp.Container()
-    >>> t = gp.Set(
-    >>>     m,
-    >>>     name="t",
-    >>>     description="time periods",
-    >>>     records=[str(x) for x in range(1985, 1996)],
-    >>> )
+    >>> t = gp.Set(m, name="t", description="time periods", records=[str(x) for x in range(1985, 1996)])
     >>> val = gp.Parameter(m, name="val", domain=[t])
     >>> val[t] = gp.Ord(t)
+
     """
 
     def __init__(self, set: Set | Alias):
@@ -551,17 +549,11 @@ class Card(operable.Operable):
     Examples
     --------
     >>> import gamspy as gp
-    >>>
     >>> m = gp.Container()
-    >>>
-    >>> t = gp.Set(
-    >>>     m,
-    >>>     name="t",
-    >>>     description="time periods",
-    >>>     records=[str(x) for x in range(1985, 1996)],
-    >>> )
+    >>> t = gp.Set(m, name="t", description="time periods", records=[str(x) for x in range(1985, 1996)])
     >>> s = gp.Parameter(m, name="s")
     >>> s[...] = gp.Card(t)
+
     """
 
     def __init__(

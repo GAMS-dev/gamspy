@@ -468,7 +468,7 @@ class Expression(operable.Operable):
                 node = stack.pop()
 
                 if isinstance(node, operation.Operation):
-                    node.validate_operation(control_stack)
+                    node._validate_operation(control_stack)
                     for elem in node.raw_domain:
                         if elem in control_stack:
                             raise ValidationError(
