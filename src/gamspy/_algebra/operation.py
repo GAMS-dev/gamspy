@@ -244,6 +244,7 @@ class Sum(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> d = gp.Parameter(m, "d", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Sum(i, d[i]) <= v
+
     """
 
     def __init__(
