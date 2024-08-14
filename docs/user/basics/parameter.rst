@@ -9,7 +9,7 @@ Parameter
 *********
 
 Introduction
-=============
+============
 
 One very important principle will motivate all our discussions on data:
 
@@ -29,7 +29,7 @@ in scalar and in list oriented format.
 
 
 Scalars
-=========
+=======
 
 A GAMSPy parameter with zero dimensionality is called a *scalar*. This means that there are 
 no associated sets, so there is exactly one number associated with the parameter: ::
