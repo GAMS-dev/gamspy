@@ -555,7 +555,7 @@ class Job(Endpoint):
                 )
                 break
             elif r.status == 308:
-                response_data = json.loads(response_data)
+                info = json.loads(response_data)
                 message, is_queue_finished = info["message"], True
                 break
             elif r.status == 403:
