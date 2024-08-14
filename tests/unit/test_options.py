@@ -589,6 +589,140 @@ class OptionsSuite(unittest.TestCase):
             check=True,
         )
 
+    def test_model_attribute_options(self):
+        m = Container()
+
+        # Prepare data
+        distances = [
+            ["seattle", "new-york", 2.5],
+            ["seattle", "chicago", 1.7],
+            ["seattle", "topeka", 1.8],
+            ["san-diego", "new-york", 2.5],
+            ["san-diego", "chicago", 1.8],
+            ["san-diego", "topeka", 1.4],
+        ]
+
+        capacities = [["seattle", 350], ["san-diego", 600]]
+        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+        # Set
+        i = Set(
+            m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            m,
+            name="a",
+            domain=i,
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            m,
+            name="b",
+            domain=j,
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            m,
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            m,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve(options=Options(infeasibility_tolerance=1e-6))
+        transport.solve(options=Options(infeasibility_tolerance=1e-6))
+        self.assertTrue(
+            "transport.tolInfRep = 1e-06;"
+            in m.generateGamsString(show_raw=True)
+        )
+
+    def test_scaling(self):
+        m = Container()
+
+        x1 = Variable(m, "x1", type="positive")
+        x2 = Variable(m, "x2", type="positive")
+
+        z = Variable(m, "z")
+        eq = Equation(m, "eq")
+        eq[...] = 200 * x1 + 0.5 * x2 == z
+
+        x1.up[...] = 0.01
+        x2.up[...] = 10
+        x1.scale[...] = 0.01
+        x2.scale[...] = 10
+
+        eq.scale = 1e-6
+
+        model = Model(m, "my_model", equations=[eq], sense="MIN", objective=z)
+        listing_file_path = os.path.join("tmp", "scaling.lst")
+        model.solve(
+            options=Options(
+                enable_scaling=True,
+                equation_listing_limit=100,
+                listing_file=listing_file_path,
+            )
+        )
+        self.assertEqual(eq.records.scale.item(), 1e-6)
+        with open(listing_file_path) as file:
+            self.assertTrue(
+                "eq..  2000000*x1 + 5000000*x2 - 1000000*z =E= 0"
+                in file.read()
+            )
+
 
 def options_suite():
     suite = unittest.TestSuite()
