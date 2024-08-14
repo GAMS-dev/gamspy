@@ -306,6 +306,7 @@ class Product(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Product(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -368,6 +369,7 @@ class Smin(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Smin(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -430,6 +432,7 @@ class Smax(Operation):
     >>> e = gp.Equation(m, "e", type="eq")
     >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
     >>> e[...] = gp.Smax(i, p[i]) <= v
+
     """
 
     def __init__(
@@ -480,6 +483,7 @@ class Ord(operable.Operable):
     >>> t = gp.Set(m, name="t", description="time periods", records=[str(x) for x in range(1985, 1996)])
     >>> val = gp.Parameter(m, name="val", domain=[t])
     >>> val[t] = gp.Ord(t)
+
     """
 
     def __init__(self, set: Set | Alias):
@@ -549,6 +553,7 @@ class Card(operable.Operable):
     >>> t = gp.Set(m, name="t", description="time periods", records=[str(x) for x in range(1985, 1996)])
     >>> s = gp.Parameter(m, name="s")
     >>> s[...] = gp.Card(t)
+
     """
 
     def __init__(
