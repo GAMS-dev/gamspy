@@ -12,6 +12,7 @@ GAMSPy 0.14.5
   - Add tests for model attribute options.
 - Documentation
   - Fix links in the api reference.
+  - Add an example that shows how to embed NN to an optimization problem.
 
 GAMSPy 0.14.4
 -------------

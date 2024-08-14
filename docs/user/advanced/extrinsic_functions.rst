@@ -103,7 +103,7 @@ the following table:
 
    * - Characteristic
      - Extrinsic Function
-     - Extrinsic Equation
+     - External Equation
    * - Maximum number of arguments
      - 20
      - No limit
