@@ -168,8 +168,6 @@ math package
 
 This package is for the mathematical operations of GAMS.
 
-GAMSPy:
-
 .. tab-set-code::
 
     .. code-block:: python
@@ -226,15 +224,6 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
 
 .. tab-set-code::
 
-    .. code-block:: GAMS
-
-        $macro reciprocal(y) 1/y
-
-        scalar z, x1 /2/, x2 /3/;
-
-        z = reciprocal(x1) + reciprocal(x2);
-        display z;
-
     .. code-block:: python
 
         import gamspy as gp
@@ -248,6 +237,15 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
         x2 = gp.Parameter(m, "x2", records=3)
         z[:] = reciprocal(x1) + reciprocal(x2)
         print(z.records)
+
+    .. code-block:: GAMS
+
+        $macro reciprocal(y) 1/y
+
+        scalar z, x1 /2/, x2 /3/;
+
+        z = reciprocal(x1) + reciprocal(x2);
+        display z;
 
 Automatic Conversion of a GAMSPy Model to GAMS
 ----------------------------------------------
