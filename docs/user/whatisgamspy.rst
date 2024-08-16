@@ -62,3 +62,23 @@ Meanwhile GAMSPy implementation employs set-based operations. This results in:
 - Concise and easier to read definitions.
 - GAMSPy definitions closely resembles mathematical notation that you in papers (making it easier, typically, to correctly code mathematical constructs).
 - Great performance since the actual operation is performed by GAMS using highly optimized low level code that has been improved in the last 40 years. 
+
+Which backends GAMSPy support?
+==============================
+
+GAMSPy currently supports three backends: your local gams installation, `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_ and `NEOS Server <https://neos-server.org/neos/>`_. 
+The default backend is the local gams installation that comes with GAMSPy. With GAMS Engine backend, you can run hundreds of jobs in cloud on parallel to speed up your pipeline. 
+One can also send their jobs to NEOS Server which is a free service for solving numerical optimization problems.  
+
+GAMSPy is also integrated with `GAMS MIRO <https://www.gams.com/sales/miro_facts/>`_ which allows you to create fully interactive applications. Extensive visualization options of 
+GAMS MIRO support you to make decisions based on optimization. 
+
+.. image:: ../_static/miro.png
+  :alt: GAMS MIRO
+
+Interoperability of GAMSPy
+==========================
+
+A mathematical optimization model written with GAMSPy can be converted to GAMS or Latex format. GAMSPy to GAMS conversion might be useful to do fast prototyping in GAMSPy and 
+converting the model to GAMS to use certain features of GAMS (e.g. EMP models) that are missing in GAMSPy. GAMSPy to Latex conversion can be convenient to put your equations 
+into an academic paper or to verify the equations you have written matches with what you think mathematically. 
