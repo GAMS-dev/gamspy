@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 0.14.6
+-------------
+- Documentation
+  - Add what is gamspy page to docs.
+
 GAMSPy 0.14.5
 -------------
 - General
