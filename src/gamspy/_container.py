@@ -382,7 +382,7 @@ class Container(gt.Container):
         self._unsaved_statements.append(statement)
 
     def _cast_symbols(self, symbol_names: list[str] | None = None) -> None:
-        """Casts GTP symbols to GAMSpy symbols"""
+        """Casts GTP symbols to GAMSPy symbols"""
         symbol_names = symbol_names if symbol_names else list(self.data.keys())
 
         for symbol_name in symbol_names:

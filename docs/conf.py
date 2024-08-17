@@ -15,10 +15,10 @@ sys.path.insert(0, os.path.abspath("../src"))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "GAMSpy"
+project = "GAMSPy"
 copyright = f"{datetime.now().year}, GAMS Development Corporation"
 author = "GAMS"
-release = gamspy.__version__
+version = gamspy.__version__
 language = "en"
 html_last_updated_fmt = ""  # to reveal the build date in the pages meta
 
@@ -76,9 +76,9 @@ html_theme_options = {
             "type": "fontawesome",
         },
         {
-            "name": "Twitter",
+            "name": "X",
             "url": "https://twitter.com/GamsSoftware",
-            "icon": "fa-brands fa-square-twitter",
+            "icon": "fa-brands fa-x-twitter",
         },
         {
             "name": "GAMS",
@@ -94,11 +94,13 @@ html_theme_options = {
     },
     "switcher": {
         "json_url": json_url,
-        "version_match": f"v{release}",
+        "version_match": f"v{version}",
     },
     "navbar_center": ["version-switcher", "navbar-nav"],
     "show_nav_level": 2,
     "show_toc_level": 2,
+    "pygments_light_style": "tango",
+    "pygments_dark_style": "lightbulb"
 }
 
 autodoc_default_options = {'member-order': 'bysource'}
@@ -107,6 +109,3 @@ autodoc_member_order = "bysource"
 
 # Display todos by setting to True
 todo_include_todos = False
-
-# temporary flag until the next release
-nbsphinx_allow_errors = True
