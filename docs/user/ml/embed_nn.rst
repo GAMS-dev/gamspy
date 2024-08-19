@@ -2,13 +2,13 @@
 Embedding a trained neural network in GAMSPy
 ********************************************
 
-One of the most exciting applications in combining Machine Learning with
-Optimization is embedding a trained neural network into your optimization model.
+One of the most exciting applications of combining machine learning with 
+optimization is embedding a trained neural network into your optimization model.
 
 
-Let's assume you trained a very simple feed-forward neural network for optical
-character recognition and you want to test robustness of this neural network.
-For the sake of simplicity, we trained one for you on MNIST dataset. If you
+Let’s assume you have trained a simple feed-forward neural network for optical 
+character recognition, and you want to test the robustness of this neural network.
+For simplicity, we trained one for you on the MNIST dataset. If you
 want to follow this tutorial locally, you can download the `weights
 <https://github.com/GAMS-dev/gamspy/blob/develop/docs/_static/data.pth?raw=true>`_.
 
@@ -60,9 +60,8 @@ And then import the Neural Network, so we can get its weights:
    network = SimpleModel()
    network.load_state_dict(torch.load("data.pth", weights_only=True))
 
-To test the robustness of the network, we will get an image from the MNIST
-and we will find the minimum change in the image so that it is misclassified
-by our neural network.
+To test the network's robustness, we will use an image from MNIST and 
+find the minimum change required for the neural network to misclassify it.
 
 
 .. code-block:: python
@@ -145,10 +144,10 @@ input image. The `noise` variable has the same dimensions as the input image.
 The variable `a1` will serve as the input to the neural network. It is defined
 by the `add_noise_and_normalize` equation, where the `noise` is added to the
 image, followed by normalization, as the network was trained with normalized
-inputs. We then ensure that `a1` stays within the valid range so that the
+inputs. We then ensure that `a1` stays within the valid range, so that the
 `noise` cannot change any pixel to a negative value or exceed a value of 1.
 
-We are ready to do our first linear layer:
+We are ready to implement our first linear layer:
 
 .. code-block:: python
 
@@ -164,7 +163,7 @@ layer, plus the bias term. Note that we use
 to declare the `a2` variable, which automatically creates the necessary
 constraints and the activated variable for us.
 
-Similarly we can define `z3`:
+Similarly, we can define `z3`:
 
 .. code-block:: python
 
@@ -172,7 +171,7 @@ Similarly we can define `z3`:
    forward_2[...] = z3 == w2 @ a2 + b2
 
 
-This essentially concludes the embedding of the neural network into our
+This essentially completes the embedding of the neural network into our
 optimization problem. If we were particularly interested in obtaining real
 probabilities, we could have also added:
 
@@ -198,8 +197,8 @@ select the digit with which to create the confusion:
 
 We fix the correct target to 0, as confusing a target with itself would require
 no change. Then, we specify that it is sufficient if just one other digit is
-more likely than the correct digit. Then we write the equation that forces
-other digit to be more likely than the correct one.
+more likely than the correct digit. Next, we write the equation that forces 
+another digit to be more likely than the correct one.
 
 .. code-block:: python
 
@@ -209,8 +208,8 @@ other digit to be more likely than the correct one.
    favor_confused[digit] = z3[digit] + (1 - confuse_with[digit]) * big_M >= z3[str(image_target)] + 0.1
 
 
-Confusing the neural network by changing the image altogether would be trivial. We want the minimum
-amount of change to the original image. Therefore we define our objective as the squared sum of
+Confusing the neural network by completely changing the image would be trivial. We aim for the minimum 
+possible change to the original image. Therefore, we define our objective as the squared sum of 
 perturbations.
 
 .. code-block:: python
@@ -221,7 +220,7 @@ perturbations.
    set_obj[...] = obj == gp.math.vector_norm(noise) ** 2
 
 
-Finally, bringing all together:
+Finally, bringing it all together:
 
 .. code-block:: python
 
@@ -237,7 +236,7 @@ Finally, bringing all together:
    model.solve(output=sys.stdout, solver="cplex")
 
 
-This takes a couple of seconds to solve, afterwards we can investigate:
+This takes a couple of seconds to solve, after which we can investigate:
 
 .. code-block:: python
 
@@ -290,4 +289,4 @@ Since GAMSPy supports a wide range of solvers, you're not limited to specific
 activation functions. For instance, we could have used `tanh` as the activation
 function and employed a nonlinear solver to find the minimum change, requiring
 just two lines of code modification. More importantly, we've shown that writing
-forward propagation in GAMSPy closely mirrors how you would write it on paper.
+forward propagation in GAMSPy closely resembles how you would write it on paper.

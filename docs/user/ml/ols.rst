@@ -12,10 +12,10 @@ Regression Example
 
 When trying to find a relationship between input data and a scalar output ,
 it's often beneficial to start with simpler models to understand your system
-better. One of the simplest methods for regression is ordinary least squares
+better. One of the simplest methods for regression is Ordinary Least Squares
 (OLS).
 
-To learn more about `Ordinary Least Squares <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_.
+Learn more about Ordinary Least Squares `here <https://en.wikipedia.org/wiki/Ordinary_least_squares>`_.
 
 In the following example, we have a training set consisting of 100
 observations, each with two features. We create our labels by multiplying the
@@ -57,7 +57,7 @@ you can follow these steps:
 
    z = gp.Variable(m, name="z")
    set_obj = gp.Equation(m, name="set_obj")
-   # we want that coefficients that minimizes sum of squares of the residuals
+   # we want the coefficients that minimizes sum of squares of the residuals
    set_obj[...] = z == gp.math.vector_norm(Y - (X @ w)) ** 2
 
    OLS = gp.Model(
@@ -76,10 +76,10 @@ you can follow these steps:
    # 2    26.795031
 
 
-Version with L2 regularization
+Version with L2 Regularization
 ==============================
 
-You can see the estimated coefficients were close to their original values. In
+You can see that the estimated coefficients are close to their original values. In
 this example, the problem is well-formed; however, in some cases, it is
 necessary to add regularization terms to improve the model's performance or to
 handle ill-posed problems. Regularization helps prevent overfitting by adding a

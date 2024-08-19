@@ -8,20 +8,20 @@ Binary Classification Example
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 
-Learning to classify between 2 (or more) classes is a common problem that can
-arise from many real life applications. For example, you might have some
-traffic data and you can try to learn depending on some parameters if some road
-is congested or not. Depending on how many hours studied, you can try to learn
-if a student will fail or pass.
+Learning to classify between two (or more) classes is a common problem that 
+arises in many real-life applications. For example, you might have traffic 
+data and want to determine, based on certain parameters, whether a road is 
+congested or not. Based on the number of hours studied, you might want to 
+predict whether a student will fail or pass.
 
-One of the most common techniques to handle binary classification problems is
-so-called logistic regression approach.
+One of the most common techniques for handling binary classification problems is
+the so-called logistic regression approach.
 
 
-To learn more about `Logistic Regression <https://en.wikipedia.org/wiki/Logistic_regression>`_.
+Learn more about logistic regression `here <https://en.wikipedia.org/wiki/Logistic_regression>`_.
 
 We start with generating a simple dataset. We have a single feature, and two
-gaussian distributions where class 1 and class 2 are sampled from.
+Gaussian distributions from which class 0 and class 1 are sampled.
 
 
 .. code-block:: python
@@ -59,13 +59,13 @@ gaussian distributions where class 1 and class 2 are sampled from.
 .. image:: ../images/logistic_regression.png
   :align: center
 
-Our goal is to fit parameters of a function (yes, the logistic function) where
-we input the feature of a sample, we calculate the probability of this sample
-belonging to class 1. Since we have only two classes, 1 minus that probability
-will give us the probability of that sample belonging to class 0.
+Our goal is to fit the parameters of a function (specifically, the logistic 
+function) where, given the feature of a sample, we calculate the probability 
+that this sample belongs to class 1. Since we have only two classes, 1 minus 
+that probability gives us the probability that the sample belongs to class 0.
 
 Just by looking at the samples, you can guess :math:`f(0)` should be very close
-to 0 whereas :math:`f(8)` should be close to 1.
+to 0 whereas :math:`f(1)` should be close to 1.
 
 The function that we are trying to fit is:
 
@@ -107,8 +107,8 @@ minimizing the loss.
    loss = gp.Variable(m, name="loss")
 
 
-We are using the log loss for guiding our optimization, which you can read more from
-the wikipedia article we cited.
+We are using log loss for guiding our optimization, which you can read more from
+the referenced wikipedia article.
 
 .. code-block:: python
 
@@ -124,7 +124,7 @@ the wikipedia article we cited.
 
 
 
-This is basically all we need, we put everything under logistic model and solve it
+This is basically all we need. We put everything under the logistic model and solve it
 using your favourite NLP solver.
 
 .. code-block:: python
@@ -188,8 +188,8 @@ If we plot the logistic function on top of the samples:
 .. image:: ../images/logistic_regression_2.png
   :align: center
 
-You can see how nicely the function is fitted over the samples. In this example, we only
-trained a logistic regression model but it is also possible to use this trained model
+You can see how nicely the function fits the samples. In this example, we only
+trained a logistic regression model, but it is also possible to use this trained model
 in your optimization models.
 
 
