@@ -11,6 +11,7 @@ GAMSPy 0.14.6
 - Documentation
   - Add what is gamspy page to docs.
   - Update indexing docs.
+  - Add a link to model library on the landing page.
 
 GAMSPy 0.14.5
 -------------
