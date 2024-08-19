@@ -23,7 +23,7 @@ GAMSPy documentation
 `Source Repository <https://github.com/GAMS-dev/gamspy>`_ |
 `Issue Tracker <https://github.com/GAMS-dev/gamspy/issues>`_ |
 `Q&A Support <gamspy@gams.com>`_ |
-`Discourse <forum.gams.com>`_
+`Discourse <https://forum.gams.com>`_
 
 GAMSPy is a mathematical optimizaton library that combines the high-performance 
 GAMS execution system with the flexible Python language. It acts as a bridge 
