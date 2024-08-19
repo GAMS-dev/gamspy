@@ -8,8 +8,8 @@ Model Interface
 ---------------
 
 Sometimes, you need to represent a complicated **non-linear** relationship in
-your constraints. However the relationship does not have an easy to write
-algebra. If you can provide function evaluation and first derivatives, you can
+your constraints. However, the relationship doesn't have an easy-to-write algebraic 
+expression. If you can provide function evaluations and first derivatives, you can 
 embed your relationship in GAMSPy using External Equations.
 
 
@@ -17,10 +17,10 @@ embed your relationship in GAMSPy using External Equations.
 
    This documentation is a shortened version of
    `External Equations <https://www.gams.com/latest/docs/UG_ExternalEquations.html>`_.
-   Since we skip many parts, we suggest reading the original documentation
+   Since many parts are skipped, we suggest reading the original documentation
    after reading this one.
 
-External equations do **not** work with all the non-linear solvers. This is
+External equations are **not** compatible with all non-linear solvers. This is
 because external module, the library you would need to implement, is limited to
 providing functionality for evaluating functions (including their first
 derivatives) at a specific point. Some solvers can also benefit from the use of
@@ -38,8 +38,8 @@ stochastic global solvers are capable of working with external equations.
    This feature requires a solid understanding of programming in C/C++ or Fortran,
    compilation, and linking processes.
 
-An **external equation** is an equation where the handling of the relationship
-between variables is delegated to an external module. In this context, the
+An **external equation** delegates the handling of the relationship between 
+variables to an external module. In this context, the
 relationship between the variables is not explicitly defined within your system
 but is instead governed by the external module. For example, you might specify
 that variables `x` and `y` are related, but the nature of that relationship is
@@ -51,7 +51,7 @@ in these equations. For instance, the external module might implement a
 function like :math:`y = sin(x)`.
 
 
-Here is an example, how an external equation is defined:
+Here is an example of how an external equation is defined:
 
 .. code-block:: python
 
@@ -63,7 +63,7 @@ Here is an example, how an external equation is defined:
     # This certainly is not a linear equation
     eq[...] = 1*x + 2*y == 1
 
-Coefficients indicate the index of the variable within the external module. For
+The coefficients indicate the index of the variable within the external module. For
 instance, in the expression `1*x`, `x` represents the first variable in the
 external module, and similarly, `y` represents the second variable. The
 right-hand side of the equation denotes that this is the first external
@@ -151,7 +151,7 @@ Finally, we need to provide the name of the external module in the model.
 
 Since no file extension was specified, GAMS will automatically search for the
 appropriate file extension based on the operating system: `.DLL` on Windows and
-`.SO` on Linux. Next step is generating the library.
+`.SO` on Linux. The next step is generating the library.
 
 
 Programming Interface

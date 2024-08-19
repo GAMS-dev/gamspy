@@ -58,7 +58,7 @@ so that it does not have to be specified for each run. ::
 This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. 
 
 When running a GAMSPy job from GAMS MIRO, you may not want to perform certain expensive operations, such as loading MIRO input data from an Excel workbook, as this data comes from MIRO.
-In that case, one can conditionally load the data by using ``in_miro`` attribute of `Container`. For example: ::
+In that case, one can conditionally load the data by using the ``in_miro`` attribute of `Container`. For example: ::
     
     import pandas as pd
     from gamspy import Container, Parameter
