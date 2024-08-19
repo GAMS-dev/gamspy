@@ -15,7 +15,7 @@ selection tuple to index all dimensions. There may only be a single ellipsis pre
 Usage of Slices
 ===============
 
-The equivalent representation of the example above with slices would be: ::
+Here is an example that shows how slices can be used: ::
 
     import gamspy as gp
     m = gp.Container()
@@ -39,7 +39,7 @@ Hence, it is equivalent to: ::
 Usage of Ellipsis
 =================
 
-The equivalent representation of the example above with ellipsis would be: ::
+Here is an example that shows how ellipsis can be used: ::
 
     import gamspy as gp
     m = gp.Container()
