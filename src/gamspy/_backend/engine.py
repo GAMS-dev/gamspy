@@ -549,15 +549,10 @@ class Job(Endpoint):
 
             if r.status == 200:
                 info = json.loads(response_data)
-                message, is_queue_finished = (
-                    info["message"],
-                    info["queue_finished"],
-                )
-                break
+                return info["message"], info["queue_finished"]
             elif r.status == 308:
                 info = json.loads(response_data)
-                message, is_queue_finished = info["message"], True
-                break
+                return info["message"], True
             elif r.status == 403:
                 raise EngineClientException(
                     "Cannot get logs of pending job / Unauthorized access!"
@@ -568,15 +563,13 @@ class Job(Endpoint):
                 time.sleep(2**attempt_number)  # retry with exponential backoff
                 continue
 
-            raise EngineClientException(
-                "Getting logs failed with status code: "
-                + str(r.status)
-                + ". "
-                + response_data
-                + "."
-            )
-
-        return message, is_queue_finished
+        raise EngineClientException(
+            "Getting logs failed with status code: "
+            + str(r.status)
+            + ". "
+            + response_data
+            + "."
+        )
 
     def _create_zip_file(
         self,

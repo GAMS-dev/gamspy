@@ -19,9 +19,7 @@ except Exception:
 
 class ExternalModuleTestSuite(unittest.TestCase):
     def setUp(self):
-        self.m = gp.Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = gp.Container()
 
         directory = str(pathlib.Path(__file__).parent.resolve())
         external_module = os.path.join(
