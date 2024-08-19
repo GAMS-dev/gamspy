@@ -17,7 +17,7 @@ Symbol Creation
 
 Every symbol in your optimization problem must belong to a :meth:`Container <gamspy.Container>`.
 
-All added symbols to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
+All symbols added to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
     
     from gamspy import Container, Set
     m = Container()
@@ -32,7 +32,7 @@ Each symbol is added to the container as soon as it is created. If the symbol al
     i2 = Set(m, "i", records = ["seattle", "san-diego"])
     print(id(i1) == id(i2))  # True
 
-Creating a symbol with the same name but different records overwrite the records of the existing symbol. ::
+Creating a symbol with the same name but different records overwrites the records of the existing symbol. ::
 
     from gamspy import Container, Set
     m = Container()
@@ -41,7 +41,7 @@ Creating a symbol with the same name but different records overwrite the records
     print(id(i1) == id(i2))  # True
     print(i2.records)  # ['seattle', 'san-diego', 'topeka']
 
-An alternative way to create a symbol in GAMSPy and adding it to the container is the following ::
+An alternative way to create a symbol in GAMSPy and add it to the container is as follows ::
 
     from gamspy import Container
     m = Container()
@@ -52,7 +52,7 @@ An alternative way to create a symbol in GAMSPy and adding it to the container i
 Reading and Writing Symbols
 ===========================
 
-The :meth:`Container <gamspy.Container>` class offers I/O functions for reading and writing symbols.
+The :meth:`Container <gamspy.Container>` class provides I/O functions for reading and writing symbols.
 
 Writing
 -------
@@ -68,9 +68,9 @@ Symbols created within a specific :meth:`Container <gamspy.Container>` can be sa
 
 Reading
 -------
-Symbol records can be read from a GDX file by either specifying the `load_from` argument during the :meth:`Container <gamspy.Container>` construction or by using the :meth:`read <gamspy.Container.read>` function.
+Symbol records can be read from a GDX file by either specifying the ``load_from`` argument during the :meth:`Container <gamspy.Container>` construction or by using the :meth:`read <gamspy.Container.read>` function.
 
-To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, use the `load_from` argument:
+To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, use the ``load_from`` argument:
 
 .. code-block:: python
 
@@ -92,7 +92,7 @@ Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to 
 Loading Records to Existing Symbols
 -----------------------------------
 
-One can load the records of a symbol from a GDX file if the symbol is already declared by using :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>`.
+You can load the records of a symbol from a GDX file if the symbol is already declared by using :meth:`loadRecordsFromGdx <gamspy.Container.loadRecordsFromGdx>`.
 
 .. code-block:: python
 
@@ -109,6 +109,6 @@ if it does not already exist, :meth:`loadRecordsFromGdx <gamspy.Container.loadRe
 Generating the Executed GAMS Code
 =================================
 
-One can check the GAMS code which is executed so far at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
-This mechanism is exposed for avid GAMS users who want to see what's being executed behind the scenes. :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging`
-page includes more details. 
+You can check the GAMS code executed so far at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
+This feature is available for avid GAMS users who want to see what’s being executed behind the scenes. For more details, see the 
+:ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 

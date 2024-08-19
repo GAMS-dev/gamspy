@@ -8,11 +8,11 @@
 Model
 *****
 
-The model class is used to collect equations into groups and to label them so that they can be solved.
-It also allows specifying the problem type (e.g. LP, MIP etc.), sense of the problem (MIN, MAX, FEASIBILITY)
-and the objective of the problem at hand.
+The model class is used to group equations and label them for solving.
+It also allows specifying the problem type (e.g. LP, MIP, etc.), the sense of the problem (MIN, MAX, FEASIBILITY),
+and the objective of the problem.
 
-The overall syntax of a model is as follows: ::
+The general syntax for creating a model is as follows: ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
 
@@ -31,12 +31,11 @@ The overall syntax of a model is as follows: ::
 
 Classification of Models
 ========================
-Various types of problems can be solved with GAMS. Note that the type of the model must be known before it 
-may be solved. The model types are briefly discussed in this section. GAMS checks that the model is in fact 
-the type the user thinks it is, and issues explanatory error messages if it discovers a mismatch - for instance, 
-that a supposedly linear model contains nonlinear terms. Some problems may be solved in more than one way, and 
-the user has to choose which way to use. For instance, if there are binary or integer variables in the model, 
-it can be solved either as a MIP or as a RMIP.
+Various types of problems can be solved with GAMS. Note that the model type must be specified before solving. 
+The model types are briefly discussed in this section. GAMS verifies that the model is of the specified type 
+and issues error messages if there is a mismatch, such as when a supposedly linear model contains nonlinear 
+terms. Some problems can be solved in multiple ways, and the user must choose the appropriate method. 
+For example, if the model contains binary or integer variables, it can be solved either as a MIP or as an RMIP.
 
 ========== ==========================================================
 Model Type Model Type Description
@@ -69,7 +68,7 @@ Matches for MCP Models
 ======================
 
 Mixed Complementarity Problem (MCP) models can be defined as pair-wise complementarities between
-variables and equations. ``Model`` accepts these pair-wise complementarities through its `matches`
+variables and equations. The ``Model`` class accepts these pair-wise complementarities via the `matches`
 argument in its constructor. ::
 
     p = Variable(m, "p", type=VariableType.POSITIVE, domain=c)
@@ -97,16 +96,16 @@ argument in its constructor. ::
         matches={mkt: p, profit: y, income: i},
     )
 
-One does not have to provide equations that are provided in the matches in the `equations` argument.
+You do not need to include equations already provided in `matches` in the `equations` argument.
 An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
 
 
 Model Attributes
 ================
 
-Models have attributes that hold a variety of information, including
+Models have attributes that store a variety of information, including
 
-* information about the results from solving a model, a solve statement, the model's solution,
+* information about the results of solving a model, the solve statement, and the model’s solution,
 * information about certain features to be used by GAMS or the solver,
 * information passed to GAMS or the solver specifying various settings that are also subject to option statements.
 
@@ -146,7 +145,7 @@ solver_version         Solver version
 Solving a Model
 ===============
 
-Model has a function named ``solve`` that allows user to solve the specified model. ::
+The ``Model`` class has a function named ``solve`` that allows users to solve the specified model. ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
 
@@ -162,15 +161,14 @@ Model has a function named ``solve`` that allows user to solve the specified mod
     summary = model.solve(solver="CONOPT", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
     print(summary)
 
-In most cases, calling the ``solve`` function of your model without any parameters is sufficient. 
-In this scenario, the default solver depending on the problem type, default options will be used. But for users
-who requires a higher level of control can set the ``solver`` to be used, general options and solver
-specific options. All installed solvers on your system can be queried by running the following command: ::
+In most cases, calling the ``solve`` function without any parameters is sufficient. 
+In this scenario, the default solver depending on the problem type, default options will be used. 
+However, users who require more control can specify the solver, general options, and solver-specific 
+options. All installed solvers on your system can be queried by running the following command: ::
 
     gamspy list solvers
 
-If you want to get all available solvers that you can install and use, the following command would give you
-the list of solvers that are available.::
+To see all available solvers that can be installed and used, run the following command.::
 
     gamspy list solvers -a
 
@@ -180,8 +178,8 @@ Redirecting Output
 ------------------
 
 The output of GAMS after solving the model can be redirected to a file, to standard input or to any 
-custom stream that supports ``write`` and ``flush`` operations by specifying the output parameter of 
-the ``solve``.::
+custom stream that supports ``write`` and ``flush`` operations by specifying the ``output`` parameter in 
+the ``solve`` function.::
     
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
     import sys
@@ -216,7 +214,7 @@ the ``solve``.::
 Solving Locally
 ---------------
 
-Models are solved locally (on your machine) by default. 
+By default, models are solved locally (on your machine).
 
 Solving with GAMS Engine
 ------------------------
@@ -225,8 +223,8 @@ Synchronous Solve
 ~~~~~~~~~~~~~~~~~
 
 In order to send your model to be solved to `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_, 
-you need to define the configuration of GAMS Engine.
-This can be done by importing ``EngineClient`` and creating an instance. Then, the user can pass it to the 
+you need to define the GAMS Engine configuration.
+This can be done by importing ``EngineClient`` and creating an instance. The user can then pass this instance to the 
 ``solve`` method and specify the backend as ``engine``. ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem, EngineClient
@@ -252,7 +250,7 @@ This can be done by importing ``EngineClient`` and creating an instance. Then, t
 
 .. note::
 
-    Extra model file paths that are provided through extra_model_files argument of EngineClient must be
+    Extra model file paths that are provided through the ``extra_model_files`` argument of ``EngineClient`` must be
     relative to the working directory. For example, if your working directory is "/foo/bar", your extra
     model file path cannot be "/foo". 
 
@@ -260,7 +258,7 @@ Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 
 If you just want to send your jobs to GAMS Engine without blocking until the results are received,
-`is_blocking` parameter can be set to `False` in `EngineClient`.
+the `is_blocking` parameter can be set to `False` in `EngineClient`.
 
 Tokens of the submitted jobs are stored in `client.tokens` ::
 
@@ -311,7 +309,7 @@ Synchronous Solve
 ~~~~~~~~~~~~~~~~~
 
 In order to send your model to be solved to `NEOS Server <https://neos-server.org/neos/>`_, you need to create a NeosClient.
-This can be done by importing ``NeosClient`` and creating an instance. Then, the user can pass it to the 
+This can be done by importing ``NeosClient`` and creating an instance. The user can then pass this instance to the 
 ``solve`` method and specify the backend as ``neos``. ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem, NeosClient
@@ -333,10 +331,10 @@ This can be done by importing ``NeosClient`` and creating an instance. Then, the
     )
     model.solve(backend="neos", client=client)
 
-Defining your username and password is optional for NEOS Server backend but it is recommended since
-it allows you to investigate your models on `NEOS web client <https://neos-server.org/neos/>`_. The
-environment variables can be set in a .env file or with export statements in command line. Example to
-run your model on NEOS Server without authentication: ::
+Providing your username and password is optional for the NEOS Server backend, but it is recommended 
+as it allows you to review your models on the `NEOS web client <https://neos-server.org/neos/>`_. The
+environment variables can be set in a `.env` file or with `export` statements in command line. Example 
+of running your model on NEOS Server without authentication: ::
 
     NEOS_EMAIL=<your_email> python <your_script>
 
@@ -405,7 +403,7 @@ Terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/
 Solve Options
 -------------
 
-Solve options can be specified as an :meth:`gamspy.Options` class. For example: ::
+Solve options can be specified using the :meth:`gamspy.Options` class. For example: ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem, Options
 
@@ -580,7 +578,7 @@ Here is the list of options and their descriptions:
 Solver Options
 --------------
 
-In addition to solve options, user can specify solver options to be used by the solver as a dictionary.::
+In addition to solve options, user can specify solver options as a dictionary.::
     
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
 
@@ -600,8 +598,8 @@ For all possible solver options, please check the corresponding `solver manual <
 
 Exporting Model To Latex
 ------------------------
-GAMSPy models can be exported to a .tex file in a LaTex format by using :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
-The generated .tex file can automatically be compiled into a PDF file by using ``pdflatex`` ::
+GAMSPy models can be exported to a `.tex` file in LaTex format by using the :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
+The generated `.tex` file can be automatically compiled into a PDF file by using ``pdflatex`` ::
 
     from gamspy import Container, Variable, Equation, Model, Sense, Problem
 
@@ -617,4 +615,4 @@ The generated .tex file can automatically be compiled into a PDF file by using `
     model.toLatex(path=<latex_path>, generate_pdf=True)
 
 .. note::
-    In order to generate a pdf file from tex file, one has to install pdflatex to their system and add it to the path.
+    To generate a PDF file from a `.tex` file, you must install `pdflatex` on your system and add it to your `PATH`.

@@ -7,20 +7,20 @@ Neural Network Example
    :description: GAMSPy User Guide
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
-Our aim in implementing ML-related features was to provide maximum flexibility.
-While GAMSPy's primary purpose is not neural network training, we wanted to
+Our goal in implementing ML-related features was to provide maximum flexibility.
+Although GAMSPy’s primary purpose is not neural network training, we wanted to 
 demonstrate the process for those who are curious or need it for research.
 Implementing a "Mini-Batch Gradient Descent" training process would be very
 time-consuming and result in a non-introductory example. Therefore, we
-implemented a method that trains using only a single mini-batch of data,
+implemented a method that trains using just a single mini-batch of data,
 stopping after one mini-batch.
 
 We will train a neural network to classify handwritten digits from MNIST
-dataset. For this example we will use a simple feed forward network since it is
+dataset. For this example we will use a simple feed-forward network since it is
 easier to implement and demonstrate. Our neural network has flattened images
-in the input layer, therefore 28x28 = 784 dimension. We will have only a single
-hidden layer with 20 neurons and the output layer will have 10 neurons
-corresponding 10 digits.
+in the input layer, resulting in a 28x28 = 784 dimension. We will use a single 
+hidden layer with 20 neurons, and the output layer will have 10 neurons 
+corresponding to 10 digits.
 
 We start with the imports:
 
@@ -91,7 +91,7 @@ Next we define `datasets and dataloaders <https://pytorch.org/tutorials/beginner
 
        return torch.stack(good_data), torch.stack(good_target)
 
-We are loading MNIST dataset since it's input size is not too large. MNIST
+We are loading MNIST dataset since it's input size is not too large. The MNIST
 dataset consists of handwritten digits that are 28x28 in size. Examples are
 grayscale. Here are some examples:
 
@@ -103,7 +103,7 @@ LeCun, Yann, et al. "Gradient-based learning applied to document recognition."
 Proceedings of the IEEE 86.11 (1998): 2278-2324.
 
 In this example, we load only one batch of data, ensuring that each digit is
-equally represented, with 10 instances of each. If we were not limiting to a
+equally represented, with 10 instances of each. If we were not limiting it to a
 single batch, this equal representation would not be necessary. This is
 achieved by ``get_balanced_batch`` method.
 
@@ -189,7 +189,7 @@ output after the first linear layer, and ``a2`` is the tanh-activated version
 of ``z2``. ``z3`` is the output after the second and final linear layer.
 ``a3``, which we will define later, will be the log_softmax-activated version
 of ``z3``, representing our log probabilities. Finally, the loss variable is
-used for calculating the negative log likelihood loss.
+used to calculate the negative log-likelihood loss.
 
 Now, let's define the relationships between our variables, also known as the
 forward pass.
@@ -263,7 +263,7 @@ our model is not yet loaded with data. We will address that next.
 
 We obtain a **single** batch of data and format it to be compatible with GAMSPy.
 Next, we set our input ``a1`` and labels ``target_set``. While we could stop
-here, our experiments have shown that providing the solver with good initial
+here, our experiments show that providing the solver with good initial
 values for every variable significantly speeds up training.
 
 
@@ -383,7 +383,7 @@ We can visualize the loss per iteration:
   :align: center
 
 
-Let's calculate accuracy on the batch we trained:
+Let's calculate the accuracy on the batch we trained:
 
 .. code-block:: python
 
@@ -441,7 +441,7 @@ However, guessing a bound is not trivial.
    stop_early[...] = loss >= 100
 
 
-We have demonstrated the flexibility of GAMSPy by training a simple neural
+We demonstrated the flexibility of GAMSPy by training a simple neural
 network. If your primary goal is to train a neural network, using frameworks
 like `PyTorch <https://pytorch.org/>`_ or `TensorFlow <https://www.tensorflow.org/>`_
 would be easier and faster. However, for research purposes and curious users,
@@ -454,7 +454,7 @@ Here are some points that can help with your research:
 - Avoid initializing your weights to zero; instead, use a common initialization
   function. This is crucial for gradient descent and equally important for your
   nonlinear solver.
-- Set upper and lower bounds whenever possible, as it helps the solver.
+- Set upper and lower bounds whenever possible, as these help the solver.
 - Provide initial values for your variables to prevent the solver from wasting
   time on forward propagation alone.
 - Unlike other optimization problems, you don't need very strict tolerances for
