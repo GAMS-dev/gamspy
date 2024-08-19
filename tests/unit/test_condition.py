@@ -21,12 +21,15 @@ from gamspy import (
 class ConditionSuite(unittest.TestCase):
     def setUp(self):
         self.m = Container()
-
-    def test_condition_on_expression(self):
-        steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
-        markets = ["mexico-df", "monterrey", "guadalaja"]
-
-        rail_distances = pd.DataFrame(
+        self.steel_plants = [
+            "ahmsa",
+            "fundidora",
+            "sicartsa",
+            "hylsa",
+            "hylsap",
+        ]
+        self.markets = ["mexico-df", "monterrey", "guadalaja"]
+        self.rail_distances = pd.DataFrame(
             [
                 ["ahmsa", "mexico-df", 1204],
                 ["ahmsa", "monterrey", 218],
@@ -51,32 +54,29 @@ class ConditionSuite(unittest.TestCase):
             ]
         )
 
-        m = Container()
-
-        m = Container()
-
+    def test_condition_on_expression(self):
         i = Set(
-            m,
+            self.m,
             name="i",
-            records=pd.DataFrame(steel_plants),
+            records=self.steel_plants,
             description="steel plants",
         )
         j = Set(
-            m,
+            self.m,
             name="j",
-            records=pd.DataFrame(markets),
+            records=self.markets,
             description="markets",
         )
 
         rd = Parameter(
-            m,
+            self.m,
             name="rd",
             domain=["*", "*"],
-            records=rail_distances,
+            records=self.rail_distances,
             description="rail distances from plants to markets",
         )
         muf = Parameter(
-            m,
+            self.m,
             name="muf",
             domain=[i, j],
             description="transport rate: final products",
@@ -91,38 +91,38 @@ class ConditionSuite(unittest.TestCase):
         )
 
     def test_condition_on_number(self):
-        steel_plants = ["ahmsa", "fundidora", "sicartsa", "hylsa", "hylsap"]
-        markets = ["mexico-df", "monterrey", "guadalaja"]
-
-        m = Container()
         i = Set(
-            m,
+            self.m,
             name="i",
-            records=pd.DataFrame(steel_plants),
+            records=self.steel_plants,
             description="steel plants",
         )
         j = Set(
-            m,
+            self.m,
             name="j",
-            records=pd.DataFrame(markets),
+            records=self.markets,
             description="markets",
         )
         k = Set(
-            m,
+            self.m,
             name="k",
-            records=pd.DataFrame(steel_plants),
+            records=self.steel_plants,
             description="steel plants",
         )
 
-        p = Set(m, name="p", records=[f"pos{elem}" for elem in range(1, 11)])
-        o = Set(m, name="o", records=[f"opt{elem}" for elem in range(1, 6)])
+        p = Set(
+            self.m, name="p", records=[f"pos{elem}" for elem in range(1, 11)]
+        )
+        o = Set(
+            self.m, name="o", records=[f"opt{elem}" for elem in range(1, 6)]
+        )
 
-        sumc = Parameter(m, name="sumc", domain=[o, p])
+        sumc = Parameter(self.m, name="sumc", domain=[o, p])
         sumc[o, p] = gamspy_math.uniform(0, 1)
 
-        op = Variable(m, name="op", type="free", domain=[o, p])
+        op = Variable(self.m, name="op", type="free", domain=[o, p])
 
-        defopLS = Equation(m, name="defopLS", domain=[o, p])
+        defopLS = Equation(self.m, name="defopLS", domain=[o, p])
         defopLS[o, p].where[sumc[o, p] <= 0.5] = op[o, p] == 1
 
         self.assertEqual(
@@ -131,7 +131,7 @@ class ConditionSuite(unittest.TestCase):
         )
 
         muf = Parameter(
-            m,
+            self.m,
             name="muf",
             domain=[i, j],
             description="transport rate: final products",
@@ -155,27 +155,27 @@ class ConditionSuite(unittest.TestCase):
         )
 
         t = Set(
-            m,
+            self.m,
             name="t",
             records=[str(i) for i in range(1, 10)],
             description="no. of Monte-Carlo draws",
         )
 
         Util_gap = Parameter(
-            m,
+            self.m,
             name="Util_gap",
             domain=[t],
             description="gap between these two util",
         )
 
         Util_lic = Parameter(
-            m,
+            self.m,
             name="Util_lic",
             domain=[t],
             description="util solved w/o MN",
         )
         Util_lic2 = Parameter(
-            m,
+            self.m,
             name="Util_lic2",
             domain=[t],
             description="util solved w/ MN",
@@ -285,25 +285,21 @@ class ConditionSuite(unittest.TestCase):
             ]
         )
 
-        m = Container()
-
-        m = Container()
-
         w = Set(
-            m,
+            self.m,
             name="w",
             records=["icbm", "mrbm-1", "lr-bomber", "f-bomber", "mrbm-2"],
         )
-        t = Set(m, name="t", records=[str(i) for i in range(1, 21)])
+        t = Set(self.m, name="t", records=[str(i) for i in range(1, 21)])
 
-        td = Parameter(m, name="td", domain=[w, t], records=td_data)
-        wa = Parameter(m, name="wa", domain=[w], records=wa_data)
-        tm = Parameter(m, name="tm", domain=[t], records=tm_data)
+        td = Parameter(self.m, name="td", domain=[w, t], records=td_data)
+        wa = Parameter(self.m, name="wa", domain=[w], records=wa_data)
+        tm = Parameter(self.m, name="tm", domain=[t], records=tm_data)
 
-        x = Variable(m, name="x", domain=[w, t], type="Positive")
+        x = Variable(self.m, name="x", domain=[w, t], type="Positive")
 
-        maxw = Equation(m, name="maxw", domain=[w])
-        minw = Equation(m, name="minw", domain=[t])
+        maxw = Equation(self.m, name="maxw", domain=[w])
+        minw = Equation(self.m, name="minw", domain=[t])
 
         maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
         minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
@@ -362,67 +358,49 @@ class ConditionSuite(unittest.TestCase):
             [("Product_A", 10), ("Product_B", 8), ("Product_C", 6)]
         )
 
-        capacity_data = pd.DataFrame([(1, 200), (2, 250), (3, 300), (4, 220)])
-        production_speed_data = pd.DataFrame(
-            [("Product_A", 20), ("Product_B", 25), ("Product_C", 30)]
+        i = Set(self.m, name="i", description="products", records=products)
+        t = Set(
+            self.m, name="t", description="time periods", records=time_periods
         )
 
-        m = Container()
-        i = Set(m, name="i", description="products", records=products)
-        t = Set(m, name="t", description="time periods", records=time_periods)
-
         d = Parameter(
-            m,
+            self.m,
             name="d",
             domain=[i, t],
             description="demand of product i in period t",
             records=demand_data,
         )
         s = Parameter(
-            m,
+            self.m,
             name="s",
             domain=i,
             description="fixed setup cost for product i",
             records=setup_cost_data,
         )
         h = Parameter(
-            m,
+            self.m,
             name="h",
             domain=i,
             description="holding cost for product i",
             records=holding_cost_data,
         )
-        _ = Parameter(
-            m,
-            name="c",
-            domain=t,
-            description="production capacity in period t",
-            records=capacity_data,
-        )
-        _ = Parameter(
-            m,
-            name="p",
-            domain=i,
-            description="production speed of product i",
-            records=production_speed_data,
-        )
 
         X = Variable(
-            m,
+            self.m,
             name="X",
             domain=[i, t],
             type="positive",
             description="lot size of product i in period t",
         )
         Y = Variable(
-            m,
+            self.m,
             name="Y",
             domain=[i, t],
             type="binary",
             description="indicates if product i is manufactures in period t",
         )
         Z = Variable(
-            m,
+            self.m,
             name="Z",
             domain=[i, t],
             type="positive",
@@ -432,7 +410,7 @@ class ConditionSuite(unittest.TestCase):
         objective = Sum((i, t), s[i] * Y[i, t] + h[i] * Z[i, t])
 
         stock = Equation(
-            m,
+            self.m,
             name="stock",
             domain=[i, t],
             description="Stock balance equation",
@@ -442,10 +420,10 @@ class ConditionSuite(unittest.TestCase):
         )
 
         clsp = Model(
-            m,
+            self.m,
             name="CLSP",
             problem="MIP",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             sense=Sense.MIN,
             objective=objective,
         )
@@ -455,9 +433,8 @@ class ConditionSuite(unittest.TestCase):
         self.assertIsNotNone(X.records)
 
     def test_operator_comparison_in_condition(self):
-        m = Container()
-        s = Set(m, name="s", records=[str(i) for i in range(1, 4)])
-        c = Parameter(m, name="c", domain=[s])
+        s = Set(self.m, name="s", records=[str(i) for i in range(1, 4)])
+        c = Parameter(self.m, name="c", domain=[s])
         c[s].where[Ord(s) <= Ord(s)] = 1
 
         self.assertEqual(

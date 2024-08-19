@@ -24,10 +24,9 @@ class DomainSuite(unittest.TestCase):
         self.assertRaises(ValidationError, Domain, "i", "j")
 
     def test_domain_forwarding(self):
-        m = Container()
-        i = Set(m, name="i")
+        i = Set(self.m, name="i")
         _ = Parameter(
-            m,
+            self.m,
             name="p",
             domain=[i],
             domain_forwarding=True,
@@ -35,10 +34,10 @@ class DomainSuite(unittest.TestCase):
         )
         self.assertEqual(i.toList(), ["i1"])
 
-        k = Set(m, name="k")
-        j = Set(m, name="j")
+        k = Set(self.m, name="k")
+        j = Set(self.m, name="j")
         _ = Parameter(
-            m,
+            self.m,
             name="p2",
             domain=[k, j],
             domain_forwarding=[True, True],
@@ -47,10 +46,10 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(k.toList(), ["k1"])
         self.assertEqual(j.toList(), ["j1"])
 
-        k2 = Set(m, name="k2")
-        j2 = Set(m, name="j2")
+        k2 = Set(self.m, name="k2")
+        j2 = Set(self.m, name="j2")
         _ = Set(
-            m,
+            self.m,
             name="p3",
             domain=[k2, j2],
             domain_forwarding=[True, True],
