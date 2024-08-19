@@ -17,6 +17,7 @@ details are found in :ref:`reference`.
    installation
    notebooks/trnsport
    examples
+   Model Library <https://github.com/GAMS-dev/gamspy-examples>
 
 .. toctree::
    :caption: Fundamentals and usage
@@ -30,7 +31,6 @@ details are found in :ref:`reference`.
    :maxdepth: 1
 
    faq
-   Model Library <https://github.com/GAMS-dev/gamspy-examples>
    gamspy_for_gams_users
 
 .. toctree::

@@ -21,9 +21,9 @@ GAMSPy documentation
 **Useful links**:
 `Installation <https://gamspy.readthedocs.io/en/latest/user/installation.html>`_ |
 `Source Repository <https://github.com/GAMS-dev/gamspy>`_ |
+`Examples <https://github.com/GAMS-dev/gamspy-examples>`_ |
 `Issue Tracker <https://github.com/GAMS-dev/gamspy/issues>`_ |
-`Q&A Support <gamspy@gams.com>`_ |
-`Discourse <https://forum.gams.com>`_
+`Q&A Support <gamspy@gams.com>`_
 
 GAMSPy is a mathematical optimization library that combines the high-performance 
 GAMS execution system with the flexible Python language. It acts as a bridge 
@@ -91,20 +91,20 @@ to create complex mathematical models with minimal effort.
             API Reference
 
     .. grid-item-card::
-        :img-top: ./_static/cli_reference.svg
+        :img-top: ./_static/examples.svg
         :text-align: center
 
-        CLI Reference
+        GAMSPy Examples
         ^^^
 
-        GAMSPy comes with a command line interface to install solvers, licenses, and much more.
-        The CLI reference contains descriptions of possible command-line arguments for GAMSPy CLI.
+        There are over hundred examples in our GAMSPy examples repository which show 
+        how to develop models with GAMSPy.
 
         +++
 
-        .. button-ref:: cli/index
+        .. button-link:: https://github.com/GAMS-dev/gamspy-examples
             :expand:
             :color: secondary
             :click-parent:
 
-            CLI Reference
+            GAMSPy Examples

@@ -766,46 +766,49 @@ class GamspyToLatexSuite(unittest.TestCase):
         self.assertEqual(reference_tex, generated_tex)
 
     def test_minlp_minlphix(self):
-        cont = Container()
-
         # Set
         i = Set(
-            cont,
+            self.m,
             name="i",
             records=[f"c-{i}" for i in range(1, 5)],
             description="condensers-columns",
         )
         j = Set(
-            cont,
+            self.m,
             name="j",
             records=[f"r-{i}" for i in range(1, 5)],
             description="reboilers",
         )
         hu = Set(
-            cont, name="hu", records=["lp", "ex"], description="hot utilities"
+            self.m,
+            name="hu",
+            records=["lp", "ex"],
+            description="hot utilities",
         )
-        cu = Set(cont, name="cu", records=["cw"], description="cold utilities")
-        n = Set(cont, name="n", records=["a", "b"], description="index")
+        cu = Set(
+            self.m, name="cu", records=["cw"], description="cold utilities"
+        )
+        n = Set(self.m, name="n", records=["a", "b"], description="index")
         m = Set(
-            cont, name="m", records=["ab", "bc"], description="intermediates"
+            self.m, name="m", records=["ab", "bc"], description="intermediates"
         )
         pm = Set(
-            cont,
+            self.m,
             name="pm",
             domain=[i, m],
             records=[("c-1", "bc"), ("c-2", "ab")],
             description="products",
         )
         fm = Set(
-            cont,
+            self.m,
             name="fm",
             domain=[i, m],
             records=[("c-3", "bc"), ("c-4", "ab")],
             description="feeds",
         )
 
-        ip = Alias(cont, name="ip", alias_with=i)
-        jp = Alias(cont, name="jp", alias_with=j)
+        ip = Alias(self.m, name="ip", alias_with=i)
+        jp = Alias(self.m, name="jp", alias_with=j)
 
         # ====================================================================
         # Definition of "z" sets for conditional control of model
@@ -815,14 +818,14 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Set
         zlead = Set(
-            cont,
+            self.m,
             name="zlead",
             domain=i,
             records=["c-1", "c-2"],
             description="leading columns in superstructure",
         )
         zcrhx = Set(
-            cont,
+            self.m,
             name="zcrhx",
             domain=[i, j],
             records=[
@@ -834,13 +837,13 @@ class GamspyToLatexSuite(unittest.TestCase):
             description="condenser to reboiler allowable matches",
         )
         zlim = Set(
-            cont,
+            self.m,
             name="zlim",
             domain=[i, j],
             description="direction of heat integration",
         )
         zcr = Set(
-            cont,
+            self.m,
             name="zcr",
             domain=[i, j],
             description="reboiler-condenser pairs",
@@ -851,7 +854,7 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Parameter
         spltfrc = Parameter(
-            cont,
+            self.m,
             name="spltfrc",
             domain=[i, m],
             records=pd.DataFrame([["c-1", "bc", 0.20], ["c-2", "ab", 0.90]]),
@@ -859,14 +862,14 @@ class GamspyToLatexSuite(unittest.TestCase):
         )
 
         tcmin = Parameter(
-            cont,
+            self.m,
             name="tcmin",
             domain=i,
             records=np.array([341.92, 343.01, 353.54, 341.92]),
             description="minimum condenser temperatures",
         )
         trmax = Parameter(
-            cont,
+            self.m,
             name="trmax",
             domain=j,
             description="maximum reboiler temperatures",
@@ -882,21 +885,21 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Parameter
         fc = Parameter(
-            cont,
+            self.m,
             name="fc",
             domain=i,
             records=np.array([151.125, 180.003, 4.2286, 213.42]),
             description="fixed charge for distillation columns",
         )
         vc = Parameter(
-            cont,
+            self.m,
             name="vc",
             domain=i,
             records=np.array([0.003375, 0.000893, 0.004458, 0.003176]),
             description="variable charge for distillation columns",
         )
         thu = Parameter(
-            cont,
+            self.m,
             name="thu",
             domain=hu,
             records=np.array([421.0, 373.0]),
@@ -907,7 +910,7 @@ class GamspyToLatexSuite(unittest.TestCase):
         # ucost = q(10e+6 kj/hr)*costhu(hu)
 
         costhu = Parameter(
-            cont,
+            self.m,
             name="costhu",
             domain=hu,
             records=np.array([24.908, 9.139]),
@@ -915,7 +918,7 @@ class GamspyToLatexSuite(unittest.TestCase):
         )
 
         kf = Parameter(
-            cont,
+            self.m,
             name="kf",
             domain=[i, n],
             records=np.array(
@@ -930,7 +933,7 @@ class GamspyToLatexSuite(unittest.TestCase):
         )
 
         af = Parameter(
-            cont,
+            self.m,
             name="af",
             domain=[i, n],
             records=np.array(
@@ -946,73 +949,73 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Scalar
         totflow = Parameter(
-            cont,
+            self.m,
             name="totflow",
             records=396,
             description="total flow to superstructure",
         )
         fchx = Parameter(
-            cont,
+            self.m,
             name="fchx",
             records=3.392,
             description="fixed charge for heat exchangers scaled",
         )
         vchx = Parameter(
-            cont,
+            self.m,
             name="vchx",
             records=0.0893,
             description="variable charge for heat exchangers scaled",
         )
         htc = Parameter(
-            cont,
+            self.m,
             name="htc",
             records=0.0028,
             description="overall heat transfer coefficient",
         )
         dtmin = Parameter(
-            cont,
+            self.m,
             name="dtmin",
             records=10.0,
             description="minimum temperature approach",
         )
         tcin = Parameter(
-            cont,
+            self.m,
             name="tcin",
             records=305.0,
             description="inlet temperature of cold water",
         )
         tcout = Parameter(
-            cont,
+            self.m,
             name="tcout",
             records=325.0,
             description="outlet temperature of cold water",
         )
         costcw = Parameter(
-            cont,
+            self.m,
             name="costcw",
             records=4.65,
             description="cooling water cost coefficient",
         )
         beta = Parameter(
-            cont,
+            self.m,
             name="beta",
             records=0.52,
             description="income tax correction factor",
         )
         alpha = Parameter(
-            cont,
+            self.m,
             name="alpha",
             records=0.40,
             description="one over payout time factor in years",
         )
         u = Parameter(
-            cont,
+            self.m,
             name="u",
             records=1500,
             description="large number for logical constraints",
         )
         uint = Parameter(
-            cont,
+            self.m,
             name="uint",
             records=20,
             description="upper bound for integer logical",
@@ -1020,105 +1023,105 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Positive Variables
         f = Variable(
-            cont,
+            self.m,
             name="f",
             type="positive",
             domain=i,
             description="flowrates to columns",
         )
         qr = Variable(
-            cont,
+            self.m,
             name="qr",
             type="positive",
             domain=j,
             description="reboiler duties for column with reboiler j",
         )
         qc = Variable(
-            cont,
+            self.m,
             name="qc",
             type="positive",
             domain=i,
             description="condenser duties for column i",
         )
         qcr = Variable(
-            cont,
+            self.m,
             name="qcr",
             type="positive",
             domain=[i, j],
             description="heat integration heat transfer",
         )
         qhu = Variable(
-            cont,
+            self.m,
             name="qhu",
             type="positive",
             domain=[hu, j],
             description="hot utility heat transfer",
         )
         qcu = Variable(
-            cont,
+            self.m,
             name="qcu",
             type="positive",
             domain=[i, cu],
             description="cold utility heat transfer",
         )
         tc = Variable(
-            cont,
+            self.m,
             name="tc",
             type="positive",
             domain=i,
             description="condenser temperature for column with cond. i",
         )
         tr = Variable(
-            cont,
+            self.m,
             name="tr",
             type="positive",
             domain=j,
             description="reboiler temperature for column with reb. j",
         )
         lmtd = Variable(
-            cont,
+            self.m,
             name="lmtd",
             type="positive",
             domain=i,
             description="lmtd for cooling water exchanges",
         )
         sl1 = Variable(
-            cont,
+            self.m,
             name="sl1",
             type="positive",
             domain=i,
             description="artificial slack variable for lmtd equalities",
         )
         sl2 = Variable(
-            cont,
+            self.m,
             name="sl2",
             type="positive",
             domain=i,
             description="artificial slack variable for lmtd equalities",
         )
         s1 = Variable(
-            cont,
+            self.m,
             name="s1",
             type="positive",
             domain=i,
             description="artificial slack variable for reb-con equalities",
         )
         s2 = Variable(
-            cont,
+            self.m,
             name="s2",
             type="positive",
             domain=i,
             description="artificial slack variable for reb-con equalities",
         )
         s3 = Variable(
-            cont,
+            self.m,
             name="s3",
             type="positive",
             domain=i,
             description="artificial slack variable for duty equalities",
         )
         s4 = Variable(
-            cont,
+            self.m,
             name="s4",
             type="positive",
             domain=i,
@@ -1127,28 +1130,28 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Binary Variable
         yhx = Variable(
-            cont,
+            self.m,
             name="yhx",
             type="binary",
             domain=[i, j],
             description="heat integration matches condenser i reboiler j",
         )
         yhu = Variable(
-            cont,
+            self.m,
             name="yhu",
             type="binary",
             domain=[hu, j],
             description="hot utility matches hot utility hu reboiler j",
         )
         ycu = Variable(
-            cont,
+            self.m,
             name="ycu",
             type="binary",
             domain=[i, cu],
             description="cold utility matches condenser i cold util cu",
         )
         ycol = Variable(
-            cont,
+            self.m,
             name="ycol",
             type="binary",
             domain=i,
@@ -1157,130 +1160,130 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # Equation
         tctrlo = Equation(
-            cont,
+            self.m,
             name="tctrlo",
             domain=[i, j],
             description="prevent division by 0 in the objective",
         )
         lmtdlo = Equation(
-            cont,
+            self.m,
             name="lmtdlo",
             domain=i,
             description="prevent division by 0 in the objective",
         )
         lmtdsn = Equation(
-            cont,
+            self.m,
             name="lmtdsn",
             domain=i,
             description="nonlinear form of lmtd definition",
         )
         tempset = Equation(
-            cont,
+            self.m,
             name="tempset",
             domain=i,
             description="sets temperatures of inactive columns to 0 (milp)",
         )
         artrex1 = Equation(
-            cont,
+            self.m,
             name="artrex1",
             domain=i,
             description="relaxes artificial slack variables (nlp)",
         )
         artrex2 = Equation(
-            cont,
+            self.m,
             name="artrex2",
             domain=i,
             description="relaxes artificial slack variables (nlp)",
         )
         material = Equation(
-            cont,
+            self.m,
             name="material",
             domain=m,
             description="material balances for each intermediate product",
         )
         feed = Equation(
-            cont, name="feed", description="feed to superstructure"
+            self.m, name="feed", description="feed to superstructure"
         )
         matlog = Equation(
-            cont,
+            self.m,
             name="matlog",
             domain=i,
             description="material balance logical constraints",
         )
         duty = Equation(
-            cont,
+            self.m,
             name="duty",
             domain=i,
             description="heat duty definition of condenser i",
         )
         rebcon = Equation(
-            cont,
+            self.m,
             name="rebcon",
             domain=[i, j],
             description="equates condenser and reboiler duties",
         )
         conheat = Equation(
-            cont,
+            self.m,
             name="conheat",
             domain=i,
             description="condenser heat balances",
         )
         rebheat = Equation(
-            cont,
+            self.m,
             name="rebheat",
             domain=j,
             description="reboiler heat balances",
         )
         dtminlp = Equation(
-            cont,
+            self.m,
             name="dtminlp",
             domain=j,
             description="minimum temp approach for low pressure steam",
         )
         dtminc = Equation(
-            cont,
+            self.m,
             name="dtminc",
             domain=i,
             description="minimum temp allowable for each condenser",
         )
         trtcdef = Equation(
-            cont,
+            self.m,
             name="trtcdef",
             domain=[i, j],
             description="relates reboiler and condenser temps of columns",
         )
         dtmincr = Equation(
-            cont,
+            self.m,
             name="dtmincr",
             domain=[i, j],
             description="minimum temp approach for heat integration",
         )
         dtminex = Equation(
-            cont,
+            self.m,
             name="dtminex",
             domain=j,
             description="minimum temp approach for exhaust steam",
         )
         hxclog = Equation(
-            cont,
+            self.m,
             name="hxclog",
             domain=[i, j],
             description="logical constraint for heat balances",
         )
         hxhulog = Equation(
-            cont,
+            self.m,
             name="hxhulog",
             domain=[hu, j],
             description="logical constraint for heat balances",
         )
         hxculog = Equation(
-            cont,
+            self.m,
             name="hxculog",
             domain=[i, cu],
             description="logical constraint for heat balances",
         )
         qcqrlog = Equation(
-            cont,
+            self.m,
             name="qcqrlog",
             domain=i,
             description="logical constraint for con-reb duties",
@@ -1288,26 +1291,26 @@ class GamspyToLatexSuite(unittest.TestCase):
 
         # these are the pure binary constraints of the minlp
         sequen = Equation(
-            cont,
+            self.m,
             name="sequen",
             domain=m,
             description="restricts superstructure to a single sequence",
         )
-        lead = Equation(cont, name="lead", description="sequence control")
+        lead = Equation(self.m, name="lead", description="sequence control")
         limutil = Equation(
-            cont,
+            self.m,
             name="limutil",
             domain=j,
             description="limits columns to have a single hot utility",
         )
         hidirect = Equation(
-            cont,
+            self.m,
             name="hidirect",
             domain=[i, j],
             description="requires a single direction of heat integration",
         )
         heat = Equation(
-            cont,
+            self.m,
             name="heat",
             domain=i,
             description="logical integer constraint",
@@ -1438,9 +1441,9 @@ class GamspyToLatexSuite(unittest.TestCase):
         tr.up[j] = trmax[j]
 
         skip = Model(
-            cont,
+            self.m,
             name="skip",
-            equations=cont.getEquations(),
+            equations=self.m.getEquations(),
             problem="minlp",
             sense=Sense.MIN,
             objective=zoau,
@@ -1462,21 +1465,19 @@ class GamspyToLatexSuite(unittest.TestCase):
         self.assertEqual(reference_tex, generated_tex)
 
     def test_qcp_EDsensitivity(self):
-        m = Container()
-
-        gen = Set(m, name="gen", records=[f"g{i}" for i in range(1, 6)])
+        gen = Set(self.m, name="gen", records=[f"g{i}" for i in range(1, 6)])
         counter = Set(
-            m, name="counter", records=[f"c{i}" for i in range(1, 12)]
+            self.m, name="counter", records=[f"c{i}" for i in range(1, 12)]
         )
 
-        report = Parameter(m, name="report", domain=[counter, "*"])
-        repGen = Parameter(m, name="repGen", domain=[counter, gen])
-        load = Parameter(m, name="load", records=400)
+        report = Parameter(self.m, name="report", domain=[counter, "*"])
+        repGen = Parameter(self.m, name="repGen", domain=[counter, gen])
+        load = Parameter(self.m, name="load", records=400)
         data = Parameter(
-            m, name="data", domain=[gen, "*"], records=data_records()
+            self.m, name="data", domain=[gen, "*"], records=data_records()
         )
 
-        P = Variable(m, name="P", domain=gen)
+        P = Variable(self.m, name="P", domain=gen)
 
         eq1 = Sum(
             gen,
@@ -1485,14 +1486,14 @@ class GamspyToLatexSuite(unittest.TestCase):
             + data[gen, "c"],
         )
 
-        eq2 = Equation(m, name="eq2", type="regular")
+        eq2 = Equation(self.m, name="eq2", type="regular")
         eq2[...] = Sum(gen, P[gen]) >= load
 
         P.lo[gen] = data[gen, "Pmin"]
         P.up[gen] = data[gen, "Pmax"]
 
         ECD = Model(
-            m,
+            self.m,
             name="ECD",
             equations=[eq2],
             problem="qcp",

@@ -18,10 +18,9 @@ class MiroSuite(unittest.TestCase):
 
     def test_domain_forwarding(self):
         # Only the parameter is miro input
-        m = Container()
-        i = Set(m, name="i")
+        i = Set(self.m, name="i")
         p = Parameter(
-            m,
+            self.m,
             name="p",
             domain=[i],
             domain_forwarding=True,
@@ -451,8 +450,6 @@ class MiroSuite(unittest.TestCase):
             self.fail("Columns are not as expected.")
 
     def test_miro_encoder(self):
-        m = Container()
-
         # Prepare data
         distances = [
             ["seattle", "new-york", 2.5],
@@ -467,20 +464,20 @@ class MiroSuite(unittest.TestCase):
         demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
         i = Set(
-            m,
+            self.m,
             name="i",
             records=["seattle", "san-diego"],
             description="canning plants",
         )
         j = Set(
-            m,
+            self.m,
             name="j",
             records=["new-york", "chicago", "topeka"],
             description="markets",
         )
-        _ = Set(m, name="k", is_miro_input=True)
+        _ = Set(self.m, name="k", is_miro_input=True)
         _ = Set(
-            m,
+            self.m,
             name="model_type",
             records=["lp"],
             is_singleton=True,
@@ -488,21 +485,21 @@ class MiroSuite(unittest.TestCase):
         )
 
         _ = Parameter(
-            m,
+            self.m,
             name="a",
             domain=[i],
             records=capacities,
             description="capacity of plant i in cases",
         )
         _ = Parameter(
-            m,
+            self.m,
             name="b",
             domain=[j],
             records=demands,
             description="demand at market j in cases",
         )
         d = Parameter(
-            m,
+            self.m,
             name="d",
             domain=[i, j],
             records=distances,
@@ -511,20 +508,20 @@ class MiroSuite(unittest.TestCase):
             is_miro_table=True,
         )
         _ = Parameter(
-            m,
+            self.m,
             name="table_without_records",
             domain=[i, j],
             is_miro_input=True,
             is_miro_table=True,
         )
         c = Parameter(
-            m,
+            self.m,
             name="c",
             domain=[i, j],
             description="transport cost in thousands of dollars per case",
         )
         f = Parameter(
-            m,
+            self.m,
             name="f",
             records=90,
             description="freight in dollars per case per thousand miles",
@@ -533,7 +530,7 @@ class MiroSuite(unittest.TestCase):
         c[i, j] = f * d[i, j] / 1000
 
         _ = Variable(
-            m,
+            self.m,
             name="x",
             domain=[i, j],
             type="Positive",
@@ -541,13 +538,13 @@ class MiroSuite(unittest.TestCase):
             is_miro_output=True,
         )
         _ = Variable(
-            m,
+            self.m,
             name="z",
             description="total transportation costs in thousands of dollars",
             is_miro_output=True,
         )
 
-        encoder = MiroJSONEncoder(m)
+        encoder = MiroJSONEncoder(self.m)
         generated_json = encoder.write_json()
         self.assertEqual(
             generated_json,
@@ -663,7 +660,7 @@ class MiroSuite(unittest.TestCase):
         )
 
         _ = Parameter(
-            m,
+            self.m,
             name="table_with_domain_forwarding",
             domain=[i, j],
             records=distances,

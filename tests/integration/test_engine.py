@@ -191,29 +191,27 @@ class EngineSuite(unittest.TestCase):
         self.assertTrue(os.path.exists(log_file_path))
 
     def test_no_config(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -223,36 +221,34 @@ class EngineSuite(unittest.TestCase):
             transport.solve(backend="engine")
 
     def test_extra_files(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
 
         with open(
-            m.working_directory + os.sep + "test.txt", "w"
+            self.m.working_directory + os.sep + "test.txt", "w"
         ) as same_directory_file:
             client = EngineClient(
                 host=os.environ["ENGINE_URL"],
@@ -280,29 +276,27 @@ class EngineSuite(unittest.TestCase):
         os.unlink(file.name)
 
     def test_solve_twice(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -319,29 +313,27 @@ class EngineSuite(unittest.TestCase):
         transport.solve(backend="engine", client=client)
 
     def test_summary(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -350,29 +342,27 @@ class EngineSuite(unittest.TestCase):
         self.assertTrue(isinstance(summary, pd.DataFrame))
 
     def test_non_blocking(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -401,7 +391,7 @@ class EngineSuite(unittest.TestCase):
             client.job.get_results(token, f"tmp{os.sep}out_dir{i}")
 
         gdx_out_path = os.path.join(
-            f"tmp{os.sep}out_dir0", os.path.basename(m.gdxOutputPath())
+            f"tmp{os.sep}out_dir0", os.path.basename(self.m.gdxOutputPath())
         )
         container = Container(load_from=gdx_out_path)
         self.assertTrue("x" in container.data)
