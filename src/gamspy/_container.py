@@ -241,9 +241,7 @@ class Container(gt.Container):
         self._network_license = is_network_license(self.system_directory)
 
         self._debugging_level = debugging_level
-        self.workspace = Workspace(
-            self.system_directory, debugging_level, working_directory
-        )
+        self.workspace = Workspace(debugging_level, working_directory)
 
         self.working_directory = self.workspace.working_directory
         self.process_directory = tempfile.mkdtemp(dir=self.working_directory)

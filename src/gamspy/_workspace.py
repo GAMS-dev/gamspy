@@ -10,19 +10,9 @@ DEBUGGING_LEVELS = ["delete", "keep_on_error", "keep"]
 
 
 def validate_arguments(
-    system_directory: str,
     working_directory: str | None,
     debugging_level: str,
 ):
-    # Validate system directory
-    if not os.path.isdir(system_directory):
-        raise ValidationError(f"{system_directory} is not a directory.")
-    else:
-        if not os.path.exists(os.path.join(system_directory, "optgams.def")):
-            raise ValidationError(
-                f"`{system_directory}` is not a GAMS directory."
-            )
-
     # Validate working_directory
     if working_directory == "":
         raise ValidationError("`working_directory` cannot be an empty string.")
@@ -39,14 +29,9 @@ def validate_arguments(
 
 class Workspace:
     def __init__(
-        self,
-        system_directory: str,
-        debugging_level: str,
-        working_directory: str | None = None,
+        self, debugging_level: str, working_directory: str | None = None
     ):
-        validate_arguments(
-            system_directory, working_directory, debugging_level
-        )
+        validate_arguments(working_directory, debugging_level)
 
         self.debugging_level = debugging_level
         self.using_tmp_working_dir = False
@@ -59,8 +44,6 @@ class Workspace:
         else:
             self.working_directory = os.path.abspath(working_directory)
             os.makedirs(self.working_directory, exist_ok=True)
-
-        self._system_directory = system_directory
 
     def __del__(self):
         if (
