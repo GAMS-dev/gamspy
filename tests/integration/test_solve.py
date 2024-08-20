@@ -127,6 +127,8 @@ def transport(f_value):
     )
     transport.solve()
 
+    m.close()
+
     return transport.objective_value
 
 
