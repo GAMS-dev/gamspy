@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._model import Sense
 
+GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
@@ -82,11 +83,14 @@ def open_connection(
     TIMEOUT = 30
     license_path = utils._get_license_path(system_directory)
 
-    address = find_free_address()
+    address = (
+        ("127.0.0.1", int(GAMS_PORT)) if GAMS_PORT else find_free_address()
+    )
+
     process = subprocess.Popen(
         [
             os.path.join(system_directory, "gams"),
-            "dummy_name",
+            "GAMSPY_JOB",
             f"incrementalMode={address[1]}",
             f"procdir={process_directory}",
             f"license={license_path}",
