@@ -6,6 +6,7 @@ GAMSPy 0.14.6
 - General
   - Fix GAMS Engine get_logs return values according to the status code.
   - Allow explicit port definition via environment variable to communicate with GAMS. 
+  - Replace GamsWorkspace with GAMSPy workspace implementation.
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.

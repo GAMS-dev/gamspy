@@ -16,7 +16,6 @@ from contextlib import closing
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-from gams import DebugLevel, GamsWorkspace
 
 import gamspy as gp
 import gamspy._miro as miro
@@ -25,6 +24,7 @@ from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._options import Options
+from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -240,11 +240,9 @@ class Container(gt.Container):
         super().__init__(system_directory=system_directory)
         self._network_license = is_network_license(self.system_directory)
 
-        self._debugging_level = self._get_debugging_level(debugging_level)
-        self.workspace = GamsWorkspace(
-            working_directory,
-            self.system_directory,
-            self._debugging_level,
+        self._debugging_level = debugging_level
+        self.workspace = Workspace(
+            self.system_directory, debugging_level, working_directory
         )
 
         self.working_directory = self.workspace.working_directory
@@ -347,23 +345,6 @@ class Container(gt.Container):
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
-
-    def _get_debugging_level(self, debugging_level: str) -> int:
-        DEBUGGING_MAP = {
-            "delete": DebugLevel.Off,
-            "keep_on_error": DebugLevel.KeepFilesOnError,
-            "keep": DebugLevel.KeepFiles,
-        }
-        if (
-            not isinstance(debugging_level, str)
-            or debugging_level not in DEBUGGING_MAP
-        ):
-            raise ValidationError(
-                "Debugging level must be one of 'delete', 'keep',"
-                " 'keep_on_error'"
-            )
-
-        return DEBUGGING_MAP[debugging_level]
 
     def _write_default_gdx_miro(self) -> None:
         # create data_<model>/default.gdx
