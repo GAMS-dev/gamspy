@@ -42,6 +42,9 @@ class ContainerSuite(unittest.TestCase):
     def test_container(self):
         import gams.transfer as gt
 
+        with self.assertRaises(ValidationError):
+            _ = Container(working_directory="")
+
         with self.assertRaises(TypeError):
             m = Container(options={"bla": "bla"})
 
