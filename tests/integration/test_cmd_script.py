@@ -41,22 +41,11 @@ class CmdSuite(unittest.TestCase):
         self.assertTrue(m._network_license)
         m.close()
         time.sleep(1)
-
         _ = subprocess.run(
-            [
-                "gamspy",
-                "install",
-                "license",
-                os.environ["LOCAL_LICENSE"],
-                "--node-specific",
-            ],
+            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
             check=True,
-        )
-
-        self.assertTrue(
-            os.path.exists(
-                os.path.join(gamspy_base_directory, "node_info.json")
-            )
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
         )
 
         m = Container()
@@ -176,6 +165,33 @@ class CmdSuite(unittest.TestCase):
 
         self.assertTrue(process.returncode == 0)
         self.assertEqual(gamspy_base.directory, process.stdout.strip())
+
+    def test_probe(self):
+        node_info_path = os.path.join("tmp", "info.json")
+        process = subprocess.run(
+            ["gamspy", "probe", "-o", node_info_path],
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            [
+                "gamspy",
+                "retrieve",
+                "license",
+                os.environ["LOCAL_LICENSE"],
+                "-i",
+                node_info_path,
+                "-o",
+                node_info_path[:-5] + ".txt",
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertTrue(process.returncode == 0)
 
 
 def cmd_suite():
