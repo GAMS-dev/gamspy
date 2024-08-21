@@ -19,7 +19,16 @@ def get_args():
 
     parser.add_argument(
         "command",
-        choices=["install", "list", "run", "show", "update", "uninstall"],
+        choices=[
+            "install",
+            "list",
+            "probe",
+            "retrieve",
+            "run",
+            "show",
+            "update",
+            "uninstall",
+        ],
         type=str,
         nargs="?",
     )
@@ -98,12 +107,6 @@ def get_args():
         ),
     )
     install_group.add_argument(
-        "--node-specific",
-        "-i",
-        action="store_true",
-        help="Whether the license is node-specific license.",
-    )
-    install_group.add_argument(
         "--port",
         help="The port number to communicate with license server. Defaults is 443.",
     )
@@ -112,6 +115,19 @@ def get_args():
         "list solvers", description="`gamspy list solvers` options"
     )
     list_group.add_argument("-a", "--all", action="store_true")
+
+    probe_group = parser.add_argument_group(
+        "probe", description="`gamspy probe` options"
+    )
+    probe_group.add_argument(
+        "--output", "-o", help="Output path for the json file."
+    )
+    probe_group.add_argument(
+        "--input",
+        "-i",
+        default=None,
+        help="json file path to retrieve a license based on node information.",
+    )
 
     return parser.parse_args()
 
@@ -139,23 +155,6 @@ def install_license(args: argparse.Namespace):
         if args.port:
             command.append("-u")
             command.append(str(args.port))
-
-        if args.node_specific:
-            command.append("-i")
-            process = subprocess.run(
-                os.path.join(gamspy_base_dir, "gamsprobe"),
-                text=True,
-                capture_output=True,
-            )
-
-            if process.returncode:
-                raise ValidationError(process.stderr)
-
-            node_info_path = os.path.join(gamspy_base_dir, "node_info.json")
-            with open(node_info_path, "w", encoding="utf-8") as file:
-                file.write(process.stdout)
-
-            command.append(node_info_path)
 
         process = subprocess.run(
             command,
@@ -528,6 +527,56 @@ def print_version():
         ...
 
 
+def probe(args: argparse.Namespace):
+    gamspy_base_dir = utils._get_gamspy_base_directory()
+    process = subprocess.run(
+        [os.path.join(gamspy_base_dir, "gamsprobe")],
+        text=True,
+        capture_output=True,
+    )
+
+    if process.returncode:
+        raise ValidationError(process.stderr)
+
+    print(process.stdout)
+
+    if args.output:
+        with open(args.output, "w") as file:
+            file.write(process.stdout)
+
+
+def retrieve(args: argparse.Namespace):
+    if args.input is None or not os.path.isfile(args.input):
+        raise ValidationError(
+            f"Given path `{args.input}` is not a json file. Please use `gamspy retrieve license <license_id> -i <json_file_path>`"
+        )
+
+    if args.name is None:
+        raise ValidationError(f"Given licence id `{args.name}` is not valid!")
+
+    gamspy_base_dir = utils._get_gamspy_base_directory()
+    print(f"{args.name=}, {args.input=}")
+    process = subprocess.run(
+        [
+            os.path.join(gamspy_base_dir, "gamsgetkey"),
+            args.name,
+            "-i",
+            args.input,
+        ],
+        text=True,
+        capture_output=True,
+    )
+
+    if process.returncode:
+        raise ValidationError(process.stderr)
+
+    print(process.stdout)
+
+    if args.output:
+        with open(args.output, "w") as file:
+            file.write(process.stdout)
+
+
 def main():
     """
     Entry point for gamspy command line application.
@@ -537,6 +586,10 @@ def main():
         print_version()
     elif args.command == "install":
         install(args)
+    elif args.command == "probe":
+        probe(args)
+    elif args.command == "retrieve":
+        retrieve(args)
     elif args.command == "run":
         run(args)
     elif args.command == "show":

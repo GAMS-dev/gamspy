@@ -9,17 +9,20 @@ GAMSPy 0.14.6
   - Replace GamsWorkspace with GAMSPy workspace implementation.
   - Remove unnecessary validation for system_directory.
   - Better formatting for gamspy list solvers and gamspy list solvers -a.
+  - Change the structure installing licenses on offline machines.
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.
   - Add a test for invalid port.
   - Explicitly close the Container for jobs executed by ProcessPoolExecutor.
   - Add a test for long running jobs with network license.
+  - Add tests for gamspy probe and gamspy retrieve license.
 - Documentation
   - Add what is gamspy page to docs.
   - Update indexing docs.
   - Add a link to model library on the landing page.
   - Encourage the use of the Discourse platform instead of sending direct emails to gamspy@gams.com. 
+  - Add instructions on how to install a license on an offline machine.
 
 GAMSPy 0.14.5
 -------------

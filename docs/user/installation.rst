@@ -45,6 +45,24 @@ If you no longer wish to use your license, you can uninstall it with the followi
 
     gamspy uninstall license
 
+License installation for offline machines
+=========================================
+
+In order to use GAMSPy in a machine which does not have an internet connection (offline), the license installation process
+is as follows:
+
+1. Generate a json file which contains the node information as follows: ::
+
+    gamspy probe -o info.json
+
+2. Move info.json file to a machine which has an internet connection and run: ::
+
+    gamspy retrieve license <your_license_id> -i info.json -o license.txt
+
+3. Move license.txt to the machine that does not have an internet connection and run: ::
+
+    gamspy install license license.txt   
+
 GAMS/Gurobi-Link
 ================
 Attempting to use the GAMS/Gurobi solver with a GAMS/Gurobi-Link license but without a 
