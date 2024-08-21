@@ -11,8 +11,9 @@ GAMSPy 0.14.6
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.
-  - Add test for invalid port.
+  - Add a test for invalid port.
   - Explicitly close the Container for jobs executed by ProcessPoolExecutor.
+  - Add a test for long running jobs with network license.
 - Documentation
   - Add what is gamspy page to docs.
   - Update indexing docs.
