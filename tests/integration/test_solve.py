@@ -131,6 +131,105 @@ def transport(f_value):
 
     return transport.objective_value
 
+def transport2(f_value):
+    m = Container()
+
+    # Prepare data
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    # Set
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+
+    # Data
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    f = Parameter(m, name="f", records=f_value)
+    c[i, j] = f * d[i, j] / 1000
+
+    # Variable
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    m.addGamsCode("scalar bla; bla = sleep(180);")
+    transport.solve()
+
+    m.close()
+
+    return transport.objective_value
+
 
 class SolveSuite(unittest.TestCase):
     def setUp(self):
@@ -1419,6 +1518,37 @@ class SolveSuite(unittest.TestCase):
             env['GAMS_PORT'] = "12345"
             process = subprocess.run([sys.executable, file_path], env=env, capture_output=True, text=True)
             self.assertEqual(process.returncode == 0)
+
+    def test_network_license(self):
+        if sys.version_info.minor == 12:
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.environ["NETWORK_LICENSE"],
+                ],
+                check=True,
+            )
+
+            f_values = [90, 120, 150, 180]
+            expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+                for expected, objective in zip(
+                    expected_values, executor.map(transport, f_values)
+                ):
+                    self.assertTrue(math.isclose(expected, objective))
+
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.environ["d2e13ee1-a504-4d87-8683-d7d1e4519608"],
+                ],
+                check=True,
+            )
+
 
 def solve_suite():
     suite = unittest.TestSuite()
