@@ -380,21 +380,29 @@ def list_solvers(args: argparse.Namespace):
         capabilities = utils.getSolverCapabilities(gamspy_base.directory)
         if args.all:
             solvers = utils.getAvailableSolvers()
-            print(f"Available solvers: {solvers}\n")
-            print("Model types that can be solved with the solver:\n")
+            print("Available Solvers")
+            print("=" * 17)
+            print(", ".join(solvers))
+            print(
+                "\nModel types that can be solved with the installed solvers:\n"
+            )
             for solver in solvers:
                 try:
-                    print(f"{solver}: {capabilities[solver]}")
+                    print(f"{solver:<10}: {', '.join(capabilities[solver])}")
                 except KeyError:
                     ...
             return
 
         solvers = utils.getInstalledSolvers(gamspy_base.directory)
-        print(f"Installed solvers: {solvers}\n")
-        print("Model types that can be solved with the solver:\n")
+        print("Installed Solvers")
+        print("=" * 17)
+        print(", ".join(solvers))
+
+        print("\nModel types that can be solved with the installed solvers")
+        print("=" * 57)
         for solver in solvers:
             try:
-                print(f"{solver}: {capabilities[solver]}")
+                print(f"{solver:<10}: {', '.join(capabilities[solver])}")
             except KeyError:
                 ...
     else:
