@@ -32,8 +32,7 @@ GAMSPy is the ultimate choice:
 
 
 We are continually developing our ML-related features. If you have specific
-needs or require additional information, please reach out to us at
-machinelearning@gams.com.
+needs or require additional information, please use our `Discourse platform <https://forum.gams.com/c/gamspy-help>`_.
 
 .. toctree::
    :maxdepth: 1

@@ -18,6 +18,7 @@ GAMSPy 0.14.6
   - Add what is gamspy page to docs.
   - Update indexing docs.
   - Add a link to model library on the landing page.
+  - Encourage the use of the Discourse platform instead of sending direct emails to gamspy@gams.com. 
 
 GAMSPy 0.14.5
 -------------
