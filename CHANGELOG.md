@@ -10,6 +10,7 @@ GAMSPy 0.14.6
   - Remove unnecessary validation for system_directory.
   - Better formatting for gamspy list solvers and gamspy list solvers -a.
   - Change the structure installing licenses on offline machines.
+  - Fix UniverseAlias bug.
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.
@@ -17,6 +18,7 @@ GAMSPy 0.14.6
   - Explicitly close the Container for jobs executed by ProcessPoolExecutor.
   - Add a test for long running jobs with network license.
   - Add tests for gamspy probe and gamspy retrieve license.
+  - Add test to use UniverseAlias object as domain.
 - Documentation
   - Add what is gamspy page to docs.
   - Update indexing docs.

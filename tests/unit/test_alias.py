@@ -140,6 +140,12 @@ class AliasSuite(unittest.TestCase):
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
         )
 
+        m = Container()
+
+        r = UniverseAlias(m, name="new_universe")
+        k = Set(m, name="k", domain=r, records="Chicago")
+        self.assertEqual(k.getDeclaration(), "Set k(*);")
+
     def test_alias_state(self):
         i = Set(self.m, name="i", records=["a", "b", "c"])
         j = Alias(self.m, name="j", alias_with=i)
