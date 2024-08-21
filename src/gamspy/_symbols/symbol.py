@@ -97,7 +97,7 @@ class Symbol:
             if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
                 set_str = elem.gamsRepr()
                 set_strs.append(set_str + "<" if is_forwarding else set_str)
-            elif isinstance(elem, str):
+            elif isinstance(elem, (str, gt.UniverseAlias)):
                 set_strs.append("*")
 
         return "(" + ",".join(set_strs) + ")"
