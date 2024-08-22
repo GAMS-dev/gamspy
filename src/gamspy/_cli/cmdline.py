@@ -418,7 +418,8 @@ def run(args: argparse.Namespace):
         mode = args.mode
         path = os.getenv("MIRO_PATH", None)
 
-        path = args.path if args.path is not None else discover_miro()
+        if path is None:
+            path = args.path if args.path is not None else discover_miro()
 
         if model is None or path is None:
             raise GamspyException(
@@ -501,7 +502,7 @@ def discover_miro():
 
     if system in ["Darwin", "Windows"]:
         for location in standard_locations[system]:
-            if os.path.exists(location):
+            if os.path.isfile(location):
                 return location
 
     return None
