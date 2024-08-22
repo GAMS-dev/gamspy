@@ -494,7 +494,7 @@ def discover_miro():
                 "Local",
                 "Programs",
                 "GAMS MIRO",
-                "GAMS MIRO",
+                "GAMS MIRO.exe",
             ),
         ],
     }
