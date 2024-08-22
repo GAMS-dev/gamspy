@@ -26,6 +26,7 @@ GAMSPy 0.14.6
   - Encourage the use of the Discourse platform instead of sending direct emails to gamspy@gams.com. 
   - Add instructions on how to install a license on an offline machine.
   - Update what is gamspy page model example.
+  - Change the order of symbol declaration and data specification in the quick start guide.
 
 GAMSPy 0.14.5
 -------------
