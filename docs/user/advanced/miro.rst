@@ -55,7 +55,11 @@ so that it does not have to be specified for each run. ::
 
     gamspy run miro --model <path_to_your_model>
 
-This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. 
+This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. You can also skip defining the ``--model`` argument 
+in case your GAMS MIRO installation is in one of the standard paths: 
+
+- Darwin: /Applications/GAMS MIRO.app/Contents/MacOS/GAMS MIRO or ~/Applications/GAMS MIRO.app/Contents/MacOS/GAMS MIRO
+- Windows: C:\Program Files\GAMS MIRO\GAMS MIRO.exe or C:\Users\<username>\AppData\Local\Programs\GAMS MIRO\GAMS MIRO.exe
 
 When running a GAMSPy job from GAMS MIRO, you may not want to perform certain expensive operations, such as loading MIRO input data from an Excel workbook, as this data comes from MIRO.
 In that case, one can conditionally load the data by using the ``in_miro`` attribute of `Container`. For example: ::

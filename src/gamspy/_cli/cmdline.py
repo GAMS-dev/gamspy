@@ -418,8 +418,7 @@ def run(args: argparse.Namespace):
         mode = args.mode
         path = os.getenv("MIRO_PATH", None)
 
-        if args.path is not None:
-            path = args.path
+        path = args.path if args.path is not None else discover_miro()
 
         if model is None or path is None:
             raise GamspyException(
@@ -457,6 +456,53 @@ def run(args: argparse.Namespace):
         subprocess_env["PYTHON_EXEC_PATH"] = sys.executable
 
         subprocess.run([path], env=subprocess_env, check=True)
+
+    return None
+
+
+def discover_miro():
+    system = platform.system()
+    if system == "Linux":
+        return None
+
+    home = os.path.expanduser("~")
+    standard_locations = {
+        "Darwin": [
+            os.path.join(
+                "Applications",
+                "GAMS MIRO.app",
+                "Contents",
+                "MacOS",
+                "GAMS MIRO",
+            ),
+            os.path.join(
+                home,
+                "Applications",
+                "GAMS MIRO.app",
+                "Contents",
+                "MacOS",
+                "GAMS MIRO",
+            ),
+        ],
+        "Windows": [
+            os.path.join(
+                "C:\\", "Program Files", "GAMS MIRO", "GAMS MIRO.exe"
+            ),
+            os.path.join(
+                home,
+                "AppData",
+                "Local",
+                "Programs",
+                "GAMS MIRO",
+                "GAMS MIRO",
+            ),
+        ],
+    }
+
+    if system in ["Darwin", "Windows"]:
+        for location in standard_locations[system]:
+            if os.path.exists(location):
+                return location
 
     return None
 
