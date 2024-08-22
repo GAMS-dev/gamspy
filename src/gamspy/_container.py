@@ -23,6 +23,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
+from gamspy._model import Problem
 from gamspy._options import Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
@@ -738,13 +739,15 @@ class Container(gt.Container):
         """Stops the socket and releases resources."""
         self._stop_socket()
 
-    def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
+    def addAlias(
+        self, name: str | None = None, alias_with: Set | Alias | None = None
+    ) -> Alias:
         """
         Creates a new Alias and adds it to the container
 
         Parameters
         ----------
-        name : str
+        name : str | None
         alias_with : Set | Alias
 
         Returns
@@ -771,7 +774,7 @@ class Container(gt.Container):
 
     def addSet(
         self,
-        name: str,
+        name: str | None = None,
         domain: list[Set | str] | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
@@ -784,7 +787,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         domain : List[Set | str], optional
         is_singleton : bool, optional
         records : Any, optional
@@ -824,7 +827,7 @@ class Container(gt.Container):
 
     def addParameter(
         self,
-        name: str,
+        name: str | None = None,
         domain: list[str | Set] | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -836,7 +839,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         domain : List[str | Set]], optional
         records : Any, optional
         domain_forwarding : bool, optional
@@ -874,7 +877,7 @@ class Container(gt.Container):
 
     def addVariable(
         self,
-        name: str,
+        name: str | None = None,
         type: str = "free",
         domain: list[str | Set] | None = None,
         records: Any | None = None,
@@ -887,7 +890,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         type : str, optional
         domain : List[str | Set]], optional
         records : Any, optional
@@ -927,7 +930,7 @@ class Container(gt.Container):
 
     def addEquation(
         self,
-        name: str,
+        name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | str] | None = None,
         definition: Expression | None = None,
@@ -942,7 +945,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         type : str
         domain : List[Set | str], optional
         definition : Definition, optional
@@ -986,8 +989,8 @@ class Container(gt.Container):
 
     def addModel(
         self,
-        name: str,
-        problem: str,
+        name: str | None = None,
+        problem: Problem | str | None = Problem.LP,
         equations: list[Equation] = [],
         sense: Literal["MIN", "MAX"] | Sense | None = None,
         objective: Variable | Expression | None = None,
@@ -1001,7 +1004,7 @@ class Container(gt.Container):
         ----------
         name : str
         equations : List[Equation]
-        problem : str
+        problem : Problem | str, by default Problem.LP
         sense : "MIN", "MAX", optional
         objective : Variable | Expression, optional
         matches : dict, optional

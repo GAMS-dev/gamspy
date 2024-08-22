@@ -45,6 +45,7 @@ class EquationSuite(unittest.TestCase):
     def test_equation_creation(self):
         # no name is fine now
         e1 = Equation(self.m)
+        self.m.addEquation()
         with self.assertRaises(ValidationError):
             _ = e1.getDefinition()
 

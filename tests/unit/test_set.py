@@ -26,6 +26,7 @@ class SetSuite(unittest.TestCase):
     def test_set_creation(self):
         # no name is fine now
         i = Set(self.m)
+        self.m.addSet()
         self.assertEqual(len(i), 0)
         with self.assertRaises(ValidationError):
             _ = i.getAssignment()
