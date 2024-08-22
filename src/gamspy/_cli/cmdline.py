@@ -470,6 +470,7 @@ def discover_miro():
     standard_locations = {
         "Darwin": [
             os.path.join(
+                "/",
                 "Applications",
                 "GAMS MIRO.app",
                 "Contents",
