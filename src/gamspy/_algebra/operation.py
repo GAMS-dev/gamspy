@@ -213,7 +213,9 @@ class Operation(operable.Operable):
             if isinstance(self.rhs, (int, float, str))
             else self.rhs.latexRepr()
         )
-        representation = f"\\displaystyle \\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        representation = (
+            f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        )
         return representation
 
 

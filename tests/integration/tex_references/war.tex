@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage{a4wide}
+\usepackage{geometry}
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -62,30 +62,30 @@ war\_objective &  & \\
 \hline
 \end{tabularx}
 \section*{Equation Definitions}
-\subsubsection*{\begin{math}\text{maxw}_{w}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{t} ~ | ~ \text{td}_{\text{w},\text{t}}} \text{x}_{\text{w},\text{t}} \leq \text{wa}_{\text{w}}
-\end{math}
+\subsubsection*{$maxw_{w}$}
+\begin{equation}
+\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall w
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{minw}_{t}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{w} ~ | ~ \text{td}_{\text{w},\text{t}}} \text{x}_{\text{w},\text{t}} \geq \text{tm}_{\text{t}}
-\end{math}
+\subsubsection*{$minw_{t}$}
+\begin{equation}
+\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}
+\end{equation}
 \hfill
-\begin{math}
-\forall t ~ | ~ \text{tm}_{\text{t}} 
-\end{math}\vspace{5pt}
+$
+\forall t ~ | ~ tm_{t} 
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{war\_objective}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{t}} \text{mv}_{\text{t}} \cdot 1 - \displaystyle \prod_{\text{w} ~ | ~ \text{td}_{\text{w},\text{t}}}  rPower((1 - td(w,t)),x(w,t))  = \text{war\_objective\_variable}
-\end{math}
+\subsubsection*{$war\_objective$}
+\begin{equation}
+\sum_{t} mv_{t} \cdot 1 - \prod_{w ~ | ~ td_{w,t}}  rPower((1 - td(w,t)),x(w,t))  = war\_objective\_variable
+\end{equation}
 \vspace{5pt}
 \hrule
 \bigskip
-\begin{math}\text{x}_{\text{w},\text{t}}\geq 0 ~ \forall w,t\\\end{math}
+$x_{w,t}\geq 0 ~ \forall w,t\\$
 \end{document}
