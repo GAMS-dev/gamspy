@@ -25,6 +25,7 @@ GAMSPy 0.14.6
   - Add a link to model library on the landing page.
   - Encourage the use of the Discourse platform instead of sending direct emails to gamspy@gams.com. 
   - Add instructions on how to install a license on an offline machine.
+  - Update what is gamspy page model example.
 
 GAMSPy 0.14.5
 -------------
