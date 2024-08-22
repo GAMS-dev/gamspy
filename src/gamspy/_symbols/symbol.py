@@ -28,7 +28,7 @@ class Symbol:
         str
         """
         name = self.name.replace("_", "\_")
-        representation = f"\\text{{{name}}}"
+        representation = f"{name}"
         domain = list(self.domain)
 
         if hasattr(self, "_scalar_domains"):

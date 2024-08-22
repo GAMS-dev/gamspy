@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage{a4wide}
+\usepackage{geometry}
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -131,267 +131,267 @@ skip\_objective &  & \\
 \hline
 \end{tabularx}
 \section*{Equation Definitions}
-\subsubsection*{\begin{math}\text{tctrlo}_{i,j}\end{math}}
-\begin{math}
-\text{tc}_{\text{i}} - \text{tr}_{\text{j}} + 1 - \text{ycol}_{\text{i}} \geq 1
-\end{math}
+\subsubsection*{$tctrlo_{i,j}$}
+\begin{equation}
+tc_{i} - tr_{j} + 1 - ycol_{i} \geq 1
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zcrhx
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{lmtdlo}_{i}\end{math}}
-\begin{math}
-\text{lmtd}_{\text{i}} \geq 2 \cdot \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$lmtdlo_{i}$}
+\begin{equation}
+lmtd_{i} \geq 2 \cdot ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{lmtdsn}_{i}\end{math}}
-\begin{math}
-\text{lmtd}_{\text{i}} = 0.6666666666666666 \cdot  \sqrt{((tc(i) - tcin) * (tc(i) - tcout))}  + 0.16666666666666666 \cdot \text{tc}_{\text{i}} - \text{tcin} + \text{tc}_{\text{i}} - \text{tcout} + \text{sl1}_{\text{i}} - \text{sl2}_{\text{i}}
-\end{math}
+\subsubsection*{$lmtdsn_{i}$}
+\begin{equation}
+lmtd_{i} = 0.6666666666666666 \cdot  \sqrt{((tc(i) - tcin) * (tc(i) - tcout))}  + 0.16666666666666666 \cdot tc_{i} - tcin + tc_{i} - tcout + sl1_{i} - sl2_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{tempset}_{i}\end{math}}
-\begin{math}
-\text{tc}_{\text{i}} + \text{lmtd}_{\text{i}} + \displaystyle \sum_{\text{zcr}_{\text{i},\text{j}}} \text{tr}_{\text{j}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$tempset_{i}$}
+\begin{equation}
+tc_{i} + lmtd_{i} + \sum_{zcr_{i,j}} tr_{j} \leq u \cdot ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{artrex1}_{i}\end{math}}
-\begin{math}
-\text{s1}_{\text{i}} + \text{s2}_{\text{i}} + \text{sl1}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$artrex1_{i}$}
+\begin{equation}
+s1_{i} + s2_{i} + sl1_{i} \leq u \cdot 1 - ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{artrex2}_{i}\end{math}}
-\begin{math}
-\text{s3}_{\text{i}} + \text{s4}_{\text{i}} + \text{sl2}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$artrex2_{i}$}
+\begin{equation}
+s3_{i} + s4_{i} + sl2_{i} \leq u \cdot 1 - ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{material}_{m}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{pm}_{\text{i},\text{m}}} \text{spltfrc}_{\text{i},\text{m}} \cdot \text{f}_{\text{i}} = \displaystyle \sum_{\text{fm}_{\text{i},\text{m}}} \text{f}_{\text{i}}
-\end{math}
+\subsubsection*{$material_{m}$}
+\begin{equation}
+\sum_{pm_{i,m}} spltfrc_{i,m} \cdot f_{i} = \sum_{fm_{i,m}} f_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall m
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{feed}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{zlead}_{\text{i}}} \text{f}_{\text{i}} = \text{totflow}
-\end{math}
+\subsubsection*{$feed$}
+\begin{equation}
+\sum_{zlead_{i}} f_{i} = totflow
+\end{equation}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{matlog}_{i}\end{math}}
-\begin{math}
-\text{f}_{\text{i}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$matlog_{i}$}
+\begin{equation}
+f_{i} \leq u \cdot ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{duty}_{i}\end{math}}
-\begin{math}
-\text{qc}_{\text{i}} = \text{kf}_{\text{i},*} + \text{kf}_{\text{i},*} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} + \text{s3}_{\text{i}} - \text{s4}_{\text{i}}
-\end{math}
+\subsubsection*{$duty_{i}$}
+\begin{equation}
+qc_{i} = kf_{i,*} + kf_{i,*} \cdot tc_{i} - tcmin_{i} + s3_{i} - s4_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{rebcon}_{i,j}\end{math}}
-\begin{math}
-\text{qr}_{\text{j}} = \text{qc}_{\text{i}}
-\end{math}
+\subsubsection*{$rebcon_{i,j}$}
+\begin{equation}
+qr_{j} = qc_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zcr
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{conheat}_{i}\end{math}}
-\begin{math}
-\text{qc}_{\text{i}} = \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{qcr}_{\text{i},\text{j}} + \displaystyle \sum_{\text{cu}} \text{qcu}_{\text{i},\text{cu}}
-\end{math}
+\subsubsection*{$conheat_{i}$}
+\begin{equation}
+qc_{i} = \sum_{zcrhx_{i,j}} qcr_{i,j} + \sum_{cu} qcu_{i,cu}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{rebheat}_{j}\end{math}}
-\begin{math}
-\text{qr}_{\text{j}} = \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{qcr}_{\text{i},\text{j}} + \displaystyle \sum_{\text{hu}} \text{qhu}_{\text{hu},\text{j}}
-\end{math}
+\subsubsection*{$rebheat_{j}$}
+\begin{equation}
+qr_{j} = \sum_{zcrhx_{i,j}} qcr_{i,j} + \sum_{hu} qhu_{hu,j}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall j
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{dtminlp}_{j}\end{math}}
-\begin{math}
-\text{dtmin} - \text{thu}_{*} - \text{tr}_{\text{j}} \leq 0
-\end{math}
+\subsubsection*{$dtminlp_{j}$}
+\begin{equation}
+dtmin - thu_{*} - tr_{j} \leq 0
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall j
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{dtminc}_{i}\end{math}}
-\begin{math}
-\text{tcmin}_{\text{i}} - \text{tc}_{\text{i}} \leq \text{u} \cdot 1 - \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$dtminc_{i}$}
+\begin{equation}
+tcmin_{i} - tc_{i} \leq u \cdot 1 - ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{trtcdef}_{i,j}\end{math}}
-\begin{math}
-\text{tr}_{\text{j}} = \text{af}_{\text{i},*} + \text{af}_{\text{i},*} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} + \text{s1}_{\text{i}} - \text{s2}_{\text{i}}
-\end{math}
+\subsubsection*{$trtcdef_{i,j}$}
+\begin{equation}
+tr_{j} = af_{i,*} + af_{i,*} \cdot tc_{i} - tcmin_{i} + s1_{i} - s2_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zcr
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{dtmincr}_{i,j}\end{math}}
-\begin{math}
-\text{tr}_{\text{j}} - \text{tc}_{\text{i}} - \text{u} \cdot 1 - \text{yhx}_{\text{i},\text{j}} + \text{dtmin} \leq 0
-\end{math}
+\subsubsection*{$dtmincr_{i,j}$}
+\begin{equation}
+tr_{j} - tc_{i} - u \cdot 1 - yhx_{i,j} + dtmin \leq 0
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zcrhx
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{dtminex}_{j}\end{math}}
-\begin{math}
-\text{dtmin} - \text{thu}_{*} - \text{tr}_{\text{j}} - \text{u} \cdot 1 - \text{yhu}_{*,\text{j}} \leq 0
-\end{math}
+\subsubsection*{$dtminex_{j}$}
+\begin{equation}
+dtmin - thu_{*} - tr_{j} - u \cdot 1 - yhu_{*,j} \leq 0
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall j
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{hxclog}_{i,j}\end{math}}
-\begin{math}
-\text{qcr}_{\text{i},\text{j}} \leq \text{u} \cdot \text{yhx}_{\text{i},\text{j}}
-\end{math}
+\subsubsection*{$hxclog_{i,j}$}
+\begin{equation}
+qcr_{i,j} \leq u \cdot yhx_{i,j}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zcrhx
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{hxhulog}_{hu,j}\end{math}}
-\begin{math}
-\text{qhu}_{\text{hu},\text{j}} \leq \text{u} \cdot \text{yhu}_{\text{hu},\text{j}}
-\end{math}
+\subsubsection*{$hxhulog_{hu,j}$}
+\begin{equation}
+qhu_{hu,j} \leq u \cdot yhu_{hu,j}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall hu,j
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{hxculog}_{i,cu}\end{math}}
-\begin{math}
-\text{qcu}_{\text{i},\text{cu}} \leq \text{u} \cdot \text{ycu}_{\text{i},\text{cu}}
-\end{math}
+\subsubsection*{$hxculog_{i,cu}$}
+\begin{equation}
+qcu_{i,cu} \leq u \cdot ycu_{i,cu}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i,cu
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{qcqrlog}_{i}\end{math}}
-\begin{math}
-\text{qc}_{\text{i}} + \displaystyle \sum_{\text{j} ~ | ~ \text{zcr}_{\text{i},\text{j}}} \text{qr}_{\text{j}} \leq \text{u} \cdot \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$qcqrlog_{i}$}
+\begin{equation}
+qc_{i} + \sum_{j ~ | ~ zcr_{i,j}} qr_{j} \leq u \cdot ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{sequen}_{m}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{pm}_{\text{i},\text{m}}} \text{ycol}_{\text{i}} = \displaystyle \sum_{\text{fm}_{\text{i},\text{m}}} \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$sequen_{m}$}
+\begin{equation}
+\sum_{pm_{i,m}} ycol_{i} = \sum_{fm_{i,m}} ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall m
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{lead}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{zlead}_{\text{i}}} \text{ycol}_{\text{i}} = 1
-\end{math}
+\subsubsection*{$lead$}
+\begin{equation}
+\sum_{zlead_{i}} ycol_{i} = 1
+\end{equation}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{limutil}_{j}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{hu}} \text{yhu}_{\text{hu},\text{j}} \leq 1
-\end{math}
+\subsubsection*{$limutil_{j}$}
+\begin{equation}
+\sum_{hu} yhu_{hu,j} \leq 1
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall j
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{hidirect}_{i,j}\end{math}}
-\begin{math}
-\text{yhx}_{\text{i},\text{j}} + \displaystyle \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} \text{yhx}_{\text{ip},\text{jp}} \leq 1
-\end{math}
+\subsubsection*{$hidirect_{i,j}$}
+\begin{equation}
+yhx_{i,j} + \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} yhx_{ip,jp} \leq 1
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall zlim
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{heat}_{i}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{yhx}_{\text{i},\text{j}} + \displaystyle \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} \text{yhx}_{\text{ip},\text{jp}} + \displaystyle \sum_{\text{hu},\text{zcr}_{\text{i},\text{j}}} \text{yhu}_{\text{hu},\text{j}} + \displaystyle \sum_{\text{cu}} \text{ycu}_{\text{i},\text{cu}} \leq \text{uint} \cdot \text{ycol}_{\text{i}}
-\end{math}
+\subsubsection*{$heat_{i}$}
+\begin{equation}
+\sum_{zcrhx_{i,j}} yhx_{i,j} + \sum_{ip,jp ~ | ~ ord(ip) eq ord(j) \wedge ord(jp) eq ord(i)} yhx_{ip,jp} + \sum_{hu,zcr_{i,j}} yhu_{hu,j} + \sum_{cu} ycu_{i,cu} \leq uint \cdot ycol_{i}
+\end{equation}
 \hfill
-\begin{math}
+$
 \forall i
-\end{math}\vspace{5pt}
+$\vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{skip\_objective}\end{math}}
-\begin{math}
-\text{alpha} \cdot \displaystyle \sum_{\text{i}} \text{fc}_{\text{i}} \cdot \text{ycol}_{\text{i}} + \text{vc}_{\text{i}} \cdot \text{tc}_{\text{i}} - \text{tcmin}_{\text{i}} \cdot \text{f}_{\text{i}} + \displaystyle \sum_{\text{zcrhx}_{\text{i},\text{j}}} \text{fchx} \cdot \text{yhx}_{\text{i},\text{j}} + \frac{\text{vchx}}{\text{htc}} \cdot \frac{\text{qcr}_{\text{i},\text{j}}}{\text{tc}_{\text{i}} - \text{tr}_{\text{j}} + 1 - \text{ycol}_{\text{i}}} + \displaystyle \sum_{\text{i},\text{cu}} \text{fchx} \cdot \text{ycu}_{\text{i},\text{cu}} + \frac{\text{vchx}}{\text{htc}} \cdot \frac{\text{qcu}_{\text{i},\text{cu}}}{\text{lmtd}_{\text{i}} + 1 - \text{ycol}_{\text{i}}} + \displaystyle \sum_{\text{hu},\text{j}} \text{fchx} \cdot \text{yhu}_{\text{hu},\text{j}} + \frac{\text{vchx}}{\text{htc}} \cdot \frac{\text{qhu}_{\text{hu},\text{j}}}{\text{thu}_{\text{hu}} - \text{tr}_{\text{j}}} + \text{beta} \cdot \displaystyle \sum_{\text{i},\text{cu}} \text{costcw} \cdot \text{qcu}_{\text{i},\text{cu}} + \displaystyle \sum_{\text{hu},\text{j}} \text{costhu}_{\text{hu}} \cdot \text{qhu}_{\text{hu},\text{j}} = \text{skip\_objective\_variable}
-\end{math}
+\subsubsection*{$skip\_objective$}
+\begin{equation}
+alpha \cdot \sum_{i} fc_{i} \cdot ycol_{i} + vc_{i} \cdot tc_{i} - tcmin_{i} \cdot f_{i} + \sum_{zcrhx_{i,j}} fchx \cdot yhx_{i,j} + \frac{vchx}{htc} \cdot \frac{qcr_{i,j}}{tc_{i} - tr_{j} + 1 - ycol_{i}} + \sum_{i,cu} fchx \cdot ycu_{i,cu} + \frac{vchx}{htc} \cdot \frac{qcu_{i,cu}}{lmtd_{i} + 1 - ycol_{i}} + \sum_{hu,j} fchx \cdot yhu_{hu,j} + \frac{vchx}{htc} \cdot \frac{qhu_{hu,j}}{thu_{hu} - tr_{j}} + beta \cdot \sum_{i,cu} costcw \cdot qcu_{i,cu} + \sum_{hu,j} costhu_{hu} \cdot qhu_{hu,j} = skip\_objective\_variable
+\end{equation}
 \vspace{5pt}
 \hrule
 \bigskip
-\begin{math}\text{tc}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{tr}_{\text{j}}\geq 0 ~ \forall j\\\end{math}
-\begin{math}\text{ycol}_{\text{i}}\in \{0,1\} ~ \forall i\\\end{math}
-\begin{math}\text{lmtd}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{sl1}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{sl2}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{s1}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{s2}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{s3}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{s4}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{f}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{qc}_{\text{i}}\geq 0 ~ \forall i\\\end{math}
-\begin{math}\text{qr}_{\text{j}}\geq 0 ~ \forall j\\\end{math}
-\begin{math}\text{qcr}_{\text{i},\text{j}}\geq 0 ~ \forall i,j\\\end{math}
-\begin{math}\text{qcu}_{\text{i},\text{cu}}\geq 0 ~ \forall i,cu\\\end{math}
-\begin{math}\text{qhu}_{\text{hu},\text{j}}\geq 0 ~ \forall hu,j\\\end{math}
-\begin{math}\text{yhx}_{\text{i},\text{j}}\in \{0,1\} ~ \forall i,j\\\end{math}
-\begin{math}\text{yhu}_{\text{hu},\text{j}}\in \{0,1\} ~ \forall hu,j\\\end{math}
-\begin{math}\text{ycu}_{\text{i},\text{cu}}\in \{0,1\} ~ \forall i,cu\\\end{math}
+$tc_{i}\geq 0 ~ \forall i\\$
+$tr_{j}\geq 0 ~ \forall j\\$
+$ycol_{i}\in \{0,1\} ~ \forall i\\$
+$lmtd_{i}\geq 0 ~ \forall i\\$
+$sl1_{i}\geq 0 ~ \forall i\\$
+$sl2_{i}\geq 0 ~ \forall i\\$
+$s1_{i}\geq 0 ~ \forall i\\$
+$s2_{i}\geq 0 ~ \forall i\\$
+$s3_{i}\geq 0 ~ \forall i\\$
+$s4_{i}\geq 0 ~ \forall i\\$
+$f_{i}\geq 0 ~ \forall i\\$
+$qc_{i}\geq 0 ~ \forall i\\$
+$qr_{j}\geq 0 ~ \forall j\\$
+$qcr_{i,j}\geq 0 ~ \forall i,j\\$
+$qcu_{i,cu}\geq 0 ~ \forall i,cu\\$
+$qhu_{hu,j}\geq 0 ~ \forall hu,j\\$
+$yhx_{i,j}\in \{0,1\} ~ \forall i,j\\$
+$yhu_{hu,j}\in \{0,1\} ~ \forall hu,j\\$
+$ycu_{i,cu}\in \{0,1\} ~ \forall i,cu\\$
 \end{document}

@@ -238,17 +238,15 @@ class LatexConverter(Converter):
         definitions = []
         for equation in self.model.equations:
             domain_str = ",".join([elem.name for elem in equation.domain])
-            equation_str = (
-                "\\subsubsection*{\\begin{math}\\text{"
-                + equation.name.replace("_", "\_")
-                + "}"
+            equation_str = "\\subsubsection*{$" + equation.name.replace(
+                "_", "\_"
             )
             if domain_str:
                 equation_str += f"_{{{domain_str}}}"
-            equation_str += "\\end{math}}\n\\begin{math}\n"
+            equation_str += "$}\n\\begin{equation}\n"
 
             equation_str += (
-                equation._definition.right.latexRepr() + "\n\\end{math}\n"
+                equation._definition.right.latexRepr() + "\n\\end{equation}\n"
             )
 
             if isinstance(
@@ -261,10 +259,8 @@ class LatexConverter(Converter):
                             for symbol in equation._definition.left.domain
                         ]
                     )
-                    domain_str = (
-                        f"\\hfill\n\\begin{{math}}\n\\forall {domain_str}"
-                    )
-                    equation_str += f"{domain_str}\n\\end{{math}}"
+                    domain_str = f"\\hfill\n$\n\\forall {domain_str}"
+                    equation_str += f"{domain_str}\n$"
             else:
                 domain_str = ",".join(
                     [
@@ -272,13 +268,11 @@ class LatexConverter(Converter):
                         for symbol in equation._definition.left.conditioning_on.domain
                     ]
                 )
-                domain_str = f"\\hfill\n\\begin{{math}}\n\\forall {domain_str}"
+                domain_str = f"\\hfill\n$\n\\forall {domain_str}"
                 constraint_str = (
                     equation._definition.left.condition.latexRepr()
                 )
-                equation_str += (
-                    f"{domain_str} ~ | ~ {constraint_str} \n\\end{{math}}"
-                )
+                equation_str += f"{domain_str} ~ | ~ {constraint_str} \n$"
 
             equation_str += "\\vspace{5pt}\n\\hrule"
             definitions.append(equation_str)
@@ -292,7 +286,7 @@ class LatexConverter(Converter):
             if not isinstance(symbol, syms.Variable):
                 continue
 
-            constraint = "\\begin{math}" + symbol.latexRepr()
+            constraint = "$" + symbol.latexRepr()
             if symbol.type == "binary":
                 constraint += (
                     "\\in "
@@ -313,24 +307,24 @@ class LatexConverter(Converter):
                     symbol.domain_names
                 )
             elif symbol.type == "sos1":
-                constraint += "\\text{SOS1}"
+                constraint += "SOS1"
             elif symbol.type == "sos2":
-                constraint += "\\text{SOS2}"
+                constraint += "SOS2"
             elif symbol.type == "semicont":
-                constraint += "\\text{SemiCont}"
+                constraint += "SemiCont"
             elif symbol.type == "semiint":
-                constraint += r"\{0, 1, 2, ... \}" + " \\text{SemiInt}"
+                constraint += r"\{0, 1, 2, ... \}" + " SemiInt"
             else:
                 continue
 
-            constraint += "\\\\\\end{math}"
+            constraint += "\\\\$"
             constraints.append(constraint)
 
         return "\n".join(constraints)
 
     def get_header(self) -> str:
         header = """\\documentclass[11pt]{article}
-\\usepackage{a4wide}
+\\usepackage{geometry}
 \\usepackage[american]{babel}
 \\usepackage{amsmath}
 \\usepackage{amssymb}
