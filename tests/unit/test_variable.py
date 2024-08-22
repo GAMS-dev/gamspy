@@ -36,6 +36,7 @@ class VariableSuite(unittest.TestCase):
     def test_variable_creation(self):
         # no name is fine now
         v = Variable(self.m)
+        self.m.addVariable()
         with self.assertRaises(ValidationError):
             _ = v.getAssignment()
 

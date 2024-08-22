@@ -22,6 +22,7 @@ class AliasSuite(unittest.TestCase):
 
     def test_alias_creation(self):
         i = Set(self.m, "i")
+        self.m.addAlias(alias_with=i)
 
         a = Alias(self.m, alias_with=i)
         self.assertEqual(len(a), 0)

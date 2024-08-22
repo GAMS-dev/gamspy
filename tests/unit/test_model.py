@@ -199,6 +199,21 @@ class ModelSuite(unittest.TestCase):
             "Model test_model6 / supply,demand.x /;",
         )
 
+        # Test no name
+        _ = Model(
+            self.m,
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        self.m.addModel(
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
         # Test repr and str
         self.assertTrue(
             str(test_model6).startswith(
