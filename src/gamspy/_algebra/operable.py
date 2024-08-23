@@ -40,7 +40,7 @@ class Operable:
     to be used in Expressions
     """
 
-    # +, -, /, *, **
+    # +, -, /, *, **, %
     def __add__(self: OperableType, other: OperableType):
         return expression.Expression(self, "+", other)
 
@@ -86,6 +86,9 @@ class Operable:
                 return gamspy_math.power(self, other)
 
         return gamspy_math.rpower(self, other)
+
+    def __mod__(self: OperableType, other: OperableType):
+        return gamspy_math.mod(self, other)
 
     # not, and, or, xor
     def __and__(self: OperableType, other: OperableType):
