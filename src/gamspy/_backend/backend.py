@@ -127,7 +127,9 @@ class Backend(ABC):
         modified_names = self.container._get_touched_symbol_names()
 
         if len(modified_names) != 0:
-            self.container.write(self.container._gdx_in, modified_names)
+            self.container.write(
+                self.container._gdx_in, modified_names, eps_to_zero=False
+            )
 
         gams_string = self.container._generate_gams_string(
             gdx_in, modified_names

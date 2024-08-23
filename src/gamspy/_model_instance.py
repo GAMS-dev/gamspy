@@ -178,7 +178,7 @@ class ModelInstance:
         options, update_type = self._prepare_options(solver, given_options)
 
         # update sync_db
-        self.container.write(self.instance.sync_db._gmd)
+        self.container.write(self.instance.sync_db._gmd, eps_to_zero=False)
 
         for symbol in self.modifiables:
             if (
@@ -194,7 +194,9 @@ class ModelInstance:
                     self.container[parent_name].records.drop(columns, axis=1)
                 )
 
-                self.instance_container.write(self.instance.sync_db._gmd)
+                self.instance_container.write(
+                    self.instance.sync_db._gmd, eps_to_zero=False
+                )
 
         try:
             self.instance.solve(update_type, output, mi_opt=options)
