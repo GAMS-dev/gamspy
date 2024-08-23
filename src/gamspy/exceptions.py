@@ -10,12 +10,23 @@ if TYPE_CHECKING:
 
 
 class GamspyException(Exception):
-    """Plain Gamspy exception."""
+    """
+    Plain Gamspy exception.
+
+    Parameters
+    ----------
+    message : str
+    return_code : int | None
+    """
 
     def __init__(self, message: str, return_code: int | None = None) -> None:
         super().__init__(message)
         self.message = message
         self.return_code = return_code
+
+
+class ValidationError(Exception):
+    """An error while validating data."""
 
 
 class NeosClientException(Exception):
@@ -35,6 +46,16 @@ class LatexException(GamspyException):
 
 
 class EngineException(GamspyException):
+    """
+    GAMS Engine execution exception.
+
+    Parameters
+    ----------
+    message : str
+    return_code : int
+    status_code : int | None, optional
+    """
+
     def __init__(
         self,
         message: str,
@@ -43,10 +64,6 @@ class EngineException(GamspyException):
     ) -> None:
         super().__init__(message, return_code)
         self.status_code = status_code
-
-
-class ValidationError(Exception):
-    """An error while validating data."""
 
 
 CHUNK_SIZE = 8
@@ -74,7 +91,7 @@ def _parse_errors(lines: list[str], index: int) -> str:
     return error_message.rstrip()
 
 
-def customize_exception(
+def _customize_exception(
     options: Options,
     job_name: str,
     return_code: int | None,

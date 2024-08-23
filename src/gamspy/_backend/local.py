@@ -8,7 +8,7 @@ from gams import DebugLevel
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
 import gamspy.utils as utils
-from gamspy.exceptions import GamspyException, customize_exception
+from gamspy.exceptions import GamspyException, _customize_exception
 
 if TYPE_CHECKING:
     import io
@@ -93,7 +93,7 @@ class Local(backend.Backend):
                 self.model._update_model_attributes()
         except GamspyException as exception:
             self.container.workspace._has_error = True
-            message = customize_exception(
+            message = _customize_exception(
                 self.options,
                 self.job_name,
                 exception.return_code,
