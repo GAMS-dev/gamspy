@@ -15,6 +15,7 @@ GAMSPy 0.14.6
   - Simplify toLatex output.
   - Make name optional for addX syntax of adding symbols.
   - Add __mod__ overload for all operables.
+  - Fix domain forwarding issue when trying to forward records to the same set.
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.

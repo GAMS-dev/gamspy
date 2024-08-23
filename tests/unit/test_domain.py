@@ -58,6 +58,33 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(k2.toList(), ["k2"])
         self.assertEqual(j2.toList(), ["j2"])
 
+        i2 = Set(self.m, "i2", description="plant locations")
+
+        _ = Parameter(
+            self.m,
+            "tran",
+            description="transport cost for interplant shipments (us$ per ton)",
+            domain=[i2, i2],
+            domain_forwarding=True,
+            records=[
+                ("pto-suarez", "palmasola", 87.22),
+                ("potosi", "palmasola", 31.25),
+                ("potosi", "pto-suarez", 55.97),
+                ("baranquill", "palmasola", 89.80),
+                ("baranquill", "pto-suarez", 114.56),
+                ("baranquill", "potosi", 70.68),
+                ("cartagena", "palmasola", 89.80),
+                ("cartagena", "pto-suarez", 114.56),
+                ("cartagena", "potosi", 70.68),
+                ("cartagena", "baranquill", 5.00),
+            ],
+        )
+
+        self.assertEqual(
+            i2.toList(),
+            ["pto-suarez", "potosi", "baranquill", "cartagena", "palmasola"],
+        )
+
     def test_domain_validation(self):
         times = Set(self.m, "times", records=["release", "duration"])
         job = Set(self.m, "job", records=["job1", "job2"])

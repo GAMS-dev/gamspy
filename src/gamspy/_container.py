@@ -537,9 +537,8 @@ class Container(gt.Container):
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        miro_load = miro.get_load_input_str(
-                            loadable.name, gdx_in
-                        )
+                        miro_names = loadable.domain_names + [loadable.name]
+                        miro_load = miro.get_load_input_str(miro_names, gdx_in)
                         strings.append(miro_load)
                     else:
                         strings.append(f"$loadDC {loadable.name}")
