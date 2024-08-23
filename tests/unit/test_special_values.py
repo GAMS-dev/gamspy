@@ -79,6 +79,17 @@ class SpecialValuesSuite(unittest.TestCase):
         dummy[...] = gp.Sum(i, -0.0)
         self.assertEqual(dummy.getAssignment(), "dummy = sum(i,EPS);")
 
+    def test_eps(self):
+        i = Set(self.m, "i", records=[f"i{i}" for i in range(11)])
+        f = Parameter(
+            self.m,
+            "f",
+            domain=i,
+            records=[("i0", gp.SpecialValues.EPS), ("i1", 1)],
+        )
+
+        self.assertEqual(f.toList(), [("i0", -0.0), ("i1", 1.0)])
+
 
 def special_values_suite():
     suite = unittest.TestSuite()
