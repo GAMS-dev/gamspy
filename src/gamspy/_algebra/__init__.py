@@ -9,3 +9,5 @@ from gamspy._algebra.operation import Product
 from gamspy._algebra.operation import Smax
 from gamspy._algebra.operation import Smin
 from gamspy._algebra.operation import Sum
+from gamspy._algebra.operation import Sand
+from gamspy._algebra.operation import Sor

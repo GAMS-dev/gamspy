@@ -27,6 +27,8 @@ gamspy
    gamspy.Product
    gamspy.Smax
    gamspy.Smin
+   gamspy.Sand
+   gamspy.Sor
    gamspy.Ord
    gamspy.Card
    gamspy._engine
