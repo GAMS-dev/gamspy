@@ -33,3 +33,4 @@ gamspy
    gamspy.math
    gamspy.utils
    gamspy.SpecialValues
+   gamspy.exceptions

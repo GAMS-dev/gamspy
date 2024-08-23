@@ -32,6 +32,7 @@ GAMSPy 0.14.6
   - Add instructions on how to install a license on an offline machine.
   - Update what is gamspy page model example.
   - Change the order of symbol declaration and data specification in the quick start guide.
+  - Add gamspy.exceptions to the api reference.
 
 GAMSPy 0.14.5
 -------------
