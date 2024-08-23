@@ -12,9 +12,11 @@ from gamspy import (
     Ord,
     Parameter,
     Product,
+    Sand,
     Set,
     Smax,
     Smin,
+    Sor,
     Sum,
     Variable,
 )
@@ -97,9 +99,31 @@ class OperationSuite(unittest.TestCase):
         self.assertEqual(sum_op.gamsRepr(), "smax(j,x(i,j)) =l= a(i)")
 
         # Operation with two indices
-        sum_op = Smax((i, j), c[i, j] * x[i, j]) == z
+        smax_op = Smax((i, j), c[i, j] * x[i, j]) == z
         self.assertEqual(
-            sum_op.gamsRepr(), "smax((i,j),(c(i,j) * x(i,j))) =e= z"
+            smax_op.gamsRepr(), "smax((i,j),(c(i,j) * x(i,j))) =e= z"
+        )
+
+        # Sand
+        # Operation with one index
+        sand_op = Sand(j, x[i, j]) <= a[i]
+        self.assertEqual(sand_op.gamsRepr(), "sand(j,x(i,j)) =l= a(i)")
+
+        # Operation with two indices
+        sand_op = Sand((i, j), c[i, j] * x[i, j]) == z
+        self.assertEqual(
+            sand_op.gamsRepr(), "sand((i,j),(c(i,j) * x(i,j))) =e= z"
+        )
+
+        # Sor
+        # Operation with one index
+        sor_op = Sor(j, x[i, j]) <= a[i]
+        self.assertEqual(sor_op.gamsRepr(), "sor(j,x(i,j)) =l= a(i)")
+
+        # Operation with two indices
+        sor_op = Sor((i, j), c[i, j] * x[i, j]) == z
+        self.assertEqual(
+            sor_op.gamsRepr(), "sor((i,j),(c(i,j) * x(i,j))) =e= z"
         )
 
         # Ord, Card
