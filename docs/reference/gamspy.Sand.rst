@@ -1,7 +1,7 @@
-Smax
+Sand
 ====
 
-.. autoclass:: gamspy.Smax
+.. autoclass:: gamspy.Sand
    :members:
    :undoc-members:
    :show-inheritance:
