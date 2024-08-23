@@ -85,6 +85,10 @@ specified is not relevant, unless and until some operation implying
 order is used. At that time, the rules change, and the set becomes what 
 we will later call an *ordered* set. 
 
+.. note::
+
+    Notice that :meth:`Set <gamspy.Set>` is different than builtin `set <https://docs.python.org/3/library/functions.html#func-set>`_ 
+    operation of Python.
 
 Subsets
 --------
