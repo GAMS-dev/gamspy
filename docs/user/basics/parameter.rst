@@ -538,6 +538,11 @@ the *controlling index* for this operation. The scope of the control is the pair
 brackets ``[]`` that start immediately after the Sum. Note that using normal mathematical 
 representation the last line could be written as: :math:`totC_p = \sum_{i}C_{ip}`.
 
+.. note::
+
+    Notice that :meth:`Sum <gamspy.Sum>` is different than builtin `sum <https://docs.python.org/3/library/functions.html#sum>`_ 
+    operation of Python.
+
 It is also possible to sum simultaneously over the domain of two or more sets as in the 
 first assignment that follows. The second assignment demonstrates the use of a less trivial 
 expression than an identifier within the indexed operation. ::
