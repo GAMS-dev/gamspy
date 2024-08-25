@@ -385,11 +385,13 @@ class Equation(gt.Equation, Symbol):
     def _set_definition(self, domain, rhs):
         # self[domain] = rhs
 
-        # In case of an MCP equation without any equality, add the equality
         if not any(eq_type in rhs.gamsRepr() for eq_type in eq_types):
             raise ValidationError(
                 "Equation definition must contain at least one equality sign such as ==, <= or >=."
             )
+
+        if self.type == "external" and "=e=" not in rhs.gamsRepr():
+            raise ValidationError("External equations must contain ==")
 
         if self.type in non_regular_map:
             rhs._replace_operator(non_regular_map[self.type])

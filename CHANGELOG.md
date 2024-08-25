@@ -18,6 +18,7 @@ GAMSPy 0.14.6
   - Fix domain forwarding issue when trying to forward records to the same set.
   - Do not convert eps to zero by default.
   - Add Sand and Sor operations.
+  - Ensure that external equations contain == operation.
 - Testing
   - Use the Container that is created in the setup phase instead of creating a new one.
   - Remove unnecessary init files in tests.
