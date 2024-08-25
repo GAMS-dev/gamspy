@@ -7,8 +7,6 @@
 \usepackage{tabularx}
 \usepackage{ltablex}
 \keepXColumns
-\usepackage{xcolor}
-\setlength{\parindent}{0pt}
 
 \begin{document}
 \section*{Symbols}
@@ -61,19 +59,16 @@ demand & i & meet demand\\
 \end{tabularx}
 \section*{Equation Definitions}
 \subsubsection*{$numpat$}
-\begin{equation}
+\begin{equation*}
 z = \sum_{pp_{p}} xp_{pp_{p}}
-\end{equation}
+\end{equation*}
 \vspace{5pt}
 \hrule
 \subsubsection*{$demand_{i}$}
-\begin{equation}
-\sum_{pp_{p}} aip_{i,pp_{p}} \cdot xp_{pp_{p}} \geq d_{i}
-\end{equation}
-\hfill
-$
-\forall i
-$\vspace{5pt}
+\begin{equation*}
+\sum_{pp_{p}} aip_{i,pp_{p}} \cdot xp_{pp_{p}} \geq d_{i}\qquad \forall i
+\end{equation*}
+\vspace{5pt}
 \hrule
 \bigskip
 $xp_{p}\in \mathbb{Z}_{+} \forall p\\$

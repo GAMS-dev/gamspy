@@ -757,7 +757,7 @@ class Equation(gt.Equation, Symbol):
         n: int | None = None,
         filters: list[list[str]] | None = None,
         infeasibility_threshold: float | None = None,
-    ) -> list[str]:
+    ) -> str:
         """
         Returns the generated equations.
 
@@ -772,7 +772,7 @@ class Equation(gt.Equation, Symbol):
 
         Returns
         -------
-        list[str]
+        str
 
         Raises
         ------
@@ -820,7 +820,7 @@ class Equation(gt.Equation, Symbol):
                 and float(infeasibility[-1][:-6]) < infeasibility_threshold
             )
 
-        return list(filter(infeasibility_filter, listings))[:n]
+        return "\n".join(list(filter(infeasibility_filter, listings))[:n])
 
     @property
     def records(self):
@@ -939,6 +939,44 @@ class Equation(gt.Equation, Symbol):
 
         """
         return self.name
+
+    def latexRepr(self) -> str:
+        if self._definition is None:
+            raise ValidationError(
+                "Equation must be defined to get its latex representation."
+            )
+
+        assert isinstance(
+            self._definition.left,
+            (implicits.ImplicitEquation, condition.Condition),
+        )
+
+        right_side = ""
+        if isinstance(self._definition.left, implicits.ImplicitEquation):
+            if len(self._definition.left.domain) > 0:
+                domain_str = ",".join(
+                    [symbol.name for symbol in self._definition.left.domain]
+                )
+                right_side = f"\\qquad \\forall {domain_str}"
+        else:
+            domain_str = ",".join(
+                [
+                    symbol.name
+                    for symbol in self._definition.left.conditioning_on.domain
+                ]
+            )
+            domain_str = f"\\forall {domain_str}"
+            constraint_str = self._definition.left.condition.latexRepr()
+            right_side = f"\\qquad {domain_str} ~ | ~ {constraint_str}"
+
+        equation_str = (
+            "\\begin{equation*}\n"
+            + self._definition.right.latexRepr()
+            + f"{right_side}"
+            + "\n\\end{equation*}"
+        )
+
+        return equation_str
 
     def getDeclaration(self) -> str:
         """

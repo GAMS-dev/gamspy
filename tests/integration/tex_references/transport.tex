@@ -7,8 +7,6 @@
 \usepackage{tabularx}
 \usepackage{ltablex}
 \keepXColumns
-\usepackage{xcolor}
-\setlength{\parindent}{0pt}
 
 \begin{document}
 \section*{Symbols}
@@ -62,27 +60,21 @@ transport\_objective &  & \\
 \end{tabularx}
 \section*{Equation Definitions}
 \subsubsection*{$supply_{i}$}
-\begin{equation}
-\sum_{j} x_{i,j} \leq a_{i}
-\end{equation}
-\hfill
-$
-\forall i
-$\vspace{5pt}
+\begin{equation*}
+\sum_{j} x_{i,j} \leq a_{i}\qquad \forall i
+\end{equation*}
+\vspace{5pt}
 \hrule
 \subsubsection*{$demand_{j}$}
-\begin{equation}
-\sum_{i} x_{i,j} \geq b_{j}
-\end{equation}
-\hfill
-$
-\forall j
-$\vspace{5pt}
+\begin{equation*}
+\sum_{i} x_{i,j} \geq b_{j}\qquad \forall j
+\end{equation*}
+\vspace{5pt}
 \hrule
 \subsubsection*{$transport\_objective$}
-\begin{equation}
+\begin{equation*}
 \sum_{i,j} c_{i,j} \cdot x_{i,j} = transport\_objective\_variable
-\end{equation}
+\end{equation*}
 \vspace{5pt}
 \hrule
 \bigskip
