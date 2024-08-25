@@ -905,9 +905,14 @@ class ModelSuite(unittest.TestCase):
         )
 
         mexss.solve(options=Options(equation_listing_limit=100))
-        self.assertEqual(len(mexss.getEquationListing()), 74)
+        self.assertEqual(len(mexss.getEquationListing().split("\n")), 74)
         self.assertEqual(
-            len(mexss.getEquationListing(infeasibility_threshold=2.5)), 2
+            len(
+                mexss.getEquationListing(infeasibility_threshold=2.5).split(
+                    "\n"
+                )
+            ),
+            2,
         )
 
     def test_jupyter_behaviour(self):

@@ -493,28 +493,40 @@ class VariableSuite(unittest.TestCase):
                 equation_listing_limit=100, variable_listing_limit=100
             )
         )
-        self.assertEqual(len(transport.getVariableListing()), 7)
-        self.assertEqual(len(transport.getVariableListing(n=3)), 3)
+        self.assertEqual(len(transport.getVariableListing().split("\n\n")), 7)
         self.assertEqual(
             transport.getVariableListing(),
-            [
-                "x(seattle,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(new-york)\n        0.225   transport_objective\n",
-                "x(seattle,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(chicago)\n        0.153   transport_objective\n",
-                "x(seattle,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(topeka)\n        0.162   transport_objective\n",
-                "x(san-diego,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(new-york)\n        0.225   transport_objective\n",
-                "x(san-diego,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(chicago)\n        0.162   transport_objective\n",
-                "x(san-diego,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(topeka)\n        0.126   transport_objective\n",
-                "transport_objective_variable\n                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)\n       -1       transport_objective\n",
-            ],
+            "\n".join(
+                [
+                    "x(seattle,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(new-york)\n        0.225   transport_objective\n",
+                    "x(seattle,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(chicago)\n        0.153   transport_objective\n",
+                    "x(seattle,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(seattle)\n        1       demand(topeka)\n        0.162   transport_objective\n",
+                    "x(san-diego,new-york)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(new-york)\n        0.225   transport_objective\n",
+                    "x(san-diego,chicago)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(chicago)\n        0.162   transport_objective\n",
+                    "x(san-diego,topeka)\n                (.LO, .L, .UP, .M = 0, 0, +INF, 0)\n        1       supply(san-diego)\n        1       demand(topeka)\n        0.126   transport_objective\n",
+                    "transport_objective_variable\n                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)\n       -1       transport_objective\n",
+                ]
+            ),
         )
         self.assertEqual(
-            len(x.getVariableListing(filters=[["seattle"], []])), 3
+            len(x.getVariableListing(filters=[["seattle"], []]).split("\n\n")),
+            3,
         )
         self.assertEqual(
-            len(x.getVariableListing(filters=[["seattle"], ["topeka"]])), 1
+            len(
+                x.getVariableListing(filters=[["seattle"], ["topeka"]]).split(
+                    "\n\n"
+                )
+            ),
+            1,
         )
         self.assertEqual(
-            len(x.getVariableListing(filters=[["seattle"], []], n=2)), 2
+            len(
+                x.getVariableListing(filters=[["seattle"], []], n=2).split(
+                    "\n\n"
+                )
+            ),
+            2,
         )
 
         transport2 = Model(

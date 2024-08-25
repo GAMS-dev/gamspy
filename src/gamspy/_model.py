@@ -583,43 +583,38 @@ class Model:
 
     def getEquationListing(
         self,
-        n: int | None = None,
         infeasibility_threshold: float | None = None,
-    ) -> list[str]:
+    ) -> str:
         """
         Returns the generated equations.
 
         Parameters
         ----------
-        n : int | None, optional
-            Number of equations to be returned.
         infeasibility_threshold: float, optional
             Filters out equations with infeasibilities that are above this value.
 
         Returns
         -------
-        list[str]
+        str
         """
         listings = []
         for equation in self.equations:
-            listings += equation.getEquationListing(
+            listing = equation.getEquationListing(
                 infeasibility_threshold=infeasibility_threshold
             )
 
-        return listings[:n]
+            if listing:
+                listings.append(listing)
 
-    def getVariableListing(self, n: int | None = None) -> list[str]:
+        return "\n".join(listings)
+
+    def getVariableListing(self) -> str:
         """
         Returns the variable listing.
 
-        Parameters
-        ----------
-        n : int | None, optional
-            Number of variables to be returned.
-
         Returns
         -------
-        list[str]
+        str
         """
         if not hasattr(self, "_variables"):
             raise ValidationError(
@@ -628,9 +623,9 @@ class Model:
 
         listings = []
         for variable in self._variables:
-            listings += variable.getVariableListing()
+            listings.append(variable.getVariableListing())
 
-        return listings[:n]
+        return "\n".join(listings)
 
     def interrupt(self) -> None:
         """

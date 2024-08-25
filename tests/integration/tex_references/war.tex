@@ -7,8 +7,6 @@
 \usepackage{tabularx}
 \usepackage{ltablex}
 \keepXColumns
-\usepackage{xcolor}
-\setlength{\parindent}{0pt}
 
 \begin{document}
 \section*{Symbols}
@@ -63,27 +61,21 @@ war\_objective &  & \\
 \end{tabularx}
 \section*{Equation Definitions}
 \subsubsection*{$maxw_{w}$}
-\begin{equation}
-\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}
-\end{equation}
-\hfill
-$
-\forall w
-$\vspace{5pt}
+\begin{equation*}
+\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\qquad \forall w
+\end{equation*}
+\vspace{5pt}
 \hrule
 \subsubsection*{$minw_{t}$}
-\begin{equation}
-\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}
-\end{equation}
-\hfill
-$
-\forall t ~ | ~ tm_{t} 
-$\vspace{5pt}
+\begin{equation*}
+\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\qquad \forall t ~ | ~ tm_{t}
+\end{equation*}
+\vspace{5pt}
 \hrule
 \subsubsection*{$war\_objective$}
-\begin{equation}
+\begin{equation*}
 \sum_{t} mv_{t} \cdot 1 - \prod_{w ~ | ~ td_{w,t}}  rPower((1 - td(w,t)),x(w,t))  = war\_objective\_variable
-\end{equation}
+\end{equation*}
 \vspace{5pt}
 \hrule
 \bigskip

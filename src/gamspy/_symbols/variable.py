@@ -616,7 +616,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self,
         n: int | None = None,
         filters: list[list[str]] | None = None,
-    ) -> list[str]:
+    ) -> str:
         """
         Returns the generated variables.
 
@@ -629,7 +629,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         Returns
         -------
-        list[str]
+        str
 
         Raises
         ------
@@ -666,7 +666,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 if matches == len(sets):
                     listings.append(listing)
 
-        return listings[:n]
+        return "\n".join(listings[:n])
 
     @property
     def records(self):
