@@ -122,6 +122,7 @@ max_infeasibility      Maximum of infeasibilities
 mean_infeasibility     Mean of infeasibilities
 status                 Integer number that indicates the model status
 num_nodes_used         Number of nodes used by the MIP solver
+solve_number           Number of the last solve
 num_dependencies       Number of dependencies in a CNS model
 num_discrete_variables Number of discrete variables
 num_infeasibilities    Number of infeasibilities

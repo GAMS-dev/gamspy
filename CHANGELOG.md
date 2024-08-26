@@ -40,6 +40,7 @@ GAMSPy 0.14.6
   - Add gamspy.exceptions to the api reference.
   - Change the order of indexing, lag-lead operations, ord-card operations and number.
   - Add gamspy.NeosClient to the api reference.
+  - Add model attributes to docstring.
 
 GAMSPy 0.14.5
 -------------
