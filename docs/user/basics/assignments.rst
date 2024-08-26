@@ -1,8 +1,8 @@
 .. _conditional_expressions_assignments_equations:
 
-*************************************
-Conditions, Assignments and Equations
-*************************************
+**************************
+Conditions and Assignments
+**************************
 
 Introduction
 ============

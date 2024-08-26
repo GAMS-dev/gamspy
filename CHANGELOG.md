@@ -38,6 +38,7 @@ GAMSPy 0.14.6
   - Change the order of symbol declaration and data specification in the quick start guide.
   - Add equation listing, variable listing, and interoperabiltiy sections to quick start guide.
   - Add gamspy.exceptions to the api reference.
+  - Change the order of indexing, lag-lead operations, ord-card operations and number.
   - Add gamspy.NeosClient to the api reference.
 
 GAMSPy 0.14.5
