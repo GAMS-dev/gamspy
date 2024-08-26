@@ -24,7 +24,7 @@ from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem
-from gamspy._options import Options
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -253,11 +253,7 @@ class Container(gt.Container):
             system_directory=self.system_directory
         )
 
-        if options is not None and not isinstance(options, Options):
-            raise TypeError(
-                f"`options` must be of type Option but found {type(options)}"
-            )
-        self._options = options
+        self._options = self._validate_global_options(options)
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -285,6 +281,26 @@ class Container(gt.Container):
             self._stop_socket()
         except (Exception, ConnectionResetError):
             ...
+
+    def _validate_global_options(self, options: Any) -> Options | None:
+        if options is not None and not isinstance(options, Options):
+            raise TypeError(
+                f"`options` must be of type Option but found {type(options)}"
+            )
+
+        if isinstance(options, Options):
+            options_dict = options.model_dump(exclude_none=True)
+            if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
+                raise ValidationError(
+                    f"{MODEL_ATTR_OPTION_MAP.keys()} cannot be provided at Container creation time."
+                )
+
+            if any(option in options_dict for option in EXECUTION_OPTIONS):
+                raise ValidationError(
+                    f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
+                )
+
+        return options
 
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:

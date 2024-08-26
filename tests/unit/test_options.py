@@ -40,6 +40,14 @@ class OptionsSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_options(self):
+        with self.assertRaises(exceptions.ValidationError):
+            options = Options(generate_name_dict=True)
+            _ = Container(options=options)
+
+        with self.assertRaises(exceptions.ValidationError):
+            options = Options(loadpoint="bla.gdx")
+            _ = Container(options=options)
+
         with self.assertRaises(ValidationError):
             _ = Options(unknown_option=5)
 
@@ -84,6 +92,11 @@ class OptionsSuite(unittest.TestCase):
 
         options = Options(report_underflow=True)
         self.assertEqual(options.report_underflow, True)
+
+        options = Options(solve_link_type="disk")
+        self.assertEqual(
+            options._get_gams_compatible_options()["solvelink"], 2
+        )
 
     def test_seed(self):
         m = Container(
