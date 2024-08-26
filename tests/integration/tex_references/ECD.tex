@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage{a4wide}
+\usepackage{geometry}
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -7,8 +7,6 @@
 \usepackage{tabularx}
 \usepackage{ltablex}
 \keepXColumns
-\usepackage{xcolor}
-\setlength{\parindent}{0pt}
 
 \begin{document}
 \section*{Symbols}
@@ -58,16 +56,16 @@ ECD\_objective &  & \\
 \hline
 \end{tabularx}
 \section*{Equation Definitions}
-\subsubsection*{\begin{math}\text{eq2}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{gen}} \text{P}_{\text{gen}} \geq \text{load}
-\end{math}
+\subsubsection*{$eq2$}
+\begin{equation*}
+\sum_{gen} P_{gen} \geq load
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{ECD\_objective}\end{math}}
-\begin{math}
-\displaystyle \sum_{\text{gen}} \text{data}_{\text{gen},*} \cdot \text{P}_{\text{gen}} \cdot \text{P}_{\text{gen}} + \text{data}_{\text{gen},*} \cdot \text{P}_{\text{gen}} + \text{data}_{\text{gen},*} = \text{ECD\_objective\_variable}
-\end{math}
+\subsubsection*{$ECD\_objective$}
+\begin{equation*}
+\sum_{gen} data_{gen,*} \cdot P_{gen} \cdot P_{gen} + data_{gen,*} \cdot P_{gen} + data_{gen,*} = ECD\_objective\_variable
+\end{equation*}
 \vspace{5pt}
 \hrule
 \bigskip

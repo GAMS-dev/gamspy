@@ -8,6 +8,7 @@ import sys
 import unittest
 
 import gamspy as gp
+from gamspy.exceptions import ValidationError
 
 try:
     from dotenv import load_dotenv
@@ -19,9 +20,7 @@ except Exception:
 
 class ExternalModuleTestSuite(unittest.TestCase):
     def setUp(self):
-        self.m = gp.Container(
-            system_directory=os.getenv("GAMSPY_GAMS_SYSDIR", None)
-        )
+        self.m = gp.Container()
 
         directory = str(pathlib.Path(__file__).parent.resolve())
         external_module = os.path.join(
@@ -59,6 +58,15 @@ class ExternalModuleTestSuite(unittest.TestCase):
 
         assert math.isclose(y1.toDense(), -1)
         assert math.isclose(y2.toDense(), -1)
+
+    def test_sin_cos_example2(self):
+        y1 = gp.Variable(self.m, "y1")
+        x1 = gp.Variable(self.m, "x1")
+
+        eq1 = gp.Equation(self.m, "eq1", type="external")
+
+        with self.assertRaises(ValidationError):
+            eq1[...] = 1 * x1 + 3 * y1 >= 1
 
 
 def external_module_suite():

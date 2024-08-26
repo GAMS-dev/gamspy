@@ -317,7 +317,7 @@ def main():
         options=Options(
             variable_listing_limit=0,
             equation_listing_limit=0,
-            solver_link_type=2,
+            solve_link_type="disk",
         )
     )
 
@@ -354,7 +354,7 @@ def main():
         options=Options(
             variable_listing_limit=0,
             equation_listing_limit=0,
-            solver_link_type=2,
+            solve_link_type="disk",
         )
     )
 
@@ -437,7 +437,7 @@ def main():
             options=Options(
                 variable_listing_limit=0,
                 equation_listing_limit=0,
-                solver_link_type=2,
+                solve_link_type="disk",
             )
         )
 
@@ -460,7 +460,7 @@ def main():
             options=Options(
                 variable_listing_limit=0,
                 equation_listing_limit=0,
-                solver_link_type=2,
+                solve_link_type="disk",
             )
         )
 
@@ -481,7 +481,7 @@ def main():
         options=Options(
             variable_listing_limit=0,
             equation_listing_limit=0,
-            solver_link_type=2,
+            solve_link_type="disk",
         )
     )
 
@@ -544,7 +544,7 @@ def main():
             options=Options(
                 variable_listing_limit=0,
                 equation_listing_limit=0,
-                solver_link_type=2,
+                solve_link_type="disk",
             )
         )
         FrontierPortfolios[jj, i] = x.l[i]

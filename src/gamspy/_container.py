@@ -16,7 +16,6 @@ from contextlib import closing
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-from gams import DebugLevel, GamsWorkspace
 
 import gamspy as gp
 import gamspy._miro as miro
@@ -24,7 +23,9 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
-from gamspy._options import Options
+from gamspy._model import Problem
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
     from gamspy._model import Sense
 
+GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
@@ -82,11 +84,14 @@ def open_connection(
     TIMEOUT = 30
     license_path = utils._get_license_path(system_directory)
 
-    address = find_free_address()
+    address = (
+        ("127.0.0.1", int(GAMS_PORT)) if GAMS_PORT else find_free_address()
+    )
+
     process = subprocess.Popen(
         [
             os.path.join(system_directory, "gams"),
-            "dummy_name",
+            "GAMSPY_JOB",
             f"incrementalMode={address[1]}",
             f"procdir={process_directory}",
             f"license={license_path}",
@@ -236,12 +241,8 @@ class Container(gt.Container):
         super().__init__(system_directory=system_directory)
         self._network_license = is_network_license(self.system_directory)
 
-        self._debugging_level = self._get_debugging_level(debugging_level)
-        self.workspace = GamsWorkspace(
-            working_directory,
-            self.system_directory,
-            self._debugging_level,
-        )
+        self._debugging_level = debugging_level
+        self.workspace = Workspace(debugging_level, working_directory)
 
         self.working_directory = self.workspace.working_directory
         self.process_directory = tempfile.mkdtemp(dir=self.working_directory)
@@ -252,11 +253,7 @@ class Container(gt.Container):
             system_directory=self.system_directory
         )
 
-        if options is not None and not isinstance(options, Options):
-            raise TypeError(
-                f"`options` must be of type Option but found {type(options)}"
-            )
-        self._options = options
+        self._options = self._validate_global_options(options)
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
@@ -284,6 +281,26 @@ class Container(gt.Container):
             self._stop_socket()
         except (Exception, ConnectionResetError):
             ...
+
+    def _validate_global_options(self, options: Any) -> Options | None:
+        if options is not None and not isinstance(options, Options):
+            raise TypeError(
+                f"`options` must be of type Option but found {type(options)}"
+            )
+
+        if isinstance(options, Options):
+            options_dict = options.model_dump(exclude_none=True)
+            if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
+                raise ValidationError(
+                    f"{MODEL_ATTR_OPTION_MAP.keys()} cannot be provided at Container creation time."
+                )
+
+            if any(option in options_dict for option in EXECUTION_OPTIONS):
+                raise ValidationError(
+                    f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
+                )
+
+        return options
 
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:
@@ -343,23 +360,6 @@ class Container(gt.Container):
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
-
-    def _get_debugging_level(self, debugging_level: str) -> int:
-        DEBUGGING_MAP = {
-            "delete": DebugLevel.Off,
-            "keep_on_error": DebugLevel.KeepFilesOnError,
-            "keep": DebugLevel.KeepFiles,
-        }
-        if (
-            not isinstance(debugging_level, str)
-            or debugging_level not in DEBUGGING_MAP
-        ):
-            raise ValidationError(
-                "Debugging level must be one of 'delete', 'keep',"
-                " 'keep_on_error'"
-            )
-
-        return DEBUGGING_MAP[debugging_level]
 
     def _write_default_gdx_miro(self) -> None:
         # create data_<model>/default.gdx
@@ -553,9 +553,8 @@ class Container(gt.Container):
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        miro_load = miro.get_load_input_str(
-                            loadable.name, gdx_in
-                        )
+                        miro_names = loadable.domain_names + [loadable.name]
+                        miro_load = miro.get_load_input_str(miro_names, gdx_in)
                         strings.append(miro_load)
                     else:
                         strings.append(f"$loadDC {loadable.name}")
@@ -755,13 +754,15 @@ class Container(gt.Container):
         """Stops the socket and releases resources."""
         self._stop_socket()
 
-    def addAlias(self, name: str, alias_with: Set | Alias) -> Alias:
+    def addAlias(
+        self, name: str | None = None, alias_with: Set | Alias | None = None
+    ) -> Alias:
         """
         Creates a new Alias and adds it to the container
 
         Parameters
         ----------
-        name : str
+        name : str | None
         alias_with : Set | Alias
 
         Returns
@@ -788,7 +789,7 @@ class Container(gt.Container):
 
     def addSet(
         self,
-        name: str,
+        name: str | None = None,
         domain: list[Set | str] | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
@@ -801,7 +802,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         domain : List[Set | str], optional
         is_singleton : bool, optional
         records : Any, optional
@@ -841,7 +842,7 @@ class Container(gt.Container):
 
     def addParameter(
         self,
-        name: str,
+        name: str | None = None,
         domain: list[str | Set] | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
@@ -853,7 +854,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         domain : List[str | Set]], optional
         records : Any, optional
         domain_forwarding : bool, optional
@@ -891,7 +892,7 @@ class Container(gt.Container):
 
     def addVariable(
         self,
-        name: str,
+        name: str | None = None,
         type: str = "free",
         domain: list[str | Set] | None = None,
         records: Any | None = None,
@@ -904,7 +905,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         type : str, optional
         domain : List[str | Set]], optional
         records : Any, optional
@@ -944,7 +945,7 @@ class Container(gt.Container):
 
     def addEquation(
         self,
-        name: str,
+        name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | str] | None = None,
         definition: Expression | None = None,
@@ -959,7 +960,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        name : str
+        name : str | None
         type : str
         domain : List[Set | str], optional
         definition : Definition, optional
@@ -1003,8 +1004,8 @@ class Container(gt.Container):
 
     def addModel(
         self,
-        name: str,
-        problem: str,
+        name: str | None = None,
+        problem: Problem | str | None = Problem.LP,
         equations: list[Equation] = [],
         sense: Literal["MIN", "MAX"] | Sense | None = None,
         objective: Variable | Expression | None = None,
@@ -1018,7 +1019,7 @@ class Container(gt.Container):
         ----------
         name : str
         equations : List[Equation]
-        problem : str
+        problem : Problem | str, by default Problem.LP
         sense : "MIN", "MAX", optional
         objective : Variable | Expression, optional
         matches : dict, optional

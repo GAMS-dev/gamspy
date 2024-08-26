@@ -5,8 +5,8 @@ What is GAMSPy?
 ===============
 
 GAMSPy combines the high-performance GAMS execution system with the flexible Python language, creating 
-a powerful mathematical optimization package. It acts as a bridge between the expressive Python language 
-and the robust GAMS system, allowing you to create complex mathematical models effortlessly. This allows 
+a powerful mathematical optimization package. It serves as a bridge between the expressive Python language 
+and the robust GAMS system, enabling you to create complex mathematical models effortlessly. This allows 
 creating full pipelines in Python by using your favorite packages for preprocessing (e.g. data cleaning) and 
 postprocessing (e.g. visualization) along with GAMSPy.
 
@@ -18,46 +18,58 @@ Why is GAMSPy fast?
 ===================
 
 GAMSPy delegates the expensive assignment and solve statements to the GAMS execution system. Set-based operations 
-are at the core of the GAMSPy and GAMS execution system. For example, in many optimization libraries what you 
-would write your equations as given in the ``Other Libraries`` block below: 
+are at the core of the GAMSPy and GAMS execution system. For example, in many optimization libraries, you would 
+write your equations as shown in the ``Other Libraries`` block below: 
 
 .. tab-set-code::
 
     .. code-block:: Other-Libraries
+      :emphasize-lines: 13,14,15
 
-        import other_library as ol
-        
-        I = ['i1', 'i2']
-        J = ['j1', 'j2']
-        a = ol.Parameter()
-        x = ol.Variable()
-        b = ol.Parameter()
+      import other_library as ol
+      from numpy.random import uniform
 
-        objective = sum(
-          a[i,j] * x[i, j] 
-          for i in I 
-          for j in J
-        ) >= b[i,j]
+      m = ol.Model()
+      m.i = ol.Set(records=range(500))
+      m.i = ol.Set(records=range(1000))
+      data = uniform(0, 1, (500, 1000))
+      data[data > 0.01] = 0
+      m.a = ol.Parameter(m.i, m.j, records=data)
+      m.b = ol.Parameter(m.i, records=uniform(0,1, 500))
+      m.x = ol.Variable(m.i, m.j)
+
+      def e_definition(m, i):
+        return sum(m.a[i, j] * m.x[i, j] for j in m.j) >= m.b[i]
+      m.e = ol.Equation(m.i, definition=e_definition)
 
     .. code-block:: GAMSPy
+      :emphasize-lines: 11
 
-        import gamspy as gp
-        
-        m = gp.Container()
-        i = gp.Set(m, records=['i1', 'i2'])
-        j = gp.Set(m, records=['j1', 'j2'])
-        a = gp.Parameter(m)
-        x = gp.Variable(m)
-        b = gp.Parameter(m)
+      import gamspy as gp
+      from numpy.random import uniform
 
-        objective = gp.Sum((i,j), a[i,j] * x[i,j]) >= b[i,j]
+      m = gp.Container()
+      i = gp.Set(m)
+      j = gp.Set(m)
+      a = gp.Parameter(m, domain=[i, j])
+      b = gp.Parameter(m, domain=[i])
+      x = gp.Variable(m, domain=[i, j])
+      e = gp.Equation(m, domain=[i])
+      e[i] = gp.Sum(j, a[i, j] * x[i, j]) >= b[i]
+
+      data = uniform(0, 1, (500, 1000))
+      data[data > 0.01] = 0
+      i.setRecords(range(500))
+      j.setRecords(range(1000))
+      a.setRecords(data)
+      b.setRecords(uniform(0, 1, 500))
 
 With the approach of other libraries, you iterate over all items of ``I`` and ``J``. This approach has certain disadvantages:
 
 - It can get pretty verbose for long statements with many loops which decreases the readability.
 - The performance might suffer severely (depending on the implementation) if there are lots of items to iterate through since Python loops are known to be very slow.
 
-Meanwhile GAMSPy implementation employs set-based operations. This results in:
+In contrast, the GAMSPy implementation employs set-based operations, which results in:
 
 - Concise and easier to read definitions.
 - GAMSPy definitions closely resemble mathematical notation that you would put in a paper making it easier to correctly code mathematical equations.
@@ -77,7 +89,7 @@ With this goal in mind GAMSPy has been developed to be able to generate mathemat
 of model instances. Think of a mathematical model as a pure representation of mathematical symbols, 
 devoid of specific data. In contrast, a model instance is the unrolled and 
 constant folded representation of a model with its actual data.
-In a model instance sum expressions are resolved into its individual components and equation 
+In a model instance, sum expressions are resolved into its individual components, and equation 
 domains are resolved to individual scalar equations.
 
 Mathematical Model
@@ -95,15 +107,15 @@ Model Instance
     2 \cdot x_{i1,j2} + 6 \cdot x_{i2,j2} + 4 \cdot x_{i3,j2} \le 10
 
 Especially for complex models with many variables and equations, a model instance can become 
-hard to manage. Therefore, GAMSPy leverages the idea of a standalone,
-data independent, and indexed representation of a mathematical model which is very close 
+hard to manage. Therefore, GAMSPy leverages the concept of a standalone,
+data independent, and indexed representation of a mathematical model, which is very close 
 to the original mathematical algebraic formulation.
 
 
 Sparsity
 --------
 
-One key aspect of any modeling language is how it handles sparse multidimensional data structures.
+A key aspect of any modeling language is how it handles sparse multidimensional data structures.
 Many optimization problems are subject to a particular structure in which the data cube 
 has a lot of zeros and only a few non-zeros, a characteristic referred to as sparsity. In 
 optimization problems, it is often necessary to account for complex mappings of indices 
@@ -111,22 +123,22 @@ to subsets.
 
 While you might be used to taking on the full responsibility to make sure only the relevant combinations
 of indices go into your variable definition in the Python modeling world, we especially focused on 
-transferring the convenience and mindset of GAMS into Python by designing GAMSPy. Thus, GAMSPy 
+transferring the convenience and mindset of GAMS into Python by designing GAMSPy. As a result, GAMSPy 
 automatically takes care of generating variables only for the relevant combinations of indices based 
 on the algebraic formulation. This feature is particularly useful when working with a large multidimensional 
-index space, where generating all possible combinations of indices would be computationally expensive and unnecessary. 
-GAMSPy quietly handles this task in the background, allowing us to focus on the formulation of the model.
+index space, where generating all possible combinations of indices would be both computationally expensive and unnecessary. 
+GAMSPy handles this task quietly in the background, allowing us to focus on the formulation of the model.
 
-Which backends GAMSPy support?
-==============================
+Which backends does GAMSPy support?
+====================================
 
 GAMSPy currently supports three backends: your local GAMS installation, `GAMS Engine <https://www.gams.com/sales/engine_facts/>`_ and `NEOS Server <https://neos-server.org/neos/>`_. 
 The default backend is the local GAMS installation that comes with GAMSPy. With GAMS Engine backend, you can run hundreds of jobs in the cloud in parallel to speed up your pipeline. 
-One can also send their jobs to NEOS Server which is a free service for solving optimization problems. Make sure you understand the `NEOS Terms of Use <https://neos-server.org/neos/termofuse.html>`_ 
+You can also send your jobs to the NEOS Server, a free service for solving optimization problems. Make sure you understand the `NEOS Terms of Use <https://neos-server.org/neos/termofuse.html>`_ 
 before you use this backend.
 
-GAMSPy is also integrated with `GAMS MIRO <https://www.gams.com/sales/miro_facts/>`_ which allows you to create fully interactive applications. Extensive visualization options of 
-GAMS MIRO support you to make decisions based on optimization. 
+GAMSPy is also integrated with `GAMS MIRO <https://www.gams.com/sales/miro_facts/>`_, allowing you to create fully interactive applications. 
+The extensive visualization options in GAMS MIRO support decision-making based on optimization.
 
 .. image:: ../_static/miro.png
   :alt: GAMS MIRO
@@ -134,6 +146,6 @@ GAMS MIRO support you to make decisions based on optimization.
 Interoperability of GAMSPy
 ==========================
 
-A mathematical optimization model written with GAMSPy can be converted to GAMS or LaTeX format. GAMSPy to GAMS conversion might be useful to do fast prototyping in GAMSPy and 
-converting the model to GAMS to use certain features of GAMS (e.g. EMP models) that are missing in GAMSPy. GAMSPy to LaTeX conversion can be convenient to put your equations 
-into an academic paper or to verify the equations you have written match with what you think mathematically. 
+A mathematical optimization model written with GAMSPy can be converted to GAMS or LaTeX format. Converting GAMSPy models to GAMS can be useful for rapid prototyping in GAMSPy and 
+converting the model to GAMS to utilize certain features of GAMS (e.g., EMP models) that are missing in GAMSPy. GAMSPy to LaTeX conversion can be convenient for including your 
+equations in an academic paper or verifying that the equations you have written match your mathematical intentions. 

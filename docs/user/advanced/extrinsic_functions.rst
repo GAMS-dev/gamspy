@@ -10,8 +10,8 @@ GAMS is used in an extremely diverse set of application areas and this creates f
 the addition of new and often sophisticated and specialized functions. There is a trade-off between 
 satisfying these requests and avoiding complexity not needed by most users. Extrinsic libraries allow 
 users to import extrinsic functions from an external library into the GAMSPy model. However, these 
-external libraries can currently only provide functionality for the evaluation of functions (incl. their first and second derivatives) 
-in a point.
+external libraries can only provide functionality for evaluating functions (including their first 
+and second derivatives) at specific points.
 
 
 .. admonition:: Information

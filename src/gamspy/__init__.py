@@ -4,7 +4,18 @@ from gams.transfer import SpecialValues
 
 import gamspy.math as math
 import gamspy.utils as utils
-from gamspy._algebra import Card, Domain, Number, Ord, Product, Smax, Smin, Sum
+from gamspy._algebra import (
+    Card,
+    Domain,
+    Number,
+    Ord,
+    Product,
+    Sand,
+    Smax,
+    Smin,
+    Sor,
+    Sum,
+)
 from gamspy._algebra.expression import Expression
 from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
@@ -43,6 +54,8 @@ __all__ = [
     "Product",
     "Smax",
     "Smin",
+    "Sand",
+    "Sor",
     "Domain",
     "Number",
     "Ord",

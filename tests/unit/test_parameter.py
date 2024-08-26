@@ -27,6 +27,7 @@ class ParameterSuite(unittest.TestCase):
     def test_parameter_creation(self):
         # no name is fine
         a = Parameter(self.m)
+        self.m.addParameter()
         with self.assertRaises(ValidationError):
             _ = a.getAssignment()
 

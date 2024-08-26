@@ -192,7 +192,14 @@ class Operation(operable.Operable):
         -------
         str
         """
-        op_map = {"sum": "sum", "prod": "prod", "smax": "max", "smin": "min"}
+        op_map = {
+            "sum": "sum",
+            "prod": "prod",
+            "smax": "max",
+            "smin": "min",
+            "sand": "sand",
+            "sor": "sor",
+        }
 
         indices = []
         given_condition = None
@@ -213,7 +220,9 @@ class Operation(operable.Operable):
             if isinstance(self.rhs, (int, float, str))
             else self.rhs.latexRepr()
         )
-        representation = f"\\displaystyle \\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        representation = (
+            f"\\{op_map[self._op_name]}_{{{index_str}}} {expression_str}"
+        )
         return representation
 
 
@@ -463,6 +472,132 @@ class Smax(Operation):
         >>> v = Variable(m, "v", domain=i)
         >>> Smax(i, c[i]*v[i]).gamsRepr()
         'smax(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
+
+
+class Sand(Operation):
+    """
+    Represents a sand operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Sand(i, p[i]) <= v
+
+    """
+
+    def __init__(
+        self,
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
+        expression: Expression | int | bool,
+    ):
+        super().__init__(domain, expression, "sand")
+
+    def __repr__(self) -> str:
+        return f"Sand(domain={self.domain}, expression={self.rhs})"
+
+    def gamsRepr(self):
+        """
+        Representation of the Sand operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Sand
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Sand(i, c[i]*v[i]).gamsRepr()
+        'sand(i,(c(i) * v(i)))'
+
+        """
+        repr = super().gamsRepr()
+        return repr
+
+
+class Sor(Operation):
+    """
+    Represents a sor operation over a domain.
+
+    Parameters
+    ----------
+    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    expression : (
+            Expression
+            | ImplicitVariable
+            | ImplicitParameter
+            | int
+            | bool
+            | Variable
+            | Parameter
+            | Operation
+        )
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
+    >>> v = gp.Variable(m, "v")
+    >>> e = gp.Equation(m, "e", type="eq")
+    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
+    >>> e[...] = gp.Sor(i, p[i]) <= v
+
+    """
+
+    def __init__(
+        self,
+        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
+        expression: Expression | int | bool,
+    ):
+        super().__init__(domain, expression, "sor")
+
+    def __repr__(self) -> str:
+        return f"Sor(domain={self.domain}, expression={self.rhs})"
+
+    def gamsRepr(self):
+        """
+        Representation of the Sor operation in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> from gamspy import Container, Set, Parameter, Variable, Sor
+        >>> m = Container()
+        >>> i = Set(m, "i", records=['i1','i2', 'i3'])
+        >>> c = Parameter(m, "c", domain=i)
+        >>> v = Variable(m, "v", domain=i)
+        >>> Sor(i, c[i]*v[i]).gamsRepr()
+        'sor(i,(c(i) * v(i)))'
 
         """
         repr = super().gamsRepr()

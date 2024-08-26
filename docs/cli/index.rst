@@ -1,20 +1,12 @@
+:html_theme.sidebar_secondary.remove:
+
 .. _cli:
 
 gamspy
 ======
 
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-
-    install
-    list
-    run
-    show
-    update
-    uninstall
-
-The base command for the GAMSPy CLI.
+GAMSPy comes with a command-line interface (CLI) to allow users to 
+easily install solvers, licenses and much more.
 
 .. list-table::
    :widths: 20 20 20 40
@@ -32,3 +24,16 @@ The base command for the GAMSPy CLI.
      - -v
      - 
      - Shows the version of GAMSPy, GAMS and gamspy_base
+
+List of Commands
+----------------
+
+.. toctree::
+    :maxdepth: 1
+
+    install
+    list
+    run
+    show
+    update
+    uninstall

@@ -8,14 +8,45 @@
 Indexing
 ********
 
+Set-based Indexing and Literal Indexing
+=======================================
+
+Set-based indexing is at the core of the GAMSPy and GAMS execution system. They are concise, easy to read and have great performance.
+Therefore, we encourage the use of it in most contexts. Yet, in certain cases, one might be inclined to do literal indexing. Because of that 
+GAMSPy also allows literal indexing.
+
+.. tab-set-code::
+
+    .. code-block:: Set-based
+
+        m = gp.Container()
+        i = gp.Set(m, records=['i1', 'i2'])
+        a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
+
+        a[i] = 5 # set-based indexing that sets all records of a to 5
+        print(a.records)
+
+    .. code-block:: Literal
+
+        import gamspy as gp
+        
+        m = gp.Container()
+        i = gp.Set(m, records=['i1', 'i2'])
+        a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
+        a['i1'] = 5 # literal indexing that sets element 'i1' to 5 
+        a['i2'] = 6 # literal indexing that sets element 'i1' to 6
+
+Slices and Ellipsis
+===================
+
 GAMSPy supports NumPy-like indexing including the usage of `Slices <https://docs.python.org/3/library/functions.html?highlight=slice#slice>`_ 
 and `Ellipsis <https://docs.python.org/3/library/constants.html#Ellipsis>`_. An ellipsis expands to the number of colon (`:`) objects needed for the 
 selection tuple to index all dimensions. There may only be a single ellipsis present. 
 
 Usage of Slices
-===============
+---------------
 
-The equivalent representation of the example above with slices would be: ::
+Here is an example that shows how slices can be used: ::
 
     import gamspy as gp
     m = gp.Container()
@@ -37,9 +68,9 @@ Hence, it is equivalent to: ::
     c[i, j] = 90 * d[i, j] / 1000
 
 Usage of Ellipsis
-=================
+-----------------
 
-The equivalent representation of the example above with ellipsis would be: ::
+Here is an example that shows how ellipsis can be used: ::
 
     import gamspy as gp
     m = gp.Container()

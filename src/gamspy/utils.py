@@ -119,7 +119,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
-    return solvers
+    return sorted(solvers)
 
 
 def getAvailableSolvers() -> list[str]:

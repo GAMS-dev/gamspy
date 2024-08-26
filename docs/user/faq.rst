@@ -219,8 +219,8 @@ Some of the features that have not been fully implemented in GAMSPy include:
     that are part of the GAMS language may not be fully accessible in GAMSPy. 
 
 It's important to emphasize that the GAMSPy team is actively working on expanding the feature 
-set to bridge the gap between GAMS and GAMSPy. If you have specific features or functionalities 
-you would like to see in GAMSPy, feel free to share your feedback with us.
+set to bridge the gap between GAMS and GAMSPy. If there are specific features or functionalities 
+you would like to see in GAMSPy, please share your feedback with us.
 
 How are GAMS and GAMSPy related?
 --------------------------------

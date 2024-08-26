@@ -6,7 +6,6 @@ import subprocess
 from abc import ABC, abstractmethod
 
 import gamspy._symbols as syms
-import gamspy._symbols.implicits as implicits
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
 
@@ -133,7 +132,7 @@ class GamsConverter(Converter):
             file.write(gams_string)
 
         logger.info(
-            f'GAMS model has been generated under {os.path.join(self.path, self.model.name + ".gms")}'
+            f'GAMS (.gms) file has been generated under {os.path.join(self.path, self.model.name + ".gms")}'
         )
 
 
@@ -198,7 +197,7 @@ class LatexConverter(Converter):
             file.write(latex_str)
 
         logger.info(
-            f'Latex (.tex) file has been generated under {os.path.join(self.path, self.model.name + ".tex")}'
+            f'LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + ".tex")}'
         )
 
         self.latex_str = latex_str
@@ -238,50 +237,14 @@ class LatexConverter(Converter):
         definitions = []
         for equation in self.model.equations:
             domain_str = ",".join([elem.name for elem in equation.domain])
-            equation_str = (
-                "\\subsubsection*{\\begin{math}\\text{"
-                + equation.name.replace("_", "\_")
-                + "}"
-            )
+            header = "\\subsubsection*{$" + equation.name.replace("_", "\_")
             if domain_str:
-                equation_str += f"_{{{domain_str}}}"
-            equation_str += "\\end{math}}\n\\begin{math}\n"
+                header += f"_{{{domain_str}}}"
+            header += "$}\n"
 
-            equation_str += (
-                equation._definition.right.latexRepr() + "\n\\end{math}\n"
-            )
-
-            if isinstance(
-                equation._definition.left, implicits.ImplicitEquation
-            ):
-                if len(equation._definition.left.domain) > 0:
-                    domain_str = ",".join(
-                        [
-                            symbol.name
-                            for symbol in equation._definition.left.domain
-                        ]
-                    )
-                    domain_str = (
-                        f"\\hfill\n\\begin{{math}}\n\\forall {domain_str}"
-                    )
-                    equation_str += f"{domain_str}\n\\end{{math}}"
-            else:
-                domain_str = ",".join(
-                    [
-                        symbol.name
-                        for symbol in equation._definition.left.conditioning_on.domain
-                    ]
-                )
-                domain_str = f"\\hfill\n\\begin{{math}}\n\\forall {domain_str}"
-                constraint_str = (
-                    equation._definition.left.condition.latexRepr()
-                )
-                equation_str += (
-                    f"{domain_str} ~ | ~ {constraint_str} \n\\end{{math}}"
-                )
-
-            equation_str += "\\vspace{5pt}\n\\hrule"
-            definitions.append(equation_str)
+            footer = "\n\\vspace{5pt}\n\\hrule"
+            latex_repr = f"{header}{equation.latexRepr()}{footer}"
+            definitions.append(latex_repr)
 
         return "\n".join(definitions)
 
@@ -292,7 +255,7 @@ class LatexConverter(Converter):
             if not isinstance(symbol, syms.Variable):
                 continue
 
-            constraint = "\\begin{math}" + symbol.latexRepr()
+            constraint = "$" + symbol.latexRepr()
             if symbol.type == "binary":
                 constraint += (
                     "\\in "
@@ -313,24 +276,24 @@ class LatexConverter(Converter):
                     symbol.domain_names
                 )
             elif symbol.type == "sos1":
-                constraint += "\\text{SOS1}"
+                constraint += "SOS1"
             elif symbol.type == "sos2":
-                constraint += "\\text{SOS2}"
+                constraint += "SOS2"
             elif symbol.type == "semicont":
-                constraint += "\\text{SemiCont}"
+                constraint += "SemiCont"
             elif symbol.type == "semiint":
-                constraint += r"\{0, 1, 2, ... \}" + " \\text{SemiInt}"
+                constraint += r"\{0, 1, 2, ... \}" + " SemiInt"
             else:
                 continue
 
-            constraint += "\\\\\\end{math}"
+            constraint += "\\\\$"
             constraints.append(constraint)
 
         return "\n".join(constraints)
 
     def get_header(self) -> str:
         header = """\\documentclass[11pt]{article}
-\\usepackage{a4wide}
+\\usepackage{geometry}
 \\usepackage[american]{babel}
 \\usepackage{amsmath}
 \\usepackage{amssymb}
@@ -338,8 +301,6 @@ class LatexConverter(Converter):
 \\usepackage{tabularx}
 \\usepackage{ltablex}
 \\keepXColumns
-\\usepackage{xcolor}
-\\setlength{\parindent}{0pt}
 
 \\begin{document}
 \section*{Symbols}

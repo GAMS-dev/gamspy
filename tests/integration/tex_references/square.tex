@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage{a4wide}
+\usepackage{geometry}
 \usepackage[american]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -7,8 +7,6 @@
 \usepackage{tabularx}
 \usepackage{ltablex}
 \keepXColumns
-\usepackage{xcolor}
-\setlength{\parindent}{0pt}
 
 \begin{document}
 \section*{Symbols}
@@ -67,61 +65,61 @@ square\_objective &  & \\
 \hline
 \end{tabularx}
 \section*{Equation Definitions}
-\subsubsection*{\begin{math}\text{e1x}\end{math}}
-\begin{math}
- sin(t("1"))  \cdot  cos((t("1") - (t("1") * t("1"))))  = \text{x}
-\end{math}
+\subsubsection*{$e1x$}
+\begin{equation*}
+ sin(t("1"))  \cdot  cos((t("1") - (t("1") * t("1"))))  = x
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e1y}\end{math}}
-\begin{math}
-\text{t}_{*} \cdot  sin(t("1"))  = \text{y}
-\end{math}
+\subsubsection*{$e1y$}
+\begin{equation*}
+t_{*} \cdot  sin(t("1"))  = y
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e2x}\end{math}}
-\begin{math}
- sin(t("2"))  \cdot  cos((t("2") - (t("2") * t("2"))))  = \text{x} + \text{a}
-\end{math}
+\subsubsection*{$e2x$}
+\begin{equation*}
+ sin(t("2"))  \cdot  cos((t("2") - (t("2") * t("2"))))  = x + a
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e2y}\end{math}}
-\begin{math}
-\text{t}_{*} \cdot  sin(t("2"))  = \text{y} + \text{b}
-\end{math}
+\subsubsection*{$e2y$}
+\begin{equation*}
+t_{*} \cdot  sin(t("2"))  = y + b
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e3x}\end{math}}
-\begin{math}
- sin(t("3"))  \cdot  cos((t("3") - (t("3") * t("3"))))  = \text{x} - \text{b}
-\end{math}
+\subsubsection*{$e3x$}
+\begin{equation*}
+ sin(t("3"))  \cdot  cos((t("3") - (t("3") * t("3"))))  = x - b
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e3y}\end{math}}
-\begin{math}
-\text{t}_{*} \cdot  sin(t("3"))  = \text{y} + \text{a}
-\end{math}
+\subsubsection*{$e3y$}
+\begin{equation*}
+t_{*} \cdot  sin(t("3"))  = y + a
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e4x}\end{math}}
-\begin{math}
- sin(t("4"))  \cdot  cos((t("4") - (t("4") * t("4"))))  = \text{x} + \text{a} - \text{b}
-\end{math}
+\subsubsection*{$e4x$}
+\begin{equation*}
+ sin(t("4"))  \cdot  cos((t("4") - (t("4") * t("4"))))  = x + a - b
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{e4y}\end{math}}
-\begin{math}
-\text{t}_{*} \cdot  sin(t("4"))  = \text{y} + \text{a} + \text{b}
-\end{math}
+\subsubsection*{$e4y$}
+\begin{equation*}
+t_{*} \cdot  sin(t("4"))  = y + a + b
+\end{equation*}
 \vspace{5pt}
 \hrule
-\subsubsection*{\begin{math}\text{square\_objective}\end{math}}
-\begin{math}
- power(a,2)  +  power(b,2)  = \text{square\_objective\_variable}
-\end{math}
+\subsubsection*{$square\_objective$}
+\begin{equation*}
+ power(a,2)  +  power(b,2)  = square\_objective\_variable
+\end{equation*}
 \vspace{5pt}
 \hrule
 \bigskip
-\begin{math}\text{a}\geq 0 ~ \forall \\\end{math}
-\begin{math}\text{b}\geq 0 ~ \forall \\\end{math}
+$a\geq 0 ~ \forall \\$
+$b\geq 0 ~ \forall \\$
 \end{document}

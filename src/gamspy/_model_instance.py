@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Iterable
 
 import gams.transfer as gt
 from gams import (
+    DebugLevel,
     EquType,
     GamsCheckpoint,
     GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
     GamsOptions,
+    GamsWorkspace,
     SymbolUpdateType,
     UpdateAction,
     VarType,
@@ -96,9 +98,37 @@ class ModelInstance:
             system_directory=container.system_directory,
         )
 
-        self.checkpoint = GamsCheckpoint(container.workspace, self.save_file)
+        self._debugging_level = self._get_debugging_level(
+            container._debugging_level
+        )
+        self.workspace = GamsWorkspace(
+            container.working_directory,
+            container.system_directory,
+            debug=self._debugging_level,
+        )
+        self.checkpoint = GamsCheckpoint(
+            self.workspace,
+            self.save_file,
+        )
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
+
+    def _get_debugging_level(self, debugging_level: str) -> int:
+        DEBUGGING_MAP = {
+            "delete": DebugLevel.Off,
+            "keep_on_error": DebugLevel.KeepFilesOnError,
+            "keep": DebugLevel.KeepFiles,
+        }
+        if (
+            not isinstance(debugging_level, str)
+            or debugging_level not in DEBUGGING_MAP
+        ):
+            raise ValidationError(
+                "Debugging level must be one of 'delete', 'keep',"
+                " 'keep_on_error'"
+            )
+
+        return DEBUGGING_MAP[debugging_level]
 
     def _create_restart_file(self):
         with open(self.gms_file, "w", encoding="utf-8") as gams_file:
@@ -148,7 +178,7 @@ class ModelInstance:
         options, update_type = self._prepare_options(solver, given_options)
 
         # update sync_db
-        self.container.write(self.instance.sync_db._gmd)
+        self.container.write(self.instance.sync_db._gmd, eps_to_zero=False)
 
         for symbol in self.modifiables:
             if (
@@ -164,7 +194,9 @@ class ModelInstance:
                     self.container[parent_name].records.drop(columns, axis=1)
                 )
 
-                self.instance_container.write(self.instance.sync_db._gmd)
+                self.instance_container.write(
+                    self.instance.sync_db._gmd, eps_to_zero=False
+                )
 
         try:
             self.instance.solve(update_type, output, mi_opt=options)
@@ -173,8 +205,8 @@ class ModelInstance:
         self._update_main_container()
 
         # update model status
-        self.model.status = gp.ModelStatus(self.instance.model_status)
-        self.model.solve_status = self.instance.solver_status
+        self.model._status = gp.ModelStatus(self.instance.model_status)
+        self.model._solve_status = self.instance.solver_status
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
@@ -234,7 +266,7 @@ class ModelInstance:
     def _prepare_gams_options(
         self, given_options: Options | dict | None
     ) -> GamsOptions:
-        options = GamsOptions(self.model.container.workspace)
+        options = GamsOptions(self.workspace)
         if given_options is None:
             return options
 
@@ -370,6 +402,6 @@ class ModelInstance:
         self.container.miro_protect = prev_state
 
         if self.model._objective_variable is not None:
-            self.model.objective_value = temp[
+            self.model._objective_value = temp[
                 self.model._objective_variable.name
             ].toValue()

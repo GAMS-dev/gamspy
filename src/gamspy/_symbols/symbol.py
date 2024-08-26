@@ -28,7 +28,7 @@ class Symbol:
         str
         """
         name = self.name.replace("_", "\_")
-        representation = f"\\text{{{name}}}"
+        representation = f"{name}"
         domain = list(self.domain)
 
         if hasattr(self, "_scalar_domains"):
@@ -87,27 +87,11 @@ class Symbol:
             self._synchronize = False
 
     def _get_domain_str(self: SymbolType):
-        if isinstance(self.domain_forwarding, bool):
-            forwarding = [self.domain_forwarding] * self.dimension
-        else:
-            forwarding = self.domain_forwarding
-
         set_strs = []
-        for elem, is_forwarding in zip(self.domain, forwarding):
+        for elem in self.domain:
             if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_str = elem.gamsRepr()
-                set_strs.append(set_str + "<" if is_forwarding else set_str)
-            elif isinstance(elem, str):
+                set_strs.append(elem.gamsRepr())
+            elif isinstance(elem, (str, gt.UniverseAlias)):
                 set_strs.append("*")
 
         return "(" + ",".join(set_strs) + ")"
-
-    def _mark_forwarded_domain_sets(
-        self: SymbolType, domain_forwarding: list[bool] | bool
-    ):
-        if isinstance(domain_forwarding, bool):
-            domain_forwarding = [domain_forwarding]
-
-        for elem, forwarding in zip(self.domain, domain_forwarding):
-            if hasattr(elem, "modified") and forwarding:
-                elem.modified = False

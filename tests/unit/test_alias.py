@@ -22,6 +22,7 @@ class AliasSuite(unittest.TestCase):
 
     def test_alias_creation(self):
         i = Set(self.m, "i")
+        self.m.addAlias(alias_with=i)
 
         a = Alias(self.m, alias_with=i)
         self.assertEqual(len(a), 0)
@@ -139,6 +140,12 @@ class AliasSuite(unittest.TestCase):
         self.assertEqual(
             bla.data["h"].records.values.tolist(), h.records.values.tolist()
         )
+
+        m = Container()
+
+        r = UniverseAlias(m, name="new_universe")
+        k = Set(m, name="k", domain=r, records="Chicago")
+        self.assertEqual(k.getDeclaration(), "Set k(*);")
 
     def test_alias_state(self):
         i = Set(self.m, name="i", records=["a", "b", "c"])

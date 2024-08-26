@@ -42,29 +42,27 @@ class NeosSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_neos_blocking(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -82,29 +80,27 @@ class NeosSuite(unittest.TestCase):
         )
 
     def test_no_client(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -113,29 +109,27 @@ class NeosSuite(unittest.TestCase):
             transport.solve(backend="neos")
 
     def test_different_solver(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -152,29 +146,27 @@ class NeosSuite(unittest.TestCase):
         )
 
     def test_neos_non_blocking(self):
-        m = Container()
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),

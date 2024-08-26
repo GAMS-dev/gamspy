@@ -199,6 +199,21 @@ class ModelSuite(unittest.TestCase):
             "Model test_model6 / supply,demand.x /;",
         )
 
+        # Test no name
+        _ = Model(
+            self.m,
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        self.m.addModel(
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
         # Test repr and str
         self.assertTrue(
             str(test_model6).startswith(
@@ -890,9 +905,14 @@ class ModelSuite(unittest.TestCase):
         )
 
         mexss.solve(options=Options(equation_listing_limit=100))
-        self.assertEqual(len(mexss.getEquationListing()), 74)
+        self.assertEqual(len(mexss.getEquationListing().split("\n")), 74)
         self.assertEqual(
-            len(mexss.getEquationListing(infeasibility_threshold=2.5)), 2
+            len(
+                mexss.getEquationListing(infeasibility_threshold=2.5).split(
+                    "\n"
+                )
+            ),
+            2,
         )
 
     def test_jupyter_behaviour(self):

@@ -23,6 +23,7 @@ from gamspy.exceptions import ValidationError
 
 class ModelInstanceSuite(unittest.TestCase):
     def setUp(self):
+        self.m = Container()
         self.canning_plants = ["seattle", "san-diego"]
         self.distances = [
             ["seattle", "new-york", 2.5],
@@ -36,38 +37,37 @@ class ModelInstanceSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_parameter_change(self):
-        m = Container()
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
         d = Parameter(
-            m,
+            self.m,
             name="d",
             domain=[i, j],
             records=self.distances,
             is_miro_input=True,
         )
-        c = Parameter(m, name="c", domain=[i, j])
-        bmult = Parameter(m, name="bmult", records=1)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        bmult = Parameter(self.m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
-        z = Variable(m, name="z")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
 
-        cost = Equation(m, name="cost")
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        cost = Equation(self.m, name="cost")
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=z,
@@ -90,7 +90,7 @@ class ModelInstanceSuite(unittest.TestCase):
         for b_value, result in zip(bmult_list, results):
             bmult[...] = b_value
             transport.solve(solver="conopt")
-            self.assertTrue("bmult_var" in m.data)
+            self.assertTrue("bmult_var" in self.m.data)
             self.assertTrue(
                 x.records.columns.to_list()
                 == ["i", "j", "level", "marginal", "lower", "upper", "scale"]
@@ -112,32 +112,31 @@ class ModelInstanceSuite(unittest.TestCase):
         self.assertFalse(transport._is_frozen)
 
     def test_variable_change(self):
-        m = Container()
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
-        bmult = Parameter(m, name="bmult", records=1)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        bmult = Parameter(self.m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
-        z = Variable(m, name="z")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
 
-        cost = Equation(m, name="cost")
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        cost = Equation(self.m, name="cost")
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=z,
@@ -154,13 +153,15 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.unfreeze()
 
     def test_fx(self):
-        m = Container()
         INCOME0 = Parameter(
-            m, name="INCOME0", description="notional income level", records=3.5
+            self.m,
+            name="INCOME0",
+            description="notional income level",
+            records=3.5,
         )
 
         IADJ = Variable(
-            m,
+            self.m,
             name="IADJ",
             description=(
                 "investment scaling factor (for fixed capital formation)"
@@ -168,20 +169,20 @@ class ModelInstanceSuite(unittest.TestCase):
             type="Free",
         )
         MPSADJ = Variable(
-            m,
+            self.m,
             name="MPSADJ",
             description="savings rate scaling factor",
             type="Free",
         )
 
         BALANCE = Equation(
-            m,
+            self.m,
             name="BALANCE",
             description="notional balance constraint",
             definition=(1 + IADJ) + (1 + MPSADJ) == INCOME0,
         )
 
-        mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
+        mm = Model(self.m, name="mm", equations=[BALANCE], problem="MCP")
         mm.freeze(modifiables=[INCOME0, IADJ.fx, MPSADJ.fx])
         IADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
         mm.solve()
@@ -195,32 +196,31 @@ class ModelInstanceSuite(unittest.TestCase):
         mm.unfreeze()
 
     def test_validations(self):
-        m = Container()
-        i = Set(m, name="i", records=["seattle", "san-diego"])
-        j = Set(m, name="j", records=["new-york", "chicago", "topeka"])
+        i = Set(self.m, name="i", records=["seattle", "san-diego"])
+        j = Set(self.m, name="j", records=["new-york", "chicago", "topeka"])
 
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
-        bmult = Parameter(m, name="bmult", records=1)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        bmult = Parameter(self.m, name="bmult", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
-        z = Variable(m, name="z")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
 
-        cost = Equation(m, name="cost")
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        cost = Equation(self.m, name="cost")
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=z,
@@ -248,12 +248,12 @@ class ModelInstanceSuite(unittest.TestCase):
         # Test solver options
         transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
         self.assertTrue(
-            os.path.exists(os.path.join(m.working_directory, "conopt.123"))
+            os.path.exists(
+                os.path.join(self.m.working_directory, "conopt.123")
+            )
         )
 
     def test_modifiable_in_condition(self):
-        m = Container()
-
         td_data = pd.DataFrame(
             [
                 ["icbm", "2", 0.05],
@@ -373,13 +373,13 @@ class ModelInstanceSuite(unittest.TestCase):
 
         # Sets
         w = Set(
-            m,
+            self.m,
             name="w",
             records=["icbm", "mrbm-1", "lr-bomber", "f-bomber", "mrbm-2"],
             description="weapons",
         )
         t = Set(
-            m,
+            self.m,
             name="t",
             records=[str(i) for i in range(1, 21)],
             description="targets",
@@ -387,28 +387,28 @@ class ModelInstanceSuite(unittest.TestCase):
 
         # Parameters
         td = Parameter(
-            m,
+            self.m,
             name="td",
             domain=[w, t],
             records=td_data,
             description="target data",
         )
         wa = Parameter(
-            m,
+            self.m,
             name="wa",
             domain=w,
             records=wa_data,
             description="weapons availability",
         )
         tm = Parameter(
-            m,
+            self.m,
             name="tm",
             domain=t,
             records=tm_data,
             description="minimum number of weapons per target",
         )
         mv = Parameter(
-            m,
+            self.m,
             name="mv",
             domain=t,
             records=mv_data,
@@ -417,28 +417,34 @@ class ModelInstanceSuite(unittest.TestCase):
 
         # Variables
         x = Variable(
-            m,
+            self.m,
             name="x",
             domain=[w, t],
             type="Positive",
             description="weapons assignment",
         )
         prob = Variable(
-            m, name="prob", domain=t, description="probability for each target"
+            self.m,
+            name="prob",
+            domain=t,
+            description="probability for each target",
         )
 
         # Equations
         maxw = Equation(
-            m, name="maxw", domain=w, description="weapons balance"
+            self.m, name="maxw", domain=w, description="weapons balance"
         )
         minw = Equation(
-            m,
+            self.m,
             name="minw",
             domain=t,
             description="minimum number of weapons required per target",
         )
         probe = Equation(
-            m, name="probe", domain=t, description="probability definition"
+            self.m,
+            name="probe",
+            domain=t,
+            description="probability definition",
         )
 
         maxw[w] = Sum(t.where[td[w, t]], x[w, t]) <= wa[w]
@@ -456,7 +462,7 @@ class ModelInstanceSuite(unittest.TestCase):
         )
 
         war = Model(
-            m,
+            self.m,
             name="war",
             equations=[maxw, minw, probe],
             problem=Problem.NLP,

@@ -27,6 +27,11 @@ class MathSuite(unittest.TestCase):
 
         v = Variable(self.m, name="v", domain=[i])
 
+        # mod
+        op = s1 % s2
+        self.assertTrue(isinstance(op, expression.Expression))
+        self.assertEqual(op.gamsRepr(), "( mod(s1,s2) )")
+
         # abs
         op2 = gams_math.abs(b[i])
         self.assertTrue(isinstance(op2, expression.Expression))

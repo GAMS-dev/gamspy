@@ -7,6 +7,7 @@ import concurrent.futures
 import logging
 import math
 import os
+import subprocess
 import sys
 import time
 import unittest
@@ -125,6 +126,107 @@ def transport(f_value):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve()
+
+    m.close()
+
+    return transport.objective_value
+
+def transport2(f_value):
+    m = Container()
+
+    # Prepare data
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    # Set
+    i = Set(
+        m,
+        name="i",
+        records=["seattle", "san-diego"],
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+
+    # Data
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    f = Parameter(m, name="f", records=f_value)
+    c[i, j] = f * d[i, j] / 1000
+
+    # Variable
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m, name="demand", domain=j, description="satisfy demand at market j"
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    m.addGamsCode("scalar bla; bla = sleep(180);")
+    transport.solve()
+
+    m.close()
 
     return transport.objective_value
 
@@ -945,29 +1047,27 @@ class SolveSuite(unittest.TestCase):
             pass
 
     def test_solver_options(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -978,7 +1078,7 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(
             os.path.exists(
-                f"{m.working_directory}{os.sep}conopt.123"
+                f"{self.m.working_directory}{os.sep}conopt.123"
             )
         )
 
@@ -987,29 +1087,27 @@ class SolveSuite(unittest.TestCase):
         )
 
     def test_ellipsis(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[...] = 90 * d[...] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[...] = Sum(j, x[...]) <= a[...]
         demand[...] = Sum(i, x[...]) >= b[...]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -1033,40 +1131,38 @@ class SolveSuite(unittest.TestCase):
             c[..., ...] = 5
         
     def test_slice(self):
-        m = Container()
-
-        i = Set(m, name="i", records=self.canning_plants)
-        i2 = Set(m, name="i2", records=self.canning_plants)
-        i3 = Set(m, name="i3", records=self.canning_plants)
-        i4 = Set(m, name="i4", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-        k = Set(m, "k", domain=[i, i2, i3, i4])
+        i = Set(self.m, name="i", records=self.canning_plants)
+        i2 = Set(self.m, name="i2", records=self.canning_plants)
+        i3 = Set(self.m, name="i3", records=self.canning_plants)
+        i4 = Set(self.m, name="i4", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
+        k = Set(self.m, "k", domain=[i, i2, i3, i4])
         self.assertEqual(k[..., i4].gamsRepr(), "k(i,i2,i3,i4)")
         self.assertEqual(k[i, ..., i4].gamsRepr(), "k(i,i2,i3,i4)")
         self.assertEqual(k[i, ...].gamsRepr(), "k(i,i2,i3,i4)")
         self.assertEqual(k[..., i3, :].gamsRepr(), "k(i,i2,i3,i4)")
 
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
         self.assertEqual(a[:].gamsRepr(), "a(i)")
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         self.assertEqual(c[:, :].gamsRepr(), "c(i,j)")
         c[:, :] = 90 * d[:, :] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
         self.assertEqual(x[:, :].gamsRepr(), "x(i,j)")
 
-        supply = Equation(m, name="supply", domain=[i])
+        supply = Equation(self.m, name="supply", domain=[i])
         self.assertEqual(supply[:].gamsRepr(), "supply(i)")
 
         supply.l[:] = 5
         self.assertEqual(supply.l[:].gamsRepr(), "supply.l(i)")
         
-        date = Set(m, "date", description="trading date")
-        ntd = Set(m, "ntd", domain=[date], description="none-training days")
-        error = Parameter(m, "error", domain=[date], description="Absolute error")
+        date = Set(self.m, "date", description="trading date")
+        ntd = Set(self.m, "ntd", domain=[date], description="none-training days")
+        error = Parameter(self.m, "error", domain=[date], description="Absolute error")
         error_test = Parameter(
-            m,
+            self.m,
             "error_test",
             description="Absolute error in entire testing phase",
             is_miro_output=True,
@@ -1074,31 +1170,29 @@ class SolveSuite(unittest.TestCase):
         error_test[:] = Sum(ntd, error[ntd])
         
     def test_max_line_length(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
-        f = Parameter(m, "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", records=1)
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
+        f = Parameter(self.m, "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", records=1)
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
         
         # This generates an equation with length > 80000
         supply[i] = Sum(j, x[i, j])*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -1106,29 +1200,27 @@ class SolveSuite(unittest.TestCase):
         transport.solve()
         
     def test_summary(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -1137,21 +1229,19 @@ class SolveSuite(unittest.TestCase):
         self.assertTrue(summary['Solver Status'].tolist()[0], 'Normal')
         
     def test_validation(self):
-        m = Container()
+        i = Set(self.m, name="i", records=self.canning_plants)
+        j = Set(self.m, name="j", records=self.markets)
 
-        i = Set(m, name="i", records=self.canning_plants)
-        j = Set(m, name="j", records=self.markets)
-
-        a = Parameter(m, name="a", domain=[i], records=self.capacities)
-        b = Parameter(m, name="b", domain=[j], records=self.demands)
-        d = Parameter(m, name="d", domain=[i, j], records=self.distances)
-        c = Parameter(m, name="c", domain=[i, j])
+        a = Parameter(self.m, name="a", domain=[i], records=self.capacities)
+        b = Parameter(self.m, name="b", domain=[j], records=self.demands)
+        d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
+        c = Parameter(self.m, name="c", domain=[i, j])
         c[i, j] = 90 * d[i, j] / 1000
 
-        x = Variable(m, name="x", domain=[i, j], type="Positive")
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
-        supply = Equation(m, name="supply", domain=[i])
-        demand = Equation(m, name="demand", domain=[j])
+        supply = Equation(self.m, name="supply", domain=[i])
+        demand = Equation(self.m, name="demand", domain=[j])
 
         with self.assertRaises(ValidationError):
             supply[j] = Sum(j, x[i, j]) <= a[i]
@@ -1163,12 +1253,11 @@ class SolveSuite(unittest.TestCase):
             c[b[j]] = 90 * d[i, j] / 1000
             
     def test_after_exception(self):
-        m = Container()
-        x = Variable(m, "x", type="positive")
-        e = Equation(m, "e", definition=x <= x + 1)
+        x = Variable(self.m, "x", type="positive")
+        e = Equation(self.m, "e", definition=x <= x + 1)
         with self.assertRaises(ValidationError):
             t = Model(
-                m,
+                self.m,
                 name="t",
                 equations=[e],
                 problem="LP",
@@ -1177,7 +1266,7 @@ class SolveSuite(unittest.TestCase):
             )
         x.type = "free"
         t = Model(
-            m,
+            self.m,
             name="t",
             equations=[e],
             problem="LP",
@@ -1193,53 +1282,48 @@ class SolveSuite(unittest.TestCase):
         except GamspyException:
             pass
         
-        f = Parameter(m, "f")
+        f = Parameter(self.m, "f")
         f[...] = 5
         
         self.assertEqual(f.getAssignment(), "f = 5;")
             
     def test_invalid_arguments(self):
-        m = Container(
-            
-            
-        )
-
         i = Set(
-            m,
+            self.m,
             name="i",
             records=self.canning_plants,
             description="canning plants",
         )
         j = Set(
-            m,
+            self.m,
             name="j",
             records=self.markets,
             description="markets",
         )
 
         a = Parameter(
-            m,
+            self.m,
             name="a",
             domain=i,
             records=self.capacities,
             description="capacity of plant i in cases",
         )
         b = Parameter(
-            m,
+            self.m,
             name="b",
             domain=j,
             records=self.demands,
             description="demand at market j in cases",
         )
         d = Parameter(
-            m,
+            self.m,
             name="d",
             domain=[i, j],
             records=self.distances,
             description="distance in thousands of miles",
         )
         c = Parameter(
-            m,
+            self.m,
             name="c",
             domain=[i, j],
             description="transport cost in thousands of dollars per case",
@@ -1247,7 +1331,7 @@ class SolveSuite(unittest.TestCase):
         c[i, j] = 90 * d[i, j] / 1000
 
         x = Variable(
-            m,
+            self.m,
             name="x",
             domain=[i, j],
             type="Positive",
@@ -1255,22 +1339,22 @@ class SolveSuite(unittest.TestCase):
         )
 
         supply = Equation(
-            m,
+            self.m,
             name="supply",
             domain=i,
             description="observe supply limit at plant i",
         )
         demand = Equation(
-            m, name="demand", domain=j, description="satisfy demand at market j"
+            self.m, name="demand", domain=j, description="satisfy demand at market j"
         )
 
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
         transport = Model(
-            m,
+            self.m,
             name="transport",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             problem="LP",
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
@@ -1295,9 +1379,6 @@ class SolveSuite(unittest.TestCase):
             transport.solve(options={"bla": "bla"})
             
     def test_marking_updated_symbols(self):
-        import gamspy as gp
-        import numpy as np
-
         height_data = [
             1.47,
             1.50,
@@ -1334,42 +1415,40 @@ class SolveSuite(unittest.TestCase):
             74.46,
         ]
 
-        m = gp.Container()
-
         num_recs = len(height_data)
 
         x_recs = np.ones((num_recs, 2))
         x_recs[:, 0] = height_data
 
 
-        set_15 = gp.Set(m, name="set15", records=range(15))
-        set_2 = gp.Set(m, name="set2", records=range(2))
+        set_15 = Set(self.m, name="set15", records=range(15))
+        set_2 = Set(self.m, name="set2", records=range(2))
 
-        X = gp.Parameter(
-            m, name="X", domain=[set_15, set_2], records=x_recs, uels_on_axes=True
+        X = Parameter(
+            self.m, name="X", domain=[set_15, set_2], records=x_recs, uels_on_axes=True
         )
 
         y_recs = np.array(weight_data)
 
-        y = gp.Parameter(
-            m, name="y", domain=[set_15], records=y_recs, uels_on_axes=True
+        y = Parameter(
+            self.m, name="y", domain=[set_15], records=y_recs, uels_on_axes=True
         )
 
-        w = gp.Variable(m, name="w", domain=[set_2])
+        w = Variable(self.m, name="w", domain=[set_2])
 
-        loss = gp.Variable(m, name="loss", domain=[])
+        loss = Variable(self.m, name="loss", domain=[])
 
-        loss_eq = gp.Equation(m, name="set_loss", domain=[])
+        loss_eq = Equation(self.m, name="set_loss", domain=[])
 
-        loss_eq[...] = loss == gp.Sum(
-            set_15, (y[set_15] - gp.Sum(set_2, X[set_15, set_2] * w[set_2])) ** 2
+        loss_eq[...] = loss == Sum(
+            set_15, (y[set_15] - Sum(set_2, X[set_15, set_2] * w[set_2])) ** 2
         )
 
-        model = gp.Model(
-            m,
+        model = Model(
+            self.m,
             name="OLS",
             problem="QCP",
-            equations=m.getEquations(),
+            equations=self.m.getEquations(),
             sense="MIN",
             objective=loss,
         )
@@ -1427,6 +1506,48 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(x.records)
         self.assertIsNone(supply.records)
         self.assertEqual(transport.objective_value, 153.675)
+
+
+    def test_explicit_port(self):
+        if sys.version_info.minor == 12:
+            file_path = os.path.join("tmp", "invalid_port.py")
+            with open(file_path, "w") as file:
+                file.write("from gamspy import Container\nm = Container()")
+
+            env = os.environ.copy()
+            env['GAMS_PORT'] = "12345"
+            process = subprocess.run([sys.executable, file_path], env=env, capture_output=True, text=True)
+            self.assertEqual(process.returncode == 0)
+
+    def test_network_license(self):
+        if sys.version_info.minor == 12:
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.environ["NETWORK_LICENSE"],
+                ],
+                check=True,
+            )
+
+            f_values = [90, 120, 150, 180]
+            expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
+            with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+                for expected, objective in zip(
+                    expected_values, executor.map(transport, f_values)
+                ):
+                    self.assertTrue(math.isclose(expected, objective))
+
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.environ["d2e13ee1-a504-4d87-8683-d7d1e4519608"],
+                ],
+                check=True,
+            )
 
 
 def solve_suite():

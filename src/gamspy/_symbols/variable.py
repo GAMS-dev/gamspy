@@ -616,7 +616,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         self,
         n: int | None = None,
         filters: list[list[str]] | None = None,
-    ) -> list[str]:
+    ) -> str:
         """
         Returns the generated variables.
 
@@ -629,7 +629,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         Returns
         -------
-        list[str]
+        str
 
         Raises
         ------
@@ -666,7 +666,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 if matches == len(sets):
                     listings.append(listing)
 
-        return listings[:n]
+        return "\n".join(listings[:n])
 
     @property
     def records(self):
@@ -708,7 +708,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         if self._records is not None and self.domain_forwarding:
             self._domainForwarding()
-            self._mark_forwarded_domain_sets(self.domain_forwarding)
 
             # reset state check flags for all symbols in the container
             for _, symbol in self.container.data.items():

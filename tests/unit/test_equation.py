@@ -45,6 +45,7 @@ class EquationSuite(unittest.TestCase):
     def test_equation_creation(self):
         # no name is fine now
         e1 = Equation(self.m)
+        self.m.addEquation()
         with self.assertRaises(ValidationError):
             _ = e1.getDefinition()
 
@@ -830,13 +831,13 @@ class EquationSuite(unittest.TestCase):
 
         war.solve(options=Options(equation_listing_limit=10))
 
-        self.assertEqual(len(maxw.getEquationListing()), 5)
+        self.assertEqual(len(maxw.getEquationListing().split("\n")), 5)
 
         self.assertEqual(
-            len(maxw.getEquationListing(filters=[["f-bomber"]])), 1
+            len(maxw.getEquationListing(filters=[["f-bomber"]]).split("\n")), 1
         )
 
-        self.assertEqual(len(maxw.getEquationListing(n=2)), 2)
+        self.assertEqual(len(maxw.getEquationListing(n=2).split("\n")), 2)
 
     def test_equation_listing2(self):
         cont = Container()
@@ -1216,11 +1217,16 @@ class EquationSuite(unittest.TestCase):
 
         mexss.solve(options=Options(equation_listing_limit=100))
         self.assertEqual(
-            len(mr.getEquationListing(filters=[["steel"], ["monterrey"]])), 1
+            len(
+                mr.getEquationListing(
+                    filters=[["steel"], ["monterrey"]]
+                ).split("\n")
+            ),
+            1,
         )
 
         self.assertEqual(
-            len(mr.getEquationListing(filters=[["steel"], []])), 3
+            len(mr.getEquationListing(filters=[["steel"], []]).split("\n")), 3
         )
 
 

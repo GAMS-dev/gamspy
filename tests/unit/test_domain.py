@@ -24,10 +24,9 @@ class DomainSuite(unittest.TestCase):
         self.assertRaises(ValidationError, Domain, "i", "j")
 
     def test_domain_forwarding(self):
-        m = Container()
-        i = Set(m, name="i")
+        i = Set(self.m, name="i")
         _ = Parameter(
-            m,
+            self.m,
             name="p",
             domain=[i],
             domain_forwarding=True,
@@ -35,10 +34,10 @@ class DomainSuite(unittest.TestCase):
         )
         self.assertEqual(i.toList(), ["i1"])
 
-        k = Set(m, name="k")
-        j = Set(m, name="j")
+        k = Set(self.m, name="k")
+        j = Set(self.m, name="j")
         _ = Parameter(
-            m,
+            self.m,
             name="p2",
             domain=[k, j],
             domain_forwarding=[True, True],
@@ -47,10 +46,10 @@ class DomainSuite(unittest.TestCase):
         self.assertEqual(k.toList(), ["k1"])
         self.assertEqual(j.toList(), ["j1"])
 
-        k2 = Set(m, name="k2")
-        j2 = Set(m, name="j2")
+        k2 = Set(self.m, name="k2")
+        j2 = Set(self.m, name="j2")
         _ = Set(
-            m,
+            self.m,
             name="p3",
             domain=[k2, j2],
             domain_forwarding=[True, True],
@@ -58,6 +57,33 @@ class DomainSuite(unittest.TestCase):
         )
         self.assertEqual(k2.toList(), ["k2"])
         self.assertEqual(j2.toList(), ["j2"])
+
+        i2 = Set(self.m, "i2", description="plant locations")
+
+        _ = Parameter(
+            self.m,
+            "tran",
+            description="transport cost for interplant shipments (us$ per ton)",
+            domain=[i2, i2],
+            domain_forwarding=True,
+            records=[
+                ("pto-suarez", "palmasola", 87.22),
+                ("potosi", "palmasola", 31.25),
+                ("potosi", "pto-suarez", 55.97),
+                ("baranquill", "palmasola", 89.80),
+                ("baranquill", "pto-suarez", 114.56),
+                ("baranquill", "potosi", 70.68),
+                ("cartagena", "palmasola", 89.80),
+                ("cartagena", "pto-suarez", 114.56),
+                ("cartagena", "potosi", 70.68),
+                ("cartagena", "baranquill", 5.00),
+            ],
+        )
+
+        self.assertEqual(
+            i2.toList(),
+            ["pto-suarez", "potosi", "baranquill", "cartagena", "palmasola"],
+        )
 
     def test_domain_validation(self):
         times = Set(self.m, "times", records=["release", "duration"])
