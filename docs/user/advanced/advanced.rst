@@ -13,12 +13,7 @@ fundamental GAMSPy ideas and philosophy.
 .. toctree::
    :maxdepth: 1
 
-   ./indexing
-   ./assignments
    ./debugging
-   ./card_ord
-   ./lag_lead
-   ./number
    ./special_features
    ./miro
    ./model_instance
