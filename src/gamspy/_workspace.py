@@ -50,8 +50,14 @@ class Workspace:
             hasattr(self, "using_tmp_working_dir")
             and self.using_tmp_working_dir
         ):
-            if self.debugging_level == "delete":
-                shutil.rmtree(self.working_directory)
+            try:
+                if self.debugging_level == "delete":
+                    shutil.rmtree(self.working_directory)
 
-            if self.debugging_level == "keep_on_error" and not self._has_error:
-                shutil.rmtree(self.working_directory)
+                if (
+                    self.debugging_level == "keep_on_error"
+                    and not self._has_error
+                ):
+                    shutil.rmtree(self.working_directory)
+            except PermissionError:
+                ...

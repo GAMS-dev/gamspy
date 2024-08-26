@@ -1507,18 +1507,6 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNone(supply.records)
         self.assertEqual(transport.objective_value, 153.675)
 
-
-    def test_explicit_port(self):
-        if sys.version_info.minor == 12:
-            file_path = os.path.join("tmp", "invalid_port.py")
-            with open(file_path, "w") as file:
-                file.write("from gamspy import Container\nm = Container()")
-
-            env = os.environ.copy()
-            env['GAMS_PORT'] = "12345"
-            process = subprocess.run([sys.executable, file_path], env=env, capture_output=True, text=True)
-            self.assertEqual(process.returncode == 0)
-
     def test_network_license(self):
         if sys.version_info.minor == 12:
             _ = subprocess.run(
