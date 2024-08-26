@@ -218,7 +218,7 @@ def main():
         p[i] = pt[i, tt]
 
         #  Solving the model w/o MN
-        SB_lic.solve(options=Options(solver_link_type=5))
+        SB_lic.solve(options=Options(solve_link_type="memory"))
 
         Util_lic[tt] = SB_lic.objective_value
         x_lic[i, tt] = x.l[i]
@@ -227,7 +227,7 @@ def main():
         )
 
         #  Solving the model w/ MN
-        SB_lic2.solve(options=Options(solver_link_type=5))
+        SB_lic2.solve(options=Options(solve_link_type="memory"))
 
         Util_lic2[tt] = SB_lic2.objective_value
         x_lic2[i, tt] = x.l[i]

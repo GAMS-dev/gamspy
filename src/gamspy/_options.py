@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from gamspy._model import Problem
 
 MULTI_SOLVE_MAP = {"replace": 0, "merge": 1, "clear": 2}
+SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
 
 # GAMSPy to GAMS option mapping
 OPTION_MAP = {
@@ -37,10 +38,7 @@ OPTION_MAP = {
     "basis_detection_threshold": "bratio",
     "compile_error_limit": "cerr",
     "domain_violation_limit": "domlim",
-    "job_time_limit": "etlim",
-    "job_heap_limit": "heaplimit",
     "hold_fixed_variables": "holdfixed",
-    "integer_variable_upper_bound": "intvarup",
     "iteration_limit": "iterlim",
     "keep_temporary_files": "keep",
     "listing_file": "output",
@@ -61,7 +59,7 @@ OPTION_MAP = {
     "seed": "seed",
     "report_solution": "solprint",
     "show_os_memory": "showosmemory",
-    "solver_link_type": "solvelink",
+    "solve_link_type": "solvelink",
     "merge_strategy": "solveopt",
     "step_summary": "stepsum",
     "suppress_compiler_listing": "suppress",
@@ -81,7 +79,7 @@ MODEL_ATTR_OPTION_MAP = {
     "enable_prior": "priorOpt",
     "infeasibility_tolerance": "tolInfRep",
     "try_partial_integer_solution": "tryInt",
-    "try_linear_solution": "tryLinear",
+    "examine_linearity": "tryLinear",
 }
 EXECUTION_OPTIONS = {"loadpoint": "execute_loadpoint"}
 
@@ -173,20 +171,14 @@ class Options(BaseModel):
         Signals the solver to make use of a partial or near-integer-feasible solution stored in current variable 
         values to get a quick integer-feasible point. The exact form of implementation depends on the solver and 
         may be partly controlled by solver settings or options. See the solver manuals for details.
-    try_linear_solution: bool | None
+    examine_linearity: bool | None
         Examine empirical NLP model to see if there are any NLP terms active. If there are none the default LP 
         solver will be used. If this option is set to True, empirical NLP models will be examined to determine 
         if there are any active NLP terms. If there are none, the default LP solver will be used. The procedure 
         also checks to see if QCP and DNLP models can be reduced to an LP; MIQCP and MINLP can be solved as a MIP; 
         RMIQCP and RMINLP can be solved as an RMIP.
-    job_time_limit: float | None
-        Elapsed time limit (seconds)
-    job_heap_limit: float | None
-        Maximum Heap size allowed (MB)
     hold_fixed_variables: bool | None
         Treat fixed variables as constants
-    integer_variable_upper_bound: int | None
-        Set mode for default upper bounds on integer variables
     iteration_limit: int | None
         Iteration limit of solver
     keep_temporary_files: bool = False
@@ -258,24 +250,12 @@ class Options(BaseModel):
         * **Option 1**: Show resident set size reported by operating system
 
         * **Option 2**: Show virtual set size reported by operating system
-    solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
+    solve_link_type: Optional[Literal["disk", "memory"]] = None
         Solver link option
 
-        * **Option 0**: Model instance and entire GAMS state saved to scratch directory, GAMS exits (and vacates memory), and the solver script is called. After the solver terminates, GAMS restarts from the saved state and continues to executing
+        * **disk**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open - If this is not supported by the selected solver, it gets reset to **1** automatically
 
-        * **Option 1**: Model instance saved to scratch directory, the solver is called from a shell while GAMS remains open
-
-        * **Option 2**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open - If this is not supported by the selected solver, it gets reset to **1** automatically
-
-        * **Option 3**: Model instance saved to scratch directory, the solver starts the solution and GAMS continues
-
-        * **Option 4**: Model instance saved to scratch directory, the solver starts the solution and GAMS waits for the solver to come back but uses same submission process as **3** (test mode)
-
-        * **Option 5**: The model instance is passed to the solver in-memory - If this is not supported by the selected solver, it gets reset to **2** automatically
-
-        * **Option 6**: The model instance is passed to the solver in-memory, the solver starts the solution and GAMS continues
-
-        * **Option 7**: The model instance is passed to the solver in-memory, the solver starts the solution and GAMS waits for the solver to come back but uses same submission process as **6** (test mode)
+        * **memory**: The model instance is passed to the solver in-memory - If this is not supported by the selected solver, it gets reset to **disk** automatically.
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
         * **Replace**: The solution information for all equations and variables is merged into the existing solution information
 
@@ -325,12 +305,9 @@ class Options(BaseModel):
     enable_prior: Optional[bool] = None
     infeasibility_tolerance: Optional[float] = None
     try_partial_integer_solution: Optional[bool] = None
-    try_linear_solution: Optional[bool] = None
+    examine_linearity: Optional[bool] = None
     min_improvement_threshold: Optional[float] = None
-    job_time_limit: Optional[float] = None
-    job_heap_limit: Optional[float] = None
     hold_fixed_variables: Optional[bool] = None
-    integer_variable_upper_bound: Optional[int] = None
     iteration_limit: Optional[int] = None
     keep_temporary_files: Optional[int] = None
     listing_file: Optional[str] = None
@@ -352,7 +329,7 @@ class Options(BaseModel):
     seed: Optional[int] = None
     report_solution: Literal[0, 1, 2] = 0
     show_os_memory: Optional[Literal[0, 1, 2]] = None
-    solver_link_type: Optional[Literal[0, 1, 2, 3, 4, 5, 6, 7]] = None
+    solve_link_type: Optional[Literal["disk", "memory"]] = None
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
     step_summary: Optional[bool] = None
     suppress_compiler_listing: Optional[bool] = None
@@ -381,6 +358,10 @@ class Options(BaseModel):
         if "merge_strategy" in gamspy_options:
             strategy = gamspy_options["merge_strategy"]
             gamspy_options["merge_strategy"] = MULTI_SOLVE_MAP[strategy]
+
+        if "solve_link_type" in gamspy_options:
+            link_type = gamspy_options["solve_link_type"]
+            gamspy_options["solve_link_type"] = SOLVE_LINK_MAP[link_type]
 
         if "listing_file" in gamspy_options:
             os.makedirs(
