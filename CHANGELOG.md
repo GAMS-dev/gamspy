@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.0.0rc1
+---------------
+- Documentation
+  - Add gamspy probe and gamspy retrieve to the cli reference page.
+
 GAMSPy 0.14.6
 -------------
 - General
