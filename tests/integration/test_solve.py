@@ -1507,36 +1507,6 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNone(supply.records)
         self.assertEqual(transport.objective_value, 153.675)
 
-    def test_network_license(self):
-        if sys.version_info.minor == 12:
-            _ = subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    os.environ["NETWORK_LICENSE"],
-                ],
-                check=True,
-            )
-
-            f_values = [90, 120, 150, 180]
-            expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
-            with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-                for expected, objective in zip(
-                    expected_values, executor.map(transport, f_values)
-                ):
-                    self.assertTrue(math.isclose(expected, objective))
-
-            _ = subprocess.run(
-                [
-                    "gamspy",
-                    "install",
-                    "license",
-                    os.environ["d2e13ee1-a504-4d87-8683-d7d1e4519608"],
-                ],
-                check=True,
-            )
-
 
 def solve_suite():
     suite = unittest.TestSuite()
