@@ -220,7 +220,6 @@ def main(output=None):
     # Fully hedged model
     u.fx[i] = 0.0
 
-    IndexFund.status = None
     for pp, _ in p.records.itertuples(index=False):
         if IndexFund.status not in [
             ModelStatus.OptimalGlobal,
@@ -244,7 +243,6 @@ def main(output=None):
     u.up[i] = 1.0
     h.fx[i] = 0.0
 
-    IndexFund.status = None
     for pp, _ in p.records.itertuples(index=False):
         if IndexFund.status not in [
             ModelStatus.OptimalGlobal,

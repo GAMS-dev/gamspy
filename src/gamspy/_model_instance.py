@@ -205,8 +205,8 @@ class ModelInstance:
         self._update_main_container()
 
         # update model status
-        self.model.status = gp.ModelStatus(self.instance.model_status)
-        self.model.solve_status = self.instance.solver_status
+        self.model._status = gp.ModelStatus(self.instance.model_status)
+        self.model._solve_status = self.instance.solver_status
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
@@ -402,6 +402,6 @@ class ModelInstance:
         self.container.miro_protect = prev_state
 
         if self.model._objective_variable is not None:
-            self.model.objective_value = temp[
+            self.model._objective_value = temp[
                 self.model._objective_variable.name
             ].toValue()
