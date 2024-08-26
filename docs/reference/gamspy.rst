@@ -32,6 +32,7 @@ gamspy
    gamspy.Ord
    gamspy.Card
    gamspy._engine
+   gamspy._neos
    gamspy.math
    gamspy.utils
    gamspy.SpecialValues
