@@ -33,6 +33,8 @@ List of Commands
 
     install
     list
+    probe
+    retrieve
     run
     show
     update
