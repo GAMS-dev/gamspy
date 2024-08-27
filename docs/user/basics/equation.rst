@@ -273,8 +273,6 @@ equation types in GAMSPy:
      - No relationship implied between left-hand side and right-hand side. This equation type is ideally suited for use in MCP models and in variational inequalities.
    * - ``external``
      - Equation is defined by external programs. See the section `External Equations <https://www.gams.com/latest/docs/UG_ExternalEquations.html>`_ in the GAMS documentation.
-   * - ``cone``
-     - Conic constraint. See the section `Conic Programming <https://www.gams.com/latest/docs/UG_LanguageFeatures.html#UG_LanguageFeatures_ConicProgramming>`_ in the GAMS documentation.
    * - ``boolean``
      - Boolean equations. See the section :ref:`logic_equations`.
 
@@ -370,11 +368,10 @@ the following table:
    * - Lower bound
      - ``.lo``
      - Negative infinity for ``<=`` equations. Right hand side value for
-       ``>=``, ``==``, and ``type="boolean"`` equations. Zero for
-       ``type="cone"`` equations. 
+       ``>=``, ``==``, and ``type="boolean"`` equations. 
    * - Upper bound 
      - ``.up``
-     - Positive infinity for ``>=`` and ``type="cone"`` equations. Right hand
+     - Right hand
        side value for ``<=``, ``==``, and ``type="boolean"`` equations.
    * - Equation level 
      - ``.l``
