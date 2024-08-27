@@ -139,7 +139,7 @@ class EquationSuite(unittest.TestCase):
 
         self.assertEqual(
             EquationType.values(),
-            ["REGULAR", "NONBINDING", "EXTERNAL", "CONE", "BOOLEAN"],
+            ["REGULAR", "NONBINDING", "EXTERNAL", "BOOLEAN"],
         )
 
         eq6 = Equation(self.m, "eq6", domain=[i])

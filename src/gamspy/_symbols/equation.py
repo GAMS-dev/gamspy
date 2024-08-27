@@ -34,7 +34,6 @@ eq_types = ["=e=", "=l=", "=g="]
 non_regular_map = {
     "nonbinding": "=n=",
     "external": "=x=",
-    "cone": "=c=",
     "boolean": "=b=",
 }
 
@@ -43,7 +42,6 @@ class EquationType(Enum):
     REGULAR = "REGULAR"
     NONBINDING = "NONBINDING"
     EXTERNAL = "EXTERNAL"
-    CONE = "CONE"
     BOOLEAN = "BOOLEAN"
 
     @classmethod
@@ -906,7 +904,6 @@ class Equation(gt.Equation, Symbol):
         The type of equation;
         3. 'regular' -- equal, less than or greater than
         4. 'nonbinding', 'N', or '=N='  -- nonbinding relationship
-        5. 'cone', 'C', or '=C=' -- cone equation
         6. 'external', 'X', or '=X=' -- external equation
         7. 'boolean', 'B', or '=B=' -- boolean equation
 
@@ -1047,7 +1044,6 @@ def cast_type(type: str | EquationType) -> str:
             "regular",
             "nonbinding",
             "external",
-            "cone",
             "boolean",
         ]:
             raise ValueError(
