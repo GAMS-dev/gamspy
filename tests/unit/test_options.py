@@ -159,7 +159,7 @@ class OptionsSuite(unittest.TestCase):
         with open(
             os.path.join(m.working_directory, m.gamsJobName() + ".pf")
         ) as file:
-            self.assertTrue("lp = conopt" in file.read())
+            self.assertTrue('lp = "conopt"' in file.read())
 
     def test_gamspy_to_gams_options(self):
         options = Options(
@@ -605,19 +605,6 @@ class OptionsSuite(unittest.TestCase):
     def test_model_attribute_options(self):
         m = Container()
 
-        # Prepare data
-        distances = [
-            ["seattle", "new-york", 2.5],
-            ["seattle", "chicago", 1.7],
-            ["seattle", "topeka", 1.8],
-            ["san-diego", "new-york", 2.5],
-            ["san-diego", "chicago", 1.8],
-            ["san-diego", "topeka", 1.4],
-        ]
-
-        capacities = [["seattle", 350], ["san-diego", 600]]
-        demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
         # Set
         i = Set(
             m,
@@ -637,21 +624,21 @@ class OptionsSuite(unittest.TestCase):
             m,
             name="a",
             domain=i,
-            records=capacities,
+            records=self.capacities,
             description="capacity of plant i in cases",
         )
         b = Parameter(
             m,
             name="b",
             domain=j,
-            records=demands,
+            records=self.demands,
             description="demand at market j in cases",
         )
         d = Parameter(
             m,
             name="d",
             domain=[i, j],
-            records=distances,
+            records=self.distances,
             description="distance in thousands of miles",
         )
         c = Parameter(
@@ -735,6 +722,92 @@ class OptionsSuite(unittest.TestCase):
                 "eq..  2000000*x1 + 5000000*x2 - 1000000*z =E= 0"
                 in file.read()
             )
+
+    def test_loadpoint(self):
+        # Set
+        i = Set(
+            self.m,
+            name="i",
+            records=self.canning_plants,
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=self.markets,
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+
+        transport.solve(options=Options(savepoint=1))
+        self.assertEqual(transport.num_iterations, 4)
+
+        transport.solve(options=Options(loadpoint="transport_p.gdx"))
+        self.assertEqual(transport.num_iterations, 0)
 
 
 def options_suite():

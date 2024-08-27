@@ -88,14 +88,20 @@ def open_connection(
         ("127.0.0.1", int(GAMS_PORT)) if GAMS_PORT else find_free_address()
     )
 
+    initial_pf_file = os.path.join(process_directory, "gamspy.pf")
+    with open(initial_pf_file, "w") as file:
+        file.write(
+            f'incrementalMode="{address[1]}"\n'
+            f'procdir="{process_directory}"\n'
+            f'license="{license_path}"\n'
+            f'curdir="{os.getcwd()}"\n'
+        )
+
     process = subprocess.Popen(
         [
             os.path.join(system_directory, "gams"),
             "GAMSPY_JOB",
-            f"incrementalMode={address[1]}",
-            f"procdir={process_directory}",
-            f"license={license_path}",
-            f"curdir={os.getcwd()}",
+            f"pf={initial_pf_file}",
         ],
         text=True,
         stdout=subprocess.PIPE,
