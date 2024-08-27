@@ -9,6 +9,7 @@ GAMSPy 0.14.7
   - Fix empty space issue in paths.
 - Documentation
   - Add gamspy probe and gamspy retrieve to the cli reference page.
+  - Fix typo in miro docs.
 
 GAMSPy 0.14.6
 -------------
