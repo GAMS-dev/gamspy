@@ -501,7 +501,7 @@ class Options(BaseModel):
         with open(pf_file, "w", encoding="utf-8") as file:
             file.write(
                 "\n".join(
-                    [f"{key} = {value}" for key, value in all_options.items()]
+                    [f'{key} = "{value}"' for key, value in all_options.items()]
                 )
             )
 

@@ -5,6 +5,7 @@ GAMSPy 1.0.0rc1
 ---------------
 - General
   - Include variable infeasibilities in model.computeInfeasibilities().
+  - Fix empty space issue in paths.
 - Documentation
   - Add gamspy probe and gamspy retrieve to the cli reference page.
 
