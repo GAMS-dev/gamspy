@@ -49,7 +49,6 @@ EQUATION_MAP = {
     "geq": EquType.G,
     "nonbinding": EquType.N,
     "external": EquType.X,
-    "cone": EquType.C,
 }
 
 UPDATE_ACTION_MAP = {
