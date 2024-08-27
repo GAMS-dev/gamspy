@@ -55,7 +55,7 @@ so that it does not have to be specified for each run. ::
 
     gamspy run miro --model <path_to_your_model>
 
-This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. You can also skip defining the ``--model`` argument 
+This command attempts to retrieve the path to the MIRO installation from the "MIRO_PATH" environment variable. You can also skip defining the ``--path`` argument 
 in case your GAMS MIRO installation is in one of the standard paths: 
 
 - macOS: /Applications/GAMS MIRO.app/Contents/MacOS/GAMS MIRO or ~/Applications/GAMS MIRO.app/Contents/MacOS/GAMS MIRO
