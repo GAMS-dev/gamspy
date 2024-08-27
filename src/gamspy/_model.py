@@ -913,6 +913,20 @@ class Model:
             infeas_rows = utils._calculate_infeasibilities(equation)
             infeas_dict[equation.name] = infeas_rows
 
+            if equation._definition is not None:
+                names = equation._definition._find_all_symbols()
+                names = [
+                    name
+                    for name in names
+                    if name in self.container.data
+                    and isinstance(self.container[name], gp.Variable)
+                ]
+
+                for name in names:
+                    variable = self.container[name]
+                    infeas_rows = utils._calculate_infeasibilities(variable)
+                    infeas_dict[variable.name] = infeas_rows
+
         return infeas_dict
 
     def getEquationListing(

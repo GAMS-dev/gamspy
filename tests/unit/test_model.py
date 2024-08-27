@@ -484,7 +484,13 @@ class ModelSuite(unittest.TestCase):
         ]
         self.assertEqual(
             list(infeasibilities.keys()),
-            ["supply", "demand", "transport_objective"],
+            [
+                "supply",
+                "x",
+                "demand",
+                "transport_objective",
+                "transport_objective_variable",
+            ],
         )
         self.assertEqual(list(infeasibilities["supply"].columns), columns)
         self.assertEqual(
@@ -511,6 +517,40 @@ class ModelSuite(unittest.TestCase):
         self.assertEqual(
             supply.computeInfeasibilities().values.tolist(),
             [["san-diego", 1000.0, 0.0, float("-inf"), 600.0, 1.0, 400.0]],
+        )
+
+        all_infeasibilities = transport.computeInfeasibilities()
+        self.assertEqual(
+            list(all_infeasibilities.keys()),
+            [
+                "supply",
+                "x",
+                "demand",
+                "transport_objective",
+                "transport_objective_variable",
+            ],
+        )
+
+        self.assertEqual(
+            [elem.values.tolist() for elem in list(infeasibilities.values())],
+            [
+                [["san-diego", 1000.0, 0.0, -float("inf"), 600.0, 1.0, 400.0]],
+                [
+                    [
+                        "seattle",
+                        "new-york",
+                        -100.0,
+                        0.0,
+                        0.0,
+                        float("inf"),
+                        1.0,
+                        100.0,
+                    ]
+                ],
+                [],
+                [],
+                [],
+            ],
         )
 
     def test_equations(self):
