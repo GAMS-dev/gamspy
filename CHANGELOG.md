@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.0.0rc1
+---------------
+- Documentation
+  - Add a warning about the manipulation of records via .records. 
+
 GAMSPy 0.14.7
 -------------
 - General

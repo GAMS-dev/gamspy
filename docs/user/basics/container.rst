@@ -48,6 +48,12 @@ An alternative way to create a symbol in GAMSPy and add it to the container is a
     i = m.addSet("i", records = ["seattle", "san-diego"])
     print(i.records)
 
+.. warning::
+    ``.records`` attribute of a symbol contains a Pandas DataFrame which holds the symbol's records and 
+    should be treated as a read-only attribute. If you want to change the records of a symbol, use 
+    ``setRecords`` function. ``setRecords`` ensures that the GAMSPy state is synchronized with GAMS 
+    execution system.
+
 ===========================
 Reading and Writing Symbols
 ===========================
