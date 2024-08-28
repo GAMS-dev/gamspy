@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import pandas as pd
 from gams import DebugLevel
 
+import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -165,6 +166,22 @@ class Backend(ABC):
             symbols = utils._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
+            filtered_names = []
+            for name in symbols:
+                # addGamsCode symbols
+                if name not in self.container:
+                    filtered_names.append(name)
+                    continue
+
+                symbol = self.container[name]
+                if isinstance(symbol, syms.Alias):
+                    filtered_names.append(name)
+                    continue
+
+                if symbol.synchronize:
+                    filtered_names.append(name)
+
+            symbols = filtered_names
 
         if len(symbols) != 0:
             self.container._load_records_from_gdx(

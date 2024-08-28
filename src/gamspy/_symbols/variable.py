@@ -739,8 +739,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     @property
     def type(self):
