@@ -600,15 +600,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if description != "":
                 self.description = description
 
-            previous_state = self.container.miro_protect
-            self.container.miro_protect = False
+            previous_state = self.container._options.miro_protect
+            self.container._options.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container.miro_protect = previous_state
+            self.container._options.miro_protect = previous_state
 
         else:
             self.where = condition.Condition(self)
@@ -622,8 +622,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
             singleton_check(is_singleton, records)
 
-            previous_state = container.miro_protect
-            container.miro_protect = False
+            previous_state = container._options.miro_protect
+            container._options.miro_protect = False
 
             super().__init__(
                 container,
@@ -650,7 +650,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             else:
                 self.container._synch_with_gams()
 
-            container.miro_protect = previous_state
+            container._options.miro_protect = previous_state
 
     def __len__(self):
         if self.records is not None:
@@ -714,7 +714,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if (
             hasattr(self, "_is_miro_input")
             and self._is_miro_input
-            and self.container.miro_protect
+            and self.container._options.miro_protect
         ):
             raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"

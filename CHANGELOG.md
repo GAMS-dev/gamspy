@@ -14,6 +14,7 @@ GAMSPy 1.0.0rc1
   - Activation functions now return added equations as well.
   - skip_intrinsic option added for log_softmax.
   - Allow installing/uninstalling multiple solvers at once.
+  - Make miro_protect an option.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
 
