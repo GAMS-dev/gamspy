@@ -213,8 +213,6 @@ class Container(gt.Container):
         "keep_on_error"
     options : Options, optional
         Global options for the overall execution
-    miro_protect : bool, optional
-        Protects MIRO input symbol records from being re-assigned, by default True
 
     Examples
     --------
@@ -231,7 +229,6 @@ class Container(gt.Container):
         working_directory: str | None = None,
         debugging_level: str = "keep_on_error",
         options: Options | None = None,
-        miro_protect: bool = True,
     ):
         self.in_miro = MIRO_GDX_IN is not None
         self._gams_string = ""
@@ -243,7 +240,6 @@ class Container(gt.Container):
         system_directory = get_system_directory(system_directory)
 
         self._unsaved_statements: list = []
-        self.miro_protect = miro_protect
 
         super().__init__(system_directory=system_directory)
         self._network_license = is_network_license(self.system_directory)
@@ -306,6 +302,9 @@ class Container(gt.Container):
                 raise ValidationError(
                     f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
                 )
+
+        if options is None:
+            return Options()
 
         return options
 
@@ -511,8 +510,7 @@ class Container(gt.Container):
         return modified_names
 
     def _synch_with_gams(self, keep_flags: bool = False) -> DataFrame | None:
-        options = Options() if self._options is None else self._options
-        runner = backend_factory(self, options)
+        runner = backend_factory(self, self._options)
         summary = runner.run(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:

@@ -200,6 +200,8 @@ class Options(BaseModel):
         optimal solution will be within the min_improvement_threshold or less of the found solution. Observe that the option
         min_improvement_threshold is specified in absolute terms, therefore non-negative values are appropriate for both
         minimization and maximization models.
+    miro_protect:
+        Protects MIRO input symbol records from being re-assigned, by default True.
     node_limit: int | None
         Node limit in branch and bound tree
     absolute_optimality_gap: float | None
@@ -307,6 +309,7 @@ class Options(BaseModel):
     try_partial_integer_solution: Optional[bool] = None
     examine_linearity: Optional[bool] = None
     min_improvement_threshold: Optional[float] = None
+    miro_protect: bool = True
     hold_fixed_variables: Optional[bool] = None
     iteration_limit: Optional[int] = None
     keep_temporary_files: Optional[int] = None

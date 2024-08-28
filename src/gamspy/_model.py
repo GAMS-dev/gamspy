@@ -1102,11 +1102,7 @@ class Model:
         validation.validate_equations(self)
 
         if options is None:
-            options = (
-                self.container._options
-                if self.container._options
-                else gp.Options()
-            )
+            options = self.container._options
 
         if self._is_frozen:
             options._set_solver_options(

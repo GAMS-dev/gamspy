@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 
-from gamspy import Container, Parameter, Set, Variable
+from gamspy import Container, Options, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
 from gamspy.exceptions import ValidationError
 
@@ -816,6 +816,30 @@ class MiroSuite(unittest.TestCase):
             )
         except subprocess.CalledProcessError as e:
             self.fail(e)
+
+    def test_miro_protect(self):
+        m = Container()
+
+        f = Parameter(
+            m,
+            name="f",
+            description="supply of commodity at plant i (in cases)",
+            records=5 if not m.in_miro else None,
+            is_miro_input=True,
+        )
+
+        with self.assertRaises(ValidationError):
+            f.setRecords(6)
+
+        m = Container(options=Options(miro_protect=False))
+        f = Parameter(
+            m,
+            name="f",
+            description="supply of commodity at plant i (in cases)",
+            records=5 if not m.in_miro else None,
+            is_miro_input=True,
+        )
+        f.setRecords(6)
 
 
 def miro_suite():

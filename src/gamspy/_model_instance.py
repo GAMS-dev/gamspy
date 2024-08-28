@@ -383,10 +383,10 @@ class ModelInstance:
         )
         temp.read(self.instance.sync_db._gmd)
 
-        prev_state = self.container.miro_protect
+        prev_state = self.container._options.miro_protect
         for name in temp.data:
             if name in self.container.data:
-                self.container.miro_protect = False
+                self.container._options.miro_protect = False
                 self.container[name].records = temp[name].records
                 self.container[name].domain_labels = self.container[
                     name
@@ -398,7 +398,7 @@ class ModelInstance:
                     name + "_var",
                     records=temp[name + "_var"].records,
                 )
-        self.container.miro_protect = prev_state
+        self.container._options.miro_protect = prev_state
 
         if self.model._objective_variable is not None:
             self.model._objective_value = temp[
