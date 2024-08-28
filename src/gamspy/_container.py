@@ -545,8 +545,10 @@ class Container(gt.Container):
             loadables = []
             for name in modified_names:
                 symbol = self[name]
-                if isinstance(symbol, LOADABLE) and not name.startswith(
-                    gp.Model._generate_prefix
+                if (
+                    isinstance(symbol, LOADABLE)
+                    and not name.startswith(gp.Model._generate_prefix)
+                    and symbol.synchronize
                 ):
                     loadables.append(symbol)
 

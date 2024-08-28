@@ -282,8 +282,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "gams"
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -424,8 +424,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     def gamsRepr(self) -> str:
         """

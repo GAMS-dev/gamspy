@@ -344,8 +344,8 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "gams"
 
     def __repr__(self) -> str:
         return f"Equation(name={self.name}, type={self.type}, domain={self.domain})"
@@ -895,8 +895,8 @@ class Equation(gt.Equation, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     @property
     def type(self):

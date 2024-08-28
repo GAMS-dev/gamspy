@@ -681,8 +681,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "gams"
 
     def __repr__(self) -> str:
         return f"Set(name={self.name}, domain={self.domain})"
@@ -767,8 +767,8 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     def gamsRepr(self) -> str:
         """
