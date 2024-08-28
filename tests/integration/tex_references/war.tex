@@ -59,23 +59,19 @@ minw & t & minimum number of weapons required per target\\
 war\_objective &  & \\
 \hline
 \end{tabularx}
-\section*{Equation Definitions}
+\subsection*{Model Definition}
+\textbf{max} $\sum_{t} mv_{t} \cdot 1 - \prod_{w ~ | ~ td_{w,t}}  rPower((1 - td(w,t)),x(w,t)) $\\
+\textbf{s.t.}
 \subsubsection*{$maxw_{w}$}
-\begin{equation*}
-\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\qquad \forall w
-\end{equation*}
+$
+\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\hfill \forall w
+$
 \vspace{5pt}
 \hrule
 \subsubsection*{$minw_{t}$}
-\begin{equation*}
-\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\qquad \forall t ~ | ~ tm_{t}
-\end{equation*}
-\vspace{5pt}
-\hrule
-\subsubsection*{$war\_objective$}
-\begin{equation*}
-\sum_{t} mv_{t} \cdot 1 - \prod_{w ~ | ~ td_{w,t}}  rPower((1 - td(w,t)),x(w,t))  = war\_objective\_variable
-\end{equation*}
+$
+\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\hfill \forall t ~ | ~ tm_{t}
+$
 \vspace{5pt}
 \hrule
 \bigskip

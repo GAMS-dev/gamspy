@@ -956,7 +956,7 @@ class Equation(gt.Equation, Symbol):
                 domain_str = ",".join(
                     [symbol.name for symbol in self._definition.left.domain]
                 )
-                right_side = f"\\qquad \\forall {domain_str}"
+                right_side = f"\\hfill \\forall {domain_str}"
         else:
             domain_str = ",".join(
                 [
@@ -966,13 +966,13 @@ class Equation(gt.Equation, Symbol):
             )
             domain_str = f"\\forall {domain_str}"
             constraint_str = self._definition.left.condition.latexRepr()
-            right_side = f"\\qquad {domain_str} ~ | ~ {constraint_str}"
+            right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         equation_str = (
-            "\\begin{equation*}\n"
+            "$\n"
             + self._definition.right.latexRepr()
             + f"{right_side}"
-            + "\n\\end{equation*}"
+            + "\n$"
         )
 
         return equation_str

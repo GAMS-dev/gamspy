@@ -55,17 +55,13 @@ eq2 &  & \\
 ECD\_objective &  & \\
 \hline
 \end{tabularx}
-\section*{Equation Definitions}
+\subsection*{Model Definition}
+\textbf{min} $\sum_{gen} data_{gen,*} \cdot P_{gen} \cdot P_{gen} + data_{gen,*} \cdot P_{gen} + data_{gen,*}$\\
+\textbf{s.t.}
 \subsubsection*{$eq2$}
-\begin{equation*}
+$
 \sum_{gen} P_{gen} \geq load
-\end{equation*}
-\vspace{5pt}
-\hrule
-\subsubsection*{$ECD\_objective$}
-\begin{equation*}
-\sum_{gen} data_{gen,*} \cdot P_{gen} \cdot P_{gen} + data_{gen,*} \cdot P_{gen} + data_{gen,*} = ECD\_objective\_variable
-\end{equation*}
+$
 \vspace{5pt}
 \hrule
 \bigskip

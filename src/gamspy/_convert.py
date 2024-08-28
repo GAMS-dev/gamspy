@@ -158,7 +158,7 @@ class LatexConverter(Converter):
         self.param_header = "\\subsection*{Parameters}"
         self.variable_header = "\\subsection*{Variables}"
         self.equation_header = "\\subsection*{Equations}"
-        self.definitions_header = "\\subsection*{Equation Definitions}"
+        self.definitions_header = "\\subsection*{Model Definition}"
         self.footer = "\\end{document}"
         self.tex_path = os.path.join(path, model.name + ".tex")
 
@@ -166,23 +166,36 @@ class LatexConverter(Converter):
         latex_strs = [self.header]
 
         # Sets
-        latex_strs.append("\\subsection*{Sets}")
+        latex_strs.append(self.set_header)
         latex_strs.append(self.get_table(syms.Set))
 
         # Parameters
-        latex_strs.append("\\subsection*{Parameters}")
+        latex_strs.append(self.param_header)
         latex_strs.append(self.get_table(syms.Parameter))
 
         # Variables
-        latex_strs.append("\\subsection*{Variables}")
+        latex_strs.append(self.variable_header)
         latex_strs.append(self.get_table(syms.Variable))
 
         # Equations
-        latex_strs.append("\\subsection*{Equations}")
+        latex_strs.append(self.equation_header)
         latex_strs.append(self.get_table(syms.Equation))
 
         # Definitions
-        latex_strs.append("\\section*{Equation Definitions}")
+        latex_strs.append(self.definitions_header)
+        if self.model._objective is None:
+            ...
+        elif isinstance(self.model._objective, syms.Variable):
+            latex_strs.append(
+                f"\\textbf{{{str(self.model.sense).lower()}}} ${self.model._objective_variable.name}$\\\\"
+            )
+            latex_strs.append("\\textbf{s.t.}")
+        else:
+            latex_strs.append(
+                f"\\textbf{{{str(self.model.sense).lower()}}} ${self.model._objective.latexRepr()}$\\\\"
+            )
+            latex_strs.append("\\textbf{s.t.}")
+
         latex_strs.append(self.get_definitions())
 
         # Constraints
@@ -236,6 +249,13 @@ class LatexConverter(Converter):
     def get_definitions(self) -> str:
         definitions = []
         for equation in self.model.equations:
+            if (
+                not isinstance(self.model._objective, syms.Variable)
+                and self.model._objective is not None
+                and equation.name == f"{self.model.name}_objective"
+            ):
+                continue
+
             domain_str = ",".join([elem.name for elem in equation.domain])
             header = "\\subsubsection*{$" + equation.name.replace("_", "\_")
             if domain_str:
