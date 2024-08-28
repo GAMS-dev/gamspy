@@ -8,7 +8,7 @@ Usage
 
 ::
 
-  gamspy uninstall <solver|license> [OPTIONS]  
+  gamspy uninstall solver <solver_name> [OPTIONS]  
 
 .. list-table::
    :widths: 20 20 20 40
@@ -22,3 +22,7 @@ Usage
      - -a
      - 
      - Skips the pip uninstall command in case the package was manually deleted.
+
+::
+
+  gamspy uninstall license

@@ -8,7 +8,7 @@ Usage
 
 ::
 
-  gamspy install <solver|license> [OPTIONS]  
+  gamspy install solver <solver_name> [OPTIONS]  
 
 .. list-table::
    :widths: 20 20 20 40
@@ -22,6 +22,19 @@ Usage
      - -a
      - 
      - Skips the pip install command in case the package was manually installed.
+
+::
+
+  gamspy install license <license_id> [OPTIONS]  
+
+.. list-table::
+   :widths: 20 20 20 40
+   :header-rows: 1
+
+   * - Option
+     - Short
+     - Default
+     - Description
    * - -\-port 
      - 
      - 

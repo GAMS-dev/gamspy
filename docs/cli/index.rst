@@ -37,5 +37,4 @@ List of Commands
     retrieve
     run
     show
-    update
     uninstall
