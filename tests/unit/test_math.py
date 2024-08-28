@@ -499,19 +499,21 @@ class MathSuite(unittest.TestCase):
         )
 
         if relu_type == gams_math.relu_with_binary_var:
-            y = relu_type(x - c, default_lb=-100, default_ub=200)
+            y, eqs = relu_type(x - c, default_lb=-100, default_ub=200)
 
-            y, b = relu_type(
+            y, b, eqs = relu_type(
                 x - c, default_lb=-100, default_ub=200, return_binary_var=True
             )
             self.assertEqual(b.type, "binary")
+            self.assertEqual(len(eqs), 3)  # adds three equations
         else:
-            y = relu_type(x - c)
-            y, s = relu_type(x - c, return_slack_var=True)
+            y, eqs = relu_type(x - c)
+            y, s, eqs = relu_type(x - c, return_slack_var=True)
             self.assertTrue(isinstance(y, ImplicitVariable))
             self.assertTrue(isinstance(s, ImplicitVariable))
             self.assertTrue(id(y.parent) == id(s.parent))
             self.assertEqual(len(y.parent.domain), len((x - c).domain) + 1)
+            self.assertEqual(len(eqs), 1)  # adds one equation
 
         total_budget = Equation(m, name="check_budget")
         total_budget[...] = Sum(i, x[i]) <= budget
@@ -558,7 +560,8 @@ class MathSuite(unittest.TestCase):
             type="Positive",
         )
 
-        y = gams_math.relu_with_complementarity_var(x - c)
+        y, eqs = gams_math.relu_with_complementarity_var(x - c)
+        self.assertEqual(len(eqs), 2)
 
         total_budget = Equation(m, name="check_budget")
         total_budget[...] = Sum(i, x[i]) <= budget
@@ -604,12 +607,16 @@ class MathSuite(unittest.TestCase):
         self.assertRaises(IndexError, gams_math.log_softmax, x, 2)
 
         # this uses LSE in background
-        y = gams_math.log_softmax(x)
-        self.assertTrue("lseMax" in m.getEquations()[0].getDefinition())
+        y, eqs = gams_math.log_softmax(x)
+        self.assertTrue("lseMax" in eqs[0].getDefinition())
 
         # this cannot use LSE in background
-        gams_math.log_softmax(x, 0)
-        self.assertTrue("lseMax" not in m.getEquations()[1].getDefinition())
+        y, eqs = gams_math.log_softmax(x, 0)
+        self.assertTrue("lseMax" not in eqs[0].getDefinition())
+
+        # this won't use LSE in background because of skip_intrinsic
+        y, eqs = gams_math.log_softmax(x, skip_intrinsic=True)
+        self.assertTrue("lseMax" not in eqs[0].getDefinition())
 
         nll = Variable(m, name="nll")
 
@@ -636,8 +643,8 @@ class MathSuite(unittest.TestCase):
         # dim out of bounds
         self.assertRaises(IndexError, gams_math.softmax, x, 2)
 
-        gams_math.softmax(x)
-        self.assertTrue("exp" in m.getEquations()[0].getDefinition())
+        y, equations = gams_math.softmax(x)
+        self.assertTrue("exp" in equations[0].getDefinition())
 
 
 def math_suite():

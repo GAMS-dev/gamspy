@@ -154,7 +154,7 @@ We are ready to implement our first linear layer:
    forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
    forward_1[...] = z2 == w1 @ a1 + b1
 
-   a2 = gp.math.relu_with_binary_var(z2)
+   a2, _ = gp.math.relu_with_binary_var(z2)
 
 
 We define `z2` as the matrix multiplication of the weights and the previous
@@ -179,7 +179,7 @@ probabilities, we could have also added:
 
    # if you need the probabilities, however it comes at a cost
    # WE DO NOT ADD THIS, or you cannot use MIQCP but have to use MINLP
-   a3 = gp.math.softmax(z3)
+   a3, _ = gp.math.softmax(z3)
 
 Next, we define the component that specifies the adversarial attack. Our goal
 is to make the model confuse our digit with another digit while making the

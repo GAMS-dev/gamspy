@@ -9,6 +9,8 @@ GAMSPy 1.0.0rc1
   - Fix solver options issue for NEOS backend.
   - Support external equation for GAMS Engine backend.
   - Change the behaviour of expert synch mode.
+  - Activation functions now return added equations as well.
+  - skip_intrinsic option added for log_softmax
 - Documentation
   - Add a warning about the manipulation of records via .records. 
 

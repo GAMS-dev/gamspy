@@ -73,8 +73,8 @@ def main():
     x.lo = -5
     x.up = 5
 
-    y = gp.math.log_softmax(x)
-    y2 = gp.math.softmax(x)
+    y, _ = gp.math.log_softmax(x)
+    y2, _ = gp.math.softmax(x)
 
     nll = Variable(m, name="nll")  # negative log likelihood loss
 

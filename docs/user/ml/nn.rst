@@ -205,7 +205,7 @@ forward pass.
    calc_mm_2 = gp.Equation(m, name="calc_mm_2", domain=dim((batch, 10)))
    calc_mm_2[...] = z3 == a2 @ w2
 
-   a3 = gp.math.activation.log_softmax(z3)
+   a3, _ = gp.math.activation.log_softmax(z3)
 
    set_loss = gp.Equation(m, name="calc_loss")
    set_loss[...] = loss == gp.Sum(target_set[a3.domain[0], a3.domain[1]], -a3)
