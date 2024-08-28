@@ -13,9 +13,24 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry, remove_solver_entry
 
+USAGE = """gamspy [-h] [-v]
+       gamspy install license <license_id> or <path/to/license/file> [--uses-port <port>]
+       gamspy uninstall license
+       gamspy install solver <solver_name> [--skip-pip-install]
+       gamspy uninstall solver <solver_name> [--skip-pip-uninstall]
+       gamspy list solvers [--all]
+       gamspy show license
+       gamspy show base
+       gamspy probe [-o <output_path>]
+       gamspy retrieve license <your_license_id> [-i <json_file_path>] [-o <output_path>] 
+       gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
+"""
+
 
 def get_args():
-    parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
+    parser = argparse.ArgumentParser(
+        prog="gamspy", usage=USAGE, description="GAMSPy CLI"
+    )
 
     parser.add_argument(
         "command",
@@ -39,11 +54,78 @@ def get_args():
         nargs="?",
         default=None,
     )
+    parser.add_argument("name", type=str, nargs="*")
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Shows the version of GAMSPy, GAMS and gamspy_base",
+    )
 
-    parser.add_argument("-v", "--version", action="store_true")
+    install_license_group = parser.add_argument_group(
+        "gamspy install license <license_id> or <path/to/license/file>",
+        description="Options for installing a license.",
+    )
+    install_license_group.add_argument(
+        "--uses-port",
+        help="Interprocess communication starting port.",
+    )
+
+    _ = parser.add_argument_group(
+        "gamspy uninstall license",
+        description="Command to uninstall user license.",
+    )
+
+    install_solver_group = parser.add_argument_group(
+        "gamspy install solver <solver_name>",
+        description="Options for installing solvers",
+    )
+    install_solver_group.add_argument(
+        "--skip-pip-install",
+        "-s",
+        action="store_true",
+        help=(
+            "If you already have the solver installed, skip pip install and"
+            " update gamspy installed solver list."
+        ),
+    )
+
+    uninstall_solver_group = parser.add_argument_group(
+        "gamspy uninstall solver <solver_name>",
+        description="Options for uninstalling solvers",
+    )
+    uninstall_solver_group.add_argument(
+        "--skip-pip-uninstall",
+        "-u",
+        action="store_true",
+        help=(
+            "If you don't want to uninstall the package of the solver, skip"
+            " uninstall and update gamspy installed solver list."
+        ),
+    )
+
+    list_group = parser.add_argument_group(
+        "gamspy list solvers", description="`gamspy list solvers` options"
+    )
+    list_group.add_argument(
+        "-a", "--all", action="store_true", help="Shows all available solvers."
+    )
+
+    probe_group = parser.add_argument_group(
+        "gamspy probe", description="`gamspy probe` options"
+    )
+    probe_group.add_argument(
+        "--output", "-o", help="Output path for the json file."
+    )
+    probe_group.add_argument(
+        "--input",
+        "-i",
+        default=None,
+        help="json file path to retrieve a license based on node information.",
+    )
 
     miro_group = parser.add_argument_group(
-        "run miro", description="`gamspy run miro` options"
+        "gamspy run miro", description="`gamspy run miro` options"
     )
     miro_group.add_argument(
         "-g",
@@ -74,59 +156,6 @@ def get_args():
         "--skip-execution",
         help="Whether to skip model execution",
         action="store_true",
-    )
-
-    _ = parser.add_argument_group(
-        "gamspy install|uninstall license",
-        description="Options for installing/uninstalling a license.",
-    )
-
-    install_group = parser.add_argument_group(
-        "gamspy install|uninstall solver",
-        description="Options for installing solvers",
-    )
-    install_group.add_argument(
-        "name", type=str, nargs="*", default=None, help="Solver name"
-    )
-    install_group.add_argument(
-        "--skip-pip-install",
-        "-s",
-        action="store_true",
-        help=(
-            "If you already have the solver installed, skip pip install and"
-            " update gamspy installed solver list."
-        ),
-    )
-    install_group.add_argument(
-        "--skip-pip-uninstall",
-        "-u",
-        action="store_true",
-        help=(
-            "If you don't want to uninstall the package of the solver, skip"
-            " uninstall and update gamspy installed solver list."
-        ),
-    )
-    install_group.add_argument(
-        "--uses-port",
-        help="Interprocess communication starting port.",
-    )
-
-    list_group = parser.add_argument_group(
-        "list solvers", description="`gamspy list solvers` options"
-    )
-    list_group.add_argument("-a", "--all", action="store_true")
-
-    probe_group = parser.add_argument_group(
-        "probe", description="`gamspy probe` options"
-    )
-    probe_group.add_argument(
-        "--output", "-o", help="Output path for the json file."
-    )
-    probe_group.add_argument(
-        "--input",
-        "-i",
-        default=None,
-        help="json file path to retrieve a license based on node information.",
     )
 
     return parser.parse_args()
