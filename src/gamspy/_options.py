@@ -419,15 +419,16 @@ class Options(BaseModel):
                     "You need to provide a 'solver' to apply solver options."
                 )
 
-            solver_file_name = os.path.join(
-                working_directory, f"{solver.lower()}.123"
+            solver_options_file_name = os.path.join(
+                working_directory, f"{solver.lower()}.opt"
             )
 
-            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
+            with open(solver_options_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            self._solver_options_file = "123"
+            self._solver_options_file = "1"
+            self._solver_options_file_name = solver_options_file_name
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""

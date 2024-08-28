@@ -809,7 +809,9 @@ class Model:
 
         return solve_string + ";"
 
-    def _add_model_attr_options(self, options: Options) -> None:
+    def _add_runtime_options(
+        self, options: Options, backend: str = "local"
+    ) -> None:
         for key, value in options.model_dump(exclude_none=True).items():
             if key in MODEL_ATTR_OPTION_MAP:
                 if isinstance(value, bool):
@@ -821,6 +823,11 @@ class Model:
                     f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
                 )
             elif key in EXECUTION_OPTIONS:
+                if backend == "engine" and key == "loadpoint":
+                    value = os.path.relpath(
+                        value, self.container.working_directory
+                    )
+
                 self.container._add_statement(
                     f"{EXECUTION_OPTIONS[key]} '{value}';\n"
                 )
@@ -1100,25 +1107,21 @@ class Model:
                 else gp.Options()
             )
 
-        options._set_solver_options(
-            working_directory=self.container.working_directory,
-            solver=solver,
-            problem=self.problem,
-            solver_options=solver_options,
-        )
-
-        self._add_model_attr_options(options)
-
         if self._is_frozen:
+            options._set_solver_options(
+                working_directory=self.container.working_directory,
+                solver=solver,
+                problem=self.problem,
+                solver_options=solver_options,
+            )
             self.instance.solve(solver, model_instance_options, output)
             return None
-
-        self._append_solve_string()
-        self._create_model_attributes()
 
         runner = backend_factory(
             self.container,
             options,
+            solver,
+            solver_options,
             output,
             backend,
             client,

@@ -249,7 +249,7 @@ class ModelInstanceSuite(unittest.TestCase):
         transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
         self.assertTrue(
             os.path.exists(
-                os.path.join(self.m.working_directory, "conopt.123")
+                os.path.join(self.m.working_directory, "conopt.opt")
             )
         )
 

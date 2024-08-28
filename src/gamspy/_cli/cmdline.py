@@ -107,8 +107,8 @@ def get_args():
         ),
     )
     install_group.add_argument(
-        "--port",
-        help="The port number to communicate with license server. Defaults is 443.",
+        "--uses-port",
+        help="Interprocess communication starting port.",
     )
 
     list_group = parser.add_argument_group(
@@ -152,9 +152,9 @@ def install_license(args: argparse.Namespace):
     if is_alp:
         command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
 
-        if args.port:
+        if args.uses_port:
             command.append("-u")
-            command.append(str(args.port))
+            command.append(str(args.uses_port))
 
         process = subprocess.run(
             command,

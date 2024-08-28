@@ -3,6 +3,11 @@ GAMSPy CHANGELOG
 
 GAMSPy 1.0.0rc1
 ---------------
+- General
+  - Fix starting from a loadpoint for GAMS Engine backend.
+  - Fix solver options issue for GAMS Engine backend.
+  - Fix solver options issue for NEOS backend.
+  - Support external equation for GAMS Engine backend.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
 
