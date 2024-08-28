@@ -1078,7 +1078,7 @@ class SolveSuite(unittest.TestCase):
 
         self.assertTrue(
             os.path.exists(
-                f"{self.m.working_directory}{os.sep}conopt.123"
+                f"{self.m.working_directory}{os.sep}conopt.opt"
             )
         )
 

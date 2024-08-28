@@ -284,6 +284,11 @@ class NeosClient:
         except FileNotFoundError:
             pass
 
+        solver_options_str = ""
+        if hasattr(options, "_solver_options_file"):
+            with open(options._solver_options_file_name) as file:
+                solver_options_str = file.read()
+
         options.export(os.path.join(working_directory, "parameters"))
         with open(
             os.path.join(working_directory, "parameters"), encoding="utf-8"
@@ -296,15 +301,21 @@ class NeosClient:
 
         parameter_string = "\n".join(parameters + extras)
 
+        solver = "cbc"
+        problem = "milp"
+        if hasattr(options, "_solver"):
+            problem = options._solver[0].lower()
+            solver = options._solver[1]
+
         template = f"""
             <document>
-            <category>milp</category>
-            <solver>Cbc</solver>
+            <category>{problem}</category>
+            <solver>{solver}</solver>
             <inputType>GAMS</inputType>
             <email>{self.email}</email>
             <priority>{self.priority}</priority>
             <model><![CDATA[{gams_string}]]></model>
-            <options><![CDATA[]]></options>
+            <options><![CDATA[{solver_options_str}]]></options>
             <parameters><![CDATA[{parameter_string}]]></parameters>
             <gdx>{gdx_string}</gdx>
             <restart>{restart_string}</restart>
@@ -401,6 +412,8 @@ class NEOSServer(backend.Backend):
         self,
         container: Container,
         options: Options,
+        solver: str | None,
+        solver_options: dict | None,
         client: NeosClient | None,
         output: io.TextIOWrapper | None,
         model: Model,
@@ -411,7 +424,15 @@ class NEOSServer(backend.Backend):
                 "`neos_client` must be provided to solve on NEOS Server"
             )
 
-        super().__init__(container, model, options, output, load_symbols)
+        super().__init__(
+            container,
+            model,
+            options,
+            solver,
+            solver_options,
+            output,
+            load_symbols,
+        )
 
         self.client = client
         self.job_name = self.get_job_name()
@@ -426,6 +447,16 @@ class NEOSServer(backend.Backend):
     def run(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to NEOS Server
         self._create_restart_file()
+
+        self.model._add_runtime_options(self.options)
+        self.options._set_solver_options(
+            working_directory=self.container.working_directory,
+            solver=self.solver,
+            problem=self.model.problem,
+            solver_options=self.solver_options,
+        )
+        self.model._append_solve_string()
+        self.model._create_model_attributes()
 
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess("in.gdx", keep_flags)

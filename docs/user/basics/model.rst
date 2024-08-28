@@ -348,6 +348,9 @@ Alternatively, the output of NEOS can be redirected to a file by specifying the 
 
     model.solve(backend="neos", client=client, output=sys.stdout)
 
+.. note::
+    NEOS Server backend does not support loadpoint option and external equations at the moment.
+
 Asynchronous Solve
 ~~~~~~~~~~~~~~~~~~
 

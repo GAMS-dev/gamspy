@@ -100,7 +100,6 @@ class Auth(Endpoint):
     def __init__(self, client: EngineClient) -> None:
         self.client = client
         self._http = client._http
-        self.extra_model_files = client.extra_model_files
         self.engine_options = client.engine_options
 
     def post(
@@ -268,7 +267,6 @@ class Job(Endpoint):
     def __init__(self, client: EngineClient) -> None:
         self.client = client
         self._http = client._http
-        self.extra_model_files = client.extra_model_files
         self.engine_options = client.engine_options
 
     def get(self, token: str) -> tuple[int, str, int | None]:
@@ -582,7 +580,7 @@ class Job(Endpoint):
         if pf_file is not None:
             model_files.append(pf_file)
 
-        model_files += self.extra_model_files
+        model_files += self.client.extra_model_files
         model_files = get_relative_paths(model_files, working_directory)
 
         with zipfile.ZipFile(
@@ -744,6 +742,8 @@ class GAMSEngine(backend.Backend):
         container: Container,
         client: EngineClient | None,
         options: Options,
+        solver: str | None,
+        solver_options: dict | None,
         output: io.TextIOWrapper | None,
         model: Model,
         load_symbols: list[Symbol] | None,
@@ -753,7 +753,15 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
-        super().__init__(container, model, options, output, load_symbols)
+        super().__init__(
+            container,
+            model,
+            options,
+            solver,
+            solver_options,
+            output,
+            load_symbols,
+        )
         self.client = client
 
         self.job_name = self.get_job_name()
@@ -768,6 +776,16 @@ class GAMSEngine(backend.Backend):
     def run(self, keep_flags: bool = False):
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
+
+        self.model._add_runtime_options(self.options, backend="engine")
+        self.model._append_solve_string()
+        self.model._create_model_attributes()
+        self.options._set_solver_options(
+            working_directory=self.container.working_directory,
+            solver=self.solver,
+            problem=self.model.problem,
+            solver_options=self.solver_options,
+        )
 
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess(
@@ -802,18 +820,14 @@ class GAMSEngine(backend.Backend):
             file.write(gams_string)
 
         try:
-            original_extra_files = copy.deepcopy(
-                self.client.job.extra_model_files
-            )
-            self.client.job.extra_model_files = self._append_gamspy_files(
-                self.restart_file
-            )
+            original_extra_files = copy.deepcopy(self.client.extra_model_files)
+            self.client.extra_model_files = self._append_gamspy_files()
             token = self.client.job.post(
                 self.container.working_directory,
                 self.gms_file,
                 self.pf_file,
             )
-            self.client.job.extra_model_files = original_extra_files
+            self.client.extra_model_files = original_extra_files
             self.client.tokens.append(token)
 
             if not self.is_async():
@@ -940,10 +954,24 @@ class GAMSEngine(backend.Backend):
 
         self.container._send_job(self.job_name, self.pf_file)
 
-    def _append_gamspy_files(self, restart_file: str) -> list[str]:
-        extra_model_files = self.client.job.extra_model_files + [
+    def _append_gamspy_files(self) -> list[str]:
+        extra_model_files = self.client.extra_model_files + [
             self.container._gdx_in,
-            restart_file,
+            self.restart_file,
         ]
+
+        if hasattr(self.options, "_solver_options_file"):
+            extra_model_files.append(
+                os.path.join(
+                    self.container.working_directory,
+                    f"{self.options._solver[1].lower()}.opt",
+                )
+            )
+
+        if self.options.loadpoint is not None:
+            extra_model_files.append(self.options.loadpoint)
+
+        if self.model.external_module is not None:
+            extra_model_files.append(self.model.external_module)
 
         return extra_model_files

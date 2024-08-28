@@ -8,6 +8,7 @@ import sys
 import unittest
 
 import gamspy as gp
+from gamspy import EngineClient
 from gamspy.exceptions import ValidationError
 
 try:
@@ -23,12 +24,22 @@ class ExternalModuleTestSuite(unittest.TestCase):
         self.m = gp.Container()
 
         directory = str(pathlib.Path(__file__).parent.resolve())
-        external_module = os.path.join(
-            directory, "external_module", "build", "libsimple_ext_module"
+        external_module = os.path.relpath(
+            os.path.join(
+                directory, "external_module", "build", "libsimple_ext_module"
+            ),
+            os.getcwd(),
         )
 
-        if platform.system() == "Darwin" and platform.machine() == "arm64":
-            external_module += "_arm64"
+        if platform.system() == "Darwin":
+            if platform.machine() == "arm64":
+                external_module += "_arm64"
+
+            external_module += ".dylib"
+        elif platform.system() == "Linux":
+            external_module += ".so"
+        elif platform.system() == "Windows":
+            external_module += ".dll"
 
         self.external_module = external_module
 
@@ -67,6 +78,41 @@ class ExternalModuleTestSuite(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             eq1[...] = 1 * x1 + 3 * y1 >= 1
+
+    def test_external_equation_on_engine(self):
+        m = gp.Container(working_directory=".")
+        y1 = gp.Variable(m, "y1")
+        y2 = gp.Variable(m, "y2")
+        x1 = gp.Variable(m, "x1")
+        x2 = gp.Variable(m, "x2")
+
+        eq1 = gp.Equation(m, "eq1", type="external")
+        eq2 = gp.Equation(m, "eq2", type="external")
+
+        eq1[...] = 1 * x1 + 3 * y1 == 1
+        eq2[...] = 2 * x2 + 4 * y2 == 2
+
+        model = gp.Model(
+            container=m,
+            name="sincos",
+            equations=m.getEquations(),
+            problem="NLP",
+            sense="min",
+            objective=y1 + y2,
+            external_module=self.external_module,
+        )
+
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+
+        model.solve(
+            output=sys.stdout, solver="conopt", backend="engine", client=client
+        )
+        self.assertEqual(y1.toDense(), -1.0)
 
 
 def external_module_suite():

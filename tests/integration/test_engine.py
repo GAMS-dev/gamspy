@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import platform
+import shutil
 import sys
 import tempfile
 import time
@@ -473,6 +474,208 @@ class EngineSuite(unittest.TestCase):
         if platform.system() == "Linux" and sys.version_info.minor == 12:
             message = client.auth.logout()
             self.assertTrue(message is not None and isinstance(message, str))
+
+    def test_solver_options(self):
+        # Set
+        i = Set(
+            self.m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+        transport.solve(
+            output=sys.stdout,
+            solver="conopt",
+            solver_options={"rtmaxv": "1.e12"},
+            backend="engine",
+            client=client,
+        )
+
+        with open(self.m.gamsJobName() + ".lst") as file:
+            self.assertTrue(">>  rtmaxv 1.e12" in file.read())
+
+    def test_savepoint(self):
+        # Set
+        i = Set(
+            self.m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+        )
+        transport.solve(
+            output=sys.stdout,
+            client=client,
+            backend="engine",
+            options=Options(savepoint=1),
+        )
+        self.assertEqual(transport.num_iterations, 4)
+
+        savepoint_path = os.path.join(
+            self.m.working_directory, "transport_p.gdx"
+        )
+        shutil.move("transport_p.gdx", savepoint_path)
+
+        transport.solve(
+            output=sys.stdout,
+            client=client,
+            backend="engine",
+            options=Options(loadpoint=savepoint_path),
+        )
+        self.assertEqual(transport.num_iterations, 0)
 
 
 def engine_suite():
