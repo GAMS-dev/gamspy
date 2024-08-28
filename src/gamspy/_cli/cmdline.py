@@ -603,7 +603,6 @@ def retrieve(args: argparse.Namespace):
         raise ValidationError(f"Given licence id `{args.name}` is not valid!")
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    print(f"{args.name=}, {args.input=}")
     process = subprocess.run(
         [
             os.path.join(gamspy_base_dir, "gamsgetkey"),
