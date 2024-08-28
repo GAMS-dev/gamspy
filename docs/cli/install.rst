@@ -19,7 +19,7 @@ Usage
      - Default
      - Description
    * - -\-skip-pip-install 
-     - -a
+     - -s
      - 
      - Skips the pip install command in case the package was manually installed.
 

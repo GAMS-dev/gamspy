@@ -15,6 +15,7 @@ GAMSPy 1.0.0rc1
   - skip_intrinsic option added for log_softmax.
   - Allow installing/uninstalling multiple solvers at once.
   - Make miro_protect an option.
+  - Show a better help message on gamspy -h command.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
 
