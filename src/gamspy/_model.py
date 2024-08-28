@@ -251,6 +251,7 @@ class Model:
             equations, problem, sense
         )
         self.equations = list(equations)
+        self._objective = objective
         self._objective_variable = self._set_objective_variable(objective)
         if (
             self._objective_variable is not None

@@ -101,7 +101,8 @@ def open_connection(
         [
             os.path.join(system_directory, "gams"),
             "GAMSPY_JOB",
-            f"pf={initial_pf_file}",
+            "pf",
+            initial_pf_file,
         ],
         text=True,
         stdout=subprocess.PIPE,
