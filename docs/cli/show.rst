@@ -8,4 +8,8 @@ Usage
 
 ::
 
-  gamspy show <license|base>  
+  gamspy show license  
+
+::
+
+  gamspy show base  

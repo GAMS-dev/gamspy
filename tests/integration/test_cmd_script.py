@@ -116,7 +116,12 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-    def test_uninstall_solver(self):
+        _ = subprocess.run(
+            ["gamspy", "install", "solver", "minos", "mosek"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
                 ["gamspy", "uninstall", "solver", "bla"],
@@ -124,6 +129,12 @@ class CmdSuite(unittest.TestCase):
                 stderr=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
             )
+
+        _ = subprocess.run(
+            ["gamspy", "uninstall", "solver", "minos", "mosek"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
 
     def test_list_solvers(self):
         process = subprocess.run(
