@@ -289,7 +289,7 @@ class NeosClient:
             with open(options._solver_options_file_name) as file:
                 solver_options_str = file.read()
 
-        options.export(os.path.join(working_directory, "parameters"))
+        options._export(os.path.join(working_directory, "parameters"))
         with open(
             os.path.join(working_directory, "parameters"), encoding="utf-8"
         ) as file:
@@ -570,7 +570,7 @@ class NEOSServer(backend.Backend):
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
         options._extra_options["save"] = self.restart_file
-        options.export(self.pf_file)
+        options._export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 
@@ -587,6 +587,6 @@ class NEOSServer(backend.Backend):
         options = Options()
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
-        options.export(self.pf_file)
+        options._export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)

@@ -149,7 +149,7 @@ class ModelInstance:
             "save": self.save_file,
         }
         options._set_extra_options(extra_options)
-        options.export(self.pf_file)
+        options._export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 

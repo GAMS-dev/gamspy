@@ -473,7 +473,17 @@ class Options(BaseModel):
 
         return Options(**attributes)
 
-    def export(
+    def export(self, pf_file: str) -> None:
+        """
+        Exports options to the pf_file. Each line contains a key-value pair.
+
+        Parameters
+        ----------
+        pf_file : str
+        """
+        self._export(pf_file)
+
+    def _export(
         self, pf_file: str, output: io.TextIOWrapper | None = None
     ) -> None:
         """
@@ -514,14 +524,13 @@ update_type_map = {
     "0": SymbolUpdateType.Zero,
     "base_case": SymbolUpdateType.BaseCase,
     "accumulate": SymbolUpdateType.Accumulate,
-    "inherit": SymbolUpdateType._Inherit,
 }
 
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
+    update_type: Literal["0", "base_case", "accumulate"] = (
         "base_case"
     )
 
