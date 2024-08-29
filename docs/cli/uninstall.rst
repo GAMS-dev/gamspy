@@ -19,10 +19,23 @@ Usage
      - Default
      - Description
    * - -\-skip-pip-uninstall 
-     - -a
+     - -u
      - 
      - Skips the pip uninstall command in case the package was manually deleted.
+
+Example: ::
+
+  gamspy uninstall solver mosek
+
+.. note::
+    Default solvers cannot be uninstalled.
+
+Usage
+-----
 
 ::
 
   gamspy uninstall license
+
+This uninstalls a previously installed license and reinstates the GAMSPy demo license that comes with the GAMSPy installation.
+

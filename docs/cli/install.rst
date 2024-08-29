@@ -1,3 +1,5 @@
+.. _gamspy_install:
+
 gamspy install
 ==============
 
@@ -8,7 +10,7 @@ Usage
 
 ::
 
-  gamspy install solver <solver_name> [OPTIONS]  
+  gamspy install solver <solver_name(s)> [OPTIONS]  
 
 .. list-table::
    :widths: 20 20 20 40
@@ -23,9 +25,16 @@ Usage
      - 
      - Skips the pip install command in case the package was manually installed.
 
+Example: ::
+
+  $ gamspy install solver mosek conopt xpress
+
+Usage
+-----
+
 ::
 
-  gamspy install license <license_id> [OPTIONS]  
+  gamspy install license <license_id>|<path/to/license/file> [OPTIONS]  
 
 .. list-table::
    :widths: 20 20 20 40
@@ -35,7 +44,16 @@ Usage
      - Short
      - Default
      - Description
-   * - -\-port 
-     - 
-     - 
-     - Sets the port to communicate with GAMS license server.
+   * - -\-uses-port 
+     - -u
+     - 33333
+     - Interprocess communication starting port. Only relevant for local licenses that restrict concurrent use of GAMSPy.
+
+
+Example: ::
+
+  $ gamspy install license 876e5812-1222-4aba-819d-e1e91b7e2f52
+
+::  
+
+  $ gamspy install license /home/joe/gamslice.txt

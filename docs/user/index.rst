@@ -1,8 +1,8 @@
 .. _user:
 
-#################
-GAMSPy User Guide
-#################
+##########
+User Guide
+##########
 
 .. todolist::
 
@@ -10,7 +10,7 @@ This guide is an overview and explains the important features;
 details are found in :ref:`reference`.
 
 .. toctree::
-   :caption: Getting started
+   :caption: Getting Started
    :maxdepth: 1
 
    whatisgamspy
@@ -20,7 +20,7 @@ details are found in :ref:`reference`.
    Model Library <https://github.com/GAMS-dev/gamspy-examples>
 
 .. toctree::
-   :caption: Fundamentals and usage
+   :caption: Fundamentals and Usage
    :maxdepth: 2
 
    basics/basics

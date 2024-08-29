@@ -27,8 +27,9 @@ GAMSPy documentation
 
 GAMSPy is a mathematical optimization library that combines the high-performance 
 GAMS execution system with the flexible Python language. It acts as a bridge 
-between the expressive Python language and the robust GAMS system, allowing you 
-to create complex mathematical models with minimal effort.
+between the expressive Python language and the robust GAMS system with its extensive
+collection of integrated solvers, allowing you to create and solve complex mathematical
+models with minimal effort.
 
 .. grid:: 1 1 2 2
     :gutter: 2 3 4 4
@@ -58,7 +59,7 @@ to create complex mathematical models with minimal effort.
         User Guide
         ^^^
 
-        The user guide provides in-depth information on the concepts of GAMSPy with 
+        The User Guide provides in-depth information on the concepts of GAMSPy with 
         useful background information and explanations.
 
         +++
@@ -77,7 +78,7 @@ to create complex mathematical models with minimal effort.
         API Reference
         ^^^
 
-        The reference guide contains a detailed description of the functions,
+        The API Reference guide contains a detailed description of the functions,
         modules, and objects included in GAMSPy. It describes how the
         functions work and which arguments they accept.
 
@@ -97,7 +98,7 @@ to create complex mathematical models with minimal effort.
         GAMSPy Examples
         ^^^
 
-        There are over hundred examples in our GAMSPy examples repository which show 
+        There are over hundred examples in our GAMSPy Examples repository which demonstrate 
         how to develop models with GAMSPy.
 
         +++

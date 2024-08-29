@@ -2,7 +2,7 @@
 
 .. meta::
    :description: Documentation of GAMSPy Parameter (gamspy.Parameter)
-   :keywords: Parameter, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+   :keywords: Parameter, GAMSPy, gamspy, mathematical modeling, sparsity, performance
 
 *********
 Parameter
@@ -24,39 +24,40 @@ Keeping the amount of data as small as possible will certainly help. The reader 
 always be kept aware of all the assumptions made during data manipulation in order to be 
 able to reproduce the results of a study.
 
-This chapter deals with the data type *parameter*. Data for *parameters* can be entered 
-in scalar and in list oriented format. 
+This chapter deals with the data type *parameter*.
 
 
 Scalars
 =======
 
-A GAMSPy parameter with zero dimensionality is called a *scalar*. This means that there are 
+A GAMSPy parameter with zero dimensionality or emtpy domain (``domain=[]``) is called a *scalar*. This means that there are 
 no associated sets, so there is exactly one number associated with the parameter: ::
 
     from gamspy import Container, Parameter
 
     m = Container()
-
-    rho = Parameter(m, "rho", records = 0.15)
+    rho = Parameter(m, "rho", records=0.15)
     irr = Parameter(m, "irr")
-    life = Parameter(m, "life", records = 20)
+    life = Parameter(m, "life", records=20)
 
-The statement above initializes ``rho`` and ``life``, but not ``irr``. Later on an 
-assignment statement could be used to provide the value: ::
+The statement above initializes ``rho`` and ``life``, but not ``irr``. GAMSPy will automatically
+initalize the value to 0. Assignment statement or the :meth:`setRecords <gamspy.Parameter.setRecords>` function can be used to provide a value for a scalar: ::
 
     irr[...] = 0.07
+    irr.setRecords(0.08)
 
 .. note::
-    When assigning values to scalar parameters, one needs to provide the ellipsis 
-    literal ``[...]``. 
+    Assignment statements to scalar parameters need the ellipsis literal ``[...]``. 
 
 
 Parameters
 ==========
 
-The parameter format is used to enter list-oriented data, which can be indexed over 
-one or more sets.
+Higher dimensional GAMSPy parameters are indexed over one or more sets. The data records in the
+contructor, the :meth:`addParameter <gamspy.Container.addParameter>` function, or the 
+:meth:`setRecords <gamspy.Parameter.setRecords>` function needs to be in a list-like format.
+The `GAMS Transfer Python documentation <https://www.gams.com/latest/docs/API_PY_GAMSTRANSFER_MAIN_CLASSES.html#PY_GAMSTRANSFER_ADD_PARAMETER_RECORDS>`_  gives many examples including lists, pandas dataframe,
+numpy matrix, etc.
 
 The Syntax
 ----------
@@ -66,13 +67,15 @@ The following example illustrates the parameter statement ::
     from gamspy import Container, Set, Parameter
 
     m = Container()
-
-    j = Set(m, "j", records = ["mexico-df", "monterrey", "guadalajara"], 
-            description = "markets")
-    
-    dd = Parameter(m, name = "dd", domain = j, description = "distribution of demand",
-                   records = [["mexico-df", 55], 
-                              ["guadalajara", 15]])
+    j = Set(m, "j", description="markets")
+    dd = Parameter(
+        m,
+        name="dd",
+        domain=j,
+        description="distribution of demand",
+        domain_forwarding=True,
+        records=[["mexico-df", 55], ["guadalajara", 15]],
+    )
 
 The class :meth:`Parameter <gamspy.Parameter>` indicates that this is a parameter statement and 
 ``name = "dd"`` is the internal name of the parameter in GAMSPy, it is an *identifier*.
@@ -92,28 +95,35 @@ tuple.
 Besides using the :meth:`Parameter <gamspy.Parameter>` class directly, one can also facilitate the 
 :meth:`addParameter <gamspy.Container.addParameter>` method of the :meth:`Container <gamspy.Container>` class: ::
 
-    dd = AddParameter("dd", domain = j, description = "distribution of demand",
-                      records = [["mexico-df", 55], 
-                                 ["guadalajara", 15]])
+    dd = m.addParameter(
+        "dd",
+        domain=j,
+        description="distribution of demand",
+        domain_forwarding=True,
+        records=[["mexico-df", 55], ["guadalajara", 15]],
+    )
 
 
 Parameter Data for Higher Dimensions
 ------------------------------------
 
-A parameter may have several dimensions. For the current maximum number of permitted 
-dimensions, see 
-`Dimensions <https://www.gams.com/latest/docs/UG_GAMSPrograms.html#UG_GAMSPrograms_Dimensions/>`_ 
-in the GAMS documentation. The list oriented data initialization through the parameter 
+A parameter may have several dimensions. GAMSPy parameters can
+have up to 20 dimensions. The list oriented data initialization through the parameter 
 statement can be easily extended to data of higher dimensionality. The label that 
-appears in the one-dimensional case is replaced by a label tuple for higher dimensions. 
+appears in the one-dimensional case is replaced by a tuple of labels for higher dimensions. 
 Just like in the case of :ref:`multi-dimensional-sets`, the elements in the :math:`n`-tuple 
-can be created using simple data frames or tuples in a pandas MultiIndex object. ::
+can be created using various Python structures: ::
 
     from gamspy import Container, Set, Parameter
-    import pandas as pd
 
-    dist = pd.DataFrame(
-        [
+    m = Container()
+    i = Set(m, "i")
+    j = Set(m, "j")
+    a = Parameter(
+        m,
+        domain=[i, j],
+        domain_forwarding=True,
+        records=[
             ("seattle", "new-york", 2.5),
             ("seattle", "chicago", 1.7),
             ("seattle", "topeka", 1.8),
@@ -121,20 +131,13 @@ can be created using simple data frames or tuples in a pandas MultiIndex object.
             ("san-diego", "chicago", 1.8),
             ("san-diego", "topeka", 1.4),
         ],
-        columns=["from", "to", "thousand_miles"],
     )
-     
-    m = Container()
-    
-    i = Set(m, "i", ["*"], records = dist["from"].unique())
-    j = Set(m, "j", ["*"], records = dist["to"].unique())
-    a = Parameter(m, "a", [i, j], records = dist)
 
 ::
 
     In [1]: a.records
     Out[1]:
-    	     from	      to	value
+    	        i	       j	value
     0	  seattle	new-york	  2.5
     1	  seattle	 chicago	  1.7
     2	  seattle	  topeka	  1.8
@@ -147,45 +150,8 @@ It is also possible to define an empty parameter at declaration and fill it with
 (e.g. from other sources like databases or spreadsheets) later on using the 
 :meth:`setRecords <gamspy.Parameter.setRecords>` method of the :meth:`Parameter <gamspy.Parameter>` class: ::
 
-    from gamspy import Container
-
-    m = Container()
-
-    a = Parameter(m, "a", [i, j])
-    a.setRecords(dist)
-
-Example with a pandas MultiIndex object: ::
-
-    from gamspy import Container, Parameter
-    import pandas as pd
-
-    dim1 = ["a", "b", "c"]
-    dim2 = ["z", "y", "x"]
-     
-    s = pd.Series(
-        index=pd.MultiIndex.from_product([dim1, dim2]),
-        data=[i + 1 for i in range(len(dim1) * len(dim2))],
-    )
-     
-    m = Container()
-    i = Parameter(m, "i", ["*", "*"], records = s, uels_on_axes=True)
-     
-Note that for indexed assignments a copy of the symbols on the right hand side is 
-installed before the assignment is carried out. That means it does not work 
-"in-place" or recursively. ::
-    
-    Out[1]:
-      uni_0 uni_1  value
-    0     a     z    1.0
-    1     a     y    2.0
-    2     a     x    3.0
-    3     b     z    4.0
-    4     b     y    5.0
-    5     b     x    6.0
-    6     c     z    7.0
-    7     c     y    8.0
-    8     c     x    9.0
-
+    b = Parameter(m, domain=[i, j])
+    b.setRecords(a.records)
 
 The Assignment Statement
 ========================
@@ -199,7 +165,7 @@ Scalar Assignments
 
 Consider the following artificial sequence: ::
 
-    x = Parameter(m, "x", records = 1.5)
+    x = Parameter(m, "x", records=1.5)
     x[...] = 1.2
     x[...] = x + 2
 
@@ -211,17 +177,13 @@ Note that, as mentioned above, when assigning values to scalar parameters, one
 needs to provide the ellipsis literal ``[...]``. This is not necessary for 
 non-scalar parameters. 
 
-Note also that the same symbol can be used on the left and right of the ``=`` sign. The new 
-value is not available until the calculation is complete, and the operation gives the 
-expected result.
-
-
+Note also that the same symbol can be used on the left and right of the ``=`` sign.
 
 Indexed Assignments
 -------------------
 
 Performing indexed assignments offers what may be thought of as simultaneous or 
-parallel assignments and provides a concise way of specifying large amounts of data.
+parallel assignments and provides a concise way of manipulating large amounts of data.
 
 Consider the mathematical statement :math:`DJ_d = 2.75 * DA_d` for all elements of 
 :math:`d`. This means that for every member of the set :math:`d`, a value is assigned 
@@ -245,48 +207,48 @@ data elements of the parameter ``a``. ::
     from gamspy import Container, Set, Parameter
 
     m = Container()
-
-    row = Set(m, "row", records = [("r-" + str(i), i) for i in range(1,11)])
-    col = Set(m, "col", records = [("c-" + str(i), i) for i in range(1,11)])
-    sro = Set(m, "sro", records = row.records[-4:])
+    row = Set(m, "row")
+    col = Set(m, "col")
     
-    r = Parameter(m, "r", domain = row, 
-                  records = [[record, 4] 
-                             if record in row.records["uni"][:7].values 
-                             else [record, 5] 
-                             for record in row.records["uni"]])
-    c = Parameter(m, "c", domain = col, 
-                  records = [[record, 3] 
-                             if record in col.records["uni"][:5].values 
-                             else [record, 2] 
-                             for record in col.records["uni"]])
+    r = Parameter(
+        m,
+        domain=row,
+        domain_forwarding=True,
+        records=[(f"r-{r}", 4) for r in range(7)]
+        + [(f"r-{r}", 5) for r in range(7, 10)],
+    )
+    c = Parameter(
+        m,
+        domain=col,
+        domain_forwarding=True,
+        records=[(f"c-{c}", 3) for c in range(5)]
+        + [(f"c-{c}", 5) for c in range(5, 10)],
+    )
     
-    a = Parameter(m, "a", domain = [row, col])
-    a[row,col]  =  13.2 + r[row]*c[col]
+    a = Parameter(m, domain=[row, col])
+    a[row, col]  =  13.2 + r[row]*c[col]
 
 The calculation in the last statement is carried out for each of the 100 unique 
 two-label combinations that can be formed from the elements of ``row`` and ``col``. 
 An explicit formulation of the first of these assignments follows: ::
 
-    a["r-1","c-1"] = 100 + r["r-1"]*c["c-1"]
+    a["r-0", "c-0"] = 100 + r["r-0"]*c["c-0"]
 
 ::
 
-    In [1]: a.records.pivot(index="row",columns="col", values="value")
+    In [1]: a.pivot()
     Out[1]:
-    col	    c-1	    c-2	    c-3	    c-4   	c-5 	c-6 	c-7 	c-8 	c-9 	c-10
-    row										
-    r-1	    112.0	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-2	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-3	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-4	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-5	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-6	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-7	    25.2	25.2	25.2	25.2	25.2	21.2	21.2	21.2	21.2	21.2
-    r-8	    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
-    r-9	    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
-    r-10    28.2	28.2	28.2	28.2	28.2	23.2	23.2	23.2	23.2	23.2
-
+           c-0   c-1   c-2   c-3   c-4   c-5   c-6   c-7   c-8   c-9
+    r-0  112.0  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-1   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-2   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-3   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-4   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-5   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-6   25.2  25.2  25.2  25.2  25.2  33.2  33.2  33.2  33.2  33.2
+    r-7   28.2  28.2  28.2  28.2  28.2  38.2  38.2  38.2  38.2  38.2
+    r-8   28.2  28.2  28.2  28.2  28.2  38.2  38.2  38.2  38.2  38.2
+    r-9   28.2  28.2  28.2  28.2  28.2  38.2  38.2  38.2  38.2  38.2
 
 Note that for indexed assignments a copy of the symbols on the right hand side 
 is installed before the assignment is carried out. That means it does not work 
@@ -298,42 +260,53 @@ parallel assignment statement for parameter ``g``. ::
     from gamspy import Container, Set, Parameter, Ord
 
     m = Container()
-    i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,11)])
+    i = Set(m, "i", records=[f"i{i}" for i in range(11)])
     
-    f = Parameter(m, "f", domain = i, records = [["i1",1]])
-    g = Parameter(m, "g", domain = i, records = [["i1",1]])
+    f = Parameter(m, "f", domain=i, records=[("i0", 0), ("i1", 1)])
+    g = Parameter(m, "g", domain=i, records=f.records)    
     
-    
-    for idx, elem in enumerate(i):
-        if idx >= 2:
-            f[elem["uni"]] = (f[i.records.iloc[idx - 1]["uni"]] + 
-                              f[i.records.iloc[idx - 2]["uni"]])
+    for idx in range(2, 11):
+        f[f"i{idx}"] = f[f"i{idx-1}"] + f[f"i{idx-2}"]
 
-    g[i].where[Ord(i)>=2] = g[i.records.iloc[idx - 2]["uni"]] + g[i.records.iloc[idx - 1]["uni"]]
+    g[i].where[Ord(i)>=3] = g[i.lag(1)] + g[i.lag(2)]
 
 
 Resulting in the following output ::
 
     In [1]: f.records
     Out[1]:
-    	  i	value
-    0	 i1	  1.0
-    1	 i3	  1.0
-    2	 i4	  1.0
-    3	 i5	  2.0
-    4	 i6	  3.0
-    5	 i7	  5.0
-    6	 i8	  8.0
-    7	 i9	 13.0
-    8	i10	 21.0
+          i  value
+    0    i0   -0.0
+    1    i1    1.0
+    2    i2    1.0
+    3    i3    2.0
+    4    i4    3.0
+    5    i5    5.0
+    6    i6    8.0
+    7    i7   13.0
+    8    i8   21.0
+    9    i9   34.0
+    10  i10   55.0
 
     In [2]: g.records
     Out[2]:
-    	 i	value
-    0	i1	  1.0
+          i  value
+    0    i0   -0.0
+    1    i1    1.0
+    2    i2    1.0
+    3    i3    1.0
 
+Not only are many elements missing from ``g``, the element ``g['i3']`` is wrong. The reason for this is
+that the copy of ``g`` made at the beginning of the assignment consists of elements for ``i0`` and ``i1``
+only. The calculation for ``i3`` uses ``g['i1'] + g['i2']``. ``g['i2']`` is still 0 and hence we end up
+with ``g['i3'] = 1``. The example, uses of :meth:`Ord <gamspy.Ord>` and :meth:`Lag <gamspy.Set.lag>`
+operations.
 
-
+.. note::
+    There are many math functions that can be used in assignments provided by GAMSPy. The whole list can 
+    be found at :meth:`gamspy.math<gamspy.math>`. More information about each function can be found at 
+    `functions <https://gams.com/latest/docs/UG_Parameters.html#UG_Parameters_Functions>` documentation of
+    GAMS.
 
 Restricting the Domain in Assignments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -344,22 +317,21 @@ explicit labels, subsets, conditionals and tuples.
 Before we look at each method in more detail, below is an introductory example: ::
 
     from gamspy import Container, Set, Parameter
-    
+
     m = Container()
     
-    # Set with element range from "i1" to "i100"
-    i = Set(m, "i", records = [("i" + str(i), i) for i in range(1,101)]) 
-    
-    k = Parameter(m, "k", domain = i)
+    # Set with element range from "i0" to "i100"
+    i = Set(m, "i", records=[(f"i{i}", i) for i in range(101)]) 
+    k = Parameter(m, domain=i)
 
-    # Assign all values of k[i] to 4
+    # Assign 4 to all elements of k[i]
     k[i] = 4
     
-    # Assign to specific set elements of k[i]
+    # Assign 15 to the specific elements of k['i77']
     k["i77"] = 15
 
-    # Assign to a part of a Set
-    j = Set(m, "j", domain = i, records = i.records[0:8])
+    # Assign 10 to the first 10 elements of i to k[i]
+    j = Set(m, "j", domain=i, records=i.records[0:8])
     k[j] = 10
 
 The parameter ``k`` is declared over the set ``i`` but not assigned any values 
@@ -378,7 +350,7 @@ The strongest restriction of the domain is assigning a value to just one element
 Labels may be used explicitly in the context of assignments to accomplish this. 
 The following example illustrates: ::
 
-    a["r-7","c-4"] = -2.36
+    a["r-7", "c-4"] = -2.36
 
 This statement assigns a constant value to just one element of the parameter ``a``. 
 All other elements of ``a`` remain unchanged. Labels must be quoted when used in 
@@ -392,7 +364,8 @@ may be used instead.
 
 Consider the following example: ::
 
-    a[sro,"col-10"] = 2.44 -33*r[sro]
+    sro = Set(m, domain=row, records=row.records[-4:])
+    a[sro, "col-9"] = 2.44 -33*r[sro]
 
 Since the set ``sro`` was declared as a subset of the set ``row``, we can use 
 ``sro`` as a controlling index in the assignment above to make the assignment 
@@ -405,7 +378,7 @@ Conditionals
 
 ::
 
-    a[row,col].where[a[row,col] >= 100] = float("inf")
+    a[row, col].where[a[row, col] >= 100] = float("inf")
 
 This assignment has the following effect: all elements of the parameter ``a`` 
 whose value was at least 100 are assigned the value ``float("inf")``, while all other elements 
@@ -422,40 +395,34 @@ to restrict the domain. The example builds on a previous example in this section
 We repeat the whole code here for clarity. ::
 
     from gamspy import Container, Set, Parameter
-    import pandas as pd
 
     m = Container()
-    row = Set(m, "row", records = [("r-" + str(i), i) for i in range(1,11)])
-    col = Set(m, "col", records = [("c-" + str(i), i) for i in range(1,11)])
-    sro = Set(m, "sro", records = row.records[-4:])
-    
-    r = Parameter(m, "r", domain = row, 
-                  records = [[record, 4] 
-                             if record in row.records["uni"][:7].values 
-                             else [record, 5] 
-                             for record in row.records["uni"]])
-    
-    c = Parameter(m, "c", domain = col, 
-                  records = [[record, 3] 
-                             if record in col.records["uni"][:5].values 
-                             else [record, 2] 
-                             for record in col.records["uni"]])
-    
-        
-    s = pd.Series(
-       index=pd.MultiIndex.from_tuples([("r-1", "c-1"),
-                                      ("r-1", "c-10"),
-                                      ("r-10", "c-1"),
-                                      ("r-10", "c-10")])
-    )
-    
-    tuples = Set(m, name = "tuples", domain = [row, col], 
-                uels_on_axes=True, records = s)
+    row = Set(m, "row")
+    col = Set(m, "col")
 
-    a = Parameter(m, "a", domain = [row, col])
-    a[row,col]  =  13.2 + r[row]*c[col]
-    a[tuples[row,col]] = 7 + r[row]*c[col]
-    a[tuples] = 0.25 * a[tuples] 
+    r = Parameter(
+        m,
+        domain=row,
+        domain_forwarding=True,
+        records=[(f"r-{r}", 4) for r in range(7)] + [(f"r-{r}", 5) for r in range(7, 10)],
+    )
+    c = Parameter(
+        m,
+        domain=col,
+        domain_forwarding=True,
+        records=[(f"c-{c}", 3) for c in range(5)] + [(f"c-{c}", 5) for c in range(5, 10)],
+    )
+
+    tuples = Set(
+        m,
+        domain=[row, col],
+        records=[("r-0", "c-0"), ("r-0", "c-9"), ("r-9", "c-0"), ("r-9", "c-9")],
+    )
+
+    a = Parameter(m, domain=[row, col])
+    a[row, col] = 13.2 + r[row] * c[col]
+    a[tuples[row, col]] = 7 + r[row] * c[col]
+    a[tuples] = 0.25 * a[tuples]
 
 Note that we have introduced the new set ``tuples``. It is two-dimensional and contains 
 just four elements. As before, the parameter ``a`` is first assigned values for all its 
@@ -474,7 +441,7 @@ Issues with Controlling Indices
 
 Consider the following statement: ::
 
-    a[row,"col-2"] = 22 - c[col]
+    a[row, "col-2"] = 22 - c[col]
 
 GAMSPy will flag this statement as an error since ``col`` is an index on the right-hand side 
 of the equation but not on the left. 
@@ -492,7 +459,7 @@ under control.
 
 Consider the following statement as an illustration: ::
 
-    b[row,row] = 7.7 - r[row]
+    b[row, row] = 7.7 - r[row]
 
 This statement has only one controlling index, namely ``row``. One element (on the diagonal 
 of ``b``) is assigned for each element of ``row``, for a total of 10 assigned values. None 
@@ -503,8 +470,8 @@ an alias ``rowp`` for ``row`` and using this alias in the second index position.
 then be two controlling indices and GAMSPy will make assignments over all 100 values of the 
 full Cartesian product. The following example illustrates this method: ::
 
-    rowp = Alias(m, name = "rowp", alias_with = row)
-    b[row,rowp] = 7.7 - [r[row] + r[rowp]]/2
+    rowp = Alias(m, name="rowp", alias_with=row)
+    b[row, rowp] = 7.7 - [r[row] + r[rowp]]/2
 
 
 .. _indexed-operations:
@@ -513,24 +480,35 @@ Indexed Operations
 ^^^^^^^^^^^^^^^^^^
 
 GAMSPy provides the following four indexed operations: :meth:`Sum <gamspy.Sum>`, 
-:meth:`Product <gamspy.Product>`, :meth:`Smax <gamspy.Smax>`, :meth:`Smin <gamspy.Smin>`. These operations are 
+:meth:`Product <gamspy.Product>`, :meth:`Smax <gamspy.Smax>`, :meth:`Smin <gamspy.Smin>`, :meth:`Sand <gamspy.Sand>`, and :meth:`Sor <gamspy.Sor>`. These operations are 
 performed over one or more controlling indices. Consider the following simple example: ::
 
-    from gamspy import Container, Set, Parameter, Sum
+    from gamspy import Container, Set, Parameter, Sum, Smax
 
     m = Container()
+    i = Set(m, "i", description="plants")
+    p = Set(m, "p", description="product")
 
-    i = Set(m, "i", records = ["cartagena", "callao", "moron"], description = "plants")
-    p = Set(m, "p", records = ["nitr-acid", "sulf-acid", "amm-sulf"], description = "product")
-    
-    capacity = Parameter(m, "capacity", domain = [i, p], description = "capacity in tons per day", 
-                         records = [["cartagena","nitr-acid",10], ["cartagena","sulf-acid",20], ["cartagena","amm-sulf",30],
-                                    ["callao","nitr-acid",20], ["callao","sulf-acid",30], ["callao","amm-sulf",40], 
-                                    ["moron","nitr-acid",30], ["moron","sulf-acid",40], ["moron","amm-sulf",50]])
-    
-    totcap = Parameter(m, "totcap", domain = p, description = "total capacity by process")
-    
-    totcap[p] = Sum(i, capacity[i,p]);
+    capacity = Parameter(
+        m,
+        domain=[i, p],
+        description="capacity in tons per day",
+        domain_forwarding=True,
+        records=[
+            ["cartagena", "nitr-acid", 10],
+            ["cartagena", "sulf-acid", 20],
+            ["cartagena", "amm-sulf", 30],
+            ["callao", "nitr-acid", 20],
+            ["callao", "sulf-acid", 30],
+            ["callao", "amm-sulf", 40],
+            ["moron", "nitr-acid", 30],
+            ["moron", "sulf-acid", 40],
+            ["moron", "amm-sulf", 50],
+        ],
+    )
+
+    totcap = Parameter(m, domain=p, description="total capacity by process")
+    totcap[p] = Sum(i, capacity[i, p])
 
 The index over which the summation is done, ``i``, is separated from the word ``Sum`` 
 by a left bracket and from the data term capacity[i,m] by a comma. The set ``i`` is called 
@@ -547,16 +525,16 @@ It is also possible to sum simultaneously over the domain of two or more sets as
 first assignment that follows. The second assignment demonstrates the use of a less trivial 
 expression than an identifier within the indexed operation. ::
 
-    count[...] = Sum((i,j), a[i,j])
-    emp[...] = Sum(t, l[t]*p[t])
+    total_capacity = Parameter(m)
+    total_capacity[...] = Sum((i, p), capacity[i, p]) # or Sum(p, totcap[p])
 
 The equivalent mathematical forms are:
 
-:math:`count = \sum_{i}\sum_{j}A_{ij}` and :math:`emp = \sum_{t}L_tP_t`
+:math:`total_capacity = \sum_{i}\sum_{p}capacity_{ip}` or :math:`total_capacity = \sum_{p}totcap_{p}`
 
 Note that the following alternative notation may be used for the first assignment above: ::
 
-    count[...] = Sum(i, Sum(j, a[i,j]))
+    total_capacity[...] = Sum(i, Sum(p, capacity[i, p]))
 
 .. note::
     In the context of sets the :meth:`Sum <gamspy.Sum>` operator may be used to compute the 
@@ -568,9 +546,8 @@ and ``Smax`` operators is specified in the same manner as in the index for the
 :meth:`Sum <gamspy.Sum>` operator. In the following example we want to find the largest 
 capacity: ::
 
-    from gamspy import Smax
-
-    max_cap[...] = Smax((i,m),capacity[i,m])
+    max_cap = Parameter(m)
+    max_cap[...] = Smax((i, p), capacity[i,p])
 
 
 .. note::

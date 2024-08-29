@@ -116,12 +116,13 @@ def get_args():
     )
 
     retrieve_group = parser.add_argument_group(
-        "gamspy retrieve", description="`gamspy retrieve` options"
+        "gamspy retrieve license",
+        description="`gamspy retrieve license` options",
     )
     retrieve_group.add_argument(
         "--output",
         "-o",
-        help="Output path for the json file.",
+        help="Output path for the license file.",
     )
     retrieve_group.add_argument(
         "--input",

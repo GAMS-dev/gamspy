@@ -21,10 +21,8 @@ GAMSPy also allows literal indexing.
 
         m = gp.Container()
         i = gp.Set(m, records=['i1', 'i2'])
-        a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
-
+        a = gp.Parameter(m, domain=i, records=[('i1', 1), ('i2', 2)])
         a[i] = 5 # set-based indexing that sets all records of a to 5
-        print(a.records)
 
     .. code-block:: Literal
 
@@ -34,7 +32,7 @@ GAMSPy also allows literal indexing.
         i = gp.Set(m, records=['i1', 'i2'])
         a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
         a['i1'] = 5 # literal indexing that sets element 'i1' to 5 
-        a['i2'] = 6 # literal indexing that sets element 'i1' to 6
+        a['i2'] = 6 # literal indexing that sets element 'i2' to 6
 
 Slices and Ellipsis
 ===================
@@ -49,11 +47,12 @@ Usage of Slices
 Here is an example that shows how slices can be used: ::
 
     import gamspy as gp
+
     m = gp.Container()
     i = gp.Set(m, name="i")
     j = gp.Set(m, name="j")
-    d = gp.Parameter(m, name="d", domain=[i, j])
-    c = gp.Parameter(m, name="c", domain=[i, j])
+    d = gp.Parameter(m, domain=[i, j])
+    c = gp.Parameter(m, domain=[i, j])
     c[:, :] = 90 * d[:, :] / 1000
 
 Each `:` refers to the corresponding domain item in that index for the symbol. In this example, the first `:` is `i` and the second `:` is `j`. 
@@ -63,8 +62,8 @@ Hence, it is equivalent to: ::
     m = gp.Container()
     i = gp.Set(m, name="i")
     j = gp.Set(m, name="j")
-    d = gp.Parameter(m, name="d", domain=[i, j])
-    c = gp.Parameter(m, name="c", domain=[i, j])
+    d = gp.Parameter(m, domain=[i, j])
+    c = gp.Parameter(m, domain=[i, j])
     c[i, j] = 90 * d[i, j] / 1000
 
 Usage of Ellipsis
@@ -73,29 +72,32 @@ Usage of Ellipsis
 Here is an example that shows how ellipsis can be used: ::
 
     import gamspy as gp
+
     m = gp.Container()
     i = gp.Set(m, name="i")
     j = gp.Set(m, name="j")
-    d = gp.Parameter(m, name="d", domain=[i, j])
-    c = gp.Parameter(m, name="c", domain=[i, j])
+    d = gp.Parameter(m, domain=[i, j])
+    c = gp.Parameter(m, domain=[i, j])
     c[...] = 90 * d[...] / 1000
 
 This is also equivalent to: ::
 
     import gamspy as gp
+
     m = gp.Container()
     i = gp.Set(m, name="i")
     j = gp.Set(m, name="j")
-    d = gp.Parameter(m, name="d", domain=[i, j])
-    c = gp.Parameter(m, name="c", domain=[i, j])
+    d = gp.Parameter(m, domain=[i, j])
+    c = gp.Parameter(m, domain=[i, j])
     c[i, j] = 90 * d[i ,j] / 1000
 
 
 For scalar symbols (symbols with no domain), slice and ellipsis means the same thing: ::
 
     import gamspy as gp
+    
     m = gp.Container()
-    c = gp.Parameter(m, name="c")
+    c = gp.Parameter(m)
     c[...] = 90
     # or
     c[:] = 90

@@ -20,33 +20,56 @@ Every symbol in your optimization problem must belong to a :meth:`Container <gam
 All symbols added to a :meth:`Container <gamspy.Container>` can be accessed by indexing into the :meth:`Container <gamspy.Container>`::
     
     from gamspy import Container, Set
+
     m = Container()
-    i = Set(m, "i", records = ["seattle", "san-diego"])
-    print(m['i'])  # returns a reference to i variable
+    i = Set(m, "i", records=["seattle", "san-diego"])
+    print(m["i"])  # returns a reference to i variable
+
 
 Each symbol is added to the container as soon as it is created. If the symbol already exists in the container, the existing symbol is returned. ::
 
     from gamspy import Container, Set
+
     m = Container()
-    i1 = Set(m, "i", records = ["seattle", "san-diego"])
-    i2 = Set(m, "i", records = ["seattle", "san-diego"])
+    i1 = Set(m, "i", records=["seattle", "san-diego"])
+    i2 = Set(m, "i", records=["seattle", "san-diego"])
     print(id(i1) == id(i2))  # True
+
 
 Creating a symbol with the same name but different records overwrites the records of the existing symbol. ::
 
     from gamspy import Container, Set
+
     m = Container()
-    i1 = Set(m, "i", records = ["seattle", "san-diego"])
-    i2 = Set(m, "i", records = ["seattle", "san-diego", "topeka"])
+    i1 = Set(m, "i", records=["seattle", "san-diego"])
+    i2 = Set(m, "i", records=["seattle", "san-diego", "topeka"])
     print(id(i1) == id(i2))  # True
     print(i2.records)  # ['seattle', 'san-diego', 'topeka']
 
 An alternative way to create a symbol in GAMSPy and add it to the container is as follows ::
 
     from gamspy import Container
+
     m = Container()
-    i = m.addSet("i", records = ["seattle", "san-diego"])
+    i = m.addSet("i", records=["seattle", "san-diego"])
     print(i.records)
+
+Symbols can be created without any data. Data can be provided later ::
+
+    from gamspy import Container
+
+    m = Container()
+    i = m.addSet("i")
+    i.setRecords(["seattle", "san-diego"])
+    print(i.records)
+
+Explicit symbols names are useful when interacting with parts of the module where symbols need to be recognized by name, e.g. :meth:`toLatex <gamspy.Model.toLatex>` and GDX imports or exports (see below). If no name is provided, GAMSPy will autogenerate a name ::
+
+    from gamspy import Container
+    
+    m = Container()
+    i = m.addSet()
+    print(i.name) # something like 's795f053a_7d21_4a17_a6c3_5a947e051930'
 
 .. warning::
     ``.records`` attribute of a symbol contains a Pandas DataFrame which holds the symbol's records and 
@@ -58,7 +81,7 @@ An alternative way to create a symbol in GAMSPy and add it to the container is a
 Reading and Writing Symbols
 ===========================
 
-The :meth:`Container <gamspy.Container>` class provides I/O functions for reading and writing symbols.
+The :meth:`Container <gamspy.Container>` class provides I/O functions for reading and writing symbols to `GAMS Data eXchange (GDX) <https://www.gams.com/latest/docs/UG_GDX.html>`_ files.
 
 Writing
 -------
@@ -81,6 +104,7 @@ To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, u
 .. code-block:: python
 
     from gamspy import Container
+
     m = Container(load_from="data.gdx")
     print(m.listSymbols())
 
@@ -91,6 +115,7 @@ Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to 
 .. code-block:: python
 
     from gamspy import Container
+
     m = Container()
     m.read("data.gdx")
     print(m.listSymbols())
@@ -103,6 +128,7 @@ You can load the records of a symbol from a GDX file if the symbol is already de
 .. code-block:: python
 
     from gamspy import Container
+
     m = Container()
     i = Set(m, name="i")
     m.loadRecordsFromGdx("data.gdx")
@@ -115,6 +141,6 @@ if it does not already exist, :meth:`loadRecordsFromGdx <gamspy.Container.loadRe
 Generating the Executed GAMS Code
 =================================
 
-You can check the GAMS code executed so far at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
+GAMSPy utilizes the GAMS execution system and instructs it to perform certain operations. You can check these executed operations by inspecting the corresponding GAMS code at any point in the program by calling :meth:`generateGamsString <gamspy.Container.generateGamsString>`.
 This feature is available for avid GAMS users who want to see what’s being executed behind the scenes. For more details, see the 
 :ref:`generate_gams_string` section of the :doc:`/user/advanced/debugging` page. 

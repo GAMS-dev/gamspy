@@ -18,8 +18,8 @@ the numerical value of the label, they can be used for the same purpose.
 Ord
 ===
 
-The ``Ord`` operator can be used with one-dimensional sets that are static and
-ordered, as well as corresponding aliases. It returns the relative position of
+The ``Ord`` operator can be used with one-dimensional static sets, as well as
+corresponding aliases. It returns the relative position of
 elements. The following example shows how ``Ord`` can be used::
 
     import gamspy as gp
@@ -29,9 +29,9 @@ elements. The following example shows how ``Ord`` can be used::
         m,
         name="t",
         description="time periods",
-        records=[str(x) for x in range(1985, 1996)],
+        records=range(1985, 1996),
     )
-    val = gp.Parameter(m, name="val", domain=[t])
+    val = gp.Parameter(m, domain=t)
     val[t] = gp.Ord(t)
 
 Note that as a result of the statements above, the value of ``val["1985"]`` will be
@@ -43,7 +43,7 @@ growing in some analytically specified way. For example, suppose a country has
 of 1.5 percent per year. Then the population in succeeding years can be
 calculated as follows::
 
-    population[t] = 56*(1.015**(gp.Ord(t) - 1))
+    population[t] = 56 * (1.015 ** (gp.Ord(t) - 1))
 
 It is often useful to simulate general matrix operations in GAMSPy. The first
 index of a two-dimensional parameter can conveniently represent the rows, the
@@ -53,18 +53,15 @@ and the diagonal and lower triangle to zero::
 
     import gamspy as gp
     
-    m = gp.Container()
-    
+    m = gp.Container()    
     i = gp.Set(
         m,
         name="i",
         description="row and column labels",
-        records=[f"x{x+1}" for x in range(10)],
+        records=range(10),
     )
     j = gp.Alias(m, name="j", alias_with=i)
-    a = gp.Parameter(
-        m, name="a", description="a general square matrix", domain=[i, j]
-    )
+    a = gp.Parameter(m, description="a general square matrix", domain=[i, j])
     a[i, j].where[gp.Ord(i) < gp.Ord(j)] = gp.Ord(i) + gp.Ord(j)
 
 Note that in the assignment statement the logical condition
@@ -84,15 +81,14 @@ number of records of a set::
 
     import gamspy as gp
     
-    m = gp.Container()
-    
+    m = gp.Container()    
     t = gp.Set(
        m,
        name="t",
        description="time periods",
-       records=[str(x) for x in range(1985, 1996)],
+       records=range(1985, 1996),
     )
-    s = gp.Parameter(m, name="s")
+    s = gp.Parameter(m)
     s[...] = gp.Card(t)
 
 Note that ``s`` will be assigned the value ``11`` since the set ``t`` has 11 elements.
@@ -105,7 +101,7 @@ example does fix a variable for the final period found in set ``t`` only::
     
     m = gp.Container()
     t = gp.Set(m, name="i", records=["t1", "t2", "t3"])
-    c = gp.Variable(m, name="c", domain=[t])
+    c = gp.Variable(m, domain=t)
     c.fx[t].where[gp.Ord(t) == gp.Card(t)] = 1
 
 Note that the logical condition ``[gp.Ord(t) == gp.Card(t)]`` restricts the

@@ -19,24 +19,19 @@ For more information about GAMS licenses and how to get a new license, check
 
 Installing or updating your license
 ===================================
-A GAMSPy license is a either an ASCII file of six lines or 36 character identification number sent to you via e-mail. 
+A GAMSPy license is a either an ASCII file of six lines or 36 character identification number. 
 In order to install your license, all you need to do is to run::
 
-    gamspy install license <path_to_ascii_file or identification number>
+    gamspy install license <path_to_ascii_file or license id>
 
-For machines that are not connected to the internet, you can install a license with the node information by running::
-
-    gamspy install license -i <your_license_number>
-
-This option is available only for licenses in identification number format.
+For machines that are not connected to the internet and a license specified by a license id, you can probe the node's data
+and get a license via a machine connected to the internet. Details about this can be found in :ref:`gamspy_retrieve`.
 
 .. note::
     
     GAMS and GAMSPy licenses are different, which means one cannot use an existing GAMS license for GAMSPy.
-    We provide GAMSPy licenses for free if you already have a full GAMS license. 
+    We provide GAMSPy licenses for free if you already have a maintained professional GAMS license. 
     Contact sales@gams.com (with your GAMS license) to arrange for the delivery of a GAMSPy license.
-    If you were using a GAMS license for GAMSPy before v0.13.0, please contact sales@gams.com to arrange
-    a GAMSPy license.
 
 
 Uninstalling your license
@@ -44,6 +39,9 @@ Uninstalling your license
 If you no longer wish to use your license, you can uninstall it with the following command: ::
 
     gamspy uninstall license
+
+The demo license originally shipped with GAMSPy is reinstated.
+
 
 License installation for offline machines
 =========================================
@@ -63,44 +61,16 @@ is as follows:
 
     gamspy install license license.txt   
 
-GAMS/Gurobi-Link
-================
-Attempting to use the GAMS/Gurobi solver with a GAMS/Gurobi-Link license but without a 
-properly set up Gurobi license will result in a licensing error with a message describing 
-the problem. To make the GAMS/Gurobi-Link work you do not need to download or install the 
-Gurobi software but only your Gurobi license. 
-
-You only need to set the ``GRB_LICENSE_FILE`` environment variable to the path of the Gurobi 
-license (gurobi.lic) that you generated using the ``grbgetkey`` program::
-
-    export GRB_LICENSE_FILE=/path/to/gurobi.lic
-    
-Then, you can run the gamspy command as usual::
-
-    gamspy install license <path_to_your_license_file>
-
-.. note::
-    
-    To use Gurobi to solve your model, remember to specify the ``solver`` argument 
-    in the ``model.solve``.
-
-        your model definition
-
-        ...
-
-        ...
-
-        model.solve(solver="gurobi")
 
 Solvers
 -------
 
 GAMSPy comes with default solvers, and additional solvers can be installed on demand.
 
-Listing Solvers
+Listing solvers
 ===============
 
-To list the installed solvers on your machine, you can run either::
+To list the installed solvers on your machine, you can run::
 
     gamspy list solvers
 
@@ -119,27 +89,56 @@ The same information can also be accessed programmatically via the ``utils`` mod
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
 
 
-Installing/Uninstalling New Solvers
-===================================
+Installing/Uninstalling additional solvers
+==========================================
 
-TThe following command can be used to install new solvers::
+The following command can be used to install additional solvers::
 
     gamspy install solver <solver_name>
 
-Similarly, a solver can be uninstalled using::
+Similarly, a (non-default) solver can be uninstalled using::
 
     gamspy uninstall solver <solver_name>
 
-Updating Solvers
-================
+.. note::
+    
+    To use a non-default solver to solve your model, remember to specify the ``solver`` argument 
+    in the ``model.solve``. For example,
 
-If the solvers on your machine are not up-to-date, you can run::
+        your model definition
 
-    gamspy update
+        ...
 
-This will update all solvers to a version compatible with GAMSPy.
+        ...
 
-Building from source
+        model.solve(solver="xpress")
+
+Updating GAMSPy
+===============
+
+``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). If there is a new version of ``gamspy_base``, you need to reinstall the additional solvers and your license after an upgrade: ::
+
+    pip install gamspy --upgrade
+    gamspy install license 876e5812-1222-4aba-819d-e1e91b7e2f52
+    gamspy install solver mosek conopt xpress
+
+Additional steps when using solver link licenses
+================================================
+
+Attempting to use a solver with a link license only you might need to perform additional steps to make
+your solver license known to GAMSPy. For example, a GAMS/Gurobi-Link license but without a 
+properly set up Gurobi license will result in a licensing error with a message describing 
+the problem. To make the GAMS/Gurobi-Link work you do not need to download or install the 
+Gurobi software but only your Gurobi license. 
+
+You only need to set the ``GRB_LICENSE_FILE`` environment variable to the path of the Gurobi 
+license (gurobi.lic) that you generated using the ``grbgetkey`` program::
+
+    export GRB_LICENSE_FILE=/path/to/gurobi.lic
+    
+Similar instructions can be found in the `GAMS Solver Manual <https://www.gams.com/latest/docs/S_MAIN.html>`_ for solvers that offer link licenses.
+
+Building From Source
 --------------------
 
 If you are a macOS or Linux user (or using a subsystem like WSL 
