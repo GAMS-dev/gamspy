@@ -99,6 +99,8 @@ class UniverseAlias(gt.UniverseAlias):
 
         # iterator index
         self._current_index = 0
+        self.container._add_statement(self)
+        self.container._synch_with_gams()
 
     def __len__(self):
         if not self.records.empty:
@@ -110,4 +112,39 @@ class UniverseAlias(gt.UniverseAlias):
         return f"UniverseAlias(name={self.name})"
 
     def gamsRepr(self) -> str:
-        return "*"
+        """
+        Representation of the UniverseAlias in GAMS language.
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.UniverseAlias(m, name="universe")
+        >>> i.gamsRepr()
+        'universe'
+
+        """
+        return self.name
+
+    def getDeclaration(self) -> str:
+        """
+        Declaration of the UniverseAlias in GAMS
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.UniverseAlias(m, name="universe")
+        >>> i.getDeclaration()
+        'Alias(universe,*);'
+
+        """
+        return f"Alias({self.name},*);"

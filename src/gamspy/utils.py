@@ -423,7 +423,9 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     """
     set_strs = []
     for set in domain:
-        if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+        if isinstance(
+            set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
+        ):
             set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":

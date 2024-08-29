@@ -521,9 +521,6 @@ class Container(gt.Container):
         modified_names = []
 
         for name, symbol in self:
-            if isinstance(symbol, gp.UniverseAlias):
-                continue
-
             if symbol.modified:
                 if (
                     isinstance(symbol, gp.Alias)
@@ -558,9 +555,6 @@ class Container(gt.Container):
 
         strings = ["$onMultiR", "$onUNDF"]
         for statement in self._unsaved_statements:
-            if isinstance(statement, gp.UniverseAlias):
-                continue
-
             if isinstance(statement, str):
                 strings.append(statement)
             else:
