@@ -814,7 +814,7 @@ class GAMSEngine(backend.Backend):
             "input": os.path.basename(self.gms_file),
         }
         self.options._set_extra_options(extra_options)
-        self.options.export(self.pf_file, self.output)
+        self.options._export(self.pf_file, self.output)
 
         with open(self.gms_file, "w", encoding="utf-8") as file:
             file.write(gams_string)
@@ -933,7 +933,7 @@ class GAMSEngine(backend.Backend):
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
         options._extra_options["save"] = self.restart_file
-        options.export(self.pf_file)
+        options._export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 
@@ -950,7 +950,7 @@ class GAMSEngine(backend.Backend):
         options = Options()
         extra_options = self._prepare_dummy_options()
         options._set_extra_options(extra_options)
-        options.export(self.pf_file)
+        options._export(self.pf_file)
 
         self.container._send_job(self.job_name, self.pf_file)
 

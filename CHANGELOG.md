@@ -16,6 +16,7 @@ GAMSPy 1.0.0rc1
   - Allow installing/uninstalling multiple solvers at once.
   - Make miro_protect an option.
   - Show a better help message on gamspy -h command.
+  - Fix missing links in api reference.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
   - Fix model attribute return type.

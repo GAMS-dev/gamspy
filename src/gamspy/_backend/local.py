@@ -104,7 +104,7 @@ class Local(backend.Backend):
         extra_options = self._prepare_extra_options(self.job_name)
         self.options._set_extra_options(extra_options)
 
-        self.options.export(self.pf_file, self.output)
+        self.options._export(self.pf_file, self.output)
 
         try:
             self.container._job = self.job_name

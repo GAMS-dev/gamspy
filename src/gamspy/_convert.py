@@ -102,7 +102,7 @@ class GamsConverter(Converter):
         # 4. Model attribute options
         options_strs = []
         if options is not None:
-            options.export(os.path.join(self.path, f"{self.model.name}.pf"))
+            options._export(os.path.join(self.path, f"{self.model.name}.pf"))
             for key, value in options.model_dump(exclude_none=True).items():
                 if key in MODEL_ATTR_OPTION_MAP:
                     if isinstance(value, bool):
