@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     """
     Represents an Alias symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_TheAliasStatementMultipleNamesForASet
+    https://gamspy.readthedocs.io/en/latest/user/basics/alias.html
 
     Parameters
     ----------

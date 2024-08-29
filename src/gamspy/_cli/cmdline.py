@@ -21,7 +21,7 @@ USAGE = """gamspy [-h] [-v]
        gamspy list solvers [--all]
        gamspy show license
        gamspy show base
-       gamspy probe [-o <output_path>]
+       gamspy probe [-j <json_output_path>]
        gamspy retrieve license <your_license_id> [-i <json_file_path>] [-o <output_path>] 
        gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
 """
@@ -46,15 +46,12 @@ def get_args():
         ],
         type=str,
         nargs="?",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
-        "component",
-        choices=["base", "license", "miro", "solver", "solvers"],
-        type=str,
-        nargs="?",
-        default=None,
+        "component", type=str, nargs="?", default=None, help=argparse.SUPPRESS
     )
-    parser.add_argument("name", type=str, nargs="*")
+    parser.add_argument("name", type=str, nargs="*", help=argparse.SUPPRESS)
     parser.add_argument(
         "-v",
         "--version",
@@ -115,12 +112,20 @@ def get_args():
         "gamspy probe", description="`gamspy probe` options"
     )
     probe_group.add_argument(
-        "--output", "-o", help="Output path for the json file."
+        "--json-out", "-j", help="Output path for the json file."
     )
-    probe_group.add_argument(
+
+    retrieve_group = parser.add_argument_group(
+        "gamspy retrieve", description="`gamspy retrieve` options"
+    )
+    retrieve_group.add_argument(
+        "--output",
+        "-o",
+        help="Output path for the json file.",
+    )
+    retrieve_group.add_argument(
         "--input",
         "-i",
-        default=None,
         help="json file path to retrieve a license based on node information.",
     )
 
@@ -620,8 +625,8 @@ def probe(args: argparse.Namespace):
 
     print(process.stdout)
 
-    if args.output:
-        with open(args.output, "w") as file:
+    if args.json_out:
+        with open(args.json_out, "w") as file:
             file.write(process.stdout)
 
 
@@ -631,7 +636,7 @@ def retrieve(args: argparse.Namespace):
             f"Given path `{args.input}` is not a json file. Please use `gamspy retrieve license <license_id> -i <json_file_path>`"
         )
 
-    if not args.name or len(args.name) > 1:
+    if args.name is None:
         raise ValidationError(f"Given licence id `{args.name}` is not valid!")
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
@@ -648,8 +653,6 @@ def retrieve(args: argparse.Namespace):
 
     if process.returncode:
         raise ValidationError(process.stderr)
-
-    print(process.stdout)
 
     if args.output:
         with open(args.output, "w") as file:

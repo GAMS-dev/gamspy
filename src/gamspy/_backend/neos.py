@@ -543,7 +543,7 @@ class NEOSServer(backend.Backend):
         return None
 
     def _prepare_dummy_options(self) -> dict:
-        scrdir = self.container.process_directory
+        scrdir = self.container._process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,

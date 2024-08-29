@@ -8,7 +8,7 @@ Usage
 
 ::
 
-  gamspy probe -o info.json  
+  gamspy probe -j info.json  
 
 .. list-table::
    :widths: 20 20 20 40
@@ -18,7 +18,7 @@ Usage
      - Short
      - Default
      - Description
-   * - -\-output 
-     - -o
+   * - -\-json-out 
+     - -j
      - 
      - Output path to dump probed information.

@@ -215,7 +215,7 @@ Some of the features that have not been fully implemented in GAMSPy include:
     challenging. Efforts are being made to provide better ways to communicate such constructs 
     to the solver for enhanced compatibility.
 3. Extrinsic functions:
-    Some `extrinsic functions <https://www.gams.com/latest/docs/UG_ExtrinsicFunctions.html?search=extrinsic>`_ 
+    Some `extrinsic functions <https://gamspy.readthedocs.io/en/latest/user/advanced/extrinsic_functions.html>`_ 
     that are part of the GAMS language may not be fully accessible in GAMSPy. 
 
 It's important to emphasize that the GAMSPy team is actively working on expanding the feature 

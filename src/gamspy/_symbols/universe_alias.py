@@ -108,3 +108,6 @@ class UniverseAlias(gt.UniverseAlias):
 
     def __repr__(self) -> str:
         return f"UniverseAlias(name={self.name})"
+
+    def gamsRepr(self) -> str:
+        return "*"

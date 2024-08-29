@@ -415,7 +415,7 @@ class SetMixin:
 class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     """
     Represents a Set symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_SetDefinition.html
+    https://gamspy.readthedocs.io/en/latest/user/basics/set.html
 
     Parameters
     ----------
@@ -430,7 +430,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
     records : pd.DataFrame | np.ndarray | list, optional
         Records of the set.
     domain_forwarding : bool, optional
-        Whether the set forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the set forwards the domain.
     description : str, optional
         Description of the set.
     uels_on_axes : bool

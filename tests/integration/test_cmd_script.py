@@ -180,7 +180,7 @@ class CmdSuite(unittest.TestCase):
     def test_probe(self):
         node_info_path = os.path.join("tmp", "info.json")
         process = subprocess.run(
-            ["gamspy", "probe", "-o", node_info_path],
+            ["gamspy", "probe", "-j", node_info_path],
             capture_output=True,
             text=True,
         )
@@ -202,6 +202,7 @@ class CmdSuite(unittest.TestCase):
             text=True,
         )
 
+        print(process.stderr, process.stdout)
         self.assertTrue(process.returncode == 0)
 
 
