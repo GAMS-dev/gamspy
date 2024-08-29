@@ -2,7 +2,7 @@
 
 .. meta::
    :description: Documentation of GAMSPy Equation (gamspy.Equation)
-   :keywords: Equation, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+   :keywords: Equation, GAMSPy, gamspy, mathematical modeling, sparsity, performance
 
 ********
 Equation
@@ -136,15 +136,14 @@ index sets to the left of the Python assignment operator ``=`` are called the do
 of definition of the equation.
 
 .. note::
+    - GAMSPy equations can have up to 20 dimensions.
     - Domain checking ensures that the domain over which an equation is defined
       is the set (or the sets) or a subset of the set (or the sets) over which
       the equation was declared.
     - As a corollary, domain checking also catches the error of the indices being
-      listed in an inconsistent order. For example, declaring an equation with ``domain=[s,t]``
-      and then naming it in the definition as ``myequation[t,s]`` causes an error
-      (unless ``s`` and ``t`` are aliases of the same set). For more information, see section
-      `Domain Checking <https://www.gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_DomainChecking>`_ 
-      in the GAMS documentation.
+      listed in an inconsistent order. For example, declaring an equation with ``domain=[s, t]``
+      and then naming it in the definition as ``myequation[t, s]`` causes an error
+      (unless ``s`` and ``t`` are aliases of the same set). 
 
 The following is an example of indexed equation definitions, again taken from the
 `trnsport.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnsport/trnsport.py>`_ model. Besides the already introduced sets ``i``
@@ -152,11 +151,8 @@ and ``j``, parameters ``a`` and ``b`` are used as well as the :meth:`Sum<gamspy.
 
     from gamspy Parameter, Sum
 
-    capacities = [["seattle", 350], ["san-diego", 600]]
-    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
-
-    a = Parameter(m, name="a", domain=[i], records=capacities)
-    b = Parameter(m, name="b", domain=[j], records=demands)
+    a = Parameter(m, domain=i, records=[["seattle", 350], ["san-diego", 600]])
+    b = Parameter(m, domain=j, records=[["new-york", 325], ["chicago", 300], ["topeka", 275]])
 
     supply[i] = Sum(j, x[i, j]) <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]
@@ -181,12 +177,10 @@ This is possible by using the optional ``definition`` argument of
 the ``Equation`` constructor. A combined declaration and definition of the
 preceding example would look like follows::
 
-    from gamspy import Container, Equation, Sum
-
     supply = Equation(
         m,
         name="supply",
-        domain=[i],
+        domain=i,
         description="observe supply limit at plant i",
         definition=Sum(j, x[i, j]) <= a[i],
     )
@@ -194,7 +188,7 @@ preceding example would look like follows::
     demand = Equation(
         m,
         name="demand",
-        domain=[j],
+        domain=j,
         description="satisfy demand at market j",
         definition=Sum(i, x[i, j]) >= b[j],
     )
@@ -220,8 +214,11 @@ Logic Equations
 ^^^^^^^^^^^^^^^
 
 Logic equations defined by using ``type="boolean"`` in the :meth:`Equation <gamspy.Equation>` constructor
-use boolean algebra and have to evaluate to ``True`` (or ``1``) to be feasible. Most
-boolean functions can be used with the a Python operator as well as an equivalent method
+use boolean algebra and have to evaluate to ``True`` (or ``1``) to be feasible if ``==`` is not provided.
+If `== 0` (or `== 1`) is given in the equation definition this requires the expression to be evaluaed to
+``False`` (or ``0``) (or ``True`` (or ``1``)) to be feasible.
+
+Most boolean functions can be used with the a Python operator as well as an equivalent method
 from :meth:`gamspy.math<gamspy.math>`, but some do exist in the latter only. The following
 table gives an overview of the available boolean functions in GAMSPy:
 
@@ -270,9 +267,9 @@ equation types in GAMSPy:
    * - ``"regular"``
      - This is the default equation type which is suitible for ordinary equations using the ``==``, ``>=``, and ``<=`` operators in the equation definition.
    * - ``nonbinding``
-     - No relationship implied between left-hand side and right-hand side. This equation type is ideally suited for use in MCP models and in variational inequalities.
+     - No relationship implied between left-hand side and right-hand side. This equation type is ideally suited for use in MCP models and in variational inequalities. This equation type requires `==`.
    * - ``external``
-     - Equation is defined by external programs. See the section `External Equations <https://gamspy.readthedocs.io/en/latest/user/advanced/external_equations.html>`_ in the GAMS documentation.
+     - Equation is defined by external programs. This equation type requires `==`. See the section `External Equations <https://gamspy.readthedocs.io/en/latest/user/advanced/external_equations.html>`_ in the documentation.
    * - ``boolean``
      - Boolean equations. See the section :ref:`logic_equations`.
 
@@ -288,19 +285,45 @@ operators can be used. Consider the following example adapted from the model
 
     production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
 
+The list of Python operators that can be used to create expressions:
+
+======== ===========
+Operator Explanation
+======== ===========
+  \+      Addition   
+  \-      Subtraction
+  /      Division
+  \*      Multiplication
+  \*\*     Power
+  %      Mod
+  &      Logical And
+  \|      Logical Or
+  ^      Logical Xor
+  <      Lower than
+  <=     Lower than or equal 
+  >      Higher than
+  >=     Higher than or equal
+  ==     Equal
+  !=     Not equal
+  ~      Not
+  @      Matmul
+  \-      Negated
+======== ===========
+
 Functions in Equation Definitions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The functions provided by GAMSPy can be found in :meth:`gamspy.math<gamspy.math>`.
 Note that some functions like :meth:`uniform<gamspy.math.uniform>` and
-:meth:`normal<gamspy.math.normal>` are not allowed in equation definitions.
-The use of the other functions is determined by the type of arguments in the model.
-There are two types of arguments:
+:meth:`normal<gamspy.math.normal>` are not allowed in equation definitions. Further
+information about the math functions can be found `functions <https://gams.com/latest/docs/UG_Parameters.html#UG_Parameters_Functions>`_ 
+documentation of GAMS. The use of the other functions is determined by the type of arguments in the model. There are two types of arguments:
 
 - **Exogenous arguments:** The arguments are known. :ref:`Parameters <parameter>` and
-  :ref:`variable attributes<variable-attributes>` (for example, ``.l`` and ``.m`` attributes) are used
-  as arguments. The expression is evaluated once when the model is being
-  set up and most mathematical functions are allowed.
+  constants are used as arguments. :ref:`Variable attributes<variable-attributes>`
+  (for example, ``.l`` and ``.m`` attributes) are also allowed, but can be confusing
+  to the reader of the model algebra. The expression is evaluated once when the model
+  is being set up.
 
 - **Endogenous arguments:** The arguments are variables and therefore unknown
   at the time of model setup. The function will be evaluated many times at
@@ -324,9 +347,8 @@ and only in a special model type called ``DNLP``. For more details on model type
     The best way to model discontinuous functions is with binary variables.
     The result is a model of the type ``MINLP``. The GAMS model
     `absmip <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_absmip.html>`_
-    demonstrates this formulation technique for the functions ``abs``, ``min``,
-    ``max`` and ``sign``. See also section `Reformulating DNLP Models <https://www.gams.com/latest/docs/UG_NLP_GoodFormulations.html#UG_NLP_GoodFormulations_ReformulatingDNLPModels>`_ in the GAMS documentation.
-    We strongly discourage the use of the ``DNLP`` model type.
+    demonstrates this formulation technique for the functions ``abs``, ``Min``,
+    ``Max``, and ``sign``.
 
 
 Preventing Undefined Operations in Equations
@@ -341,7 +363,7 @@ cases. One way to avoid an expression becoming undefined is adding bounds to the
 respective variables. Consider the following example from the `ramsey.py <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/ramsey/ramsey.py>`_.
 model::
 
-    C.lo[t] = 0.001
+    C.lo[t] = 1e-3
     utility[...] = W == Sum(t, beta[t] * gams_math.log(C[t]))
 
 Specifying a lower bound for ``C[t]`` that is slightly larger than ``0``
@@ -359,40 +381,35 @@ are denoted by the properties ``.l``, ``.m``, ``.lo``, ``.up`` and
 the following table:
 
 .. list-table::
-   :widths: 25 10 65
+   :widths: 10 65
    :header-rows: 1
 
-   * - Equation Attribute
-     - Property
+   * - Attribute
      - Description
-   * - Lower bound
-     - ``.lo``
-     - Negative infinity for ``<=`` equations. Right hand side value for
-       ``>=``, ``==``, and ``type="boolean"`` equations. 
-   * - Upper bound 
-     - ``.up``
-     - Right hand
+   * - ``.lo``
+     - Lower bound. Negative infinity for ``<=`` equations. Right hand side value for
+       ``>=``, ``==``, and ``type="boolean"`` equations.
+   * - ``.up``
+     - Upper bound. Positive infinity for ``>=`` equations. Right hand
        side value for ``<=``, ``==``, and ``type="boolean"`` equations.
-   * - Equation level 
-     - ``.l``
-     - Level of the equation in the current solution, equal to the level of all
-       terms involving variables.
-   * - Marginal
-     - ``.m``
+   * - ``.l``
+     - Level of the equation. This attribute is reset to a new value when
+       a model containing the equation is solved. It is the calculation of the
+       left hand side using the level of all terms involving variables.
+   * - ``.m``
      - Marginal value for equation. This attribute is reset to a new value when
        a model containing the equation is solved. The marginal value for an
        equation is also known as the shadow price for the equation and in
        general not defined before solution but if present it can help to
        provide a basis for the model 
-   * - Scale factor
-     - ``.scale``
+   * - ``.scale``
      - Numerical scaling factor that scales all coefficients in the equation.
        This is only used when the model attribute ``scaleopt`` is set to ``1``.
-   * - Stage
-     - ``.stage``
+   * - ``.stage``
      - This attribute allows to assign equations to stages in a stochastic
-       program or other block structured model. Its current use is limited to
-       2-stage stochastic programs solved with ``DECIS``.
+       program or other block structured model. Similar to variable attributes
+       ``.scale`` and ``.stage`` are stored in the same location. So only either
+       of them can be used.
 
 Note that all properties except for ``.scale`` and ``.stage`` contain the
 attribute values of equations after a solution of the model has been obtained.
@@ -402,8 +419,8 @@ marginal value is also known as the dual or shadow price. Roughly speaking, the
 marginal value ``.m`` of an equation is the amount by which the value of the
 objective variable would change if the equation level were moved one unit.
 
-Equation attributes may be referenced in expressions and can be used to specify
-starting values. In addition, they serve for scaling purposes and for reporting
+Equation attributes may be referenced in assignment statements and can be assigned to
+to specify starting values. In addition, they serve for scaling purposes and for reporting
 after a model was solved. Here the attributes are not accessed via the Python
 properties, but are contained in the data of the equation itself which can be
 retrieved via the ``records`` property as the following example shows::
@@ -417,9 +434,11 @@ retrieved via the ``records`` property as the following example shows::
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve()
-    print(supply.records)
 
 ::
+
+    In [1]: supply.records
+    Out[1]:
 
                i  level  marginal  lower  upper  scale
     0    seattle  350.0      -0.0   -inf  350.0    1.0
@@ -434,49 +453,45 @@ equation attributes that cannot be assigned but may be used in computations.
 They are given in the following table:
 
 .. list-table::
-   :widths: 25 10 65
+   :widths: 10 65
    :header-rows: 1
 
-   * - Equation Attribute
-     - Property
+   * - Attribute
      - Description
-   * - Range
-     - ``.range``
+   * - ``.range``
      - The difference between the lower and upper bounds of an equation.
-   * - Slack lower bound
-     - ``.slacklo``
+   * - ``.slacklo``
      - Slack from equation lower bound. This is defined as the greater of two
        values: zero or the difference between the level value and the lower
        bound of an equation.
-   * - Slack upper bound
-     - ``.slackup``
+   * - ``.slackup``
      - Slack from equation upper bound. This is defined as the greater of two
        values: zero or the difference between the upper bound and the level
        value of an equation.
-   * - Slack
-     - ``.slack``
+   * - ``.slack``
      - Minimum slack from equation bound. This is defined as the minimum of two
        values: the slack from equation lower bound and the slack from equation
        upper bound.
-   * - Infeasibility
-     - ``.infeas``
-     - Amount by which an equation is infeasible falling below its lower bound
-       or above its upper bound. This is defined as max(0, lower bound - level, level - upper bound). 
+   * - ``.infeas``
+     - Infeasibility: Amount by which an equation is infeasible falling below its lower bound
+       or above its upper bound. This is defined as ``max[0, lower-level, level-upper]``. 
 
 `Equation` attributes can be assigned just like `Variable` attributes. For example to assign an initial value
 to a scalar equation: ::
 
   import gamspy as gp
+
   m = gp.Container()
-  e = gp.Equation(m, "e")
+  e = gp.Equation(m)
   e.l = 5
 
 or to assign an initial value to an equation with non-scalar domain: ::
 
   import gamspy as gp
+
   m = gp.Container()
-  i = gp.Set(m, "i", records=['i1', 'i2'])
-  e = gp.Equation(m, "e", domain=[i])
+  i = gp.Set(m, "i", records=range(5))
+  e = gp.Equation(m, domain=i)
   e.l[i] = 5
 
 
@@ -488,41 +503,29 @@ Inspecting Generated Equations
 The generated equations can be inspected by using :meth:`getEquationListing() <gamspy.Equation.getEquationListing>`
 function after solving the model. Note that by studying the equation listing the user may determine whether the 
 model generated by GAMS is the the model that the user has intended - an extremely important question. The equation
-listing can be filtered with ``filters`` argument, the number of equations returned can be limited with ``n`` argument, and Infeasibilities
-above a certain threshold can be filtered with ``infeasibility_threshold`` argument.
+listing can be filtered with ``filters`` argument, the number of equations returned can be limited with ``n`` argument,
+and Infeasibilities above a certain threshold can be filtered with ``infeasibility_threshold`` argument.
 
 For example, in `Mexico Steel sector model <https://github.com/GAMS-dev/gamspy/blob/develop/tests/integration/models/mexss.py>`_ 
 market requirements equation ``mr`` is defined over markets ``j`` which contain 3 elements and commodities ``cf`` which contain 
 one element. If one prints the equation listing directly, ``getEquationListing`` would return all three generated equations. ::
 
-  import gamspy as gp
-  m = gp.Container()
-  ...
-  ...
-  model_definition_goes_here
-  ...
-  ...
-  model.solve(options=Options(equation_listing_limit=100))
-  print(mr.getEquationListing())
+  model.solve(options=gp.Options(equation_listing_limit=100))
 
-Generated equations: ::
+::
 
-  mr(steel,mexico-df)..  x(steel,ahmsa,mexico-df) + x(steel,fundidora,mexico-df) + x(steel,sicartsa,mexico-df) + x(steel,hylsa,mexico-df) + x(steel,hylsap,mexico-df) + v(steel,mexico-df) =G= 4.01093 ; (LHS = 0, INFES = 4.01093 ****)
-  mr(steel,monterrey)..  x(steel,ahmsa,monterrey) + x(steel,fundidora,monterrey) + x(steel,sicartsa,monterrey) + x(steel,hylsa,monterrey) + x(steel,hylsap,monterrey) + v(steel,monterrey) =G= 2.18778 ; (LHS = 0, INFES = 2.18778 ****)
-  mr(steel,guadalaja)..  x(steel,ahmsa,guadalaja) + x(steel,fundidora,guadalaja) + x(steel,sicartsa,guadalaja) + x(steel,hylsa,guadalaja) + x(steel,hylsap,guadalaja) + v(steel,guadalaja) =G= 1.09389 ; (LHS = 0, INFES = 1.09389 ****)
+  In [1]: mr.getEquationListing()
+  Out[1]:
+    mr(steel,mexico-df)..  x(steel,ahmsa,mexico-df) + x(steel,fundidora,mexico-df) + x(steel,sicartsa,mexico-df) + x(steel,hylsa,mexico-df) + x(steel,hylsap,mexico-df) + v(steel,mexico-df) =G= 4.01093 ; (LHS = 0, INFES = 4.01093 ****)
+    mr(steel,monterrey)..  x(steel,ahmsa,monterrey) + x(steel,fundidora,monterrey) + x(steel,sicartsa,monterrey) + x(steel,hylsa,monterrey) + x(steel,hylsap,monterrey) + v(steel,monterrey) =G= 2.18778 ; (LHS = 0, INFES = 2.18778 ****)
+    mr(steel,guadalaja)..  x(steel,ahmsa,guadalaja) + x(steel,fundidora,guadalaja) + x(steel,sicartsa,guadalaja) + x(steel,hylsa,guadalaja) + x(steel,hylsap,guadalaja) + v(steel,guadalaja) =G= 1.09389 ; (LHS = 0, INFES = 1.09389 ****)
 
 One can alternatively filter certain equations by using the ``filters`` argument. For example, if one only wants to see 
 the equations for monterrey market, they can provide the elements as follows: ::
 
-  import gamspy as gp
-  m = gp.Container()
-  ...
-  ...
-  model_definition_goes_here
-  ...
-  ...
-  model.solve(options=Options(equation_listing_limit=100))
-  print(mr.getEquationListing(filters=[[], ['monterrey']]))
+  In [1]: mr.getEquationListing(filters=[[], ['monterrey']])
+  Out[1]:
+    mr(steel,monterrey)..  x(steel,ahmsa,monterrey) + x(steel,fundidora,monterrey) + x(steel,sicartsa,monterrey) + x(steel,hylsa,monterrey) + x(steel,hylsap,monterrey) + v(steel,monterrey) =G= 2.18778 ; (LHS = 0, INFES = 2.18778 ****)
 
 ``filters`` argument is a list of lists where each list specifies the elements to be gathered. 
 If an empty list is given as in the example above, it means all elements. 
@@ -530,8 +533,13 @@ If an empty list is given as in the example above, it means all elements.
 Number of equations returned can be filtered with ``n`` argument. For example, if ``n`` is set to 1,
 the function return only the first equation.
 
-If one wants to ignore equations that have an infeasibility above a certain threshold, they can 
-specify ``infeasibility_threshold`` argument. Any equation that has higher infeasibility than
+.. note::
+    The equation listing provides information about the value of the left hand side (``LHS``) and the
+    infeasbility ``max[0, lower-level, level-upper]`` (``INFES``) of the equations. This information is based on
+    the *input* point, not the solution that is calculated by the solve.
+
+If one wants to ignore equations that have an infeasibility below a certain threshold, one can 
+specify the ``infeasibility_threshold`` argument. Any equation that has infeasibility smaller than
 infeasibility_threshold will be filtered out.
 
 .. note::

@@ -22,22 +22,23 @@ symbol below:
         import gamspy as gp
 
         m = gp.Container()
-        i = gp.Set(m, "i", records=['i1','i2'])
-        a = gp.Alias(m, "a", alias_with=i)
-        p = gp.Parameter(m, 'p', domain=[i], records=[['i1','1'], ['i2','2']])
-        v = gp.Variable(m, "v", domain=[i])
-        z = gp.Variable(m, "z")
-        e = gp.Equation(m, "e", domain=[i])
+
+        i = gp.Set(m, 'i', records=['i1','i2'])
+        a = gp.Alias(m, 'a', alias_with=i)
+        p = gp.Parameter(m, 'p', domain=i, records=[['i1','1'], ['i2','2']])
+        v = gp.Variable(m, 'v', domain=i)
+        z = gp.Variable(m, 'z')
+        e = gp.Equation(m, 'e', domain=i)
         e[i] = v[i] + p[i] <= z
-        model = gp.Model(m, "my_model", equations=[e], problem="lp", sense="min", objective=z)
-        model.solve()
+        my_model = gp.Model(m, equations=[e], problem="lp", sense="min", objective=z)
+        my_model.solve()
 
     .. code-block:: GAMS
 
         Set i / i1, i2 /;
         Alias (i, a);
-        Parameter p / i1 1, i2 2 /;
-        Variable v(i);
+        Parameter p(i) / i1 1, i2 2 /;
+        Variable v(i), z;
         Equation e(i);
         e(i) .. v(i) + p(i) =l= z
         Model my_model / e /;
@@ -55,8 +56,8 @@ Frequently used GAMS operations which accept an index list and an expression can
         from gamspy import Sum, Product, Smin, Smax
         
         m = gp.Container()
-        i = gp.Set(m, "i", records=['i1','i2'])
-        a = gp.Parameter(m, 'a', domain=[i], records=[['i1','1'], ['i2','2']])
+        i = gp.Set(m, 'i', records=['i1','i2'])
+        a = gp.Parameter(m, 'a', domain=i, records=[['i1','1'], ['i2','2']])
         z = gp.Variable(m, 'z')
 
         eq = gp.Equation(m, name="eq")
@@ -65,7 +66,7 @@ Frequently used GAMS operations which accept an index list and an expression can
     .. code-block:: GAMS
 
         Set i / i1, i2 /;
-        Parameter a / i1 1, i2 2 /;
+        Parameter a(i) / i1 1, i2 2 /;
         Variable z;
         Equation eq;
         eq .. sum(i, a(i)) =l= z;
@@ -83,18 +84,18 @@ Card and Ord operations can be translated as follows:
         import math
 
         m = gp.Container()
-        i = Set(m, name="i", records=[str(idx) for idx in range(0, 181)])
+        i = Set(m, name='i', records=[f'i{i}' for i in range(181)])
         step = Parameter(m, name="step", records=math.pi / 180)
-        omega = Parameter(m, name="omega", domain=[i])
+        omega = Parameter(m, name="omega", domain=i)
         omega[i] = (Ord(i) - 1) * step
 
     .. code-block:: GAMS
         
-        Set i / i0..i180 /;
+        Set i / i0*i180 /;
         Parameter step;
         step = pi / 180;
         Parameter omega(i);
-        omega(i) = (Ord(i) - 1) * step;
+        omega(i) = (ord(i) - 1) * step;
 
 Domain
 ------
@@ -108,14 +109,13 @@ This class is exclusively for conditioning on a domain with more than one set.
         import gamspy as gp
 
         m = gp.Container()
-
-        bus = gp.Set(m, "bus", records=["i" + str(buses) for buses in range(1, 7)])
+        bus = gp.Set(m, name="bus", records=[f"i{b}" for b in range(1, 7)])
         node = Alias(m, name="node", alias_with=bus)
-        conex = Set(m,"conex",domain=[bus, bus])
+        conex = Set(m, name="conex", domain=[bus, bus])
 
-        branch = Parameter(m,"branch",[bus, node, "*"],records=records)
+        branch = Parameter(m,"branch", [bus, node, "*"] ,records=...)
 
-        p = Parameter(m, name="M")
+        p = Parameter(m, name="p")
         
         conex[bus, node].where[branch[bus, node, "x"]] = True
         conex[bus, node].where[conex[node, bus]] = True
@@ -127,7 +127,7 @@ This class is exclusively for conditioning on a domain with more than one set.
 
     .. code-block:: GAMS
         
-        Set bus / i1..i6 /;
+        Set bus / i1*i6 /;
         Alias (bus, node);
         Set conex(bus, bus);
         
@@ -137,7 +137,7 @@ This class is exclusively for conditioning on a domain with more than one set.
         conex(bus, node)$(branch(bus, node, "x")) = yes;
         conex(bus, node)$(conex(node, bus)) = yes;
 
-        p = smax((bus, node) $ (conex(bus, node)), branch(bus, node, "bij" * 3.14 * 2))
+        p = smax((bus, node) $ (conex(bus, node)), branch(bus, node, "bij") * 3.14 * 2)
 
 Number
 ------
@@ -151,14 +151,14 @@ This is for conditions on numbers or yes/no statements.
         import gamspy as gp
 
         m = gp.Container()
-        i = gp.Set(m, "i", records=[str(i) for i in range(1,5)])
-        ie = gp.Set(m, "ie", domain=[i])
-        x = gp.Variable(m, "x", domain=[i])
+        i = gp.Set(m, "i", records=range(1,5))
+        ie = gp.Set(m, "ie", domain=i)
+        x = gp.Variable(m, "x", domain=i)
         ie[i] = gp.Number(1).where[x.lo[i] == x.up[i]]
 
     .. code-block:: GAMS
     
-        Set i / 1..4 /;
+        Set i / 1*4 /;
         Set ie(i);
         Variable x(i);
         ie(i) = yes$(x.lo(i) = x.up(i));
@@ -209,7 +209,7 @@ Mapping:
 
     .. code-block:: python
 
-        error01[s1,s2] = rt[s1,s2] & (~lfr[s1,s2]) | ((~rt[s1,s2]) & lfr[s1,s2])
+        error01[s1, s2] = rt[s1, s2] & (~lfr[s1, s2]) | ((~rt[s1, s2]) & lfr[s1, s2])
 
     .. code-block:: GAMS
     
@@ -229,7 +229,7 @@ The following example shows how GAMS Macro `reciprocal` can be defined as a func
         import gamspy as gp
 
         def reciprocal(y):
-            return 1/y
+            return 1 / y
 
         m = gp.Container()
         z = gp.Parameter(m, "z")
@@ -259,10 +259,10 @@ Existing GAMSPy models can be translated to a GAMS model automatically by using 
     a = gp.Parameter(m, "a", domain=i)
     ...
     ...
-    your_model = gp.Model(m, "your_model", equations=<your_equations>)
+    your_model = gp.Model(m, "your_model", equations=...)
     ...
     ...
 
     your_model.toGams(path=<gams_model_path>)
 
-The generated GAMS model can be found under <gams_model_path>/<model_name>.gms
+The generated GAMS model can be found under ``<gams_model_path>/<model_name>.gms``.

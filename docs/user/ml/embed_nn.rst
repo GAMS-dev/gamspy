@@ -1,5 +1,5 @@
 ********************************************
-Embedding a trained neural network in GAMSPy
+Embedding a Trained Neural Network in GAMSPy
 ********************************************
 
 One of the most exciting applications of combining machine learning with 

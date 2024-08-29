@@ -26,7 +26,7 @@ Scaling Variables
 The scale factor of a variable is defined using the variable attribute 
 :meth:`scale <gamspy.Variable.scale>` in the following way: ::
 
-    myvar.scale[i,j] = c
+    myvar.scale[i, j] = c
 
 The scale factor ``c`` is a number or a numerical expression that evaluates to a number. Note that 
 the default scale factor is 1.
@@ -40,34 +40,34 @@ as seen by the user, is *divided* by the scale factor.
 For example, consider the following code snippet: ::
 
     from gamspy import Container, Variable, Equation
+
     m = Container()
+    x1 = Variable(m)
+    x2 = Variable(m)
     
-    x1 = Variable(m, "x1", type="positive")
-    x2 = Variable(m, "x2", type="positive")
+    eq = Equation(m)
     
-    eq = Equation(m, "eq")
+    eq = 200 * x1 + 0.5 * x2 <= 5
     
-    eq = 200*x1 + 0.5*x2 <= 5
-    
-    x1.up[...] = 0.01
-    x2.up[...] = 10
-    x1.scale[...] = 0.01
-    x2.scale[...] = 10
+    x1.up = 0.01
+    x2.up = 10
+    x1.scale = 0.01
+    x2.scale = 10
 
 By setting ``x1.scale`` to 0.01 and ``x2.scale`` to 10, the model seen by the solver is: ::
 
     from gamspy import Container, Variable, Equation
+
     m = Container()
-    
-    xPrime1 = Variable(m, "xPrime1", type="positive")
-    xPrime2 = Variable(m, "xPrime2", type="positive")
+    xPrime1 = Variable(m)
+    xPrime2 = Variable(m)
     
     eq = Equation(m, "eq")
     
-    eq = 2*xPrime1 + 5*xPrime2 <= 5
+    eq = 2 * xPrime1 + 5 * xPrime2 <= 5
     
-    xPrime1.up[...] = 1
-    xPrime2.up[...] = 1
+    xPrime1.up = 1
+    xPrime2.up = 1
 
 Note that the solver does not see the variables ``x1`` or ``x2``, but rather the scaled (and 
 better-behaved) variables ``xPrime1`` and ``xPrime2``. Note further that upper and lower bounds 
@@ -77,7 +77,7 @@ on variables are automatically scaled in the same way as the variable itself.
     Discrete variables cannot be scaled.
 
 .. note::
-    ``enable_scaling`` option in the solve statement must be set to True to for GAMS to employ 
+    ``enable_scaling`` option in the solve statement must be set to True for GAMSPy to apply 
     user-specified variable and equation scaling factors.
 
 
@@ -87,7 +87,7 @@ Scaling Equations
 The scale factor of an equation is defined using the equation attribute 
 :meth:`scale <gamspy.Equation.scale>` in the following way: ::
 
-    mzeqn.scale[i,j] = d
+    mzeqn.scale[i, j] = d
 
 The scale factor ``d`` is a number or a numerical expression that evaluates to a number. Note 
 that the default scale factor is 1.
@@ -99,32 +99,30 @@ that each equation as seen by the user is *divided* by the scale factor.
 For example, consider the following equations: ::
 
     from gamspy import Container, Variable, Equation
-    m = Container()
-    
-    y1 = Variable(m, "y1", type="positive")
-    y2 = Variable(m, "y2", type="positive")
-    
-    eq1 = Equation(m, "eq1")
-    eq2 = Equation(m, "eq2")
-    
-    eq1 = 200*y1 + 100*y2 <= 500
-    eq2 = 3*y1 - 4*y2 >= 6
 
-By setting ``eq1.scale[...] = 100``, the model seen by the solver is: ::
+    m = Container()
+    y1 = Variable(m)
+    y2 = Variable(m)
+    
+    eq1 = Equation(m)
+    eq2 = Equation(m)
+    
+    eq1[...] = 200 * y1 + 100 * y2 <= 500
+    eq2[...] = 3 * y1 - 4 * y2 >= 6
+
+By setting ``eq1.scale = 100``, the model seen by the solver is: ::
 
     from gamspy import Container, Variable, Equation
+
     m = Container()
+    y1 = Variable(m)
+    y2 = Variable(m)
     
-    y1 = Variable(m, "y1", type="positive")
-    y2 = Variable(m, "y2", type="positive")
+    eqPrime1 = Equation(m)
+    eq2      = Equation(m)
     
-    eqPrime1 = Equation(m, "eqPrime1")
-    eq2      = Equation(m, "eq2")
-    
-    eqPrime1 = 2*y1 + 1*y2 <= 5
-    eq2      = 3*y1 - 4*y2 >= 6
-
-
+    eqPrime1 = 2 * y1 + 1 * y2 <= 5
+    eq2      = 3 * y1 - 4 * y2 >= 6
 
 .. note::
     The user may have to perform a combination of equation and variable scaling to obtain a 
@@ -133,42 +131,42 @@ By setting ``eq1.scale[...] = 100``, the model seen by the solver is: ::
 Consider the following example: ::
 
     from gamspy import Container, Variable, Equation
+
     m = Container()
+    y1 = Variable(m)
+    y2 = Variable(m)
     
-    x1 = Variable(m, "x1", type="positive")
-    x2 = Variable(m, "x2", type="positive")
+    eq1 = Equation(m)
+    eq2 = Equation(m)
     
-    eq1 = Equation(m, "eq1")
-    eq2 = Equation(m, "eq2")
+    eq1[...] = 100 * x1 + 5 * x2 >= 20
+    eq2[...] = 50 * x1 - 10 * x2 <= 5
     
-    eq1 = 100*x1 + 5*x2 >= 20
-    eq2 = 50*x1 - 10*x2 <= 5
-    
-    x1.up[...] = 0.2
-    x2.up[...] = 1.5
+    x1.up = 0.2
+    x2.up = 1.5
 
 Setting the following scale values: ::
 
-    x1.scale[...]  = 0.1
-    eq1.scale[...] = 5
-    eq2.scale[...] = 5
+    x1.scale  = 0.1
+    eq1.scale = 5
+    eq2.scale = 5
 
 will result in the solver seeing the following well-scaled model: ::
 
     from gamspy import Container, Variable, Equation
     m = Container()
     
-    xPrime1 = Variable(m, "xPrime1", type="positive")
-    x2 = Variable(m, "x2", type="positive")
+    xPrime1 = Variable(m)
+    x2 = Variable(m)
     
-    eqPrime1 = Equation(m, "eqPrime1")
-    eqPrime2 = Equation(m, "eqPrime2")
+    eqPrime1 = Equation(m)
+    eqPrime2 = Equation(m)
     
-    eqPrime1 = 2*xPrime1 + x2 >= 4
-    eqPrime2 = xPrime1 - 2*x2 <= 1
+    eqPrime1[...] = 2 * xPrime1 + x2 >= 4
+    eqPrime2[...] = xPrime1 - 2 * x2 <= 1
     
-    xPrime1.up[...] = 0.2
-    x2.up[...] = 1.5
+    xPrime1.up = 2
+    x2.up = 1.5
 
 
 Scaling Derivatives
@@ -214,12 +212,8 @@ Response (FIR) filter design and signal processing, antenna array weight design,
 grasping force optimization,  quadratic programming, robust linear programming and
 norm minimization problems.
 
-For more information, see `References and Links <references-and-links>`_ at the 
-end of this section.
-
 Introduction to Conic Programming
 -----------------------------------
-
 
 Conic programs can be thought of as generalized linear programs with the additional 
 nonlinear constraint :math:`x \in C`, where :math:`C` is required to be a convex cone. 
@@ -276,8 +270,7 @@ Implementation of Conic Constraints in GAMSPy
 ---------------------------------------------
 
 The recommended way to write conic constraints is by using a quadratic formulation. Many 
-solvers have the capability to identify the conic constraints in a 
-`QCP [GAMS documentation] <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_modelclassificationQCP>`_ 
+solvers have the capability to identify the conic constraints in a ``QCP``
 model even if it is not in perfect form but can be easily reformulated to fit in the 
 described form. However, some solvers (namely MOSEK) expect the conic constraints to 
 be precisely in the form given above. Moreover, such solvers have other requirements 
@@ -290,13 +283,13 @@ constraints:
 
 - Quadratic cone: ::
 
-      x['1'] >= sqrt(Sum(i.where[~ sameAs(i,'1')], sqr(x[i])))
+      x['1'] >= gp.math.sqrt(gp.Sum(i.where[~i.sameAs('1')], gp.math.sqr(x[i])))
 
 - Rotated quadratic cone: ::
 
-      2*x['1']*x['2'] >= Sum(i.where[~sameAs(i,'1') & ~sameas(i,'2')], sqr(x[i]))
+      2 * x['1'] * x['2'] >= gp.Sum(i.where[~i.sameAs('1') & ~i.sameas('2')], sqr(x[i]))
 
-  Here x['1'] and x['2'] are positive variables.
+  Here ``x['1']`` and ``x['2']`` are positive variables.
 
 The following example illustrates the different formulations for conic programming 
 problems. Note that a conic optimizer usually outperforms a general NLP method for 
@@ -322,13 +315,10 @@ where :math:`x \in \mathbb{R}^n` is the decision variable,
 :math:`d_i \ge 0` and :math:`b \in \mathbb{R}` is a scalar parameter. The original model 
 may be written in GAMSPy using the following equations: ::
     
-    defobj = Sum(n, d[n]/x[n]) == obj
-    e1     = Sum(n, a[n]*x[n]) <= b
+    obj = gp.Sum(n, d[n] / x[n])
+    e1[...] = gp.Sum(n, a[n] * x[n]) <= b
 
-    orig = Model(m, "orig", equations=[defobjc,e1], 
-                 problem=Problem.NLP, 
-                 sense=Sense.Min, 
-                 objective=obj)
+    orig = Model(m, equations=[e1], problem=Problem.NLP, sense=Sense.Min, objective=obj)
 
     x.lo[n] = l[n]
     x.up[n] = u[n]
@@ -349,19 +339,18 @@ equivalent problem with a convex feasible set:
 where :math:`t \in \mathbb{R}^n` is a new decision variable. The GAMSPy formulation
 of this QCP is: ::
 
-    defobjc    = Sum(n, d[n]*t[n]) == obj
-    e1         = Sum(n, a[n]*x[n]) <= b
-    coneqcp[n] = t[n]*x[n] >= 1
+    obj = gp.Sum(n, d[n] * t[n])
+    e1[...] = Sum(n, a[n] * x[n]) <= b
+    coneqcp[n] = t[n] * x[n] >= 1
 
-    cqcp = Model(m, "cqcp", equations=[defobjc,e1,coneqcp], 
-                 problem=Problem.QCP, 
-                 sense=Sense.Min, 
-                 objective=obj)
+    cqcp = Model(
+        m, equations=[e1, coneqcp], problem=Problem.QCP, sense=Sense.Min, objective=obj
+    )
 
     t.lo[n] = 0
     x.lo[n] = l[n]
     x.up[n] = u[n]
-    
+
 Note that the constraints :math:`t_i x_i \ge 1` are almost in rotated conic form. If 
 we introduce a variable :math:`z \in \mathbb{R}^n` with :math:`z_i = \sqrt{2}` then we 
 can reformulate the problem using conic constraints as:
@@ -376,106 +365,203 @@ can reformulate the problem using conic constraints as:
 
 The GAMSPy formulation using conic equations is as follows: ::
 
-    defobjc        = Sum(n, d[n]*t[n]) == obj
-    e1             = Sum(n, a[n]*x[n]) <= b
-    e2[n]          = z[n] == sqrt(2)
-    coneperfect[n] = 2*x[n]*t[n] >= sqr(z[n])
-    
-    cperfect = Model(m, "cperfect", equations=[defobjc,e1,e2,coneqcp], 
-                     problem=Problem.QCP, 
-                     sense=Sense.Min, 
-                     objective=obj)
-                     
+    obj = gp.Sum(n, d[n] * t[n])
+    e1[...] = Sum(n, a[n] * x[n]) <= b
+    e2[n] = z[n] == gp.math.sqrt(2)
+    coneperfect[n] = 2 * x[n] * t[n] >= gp.math.sqr(z[n])
+
+    cperfect = Model(
+        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.Min, objective=obj
+    )
+
     t.lo[n] = 0
     x.lo[n] = l[n]
     x.up[n] = u[n]
 
 The complete model is listed below::
     
-    from gamspy import Container, Set, Parameter, Variable, Equation, Model, Sum, Problem, Sense, Options
+    from gamspy import (
+        Container,
+        Set,
+        Parameter,
+        Variable,
+        Equation,
+        Model,
+        Sum,
+        Problem,
+        Sense,
+        Options,
+    )
     import gamspy.math as math
+
     m = Container()
 
-    n = Set(m, "n", records=[("i" + str(i), i) for i in range(1, 11)])
-
-    d = Parameter(m, "d", domain=n)
-    a = Parameter(m, "a", domain=n)
-    l = Parameter(m, "l", domain=n)
-    u = Parameter(m, "u", domain=n)
-    b = Parameter(m, "b")
+    n = Set(m, "n", records=range(1, 11))
+    d = Parameter(m, domain=n)
+    a = Parameter(m, domain=n)
+    l = Parameter(m, domain=n)
+    u = Parameter(m, domain=n)
+    b = Parameter(m)
 
     d[n] = math.uniform(1, 2)
     a[n] = math.uniform(10, 50)
     l[n] = math.uniform(0.1, 10)
     u[n] = l[n] + math.uniform(0, 12 - l[n])
 
-    x = Variable(m, "x", domain=n)
+    x = Variable(m, domain=n)
     x.l[n] = math.uniform(l[n], u[n])
     b = Sum(n, x.l[n] * a[n])
 
-    t = Variable(m, "t", domain=n)
-    z = Variable(m, "z", domain=n)
-    obj = Variable(m, "obj")
+    t = Variable(m, domain=n)
+    z = Variable(m, domain=n)
 
-    defobjc = Equation(m, "defobjc")
-    defobj = Equation(m, "defobj")
-    e1 = Equation(m, "e1")
-    e2 = Equation(m, "e2", domain=n)
-    coneqcp = Equation(m, "coneqcp", domain=n)
-    coneperfect = Equation(m, "coneperfect", domain=n)
-    conenlp = Equation(m, "conenlp", domain=n)
+    e1 = Equation(m)
+    e2 = Equation(m, domain=n)
+    coneqcp = Equation(m, domain=n)
+    coneperfect = Equation(m, domain=n)
+    conenlp = Equation(m, domain=n)
 
-    defobjc[...] = Sum(n, d[n] * t[n]) == obj
-    defobj[...] = Sum(n, d[n] / x[n]) == obj
+    objc = Sum(n, d[n] * t[n])
+    obj = Sum(n, d[n] / x[n])
     e1[...] = Sum(n, a[n] * x[n]) <= b
     coneqcp[n] = t[n] * x[n] >= 1
     e2[n] = z[n] == math.sqrt(2)
     coneperfect[n] = 2 * x[n] * t[n] >= math.sqr(z[n])
 
-    cqcp = Model(m,"cqcp",equations=[defobjc, e1, coneqcp],problem=Problem.QCP,sense=Sense.MIN,objective=obj)
+    cqcp = Model(
+        m, equations=[e1, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=objc
+    )
 
-    cperfect = Model(m,"cperfect",equations=[defobjc, e1, e2, coneqcp],problem=Problem.QCP,sense=Sense.MIN,objective=obj)
+    cperfect = Model(
+        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=objc
+    )
 
-    orig = Model(m,"orig",equations=[defobjc, e1],problem=Problem.NLP,sense=Sense.MIN,objective=obj)
+    orig = Model(m, equations=[e1], problem=Problem.NLP, sense=Sense.MIN, objective=obj)
 
     t.lo[n] = 0
     x.lo[n] = l[n]
     x.up[n] = u[n]
 
-    cqcp.solve(options=Options(qcp="cplex"))
-    cperfect.solve(options=Options(qcp="mosek"))
-    orig.solve(options=Options(qcp="cplex"))
+    cqcp.solve(solver="cplex")
+    cperfect.solve(solver="mosek")
+    orig.solve(solver="conopt")
 
 
+Other Conic Programs with MOSEK
+-------------------------------
 
-Sample Conic Models in GAMS
-----------------------------
+In addition to quadratic and rotated quadratic cones which can be solved by most QCP solver, the 
+`MOSEK <https://www.gams.com/latest/docs/S_MOSEK.html#MOSEK_CONIC_PROGRAMMING>`_ solver
+has the capability to solve other conic problems, namely problems with *power cones*, *exponential cones*, and
+*semidefinite cones*. For the first two, the structure of the cones are tried to be extracted from the non-linear
+algebra. For the latter, the PSD variable needs to the description ``PSDMATRIX``. Here are four  examples for these
+cone types: ::
 
-..
-    TODO: GAMSPy pendants?
+    import gamspy as gp
 
-- [`EMFL <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_emfl.html>`_]: A multiple facility location problem,
-- [`FDESIGN <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_fdesign.html>`_]: Linear Phase Lowpass Filter Design,
-- [`IMMUN <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_immun.html>`_]: Financial Optimization: Risk Management,
-- [`PMEANVAR <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_pmeanvar.html>`_]: Mean-Variance Models with variable upper and lower Bounds,
-- [`QP7 <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_qp7.html>`_]: A portfolio investment model using rotated quadratic cones (quadratic program using a Markowitz model),
-- [`ROBUSTLP <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_robustlp.html>`_]: Robust linear programming as an SOCP,
-- [`SPRINGCHAIN <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_springchain.html>`_]: Equilibrium of System with Piecewise Linear Spring,
-- [`TRUSSM <https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_trussm.html>`_]: Truss Toplogy Design with Multiple Loads
+    m = gp.Container()
 
-.. _references-and-links:
+    x0 = gp.Variable(m, type="positive")
+    x1 = gp.Variable(m, type="positive")
+    x2 = gp.Variable(m, type="positive")
+    x3 = gp.Variable(m) 
+    x4 = gp.Variable(m) 
+    x5 = gp.Variable(m) 
 
-References and Links
---------------------
+    e1 = gp.Equation(m)
+    e2 = gp.Equation(m)
+    e3 = gp.Equation(m)
 
-- A. Ben-Tal and A. Nemirovski,
-  Lectures on Modern Convex Optimization: Analysis, Algorithms, and Engineering Applications,
-  MPS/SIAM Series on Optimization, SIAM Press, 2001.
-- M. Lobo, L. Vandenberghe, S. Boyd and H. Lebret, `Applications of Second-Order Cone Programming <http://stanford.edu/~boyd/papers/socp.html>`_, Linear Algebra and its 
-  Applications, 284:193-228, November 1998, Special Issue on Linear Algebra in 
-  Control, Signals and Image Processing.
-- MOSEK ApS, `MOSEK Modeling Cookbook <https://docs.mosek.com/modeling-cookbook/index.html>`_, 2015.
-- G. Pataki G and S. Schmieta, The DIMACS Library of Semidefinite-Quadratic-Linear 
-  Programs. Tech. rep., Computational Optimization Research Center, Columbia 
-  University, 2002.
-- Seventh Dimacs Implementation Challenge on Semidefinite and Related Optimization Problems.
+    obj = x3 + x4 - x0
+
+    e1[...] = x0 + x1 + 0.5 * x2 == 2
+    e2[...] = x0 ** 0.2 * x1 ** 0.8 >= gp.math.abs(x3)
+    e3[...] = x2 ** 0.4 * x5 ** 0.6 >= gp.math.abs(x4)
+
+    x5.fx = 1
+
+    power_cone1 = gp.Model(m, equations=[e1, e2, e3], objective=obj, sense="max", problem="dnlp")
+    power_cone1.solve(solver="mosek")
+
+
+::
+
+    import gamspy as program
+
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=range(5))
+
+    x0 = gp.Variable(m, type="positive")
+    x1 = gp.Variable(m, type="positive")
+    x2 = gp.Variable(m, domain=i)
+
+    e1 = gp.Equation(m)
+    e2 = gp.Equation(m)
+
+    obj = gp.Sum(i, gp.Ord(i) * x2[i]) - x0
+    e1[...] = x0 + x1 == 2
+    e2[...] = gp.math.sqrt(x0 * x1) >= gp.math.sqrt(gp.Sum(i, gp.math.sqr(x2[i])));
+
+    power_cone2 = gp.Model(m, equations=[e1, e2], objective=obj, sense="max", problem="nlp")
+
+    power_cone2.solve(solver="mosek")
+
+::
+
+    import gamspy as program
+
+    m = gp.Container()
+
+    x0 = gp.Variable(m, type="positive")
+    x1 = gp.Variable(m, type="positive")
+    x2 = gp.Variable(m)
+
+    e1 = gp.Equation(m)
+    e2 = gp.Equation(m)
+
+    obj = x0 + x1
+    e1[...] =  x0 + x1 + x2 == 1
+    e2[...] = x0 >= x1 * gp.math.exp(x2 / x1)
+
+    exp_cone = gp.Model(m, equations=[e1, e2], objective=obj, sense="min", problem="nlp")
+
+    x1.l = 1 # avoid division by 0 at initial point
+    exp_cone.solve(solver="mosek")
+
+::
+
+    import gamspy as gp
+    import numpy as np
+
+    m = gp.Container()
+
+    i = gp.Set(m, name="i", records=range(3))
+    ip = gp.Alias(m, name="ip", alias_with=i)
+
+    barX = gp.Variable(m, domain=[i, i], description="PSDMATRIX")
+    x = gp.Variable(m, domain=i, type="positive")
+
+    barAobj = gp.Parameter(
+        m, domain=[i, i], description="coefficients of barX in objective"
+    )
+    barAe1 = gp.Parameter(m, domain=[i, i], description="coefficients of barX in e1")
+    barAe2 = gp.Parameter(m, domain=[i, i], description="coefficients of barX in e2")
+
+    barAobj.setRecords(np.array([[2.0, 1.0, 0.0], [1.0, 2.0, 1.0], [0.0, 1.0, 2.0]]))
+    barAe1[i, i] = 1.0  # identity matrix
+    barAe2[i, ip] = 1.0  # all-one matrix
+
+    e1 = gp.Equation(m)
+    e2 = gp.Equation(m)
+    e3 = gp.Equation(m)
+
+    obj = gp.Sum([i, ip], barAobj[i, ip] * barX[i, ip]) + x["0"]
+    e1[...] = 1 == gp.Sum([i, ip], barAe1[i, ip] * barX[i, ip]) + x["0"]
+    e2[...] = 0.5 == gp.Sum([i, ip], barAe2[i, ip] * barX[i, ip]) + x["1"] + x["2"]
+    e3[...] = -gp.math.sqr(x["0"]) + gp.math.sqr(x["1"]) + gp.math.sqr(x["2"]) <= 0
+
+    psd_cone = gp.Model(
+        m, equations=[e1, e2, e3], objective=obj, sense="min", problem="qcp"
+    )
+
+    psd_cone.solve(solver="mosek")

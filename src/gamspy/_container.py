@@ -636,8 +636,8 @@ class Container(gt.Container):
         encoding: str | None = None,
     ) -> None:
         """
-        Reads specified symbols from the gdx file. If symbol_names are
-        not provided, it reads all symbols from the gdx file.
+        Reads specified symbols from the GDX file. If symbol_names are
+        not provided, it reads all symbols from the GDX file.
 
         Parameters
         ----------
@@ -671,8 +671,8 @@ class Container(gt.Container):
         eps_to_zero: bool = True,
     ) -> None:
         """
-        Writes specified symbols to the gdx file. If symbol_names are
-        not provided, it writes all symbols to the gdx file.
+        Writes specified symbols to the GDX file. If symbol_names are
+        not provided, it writes all symbols to the GDX file.
 
         Parameters
         ----------
@@ -731,15 +731,15 @@ class Container(gt.Container):
         symbol_names: list[str] | None = None,
     ) -> None:
         """
-        Loads data of the given symbols from a gdx file. If no
+        Loads data of the given symbols from a GDX file. If no
         symbol names are given, data of all symbols are loaded.
 
         Parameters
         ----------
         load_from : str
-            Path to the gdx file
+            Path to the GDX file
         symbols : List[str], optional
-            Symbols whose data will be load from gdx, by default None
+            Symbols whose data will be load from GDX, by default None
 
         Examples
         --------
@@ -758,12 +758,12 @@ class Container(gt.Container):
     def addGamsCode(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file.
-        Using addGAMSCode might result in a license error if no professional 08/09 license is used.
+        Using addGAMSCode might result in a license error if no GAMSpy++ license is used.
 
         Parameters
         ----------
         gams_code : str
-            Gams code that you want to insert.
+            GAMS code that you want to insert.
 
         Examples
         --------
@@ -778,7 +778,11 @@ class Container(gt.Container):
         self._synch_with_gams()
 
     def close(self) -> None:
-        """Stops the socket and releases resources."""
+        """
+        Stops the socket and releases resources. The container should not be used afterwards
+        to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
+        solves, etc. The container data (Container.data) is still available for read operations.
+        """
         self._stop_socket()
 
     def addAlias(
@@ -1345,7 +1349,7 @@ class Container(gt.Container):
 
     def gdxInputPath(self) -> str:
         """
-        Path to the input gdx file
+        Path to the input GDX file
 
         Returns
         -------
@@ -1363,7 +1367,7 @@ class Container(gt.Container):
 
     def gdxOutputPath(self) -> str:
         """
-        Path to the output gdx file
+        Path to the output GDX file
 
         Returns
         -------

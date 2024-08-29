@@ -26,7 +26,7 @@ GAMSPy is the ultimate choice:
 
   * You can build the architecture from scratch using GAMSPy
 
-* Development speed of Python combined with model generation speed of GAMS
+* Development speed of Python combined with model generation speed of the GAMS execution engine
 
   * Equations and variables are generated in GAMS, not in Python, giving GAMSPy a speed advantage.
 
