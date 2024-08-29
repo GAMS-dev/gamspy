@@ -593,7 +593,7 @@ class OptionsSuite(unittest.TestCase):
                 options=Options(
                     time_limit=60000,
                     iteration_limit=80000,
-                    listing_file="bla.lst",
+                    listing_file=os.path.join("tmp", "bla.lst"),
                 ),
             )
 

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import pandas as pd
 from gams import DebugLevel
 
+import gamspy._symbols as syms
 import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
@@ -51,6 +52,8 @@ HEADER = [
 def backend_factory(
     container: Container,
     options: Options | None = None,
+    solver: str | None = None,
+    solver_options: dict | None = None,
     output: io.TextIOWrapper | None = None,
     backend: Literal["local", "engine", "neos"] = "local",
     client: EngineClient | NeosClient | None = None,
@@ -63,6 +66,8 @@ def backend_factory(
         return NEOSServer(
             container,
             options,  # type: ignore
+            solver,
+            solver_options,
             client,  # type: ignore
             output,
             model,
@@ -75,6 +80,8 @@ def backend_factory(
             container,
             client,  # type: ignore
             options,  # type: ignore
+            solver,
+            solver_options,
             output,
             model,
             load_symbols,
@@ -82,7 +89,15 @@ def backend_factory(
     elif backend == "local":
         from gamspy._backend.local import Local
 
-        return Local(container, options, output, model, load_symbols)
+        return Local(
+            container,
+            options,
+            solver,
+            solver_options,
+            output,
+            model,
+            load_symbols,
+        )
 
     raise ValidationError(
         f"`{backend}` is not a valid backend. Possible backends:"
@@ -96,12 +111,16 @@ class Backend(ABC):
         container: Container,
         model: Model,
         options: Options,
+        solver: str | None,
+        solver_options: dict | None,
         output: io.TextIOWrapper | None,
         load_symbols: list[Symbol] | None,
     ):
         self.container = container
         self.model = model
         self.options = options
+        self.solver = solver
+        self.solver_options = solver_options
         self.output = output
         self.load_symbols = load_symbols
         if load_symbols is not None:
@@ -147,6 +166,22 @@ class Backend(ABC):
             symbols = utils._get_symbol_names_from_gdx(
                 self.container.system_directory, self.container._gdx_out
             )
+            filtered_names = []
+            for name in symbols:
+                # addGamsCode symbols
+                if name not in self.container:
+                    filtered_names.append(name)
+                    continue
+
+                symbol = self.container[name]
+                if isinstance(symbol, syms.Alias):
+                    filtered_names.append(name)
+                    continue
+
+                if symbol.synchronize:
+                    filtered_names.append(name)
+
+            symbols = filtered_names
 
         if len(symbols) != 0:
             self.container._load_records_from_gdx(

@@ -13,9 +13,24 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 from .util import add_solver_entry, remove_solver_entry
 
+USAGE = """gamspy [-h] [-v]
+       gamspy install license <license_id> or <path/to/license/file> [--uses-port <port>]
+       gamspy uninstall license
+       gamspy install solver <solver_name> [--skip-pip-install]
+       gamspy uninstall solver <solver_name> [--skip-pip-uninstall]
+       gamspy list solvers [--all]
+       gamspy show license
+       gamspy show base
+       gamspy probe [-j <json_output_path>]
+       gamspy retrieve license <your_license_id> [-i <json_file_path>] [-o <output_path>] 
+       gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
+"""
+
 
 def get_args():
-    parser = argparse.ArgumentParser(prog="gamspy", description="GAMSPy CLI")
+    parser = argparse.ArgumentParser(
+        prog="gamspy", usage=USAGE, description="GAMSPy CLI"
+    )
 
     parser.add_argument(
         "command",
@@ -31,19 +46,92 @@ def get_args():
         ],
         type=str,
         nargs="?",
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
-        "component",
-        choices=["base", "license", "miro", "solver", "solvers"],
-        type=str,
-        nargs="?",
-        default=None,
+        "component", type=str, nargs="?", default=None, help=argparse.SUPPRESS
+    )
+    parser.add_argument("name", type=str, nargs="*", help=argparse.SUPPRESS)
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="store_true",
+        help="Shows the version of GAMSPy, GAMS and gamspy_base",
     )
 
-    parser.add_argument("-v", "--version", action="store_true")
+    install_license_group = parser.add_argument_group(
+        "gamspy install license <license_id> or <path/to/license/file>",
+        description="Options for installing a license.",
+    )
+    install_license_group.add_argument(
+        "--uses-port",
+        help="Interprocess communication starting port.",
+    )
+
+    _ = parser.add_argument_group(
+        "gamspy uninstall license",
+        description="Command to uninstall user license.",
+    )
+
+    install_solver_group = parser.add_argument_group(
+        "gamspy install solver <solver_name>",
+        description="Options for installing solvers",
+    )
+    install_solver_group.add_argument(
+        "--skip-pip-install",
+        "-s",
+        action="store_true",
+        help=(
+            "If you already have the solver installed, skip pip install and"
+            " update gamspy installed solver list."
+        ),
+    )
+
+    uninstall_solver_group = parser.add_argument_group(
+        "gamspy uninstall solver <solver_name>",
+        description="Options for uninstalling solvers",
+    )
+    uninstall_solver_group.add_argument(
+        "--skip-pip-uninstall",
+        "-u",
+        action="store_true",
+        help=(
+            "If you don't want to uninstall the package of the solver, skip"
+            " uninstall and update gamspy installed solver list."
+        ),
+    )
+
+    list_group = parser.add_argument_group(
+        "gamspy list solvers", description="`gamspy list solvers` options"
+    )
+    list_group.add_argument(
+        "-a", "--all", action="store_true", help="Shows all available solvers."
+    )
+
+    probe_group = parser.add_argument_group(
+        "gamspy probe", description="`gamspy probe` options"
+    )
+    probe_group.add_argument(
+        "--json-out", "-j", help="Output path for the json file."
+    )
+
+    retrieve_group = parser.add_argument_group(
+        "gamspy retrieve license",
+        description="`gamspy retrieve license` options",
+    )
+    retrieve_group.add_argument(
+        "--output",
+        "-o",
+        help="Output path for the license file.",
+    )
+    retrieve_group.add_argument(
+        "--input",
+        "-i",
+        help="json file path to retrieve a license based on node information.",
+    )
 
     miro_group = parser.add_argument_group(
-        "run miro", description="`gamspy run miro` options"
+        "gamspy run miro", description="`gamspy run miro` options"
     )
     miro_group.add_argument(
         "-g",
@@ -76,69 +164,16 @@ def get_args():
         action="store_true",
     )
 
-    _ = parser.add_argument_group(
-        "gamspy install|uninstall license",
-        description="Options for installing/uninstalling a license.",
-    )
-
-    install_group = parser.add_argument_group(
-        "gamspy install|uninstall solver",
-        description="Options for installing solvers",
-    )
-    install_group.add_argument(
-        "name", type=str, nargs="?", default=None, help="Solver name"
-    )
-    install_group.add_argument(
-        "--skip-pip-install",
-        "-s",
-        action="store_true",
-        help=(
-            "If you already have the solver installed, skip pip install and"
-            " update gamspy installed solver list."
-        ),
-    )
-    install_group.add_argument(
-        "--skip-pip-uninstall",
-        "-u",
-        action="store_true",
-        help=(
-            "If you don't want to uninstall the package of the solver, skip"
-            " uninstall and update gamspy installed solver list."
-        ),
-    )
-    install_group.add_argument(
-        "--port",
-        help="The port number to communicate with license server. Defaults is 443.",
-    )
-
-    list_group = parser.add_argument_group(
-        "list solvers", description="`gamspy list solvers` options"
-    )
-    list_group.add_argument("-a", "--all", action="store_true")
-
-    probe_group = parser.add_argument_group(
-        "probe", description="`gamspy probe` options"
-    )
-    probe_group.add_argument(
-        "--output", "-o", help="Output path for the json file."
-    )
-    probe_group.add_argument(
-        "--input",
-        "-i",
-        default=None,
-        help="json file path to retrieve a license based on node information.",
-    )
-
     return parser.parse_args()
 
 
 def install_license(args: argparse.Namespace):
-    if args.name is None:
+    if not args.name or len(args.name) > 1:
         raise ValidationError(
             "License is missing: `gamspy install license <your_license>`"
         )
 
-    license = args.name
+    license = args.name[0]
     is_alp = not os.path.isfile(license)
 
     if is_alp and len(license) != 36:
@@ -152,9 +187,9 @@ def install_license(args: argparse.Namespace):
     if is_alp:
         command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
 
-        if args.port:
+        if args.uses_port:
             command.append("-u")
-            command.append(str(args.port))
+            command.append(str(args.uses_port))
 
         process = subprocess.run(
             command,
@@ -184,64 +219,65 @@ def uninstall_license():
 
 
 def install_solver(args: argparse.Namespace):
-    if args.name is None:
+    if not args.name:
         raise ValidationError(
             "Solver name is missing: `gamspy install solver <solver_name>`"
         )
 
-    solver_name = args.name.lower()
+    for item in args.name:
+        solver_name = item.lower()
 
-    if solver_name.upper() not in utils.getAvailableSolvers():
-        raise ValidationError(
-            f'Given solver name ("{solver_name}") is not valid. Available'
-            f" solvers that can be installed: {utils.getAvailableSolvers()}"
-        )
-
-    import gamspy_base
-
-    if not args.skip_pip_install:
-        # install specified solver
-        try:
-            _ = subprocess.run(
-                [
-                    "pip",
-                    "install",
-                    f"gamspy-{solver_name}=={gamspy_base.__version__}",
-                    "--force-reinstall",
-                ],
-                check=True,
-                stderr=subprocess.PIPE,
-            )
-        except subprocess.CalledProcessError as e:
-            raise GamspyException(
-                f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
-            ) from e
-    else:
-        try:
-            solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-        except ModuleNotFoundError as e:
-            e.msg = f"You must install gamspy-{solver_name} first!"
-            raise e
-
-        if solver_lib.__version__ != gamspy_base.__version__:
+        if solver_name.upper() not in utils.getAvailableSolvers():
             raise ValidationError(
-                f"gamspy_base version ({gamspy_base.__version__}) and solver"
-                f" version ({solver_lib.__version__}) must match! Run `gamspy"
-                " update` to update your solvers."
+                f'Given solver name ("{solver_name}") is not valid. Available'
+                f" solvers that can be installed: {utils.getAvailableSolvers()}"
             )
 
-    # copy solver files to gamspy_base
-    gamspy_base_dir = utils._get_gamspy_base_directory()
-    solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+        import gamspy_base
 
-    file_paths = solver_lib.file_paths
-    for file in file_paths:
-        shutil.copy(file, gamspy_base_dir)
+        if not args.skip_pip_install:
+            # install specified solver
+            try:
+                _ = subprocess.run(
+                    [
+                        "pip",
+                        "install",
+                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        "--force-reinstall",
+                    ],
+                    check=True,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as e:
+                raise GamspyException(
+                    f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
+                ) from e
+        else:
+            try:
+                solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+            except ModuleNotFoundError as e:
+                e.msg = f"You must install gamspy-{solver_name} first!"
+                raise e
 
-    files = solver_lib.files
-    verbatims = [solver_lib.verbatim]
-    append_dist_info(files, gamspy_base_dir)
-    add_solver_entry(gamspy_base_dir, solver_name, verbatims)
+            if solver_lib.__version__ != gamspy_base.__version__:
+                raise ValidationError(
+                    f"gamspy_base version ({gamspy_base.__version__}) and solver"
+                    f" version ({solver_lib.__version__}) must match! Run `gamspy"
+                    " update` to update your solvers."
+                )
+
+        # copy solver files to gamspy_base
+        gamspy_base_dir = utils._get_gamspy_base_directory()
+        solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+
+        file_paths = solver_lib.file_paths
+        for file in file_paths:
+            shutil.copy(file, gamspy_base_dir)
+
+        files = solver_lib.files
+        verbatims = [solver_lib.verbatim]
+        append_dist_info(files, gamspy_base_dir)
+        add_solver_entry(gamspy_base_dir, solver_name, verbatims)
 
 
 def append_dist_info(files, gamspy_base_dir: str):
@@ -274,34 +310,36 @@ def uninstall_solver(args: argparse.Namespace):
             "You must install gamspy_base to use this command!"
         ) from e
 
-    if args.name is None:
+    if not args.name:
         raise ValidationError(
             "Solver name is missing: `gamspy uninstall solver <solver_name>`"
         )
 
-    solver_name = args.name.lower()
+    for item in args.name:
+        solver_name = item.lower()
 
-    installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-    if solver_name.upper() not in installed_solvers:
-        raise ValidationError(
-            f'Given solver name ("{solver_name}") is not valid. Installed'
-            f" solvers solvers that can be uninstalled: {installed_solvers}"
-        )
-
-    if not args.skip_pip_uninstall:
-        # uninstall specified solver
-        try:
-            _ = subprocess.run(
-                ["pip", "uninstall", f"gamspy-{solver_name}"], check=True
+        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+        if solver_name.upper() not in installed_solvers:
+            raise ValidationError(
+                f'Given solver name ("{solver_name}") is not valid. Installed'
+                f" solvers solvers that can be uninstalled: {installed_solvers}"
             )
-        except subprocess.CalledProcessError as e:
-            raise GamspyException(
-                f"Could not uninstall gamspy-{solver_name}: {e.output}"
-            ) from e
 
-    # do not delete files from gamspy_base as other solvers might depend on it
-    gamspy_base_dir = utils._get_gamspy_base_directory()
-    remove_solver_entry(gamspy_base_dir, solver_name)
+        if not args.skip_pip_uninstall:
+            # uninstall specified solver
+            try:
+                _ = subprocess.run(
+                    ["pip", "uninstall", f"gamspy-{solver_name}", "-y"],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise GamspyException(
+                    f"Could not uninstall gamspy-{solver_name}: {e.output}"
+                ) from e
+
+        # do not delete files from gamspy_base as other solvers might depend on it
+        gamspy_base_dir = utils._get_gamspy_base_directory()
+        remove_solver_entry(gamspy_base_dir, solver_name)
 
 
 def install(args: argparse.Namespace):
@@ -588,8 +626,8 @@ def probe(args: argparse.Namespace):
 
     print(process.stdout)
 
-    if args.output:
-        with open(args.output, "w") as file:
+    if args.json_out:
+        with open(args.json_out, "w") as file:
             file.write(process.stdout)
 
 
@@ -603,11 +641,10 @@ def retrieve(args: argparse.Namespace):
         raise ValidationError(f"Given licence id `{args.name}` is not valid!")
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
-    print(f"{args.name=}, {args.input=}")
     process = subprocess.run(
         [
             os.path.join(gamspy_base_dir, "gamsgetkey"),
-            args.name,
+            args.name[0],
             "-i",
             args.input,
         ],
@@ -617,8 +654,6 @@ def retrieve(args: argparse.Namespace):
 
     if process.returncode:
         raise ValidationError(process.stderr)
-
-    print(process.stdout)
 
     if args.output:
         with open(args.output, "w") as file:

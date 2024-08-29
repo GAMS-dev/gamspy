@@ -229,7 +229,7 @@ class Model:
         self,
         container: Container,
         name: str | None = None,
-        problem: Problem | str = Problem.LP,
+        problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
         sense: Sense | str | None = None,
         objective: Variable | Expression | None = None,
@@ -251,6 +251,7 @@ class Model:
             equations, problem, sense
         )
         self.equations = list(equations)
+        self._objective = objective
         self._objective_variable = self._set_objective_variable(objective)
         if (
             self._objective_variable is not None
@@ -291,6 +292,7 @@ class Model:
         self._solve_number = None
         self._num_dependencies = None
         self._num_discrete_variables = None
+        self._num_equations = None
         self._num_infeasibilities = None
         self._num_nonlinear_insts = None
         self._num_nonlinear_zeros = None
@@ -320,18 +322,18 @@ class Model:
         )
 
     @property
-    def num_domain_violations(self) -> int | None:
+    def num_domain_violations(self) -> float | None:
         """
         Number of domain violations.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_domain_violations
 
     @property
-    def algorithm_time(self) -> int | None:
+    def algorithm_time(self) -> float | None:
         """
         Solver dependent timing information. This attribute was intended to allow
         solvers to return the elapsed time used by the solve algorithm without
@@ -343,12 +345,12 @@ class Model:
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._algorithm_time
 
     @property
-    def total_solve_time(self) -> int | None:
+    def total_solve_time(self) -> float | None:
         """
         Elapsed time it took to execute a solve statement in total. This model
         attribute returns the elapsed time it took to execute a solve statement in total.
@@ -358,12 +360,12 @@ class Model:
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._total_solve_time
 
     @property
-    def total_solver_time(self) -> int | None:
+    def total_solver_time(self) -> float | None:
         """
         Elapsed time taken by the solver only. This model attribute returns the elapsed
         time taken by the solver only. This does not include the GAMS model generation time
@@ -372,51 +374,51 @@ class Model:
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._total_solver_time
 
     @property
-    def num_iterations(self) -> int | None:
+    def num_iterations(self) -> float | None:
         """
         Number of iterations used.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_iterations
 
     @property
-    def marginals(self) -> int | None:
+    def marginals(self) -> float | None:
         """
         Indicates whether there are marginals.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._marginals
 
     @property
-    def max_infeasibility(self) -> int | None:
+    def max_infeasibility(self) -> float | None:
         """
         Maximum of infeasibilities
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._max_infeasibility
 
     @property
-    def mean_infeasibility(self) -> int | None:
+    def mean_infeasibility(self) -> float | None:
         """
         Mean of infeasibilities
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._mean_infeasibility
 
@@ -432,222 +434,233 @@ class Model:
         return self._status
 
     @property
-    def num_nodes_used(self) -> int | None:
+    def num_nodes_used(self) -> float | None:
         """
         Number of nodes used by the MIP solver.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_nodes_used
 
     @property
-    def solve_number(self) -> int | None:
+    def solve_number(self) -> float | None:
         """
         Number of the last solve.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._solve_number
 
     @property
-    def num_dependencies(self) -> int | None:
+    def num_dependencies(self) -> float | None:
         """
         Number of dependencies in a CNS model.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_dependencies
 
     @property
-    def num_discrete_variables(self) -> int | None:
+    def num_discrete_variables(self) -> float | None:
         """
         Number of discrete variables.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_discrete_variables
 
     @property
-    def num_infeasibilities(self) -> int | None:
+    def num_equations(self) -> float | None:
+        """
+        Number of equations.
+
+        Returns
+        -------
+        float | None
+        """
+        return self._num_equations
+
+    @property
+    def num_infeasibilities(self) -> float | None:
         """
         Number of infeasibilities.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_infeasibilities
 
     @property
-    def num_nonlinear_insts(self) -> int | None:
+    def num_nonlinear_insts(self) -> float | None:
         """
         Number of nonlinear instructions.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_nonlinear_insts
 
     @property
-    def num_nonlinear_zeros(self) -> int | None:
+    def num_nonlinear_zeros(self) -> float | None:
         """
         Number of nonlinear nonzeros.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_nonlinear_zeros
 
     @property
-    def num_nonoptimalities(self) -> int | None:
+    def num_nonoptimalities(self) -> float | None:
         """
         Number of nonoptimalities.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_nonoptimalities
 
     @property
-    def num_nonzeros(self) -> int | None:
+    def num_nonzeros(self) -> float | None:
         """
         Number of nonzero entries in the model coefficient matrix.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_nonzeros
 
     @property
-    def num_mcp_redefinitions(self) -> int | None:
+    def num_mcp_redefinitions(self) -> float | None:
         """
         Number of MCP redefinitions.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_mcp_redefinitions
 
     @property
-    def num_variables(self) -> int | None:
+    def num_variables(self) -> float | None:
         """
         Number of variables.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_variables
 
     @property
-    def num_bound_projections(self) -> int | None:
+    def num_bound_projections(self) -> float | None:
         """
         Number of bound projections during model generation.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._num_bound_projections
 
     @property
-    def objective_estimation(self) -> int | None:
+    def objective_estimation(self) -> float | None:
         """
         Estimate of the best possible solution for a mixed-integer model
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._objective_estimation
 
     @property
-    def objective_value(self) -> int | None:
+    def objective_value(self) -> float | None:
         """
         Objective function value
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._objective_value
 
     @property
-    def used_model_type(self) -> int | None:
+    def used_model_type(self) -> float | None:
         """
         Integer number that indicates the used model type.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._used_model_type
 
     @property
-    def model_generation_time(self) -> int | None:
+    def model_generation_time(self) -> float | None:
         """
         Time GAMS took to generate the model in wall-clock seconds.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._model_generation_time
 
     @property
-    def solve_model_time(self) -> int | None:
+    def solve_model_time(self) -> float | None:
         """
         Time the solver used to solve the model in seconds
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._solve_model_time
 
     @property
-    def solve_status(self) -> int | None:
+    def solve_status(self) -> float | None:
         """
         Indicates the solver termination condition.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._solve_status
 
     @property
-    def sum_infeasibilities(self) -> int | None:
+    def sum_infeasibilities(self) -> float | None:
         """
         Sum of infeasibilities.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._sum_infeasibilities
 
     @property
-    def solver_version(self) -> int | None:
+    def solver_version(self) -> float | None:
         """
         Solver version.
 
         Returns
         -------
-        int | None
+        float | None
         """
         return self._solver_version
 
@@ -661,7 +674,7 @@ class Model:
 
         This feature requires a solid understanding of programming, compilation,
         and linking processes. For more information, please refer to the
-        https://www.gams.com/latest/docs/UG_ExternalEquations.html .
+        https://gamspy.readthedocs.io/en/latest/user/advanced/external_equations.html .
 
         Returns
         -------
@@ -809,7 +822,9 @@ class Model:
 
         return solve_string + ";"
 
-    def _add_model_attr_options(self, options: Options) -> None:
+    def _add_runtime_options(
+        self, options: Options, backend: str = "local"
+    ) -> None:
         for key, value in options.model_dump(exclude_none=True).items():
             if key in MODEL_ATTR_OPTION_MAP:
                 if isinstance(value, bool):
@@ -821,6 +836,11 @@ class Model:
                     f"{self.name}.{MODEL_ATTR_OPTION_MAP[key]} = {value};\n"
                 )
             elif key in EXECUTION_OPTIONS:
+                if backend == "engine" and key == "loadpoint":
+                    value = os.path.relpath(
+                        value, self.container.working_directory
+                    )
+
                 self.container._add_statement(
                     f"{EXECUTION_OPTIONS[key]} '{value}';\n"
                 )
@@ -861,7 +881,7 @@ class Model:
                 if status in INTERRUPT_STATUS:
                     logger.warn(
                         f"The solve was interrupted! Solve status: {status.name}. "
-                        "For further information, see https://www.gams.com/latest/docs/UG_GAMSOutput.html#UG_GAMSOutput_SolverStatus."
+                        "For further information, see https://gamspy.readthedocs.io/en/latest/reference/gamspy._model.html#gamspy.SolveStatus."
                     )
                 elif status in ERROR_STATUS:
                     raise GamspyException(
@@ -1094,31 +1114,23 @@ class Model:
         validation.validate_equations(self)
 
         if options is None:
-            options = (
-                self.container._options
-                if self.container._options
-                else gp.Options()
-            )
-
-        options._set_solver_options(
-            working_directory=self.container.working_directory,
-            solver=solver,
-            problem=self.problem,
-            solver_options=solver_options,
-        )
-
-        self._add_model_attr_options(options)
+            options = self.container._options
 
         if self._is_frozen:
+            options._set_solver_options(
+                working_directory=self.container.working_directory,
+                solver=solver,
+                problem=self.problem,
+                solver_options=solver_options,
+            )
             self.instance.solve(solver, model_instance_options, output)
             return None
-
-        self._append_solve_string()
-        self._create_model_attributes()
 
         runner = backend_factory(
             self.container,
             options,
+            solver,
+            solver_options,
             output,
             backend,
             client,

@@ -226,7 +226,7 @@ def isin(symbol, sequence: Sequence) -> bool:
 
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
-    return arrvals[0][0]
+    return float(arrvals[0][0])
 
 
 def _get_symbol_names_from_gdx(
@@ -423,7 +423,9 @@ def _get_domain_str(domain: Iterable[Set | Alias | ImplicitSet | str]) -> str:
     """
     set_strs = []
     for set in domain:
-        if isinstance(set, (gt.Set, gt.Alias, implicits.ImplicitSet)):
+        if isinstance(
+            set, (gt.Set, gt.Alias, gt.UniverseAlias, implicits.ImplicitSet)
+        ):
             set_strs.append(set.gamsRepr())
         elif isinstance(set, str):
             if set == "*":

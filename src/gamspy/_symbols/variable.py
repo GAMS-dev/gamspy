@@ -51,7 +51,7 @@ class VariableType(Enum):
 class Variable(gt.Variable, operable.Operable, Symbol):
     """
     Represents a variable symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_Variables.html
+    https://gamspy.readthedocs.io/en/latest/user/basics/variable.html
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     records : Any, optional
         Records of the variable.
     domain_forwarding : bool, optional
-        Whether the variable forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the variable forwards the domain.
     description : str, optional
         Description of the variable.
     is_miro_output : bool
@@ -234,15 +234,15 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if description != "":
                 self.description = description
 
-            previous_state = self.container.miro_protect
-            self.container.miro_protect = False
+            previous_state = self.container._options.miro_protect
+            self.container._options.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container.miro_protect = previous_state
+            self.container._options.miro_protect = previous_state
 
         else:
             type = cast_type(type)
@@ -255,8 +255,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             else:
                 name = "v" + str(uuid.uuid4()).replace("-", "_")
 
-            previous_state = container.miro_protect
-            container.miro_protect = False
+            previous_state = container._options.miro_protect
+            container._options.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -291,7 +291,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             else:
                 self.container._synch_with_gams()
 
-            container.miro_protect = True
+            container._options.miro_protect = True
 
     def __getitem__(
         self, indices: Sequence | str
@@ -739,8 +739,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     @property
     def type(self):

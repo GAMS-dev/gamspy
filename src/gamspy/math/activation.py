@@ -55,8 +55,8 @@ def relu_with_sos1_var(
     `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
     The ReLU function is defined as ReLU(x) = max(x, 0). This implementation
     **generates** one SOS1 type variable which is necessary to represent the
-    mathematical relationship and this SOS1 variable contains the activation
-    variable and slack variable.
+    mathematical relationship and one equation. The SOS1 variable contains the
+    activation variable and the slack variable.
 
     Unlike ``relu_with_binary_var``, this function does not require lower and
     upper bounds for the formulation. It is claimed that when providing tight
@@ -69,10 +69,11 @@ def relu_with_sos1_var(
     neural network into MIP models, we do not suggest using it in training since
     you would need a MINLP solver that support SOS1 variables.
 
-    Returns activation variable if ``return_slack_var`` is False, otherwise
-    returns activation and slack variable in order. Since activation variable
-    and slack variable are the same variable only separated by the last domain
-    this function returns ImplicitVariable instead of Variable.
+    Returns the activation variable and the equation list if ``return_slack_var`` is
+    False, otherwise returns activation, slack variable and the equation list in
+    order. Since activation variable and slack variable are the same variable
+    only separated by the last domain this function returns ImplicitVariable
+    instead of Variable.
 
     Based on paper:
     `PySCIPOpt-ML: Embedding trained machine learning models into mixed-integer programs. <https://arxiv.org/pdf/2312.08074>`_
@@ -84,7 +85,7 @@ def relu_with_sos1_var(
 
     Returns
     -------
-    implicits.ImplicitVariable | tuple[implicits.ImplicitVariable, implicits.ImplicitVariable]
+    tuple[implicits.ImplicitVariable, list[Equation]] | tuple[implicits.ImplicitVariable, implicits.ImplicitVariable, list[Equation]]
 
     Examples
     --------
@@ -93,8 +94,8 @@ def relu_with_sos1_var(
     >>> m = Container()
     >>> i = Set(m, "i", records=range(3))
     >>> x = Variable(m, "x", domain=[i])
-    >>> y = relu_with_sos1_var(x)
-    >>> y, s = relu_with_sos1_var(x, return_slack_var=True)
+    >>> y, eqs = relu_with_sos1_var(x)
+    >>> y, s, eqs = relu_with_sos1_var(x, return_slack_var=True)
     >>> y.domain # implicit activation variable has the same domain
     [Set(name=i, domain=['*'])]
     >>> s.domain # implicit slack variable has the same domain as well
@@ -122,9 +123,9 @@ def relu_with_sos1_var(
     eq[...] = y[activation_domain] == x + y[sos1_var_domain]
 
     if return_slack_var:
-        return y[activation_domain], y[sos1_var_domain]
+        return y[activation_domain], y[sos1_var_domain], [eq]
 
-    return y[activation_domain]
+    return y[activation_domain], [eq]
 
 
 def relu_with_binary_var(
@@ -143,10 +144,10 @@ def relu_with_binary_var(
     """
     Implements the ReLU activation function using binary variables. The ReLU
     function is defined as ReLU(x) = max(x, 0). This implementation **generates**
-    one binary variable and one positive variable. The binary variable is
-    necessary to represent the mathematical relationship, while the positive
-    variable serves as the activation variable. Both the binary and positive
-    variables share the same domain as the input.
+    one binary variable, one positive variable and three equations. The binary
+    variable is necessary to represent the mathematical relationship, while the
+    positive variable serves as the activation variable. Both the binary and
+    positive variables share the same domain as the input.
 
     The formulation of this function requires having lower and upper bounds
     for the input ``x``. This function utilizes the bounds from the variables
@@ -154,8 +155,8 @@ def relu_with_binary_var(
     and ``default_ub``. Providing tighter and **correct** bounds can enhance
     the quality of linear relaxations.
 
-    Returns activation variable if ``return_binary_var`` is False,
-    otherwise returns activation and binary variable in order.
+    Returns the activation variable and the equation list if ``return_binary_var`` is False,
+    otherwise returns activation, binary variable and equation list in order.
 
     Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L5>`_
 
@@ -168,7 +169,7 @@ def relu_with_binary_var(
 
     Returns
     -------
-    Variable | tuple[Variable, Variable]
+    tuple[Variable, list[Equation]] | tuple[Variable, Variable, list[Equation]]
 
     Examples
     --------
@@ -177,10 +178,12 @@ def relu_with_binary_var(
     >>> m = Container()
     >>> i = Set(m, "i", records=range(3))
     >>> x = Variable(m, "x", domain=[i])
-    >>> y = relu_with_binary_var(x)
+    >>> y, eqs = relu_with_binary_var(x)
     >>> y.type
     'positive'
-    >>> y, b = relu_with_binary_var(x, return_binary_var=True)
+    >>> len(eqs)
+    3
+    >>> y, b, eqs = relu_with_binary_var(x, return_binary_var=True)
     >>> b.type
     'binary'
     >>> y.domain # i many activation variables
@@ -225,9 +228,9 @@ def relu_with_binary_var(
         y.lo[...] = 0
 
     if return_binary_var:
-        return y, sigma
+        return y, sigma, eq
     else:
-        return y
+        return y, eq
 
 
 def relu_with_complementarity_var(
@@ -243,12 +246,12 @@ def relu_with_complementarity_var(
     """
     Implements the ReLU activation function using complementarity conditions.
     The ReLU function is defined as ReLU(x) = max(x, 0). This implementation
-    **generates** one positive variable, which serves as the activation variable.
-    The activation variable shares the same domain as the input. Unlike
-    ``relu_with_binary_var``, this function does not require lower and upper
-    bounds for the formulation.
+    **generates** one positive variable, which serves as the activation variable
+    and two equations. The activation variable shares the same domain as the
+    input. Unlike ``relu_with_binary_var``, this function does not require lower
+    and upper bounds for the formulation.
 
-    Returns the activation variable.
+    Returns the activation variable and the equation list.
 
     Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L85>`_
 
@@ -258,7 +261,7 @@ def relu_with_complementarity_var(
 
     Returns
     -------
-    Variable
+    tuple[Variable, list[Equation]]
 
     Examples
     --------
@@ -267,9 +270,11 @@ def relu_with_complementarity_var(
     >>> m = Container()
     >>> i = Set(m, "i", records=range(3))
     >>> x = Variable(m, "x", domain=[i])
-    >>> y = relu_with_complementarity_var(x)
+    >>> y, eqs = relu_with_complementarity_var(x)
     >>> y.type
     'positive'
+    >>> len(eqs)
+    2
 
     """
     domain = x.domain
@@ -298,10 +303,10 @@ def relu_with_complementarity_var(
     else:
         y.lo[...] = 0
 
-    return y
+    return y, eq
 
 
-def log_softmax(x: Variable, dim: int = -1):
+def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
     """
     Implements the log_softmax activation function. This function strictly
     requires a GAMSPy Variable, `y = log_softmax(x)`. The ``dim`` parameter
@@ -311,22 +316,26 @@ def log_softmax(x: Variable, dim: int = -1):
     the softmax dimension has 20 or fewer elements, it uses the
     :meth:`lse_max <gamspy.math.lse_max>` (log-sum-exp) intrinsic function for
     improved numerical stability which usually leads to faster solve times.
+    Some solvers do not support :meth:`lse_max <gamspy.math.lse_max>`, in that
+    case you can set ``skip_intrinsic`` parameter to True to not use intrinsic
+    functions even when possible.
 
     To learn more about `Log-Sum-Exp trick <https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/>`_ .
 
     This function is usually combined with Negative Log Likelihood loss for
     classification problems.
 
-    Returns the activation variable.
+    Returns the activation variable and the equation list.
 
     Parameters
     ----------
     x : Variable
     dim : int
+    skip_intrinsic: bool
 
     Returns
     -------
-    Variable
+    Variable, list[Equation]
 
     Examples
     --------
@@ -335,10 +344,11 @@ def log_softmax(x: Variable, dim: int = -1):
     >>> from gamspy.math.activation import log_softmax
     >>> m = Container()
     >>> x = Variable(m, "x", domain=dim([500, 10]))
-    >>> y = log_softmax(x) # uses LSE because 10 <= 20
+    >>> y, eqs1 = log_softmax(x) # uses LSE because 10 <= 20
     >>> y.domain
     [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
-    >>> y2 = log_softmax(x, dim=0) # cannot use LSE because 500 > 20
+    >>> y2, eqs2 = log_softmax(x, dim=0) # cannot use LSE because 500 > 20
+    >>> y3, eqs3 = log_softmax(x, skip_intrinsic=True) # don't use LSE because of skip_intrinsic
 
     """
     if not isinstance(x, Variable):
@@ -359,7 +369,7 @@ def log_softmax(x: Variable, dim: int = -1):
         domain=x.domain,
     )
 
-    if len(sum_domain) != 0 and len(sum_domain) <= 20:
+    if not skip_intrinsic and len(sum_domain) != 0 and len(sum_domain) <= 20:
         # Use built-in LSE if possible
         scalars = [rec for rec in sum_domain.records["uni"]]
         variables = []
@@ -376,7 +386,7 @@ def log_softmax(x: Variable, dim: int = -1):
         sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
         eq[...] = y[...] == x - gamspy.math.log(sum_expr)
 
-    return y
+    return y, [eq]
 
 
 def softmax(x: Variable, dim: int = -1):
@@ -391,7 +401,7 @@ def softmax(x: Variable, dim: int = -1):
     Use :meth:`log_softmax <gamspy.math.log_softmax>` if you need to take the
     logarithm of the softmax function.
 
-    Returns the activation variable.
+    Returns the activation variable and the equation list.
 
     Parameters
     ----------
@@ -400,7 +410,7 @@ def softmax(x: Variable, dim: int = -1):
 
     Returns
     -------
-    Variable
+    tuple[Variable, list[Equation]]
 
     Examples
     --------
@@ -409,7 +419,7 @@ def softmax(x: Variable, dim: int = -1):
     >>> from gamspy.math.activation import softmax
     >>> m = Container()
     >>> x = Variable(m, "x", domain=dim([500, 10]))
-    >>> y = softmax(x)
+    >>> y, eqs = softmax(x)
     >>> y.domain
     [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
 
@@ -438,4 +448,4 @@ def softmax(x: Variable, dim: int = -1):
     sum_expr = gamspy.Sum(sum_domain, gamspy.math.exp(x[expr_domain]))
     eq[...] = y[...] == gamspy.math.exp(x) / sum_expr
 
-    return y
+    return y, [eq]

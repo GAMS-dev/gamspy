@@ -200,6 +200,8 @@ class Options(BaseModel):
         optimal solution will be within the min_improvement_threshold or less of the found solution. Observe that the option
         min_improvement_threshold is specified in absolute terms, therefore non-negative values are appropriate for both
         minimization and maximization models.
+    miro_protect:
+        Protects MIRO input symbol records from being re-assigned, by default True.
     node_limit: int | None
         Node limit in branch and bound tree
     absolute_optimality_gap: float | None
@@ -307,6 +309,7 @@ class Options(BaseModel):
     try_partial_integer_solution: Optional[bool] = None
     examine_linearity: Optional[bool] = None
     min_improvement_threshold: Optional[float] = None
+    miro_protect: bool = True
     hold_fixed_variables: Optional[bool] = None
     iteration_limit: Optional[int] = None
     keep_temporary_files: Optional[int] = None
@@ -419,15 +422,16 @@ class Options(BaseModel):
                     "You need to provide a 'solver' to apply solver options."
                 )
 
-            solver_file_name = os.path.join(
-                working_directory, f"{solver.lower()}.123"
+            solver_options_file_name = os.path.join(
+                working_directory, f"{solver.lower()}.opt"
             )
 
-            with open(solver_file_name, "w", encoding="utf-8") as solver_file:
+            with open(solver_options_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
                     solver_file.write(f"{key} {value}\n")
 
-            self._solver_options_file = "123"
+            self._solver_options_file = "1"
+            self._solver_options_file_name = solver_options_file_name
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
@@ -469,7 +473,17 @@ class Options(BaseModel):
 
         return Options(**attributes)
 
-    def export(
+    def export(self, pf_file: str) -> None:
+        """
+        Exports options to the pf_file. Each line contains a key-value pair.
+
+        Parameters
+        ----------
+        pf_file : str
+        """
+        self._export(pf_file)
+
+    def _export(
         self, pf_file: str, output: io.TextIOWrapper | None = None
     ) -> None:
         """
@@ -510,14 +524,13 @@ update_type_map = {
     "0": SymbolUpdateType.Zero,
     "base_case": SymbolUpdateType.BaseCase,
     "accumulate": SymbolUpdateType.Accumulate,
-    "inherit": SymbolUpdateType._Inherit,
 }
 
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
+    update_type: Literal["0", "base_case", "accumulate"] = (
         "base_case"
     )
 

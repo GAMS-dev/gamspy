@@ -22,11 +22,21 @@ class Local(backend.Backend):
         self,
         container: Container,
         options: Options,
+        solver: str | None,
+        solver_options: dict | None,
         output: io.TextIOWrapper | None,
         model: Model | None,
         load_symbols: list[Symbol] | None,
     ) -> None:
-        super().__init__(container, model, options, output, load_symbols)
+        super().__init__(
+            container,
+            model,
+            options,
+            solver,
+            solver_options,
+            output,
+            load_symbols,
+        )
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
@@ -38,7 +48,7 @@ class Local(backend.Backend):
             self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
-        scrdir = self.container.process_directory
+        scrdir = self.container._process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,
@@ -63,6 +73,17 @@ class Local(backend.Backend):
         return False
 
     def run(self, keep_flags: bool = False):
+        if self.model is not None:
+            self.model._add_runtime_options(self.options)
+            self.model._append_solve_string()
+            self.model._create_model_attributes()
+            self.options._set_solver_options(
+                working_directory=self.container.working_directory,
+                solver=self.solver,
+                problem=self.model.problem,
+                solver_options=self.solver_options,
+            )
+
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess(self.container._gdx_in, keep_flags)
 
@@ -83,7 +104,7 @@ class Local(backend.Backend):
         extra_options = self._prepare_extra_options(self.job_name)
         self.options._set_extra_options(extra_options)
 
-        self.options.export(self.pf_file, self.output)
+        self.options._export(self.pf_file, self.output)
 
         try:
             self.container._job = self.job_name
@@ -92,7 +113,7 @@ class Local(backend.Backend):
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
         except GamspyException as exception:
-            self.container.workspace._has_error = True
+            self.container._workspace._has_error = True
             message = _customize_exception(
                 self.options,
                 self.job_name,

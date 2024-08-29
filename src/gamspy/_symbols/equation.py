@@ -56,7 +56,7 @@ class EquationType(Enum):
 class Equation(gt.Equation, Symbol):
     """
     Represents an Equation symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_Equations.html
+    https://gamspy.readthedocs.io/en/latest/user/basics/equation.html
 
     Parameters
     ----------
@@ -73,7 +73,7 @@ class Equation(gt.Equation, Symbol):
     records : Any, optional
         Records of the equation.
     domain_forwarding : bool, optional
-        Whether the equation forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the equation forwards the domain.
     description : str, optional
         Description of the equation.
     uels_on_axes: bool
@@ -256,15 +256,15 @@ class Equation(gt.Equation, Symbol):
             if description != "":
                 self.description = description
 
-            previous_state = self.container.miro_protect
-            self.container.miro_protect = False
+            previous_state = self.container._options.miro_protect
+            self.container._options.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container.miro_protect = previous_state
+            self.container._options.miro_protect = previous_state
 
         else:
             type = cast_type(type)
@@ -277,8 +277,8 @@ class Equation(gt.Equation, Symbol):
             else:
                 name = "e" + str(uuid.uuid4()).replace("-", "_")
 
-            previous_state = container.miro_protect
-            container.miro_protect = False
+            previous_state = container._options.miro_protect
+            container._options.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -319,7 +319,7 @@ class Equation(gt.Equation, Symbol):
             else:
                 self.container._synch_with_gams()
 
-            container.miro_protect = previous_state
+            container._options.miro_protect = previous_state
 
     def __hash__(self):
         return id(self)
@@ -344,8 +344,8 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "gams"
 
     def __repr__(self) -> str:
         return f"Equation(name={self.name}, type={self.type}, domain={self.domain})"
@@ -895,8 +895,8 @@ class Equation(gt.Equation, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     @property
     def type(self):
@@ -956,7 +956,7 @@ class Equation(gt.Equation, Symbol):
                 domain_str = ",".join(
                     [symbol.name for symbol in self._definition.left.domain]
                 )
-                right_side = f"\\qquad \\forall {domain_str}"
+                right_side = f"\\hfill \\forall {domain_str}"
         else:
             domain_str = ",".join(
                 [
@@ -966,13 +966,13 @@ class Equation(gt.Equation, Symbol):
             )
             domain_str = f"\\forall {domain_str}"
             constraint_str = self._definition.left.condition.latexRepr()
-            right_side = f"\\qquad {domain_str} ~ | ~ {constraint_str}"
+            right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         equation_str = (
-            "\\begin{equation*}\n"
+            "$\n"
             + self._definition.right.latexRepr()
             + f"{right_side}"
-            + "\n\\end{equation*}"
+            + "\n$"
         )
 
         return equation_str

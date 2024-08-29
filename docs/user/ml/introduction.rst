@@ -30,10 +30,10 @@ is much easier than:
 
 .. code-block:: python
 
-   calc_mm_3[...] = z3[m, j] == Sum(k,  a2[m, i] @ w2[i, j])
+   calc_mm_3[m, j] = z3[m, j] == Sum(k,  a2[m, i] @ w2[i, j])
 
-In this context, m represents the batch dimension, i denotes the feature dimension of layer 2,
-and j represents the feature dimension of layer 3.
+In this context, ``m`` represents the batch dimension, ``i`` denotes the feature dimension of layer 2,
+and ``j`` represents the feature dimension of layer 3.
 
 GAMSPy provides the following features for ML workloads:
 
@@ -61,6 +61,7 @@ the domains specified when declaring the symbol is used implicitly.
 
    import gamspy as gp
    import numpy as np
+   
    m = gp.Container()
    i = gp.Set(m, "i")
    j = gp.Set(m, "j")
@@ -89,7 +90,7 @@ Or if you want to be specific:
 
 .. code-block:: python
 
-   assign_1[...] = a[i, j, k] == b[j, k] + c[i, j]
+   assign_1[i, j, k] = a[i, j, k] == b[j, k] + c[i, j]
 
 
 
@@ -185,7 +186,7 @@ You are not limited to 2 dimensions. Many times in ML applications we need more 
    ...
    y = gp.Variable(m, name="y", domain=dim((128, 500, 1000)))
 
-However, you are limited to 20 dimensions as GAMS supports up to 20 dimensions:
+However, you are limited to 20 dimensions as GAMSPy supports up to 20 dimensions:
 
 .. code-block:: python
 
@@ -212,7 +213,7 @@ symbols and expressions support matrix multiplication by overriding the ``@`` op
    matrix multiplication is computationally expensive, and since the elements 
    involved include variables as well as numbers, certain libraries and optimization 
    techniques cannot be used to accelerate the process. By
-   delegating this task to GAMS rather than handling it directly in Python, we
+   delegating this task to the GAMS execution engine rather than handling it directly in Python, we
    achieve a faster model generation process.
 
 
@@ -367,12 +368,9 @@ norm.
    i = gp.Set(m, name="i", records=["i1", "i2"])
    j = gp.Set(m, name="j", records=["j1", "j2"])
    mat = gp.Parameter(m, "mat", domain=[i, j],
-                      records=[
-                        ("i1", "j1", 3),
-                        ("i1", "j2", 4),
-                        ("i2", "j1", 7),
-                        ("i2", "j2", 24),
-                      ]
+                      records=np.array([[3, 4],
+                                        [7, 24]])
+
                      )
    vlen = gp.Parameter(m, "vlen", domain=[i])
    vlen[...] = gp.math.vector_norm(mat, dim=[j])
@@ -411,12 +409,9 @@ the applicability of the `vector_norm` function in various modeling scenarios.
    i = gp.Set(m, name="i", records=["i1", "i2"])
    j = gp.Set(m, name="j", records=["j1", "j2"])
    mat = gp.Parameter(m, "mat", domain=[i, j],
-                      records=[
-                        ("i1", "j1", 3),
-                        ("i1", "j2", 4),
-                        ("i2", "j1", 7),
-                        ("i2", "j2", 24),
-                      ]
+                      records=np.array([[3, 4],
+                                        [7, 24]])
+
                      )
    expr = gp.math.vector_norm(mat, dim=[j])
    expr.gamsRepr()
@@ -460,12 +455,8 @@ generated.
    i = gp.Set(m, name="i", records=["i1", "i2"])
    j = gp.Set(m, name="j", records=["j1", "j2"])
    mat = gp.Parameter(m, "mat", domain=[i, j],
-                      records=[
-                        ("i1", "j1", 3),
-                        ("i1", "j2", 4),
-                        ("i2", "j1", 7),
-                        ("i2", "j2", 24),
-                      ]
+                      records=np.array([[3, 4],
+                                        [7, 24]])
                      )
 
    mat2 = permute(mat, [1, 0])
@@ -494,12 +485,8 @@ If you only need to permute the last two dimensions (transpose), you can use
    i = gp.Set(m, name="i", records=["i1", "i2"])
    j = gp.Set(m, name="j", records=["j1", "j2"])
    mat = gp.Parameter(m, "mat", domain=[i, j],
-                      records=[
-                        ("i1", "j1", 3),
-                        ("i1", "j2", 4),
-                        ("i2", "j1", 7),
-                        ("i2", "j2", 24),
-                      ]
+                      records=np.array([[3, 4],
+                                        [7, 24]])
                      )
 
    mat2 = mat.t() # same as before
@@ -526,21 +513,17 @@ still be useful in various applications.
 
    m = gp.Container()
    i = gp.Set(m, name="i", records=["i1", "i2"])
+   mat = gp.Parameter(m, "mat", domain=[i, i],
+                      records=np.array([[3, 4],
+                                        [5, 6]])
+                     )
+
    # Matrix
    # 3 4
    # 5 6
    # Trace of it is 3 + 6 = 9
 
-   mat = gp.Parameter(m, "mat", domain=[i, i],
-                      records=[
-                        ("i1", "i1", 3),
-                        ("i1", "i2", 4),
-                        ("i2", "i1", 5),
-                        ("i2", "i2", 6),
-                      ]
-                     )
-
-   sc = gp.Parameter(m, name="sc", domain=[])
+   sc = gp.Parameter(m, name="sc")
    sc[...] = trace(mat)
    sc.records
    #    value
@@ -600,14 +583,12 @@ To read more about `classification of models
    from gamspy.math import relu_with_binary_var, log_softmax
    from gamspy.math import dim
 
-
    batch = 128
    m = Container()
    x = Variable(m, "x", domain=dim([batch, 10]))
-   y = relu_with_binary_var(x)
+   y, eqs1 = relu_with_binary_var(x)
 
-   y2 = log_softmax(x) # this creates variable and equations for you
-
+   y2, eqs2 = log_softmax(x) # this creates variable and equations for you
 
 Additionally, we offer our established functions that can also be used as
 activation functions:
@@ -622,7 +603,6 @@ need to create equations and variables yourself.
 
    from gamspy import Container, Variable, Set, Equation
    from gamspy.math import dim, tanh
-
 
    batch = 128
    m = Container()
@@ -651,6 +631,7 @@ alias to its alias. See the following code snippet as an example.
 
    import gamspy as gp
    import numpy as np
+
    m = gp.Container()
    i = gp.Set(m, "i")
    j = gp.Set(m, "j")

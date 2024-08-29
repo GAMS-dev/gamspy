@@ -1,7 +1,7 @@
 .. _reference:
 
-GAMSPy API Reference
-====================
+API Reference
+=============
 
 .. toctree::
    :maxdepth: 2

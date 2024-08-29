@@ -119,6 +119,10 @@ class AliasSuite(unittest.TestCase):
         j2 = UniverseAlias(self.m, "j")
         self.assertEqual(id(j1), id(j2))
 
+        u = UniverseAlias(self.m, name="u")
+        p = Parameter(self.m, name="p", domain=u)
+        p[u] = 2
+
     def test_universe_alias(self):
         gdx_path = os.path.join("tmp", "test.gdx")
 

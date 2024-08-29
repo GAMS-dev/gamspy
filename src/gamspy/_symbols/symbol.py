@@ -82,7 +82,14 @@ class Symbol:
         """
         if value:
             self._synchronize = True
-            self.container._synch_with_gams()
+
+            if self._winner == "python":
+                self.modified = True
+                self.container._synch_with_gams()
+            else:
+                self.container.loadRecordsFromGdx(
+                    load_from=self.container._gdx_out, symbol_names=[self.name]
+                )
         else:
             self._synchronize = False
 

@@ -269,20 +269,32 @@ class ParameterSuite(unittest.TestCase):
             )
 
     def test_expert_sync(self):
-        i_list = [str(i) for i in range(4)]
-        m = Container()
-        i = Set(m, "i", records=i_list)
-        f = Parameter(m, "f", domain=i)
-        f["0"] = 0
-        f["1"] = 1
-
+        f = Parameter(self.m, "f")
+        f.setRecords(3)  # Python: 3 GAMS: 3
+        self.assertEqual(f.toValue(), 3)
+        f[...] = 2  # Python: 2 GAMS: 2
+        self.assertEqual(f.toValue(), 2)
         f.synchronize = False
-        for n in range(2, 4):
-            f[str(n)] = f[str(n - 2)] + f[str(n - 1)]
+        f.setRecords(3)  # Python: 3 GAMS: 2
+        self.assertEqual(f.toValue(), 3)
+        f[...] = 1  # Python: 3 GAMS: 1
+        self.assertEqual(f.toValue(), 3)
+        f.synchronize = True  # Python: 1 GAMS: 1 (GAMS wins because the user has assignment statement last)
+        self.assertEqual(f.toValue(), 1)
 
-        self.assertEqual(f.records.value.tolist(), [1.0])
-        f.synchronize = True
-        self.assertEqual(f.records.value.tolist(), [1.0, 1.0, 2.0])
+    def test_expert_sync2(self):
+        f = Parameter(self.m, "f")
+        f.setRecords(3)  # Python: 3 GAMS: 3
+        self.assertEqual(f.toValue(), 3)
+        f[...] = 2  # Python: 2 GAMS: 2
+        self.assertEqual(f.toValue(), 2)
+        f.synchronize = False
+        f[...] = 1  # Python: 2 GAMS: 1
+        self.assertEqual(f.toValue(), 2)
+        f.setRecords(3)  # Python: 3 GAMS: 1
+        self.assertEqual(f.toValue(), 3)
+        f.synchronize = True  # Python: 3 GAMS: 3 (Python wins because the user has setRecords last)
+        self.assertEqual(f.toValue(), 3)
 
     def test_control_domain(self):
         i = Set(self.m, "i", records=["i1", "i2"])

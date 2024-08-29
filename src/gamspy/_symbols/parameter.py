@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 class Parameter(gt.Parameter, operable.Operable, Symbol):
     """
     Represents a parameter symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
+    https://gamspy.readthedocs.io/en/latest/user/basics/parameter.html
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     records : int | float | pd.DataFrame | np.ndarray | list, optional
         Records of the parameter.
     domain_forwarding : bool, optional
-        Whether the parameter forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the parameter forwards the domain.
     description : str, optional
         Description of the parameter.
     uels_on_axes : bool
@@ -49,6 +49,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
     is_miro_output : bool
         Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+    is_miro_table : bool
+        Whether the symbol is a GAMS MIRO table symbol. See: https://gams.com/miro/tutorial.html
 
     Examples
     --------
@@ -199,15 +201,15 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if description != "":
                 self.description = description
 
-            previous_state = self.container.miro_protect
-            self.container.miro_protect = False
+            previous_state = self.container._options.miro_protect
+            self.container._options.miro_protect = False
             self.records = None
             self.modified = True
 
             # only set records if records are provided
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
-            self.container.miro_protect = previous_state
+            self.container._options.miro_protect = previous_state
         else:
             if name is not None:
                 name = validation.validate_name(name)
@@ -217,8 +219,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             else:
                 name = "p" + str(uuid.uuid4()).replace("-", "_")
 
-            previous_state = container.miro_protect
-            container.miro_protect = False
+            previous_state = container._options.miro_protect
+            container._options.miro_protect = False
             super().__init__(
                 container,
                 name,
@@ -244,7 +246,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             else:
                 self.container._synch_with_gams()
 
-            container.miro_protect = previous_state
+            container._options.miro_protect = previous_state
 
     def __getitem__(
         self, indices: Sequence | str
@@ -261,7 +263,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
 
-        if self._is_miro_input and self.container.miro_protect:
+        if self._is_miro_input and self.container._options.miro_protect:
             raise ValidationError(
                 f"Cannot assign to protected miro input symbol {self.name}. `miro_protect`"
                 " attribute of the container can be set to False to allow"
@@ -282,8 +284,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "gams"
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
@@ -372,7 +374,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if (
             hasattr(self, "_is_miro_input")
             and self._is_miro_input
-            and self.container.miro_protect
+            and self.container._options.miro_protect
         ):
             raise ValidationError(
                 "Cannot assign to protected miro input symbols. `miro_protect`"
@@ -424,8 +426,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        if self.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self._winner = "python"
 
     def gamsRepr(self) -> str:
         """

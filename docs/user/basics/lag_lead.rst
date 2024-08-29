@@ -2,13 +2,13 @@
 
 .. meta::
    :description: Documentation of lead and lag operations on sets
-   :keywords: Lag, Lead, Set, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
+   :keywords: Lag, Lead, Set, GAMSPy, gamspy, mathematical modeling, sparsity, performance
 
 ************
 Lag and Lead
 ************
 
-``Lag`` and ``Lead`` operators can be used on ordered sets only, via the methods
+``Lag`` and ``Lead`` operators can be used on static sets only, via the methods
 ``lag()`` and ``lead()``. They are used to relate the current member of an
 ordered set to the previous or next member of the set. Both ``lag()`` and
 ``lead()`` require the argument ``n`` indicating the element offset to be
@@ -38,7 +38,7 @@ This assumption may result in elements of the set being referenced that
 actually do not exist. Therefore, the user must think carefully about the
 treatment of endpoints. Models with linear lag and lead operators will need
 special exception handling logic to deal with them. The following sections will
-describe how this issue is handled in ``GAMSPy`` in the context in which these
+describe how this issue is handled in GAMSPy in the context in which these
 operators are typically used: assignments and equation definitions. Linear lag and lead
 operators are useful for modeling time periods that do not repeat, like a set
 of years (say ``"1990"`` to ``"1997"``).
@@ -76,15 +76,12 @@ The following example shows the use of ``lag()`` on the right-hand side of an as
         description="time sequence",
         records=[f"y-{x}" for x in range(1987, 1992)],
     )
-    a = gp.Parameter(m, name="a", domain=[t])
-    b = gp.Parameter(m, name="b", domain=[t])
+    a = gp.Parameter(m, domain=t)
+    b = gp.Parameter(m, domain=t)
     
     a[t] = 1986 + gp.Ord(t)
     b[t] = -1
     b[t] = a[t.lag(1, "linear")]
-    
-    print(a.records)
-    print(b.records)
 
 This sets the values for the parameter ``a`` to ``1987``, ``1988`` up to ``1991``
 corresponding to the labels ``"y-1987"``, ``"y-1988"`` and so on.
@@ -110,16 +107,13 @@ left-hand side of an assignment::
         description="time sequence",
         records=[f"y-{x}" for x in range(1987, 1992)],
     )
-    a = gp.Parameter(m, name="a", domain=[t])
-    c = gp.Parameter(m, name="c", domain=[t])
+    a = gp.Parameter(m, domain=t)
+    c = gp.Parameter(m, domain=t)
     
     a[t] = 1986 + gp.Ord(t)
     c[t] = -1
     c[t.lead(2, "linear")] = a[t]
     
-    print(a.records)
-    print(c.records)
-
 Here, the assignment to ``c`` involves the ``lead()`` operator on the left-hand
 side. It is best to spell out step-by-step how this assignment is made. For
 each element in ``t``, find the element of ``c`` associated with ``t+2``. If it
@@ -146,21 +140,16 @@ assignment statements::
     )
     val = gp.Parameter(
         m,
-        name="val",
-        domain=[s],
+        domain=s,
         records=[["spring", 10], ["summer", 15], ["autumn", 12], ["winter", 8]],
     )
-    lagval = gp.Parameter(m, name="lagval", domain=[s])
-    leadval = gp.Parameter(m, name="leadval", domain=[s])
+    lagval = gp.Parameter(m, domain=s)
+    leadval = gp.Parameter(m, domain=s)
     
     lagval[s] = -1
     lagval[s] = val[s.lag(2, "circular")]
     leadval[s] = -1
     leadval[s.lead(1, "circular")] = val[s]
-    
-    print(val.records)
-    print(lagval.records)
-    print(leadval.records)
 
 In the example, parameter ``lagval`` is used for reference while ``leadval`` is
 used for assignment. Notice that the case of circular lag and lead operators
@@ -195,27 +184,25 @@ complete model and encourage users to solve it and further explore it::
 
     import gamspy as gp
     
-    m = gp.Container()
-    
-    t = gp.Set(m, name="t", records=[f"t{x+1}" for x in range(5)])
-    tfirst = gp.Set(m, name="tfirst", domain=[t])
-    i = gp.Parameter(m, name="i", domain=[t])
+    m = gp.Container()    
+    t = gp.Set(m, name="t", records=range(5))
+    tfirst = gp.Set(m, domain=t)
+    i = gp.Parameter(m, domain=t)
     i[t] = 1
-    k0 = gp.Parameter(m, name="k0", records=[3.0])
+    k0 = gp.Parameter(m, records=3)
     tfirst[t] = gp.Number(1).where[gp.Ord(t) == 1]
     
-    k = gp.Variable(m, name="k", domain=[t])
-    z = gp.Variable(m, name="z")
+    k = gp.Variable(m, domain=[t])
+    z = gp.Variable(m)
     k.fx[tfirst] = k0
     
-    kk = gp.Equation(m, name="kk", domain=[t])
-    dummy = gp.Equation(m, name="dummy")
+    kk = gp.Equation(m, domain=t)
+    dummy = gp.Equation(m)
     kk[t.lead(1)] = k[t.lead(1)] == k[t] + i[t]
     dummy[...] = z == 0
     
     m1 = gp.Model(
         m,
-        name="m1",
         equations=m.getEquations(),
         problem="LP",
         sense=gp.Sense.MIN,
@@ -226,9 +213,9 @@ complete model and encourage users to solve it and further explore it::
 Note that the equation ``kk`` is declared over the set ``t``, but it is defined
 over the domain ``t.lead(1)``. Therefore the first equation that will be generated is the following::
 
-    k["t2"]  ==  k["t1"] + i["t1"]
+    k["1"]  ==  k["0"] + i["0"]
 
-Note that the value of the variable ``k["t1"]`` is fixed at the value of scalar
+Note that the value of the variable ``k["0"]`` is fixed at the value of scalar
 ``k0``. Observe that for the last element of ``t``, the term ``k[t.lead(1)]``
 is not defined and therefore the equation will not be generated.
 
@@ -253,9 +240,9 @@ Note that for the first element of the set ``t`` the terms ``k[t.lag(1)]`` and
 ``i[t.lag(1)]`` are not defined and therefore vanish. Without the conditional
 term, the resulting equation would be::
 
-    k["t1"] == 0
+    k["0"] == 0
 
-However, this would lead to different results as ``k["t1"]`` would not be set
+However, this would lead to different results as ``k["0"]`` would not be set
 to the value of ``k0`` anymore. Therefore the conditional expression
 ``k0.where[tfirst[t]]`` is added. Observe that in this formulation equations
 are generated for all time periods, no equation is suppressed.
@@ -273,7 +260,6 @@ artificial example::
     import gamspy as gp
     
     m = gp.Container()
-    
     s = gp.Set(
         m,
         name="s",
@@ -282,24 +268,20 @@ artificial example::
     )
     produ = gp.Variable(
         m,
-        name="produ",
         description="amount of goods produced in each season",
-        domain=[s],
+        domain=s,
     )
     avail = gp.Variable(
         m,
-        name="avail",
         description="amount of goods available in each season",
-        domain=[s],
+        domain=s,
     )
     sold = gp.Variable(
         m,
-        name="sold",
         description="amount of goods sold in each season",
-        domain=[s],
+        domain=s,
     )
-    matbal = gp.Equation(m, name="matbal", domain=[s])
-    
+    matbal = gp.Equation(m, domain=s)
     matbal[s] = avail[s.lead(1, "circular")] == avail[s] + produ[s] - sold[s]
 
 In this example four individual equations are generated. They are listed below::

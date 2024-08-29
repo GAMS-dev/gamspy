@@ -30,7 +30,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Literal
+    from typing import Any, Iterable
 
     from pandas import DataFrame
 
@@ -44,6 +44,7 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
     from gamspy._model import Sense
 
 GAMS_PORT = os.getenv("GAMS_PORT", None)
@@ -101,7 +102,8 @@ def open_connection(
         [
             os.path.join(system_directory, "gams"),
             "GAMSPY_JOB",
-            f"pf={initial_pf_file}",
+            "pf",
+            initial_pf_file,
         ],
         text=True,
         stdout=subprocess.PIPE,
@@ -212,8 +214,6 @@ class Container(gt.Container):
         "keep_on_error"
     options : Options, optional
         Global options for the overall execution
-    miro_protect : bool, optional
-        Protects MIRO input symbol records from being re-assigned, by default True
 
     Examples
     --------
@@ -230,9 +230,7 @@ class Container(gt.Container):
         working_directory: str | None = None,
         debugging_level: str = "keep_on_error",
         options: Options | None = None,
-        miro_protect: bool = True,
     ):
-        self.in_miro = MIRO_GDX_IN is not None
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
@@ -242,16 +240,15 @@ class Container(gt.Container):
         system_directory = get_system_directory(system_directory)
 
         self._unsaved_statements: list = []
-        self.miro_protect = miro_protect
 
         super().__init__(system_directory=system_directory)
         self._network_license = is_network_license(self.system_directory)
 
         self._debugging_level = debugging_level
-        self.workspace = Workspace(debugging_level, working_directory)
+        self._workspace = Workspace(debugging_level, working_directory)
 
-        self.working_directory = self.workspace.working_directory
-        self.process_directory = tempfile.mkdtemp(dir=self.working_directory)
+        self._working_directory = self._workspace.working_directory
+        self._process_directory = tempfile.mkdtemp(dir=self.working_directory)
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()
 
@@ -266,7 +263,7 @@ class Container(gt.Container):
         self._miro_output_symbols: list[str] = []
 
         self._socket, self._process = open_connection(
-            self.system_directory, self.process_directory
+            self.system_directory, self._process_directory
         )
 
         if load_from is not None:
@@ -288,6 +285,32 @@ class Container(gt.Container):
         except (Exception, ConnectionResetError):
             ...
 
+    @property
+    def working_directory(self) -> str:
+        """
+        Working directory path.
+
+        Returns
+        -------
+        str
+        """
+        return self._working_directory
+
+    @property
+    def in_miro(self) -> bool:
+        """
+        When running a GAMSPy job from GAMS MIRO, you may not want to
+        perform certain expensive operations, such as loading MIRO input
+        data from an Excel workbook, as this data comes from MIRO. In that
+        case, one can conditionally load the data by using the ``in_miro``
+        attribute of `Container`.
+
+        Returns
+        -------
+        bool
+        """
+        return MIRO_GDX_IN is not None
+
     def _validate_global_options(self, options: Any) -> Options | None:
         if options is not None and not isinstance(options, Options):
             raise TypeError(
@@ -305,6 +328,9 @@ class Container(gt.Container):
                 raise ValidationError(
                     f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
                 )
+
+        if options is None:
+            return Options()
 
         return options
 
@@ -495,9 +521,6 @@ class Container(gt.Container):
         modified_names = []
 
         for name, symbol in self:
-            if isinstance(symbol, gp.UniverseAlias):
-                continue
-
             if symbol.modified:
                 if (
                     isinstance(symbol, gp.Alias)
@@ -510,8 +533,7 @@ class Container(gt.Container):
         return modified_names
 
     def _synch_with_gams(self, keep_flags: bool = False) -> DataFrame | None:
-        options = Options() if self._options is None else self._options
-        runner = backend_factory(self, options)
+        runner = backend_factory(self, self._options)
         summary = runner.run(keep_flags=keep_flags)
 
         if self._options and self._options.seed is not None:
@@ -533,9 +555,6 @@ class Container(gt.Container):
 
         strings = ["$onMultiR", "$onUNDF"]
         for statement in self._unsaved_statements:
-            if isinstance(statement, gp.UniverseAlias):
-                continue
-
             if isinstance(statement, str):
                 strings.append(statement)
             else:
@@ -545,8 +564,10 @@ class Container(gt.Container):
             loadables = []
             for name in modified_names:
                 symbol = self[name]
-                if isinstance(symbol, LOADABLE) and not name.startswith(
-                    gp.Model._generate_prefix
+                if (
+                    isinstance(symbol, LOADABLE)
+                    and not name.startswith(gp.Model._generate_prefix)
+                    and symbol.synchronize
                 ):
                     loadables.append(symbol)
 
@@ -615,8 +636,8 @@ class Container(gt.Container):
         encoding: str | None = None,
     ) -> None:
         """
-        Reads specified symbols from the gdx file. If symbol_names are
-        not provided, it reads all symbols from the gdx file.
+        Reads specified symbols from the GDX file. If symbol_names are
+        not provided, it reads all symbols from the GDX file.
 
         Parameters
         ----------
@@ -650,8 +671,8 @@ class Container(gt.Container):
         eps_to_zero: bool = True,
     ) -> None:
         """
-        Writes specified symbols to the gdx file. If symbol_names are
-        not provided, it writes all symbols to the gdx file.
+        Writes specified symbols to the GDX file. If symbol_names are
+        not provided, it writes all symbols to the GDX file.
 
         Parameters
         ----------
@@ -710,15 +731,15 @@ class Container(gt.Container):
         symbol_names: list[str] | None = None,
     ) -> None:
         """
-        Loads data of the given symbols from a gdx file. If no
+        Loads data of the given symbols from a GDX file. If no
         symbol names are given, data of all symbols are loaded.
 
         Parameters
         ----------
         load_from : str
-            Path to the gdx file
+            Path to the GDX file
         symbols : List[str], optional
-            Symbols whose data will be load from gdx, by default None
+            Symbols whose data will be load from GDX, by default None
 
         Examples
         --------
@@ -737,12 +758,12 @@ class Container(gt.Container):
     def addGamsCode(self, gams_code: str) -> None:
         """
         Adds an arbitrary GAMS code to the generate .gms file.
-        Using addGAMSCode might result in a license error if no professional 08/09 license is used.
+        Using addGAMSCode might result in a license error if no GAMSpy++ license is used.
 
         Parameters
         ----------
         gams_code : str
-            Gams code that you want to insert.
+            GAMS code that you want to insert.
 
         Examples
         --------
@@ -757,19 +778,27 @@ class Container(gt.Container):
         self._synch_with_gams()
 
     def close(self) -> None:
-        """Stops the socket and releases resources."""
+        """
+        Stops the socket and releases resources. The container should not be used afterwards
+        to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
+        solves, etc. The container data (Container.data) is still available for read operations.
+        """
         self._stop_socket()
 
     def addAlias(
-        self, name: str | None = None, alias_with: Set | Alias | None = None
+        self,
+        name: str | None = None,
+        alias_with: Set | Alias | None = None,
     ) -> Alias:
         """
         Creates a new Alias and adds it to the container
 
         Parameters
         ----------
-        name : str | None
-        alias_with : Set | Alias
+        name : str, optional
+            Name of the alias.
+        alias_with : Set | Alias | None
+            Alias set object.
 
         Returns
         -------
@@ -796,25 +825,38 @@ class Container(gt.Container):
     def addSet(
         self,
         name: str | None = None,
-        domain: list[Set | str] | None = None,
+        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
     ) -> Set:
         """
         Creates a Set and adds it to the container
 
         Parameters
         ----------
-        name : str | None
-        domain : List[Set | str], optional
+        name : str, optional
+            Name of the set. Name is autogenerated by default.
+        domain : list[Set | Alias | str] | Set | Alias | str, optional
+            Domain of the set.
         is_singleton : bool, optional
-        records : Any, optional
+            Whether the set is a singleton set. Singleton sets cannot contain more than one element.
+        records : pd.DataFrame | np.ndarray | list, optional
+            Records of the set.
         domain_forwarding : bool, optional
+            Whether the set forwards the domain.
         description : str, optional
-        uels_on_axes : bool, optional
+            Description of the set.
+        uels_on_axes : bool
+            Assume that symbol domain information is contained in the axes of the given records.
+        is_miro_input : bool
+            Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
+        is_miro_output : bool
+            Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
 
         Returns
         -------
@@ -844,28 +886,45 @@ class Container(gt.Container):
             domain_forwarding,
             description,
             uels_on_axes,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
         )
 
     def addParameter(
         self,
         name: str | None = None,
-        domain: list[str | Set] | None = None,
+        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_input: bool = False,
+        is_miro_output: bool = False,
+        is_miro_table: bool = False,
     ) -> Parameter:
         """
         Creates a Parameter and adds it to the Container
 
         Parameters
         ----------
-        name : str | None
-        domain : List[str | Set]], optional
-        records : Any, optional
+        name : str, optional
+            Name of the parameter. Name is autogenerated by default.
+        domain : list[Set | Alias | str] | Set | Alias | str, optional
+            Domain of the parameter.
+        records : int | float | pd.DataFrame | np.ndarray | list, optional
+            Records of the parameter.
         domain_forwarding : bool, optional
+            Whether the parameter forwards the domain.
         description : str, optional
-        uels_on_axes : bool, optional
+            Description of the parameter.
+        uels_on_axes : bool
+            Assume that symbol domain information is contained in the axes of the given records.
+        is_miro_input : bool
+            Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
+        is_miro_output : bool
+            Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+        is_miro_table : bool
+            Whether the symbol is a GAMS MIRO table symbol. See: https://gams.com/miro/tutorial.html
 
         Returns
         -------
@@ -894,30 +953,41 @@ class Container(gt.Container):
             domain_forwarding,
             description,
             uels_on_axes,
+            is_miro_input=is_miro_input,
+            is_miro_output=is_miro_output,
+            is_miro_table=is_miro_table,
         )
 
     def addVariable(
         self,
         name: str | None = None,
         type: str = "free",
-        domain: list[str | Set] | None = None,
+        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
+        is_miro_output: bool = False,
     ) -> Variable:
         """
         Creates a Variable and adds it to the Container
 
         Parameters
         ----------
-        name : str | None
+        name : str, optional
+            Name of the variable. Name is autogenerated by default.
         type : str, optional
-        domain : List[str | Set]], optional
+            Type of the variable. "free" by default.
+        domain : list[Set | Alias | str] | Set | Alias | str, optional
+            Domain of the variable.
         records : Any, optional
+            Records of the variable.
         domain_forwarding : bool, optional
+            Whether the variable forwards the domain.
         description : str, optional
-        uels_on_axes : bool, optional
+            Description of the variable.
+        is_miro_output : bool
+            Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
 
         Returns
         -------
@@ -947,34 +1017,47 @@ class Container(gt.Container):
             domain_forwarding,
             description,
             uels_on_axes,
+            is_miro_output=is_miro_output,
         )
 
     def addEquation(
         self,
         name: str | None = None,
         type: str | EquationType = "regular",
-        domain: list[Set | str] | None = None,
-        definition: Expression | None = None,
+        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        definition: Variable | Operation | Expression | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
         uels_on_axes: bool = False,
-        definition_domain: list[Set | str] | None = None,
+        is_miro_output: bool = False,
+        definition_domain: list | None = None,
     ) -> Equation:
         """
         Creates an Equation and adds it to the Container
 
         Parameters
         ----------
-        name : str | None
+        name : str, optional
+            Name of the equation. Name is autogenerated by default.
         type : str
-        domain : List[Set | str], optional
-        definition : Definition, optional
+            Type of the equation. "regular" by default.
+        domain : list[Set | Alias | str] | Set | Alias | str, optional
+            Domain of the variable.
+        definition: Expression, optional
+            Definition of the equation.
         records : Any, optional
+            Records of the equation.
         domain_forwarding : bool, optional
+            Whether the equation forwards the domain.
         description : str, optional
-        uels_on_axes : bool, optional
-        definition_domain : List[Set | str], optional
+            Description of the equation.
+        uels_on_axes: bool
+            Assume that symbol domain information is contained in the axes of the given records.
+        definition_domain: list, optional
+            Definiton domain of the equation.
+        is_miro_output : bool
+            Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
 
         Returns
         -------
@@ -1005,31 +1088,43 @@ class Container(gt.Container):
             domain_forwarding,
             description,
             uels_on_axes,
+            is_miro_output,
             definition_domain,
         )
 
     def addModel(
         self,
         name: str | None = None,
-        problem: Problem | str | None = Problem.LP,
-        equations: list[Equation] = [],
-        sense: Literal["MIN", "MAX"] | Sense | None = None,
+        problem: Problem | str = Problem.LP,
+        equations: Iterable[Equation] = [],
+        sense: Sense | str | None = None,
         objective: Variable | Expression | None = None,
-        matches: dict | None = None,
-        limited_variables: list | None = None,
+        matches: dict[Equation, Variable] | None = None,
+        limited_variables: Iterable[Variable] | None = None,
+        external_module: str | None = None,
     ) -> Model:
         """
         Creates a Model and adds it to the Container
 
         Parameters
         ----------
-        name : str
-        equations : List[Equation]
-        problem : Problem | str, by default Problem.LP
-        sense : "MIN", "MAX", optional
+        name : str, optional
+            Name of the model. Name is autogenerated by default.
+        equations : Iterable[Equation]
+            Iterable of Equation objects.
+        problem : Problem or str, optional
+            'LP', 'NLP', 'QCP', 'DNLP', 'MIP', 'RMIP', 'MINLP', 'RMINLP', 'MIQCP', 'RMIQCP', 'MCP', 'CNS', 'MPEC', 'RMPEC', 'EMP', or 'MPSGE',
+            by default Problem.LP.
+        sense : Sense, optional
+            "MIN", "MAX", or "FEASIBILITY".
         objective : Variable | Expression, optional
-        matches : dict, optional
-        limited_variables : list, optional
+            Objective variable to minimize or maximize or objective itself.
+        matches : dict[Equation, Variable]
+            Equation - Variable matches for MCP models.
+        limited_variables : Iterable, optional
+            Allows limiting the domain of variables used in a model.
+        external_module: str, optional
+            The name of the external module in which the external equations are implemented
 
         Returns
         -------
@@ -1052,6 +1147,7 @@ class Container(gt.Container):
             objective,
             matches,
             limited_variables,
+            external_module=external_module,
         )
 
     def copy(self, working_directory: str) -> Container:
@@ -1253,7 +1349,7 @@ class Container(gt.Container):
 
     def gdxInputPath(self) -> str:
         """
-        Path to the input gdx file
+        Path to the input GDX file
 
         Returns
         -------
@@ -1271,7 +1367,7 @@ class Container(gt.Container):
 
     def gdxOutputPath(self) -> str:
         """
-        Path to the output gdx file
+        Path to the output GDX file
 
         Returns
         -------

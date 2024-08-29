@@ -99,8 +99,8 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._add_statement(statement)
         self.parent._assignment = statement
 
-        if self.parent.synchronize:
-            self.container._synch_with_gams()
+        self.container._synch_with_gams()
+        self.parent._winner = "gams"
 
     def __eq__(self, other):  # type: ignore
         op = "eq"
