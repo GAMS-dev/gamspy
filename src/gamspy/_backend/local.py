@@ -48,7 +48,7 @@ class Local(backend.Backend):
             self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
-        scrdir = self.container.process_directory
+        scrdir = self.container._process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,
@@ -113,7 +113,7 @@ class Local(backend.Backend):
             if not self.is_async() and self.model:
                 self.model._update_model_attributes()
         except GamspyException as exception:
-            self.container.workspace._has_error = True
+            self.container._workspace._has_error = True
             message = _customize_exception(
                 self.options,
                 self.job_name,

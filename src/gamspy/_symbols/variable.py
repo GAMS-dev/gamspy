@@ -51,7 +51,7 @@ class VariableType(Enum):
 class Variable(gt.Variable, operable.Operable, Symbol):
     """
     Represents a variable symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_Variables.html
+    https://gamspy.readthedocs.io/en/latest/user/basics/variable.html
 
     Parameters
     ----------
@@ -66,7 +66,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     records : Any, optional
         Records of the variable.
     domain_forwarding : bool, optional
-        Whether the variable forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the variable forwards the domain.
     description : str, optional
         Description of the variable.
     is_miro_output : bool

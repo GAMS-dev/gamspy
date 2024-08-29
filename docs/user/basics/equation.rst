@@ -272,7 +272,7 @@ equation types in GAMSPy:
    * - ``nonbinding``
      - No relationship implied between left-hand side and right-hand side. This equation type is ideally suited for use in MCP models and in variational inequalities.
    * - ``external``
-     - Equation is defined by external programs. See the section `External Equations <https://www.gams.com/latest/docs/UG_ExternalEquations.html>`_ in the GAMS documentation.
+     - Equation is defined by external programs. See the section `External Equations <https://gamspy.readthedocs.io/en/latest/user/advanced/external_equations.html>`_ in the GAMS documentation.
    * - ``boolean``
      - Boolean equations. See the section :ref:`logic_equations`.
 

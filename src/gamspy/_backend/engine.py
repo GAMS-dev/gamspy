@@ -906,7 +906,7 @@ class GAMSEngine(backend.Backend):
         return self.prepare_summary(self.trace_file)
 
     def _prepare_dummy_options(self) -> dict:
-        scrdir = self.container.process_directory
+        scrdir = self.container._process_directory
 
         extra_options = {
             "gdx": self.container._gdx_out,

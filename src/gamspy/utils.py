@@ -226,7 +226,7 @@ def isin(symbol, sequence: Sequence) -> bool:
 
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
-    return arrvals[0][0]
+    return float(arrvals[0][0])
 
 
 def _get_symbol_names_from_gdx(

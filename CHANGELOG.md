@@ -18,6 +18,7 @@ GAMSPy 1.0.0rc1
   - Show a better help message on gamspy -h command.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
+  - Fix model attribute return type.
 
 GAMSPy 0.14.7
 -------------

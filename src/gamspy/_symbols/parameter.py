@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 class Parameter(gt.Parameter, operable.Operable, Symbol):
     """
     Represents a parameter symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_DataEntry.html#UG_DataEntry_Parameters
+    https://gamspy.readthedocs.io/en/latest/user/basics/parameter.html
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     records : int | float | pd.DataFrame | np.ndarray | list, optional
         Records of the parameter.
     domain_forwarding : bool, optional
-        Whether the parameter forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the parameter forwards the domain.
     description : str, optional
         Description of the parameter.
     uels_on_axes : bool
@@ -49,6 +49,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         Whether the symbol is a GAMS MIRO input symbol. See: https://gams.com/miro/tutorial.html
     is_miro_output : bool
         Whether the symbol is a GAMS MIRO output symbol. See: https://gams.com/miro/tutorial.html
+    is_miro_table : bool
+        Whether the symbol is a GAMS MIRO table symbol. See: https://gams.com/miro/tutorial.html
 
     Examples
     --------

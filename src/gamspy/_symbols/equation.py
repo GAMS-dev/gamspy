@@ -56,7 +56,7 @@ class EquationType(Enum):
 class Equation(gt.Equation, Symbol):
     """
     Represents an Equation symbol in GAMS.
-    https://www.gams.com/latest/docs/UG_Equations.html
+    https://gamspy.readthedocs.io/en/latest/user/basics/equation.html
 
     Parameters
     ----------
@@ -73,7 +73,7 @@ class Equation(gt.Equation, Symbol):
     records : Any, optional
         Records of the equation.
     domain_forwarding : bool, optional
-        Whether the equation forwards the domain. See: https://gams.com/latest/docs/UG_SetDefinition.html#UG_SetDefinition_ImplicitSetDefinition
+        Whether the equation forwards the domain.
     description : str, optional
         Description of the equation.
     uels_on_axes: bool
