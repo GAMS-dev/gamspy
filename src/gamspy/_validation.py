@@ -103,6 +103,7 @@ def validate_type(domain):
             (
                 symbols.Set,
                 symbols.Alias,
+                symbols.UniverseAlias,
                 implicits.ImplicitSet,
                 str,
                 type(...),

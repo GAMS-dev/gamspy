@@ -15,7 +15,7 @@ test-leg-3.8:
     - gamspy install solver mpsge
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
-    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch develop --single-branch miro
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch gamspy --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
     - coverage run --source=gamspy tests/test_gamspy.py --integration --engine --model-library
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
