@@ -292,6 +292,7 @@ class Model:
         self._solve_number = None
         self._num_dependencies = None
         self._num_discrete_variables = None
+        self._num_equations = None
         self._num_infeasibilities = None
         self._num_nonlinear_insts = None
         self._num_nonlinear_zeros = None
@@ -475,6 +476,17 @@ class Model:
         float | None
         """
         return self._num_discrete_variables
+
+    @property
+    def num_equations(self) -> float | None:
+        """
+        Number of equations.
+
+        Returns
+        -------
+        float | None
+        """
+        return self._num_equations
 
     @property
     def num_infeasibilities(self) -> float | None:
