@@ -19,6 +19,7 @@ GAMSPy 1.0.0rc1
   - Fix missing links in api reference.
   - Set default problem type as MIP instead of LP.
   - Allow UniverseAlias in assignments.
+  - Update gamspy_base and gamsapi to 47.5.0.
 - Documentation
   - Add a warning about the manipulation of records via .records. 
   - Fix model attribute return type.
