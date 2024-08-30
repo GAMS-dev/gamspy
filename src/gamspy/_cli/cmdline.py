@@ -14,7 +14,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 from .util import add_solver_entry, remove_solver_entry
 
 USAGE = """gamspy [-h] [-v]
-       gamspy install license <license_id> or <path/to/license/file> [--uses-port <port>]
+       gamspy install license <access_code> or <path/to/license/file> [--uses-port <port>]
        gamspy uninstall license
        gamspy install solver <solver_name> [--skip-pip-install]
        gamspy uninstall solver <solver_name> [--skip-pip-uninstall]
@@ -22,7 +22,7 @@ USAGE = """gamspy [-h] [-v]
        gamspy show license
        gamspy show base
        gamspy probe [-j <json_output_path>]
-       gamspy retrieve license <your_license_id> [-i <json_file_path>] [-o <output_path>] 
+       gamspy retrieve license <access_code> [-i <json_file_path>] [-o <output_path>] 
        gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
 """
 
@@ -60,7 +60,7 @@ def get_args():
     )
 
     install_license_group = parser.add_argument_group(
-        "gamspy install license <license_id> or <path/to/license/file>",
+        "gamspy install license <access_code> or <path/to/license/file>",
         description="Options for installing a license.",
     )
     install_license_group.add_argument(
@@ -116,7 +116,7 @@ def get_args():
     )
 
     retrieve_group = parser.add_argument_group(
-        "gamspy retrieve license",
+        "gamspy retrieve license <access_code>",
         description="`gamspy retrieve license` options",
     )
     retrieve_group.add_argument(
@@ -170,7 +170,7 @@ def get_args():
 def install_license(args: argparse.Namespace):
     if not args.name or len(args.name) > 1:
         raise ValidationError(
-            "License is missing: `gamspy install license <your_license>`"
+            "License is missing: `gamspy install license <access_code> or <path/to/license/file>`"
         )
 
     license = args.name[0]
@@ -178,7 +178,7 @@ def install_license(args: argparse.Namespace):
 
     if is_alp and len(license) != 36:
         raise ValidationError(
-            f"License id is a 36 character string or an absolute path to the "
+            f"Access code is a 36 character string or an absolute path to the "
             f"license file but {len(license)} character string ({license}) provided."
         )
 
@@ -634,7 +634,7 @@ def probe(args: argparse.Namespace):
 def retrieve(args: argparse.Namespace):
     if args.input is None or not os.path.isfile(args.input):
         raise ValidationError(
-            f"Given path `{args.input}` is not a json file. Please use `gamspy retrieve license <license_id> -i <json_file_path>`"
+            f"Given path `{args.input}` is not a json file. Please use `gamspy retrieve license <access_code> -i <json_file_path>`"
         )
 
     if args.name is None:

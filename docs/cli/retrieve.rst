@@ -10,7 +10,7 @@ Usage
 
 ::
 
-  gamspy retrieve license <license_id> [-i <probed_info>] [-o <license_name>]
+  gamspy retrieve license <access_code> [-i <probed_info>] [-o <license_name>]
 
 .. list-table::
    :widths: 20 20 20 40
@@ -58,5 +58,5 @@ Example: ::
     for a node (or machine or computer) that is not connected to the internet and not capable of reaching ``license.gams.com`` to retrieve the
     license itself. In this case one runs ``gamspy probe -o info.json`` on the machine not connected to the internet, let's call this machine A.
     Now, we bring the file ``info.json`` to a machine connected to the internet, let's call this machine B. On machine B, one runs now 
-    ``gamspy retrieve license -i info.json -o gamslice.A``. Now we bring the file ``gamslice.A`` to machine A and run on machine A 
+    ``gamspy retrieve license <access_code> -i info.json -o gamslice.A``. Now we bring the file ``gamslice.A`` to machine A and run on machine A 
     ``gams install license /path/to/gamslice.A``.
