@@ -22,6 +22,8 @@ GAMSPy 1.0.0rc1
 - Documentation
   - Add a warning about the manipulation of records via .records. 
   - Fix model attribute return type.
+- Testing
+  - Add sat problem to the example models.
 
 GAMSPy 0.14.7
 -------------
