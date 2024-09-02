@@ -34,7 +34,7 @@ Usage
 
 ::
 
-  gamspy install license <license_id>|<path/to/license/file> [OPTIONS]  
+  gamspy install license <access_code>|<path/to/license/file> [OPTIONS]  
 
 .. list-table::
    :widths: 20 20 20 40
