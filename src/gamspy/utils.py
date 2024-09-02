@@ -611,7 +611,9 @@ def _parse_generated_variables(model: Model, listing_file: str) -> None:
     for variable in variables:
         listings: list[str] = []
         idx = 0
-        while not lines[idx].startswith(f"---- {variable.name}"):
+        while idx < len(lines) and not lines[idx].startswith(
+            f"---- {variable.name}"
+        ):
             idx += 1
 
         idx += 2
