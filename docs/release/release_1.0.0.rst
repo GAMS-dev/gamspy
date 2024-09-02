@@ -12,6 +12,6 @@ Highlights
 - Interoperability with GAMS (via toGams) and LaTeX (via toLatex).
 - Commandline interface (gamspy cli) to install/uninstall licenses and add on solvers.
 - 114 models and 6 notebooks on our gamspy-examples repository.
-- Frozen model support (aka ModelInstance)
+- Frozen solve support (aka ModelInstance)
 - External equation support.
 - Extrinsic function support.
