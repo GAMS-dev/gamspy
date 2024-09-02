@@ -549,6 +549,29 @@ capacity: ::
     max_cap = Parameter(m)
     max_cap[...] = Smax((i, p), capacity[i,p])
 
+The :meth:`Sand <gamspy.Sand>` and :meth:`Sor <gamspy.Sor>` operations are used for boolean `and` 
+and `or` calculation over the domain of the index set or sets. The index for the ``Sand`` 
+and ``Sor`` operators is specified in the same manner as in the index for the 
+:meth:`Sum <gamspy.Sum>` operator. In the following example we represent a (random) boolean expression
+in conjunctive normal form (CNF) using numerical data and check if some (random) configuration of the
+boolean varibales satisfies the boolean expression: ::
+
+    import gamspy as gp
+    
+    m = gp.Container()
+    c = gp.Set(m, "c", description="conjunctions", records=range(6))
+    j = gp.Set(m, "j", records=range(5))
+    cnf = gp.Parameter(m, domain=[c, j], description="conjunctive normal form 1: A, -1: ~A")
+    cnf[c,j].where[gp.math.uniform(0,1)<0.5] = 2*gp.math.uniformInt(0,1) - 1
+    conf = gp.Parameter(m, domain=j)
+    conf[j] = gp.math.uniformInt(0,1)
+    result = gp.Parameter(m)
+
+    result[:] = gp.Sand(
+        c,
+        gp.Sor(j.where[cnf[c, j] > 0], conf[j]) | gp.Sor(j.where[cnf[c, j] < 0], ~conf[j]),
+    )
+    result.records
 
 .. note::
     - In the context of assignment statements, the attributes of variables and equations 
