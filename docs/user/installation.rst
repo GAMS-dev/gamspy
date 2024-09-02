@@ -19,19 +19,23 @@ For more information about GAMS licenses and how to get a new license, check
 
 Installing or updating your license
 ===================================
-A GAMSPy license is a either an ASCII file of six lines or 36 character identification number. 
+A GAMSPy license is a either an ASCII file of six lines or 36 character access code. 
 In order to install your license, all you need to do is to run::
 
-    gamspy install license <path_to_ascii_file or license id>
+    gamspy install license <path_to_ascii_file or access code>
 
-For machines that are not connected to the internet and a license specified by a license id, you can probe the node's data
-and get a license via a machine connected to the internet. Details about this can be found in :ref:`gamspy_retrieve`.
+For machines that are not connected to the internet and a license specified by an access code, you can probe the node's data
+and get a license via a machine connected to the internet. Details about this can be found below and in :ref:`gamspy_retrieve`.
 
 .. note::
     
     GAMS and GAMSPy licenses are different, which means one cannot use an existing GAMS license for GAMSPy.
     We provide GAMSPy licenses for free if you already have a maintained professional GAMS license. 
     Contact sales@gams.com (with your GAMS license) to arrange for the delivery of a GAMSPy license.
+
+.. note::
+    
+    GAMSPy is free for academics. Please check `GAMS Academic Program <https://www.gams.com/academics/>`_ for details.
 
 
 Uninstalling your license
@@ -55,7 +59,7 @@ is as follows:
 
 2. Move info.json file to a machine which has an internet connection and run: ::
 
-    gamspy retrieve license <your_license_id> -i info.json -o license.txt
+    gamspy retrieve license <access code> -i info.json -o license.txt
 
 3. Move license.txt to the machine that does not have an internet connection and run: ::
 
