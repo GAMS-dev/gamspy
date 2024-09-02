@@ -501,10 +501,10 @@ class Sand(Operation):
     >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
-    >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq")
-    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
-    >>> e[...] = gp.Sand(i, p[i]) <= v
+    >>> p = gp.Parameter(m, domain=i)
+    >>> p[i] = gp.math.uniformInt(0,1)
+    >>> result = gp.Parameter(m)
+    >>> result[:] = gp.Sand(i, p[i])
 
     """
 
@@ -528,13 +528,12 @@ class Sand(Operation):
 
         Examples
         --------
-        >>> from gamspy import Container, Set, Parameter, Variable, Sand
+        >>> from gamspy import Container, Set, Parameter, Variable, Sor
         >>> m = Container()
         >>> i = Set(m, "i", records=['i1','i2', 'i3'])
-        >>> c = Parameter(m, "c", domain=i)
-        >>> v = Variable(m, "v", domain=i)
-        >>> Sand(i, c[i]*v[i]).gamsRepr()
-        'sand(i,(c(i) * v(i)))'
+        >>> v = Variable(m, "v", domain=i, type="binary")
+        >>> Sand(i, v[i]).gamsRepr()
+        'sand(i,v(i))'
 
         """
         repr = super().gamsRepr()
@@ -564,10 +563,10 @@ class Sor(Operation):
     >>> import gamspy as gp
     >>> m = gp.Container()
     >>> i = gp.Set(m, "i", records=['i1','i2', 'i3'])
-    >>> v = gp.Variable(m, "v")
-    >>> e = gp.Equation(m, "e", type="eq")
-    >>> p = gp.Parameter(m, "p", domain=[i], records=[("i1", 1), ("i2", 2), ("i3", 4)])
-    >>> e[...] = gp.Sor(i, p[i]) <= v
+    >>> p = gp.Parameter(m, domain=i)
+    >>> p[i] = gp.math.uniformInt(0,1)
+    >>> result = gp.Parameter(m)
+    >>> result[:] = gp.Sor(i, p[i])
 
     """
 
@@ -594,10 +593,9 @@ class Sor(Operation):
         >>> from gamspy import Container, Set, Parameter, Variable, Sor
         >>> m = Container()
         >>> i = Set(m, "i", records=['i1','i2', 'i3'])
-        >>> c = Parameter(m, "c", domain=i)
-        >>> v = Variable(m, "v", domain=i)
-        >>> Sor(i, c[i]*v[i]).gamsRepr()
-        'sor(i,(c(i) * v(i)))'
+        >>> v = Variable(m, "v", domain=i, type="binary")
+        >>> Sor(i, v[i]).gamsRepr()
+        'sor(i,v(i))'
 
         """
         repr = super().gamsRepr()
