@@ -396,6 +396,7 @@ class ModelInstance:
                 _ = gp.Variable(
                     self.container,
                     name + "_var",
+                    domain=self.container[name].domain,
                     records=temp[name + "_var"].records,
                 )
         self.container._options.miro_protect = prev_state

@@ -479,6 +479,41 @@ class ModelInstanceSuite(unittest.TestCase):
         with self.assertRaises(ValidationError):
             war.freeze(modifiables=[x.l])
 
+    def test_modifiable_with_domain(self):
+        import gamspy as gp
+
+        m = gp.Container()
+        i = gp.Set(m, name="i")
+        j = gp.Set(m, name="j")
+        a = gp.Parameter(m, name="a", domain=[i, j])
+        b = gp.Parameter(m, name="b", domain=i)
+        c = gp.Parameter(m, name="c", domain=j)
+
+        x = gp.Variable(m, name="x", domain=j, type="positive")
+        e = gp.Equation(m, name="e", domain=i)
+
+        e[i] = gp.Sum(j, a[i, j] * x[j]) >= b[i]
+
+        mymodel = gp.Model(
+            m,
+            name="mymodel",
+            equations=[e],
+            objective=gp.Sum(j, c[j] * x[j]),
+            sense="min",
+            problem="lp",
+        )
+
+        i.setRecords(range(10))
+        j.setRecords(range(20))
+        a[i, j] = gp.math.uniform(0, 1)
+        b[i] = gp.math.uniform(1, 10)
+        c[j] = gp.math.uniform(1, 10)
+
+        mymodel.freeze(modifiables=[b])
+        b[i] = gp.math.uniform(1, 10)
+        mymodel.solve()
+        self.assertAlmostEqual(mymodel.objective_value, 32.36124699832342)
+
 
 def model_instance_suite():
     suite = unittest.TestSuite()
