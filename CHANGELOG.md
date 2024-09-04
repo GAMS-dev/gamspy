@@ -1,8 +1,14 @@
 GAMSPy CHANGELOG
 ================
+GAMSPy 1.0.1
+------------
+- General
+  - Fix frozen solve with non-scalar symbols.
+- Testing
+  - Add test for the frozen solve with non-scalar symbols.
 
-GAMSPy 1.0.0rc1
----------------
+GAMSPy 1.0.0
+------------
 - General
   - Fix starting from a loadpoint for GAMS Engine backend.
   - Fix solver options issue for GAMS Engine backend.
