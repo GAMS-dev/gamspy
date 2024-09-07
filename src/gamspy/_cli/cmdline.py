@@ -566,12 +566,8 @@ def show_license():
             "You must install gamspy_base to use this command!"
         ) from e
 
-    userlice_path = os.path.join(gamspy_base.directory, "user_license.txt")
-    demolice_path = os.path.join(gamspy_base.directory, "gamslice.txt")
-    lice_path = (
-        userlice_path if os.path.exists(userlice_path) else demolice_path
-    )
-    with open(lice_path, encoding="utf-8") as license_file:
+    license_path = utils._get_license_path(gamspy_base.directory)
+    with open(license_path, encoding="utf-8") as license_file:
         print(license_file.read())
 
 

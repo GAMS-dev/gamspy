@@ -61,17 +61,6 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 
-def is_network_license(system_directory: str) -> bool:
-    user_license_path = os.path.join(system_directory, "user_license.txt")
-    if not os.path.exists(user_license_path):
-        return False
-
-    with open(user_license_path, encoding="utf-8") as file:
-        lines = file.readlines()
-
-    return bool("+" in lines[0] and lines[4][47] == "N")
-
-
 def find_free_address() -> tuple[str, int]:
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         s.bind(("127.0.0.1", 0))
@@ -242,7 +231,8 @@ class Container(gt.Container):
         self._unsaved_statements: list = []
 
         super().__init__(system_directory=system_directory)
-        self._network_license = is_network_license(self.system_directory)
+        self._license_path = utils._get_license_path(self.system_directory)
+        self._network_license = self._is_network_license()
 
         self._debugging_level = debugging_level
         self._workspace = Workspace(debugging_level, working_directory)
@@ -310,6 +300,12 @@ class Container(gt.Container):
         bool
         """
         return MIRO_GDX_IN is not None
+
+    def _is_network_license(self) -> bool:
+        with open(self._license_path, encoding="utf-8") as file:
+            lines = file.readlines()
+
+        return bool("+" in lines[0] and lines[4][47] == "N")
 
     def _validate_global_options(self, options: Any) -> Options | None:
         if options is not None and not isinstance(options, Options):

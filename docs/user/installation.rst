@@ -20,9 +20,15 @@ For more information about GAMS licenses and how to get a new license, check
 Installing or updating your license
 ===================================
 A GAMSPy license is a either an ASCII file of six lines or 36 character access code. 
-In order to install your license, all you need to do is to run::
+In order to install your license, all you need to do is to run: ::
 
     gamspy install license <path_to_ascii_file or access code>
+
+You can run: ::
+
+    gamspy show license
+
+to verify the installation of the license.
 
 For machines that are not connected to the internet and a license specified by an access code, you can probe the node's data
 and get a license via a machine connected to the internet. Details about this can be found below and in :ref:`gamspy_retrieve`.
@@ -36,6 +42,12 @@ and get a license via a machine connected to the internet. Details about this ca
 .. note::
     
     GAMSPy is free for academics. Please check `GAMS Academic Program <https://www.gams.com/academics/>`_ for details.
+
+.. note::
+    
+    In order to avoid reinstalling your license every time you upgrade your GAMSPy version, you can also put your license file under 
+    your home directory. GAMSPy will look for the license file at ``~/gamspy_license.txt``. ``~`` will be replaced with the value of 
+    ``HOME`` environment variable.
 
 
 Uninstalling your license
@@ -176,4 +188,5 @@ Tests are classified into three categories: unit tests, integration tests, and d
 
 .. note::
     By default, only unit tests are run. To enable integration tests, the ``--integration`` argument should be provided.
-    Doctests can be enable with the ``--doc`` argument.
+    Doctests can be enable with the ``--doc`` argument. To enable GAMS Engine backend tests, add ``--engine`` argument.
+    To enable NEOS Server backend tests, add ``--neos`` argument.

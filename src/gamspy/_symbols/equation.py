@@ -260,6 +260,7 @@ class Equation(gt.Equation, Symbol):
             self.container._options.miro_protect = False
             self.records = None
             self.modified = True
+            self._init_definition(definition)
 
             # only set records if records are provided
             if records is not None:
@@ -296,6 +297,7 @@ class Equation(gt.Equation, Symbol):
 
             self.where = condition.Condition(self)
             self.container._add_statement(self)
+            self._definition = None
             self._definition_domain = definition_domain
             self._init_definition(definition)
 
@@ -371,7 +373,6 @@ class Equation(gt.Equation, Symbol):
         assignment: Variable | Operation | Expression | None = None,
     ):
         if assignment is None:
-            self._definition = None  # type: ignore
             return None
 
         domain = self.domain

@@ -21,6 +21,7 @@ class CmdSuite(unittest.TestCase):
     def test_install_license(self):
         gamspy_base_directory = utils._get_gamspy_base_directory()
 
+        # Test network license
         _ = subprocess.run(
             [
                 "gamspy",
@@ -51,6 +52,7 @@ class CmdSuite(unittest.TestCase):
         m = Container()
         self.assertFalse(m._network_license)
 
+        # Test invalid access code / license
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
                 ["gamspy", "install", "license", "blabla"],
@@ -59,6 +61,7 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
+        # Test installing a license from a file path.
         tmp_license_path = os.path.join("tmp", "user_license.txt")
         shutil.copy(user_license_path, tmp_license_path)
 
@@ -95,16 +98,6 @@ class CmdSuite(unittest.TestCase):
             os.path.exists(
                 os.path.join(gamspy_base_directory, "user_license.txt")
             )
-        )
-
-        # Recover the license
-        subprocess.run(
-            [
-                "gamspy",
-                "install",
-                "license",
-                os.environ["LOCAL_LICENSE"],
-            ]
         )
 
     def test_install_solver(self):
@@ -204,6 +197,40 @@ class CmdSuite(unittest.TestCase):
 
         print(process.stderr, process.stdout)
         self.assertTrue(process.returncode == 0)
+
+    def test_license_in_default_location(self):
+        _ = subprocess.run(
+            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            check=True,
+        )
+
+        # Copy license to the default path
+        gamspy_base_directory = utils._get_gamspy_base_directory()
+        license_path = os.path.join(gamspy_base_directory, "user_license.txt")
+        default_path = os.path.join(
+            os.path.expanduser("~"), "gamspy_license.txt"
+        )
+        shutil.copy(license_path, default_path)
+
+        # Delete the license from gamspy_base directory
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "uninstall",
+                "license",
+            ],
+            check=True,
+        )
+
+        m = Container()
+        self.assertEqual(m._license_path, default_path)
+
+    @classmethod
+    def tearDownClass(cls):
+        _ = subprocess.run(
+            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            check=True,
+        )
 
 
 def cmd_suite():

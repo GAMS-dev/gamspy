@@ -310,10 +310,18 @@ def _get_gamspy_base_directory() -> str:
 
 
 def _get_license_path(system_directory: str) -> str:
+    # Check if a new license was installed.
     user_license_path = os.path.join(system_directory, "user_license.txt")
     if os.path.exists(user_license_path):
         return user_license_path
 
+    # Check if the license is in one of the default paths.
+    home = os.path.expanduser("~")
+    license_path = os.path.join(home, "gamspy_license.txt")
+    if os.path.exists(license_path):
+        return license_path
+
+    # No preinstalled licenses on the machine. Use the demo license.
     return os.path.join(system_directory, "gamslice.txt")
 
 
