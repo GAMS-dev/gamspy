@@ -168,6 +168,8 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
+
     if not args.name or len(args.name) > 1:
         raise ValidationError(
             "License is missing: `gamspy install license <access_code> or <path/to/license/file>`"
@@ -200,20 +202,20 @@ def install_license(args: argparse.Namespace):
             raise ValidationError(process.stderr)
 
         with open(
-            os.path.join(gamspy_base_dir, "user_license.txt"),
+            os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"),
             "w",
             encoding="utf-8",
         ) as file:
             file.write(process.stdout)
     else:
-        shutil.copy(license, os.path.join(gamspy_base_dir, "user_license.txt"))
+        shutil.copy(
+            license, os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
+        )
 
 
 def uninstall_license():
-    gamspy_base_dir = utils._get_gamspy_base_directory()
-
     try:
-        os.unlink(os.path.join(gamspy_base_dir, "user_license.txt"))
+        os.unlink(os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"))
     except FileNotFoundError:
         ...
 
@@ -566,12 +568,8 @@ def show_license():
             "You must install gamspy_base to use this command!"
         ) from e
 
-    userlice_path = os.path.join(gamspy_base.directory, "user_license.txt")
-    demolice_path = os.path.join(gamspy_base.directory, "gamslice.txt")
-    lice_path = (
-        userlice_path if os.path.exists(userlice_path) else demolice_path
-    )
-    with open(lice_path, encoding="utf-8") as license_file:
+    license_path = utils._get_license_path(gamspy_base.directory)
+    with open(license_path, encoding="utf-8") as license_file:
         print(license_file.read())
 
 

@@ -4,9 +4,13 @@ GAMSPy 1.0.1
 ------------
 - General
   - Fix frozen solve with non-scalar symbols.
-  - Fix the issue related to reading equation records from a gdx file.
+  - Fix the definition update problem while redefining an equation with definition argument.
+  - Introduce default directories to keep license information on upgrade.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
+  - Add a test to verify the behaviour of equation redefinition with definition argument.
+  - Test the usage of a license that is in one of the default paths.
+  - Fix the issue related to reading equation records from a gdx file.
   - Add tests to verify the records after reading them from a gdx file.
 
 GAMSPy 1.0.0

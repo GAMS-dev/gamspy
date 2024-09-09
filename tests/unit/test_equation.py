@@ -383,6 +383,31 @@ class EquationSuite(unittest.TestCase):
             assign_1.getDefinition(), "assign_1 .. a =e= sum(k,(b(k) * c(k)));"
         )
 
+        i = Set(m, "i", records=["OJ", "1M"])
+        x = Variable(m, "x", domain=i)
+        drinking_eqn = m.addEquation(
+            "drinking_eqn",
+            description="Don't drink too much",
+            definition=x["OJ"] + x["1M"] <= 3,
+        )
+        self.assertEqual(
+            drinking_eqn.getDefinition(),
+            'drinking_eqn .. (x("OJ") + x("1M")) =l= 3;',
+        )
+
+        s = m.addVariable(
+            "s", "free", description="Surplus variable for drinking_eqn"
+        )
+        drinking_eqn = m.addEquation(
+            "drinking_eqn",
+            description="Don't drink too much",
+            definition=x["OJ"] + x["1M"] <= 3 + s,
+        )
+        self.assertEqual(
+            drinking_eqn.getDefinition(),
+            'drinking_eqn .. (x("OJ") + x("1M")) =l= (3 + s);',
+        )
+
     def test_equation_attributes(self):
         pi = Equation(self.m, "pi")
 
