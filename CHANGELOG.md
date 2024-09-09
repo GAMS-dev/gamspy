@@ -4,8 +4,10 @@ GAMSPy 1.0.1
 ------------
 - General
   - Fix frozen solve with non-scalar symbols.
+  - Fix the issue related to reading equation records from a gdx file.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
+  - Add tests to verify the records after reading them from a gdx file.
 
 GAMSPy 1.0.0
 ------------
