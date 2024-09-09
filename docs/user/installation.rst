@@ -43,12 +43,6 @@ and get a license via a machine connected to the internet. Details about this ca
     
     GAMSPy is free for academics. Please check `GAMS Academic Program <https://www.gams.com/academics/>`_ for details.
 
-.. note::
-    
-    In order to avoid reinstalling your license every time you upgrade your GAMSPy version, you can also put your license file under 
-    your home directory. GAMSPy will look for the license file at ``~/gamspy_license.txt``. ``~`` will be replaced with the value of 
-    ``HOME`` environment variable.
-
 
 Uninstalling your license
 =========================
