@@ -1052,7 +1052,7 @@ class Model:
         solver: str | None = None,
         options: Options | None = None,
         solver_options: dict | None = None,
-        model_instance_options: ModelInstanceOptions | dict | None = None,
+        model_instance_options: ModelInstanceOptions | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
@@ -1069,7 +1069,7 @@ class Model:
             GAMS options
         solver_options : dict, optional
             Solver options
-        model_instance_options : optional
+        model_instance_options : ModelInstanceOptions, optional
             Model instance options
         output : TextIOWrapper, optional
             Output redirection target
@@ -1077,6 +1077,8 @@ class Model:
             Backend to run on
         client : EngineClient, NeosClient, optional
             EngineClient to communicate with GAMS Engine or NEOS Client to communicate with NEOS Server
+        load_symbols : list[Symbol], optional
+            Specifies the symbols that need to be loaded. If not given, all symbols are loaded after solve.
 
         Returns
         -------

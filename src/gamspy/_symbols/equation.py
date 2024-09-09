@@ -128,7 +128,7 @@ class Equation(gt.Equation, Symbol):
         obj._domain = domain
         obj._domain_forwarding = False
         obj._description = description
-        obj._records = None
+        obj._records = records
         obj._modified = True
 
         # add to container

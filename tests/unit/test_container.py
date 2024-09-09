@@ -478,6 +478,120 @@ Equation e;
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
 
+    def test_read_from_gdx(self):
+        # Set
+        i = Set(
+            self.m,
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            self.m,
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+        _ = Alias(self.m, "k", alias_with=i)
+
+        # Data
+        a = Parameter(
+            self.m,
+            name="a",
+            domain=i,
+            records=self.capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            self.m,
+            name="b",
+            domain=j,
+            records=self.demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            self.m,
+            name="d",
+            domain=[i, j],
+            records=self.distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            self.m,
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            self.m,
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            self.m,
+            name="demand",
+            domain=j,
+            description="satisfy demand at market j",
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            self.m,
+            name="transport",
+            equations=self.m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+        gdx_path = os.path.join("tmp", "out.gdx")
+        self.m.write(gdx_path)
+
+        m = Container(load_from=gdx_path)
+        self.assertEqual(
+            m["supply"].toList(), [("seattle", 350.0), ("san-diego", 550.0)]
+        )
+        self.assertEqual(
+            m["x"].toList(),
+            [
+                ("seattle", "new-york", 50.0),
+                ("seattle", "chicago", 300.0),
+                ("seattle", "topeka", 0.0),
+                ("san-diego", "new-york", 275.0),
+                ("san-diego", "chicago", 0.0),
+                ("san-diego", "topeka", 275.0),
+            ],
+        )
+        self.assertEqual(
+            m["c"].toList(),
+            [
+                ("seattle", "new-york", 0.225),
+                ("seattle", "chicago", 0.153),
+                ("seattle", "topeka", 0.162),
+                ("san-diego", "new-york", 0.225),
+                ("san-diego", "chicago", 0.162),
+                ("san-diego", "topeka", 0.126),
+            ],
+        )
+
+        self.assertEqual(m["i"].toList(), ["seattle", "san-diego"])
+        self.assertEqual(m["k"].toList(), ["seattle", "san-diego"])
+
 
 def container_suite():
     suite = unittest.TestSuite()
