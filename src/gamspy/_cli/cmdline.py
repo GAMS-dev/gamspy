@@ -677,8 +677,11 @@ def show_license():
         ) from e
 
     license_path = utils._get_license_path(gamspy_base.directory)
+    print(f"License found at: {license_path}\n")
+    print("License Content")
+    print("=" * 15)
     with open(license_path, encoding="utf-8") as license_file:
-        print(license_file.read())
+        print(license_file.read().strip())
 
 
 def show_base():

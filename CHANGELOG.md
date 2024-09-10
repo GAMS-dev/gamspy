@@ -8,6 +8,7 @@ GAMSPy 1.0.1
   - Introduce default directories to keep license information on upgrade.
   - Add --existing-solvers and --install-all-solvers options for gamspy install solver.
   - Add --uninstall-all-solvers option for gamspy uninstall solver.
+  - Show license path on gamspy show license command.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.
