@@ -313,7 +313,6 @@ def install_solver(args: argparse.Namespace):
             except FileNotFoundError:
                 installed = []
 
-            print(f"{installed=}")
             with open(addons_path, "w") as file:
                 if solver_name.upper() not in installed:
                     file.write(
