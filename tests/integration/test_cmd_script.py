@@ -135,16 +135,16 @@ class CmdSuite(unittest.TestCase):
 
         process = subprocess.run(
             ["gamspy", "install", "solver", "--install-all-solvers"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            capture_output=True,
         )
+        print(process.stdout, process.stderr)
         self.assertTrue(process.returncode == 0)
 
         process = subprocess.run(
             ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            capture_output=True,
         )
+        print(process.stdout, process.stderr)
         self.assertTrue(process.returncode == 0)
 
         process = subprocess.run(
