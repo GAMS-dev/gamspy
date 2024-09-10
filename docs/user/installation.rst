@@ -102,13 +102,25 @@ The same information can also be accessed programmatically via the ``utils`` mod
 Installing/Uninstalling additional solvers
 ==========================================
 
-The following command can be used to install additional solvers::
+The following command can be used to install additional solvers: ::
 
-    gamspy install solver <solver_name>
+    gamspy install solver <solver_name1> <solver_name2> ......
 
-Similarly, a (non-default) solver can be uninstalled using::
+Similarly, a (non-default) solver can be uninstalled using: ::
 
-    gamspy uninstall solver <solver_name>
+    gamspy uninstall solver <solver_name1> <solver_name2> ......
+
+If you want to install all addon solvers, you can do by running: ::
+
+    gamspy install solver --install-all-solvers
+
+You can uninstall all addon solvers in the same way by running: ::
+
+    gamspy uninstall solver --uninstall-all-solvers
+
+One can also recover the addon solvers that they have installed in a previous GAMSPy version with: ::
+
+    gamspy install solver --existing-solvers
 
 .. note::
     
@@ -126,10 +138,10 @@ Similarly, a (non-default) solver can be uninstalled using::
 Updating GAMSPy
 ===============
 
-``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). If there is a new version of ``gamspy_base``, you need to reinstall the additional solvers and your license after an upgrade: ::
+``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). 
+Hence, if there is a new version of ``gamspy_base``, you need to reinstall the additional solvers after an upgrade: ::
 
     pip install gamspy --upgrade
-    gamspy install license 876e5812-1222-4aba-819d-e1e91b7e2f52
     gamspy install solver mosek conopt xpress
 
 Additional steps when using solver link licenses
