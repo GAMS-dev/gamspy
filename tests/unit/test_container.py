@@ -296,24 +296,29 @@ class ContainerSuite(unittest.TestCase):
         supply[i] = Sum(j, x[i, j]) <= a[i]
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
-        if not m._network_license:
-            self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
-            new_cont = m.copy(working_directory=f"tmp{os.sep}test")
-            self.assertEqual(m.data.keys(), new_cont.data.keys())
+        self.assertRaises(ValidationError, m.copy, f"tmp{os.sep}copy")
+        new_cont = m.copy(working_directory=f"tmp{os.sep}test")
+        self.assertEqual(m.data.keys(), new_cont.data.keys())
+        self.assertEqual(
+            supply.getDefinition(), new_cont["supply"].getDefinition()
+        )
+        self.assertEqual(
+            demand.getDefinition(), new_cont["demand"].getDefinition()
+        )
 
-            transport = Model(
-                new_cont,
-                name="transport",
-                equations=m.getEquations(),
-                problem="LP",
-                sense=Sense.MIN,
-                objective=Sum((i, j), c[i, j] * x[i, j]),
-            )
+        transport = Model(
+            new_cont,
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
 
-            transport.solve()
+        transport.solve()
 
-            self.assertIsNotNone(new_cont.gamsJobName())
-            self.assertAlmostEqual(transport.objective_value, 153.675, 3)
+        self.assertIsNotNone(new_cont.gamsJobName())
+        self.assertAlmostEqual(transport.objective_value, 153.675, 3)
 
     def test_generate_gams_string(self):
         i = Set(self.m, "i")

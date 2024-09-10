@@ -4,7 +4,6 @@ import atexit
 import logging
 import os
 import platform
-import shutil
 import signal
 import socket
 import subprocess
@@ -528,9 +527,9 @@ class Container(gt.Container):
 
         return modified_names
 
-    def _synch_with_gams(self, keep_flags: bool = False) -> DataFrame | None:
+    def _synch_with_gams(self) -> DataFrame | None:
         runner = backend_factory(self, self._options)
-        summary = runner.run(keep_flags=keep_flags)
+        summary = runner.run()
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -1182,92 +1181,16 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._synch_with_gams()
-
-        for name, symbol in self:
-            new_domain = []
-            for elem in symbol.domain:
-                if not isinstance(elem, str):
-                    new_set = gp.Set._constructor_bypass(
-                        m,
-                        elem.name,
-                        elem.domain,
-                        elem.is_singleton,
-                        elem.records,
-                        elem.description,
-                    )
-                    new_domain.append(new_set)
-                else:
-                    new_domain.append(elem)
-
-            if isinstance(symbol, gp.Alias):
-                alias_with = gp.Set._constructor_bypass(
-                    m,
-                    symbol.alias_with.name,
-                    symbol.alias_with.domain,
-                    symbol.alias_with.is_singleton,
-                    symbol.alias_with.records,
-                )
-                _ = gp.Alias._constructor_bypass(
-                    m,
-                    name,
-                    alias_with,
-                )
-            elif isinstance(symbol, gp.UniverseAlias):
-                _ = gp.UniverseAlias._constructor_bypass(
-                    m,
-                    name,
-                )
-            elif isinstance(symbol, gp.Set):
-                _ = gp.Set._constructor_bypass(
-                    m,
-                    name,
-                    new_domain,
-                    symbol.is_singleton,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Parameter):
-                _ = gp.Parameter._constructor_bypass(
-                    m,
-                    name,
-                    new_domain,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Variable):
-                _ = gp.Variable._constructor_bypass(
-                    m,
-                    name,
-                    symbol.type,
-                    new_domain,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Equation):
-                symbol_type = symbol.type
-                if symbol.type in ["eq", "leq", "geq"]:
-                    symbol_type = "regular"
-                _ = gp.Equation._constructor_bypass(
-                    container=m,
-                    name=name,
-                    type=symbol_type,
-                    domain=new_domain,
-                    records=symbol._records,
-                    description=symbol.description,
-                )
-
-        shutil.copy(self._gdx_in, m._gdx_in)
-        try:
-            shutil.copy(self._gdx_out, m._gdx_out)
-        except FileNotFoundError:
-            pass
+        self.write(m._job + "in.gdx")
+        m.read(m._job + "in.gdx")
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
             if equation._definition is not None:
                 m._add_statement(equation._definition)
+                m[equation.name]._definition = equation._definition
 
+        m._synch_with_gams()
         return m
 
     def getEquations(self) -> list[Equation]:

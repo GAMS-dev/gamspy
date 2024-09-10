@@ -444,7 +444,7 @@ class NEOSServer(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def run(self, keep_flags: bool = False):
+    def run(self):
         # Run a dummy job to get the restart file to be sent to NEOS Server
         self._create_restart_file()
 
@@ -459,7 +459,7 @@ class NEOSServer(backend.Backend):
         self.model._create_model_attributes()
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess("in.gdx", keep_flags)
+        gams_string = self.preprocess("in.gdx")
 
         # Run the model
         self.execute_gams(gams_string)
