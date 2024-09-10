@@ -305,6 +305,11 @@ def install_solver(args: argparse.Namespace):
             try:
                 with open(addons_path) as file:
                     installed = file.read().splitlines()
+                    installed = [
+                        solver
+                        for solver in installed
+                        if solver != "" and solver != "\n"
+                    ]
             except FileNotFoundError:
                 installed = []
 
@@ -421,6 +426,11 @@ def uninstall_solver(args: argparse.Namespace):
         try:
             with open(addons_path) as file:
                 solvers = file.read().splitlines()
+                solvers = [
+                    solver
+                    for solver in solvers
+                    if solver != "" and solver != "\n"
+                ]
                 remove_addons(solvers)
 
         except FileNotFoundError as e:

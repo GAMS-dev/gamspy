@@ -51,7 +51,9 @@ def add_solver_entry(
     capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
     installed_solvers = utils.getInstalledSolvers(system_directory)
     if solver_name.upper() in installed_solvers:
-        print("Solver already exists in the capabilities file, skipping")
+        print(
+            f"`{solver_name}` already exists in the capabilities file, skipping"
+        )
         return
 
     with open(capabilities_path, encoding="utf-8") as f:

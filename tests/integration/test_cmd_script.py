@@ -113,9 +113,10 @@ class CmdSuite(unittest.TestCase):
 
         process = subprocess.run(
             ["gamspy", "install", "solver", "minos", "mosek"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
         )
+        print(process.stdout, process.stderr)
         self.assertTrue(process.returncode == 0)
 
         with self.assertRaises(subprocess.CalledProcessError):
@@ -128,9 +129,10 @@ class CmdSuite(unittest.TestCase):
 
         process = subprocess.run(
             ["gamspy", "uninstall", "solver", "minos", "mosek"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
         )
+        print(process.stdout, process.stderr)
         self.assertTrue(process.returncode == 0)
 
         process = subprocess.run(
