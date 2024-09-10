@@ -22,6 +22,10 @@ Usage
      - -u
      - 
      - Skips the pip uninstall command in case the package was manually deleted.
+   * - -\-uninstall-all-solvers
+     - -u
+     - 
+     - Uninstalls all addon solvers.
 
 Example: ::
 

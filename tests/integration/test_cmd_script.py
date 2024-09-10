@@ -111,11 +111,12 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        _ = subprocess.run(
+        process = subprocess.run(
             ["gamspy", "install", "solver", "minos", "mosek"],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
+        self.assertTrue(process.returncode == 0)
 
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
@@ -125,11 +126,33 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        _ = subprocess.run(
+        process = subprocess.run(
             ["gamspy", "uninstall", "solver", "minos", "mosek"],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "install", "solver", "--install-all-solvers"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "install", "solver", "mpsge", "scip"],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
+        self.assertTrue(process.returncode == 0)
 
     def test_list_solvers(self):
         process = subprocess.run(
@@ -212,7 +235,7 @@ class CmdSuite(unittest.TestCase):
         )
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDown(cls):
         _ = subprocess.run(
             ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
             check=True,
