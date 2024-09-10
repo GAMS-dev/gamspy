@@ -1,0 +1,8 @@
+Input=GAMSPY_JOB
+ScrDir=/home/muhammet/Documents/gams_workspace/gamspy/tmpmqmdz5_v
+SysDir=/home/muhammet/anaconda3/envs/py38/lib/python3.8/site-packages/gamspy_base
+CurDir=""
+ScriptNext=/home/muhammet/Documents/gams_workspace/gamspy/tmpmqmdz5_v/gamsnext.sh
+License=/home/muhammet/.local/share/GAMSPy/gamspy_license.txt
+ProcDir=/home/muhammet/Documents/gams_workspace/gamspy/tmpmqmdz5_v
+IncrementalMode=32997

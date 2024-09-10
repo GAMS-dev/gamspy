@@ -431,6 +431,7 @@ def uninstall_solver(args: argparse.Namespace):
                     for solver in solvers
                     if solver != "" and solver != "\n"
                 ]
+                print(f"{solvers=}")
                 remove_addons(solvers)
 
         except FileNotFoundError as e:
