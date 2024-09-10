@@ -415,7 +415,7 @@ def uninstall_solver(args: argparse.Namespace):
                 ) from e
 
             with open(addons_path, "w") as file:
-                file.write("\n".join(installed))
+                file.write("\n".join(installed) + "\n")
 
     if args.uninstall_all_solvers:
         try:
