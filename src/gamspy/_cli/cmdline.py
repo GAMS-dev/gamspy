@@ -313,10 +313,15 @@ def install_solver(args: argparse.Namespace):
             except FileNotFoundError:
                 installed = []
 
+            print(f"{installed=}")
             with open(addons_path, "w") as file:
-                installed.append(solver_name.upper())
                 if solver_name.upper() not in installed:
-                    file.write("\n".join(installed) + "\n")
+                    file.write(
+                        "\n".join(installed)
+                        + "\n"
+                        + solver_name.upper()
+                        + "\n"
+                    )
 
     if args.install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
@@ -432,7 +437,6 @@ def uninstall_solver(args: argparse.Namespace):
                     for solver in solvers
                     if solver != "" and solver != "\n"
                 ]
-                print(f"{solvers=}")
                 remove_addons(solvers)
 
         except FileNotFoundError as e:

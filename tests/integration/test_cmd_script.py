@@ -128,7 +128,7 @@ class CmdSuite(unittest.TestCase):
             )
 
         process = subprocess.run(
-            ["gamspy", "uninstall", "solver", "minos", "mosek"],
+            ["gamspy", "install", "solver", "--install-all-solvers"],
             capture_output=True,
             text=True,
         )
@@ -136,7 +136,7 @@ class CmdSuite(unittest.TestCase):
         self.assertTrue(process.returncode == 0)
 
         process = subprocess.run(
-            ["gamspy", "install", "solver", "--install-all-solvers"],
+            ["gamspy", "uninstall", "solver", "minos", "mosek"],
             capture_output=True,
             text=True,
         )
