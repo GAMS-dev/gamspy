@@ -6,6 +6,7 @@ GAMSPy 1.0.1
   - Fix frozen solve with non-scalar symbols.
   - Fix the definition update problem while redefining an equation with definition argument.
   - Introduce default directories to keep license information on upgrade.
+  - Show license path on gamspy show license command.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.
