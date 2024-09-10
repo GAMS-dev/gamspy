@@ -1189,8 +1189,8 @@ class Container(gt.Container):
             if equation._definition is not None:
                 m._add_statement(equation._definition)
                 m[equation.name]._definition = equation._definition
+                m._synch_with_gams()
 
-        m._synch_with_gams()
         return m
 
     def getEquations(self) -> list[Equation]:
