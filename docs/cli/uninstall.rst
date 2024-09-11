@@ -25,7 +25,7 @@ Usage
    * - -\-uninstall-all-solvers
      - -u
      - 
-     - Uninstalls all addon solvers.
+     - Uninstalls all add-on solvers.
 
 Example: ::
 
