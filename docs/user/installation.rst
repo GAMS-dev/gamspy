@@ -143,6 +143,8 @@ Hence, if there is a new version of ``gamspy_base``, you need to reinstall the a
 
     pip install gamspy --upgrade
     gamspy install solver mosek conopt xpress
+    # or 
+    gamspy install solver --existing-solvers
 
 Additional steps when using solver link licenses
 ================================================
