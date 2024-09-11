@@ -75,7 +75,7 @@ is as follows:
 Solvers
 -------
 
-GAMSPy comes with default solvers, and addon solvers can be installed on demand.
+GAMSPy comes with default solvers, and add-on solvers can be installed on demand.
 
 Listing solvers
 ===============
@@ -99,32 +99,32 @@ The same information can also be accessed programmatically via the ``utils`` mod
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
 
 
-Installing/Uninstalling addon solvers
-=====================================
+Installing/Uninstalling add-on solvers
+======================================
 
-The following command can be used to install addon solvers: ::
+The following command can be used to install add-on solvers: ::
 
     gamspy install solver <solver_name1> <solver_name2> ......
 
-Similarly, an addon solver can be uninstalled using: ::
+Similarly, an add-on solver can be uninstalled using: ::
 
     gamspy uninstall solver <solver_name1> <solver_name2> ......
 
-If you want to install all addon solvers, you can do by running: ::
+If you want to install all add-on solvers, you can do by running: ::
 
     gamspy install solver --install-all-solvers
 
-You can uninstall all addon solvers in the same way by running: ::
+You can uninstall all add-on solvers in the same way by running: ::
 
     gamspy uninstall solver --uninstall-all-solvers
 
-One can also recover the addon solvers that they have installed in a previous GAMSPy version with: ::
+One can also recover the add-on solvers that they have installed in a previous GAMSPy version with: ::
 
     gamspy install solver --existing-solvers
 
 .. note::
     
-    To use an addon solver to solve your model, remember to specify the ``solver`` argument 
+    To use an add-on solver to solve your model, remember to specify the ``solver`` argument 
     in the ``model.solve``. For example,
 
         your model definition
@@ -139,7 +139,7 @@ Updating GAMSPy
 ===============
 
 ``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). 
-Hence, if there is a new version of ``gamspy_base``, you need to reinstall the addon solvers after an upgrade: ::
+Hence, if there is a new version of ``gamspy_base``, you need to reinstall the add-on solvers after an upgrade: ::
 
     pip install gamspy --upgrade
     gamspy install solver mosek conopt xpress
