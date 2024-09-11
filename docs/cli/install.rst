@@ -3,7 +3,7 @@
 gamspy install
 ==============
 
-Installs a new solver or a license to the GAMSPy installation.
+Installs addon solvers or a license to the GAMSPy installation.
 
 Usage
 -----
@@ -27,11 +27,11 @@ Usage
    * - -\-install-all-solvers
      - 
      - 
-     - Installs all solvers.
+     - Installs all addon solvers.
    * - -\-existing-solvers
      - 
      - 
-     - Installs solvers that were previously installed with an older version of gamspy.
+     - Installs addon solvers that were previously installed with an older version of gamspy.
 
 Example 1: ::
 
