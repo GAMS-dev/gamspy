@@ -3,7 +3,7 @@
 gamspy install
 ==============
 
-Installs a new solver or a license to the GAMSPy installation.
+Installs add-on solvers or a license to the GAMSPy installation.
 
 Usage
 -----
@@ -24,10 +24,22 @@ Usage
      - -s
      - 
      - Skips the pip install command in case the package was manually installed.
+   * - -\-install-all-solvers
+     - 
+     - 
+     - Installs all add-on solvers.
+   * - -\-existing-solvers
+     - 
+     - 
+     - Installs add-on solvers that were previously installed with an older version of gamspy.
 
-Example: ::
+Example 1: ::
 
   $ gamspy install solver mosek conopt xpress
+
+Example 2: ::
+
+  $ gamspy install solver --install-all-solvers
 
 Usage
 -----

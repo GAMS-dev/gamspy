@@ -4,6 +4,8 @@ import os
 import platform
 from dataclasses import dataclass, field
 
+import gamspy.utils as utils
+
 __all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
 
 platform_to_capabilities_file = {
@@ -43,80 +45,72 @@ class SolverInfo:
         )
 
 
-def check_solver_exists(
-    capabilities_file: str, solver_name: str
-) -> tuple[int, int] | None:
-    with open(capabilities_file, encoding="utf-8") as capabilities:
-        lines = capabilities.readlines()
-        lines = [line for line in lines if line != "\n" and line[0] != "*"]
-        idx = 0
-        while True:
-            start_idx = idx
-            line1 = lines[idx]
-            if line1 == "DEFAULTS\n":
-                break
-
-            idx += 2
-            splitted_line = line1.split(" ")
-            solver = SolverInfo(*splitted_line[:7])  # type: ignore
-            idx += int(solver.lines_to_follow)
-            if solver.solver_id.lower() == solver_name.lower():
-                return start_idx, 2 + int(solver.lines_to_follow)
-
-        return None
-
-
-def get_capabilities_filename() -> str:
-    current_platform = get_platform()
-    return platform_to_capabilities_file[current_platform]
-
-
 def add_solver_entry(
-    gamspy_base_location: str,
-    solver_name: str,
-    verbatims: list[str],
+    system_directory: str, solver_name: str, verbatims: list[str]
 ):
-    capabilities_file = (
-        gamspy_base_location + os.sep + get_capabilities_filename()
-    )
+    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
+    installed_solvers = utils.getInstalledSolvers(system_directory)
+    if solver_name.upper() in installed_solvers:
+        print(
+            f"`{solver_name}` already exists in the capabilities file, skipping"
+        )
+        return
 
-    if check_solver_exists(capabilities_file, solver_name):
-        if solver_name == "scip":
-            if check_solver_exists(capabilities_file, "mosek"):
-                print(
-                    "Solver already exists in the capabilities file, skipping"
-                )
-                return
-        else:
-            print("Solver already exists in the capabilities file, skipping")
-            return
-
-    with open(capabilities_file, encoding="utf-8") as f:
+    with open(capabilities_path, encoding="utf-8") as f:
         string = f.read()
 
     for verbatim in verbatims:
         string = f"{verbatim}\n\n{string}"
 
-        with open(capabilities_file, "w", encoding="utf-8") as f:
+        with open(capabilities_path, "w", encoding="utf-8") as f:
             f.write(string)
 
 
-def remove_solver_entry(gamspy_base_location: str, solver_name: str):
-    capabilities_file = (
-        gamspy_base_location + os.sep + get_capabilities_filename()
-    )
-    solver_tuple = check_solver_exists(capabilities_file, solver_name)
+def find_bounds(system_directory: str, solver_name: str) -> tuple[int, int]:
+    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
+    with open(capabilities_path, encoding="utf-8") as file:
+        lines = file.readlines()
 
-    if not solver_tuple:
+    start_idx = 0
+    line_count = 0
+    while True:
+        line = lines.pop(0)
+        if line.startswith("*") or line == "" or line == "\n":
+            start_idx += 1
+            continue
+        if line == "DEFAULTS":
+            break
+
+        start_idx += 1
+        solver, _, _, _, _, _, num_lines, *_ = line.split()
+        for _ in range(int(num_lines) + 2):
+            _ = lines.pop(0)
+
+        start_idx += int(num_lines) + 2
+
+        if solver == solver_name.upper():
+            line_count = int(num_lines)
+            start_idx -= int(num_lines) + 3
+            break
+
+    return start_idx, line_count
+
+
+def remove_solver_entry(system_directory: str, solver_name: str):
+    capabilities_path = os.path.join(system_directory, utils.CAPABILITIES_FILE)
+    installed_solvers = utils.getInstalledSolvers(system_directory)
+
+    if solver_name.upper() not in installed_solvers:
         print("Solver is not in the capabilities file, skipping")
         return
 
-    line_num, line_count = solver_tuple
-    with open(capabilities_file, encoding="utf-8") as f:
+    line_num, line_count = find_bounds(system_directory, solver_name)
+
+    with open(capabilities_path, encoding="utf-8") as f:
         lines = f.readlines()
 
-    for _ in range(line_count + 1):
+    for _ in range(line_count + 3):
         lines.pop(line_num)
 
-    with open(capabilities_file, "w", encoding="utf-8") as f:
+    with open(capabilities_path, "w", encoding="utf-8") as f:
         f.writelines(lines)

@@ -31,8 +31,8 @@ Example: ::
     usage: gamspy [-h] [-v]
            gamspy install license <access_code> or <path/to/license/file> [--uses-port <port>]
            gamspy uninstall license
-           gamspy install solver <solver_name> [--skip-pip-install]
-           gamspy uninstall solver <solver_name> [--skip-pip-uninstall]
+           gamspy install solver <solver_name> [--skip-pip-install] [--existing-solvers] [--install-all-solvers]
+           gamspy uninstall solver <solver_name> [--skip-pip-uninstall] [--uninstall-all-solvers]
            gamspy list solvers [--all]
            gamspy show license
            gamspy show base
