@@ -75,7 +75,7 @@ is as follows:
 Solvers
 -------
 
-GAMSPy comes with default solvers, and additional solvers can be installed on demand.
+GAMSPy comes with default solvers, and addon solvers can be installed on demand.
 
 Listing solvers
 ===============
@@ -99,14 +99,14 @@ The same information can also be accessed programmatically via the ``utils`` mod
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
 
 
-Installing/Uninstalling additional solvers
-==========================================
+Installing/Uninstalling addon solvers
+=====================================
 
-The following command can be used to install additional solvers: ::
+The following command can be used to install addon solvers: ::
 
     gamspy install solver <solver_name1> <solver_name2> ......
 
-Similarly, a (non-default) solver can be uninstalled using: ::
+Similarly, an addon solver can be uninstalled using: ::
 
     gamspy uninstall solver <solver_name1> <solver_name2> ......
 
@@ -124,7 +124,7 @@ One can also recover the addon solvers that they have installed in a previous GA
 
 .. note::
     
-    To use a non-default solver to solve your model, remember to specify the ``solver`` argument 
+    To use an addon solver to solve your model, remember to specify the ``solver`` argument 
     in the ``model.solve``. For example,
 
         your model definition
@@ -139,7 +139,7 @@ Updating GAMSPy
 ===============
 
 ``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). 
-Hence, if there is a new version of ``gamspy_base``, you need to reinstall the additional solvers after an upgrade: ::
+Hence, if there is a new version of ``gamspy_base``, you need to reinstall the addon solvers after an upgrade: ::
 
     pip install gamspy --upgrade
     gamspy install solver mosek conopt xpress
