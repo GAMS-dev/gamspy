@@ -96,7 +96,7 @@ def get_args():
     install_solver_group.add_argument(
         "--install-all-solvers",
         action="store_true",
-        help="Installs all available addon solvers.",
+        help="Installs all available add-on solvers.",
     )
 
     uninstall_solver_group = parser.add_argument_group(
@@ -115,7 +115,7 @@ def get_args():
     install_solver_group.add_argument(
         "--uninstall-all-solvers",
         action="store_true",
-        help="Uninstalls all installed addon solvers.",
+        help="Uninstalls all installed add-on solvers.",
     )
 
     list_group = parser.add_argument_group(
@@ -340,7 +340,7 @@ def install_solver(args: argparse.Namespace):
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
-            raise ValidationError("No existing addon solvers found!") from e
+            raise ValidationError("No existing add-on solvers found!") from e
 
     if not args.name:
         raise ValidationError(
@@ -439,7 +439,7 @@ def uninstall_solver(args: argparse.Namespace):
                 remove_addons(solvers)
 
         except FileNotFoundError as e:
-            raise ValidationError("No existing addon solvers found!") from e
+            raise ValidationError("No existing add-on solvers found!") from e
 
         # All addon solvers are gone.
         return
