@@ -72,7 +72,7 @@ class Local(backend.Backend):
     def is_async(self):
         return False
 
-    def run(self, keep_flags: bool = False):
+    def run(self):
         if self.model is not None:
             self.model._add_runtime_options(self.options)
             self.model._append_solve_string()
@@ -85,7 +85,7 @@ class Local(backend.Backend):
             )
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess(self.container._gdx_in, keep_flags)
+        gams_string = self.preprocess(self.container._gdx_in)
 
         # Run the model
         self.execute_gams(gams_string)

@@ -7,6 +7,7 @@ GAMSPy 1.0.1
   - Fix the definition update problem while redefining an equation with definition argument.
   - Introduce default directories to keep license information on upgrade.
   - Show license path on gamspy show license command.
+  - Simplify the implementation of the copy container operation.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.

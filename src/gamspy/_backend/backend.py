@@ -130,7 +130,7 @@ class Backend(ABC):
     def is_async(self): ...
 
     @abstractmethod
-    def run(self, keep_flags: bool = False): ...
+    def run(self): ...
 
     def get_job_name(self):
         job_name = self.container._job
@@ -142,7 +142,7 @@ class Backend(ABC):
 
         return job_name
 
-    def preprocess(self, gdx_in: str, keep_flags: bool = False):
+    def preprocess(self, gdx_in: str):
         modified_names = self.container._get_touched_symbol_names()
 
         if len(modified_names) != 0:
@@ -154,8 +154,7 @@ class Backend(ABC):
             gdx_in, modified_names
         )
 
-        if not keep_flags:
-            self.update_modified_state(modified_names)
+        self.update_modified_state(modified_names)
 
         return gams_string
 
