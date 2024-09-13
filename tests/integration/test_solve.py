@@ -7,7 +7,6 @@ import concurrent.futures
 import logging
 import math
 import os
-import subprocess
 import sys
 import time
 import unittest
@@ -30,6 +29,8 @@ from gamspy import (
     Sum,
     Variable,
 )
+import math
+import gamspy.math as gamspy_math
 from gamspy.exceptions import GamspyException, ValidationError
 
 
@@ -1506,6 +1507,21 @@ class SolveSuite(unittest.TestCase):
         self.assertIsNotNone(x.records)
         self.assertIsNone(supply.records)
         self.assertEqual(transport.objective_value, 153.675)
+
+    def test_execution_error(self):
+        m = Container()
+        x = Variable(m)
+        y = Variable(m)
+        obj = gamspy_math.sqr(math.pi - x / y)
+        model = Model(m, objective=obj, problem="nlp", sense="min")
+        try:
+            model.solve()  # this will trigger a division by 0 execution error
+        except:
+            y.l = 1
+
+        summary = model.solve()  # this should work
+        self.assertIsNotNone(summary)
+
 
 
 def solve_suite():
