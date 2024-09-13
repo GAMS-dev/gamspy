@@ -4,7 +4,6 @@ import atexit
 import logging
 import os
 import platform
-import shutil
 import signal
 import socket
 import subprocess
@@ -59,17 +58,6 @@ stream_handler.setLevel(logging.INFO)
 formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-
-
-def is_network_license(system_directory: str) -> bool:
-    user_license_path = os.path.join(system_directory, "user_license.txt")
-    if not os.path.exists(user_license_path):
-        return False
-
-    with open(user_license_path, encoding="utf-8") as file:
-        lines = file.readlines()
-
-    return bool("+" in lines[0] and lines[4][47] == "N")
 
 
 def find_free_address() -> tuple[str, int]:
@@ -242,7 +230,8 @@ class Container(gt.Container):
         self._unsaved_statements: list = []
 
         super().__init__(system_directory=system_directory)
-        self._network_license = is_network_license(self.system_directory)
+        self._license_path = utils._get_license_path(self.system_directory)
+        self._network_license = self._is_network_license()
 
         self._debugging_level = debugging_level
         self._workspace = Workspace(debugging_level, working_directory)
@@ -310,6 +299,12 @@ class Container(gt.Container):
         bool
         """
         return MIRO_GDX_IN is not None
+
+    def _is_network_license(self) -> bool:
+        with open(self._license_path, encoding="utf-8") as file:
+            lines = file.readlines()
+
+        return bool("+" in lines[0] and lines[4][47] == "N")
 
     def _validate_global_options(self, options: Any) -> Options | None:
         if options is not None and not isinstance(options, Options):
@@ -532,9 +527,9 @@ class Container(gt.Container):
 
         return modified_names
 
-    def _synch_with_gams(self, keep_flags: bool = False) -> DataFrame | None:
+    def _synch_with_gams(self) -> DataFrame | None:
         runner = backend_factory(self, self._options)
-        summary = runner.run(keep_flags=keep_flags)
+        summary = runner.run()
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -1186,91 +1181,15 @@ class Container(gt.Container):
                 " with the original container."
             )
 
-        self._synch_with_gams()
-
-        for name, symbol in self:
-            new_domain = []
-            for elem in symbol.domain:
-                if not isinstance(elem, str):
-                    new_set = gp.Set._constructor_bypass(
-                        m,
-                        elem.name,
-                        elem.domain,
-                        elem.is_singleton,
-                        elem.records,
-                        elem.description,
-                    )
-                    new_domain.append(new_set)
-                else:
-                    new_domain.append(elem)
-
-            if isinstance(symbol, gp.Alias):
-                alias_with = gp.Set._constructor_bypass(
-                    m,
-                    symbol.alias_with.name,
-                    symbol.alias_with.domain,
-                    symbol.alias_with.is_singleton,
-                    symbol.alias_with.records,
-                )
-                _ = gp.Alias._constructor_bypass(
-                    m,
-                    name,
-                    alias_with,
-                )
-            elif isinstance(symbol, gp.UniverseAlias):
-                _ = gp.UniverseAlias._constructor_bypass(
-                    m,
-                    name,
-                )
-            elif isinstance(symbol, gp.Set):
-                _ = gp.Set._constructor_bypass(
-                    m,
-                    name,
-                    new_domain,
-                    symbol.is_singleton,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Parameter):
-                _ = gp.Parameter._constructor_bypass(
-                    m,
-                    name,
-                    new_domain,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Variable):
-                _ = gp.Variable._constructor_bypass(
-                    m,
-                    name,
-                    symbol.type,
-                    new_domain,
-                    symbol._records,
-                    symbol.description,
-                )
-            elif isinstance(symbol, gp.Equation):
-                symbol_type = symbol.type
-                if symbol.type in ["eq", "leq", "geq"]:
-                    symbol_type = "regular"
-                _ = gp.Equation._constructor_bypass(
-                    container=m,
-                    name=name,
-                    type=symbol_type,
-                    domain=new_domain,
-                    records=symbol._records,
-                    description=symbol.description,
-                )
-
-        shutil.copy(self._gdx_in, m._gdx_in)
-        try:
-            shutil.copy(self._gdx_out, m._gdx_out)
-        except FileNotFoundError:
-            pass
+        self.write(m._job + "in.gdx")
+        m.read(m._job + "in.gdx")
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():
             if equation._definition is not None:
                 m._add_statement(equation._definition)
+                m[equation.name]._definition = equation._definition
+                m._synch_with_gams()
 
         return m
 

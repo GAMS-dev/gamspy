@@ -286,6 +286,34 @@ class NeosSuite(unittest.TestCase):
         with open(os.path.join(self.m.working_directory, "solve.log")) as file:
             self.assertTrue(">>  aggfill 11" in file.read())
 
+    def test_mip(self):
+        mdl = Container()
+        x1 = Variable(mdl, type="integer")
+        x2 = Variable(mdl, type="integer")
+        x3 = Variable(mdl, type="integer")
+
+        eq1 = Equation(mdl)
+        eq2 = Equation(mdl)
+        eq3 = Equation(mdl)
+        eq1[...] = x1 + 2 * x2 >= 3
+        eq2[...] = x3 + x2 >= 5
+        eq3[...] = x1 + x3 == 4
+        obj = x1 + 3 * x2 + 3 * x3
+
+        LP1 = Model(
+            mdl,
+            equations=mdl.getEquations(),
+            problem="mip",
+            sense="min",
+            objective=obj,
+        )
+
+        client = NeosClient(email=os.environ["NEOS_EMAIL"])
+        summary = LP1.solve(
+            solver="cplex", output=sys.stdout, backend="neos", client=client
+        )
+        self.assertTrue(isinstance(summary, pd.DataFrame))
+
 
 def neos_suite():
     suite = unittest.TestSuite()

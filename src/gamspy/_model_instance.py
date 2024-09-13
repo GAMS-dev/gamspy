@@ -170,7 +170,7 @@ class ModelInstance:
     def solve(
         self,
         solver: str | None,
-        given_options: ModelInstanceOptions | dict | None = None,
+        given_options: ModelInstanceOptions | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         # get options from dict
@@ -279,7 +279,7 @@ class ModelInstance:
     def _prepare_options(
         self,
         solver: str | None,
-        given_options: ModelInstanceOptions | dict | None,
+        given_options: ModelInstanceOptions | None,
     ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
         options = GamsModelInstanceOpt()
@@ -396,6 +396,7 @@ class ModelInstance:
                 _ = gp.Variable(
                     self.container,
                     name + "_var",
+                    domain=self.container[name].domain,
                     records=temp[name + "_var"].records,
                 )
         self.container._options.miro_protect = prev_state

@@ -530,7 +530,7 @@ expression than an identifier within the indexed operation. ::
 
 The equivalent mathematical forms are:
 
-:math:`total_capacity = \sum_{i}\sum_{p}capacity_{ip}` or :math:`total_capacity = \sum_{p}totcap_{p}`
+:math:`total\_capacity = \sum_{i}\sum_{p}capacity_{ip}` or :math:`total\_capacity = \sum_{p}totcap_{p}`
 
 Note that the following alternative notation may be used for the first assignment above: ::
 

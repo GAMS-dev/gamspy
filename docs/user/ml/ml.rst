@@ -38,6 +38,7 @@ needs or require additional information, please use our `Discourse platform <htt
    :maxdepth: 1
 
    ./introduction
+   ./formulations
    ./embed_nn
    ./ols
    ./logistic

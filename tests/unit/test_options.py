@@ -576,7 +576,7 @@ class OptionsSuite(unittest.TestCase):
 
         # Bounds
         u.lo[nh] = 0.0
-        u.up[nh] = 5
+        u.up[nh] = -5
 
         protein = Model(
             m,

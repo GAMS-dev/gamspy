@@ -7,6 +7,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from typing import Iterable
 
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError
@@ -16,8 +17,8 @@ from .util import add_solver_entry, remove_solver_entry
 USAGE = """gamspy [-h] [-v]
        gamspy install license <access_code> or <path/to/license/file> [--uses-port <port>]
        gamspy uninstall license
-       gamspy install solver <solver_name> [--skip-pip-install]
-       gamspy uninstall solver <solver_name> [--skip-pip-uninstall]
+       gamspy install solver <solver_name> [--skip-pip-install] [--existing-solvers] [--install-all-solvers]
+       gamspy uninstall solver <solver_name> [--skip-pip-uninstall] [--uninstall-all-solvers]
        gamspy list solvers [--all]
        gamspy show license
        gamspy show base
@@ -86,6 +87,17 @@ def get_args():
             " update gamspy installed solver list."
         ),
     )
+    install_solver_group.add_argument(
+        "--existing-solvers",
+        "-e",
+        action="store_true",
+        help="Reinstalls previously installed add-on solvers.",
+    )
+    install_solver_group.add_argument(
+        "--install-all-solvers",
+        action="store_true",
+        help="Installs all available add-on solvers.",
+    )
 
     uninstall_solver_group = parser.add_argument_group(
         "gamspy uninstall solver <solver_name>",
@@ -99,6 +111,11 @@ def get_args():
             "If you don't want to uninstall the package of the solver, skip"
             " uninstall and update gamspy installed solver list."
         ),
+    )
+    install_solver_group.add_argument(
+        "--uninstall-all-solvers",
+        action="store_true",
+        help="Uninstalls all installed add-on solvers.",
     )
 
     list_group = parser.add_argument_group(
@@ -168,6 +185,8 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
+
     if not args.name or len(args.name) > 1:
         raise ValidationError(
             "License is missing: `gamspy install license <access_code> or <path/to/license/file>`"
@@ -200,84 +219,135 @@ def install_license(args: argparse.Namespace):
             raise ValidationError(process.stderr)
 
         with open(
-            os.path.join(gamspy_base_dir, "user_license.txt"),
+            os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"),
             "w",
             encoding="utf-8",
         ) as file:
             file.write(process.stdout)
     else:
-        shutil.copy(license, os.path.join(gamspy_base_dir, "user_license.txt"))
+        shutil.copy(
+            license, os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
+        )
 
 
 def uninstall_license():
-    gamspy_base_dir = utils._get_gamspy_base_directory()
-
     try:
-        os.unlink(os.path.join(gamspy_base_dir, "user_license.txt"))
+        os.unlink(os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"))
     except FileNotFoundError:
         ...
 
 
 def install_solver(args: argparse.Namespace):
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
+
+    def install_addons(addons: Iterable[str]):
+        for item in addons:
+            solver_name = item.lower()
+
+            if solver_name.upper() not in utils.getAvailableSolvers():
+                raise ValidationError(
+                    f'Given solver name ("{solver_name}") is not valid. Available'
+                    f" solvers that can be installed: {utils.getAvailableSolvers()}"
+                )
+
+            if not args.skip_pip_install:
+                # install specified solver
+                try:
+                    _ = subprocess.run(
+                        [
+                            "pip",
+                            "install",
+                            f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                            "--force-reinstall",
+                        ],
+                        check=True,
+                        stderr=subprocess.PIPE,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise GamspyException(
+                        f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
+                    ) from e
+            else:
+                try:
+                    solver_lib = importlib.import_module(
+                        f"gamspy_{solver_name}"
+                    )
+                except ModuleNotFoundError as e:
+                    e.msg = f"You must install gamspy-{solver_name} first!"
+                    raise e
+
+                if solver_lib.__version__ != gamspy_base.__version__:
+                    raise ValidationError(
+                        f"gamspy_base version ({gamspy_base.__version__}) and solver"
+                        f" version ({solver_lib.__version__}) must match! Run `gamspy"
+                        " update` to update your solvers."
+                    )
+
+            # copy solver files to gamspy_base
+            gamspy_base_dir = utils._get_gamspy_base_directory()
+            solver_lib = importlib.import_module(f"gamspy_{solver_name}")
+
+            file_paths = solver_lib.file_paths
+            for file in file_paths:
+                shutil.copy(file, gamspy_base_dir)
+
+            files = solver_lib.files
+            verbatims = [solver_lib.verbatim]
+            append_dist_info(files, gamspy_base_dir)
+            add_solver_entry(gamspy_base_dir, solver_name, verbatims)
+
+            try:
+                with open(addons_path) as file:
+                    installed = file.read().splitlines()
+                    installed = [
+                        solver
+                        for solver in installed
+                        if solver != "" and solver != "\n"
+                    ]
+            except FileNotFoundError:
+                installed = []
+
+            with open(addons_path, "w") as file:
+                if solver_name.upper() not in installed:
+                    file.write(
+                        "\n".join(installed)
+                        + "\n"
+                        + solver_name.upper()
+                        + "\n"
+                    )
+
+    if args.install_all_solvers:
+        available_solvers = utils.getAvailableSolvers()
+        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+        diff = []
+        for solver in available_solvers:
+            if solver not in installed_solvers:
+                diff.append(solver)
+
+        install_addons(diff)
+        return
+
+    if args.existing_solvers:
+        try:
+            with open(addons_path) as file:
+                solvers = file.read().splitlines()
+                install_addons(solvers)
+                return
+        except FileNotFoundError as e:
+            raise ValidationError("No existing add-on solvers found!") from e
+
     if not args.name:
         raise ValidationError(
             "Solver name is missing: `gamspy install solver <solver_name>`"
         )
 
-    for item in args.name:
-        solver_name = item.lower()
-
-        if solver_name.upper() not in utils.getAvailableSolvers():
-            raise ValidationError(
-                f'Given solver name ("{solver_name}") is not valid. Available'
-                f" solvers that can be installed: {utils.getAvailableSolvers()}"
-            )
-
-        import gamspy_base
-
-        if not args.skip_pip_install:
-            # install specified solver
-            try:
-                _ = subprocess.run(
-                    [
-                        "pip",
-                        "install",
-                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
-                        "--force-reinstall",
-                    ],
-                    check=True,
-                    stderr=subprocess.PIPE,
-                )
-            except subprocess.CalledProcessError as e:
-                raise GamspyException(
-                    f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"
-                ) from e
-        else:
-            try:
-                solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-            except ModuleNotFoundError as e:
-                e.msg = f"You must install gamspy-{solver_name} first!"
-                raise e
-
-            if solver_lib.__version__ != gamspy_base.__version__:
-                raise ValidationError(
-                    f"gamspy_base version ({gamspy_base.__version__}) and solver"
-                    f" version ({solver_lib.__version__}) must match! Run `gamspy"
-                    " update` to update your solvers."
-                )
-
-        # copy solver files to gamspy_base
-        gamspy_base_dir = utils._get_gamspy_base_directory()
-        solver_lib = importlib.import_module(f"gamspy_{solver_name}")
-
-        file_paths = solver_lib.file_paths
-        for file in file_paths:
-            shutil.copy(file, gamspy_base_dir)
-
-        files = solver_lib.files
-        verbatims = [solver_lib.verbatim]
-        append_dist_info(files, gamspy_base_dir)
-        add_solver_entry(gamspy_base_dir, solver_name, verbatims)
+    install_addons(args.name)
 
 
 def append_dist_info(files, gamspy_base_dir: str):
@@ -310,36 +380,76 @@ def uninstall_solver(args: argparse.Namespace):
             "You must install gamspy_base to use this command!"
         ) from e
 
+    addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
+
+    def remove_addons(addons: Iterable[str]):
+        for item in addons:
+            solver_name = item.lower()
+
+            installed_solvers = utils.getInstalledSolvers(
+                gamspy_base.directory
+            )
+            if solver_name.upper() not in installed_solvers:
+                raise ValidationError(
+                    f'Given solver name ("{solver_name}") is not valid. Installed'
+                    f" solvers solvers that can be uninstalled: {installed_solvers}"
+                )
+
+            if not args.skip_pip_uninstall:
+                # uninstall specified solver
+                try:
+                    _ = subprocess.run(
+                        ["pip", "uninstall", f"gamspy-{solver_name}", "-y"],
+                        check=True,
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise GamspyException(
+                        f"Could not uninstall gamspy-{solver_name}: {e.output}"
+                    ) from e
+
+            # do not delete files from gamspy_base as other solvers might depend on it
+            gamspy_base_dir = utils._get_gamspy_base_directory()
+            remove_solver_entry(gamspy_base_dir, solver_name)
+
+            try:
+                with open(addons_path) as file:
+                    installed = file.read().splitlines()
+            except FileNotFoundError:
+                installed = []
+
+            try:
+                installed.remove(solver_name.upper())
+            except ValueError as e:
+                raise ValidationError(
+                    f"Cannot remove `{solver_name}` which was not installed before!"
+                ) from e
+
+            with open(addons_path, "w") as file:
+                file.write("\n".join(installed) + "\n")
+
+    if args.uninstall_all_solvers:
+        try:
+            with open(addons_path) as file:
+                solvers = file.read().splitlines()
+                solvers = [
+                    solver
+                    for solver in solvers
+                    if solver != "" and solver != "\n"
+                ]
+                remove_addons(solvers)
+
+        except FileNotFoundError as e:
+            raise ValidationError("No existing add-on solvers found!") from e
+
+        # All add-on solvers are gone.
+        return
+
     if not args.name:
         raise ValidationError(
             "Solver name is missing: `gamspy uninstall solver <solver_name>`"
         )
 
-    for item in args.name:
-        solver_name = item.lower()
-
-        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
-        if solver_name.upper() not in installed_solvers:
-            raise ValidationError(
-                f'Given solver name ("{solver_name}") is not valid. Installed'
-                f" solvers solvers that can be uninstalled: {installed_solvers}"
-            )
-
-        if not args.skip_pip_uninstall:
-            # uninstall specified solver
-            try:
-                _ = subprocess.run(
-                    ["pip", "uninstall", f"gamspy-{solver_name}", "-y"],
-                    check=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise GamspyException(
-                    f"Could not uninstall gamspy-{solver_name}: {e.output}"
-                ) from e
-
-        # do not delete files from gamspy_base as other solvers might depend on it
-        gamspy_base_dir = utils._get_gamspy_base_directory()
-        remove_solver_entry(gamspy_base_dir, solver_name)
+    remove_addons(args.name)
 
 
 def install(args: argparse.Namespace):
@@ -566,13 +676,12 @@ def show_license():
             "You must install gamspy_base to use this command!"
         ) from e
 
-    userlice_path = os.path.join(gamspy_base.directory, "user_license.txt")
-    demolice_path = os.path.join(gamspy_base.directory, "gamslice.txt")
-    lice_path = (
-        userlice_path if os.path.exists(userlice_path) else demolice_path
-    )
-    with open(lice_path, encoding="utf-8") as license_file:
-        print(license_file.read())
+    license_path = utils._get_license_path(gamspy_base.directory)
+    print(f"License found at: {license_path}\n")
+    print("License Content")
+    print("=" * 15)
+    with open(license_path, encoding="utf-8") as license_file:
+        print(license_file.read().strip())
 
 
 def show_base():

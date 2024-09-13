@@ -20,9 +20,15 @@ For more information about GAMS licenses and how to get a new license, check
 Installing or updating your license
 ===================================
 A GAMSPy license is a either an ASCII file of six lines or 36 character access code. 
-In order to install your license, all you need to do is to run::
+In order to install your license, all you need to do is to run: ::
 
     gamspy install license <path_to_ascii_file or access code>
+
+You can run: ::
+
+    gamspy show license
+
+to verify the installation of the license.
 
 For machines that are not connected to the internet and a license specified by an access code, you can probe the node's data
 and get a license via a machine connected to the internet. Details about this can be found below and in :ref:`gamspy_retrieve`.
@@ -69,7 +75,7 @@ is as follows:
 Solvers
 -------
 
-GAMSPy comes with default solvers, and additional solvers can be installed on demand.
+GAMSPy comes with default solvers, and add-on solvers can be installed on demand.
 
 Listing solvers
 ===============
@@ -93,20 +99,32 @@ The same information can also be accessed programmatically via the ``utils`` mod
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
 
 
-Installing/Uninstalling additional solvers
-==========================================
+Installing/Uninstalling add-on solvers
+======================================
 
-The following command can be used to install additional solvers::
+The following command can be used to install add-on solvers: ::
 
-    gamspy install solver <solver_name>
+    gamspy install solver <solver_name1> <solver_name2> ......
 
-Similarly, a (non-default) solver can be uninstalled using::
+Similarly, an add-on solver can be uninstalled using: ::
 
-    gamspy uninstall solver <solver_name>
+    gamspy uninstall solver <solver_name1> <solver_name2> ......
+
+If you want to install all add-on solvers, you can do by running: ::
+
+    gamspy install solver --install-all-solvers
+
+You can uninstall all add-on solvers in the same way by running: ::
+
+    gamspy uninstall solver --uninstall-all-solvers
+
+One can also recover the add-on solvers that they have installed in a previous GAMSPy version with: ::
+
+    gamspy install solver --existing-solvers
 
 .. note::
     
-    To use a non-default solver to solve your model, remember to specify the ``solver`` argument 
+    To use an add-on solver to solve your model, remember to specify the ``solver`` argument 
     in the ``model.solve``. For example,
 
         your model definition
@@ -120,11 +138,13 @@ Similarly, a (non-default) solver can be uninstalled using::
 Updating GAMSPy
 ===============
 
-``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). If there is a new version of ``gamspy_base``, you need to reinstall the additional solvers and your license after an upgrade: ::
+``pip install gamspy`` implicitly upgrades the dependencies of GAMSPy (i.e. gamspy_base and gamsapi). 
+Hence, if there is a new version of ``gamspy_base``, you need to reinstall the add-on solvers after an upgrade: ::
 
     pip install gamspy --upgrade
-    gamspy install license 876e5812-1222-4aba-819d-e1e91b7e2f52
     gamspy install solver mosek conopt xpress
+    # or 
+    gamspy install solver --existing-solvers
 
 Additional steps when using solver link licenses
 ================================================
@@ -176,4 +196,5 @@ Tests are classified into three categories: unit tests, integration tests, and d
 
 .. note::
     By default, only unit tests are run. To enable integration tests, the ``--integration`` argument should be provided.
-    Doctests can be enable with the ``--doc`` argument.
+    Doctests can be enable with the ``--doc`` argument. To enable GAMS Engine backend tests, add ``--engine`` argument.
+    To enable NEOS Server backend tests, add ``--neos`` argument.

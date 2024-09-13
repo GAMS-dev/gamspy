@@ -41,6 +41,16 @@ CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
 
+user_dir = os.path.expanduser("~")
+if platform.system() == "Linux":
+    DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
+elif platform.system() == "Darwin":
+    DEFAULT_DIR = os.path.join(
+        user_dir, "Library", "Application Support", "GAMSPy"
+    )
+elif platform.system() == "Windows":
+    DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
+
 
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     """
@@ -310,10 +320,18 @@ def _get_gamspy_base_directory() -> str:
 
 
 def _get_license_path(system_directory: str) -> str:
+    # Check if a new license was installed.
+    gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
+    if os.path.exists(gamspy_license_path):
+        return gamspy_license_path
+
+    # Check old license installation path.
+    # TODO: Remove this after 1.0.1 release.
     user_license_path = os.path.join(system_directory, "user_license.txt")
     if os.path.exists(user_license_path):
         return user_license_path
 
+    # No preinstalled licenses on the machine. Use the demo license.
     return os.path.join(system_directory, "gamslice.txt")
 
 

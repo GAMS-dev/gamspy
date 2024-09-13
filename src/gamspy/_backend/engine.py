@@ -773,7 +773,7 @@ class GAMSEngine(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def run(self, keep_flags: bool = False):
+    def run(self):
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
@@ -788,10 +788,7 @@ class GAMSEngine(backend.Backend):
         )
 
         # Generate gams string and write modified symbols to gdx
-        gams_string = self.preprocess(
-            os.path.basename(self.container._gdx_in),
-            keep_flags,
-        )
+        gams_string = self.preprocess(os.path.basename(self.container._gdx_in))
 
         self.execute_gams(gams_string)
 

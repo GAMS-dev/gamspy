@@ -7,12 +7,12 @@ Matrix Operations - Introduction
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 
-Matrix operations are introduced for those who want to use machine learning 
-with GAMS or prefer matrix notation. In many machine learning applications, 
-the underlying algebra is expressed using matrix operations rather than indexed 
-algebra. While GAMS provides indexed algebra to meet the needs of many common 
-optimization applications, matrix operations have been introduced to complement 
-indexed algebra. We still believe that for classical optimization problems, 
+Matrix operations are introduced for those who want to use machine learning
+with GAMSPy or prefer matrix notation. In many machine learning applications,
+the underlying algebra is expressed using matrix operations rather than indexed
+algebra. While GAMSPy provides indexed algebra to meet the needs of many common
+optimization applications, matrix operations have been introduced to complement
+indexed algebra. We still believe that for classical optimization problems,
 indexed algebra is a better choice as it is more intuitive.
 
 However, for ML practitioners, writing this:
@@ -35,7 +35,7 @@ is much easier than:
 In this context, ``m`` represents the batch dimension, ``i`` denotes the feature dimension of layer 2,
 and ``j`` represents the feature dimension of layer 3.
 
-GAMSPy provides the following features for ML workloads:
+GAMSPy provides the following matrix features:
 
 * Implicit default domains
 * Easy matrix declaration
@@ -44,11 +44,12 @@ GAMSPy provides the following features for ML workloads:
    * Vector norms
    * Trace
    * Permute
-   * Activation Functions
 * Improved domain tracking
 
 In this introduction section, we summarize each of the features. You can find
 more information about the features in their own respective pages.
+
+Activation functions are moved to :ref:`Formulations page<activation-functions>`.
 
 Implicit default domains
 ========================
@@ -61,7 +62,7 @@ the domains specified when declaring the symbol is used implicitly.
 
    import gamspy as gp
    import numpy as np
-   
+
    m = gp.Container()
    i = gp.Set(m, "i")
    j = gp.Set(m, "j")
@@ -97,9 +98,9 @@ Or if you want to be specific:
 Easy matrix declaration
 =======================
 
-Sometimes you need to generate parameters or variables as a matrix without assigning 
-significant meaning to their indices. The ``gp.math.dim`` recommended method for 
-declaring matrices, though parameters or variables defined without it can still be 
+Sometimes you need to generate parameters or variables as a matrix without assigning
+significant meaning to their indices. The ``gp.math.dim`` recommended method for
+declaring matrices, though parameters or variables defined without it can still be
 used in matrix operations.
 
 See the following example for using ``dim`` function:
@@ -208,10 +209,10 @@ symbols and expressions support matrix multiplication by overriding the ``@`` op
 .. admonition:: Information
 
 
-   When performing matrix multiplication, the actual computation is not performed 
-   immediately. Instead, an expression is generated. This approach is used because 
-   matrix multiplication is computationally expensive, and since the elements 
-   involved include variables as well as numbers, certain libraries and optimization 
+   When performing matrix multiplication, the actual computation is not performed
+   immediately. Instead, an expression is generated. This approach is used because
+   matrix multiplication is computationally expensive, and since the elements
+   involved include variables as well as numbers, certain libraries and optimization
    techniques cannot be used to accelerate the process. By
    delegating this task to the GAMS execution engine rather than handling it directly in Python, we
    achieve a faster model generation process.
@@ -319,8 +320,8 @@ are frequently used in machine learning applications.
 Vector Norms
 ------------
 
-Vector norms are essential to many machine learning applications. For example, 
-in the ordinary least squares method, one minimizes the squared residuals, which 
+Vector norms are essential to many machine learning applications. For example,
+in the ordinary least squares method, one minimizes the squared residuals, which
 can be formulated as minimizing the vector size of the residuals.
 
 In the simple example, we can use :meth:`vector_norm <gamspy.math.vector_norm>`
@@ -390,9 +391,9 @@ allowing the use of a Quadratically Constrained Programming (QCP) model type.
 
 Normally, this approach wouldn't work in GAMSPy because the square and square
 root operations don’t automatically cancel each other out. However, the
-`vector_norm` operation is an exception. When the conditions are correct, 
+`vector_norm` operation is an exception. When the conditions are correct,
 :meth:`vector_norm <gamspy.math.vector_norm>` marks the :meth:`sqrt <gamspy.math.sqrt>`
-function as cancellable, effectively allowing the minimization of the squared 
+function as cancellable, effectively allowing the minimization of the squared
 norm within a QCP model.
 
 This enhanced functionality simplifies the optimization process and broadens
@@ -433,12 +434,12 @@ where the `x` is one of the following:
 - Variable
 - ImplicitVariable
 
-and returns either an ImplicitVariable or ImplicitParameter with the 
+and returns either an ImplicitVariable or ImplicitParameter with the
 dimensions permuted as requested.
 
 
 `permute` does not create a new variable or parameter in GAMS but rather
-creates a placeholder that accesses the original variable during the 
+creates a placeholder that accesses the original variable during the
 permutation. You can see that in the following example, where we create a matrix
 `mat` with domain [i, j]. Afterwards, we set `mat2` to a permutation of the
 `mat` but printing the GAMS string of `mat2` reveals that no new variable is
@@ -473,7 +474,7 @@ generated.
    # 'mat("i1","j2")'
 
 
-If you only need to permute the last two dimensions (transpose), you can use 
+If you only need to permute the last two dimensions (transpose), you can use
 `.t()` on parameters and variables.
 
 .. code-block:: python
@@ -529,100 +530,18 @@ still be useful in various applications.
    #    value
    # 0    9.0
 
-.. _activation-functions:
-
-Activation Functions
---------------------
-
-One of the key reasons neural networks can learn a wide range of tasks is their
-ability to approximate complex functions, including non-linear ones. Activation
-functions are essential components that introduce nonlinearity to neural
-networks. While understanding functions like ReLU may be straightforward,
-integrating them into optimization models can be challenging. To assist you, we
-have started with a small list of commonly used activation functions. So far,
-we have implemented the following activation functions:
-
-- :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-- :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
-- :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
-- :meth:`softmax <gamspy.math.softmax>`
-- :meth:`log_softmax <gamspy.math.log_softmax>`
-
-Unlike other mathematical functions, these activation functions return a
-variable instead of an expression. This is because ReLU cannot be represented
-by a single expression. Directly writing ``y = max(x, 0)`` without reformulating
-it would result in a Discontinuous Nonlinear Program (``DNLP``) model, which is
-highly undesirable. Currently, you can either use
-:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>` to
-introduce binary variables into your problem, or
-:meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
-to introduce nonlinearity.
-
-Your model class changes depending on whether you want to embed a pre-trained 
-neural network into your problem or train a neural network within your problem.
-
-If you are training a neural network, you must have non-linearity. Using
-:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-would result in a Mixed-Integer Nonlinear Program (``MINLP``) model. On the other
-hand, :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
-would keep the model as a Nonlinear Program (``NLP``) model, though this does not
-necessarily mean it will train faster.
-
-If you are embedding a pre-trained neural network using
-:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`,
-you can maintain your model as a Mixed-Integer Programming (``MIP``) model,
-provided you do not introduce nonlinearities elsewhere.
-
-
-To read more about `classification of models
-<https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels>`_.
-
-.. code-block:: python
-
-   from gamspy import Container, Variable, Set
-   from gamspy.math import relu_with_binary_var, log_softmax
-   from gamspy.math import dim
-
-   batch = 128
-   m = Container()
-   x = Variable(m, "x", domain=dim([batch, 10]))
-   y, eqs1 = relu_with_binary_var(x)
-
-   y2, eqs2 = log_softmax(x) # this creates variable and equations for you
-
-Additionally, we offer our established functions that can also be used as
-activation functions:
-
-- :meth:`tanh <gamspy.math.tanh>`
-- :meth:`sigmoid <gamspy.math.sigmoid>`
-
-These functions return expressions like the other math functions. So, you
-need to create equations and variables yourself.
-
-.. code-block:: python
-
-   from gamspy import Container, Variable, Set, Equation
-   from gamspy.math import dim, tanh
-
-   batch = 128
-   m = Container()
-   x = Variable(m, "x", domain=dim([batch, 10]))
-   eq = Equation(m, "set_y", domain=dim([batch, 10]))
-   y = Variable(m, "y", domain=dim([batch, 10]))
-   eq[...] = y == tanh(x)
-
 
 Improved domain tracking
 ========================
 
 GAMSPy provides a flexible implementation of matrix multiplication that goes
 beyond parameters and variables. Expressions can also be used within matrix
-multiplications. To support this functionality, GAMSPy tracks the domain of 
+multiplications. To support this functionality, GAMSPy tracks the domain of
 each expression.
 
-You can query the domain of an expression by using the `domain` attibute. In 
-some cases, in addition to tracking the domain, GAMSPy needs to change the domain 
-to preserve it when the resulting multiplication has the same set in its domain 
+You can query the domain of an expression by using the `domain` attibute. In
+some cases, in addition to tracking the domain, GAMSPy needs to change the domain
+to preserve it when the resulting multiplication has the same set in its domain
 more than once.You can also use this feature to change a set or
 alias to its alias. See the following code snippet as an example.
 

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 import time
 import unittest
 
-import gamspy.utils as utils
 from gamspy import Container
 
 try:
@@ -16,11 +16,20 @@ try:
 except Exception:
     pass
 
+user_dir = os.path.expanduser("~")
+if platform.system() == "Linux":
+    DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
+elif platform.system() == "Darwin":
+    DEFAULT_DIR = os.path.join(
+        user_dir, "Library", "Application Support", "GAMSPy"
+    )
+elif platform.system() == "Windows":
+    DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
+
 
 class CmdSuite(unittest.TestCase):
     def test_install_license(self):
-        gamspy_base_directory = utils._get_gamspy_base_directory()
-
+        # Test network license
         _ = subprocess.run(
             [
                 "gamspy",
@@ -31,11 +40,9 @@ class CmdSuite(unittest.TestCase):
             check=True,
         )
 
-        user_license_path = os.path.join(
-            gamspy_base_directory, "user_license.txt"
-        )
+        gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
 
-        self.assertTrue(os.path.exists(user_license_path))
+        self.assertTrue(os.path.exists(gamspy_license_path))
 
         m = Container()
         self.assertTrue(m._network_license)
@@ -51,6 +58,7 @@ class CmdSuite(unittest.TestCase):
         m = Container()
         self.assertFalse(m._network_license)
 
+        # Test invalid access code / license
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
                 ["gamspy", "install", "license", "blabla"],
@@ -59,8 +67,9 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        tmp_license_path = os.path.join("tmp", "user_license.txt")
-        shutil.copy(user_license_path, tmp_license_path)
+        # Test installing a license from a file path.
+        tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
+        shutil.copy(gamspy_license_path, tmp_license_path)
 
         _ = subprocess.run(
             [
@@ -81,30 +90,16 @@ class CmdSuite(unittest.TestCase):
             check=True,
         )
 
-        self.assertTrue(os.path.exists(user_license_path))
+        self.assertTrue(os.path.exists(gamspy_license_path))
 
     def test_uninstall_license(self):
-        gamspy_base_directory = utils._get_gamspy_base_directory()
-
         _ = subprocess.run(
             ["gamspy", "uninstall", "license"],
             check=True,
         )
 
         self.assertFalse(
-            os.path.exists(
-                os.path.join(gamspy_base_directory, "user_license.txt")
-            )
-        )
-
-        # Recover the license
-        subprocess.run(
-            [
-                "gamspy",
-                "install",
-                "license",
-                os.environ["LOCAL_LICENSE"],
-            ]
+            os.path.exists(os.path.join(DEFAULT_DIR, "gamspy_license.txt"))
         )
 
     def test_install_solver(self):
@@ -116,11 +111,13 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        _ = subprocess.run(
+        process = subprocess.run(
             ["gamspy", "install", "solver", "minos", "mosek"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
         )
+        print(process.stdout, process.stderr)
+        self.assertTrue(process.returncode == 0)
 
         with self.assertRaises(subprocess.CalledProcessError):
             _ = subprocess.run(
@@ -130,11 +127,36 @@ class CmdSuite(unittest.TestCase):
                 stdout=subprocess.DEVNULL,
             )
 
-        _ = subprocess.run(
+        process = subprocess.run(
+            ["gamspy", "install", "solver", "--install-all-solvers"],
+            capture_output=True,
+            text=True,
+        )
+        print(process.stdout, process.stderr)
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
             ["gamspy", "uninstall", "solver", "minos", "mosek"],
+            capture_output=True,
+            text=True,
+        )
+        print(process.stdout, process.stderr)
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+            capture_output=True,
+            text=True,
+        )
+        print(process.stdout, process.stderr)
+        self.assertTrue(process.returncode == 0)
+
+        process = subprocess.run(
+            ["gamspy", "install", "solver", "mpsge", "scip"],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
+        self.assertTrue(process.returncode == 0)
 
     def test_list_solvers(self):
         process = subprocess.run(
@@ -204,6 +226,24 @@ class CmdSuite(unittest.TestCase):
 
         print(process.stderr, process.stdout)
         self.assertTrue(process.returncode == 0)
+
+    def test_license_in_default_location(self):
+        _ = subprocess.run(
+            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            check=True,
+        )
+
+        m = Container()
+        self.assertEqual(
+            m._license_path, os.path.join(DEFAULT_DIR, "gamspy_license.txt")
+        )
+
+    @classmethod
+    def tearDown(cls):
+        _ = subprocess.run(
+            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            check=True,
+        )
 
 
 def cmd_suite():
