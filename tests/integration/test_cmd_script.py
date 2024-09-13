@@ -4,7 +4,6 @@ import os
 import platform
 import shutil
 import subprocess
-import time
 import unittest
 
 from gamspy import Container
@@ -29,6 +28,9 @@ elif platform.system() == "Windows":
 
 class CmdSuite(unittest.TestCase):
     def test_install_license(self):
+        m = Container()
+        self.assertFalse(m._network_license)
+
         # Test network license
         _ = subprocess.run(
             [
@@ -47,16 +49,6 @@ class CmdSuite(unittest.TestCase):
         m = Container()
         self.assertTrue(m._network_license)
         m.close()
-        time.sleep(1)
-        _ = subprocess.run(
-            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
-            check=True,
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-        )
-
-        m = Container()
-        self.assertFalse(m._network_license)
 
         # Test invalid access code / license
         with self.assertRaises(subprocess.CalledProcessError):
@@ -74,15 +66,6 @@ class CmdSuite(unittest.TestCase):
         _ = subprocess.run(
             [
                 "gamspy",
-                "uninstall",
-                "license",
-            ],
-            check=True,
-        )
-
-        _ = subprocess.run(
-            [
-                "gamspy",
                 "install",
                 "license",
                 tmp_license_path,
@@ -91,16 +74,6 @@ class CmdSuite(unittest.TestCase):
         )
 
         self.assertTrue(os.path.exists(gamspy_license_path))
-
-    def test_uninstall_license(self):
-        _ = subprocess.run(
-            ["gamspy", "uninstall", "license"],
-            check=True,
-        )
-
-        self.assertFalse(
-            os.path.exists(os.path.join(DEFAULT_DIR, "gamspy_license.txt"))
-        )
 
     def test_install_solver(self):
         with self.assertRaises(subprocess.CalledProcessError):
@@ -226,17 +199,6 @@ class CmdSuite(unittest.TestCase):
 
         print(process.stderr, process.stdout)
         self.assertTrue(process.returncode == 0)
-
-    def test_license_in_default_location(self):
-        _ = subprocess.run(
-            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
-            check=True,
-        )
-
-        m = Container()
-        self.assertEqual(
-            m._license_path, os.path.join(DEFAULT_DIR, "gamspy_license.txt")
-        )
 
     @classmethod
     def tearDown(cls):

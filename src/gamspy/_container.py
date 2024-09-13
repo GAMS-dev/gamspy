@@ -359,13 +359,10 @@ class Container(gt.Container):
         if output is not None:
             while True:
                 data = self._process.stdout.readline()
-                if data.startswith("--- Job ") and "elapsed" in data:
-                    output.write(data)
-                    output.flush()
-                    break
-
                 output.write(data)
                 output.flush()
+                if data.startswith("--- Job ") and "elapsed" in data:
+                    break
 
         # Receive response
         try:
