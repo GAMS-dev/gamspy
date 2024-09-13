@@ -528,7 +528,7 @@ class Sand(Operation):
 
         Examples
         --------
-        >>> from gamspy import Container, Set, Parameter, Variable, Sor
+        >>> from gamspy import Container, Set, Parameter, Variable, Sor, Sand
         >>> m = Container()
         >>> i = Set(m, "i", records=['i1','i2', 'i3'])
         >>> v = Variable(m, "v", domain=i, type="binary")
