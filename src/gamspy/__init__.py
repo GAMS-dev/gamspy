@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from gams.transfer import SpecialValues
 
+import gamspy.formulations as formulations
 import gamspy.math as math
 import gamspy.utils as utils
 from gamspy._algebra import (
@@ -66,6 +67,7 @@ __all__ = [
     "EngineClient",
     "NeosClient",
     "math",
+    "formulations",
     "utils",
     "SpecialValues",
     "__version__",

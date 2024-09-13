@@ -34,6 +34,7 @@ gamspy
    gamspy._engine
    gamspy._neos
    gamspy.math
+   gamspy.formulations
    gamspy.utils
    gamspy.SpecialValues
    gamspy.exceptions
