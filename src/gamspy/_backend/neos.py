@@ -307,6 +307,16 @@ class NeosClient:
             problem = options._solver[0].lower()
             solver = options._solver[1]
 
+        problem_mapping = {
+            "mip": "milp",
+            "mcp": "cp",
+            "minlp": "minco",
+            "nlp": "nco",
+        }
+
+        if problem in problem_mapping:
+            problem = problem_mapping[problem]
+
         template = f"""
             <document>
             <category>{problem}</category>
