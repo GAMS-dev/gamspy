@@ -1,5 +1,10 @@
 GAMSPy CHANGELOG
 ================
+GAMSPy 1.0.2
+------------
+- Testing
+  - Remove license uninstall test to avoid crashing parallel tests on the same machine.
+
 GAMSPy 1.0.1
 ------------
 - General
