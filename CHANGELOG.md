@@ -10,6 +10,7 @@ GAMSPy 1.0.1
   - Add --uninstall-all-solvers option for gamspy uninstall solver.
   - Show license path on gamspy show license command.
   - Simplify the implementation of the copy container operation.
+  - Map GAMSPy problem types to NEOS problem types before sending the job.
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.
@@ -17,6 +18,7 @@ GAMSPy 1.0.1
   - Fix the issue related to reading equation records from a gdx file.
   - Add tests to verify the records after reading them from a gdx file.
   - Add tests for installing/uninstalling solvers.
+  - Add a test to verify GAMSPy -> NEOS mapping.
 - Documentation
   - Update the documentation of install/uninstall command line arguments.
 
