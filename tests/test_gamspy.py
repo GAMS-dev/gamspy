@@ -29,6 +29,7 @@ from unit.test_magics import magics_suite
 from unit.test_math import math_suite
 from unit.test_matrix import matrix_suite
 from unit.test_model import model_suite
+from unit.test_nn_formulation import nn_formulation_suite
 from unit.test_operation import operation_suite
 from unit.test_options import options_suite
 from unit.test_parameter import parameter_suite
@@ -175,6 +176,7 @@ def main():
         container_suite,
         math_suite,
         matrix_suite,
+        nn_formulation_suite,
         utils_suite,
         set_suite,
         alias_suite,
