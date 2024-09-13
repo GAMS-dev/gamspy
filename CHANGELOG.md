@@ -12,6 +12,7 @@ GAMSPy 1.0.1
   - Simplify the implementation of the copy container operation.
   - Add Conv2d formulation for convenience
   - Map GAMSPy problem types to NEOS problem types before sending the job.
+  - Upgrade gamspy_base and gamsapi versions to 47.6.0. 
 - Testing
   - Add test for the frozen solve with non-scalar symbols.
   - Add a test to verify the behaviour of equation redefinition with definition argument.
@@ -21,6 +22,7 @@ GAMSPy 1.0.1
   - Add tests for installing/uninstalling solvers.
   - Add tests to verify correctness of Conv2d formulation
   - Add a test to verify GAMSPy -> NEOS mapping.
+  - Add an execution error test.
 - Documentation
   - Update the documentation of install/uninstall command line arguments.
   - Add a section for NN formulations
