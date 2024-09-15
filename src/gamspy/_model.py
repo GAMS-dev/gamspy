@@ -1107,6 +1107,7 @@ class Model:
         """
         validation.validate_solver_args(
             self.container.system_directory,
+            backend,
             solver,
             self.problem,
             options,
