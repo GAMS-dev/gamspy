@@ -2,6 +2,8 @@ GAMSPy CHANGELOG
 ================
 GAMSPy 1.0.2
 ------------
+- General
+  - Validate whether the solver is installed only for local backend.
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
 

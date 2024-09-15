@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
@@ -406,6 +406,7 @@ def validate_model_name(name: str) -> str:
 
 def validate_solver_args(
     system_directory: str,
+    backend: Literal["local", "engine", "neos"],
     solver: str | None,
     problem: Problem | str,
     options: Options | None,
@@ -417,8 +418,9 @@ def validate_solver_args(
         if not isinstance(solver, str):
             raise TypeError("`solver` argument must be a string.")
 
+        solver = solver.upper()
         installed_solvers = utils.getInstalledSolvers(system_directory)
-        if solver.upper() not in installed_solvers:
+        if backend == "local" and solver not in installed_solvers:
             raise ValidationError(
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
@@ -426,7 +428,7 @@ def validate_solver_args(
             )
 
         capabilities = utils.getSolverCapabilities(system_directory)
-        if str(problem) not in capabilities[solver.upper()]:
+        if str(problem) not in capabilities[solver]:
             raise ValidationError(
                 f"Given solver `{solver}` is not capable of solving given"
                 f" problem type `{problem}`. See capability matrix "
