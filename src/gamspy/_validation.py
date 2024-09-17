@@ -343,8 +343,8 @@ def validate_name(word: str) -> str:
 def validate_model(
     equations: Iterable[Equation],
     problem: Problem | str,
-    sense: str | Sense | None = None,
-) -> tuple[Problem, Sense | None]:
+    sense: str | Sense,
+) -> tuple[Problem, Sense]:
     if isinstance(problem, str):
         if problem.upper() not in Problem.values():
             raise ValueError(
@@ -373,10 +373,7 @@ def validate_model(
     ):
         raise TypeError("`equations` must be an Iterable of Equation objects")
 
-    if problem in (Problem.CNS, Problem.MCP) and sense is not None:
-        raise ValueError("Cannot set `sense` argument for MCP and CNS models.")
-
-    return problem, sense  # type: ignore
+    return problem, sense
 
 
 def validate_model_name(name: str) -> str:

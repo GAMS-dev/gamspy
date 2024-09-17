@@ -158,7 +158,7 @@ class ModelInstance:
 
         solve_string = f"{model.name} using {model.problem}"
 
-        if model.sense:
+        if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
             solve_string += f" {model.sense}"
 
         if model._objective_variable is not None:
