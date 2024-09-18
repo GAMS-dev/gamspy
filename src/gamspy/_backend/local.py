@@ -3,8 +3,6 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
-from gams import DebugLevel
-
 import gamspy._backend.backend as backend
 import gamspy._miro as miro
 import gamspy.utils as utils
@@ -41,11 +39,6 @@ class Local(backend.Backend):
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
         self.trace_file = self.job_name + ".txt"
-
-        if self.container._debugging_level == DebugLevel.KeepFiles:
-            self.options.log_file = self.job_name + ".log"
-            self.container._gdx_in = self.job_name + "in.gdx"
-            self.container._gdx_out = self.job_name + "out.gdx"
 
     def _prepare_extra_options(self, job_name: str) -> dict:
         scrdir = self.container._process_directory

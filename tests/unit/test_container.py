@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import gc
+import glob
 import os
+import subprocess
+import sys
 import unittest
 
 import gamspy.utils as utils
@@ -444,10 +447,14 @@ Equation e;
             global working_directory
             working_directory = m.working_directory
             _ = Equation(m, "e")
+            _ = Equation(m, "e2")
 
         test_keep_success()
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
+        self.assertTrue(
+            len(glob.glob(os.path.join(working_directory, "*.gms"))) == 2
+        )
 
         def test_keep_err():
             m = Container(debugging_level="keep")
@@ -460,6 +467,9 @@ Equation e;
         test_keep_err()
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
+        self.assertTrue(
+            len(glob.glob(os.path.join(working_directory, "*.gms"))) == 2
+        )
 
         def test_keep_on_error_success():
             m = Container(debugging_level="keep_on_error")
@@ -482,6 +492,9 @@ Equation e;
         test_keep_on_error_err()
         gc.collect()
         self.assertTrue(os.path.exists(working_directory))
+        self.assertTrue(
+            len(glob.glob(os.path.join(working_directory, "*.gms"))) == 1
+        )
 
     def test_read_from_gdx(self):
         # Set
@@ -596,6 +609,18 @@ Equation e;
 
         self.assertEqual(m["i"].toList(), ["seattle", "san-diego"])
         self.assertEqual(m["k"].toList(), ["seattle", "san-diego"])
+
+    def test_output(self):
+        path = os.path.join("tmp", "bla.py")
+        with open(path, "w") as file:
+            file.write(
+                "import sys\nfrom gamspy import Container, Set\nm = Container(output=sys.stdout)\ni = Set(m)\nj = Set(m)"
+            )
+
+        process = subprocess.run(
+            [sys.executable, path], capture_output=True, check=True, text=True
+        )
+        self.assertIsNotNone(process.stdout)
 
 
 def container_suite():
