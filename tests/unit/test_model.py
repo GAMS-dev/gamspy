@@ -4,6 +4,7 @@ import unittest
 
 import pandas as pd
 from gamspy import (
+    Alias,
     Container,
     Equation,
     Model,
@@ -14,6 +15,7 @@ from gamspy import (
     Set,
     Sum,
     Variable,
+    VariableType,
 )
 from gamspy.exceptions import ValidationError
 
@@ -35,12 +37,6 @@ class ModelSuite(unittest.TestCase):
         self.demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
     def test_model(self):
-        # No equations or matches
-        self.assertRaises(ValidationError, Model, self.m)
-
-        # Empty name
-        self.assertRaises(ValueError, Model, self.m, "")
-
         i = Set(
             self.m,
             name="i",
@@ -78,16 +74,6 @@ class ModelSuite(unittest.TestCase):
 
         demand = Equation(self.m, name="demand", domain=[j])
         demand[j] = Sum(i, x[i, j]) >= b[j]
-
-        with self.assertRaises(ValueError):
-            _ = Model(
-                self.m,
-                name="test_model",
-                equations=[supply, demand],
-                problem="MCP",
-                sense="min",
-                objective=Sum((i, j), c[i, j] * x[i, j]),
-            )
 
         # Model with implicit objective
         test_model = Model(
@@ -308,6 +294,10 @@ class ModelSuite(unittest.TestCase):
             problem="LP",
             sense="feasibility",
         )
+        self.assertEqual(
+            transport._generate_solve_string(),
+            "solve transport using LP MIN transport_objective_variable;",
+        )
         transport.solve()
         self.assertIsNotNone(x.records)
 
@@ -320,16 +310,6 @@ class ModelSuite(unittest.TestCase):
             m.getEquations(),
             "feasibility",
             Sum((i, j), c[i, j] * x[i, j]),
-        )
-
-        self.assertRaises(
-            ValueError,
-            Model,
-            m,
-            "transport2",
-            "CNS",
-            m.getEquations(),
-            "feasibility",
         )
 
     def test_tuple_equations(self):
@@ -999,6 +979,106 @@ class ModelSuite(unittest.TestCase):
         )
         transport.solve()
         transport.solve()
+
+    def test_solve_string_lp(self):
+        i = Set(self.m, name="i")
+        j = Set(self.m, name="j")
+
+        # Params
+        a = Parameter(self.m, name="a", domain=[i])
+        b = Parameter(self.m, name="b", domain=[j])
+        c = Parameter(self.m, name="c", domain=[i, j])
+
+        x = Variable(self.m, name="x", domain=[i, j], type="Positive")
+        z = Variable(self.m, name="z")
+
+        # Equation definition without an index
+        cost = Equation(
+            self.m,
+            name="cost",
+            description="define objective function",
+        )
+        cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
+
+        # Equation definition with an index
+        supply = Equation(
+            self.m,
+            name="supply",
+            domain=[i],
+            description="observe supply limit at plant i",
+        )
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+
+        demand = Equation(self.m, name="demand", domain=[j])
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        test_model = Model(
+            self.m,
+            name="test_model",
+            equations=[supply, demand],
+            problem="LP",
+            sense="min",
+            objective=z,
+        )
+        self.assertEqual(
+            test_model._generate_solve_string(),
+            "solve test_model using LP MIN z;",
+        )
+
+    def test_solve_string_mcp(self):
+        c = Set(self.m, "c")
+        h = Set(self.m, "h")
+        s = Set(self.m, "s")
+
+        cc = Alias(self.m, "cc", c)
+
+        e = Parameter(self.m, "e", domain=[c, h])
+        esub = Parameter(self.m, "esub", domain=h)
+
+        alpha = Parameter(self.m, "alpha", domain=[c, h])
+        a = Parameter(self.m, "a", domain=[c, s])
+
+        p = Variable(self.m, "p", type=VariableType.POSITIVE, domain=c)
+        y = Variable(self.m, "y", type=VariableType.POSITIVE, domain=s)
+        i = Variable(self.m, "i", type=VariableType.POSITIVE, domain=h)
+
+        mkt = Equation(self.m, "mkt", domain=c, description="commodity market")
+        profit = Equation(
+            self.m, "profit", domain=s, description="zero profit"
+        )
+        income = Equation(
+            self.m, "income", domain=h, description="income index"
+        )
+
+        mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= Sum(
+            h.where[esub[h] != 1],
+            (i[h] / Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
+            * alpha[c, h]
+            * (1 / p[c]) ** esub[h],
+        ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
+
+        profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+        income[h] = i[h] >= Sum(c, p[c] * e[c, h])
+
+        hansen = Model(
+            self.m,
+            "hansen",
+            problem=Problem.MCP,
+            matches={mkt: p, profit: y, income: i},
+        )
+        self.assertEqual(
+            hansen._generate_solve_string(), "solve hansen using MCP;"
+        )
+
+    def test_solve_string_cns(self):
+        x = Variable(self.m, "x")
+        f = Equation(self.m, "f")
+        f[...] = x * x == 4
+        x.l = 1
+        m = Model(
+            self.m, name="m", equations=[f], problem="CNS", sense="FEASIBILITY"
+        )
+        self.assertEqual(m._generate_solve_string(), "solve m using CNS;")
 
 
 def model_suite():

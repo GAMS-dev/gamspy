@@ -4,8 +4,10 @@ GAMSPy 1.0.2
 ------------
 - General
   - Validate whether the solver is installed only for local backend.
+  - Change the default value of sense to Sense.FEASIBILITY.
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
+  - Add tests for the generated solve strings for different type of problems.
 
 GAMSPy 1.0.1
 ------------
