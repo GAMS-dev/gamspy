@@ -1,4 +1,4 @@
-.. _set:
+.. _gams_set:
 
 .. meta::
    :description: Documentation of GAMSPy Set (gamspy.Set)
@@ -893,7 +893,7 @@ illustrate assignments for multi-dimensional sets. ::
 Equations Defined over the Domain of Dynamic Sets
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Dynamic sets are not permitted as domains in *declarations* of :ref:`sets <set>`, 
+Dynamic sets are not permitted as domains in *declarations* of :ref:`sets <gams_set>`, 
 :ref:`variables <variable>`, :ref:`parameters <parameter>` and :ref:`equations <equation>`. 
 However, they may be *referenced* and sometimes it is necessary 
 to define an equation over a dynamic set.

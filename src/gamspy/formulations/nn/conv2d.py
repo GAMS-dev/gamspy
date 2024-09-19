@@ -52,6 +52,7 @@ class Conv2d:
     <class 'gamspy._symbols.variable.Variable'>
     >>> [len(x) for x in out.domain]
     [10, 2, 22, 22]
+
     """
 
     def __init__(

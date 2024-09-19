@@ -12,6 +12,9 @@ GAMSPy 1.0.2
   - Add tests for the generated solve strings for different type of problems.
   - Add a test for Container output argument.
   - Add tests for debugging_level.
+- Documentation
+  - Fix broken links in the documentation.
+  - Add a ci step to check doc links.
 
 GAMSPy 1.0.1
 ------------

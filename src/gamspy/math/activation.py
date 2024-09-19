@@ -158,7 +158,7 @@ def relu_with_binary_var(
     Returns the activation variable and the equation list if ``return_binary_var`` is False,
     otherwise returns activation, binary variable and equation list in order.
 
-    Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L5>`_
+    Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py>`_
 
     Parameters
     ----------
@@ -253,7 +253,7 @@ def relu_with_complementarity_var(
 
     Returns the activation variable and the equation list.
 
-    Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py#L85>`_
+    Adapted from `OMLT <https://github.com/cog-imperial/OMLT/blob/e60563859a66ac5dd3348bf1763de57eec95171e/src/omlt/neuralnet/activations/relu.py>`_
 
     Parameters
     ----------

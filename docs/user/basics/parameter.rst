@@ -157,7 +157,7 @@ The Assignment Statement
 ========================
 
 The assignment statement is the fundamental data manipulation statement in GAMSPy. 
-It may be used to define or alter values associated with :ref:`sets <set>`, 
+It may be used to define or alter values associated with :ref:`sets <gams_set>`, 
 :ref:`variables <variable>`, :ref:`parameters <parameter>` or :ref:`equations <equation>`.
 
 Scalar Assignments
