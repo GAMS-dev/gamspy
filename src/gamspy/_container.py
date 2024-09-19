@@ -341,7 +341,7 @@ class Container(gt.Container):
             self._process.stdout = subprocess.DEVNULL
             self._process.stderr = subprocess.DEVNULL
             if platform.system() == "Windows":
-                self._process.send_signal(signal.CTRL_C_EVENT)
+                self._process.send_signal(signal.SIGTERM)
             else:
                 self._process.send_signal(signal.SIGINT)
 
