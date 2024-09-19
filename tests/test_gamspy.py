@@ -7,6 +7,7 @@ import json
 import os
 import shutil
 import unittest
+from os.path import join
 
 import gamspy
 from integration.test_cmd_script import cmd_suite
@@ -41,7 +42,7 @@ from unit.test_variable import variable_suite
 try:
     from dotenv import load_dotenv
 
-    load_dotenv(os.getcwd() + os.sep + ".env")
+    load_dotenv(join(os.getcwd(), ".env"))
 except Exception:
     pass
 
@@ -57,43 +58,24 @@ class DocsSuite(unittest.TestCase):
     def test_switcher(self):
         this = os.path.dirname(os.path.abspath(__file__))
         root = this.rsplit(os.sep, maxsplit=1)[0]
-        with open(
-            f"{root}{os.sep}docs{os.sep}_static{os.sep}switcher.json"
-        ) as file:
+        with open(join(root, "docs", "_static", "switcher.json")) as file:
             switcher = json.loads(file.read())
             versions = [elem["version"] for elem in switcher]
             self.assertTrue(f"v{gamspy.__version__}" in versions)
 
     def test_docs(self):
-        root = gamspy.__path__[0]
-
+        src_path = join(os.getcwd(), "src", "gamspy")
         api_files = [
-            f"{root}{os.sep}_container.py",
-            f"{root}{os.sep}_model_instance.py",
-            f"{root}{os.sep}_model.py",
-            f"{root}{os.sep}utils.py",
-            f"{root}{os.sep}_algebra{os.sep}expression.py",
-            f"{root}{os.sep}_algebra{os.sep}operation.py",
-            f"{root}{os.sep}_algebra{os.sep}domain.py",
-            f"{root}{os.sep}_algebra{os.sep}number.py",
-            f"{root}{os.sep}_symbols{os.sep}symbol.py",
-            f"{root}{os.sep}_symbols{os.sep}alias.py",
-            f"{root}{os.sep}_symbols{os.sep}equation.py",
-            f"{root}{os.sep}_symbols{os.sep}parameter.py",
-            f"{root}{os.sep}_symbols{os.sep}set.py",
-            f"{root}{os.sep}_symbols{os.sep}universe_alias.py",
-            f"{root}{os.sep}_symbols{os.sep}variable.py",
-            f"{root}{os.sep}math{os.sep}matrix.py",
-            f"{root}{os.sep}math{os.sep}log_power.py",
-            f"{root}{os.sep}math{os.sep}misc.py",
-            f"{root}{os.sep}math{os.sep}probability.py",
-            f"{root}{os.sep}math{os.sep}trigonometric.py",
-            f"{root}{os.sep}math{os.sep}activation.py",
+            file
+            for file in glob.glob("**", root_dir=src_path, recursive=True)
+            if file.endswith(".py")
         ]
 
         for file in api_files:
             results = doctest.testfile(
-                file, verbose=True, module_relative=False
+                join(src_path, file),
+                verbose=True,
+                module_relative=False,
             )
 
             self.assertEqual(results.failed, 0)
@@ -227,9 +209,9 @@ def main():
         os.remove(txt_path)
 
     miro_paths = [
-        f"tests{os.sep}conf_test_gamspy",
-        f"tests{os.sep}integration{os.sep}conf_test_miro",
-        f"tests{os.sep}integration{os.sep}miro_models{os.sep}conf_miro5",
+        join("tests", "conf_test_gamspy"),
+        join("tests", "integration", "conf_test_miro"),
+        join("tests", "integration", "miro_models", "conf_miro5"),
     ]
     for path in miro_paths:
         if os.path.exists(path):
