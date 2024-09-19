@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
-from gams import DebugLevel
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
@@ -135,7 +134,7 @@ class Backend(ABC):
     def get_job_name(self):
         job_name = self.container._job
 
-        if self.container._debugging_level == DebugLevel.KeepFiles:
+        if self.container._debugging_level == "keep":
             job_name = os.path.join(
                 self.container.working_directory, "_" + str(uuid.uuid4())
             )

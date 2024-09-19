@@ -29,7 +29,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Iterable
+    from typing import Any, Iterable, Literal
 
     from pandas import DataFrame
 
@@ -216,9 +216,13 @@ class Container(gt.Container):
         load_from: str | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
-        debugging_level: str = "keep_on_error",
+        debugging_level: Literal[
+            "keep", "keep_on_error", "delete"
+        ] = "keep_on_error",
         options: Options | None = None,
+        output: io.TextIOWrapper | None = None,
     ):
+        self.output = output
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
@@ -525,7 +529,7 @@ class Container(gt.Container):
         return modified_names
 
     def _synch_with_gams(self) -> DataFrame | None:
-        runner = backend_factory(self, self._options)
+        runner = backend_factory(self, self._options, output=self.output)
         summary = runner.run()
 
         if self._options and self._options.seed is not None:

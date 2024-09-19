@@ -90,6 +90,16 @@ a file by specifying the handle for the destination. For example:
 
     model.solve(output=sys.stdout)
 
+One can also redirect the output of all GAMS executions by specifying ``output`` argument of the :meth:`Container <gamspy.Container>`.
+
+.. code-block:: python
+
+    from gamspy import Container, Set
+    import sys
+
+    m = Container(output=sys.stdout)
+    i = Set(m)
+
 The code snippet above redirects the GAMS execution output to your console by specifying the output as standard output.
 You can also redirect the output to a file:
 
