@@ -23,6 +23,7 @@ from gamspy import (
     Sum,
     Variable,
 )
+from gamspy.exceptions import ValidationError
 from gamspy.math import sqrt
 
 
@@ -137,6 +138,11 @@ class GamspyToGamsSuite(unittest.TestCase):
             sense=Sense.MIN,
             objective=Sum((i, j), c[i, j] * x[i, j]),
         )
+
+        with self.assertRaises(ValidationError):
+            transport.toGams(
+                os.path.join("tmp", "to_gams"), options={"lp": "cplex"}
+            )
 
         transport.toGams(
             os.path.join("tmp", "to_gams"),

@@ -98,6 +98,16 @@ class OptionsSuite(unittest.TestCase):
             options._get_gams_compatible_options()["solvelink"], 2
         )
 
+        options_path = os.path.join("tmp", "options.pf")
+        options.export(options_path)
+        with open(options_path) as file:
+            content = file.read()
+
+        self.assertEqual(
+            content,
+            'limcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\ngdxSymbols = "newOrChanged"\nlogoption = "0"',
+        )
+
     def test_seed(self):
         m = Container(
             options=Options(seed=1),

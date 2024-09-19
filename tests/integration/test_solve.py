@@ -1096,6 +1096,13 @@ class SolveSuite(unittest.TestCase):
         d = Parameter(self.m, name="d", domain=[i, j], records=self.distances)
         c = Parameter(self.m, name="c", domain=[i, j])
         c[...] = 90 * d[...] / 1000
+        f = Parameter(self.m)
+
+        with self.assertRaises(ValidationError):
+            f[i,j] = 5
+
+        with self.assertRaises(ValidationError):
+            f[i] = 5
 
         x = Variable(self.m, name="x", domain=[i, j], type="Positive")
 
@@ -1104,6 +1111,9 @@ class SolveSuite(unittest.TestCase):
 
         supply[...] = Sum(j, x[...]) <= a[...]
         demand[...] = Sum(i, x[...]) >= b[...]
+
+        with self.assertRaises(ValueError):
+            transport = Model(self.m, name="")
 
         transport = Model(
             self.m,
@@ -1495,6 +1505,9 @@ class SolveSuite(unittest.TestCase):
         )
         with self.assertRaises(ValidationError):
             transport.solve(load_symbols=['x'])
+
+        with self.assertRaises(ValidationError):
+            transport.solve(load_symbols=x)
 
         transport.solve(load_symbols=[])
 

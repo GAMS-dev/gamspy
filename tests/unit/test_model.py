@@ -75,6 +75,9 @@ class ModelSuite(unittest.TestCase):
         demand = Equation(self.m, name="demand", domain=[j])
         demand[j] = Sum(i, x[i, j]) >= b[j]
 
+        with self.assertRaises(ValidationError):
+            _ = Model(self.m, sense="min")
+
         # Model with implicit objective
         test_model = Model(
             self.m,

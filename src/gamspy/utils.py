@@ -153,7 +153,7 @@ def getAvailableSolvers() -> list[str]:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError as e:
+    except ModuleNotFoundError as e:  # pragma: no cover
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
@@ -312,7 +312,7 @@ def _get_gamspy_base_directory() -> str:
     """
     try:
         import gamspy_base
-    except ModuleNotFoundError as e:
+    except ModuleNotFoundError as e:  # pragma: no cover
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 

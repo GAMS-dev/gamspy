@@ -858,6 +858,9 @@ class EquationSuite(unittest.TestCase):
 
         self.assertEqual(len(maxw.getEquationListing().split("\n")), 5)
 
+        with self.assertRaises(ValidationError):
+            maxw.getEquationListing(filters=[["f-bomber"], ["bla"]])
+
         self.assertEqual(
             len(maxw.getEquationListing(filters=[["f-bomber"]]).split("\n")), 1
         )
@@ -1166,6 +1169,9 @@ class EquationSuite(unittest.TestCase):
             domain=[c, i],
             description="material balances: final products",
         )
+        with self.assertRaises(ValidationError):
+            mbf.latexRepr()
+
         mbi = Equation(
             cont,
             name="mbi",
