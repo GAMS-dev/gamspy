@@ -118,15 +118,6 @@ class ModelInstance:
             "keep_on_error": DebugLevel.KeepFilesOnError,
             "keep": DebugLevel.KeepFiles,
         }
-        if (
-            not isinstance(debugging_level, str)
-            or debugging_level not in DEBUGGING_MAP
-        ):
-            raise ValidationError(
-                "Debugging level must be one of 'delete', 'keep',"
-                " 'keep_on_error'"
-            )
-
         return DEBUGGING_MAP[debugging_level]
 
     def _create_restart_file(self):

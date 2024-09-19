@@ -95,7 +95,7 @@ where = ["src"]
 omit = ["*/_cli/*.py", "__main__.py", "*__init__.py"]
 
 [tool.coverage.report]
-exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__"]
+exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "@property"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

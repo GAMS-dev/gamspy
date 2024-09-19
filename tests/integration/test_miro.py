@@ -820,6 +820,10 @@ class MiroSuite(unittest.TestCase):
     def test_miro_protect(self):
         m = Container()
 
+        i = Set(m, name="i", is_miro_input=True)
+        with self.assertRaises(ValidationError):
+            i.setRecords(["i1", "i2"])
+
         f = Parameter(
             m,
             name="f",
@@ -830,6 +834,9 @@ class MiroSuite(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             f.setRecords(6)
+
+        with self.assertRaises(ValidationError):
+            f[...] = 5
 
         m = Container(options=Options(miro_protect=False))
         f = Parameter(

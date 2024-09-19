@@ -6,7 +6,7 @@ import shutil
 import subprocess
 import unittest
 
-from gamspy import Container
+from gamspy import Container, Set
 
 try:
     from dotenv import load_dotenv
@@ -48,6 +48,8 @@ class CmdSuite(unittest.TestCase):
 
         m = Container()
         self.assertTrue(m._network_license)
+
+        _ = Set(m, "i", records=["bla"])
         m.close()
 
         # Test invalid access code / license

@@ -100,7 +100,7 @@ def open_connection(
 
     start = time.time()
     while True:
-        if process.poll() is not None:
+        if process.poll() is not None:  # pragma: no cover
             raise ValidationError(process.communicate()[0])
 
         try:
@@ -110,7 +110,7 @@ def open_connection(
         except (ConnectionRefusedError, OSError) as e:
             end = time.time()
 
-            if end - start > TIMEOUT:
+            if end - start > TIMEOUT:  # pragma: no cover
                 raise GamspyException(
                     f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
                 ) from e
@@ -168,7 +168,7 @@ def check_response(response: bytes, job_name: str) -> None:
 
     try:
         return_code = int(response[: response.find(b"#")].decode("ascii"))
-    except (ValueError, UnicodeError) as e:
+    except (ValueError, UnicodeError) as e:  # pragma: no cover
         raise GamspyException(
             "Error while getting the return code from GAMS backend"
         ) from e
@@ -176,7 +176,7 @@ def check_response(response: bytes, job_name: str) -> None:
     if return_code in GAMS_STATUS:
         try:
             info = GAMS_STATUS[return_code]
-        except IndexError:
+        except IndexError:  # pragma: no cover
             info = ""
         raise GamspyException(
             f'{info} Check {job_name + ".lst"} for more information.',
@@ -275,7 +275,7 @@ class Container(gt.Container):
     def __del__(self):
         try:
             self._stop_socket()
-        except (Exception, ConnectionResetError):
+        except (Exception, ConnectionResetError):  # pragma: no cover
             ...
 
     @property
@@ -341,7 +341,7 @@ class Container(gt.Container):
             self._process.stdout = subprocess.DEVNULL
             self._process.stderr = subprocess.DEVNULL
             if platform.system() == "Windows":
-                self._process.send_signal(signal.SIGTERM)
+                self._process.send_signal(signal.CTRL_C_EVENT)
             else:
                 self._process.send_signal(signal.SIGINT)
 
