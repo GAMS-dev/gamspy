@@ -876,7 +876,7 @@ class Model:
                 setattr(self, python_attr, status)
 
                 if status in INTERRUPT_STATUS:
-                    logger.warn(
+                    logger.warning(
                         f"The solve was interrupted! Solve status: {status.name}. "
                         "For further information, see https://gamspy.readthedocs.io/en/latest/reference/gamspy._model.html#gamspy.SolveStatus."
                     )

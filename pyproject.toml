@@ -173,3 +173,13 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit tests",
+    "integration: integration tests",
+    "doc: doctests",
+    "engine: engine tests",
+    "neos: neos tests",
+    "model_library: run all model library",
+]
