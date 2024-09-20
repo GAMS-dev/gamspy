@@ -28,17 +28,30 @@ elif platform.system() == "Windows":
 
 
 @pytest.fixture
-def install_local_license():
+def teardown():
+    os.makedirs("tmp", exist_ok=True)
     yield
     _ = subprocess.run(
         ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
         check=True,
     )
 
+    _ = subprocess.run(
+        ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+        capture_output=True,
+        text=True,
+    )
 
-def test_install_license(install_local_license):
+    _ = subprocess.run(
+        ["gamspy", "install", "solver", "scip", "mpsge"],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_install_license(teardown):
     m = Container()
-    assert not m._network_license
+    assert m._network_license is False
 
     # Test network license
     _ = subprocess.run(
@@ -87,7 +100,7 @@ def test_install_license(install_local_license):
     assert os.path.exists(gamspy_license_path)
 
 
-def test_install_solver():
+def test_install_solver(teardown):
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             ["gamspy", "install", "solver", "bla"],

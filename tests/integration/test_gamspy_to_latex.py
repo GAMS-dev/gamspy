@@ -29,6 +29,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def data():
+    os.makedirs("tmp", exist_ok=True)
     m = Container()
     yield m
     m.close()

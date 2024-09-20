@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import platform
-import shutil
 import sys
 import tempfile
 import time
@@ -35,6 +34,7 @@ except Exception:
 
 @pytest.fixture
 def data():
+    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -683,7 +683,6 @@ def test_savepoint(data):
     assert transport.num_iterations == 4
 
     savepoint_path = os.path.join(m.working_directory, "transport_p.gdx")
-    shutil.move("transport_p.gdx", savepoint_path)
 
     transport.solve(
         output=sys.stdout,

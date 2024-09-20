@@ -20,6 +20,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def m():
+    os.makedirs("tmp", exist_ok=True)
     container = Container()
     yield container
     container.close()

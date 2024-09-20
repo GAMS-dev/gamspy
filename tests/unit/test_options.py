@@ -27,6 +27,7 @@ pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def data():
+    os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
