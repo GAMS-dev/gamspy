@@ -192,9 +192,8 @@ Testing
 
 Tests are classified into three categories: unit tests, integration tests, and doc tests. The tests can be run with::
 
-    python tests/test_gamspy.py
+    pytest -m 'unit or integration or doc' tests
 
 .. note::
-    By default, only unit tests are run. To enable integration tests, the ``--integration`` argument should be provided.
-    Doctests can be enable with the ``--doc`` argument. To enable GAMS Engine backend tests, add ``--engine`` argument.
-    To enable NEOS Server backend tests, add ``--neos`` argument.
+    To enable GAMS Engine backend tests, add ``engine`` marker to the command above.
+    To enable NEOS Server backend tests, add ``neos`` market to the command above.
