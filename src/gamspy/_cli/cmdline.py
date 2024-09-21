@@ -419,27 +419,20 @@ def uninstall_solver(args: argparse.Namespace):
 
             try:
                 installed.remove(solver_name.upper())
-            except ValueError as e:
-                raise ValidationError(
-                    f"Cannot remove `{solver_name}` which was not installed before!"
-                ) from e
+            except ValueError:
+                ...
 
             with open(addons_path, "w") as file:
                 file.write("\n".join(installed) + "\n")
 
     if args.uninstall_all_solvers:
-        try:
-            with open(addons_path) as file:
-                solvers = file.read().splitlines()
-                solvers = [
-                    solver
-                    for solver in solvers
-                    if solver != "" and solver != "\n"
-                ]
-                remove_addons(solvers)
-
-        except FileNotFoundError as e:
-            raise ValidationError("No existing add-on solvers found!") from e
+        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+        solvers = [
+            solver
+            for solver in installed_solvers
+            if solver not in gamspy_base.default_solvers
+        ]
+        remove_addons(solvers)
 
         # All add-on solvers are gone.
         return

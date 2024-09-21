@@ -449,7 +449,7 @@ provided by the solver will be indistinguishable from the ``SOS1`` case.
 The use of special ordered sets may not always improve the performance of the branch 
 and bound algorithm. If there is no natural order the use of binary variables may be 
 a better choice. A good example of this is the classical assignment problem 
-(see [H.P. Williams (2013) `Model Building in Mathematical Programming <https://www.wiley.com/en-us/Model+Building+in+Mathematical+Programming%2C+5th+Edition-p-9781118443330>`_], 
+(see [H.P. Williams (2013) `Model Building in Mathematical Programming <https://books.google.de/books?id=YJRh0tOes7UC>`_], 
 Wiley, Section 9.3.
 
 Special Order Sets of Type 2 (SOS2)
