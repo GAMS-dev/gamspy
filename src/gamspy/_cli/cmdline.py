@@ -202,9 +202,11 @@ def install_license(args: argparse.Namespace):
         )
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
+    license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
 
     if is_alp:
-        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
+        alp_id = license
+        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id]
 
         if args.uses_port:
             command.append("-u")
@@ -218,16 +220,27 @@ def install_license(args: argparse.Namespace):
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        with open(
-            os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"),
-            "w",
-            encoding="utf-8",
-        ) as file:
-            file.write(process.stdout)
+        license_text = process.stdout
+        lines = license_text.splitlines()
+        if lines[2][:2] not in ["00", "07", "08", "09"]:
+            raise ValidationError(
+                f"Given access code `{alp_id}` is not a valid for GAMSPy. "
+                "Make sure that you use a GAMSPy license, not a GAMS license."
+            )
+
+        with open(license_path, "w", encoding="utf-8") as file:
+            file.write(license_text)
     else:
-        shutil.copy(
-            license, os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
-        )
+        with open(license) as file:
+            lines = file.read().splitlines()
+
+        if lines[2][:2] not in ["00", "07", "08", "09"]:
+            raise ValidationError(
+                f"Given license file `{license}` is not a valid for GAMSPy. "
+                "Make sure that you use a GAMSPy license, not a GAMS license."
+            )
+
+        shutil.copy(license, license_path)
 
 
 def uninstall_license():
@@ -419,27 +432,20 @@ def uninstall_solver(args: argparse.Namespace):
 
             try:
                 installed.remove(solver_name.upper())
-            except ValueError as e:
-                raise ValidationError(
-                    f"Cannot remove `{solver_name}` which was not installed before!"
-                ) from e
+            except ValueError:
+                ...
 
             with open(addons_path, "w") as file:
                 file.write("\n".join(installed) + "\n")
 
     if args.uninstall_all_solvers:
-        try:
-            with open(addons_path) as file:
-                solvers = file.read().splitlines()
-                solvers = [
-                    solver
-                    for solver in solvers
-                    if solver != "" and solver != "\n"
-                ]
-                remove_addons(solvers)
-
-        except FileNotFoundError as e:
-            raise ValidationError("No existing add-on solvers found!") from e
+        installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
+        solvers = [
+            solver
+            for solver in installed_solvers
+            if solver not in gamspy_base.default_solvers
+        ]
+        remove_addons(solvers)
 
         # All add-on solvers are gone.
         return

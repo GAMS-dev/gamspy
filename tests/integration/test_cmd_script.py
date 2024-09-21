@@ -28,6 +28,36 @@ elif platform.system() == "Windows":
 
 class CmdSuite(unittest.TestCase):
     def test_install_license(self):
+        tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
+
+        # Try to install a license with GAMS access code
+        with self.assertRaises(subprocess.CalledProcessError):
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    os.environ["GAMS_ACCESS_CODE"],
+                ],
+                check=True,
+            )
+
+        # Try to install a GAMS license
+        with open(tmp_license_path, "w") as file:
+            file.write(os.environ["GAMS_ACADEMIC_LICENSE"])
+
+        with self.assertRaises(subprocess.CalledProcessError):
+            _ = subprocess.run(
+                [
+                    "gamspy",
+                    "install",
+                    "license",
+                    tmp_license_path,
+                ],
+                check=True,
+                capture_output=True,
+            )
+
         m = Container()
         self.assertFalse(m._network_license)
 
@@ -62,7 +92,6 @@ class CmdSuite(unittest.TestCase):
             )
 
         # Test installing a license from a file path.
-        tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
         shutil.copy(gamspy_license_path, tmp_license_path)
 
         _ = subprocess.run(
