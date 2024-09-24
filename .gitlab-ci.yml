@@ -5,8 +5,8 @@ default:
 stages:
   - formatter
   - docs
-  - performance
   - test
+  - performance
   - website
   - upload
 

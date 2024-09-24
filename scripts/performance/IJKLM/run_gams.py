@@ -10,7 +10,7 @@ import pandas as pd
 
 ########## GAMS ##########
 def data_to_gdx(I, J, K, L, M, ijk, jkl, klm):
-    c = gt.Container()
+    c = gt.Container(system_directory=gamspy_base.directory)
 
     # create sets
     i = c.addSet("i", records=I)
