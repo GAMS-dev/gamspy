@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+
 from gamspy import Alias, Container, Ord, Parameter, Set, Sum, Variable
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -179,9 +180,8 @@ def test_override(data):
     pytest.raises(ValueError, m.addParameter, "c", [s, s])
 
 
-def test_undef(data):
-    m, *_ = data
-    m = Container()
+def test_undef():
+    m = Container(debugging_level="keep")
     _ = Parameter(
         m, name="rho", records=[np.nan]
     )  # Instead of using numpy there might be a NA from the math package

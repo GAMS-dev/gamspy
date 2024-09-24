@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import gamspy.utils as utils
 import pytest
+
+import gamspy.utils as utils
 from gamspy import Container, Set
 from gamspy.exceptions import GamspyException, ValidationError
 

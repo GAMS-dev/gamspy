@@ -109,8 +109,9 @@ from __future__ import annotations
 
 from sys import float_info
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Container,

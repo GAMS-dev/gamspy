@@ -1,7 +1,8 @@
 import string
 
-import gamspy as gp
 import numpy as np
+
+import gamspy as gp
 
 m = gp.Container()
 c = gp.Set(m, "c", description="conjunctions", records=range(5))

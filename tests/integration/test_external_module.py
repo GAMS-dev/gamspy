@@ -6,8 +6,9 @@ import pathlib
 import platform
 import sys
 
-import gamspy as gp
 import pytest
+
+import gamspy as gp
 from gamspy import EngineClient
 from gamspy.exceptions import ValidationError
 

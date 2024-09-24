@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import gamspy as gp
 import numpy as np
 import pytest
+
+import gamspy as gp
 from gamspy import Container
 from gamspy.exceptions import ValidationError
 from gamspy.formulations.nn import Conv2d

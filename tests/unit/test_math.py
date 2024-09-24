@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import sys
 
-import gamspy._algebra.expression as expression
-import gamspy.math as gams_math
 import numpy as np
 import pytest
+
+import gamspy._algebra.expression as expression
+import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Parameter, Set, Sum, Variable
 from gamspy._symbols.implicits import ImplicitVariable
 from gamspy.exceptions import ValidationError

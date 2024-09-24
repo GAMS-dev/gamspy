@@ -3,9 +3,10 @@ from __future__ import annotations
 import itertools
 import math
 
-import gamspy as gp
 import numpy as np
 import pytest
+
+import gamspy as gp
 from gamspy import Alias, Container, Parameter, Set, Sum, Variable
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim, permute, trace, vector_norm

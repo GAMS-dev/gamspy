@@ -2,10 +2,11 @@ import math
 import os
 import subprocess
 
-import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
 import pytest
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Card,

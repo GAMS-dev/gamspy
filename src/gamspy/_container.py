@@ -590,7 +590,9 @@ class Container(gt.Container):
             strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
-        self._gams_string += gams_string + "\n"
+
+        if self._debugging_level == "keep":
+            self._gams_string += gams_string + "\n"
 
         return gams_string
 
@@ -716,6 +718,11 @@ class Container(gt.Container):
         >>> gams_code = m.generateGamsString()
 
         """
+        if self._debugging_level != "keep":
+            raise ValidationError(
+                "`debug_level` argument of the container must be set to 'keep' to use this function."
+            )
+
         if not show_raw:
             return self._gams_string
 

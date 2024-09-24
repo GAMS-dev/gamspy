@@ -4,6 +4,7 @@ import os
 
 import pandas as pd
 import pytest
+
 from gamspy import (
     Alias,
     Container,

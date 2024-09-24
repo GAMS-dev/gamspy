@@ -18,6 +18,7 @@ Princeton University Press, Princeton, New Jersey, 1963.
 from __future__ import annotations
 
 import numpy as np
+
 from gamspy import (
     Container,
     Equation,

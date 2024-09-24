@@ -4,6 +4,7 @@ import os
 import platform
 
 import pytest
+
 from gamspy import Container, Parameter
 from gamspy.exceptions import ValidationError
 
