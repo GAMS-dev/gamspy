@@ -5,6 +5,7 @@ import timeit
 
 import gams.transfer as gt
 import gamspy as gp
+import gamspy_base
 import numpy as np
 import pandas as pd
 
@@ -16,7 +17,8 @@ warnings.filterwarnings("ignore")
 
 def run_gamspy(I, repeats, number):
     m = gt.Container(
-        load_from=os.path.join(os.path.dirname(__file__), "data", "data.gdx")
+        system_directory=gamspy_base.directory,
+        load_from=os.path.join(os.path.dirname(__file__), "data", "data.gdx"),
     )
     gamspy_container = gp.Container(
         options=gp.Options(write_listing_file=False)
