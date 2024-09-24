@@ -8,7 +8,7 @@ build
 __pycache__
 test.gms
 test.gdx
-test.lst
+*.lst
 test.py
 /test
 gams-transfer-python
@@ -22,3 +22,4 @@ tests/integration/models/results.xlsx
 miro.log
 trace.txt
 data
+results
