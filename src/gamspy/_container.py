@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import atexit
-import logging
 import os
 import platform
 import signal
@@ -50,14 +49,6 @@ GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-
-logger = logging.getLogger("MODEL")
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 
 def find_free_address() -> tuple[str, int]:
@@ -370,7 +361,7 @@ class Container(gt.Container):
 
         # Receive response
         try:
-            response = self._socket.recv(4)
+            response = self._socket.recv(256)
         except ConnectionError as e:
             raise GamspyException(
                 f"There was an error while receiving response from GAMS server: {e}",
