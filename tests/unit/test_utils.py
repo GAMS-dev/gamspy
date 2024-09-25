@@ -4,7 +4,7 @@ import pytest
 
 import gamspy.utils as utils
 from gamspy import Container, Set
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import FatalError, ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -23,7 +23,7 @@ def test_utils(data):
     pytest.raises(ValidationError, utils._get_domain_str, [5])
 
     # invalid system directory
-    pytest.raises(GamspyException, utils._open_gdx_file, "bla", "bla")
+    pytest.raises(FatalError, utils._open_gdx_file, "bla", "bla")
 
     assert not utils.checkAllSame([1, 2], [2])
     assert not utils.checkAllSame([1, 2], [2, 3])
