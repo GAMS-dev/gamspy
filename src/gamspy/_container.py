@@ -24,7 +24,7 @@ from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._workspace import Workspace
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -102,7 +102,7 @@ def open_connection(
             end = time.time()
 
             if end - start > TIMEOUT:  # pragma: no cover
-                raise GamspyException(
+                raise FatalError(
                     f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
                 ) from e
 
@@ -157,19 +157,21 @@ def check_response(response: bytes, job_name: str) -> None:
         5000: "Driver error: internal error: cannot load option handling library.",
     }
 
-    try:
-        return_code = int(response[: response.find(b"#")].decode("ascii"))
-    except (ValueError, UnicodeError) as e:  # pragma: no cover
-        raise GamspyException(
-            "Error while getting the return code from GAMS backend"
-        ) from e
+    value = response[: response.find(b"#")].decode("ascii")
+    if not value:
+        raise FatalError(
+            "Error while getting the return code from GAMS backend. This means that GAMS is in a bad state. Try to backtrack for previous errors."
+        )
+
+    return_code = int(value)
 
     if return_code in GAMS_STATUS:
         try:
             info = GAMS_STATUS[return_code]
         except IndexError:  # pragma: no cover
             info = ""
-        raise GamspyException(
+
+        raise FatalError(
             f'{info} Check {job_name + ".lst"} for more information.',
             return_code,
         )
@@ -346,7 +348,7 @@ class Container(gt.Container):
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
         except ConnectionError as e:
-            raise GamspyException(
+            raise FatalError(
                 f"There was an error while sending pf file name to GAMS server: {e}",
             ) from e
 
@@ -363,7 +365,7 @@ class Container(gt.Container):
         try:
             response = self._socket.recv(256)
         except ConnectionError as e:
-            raise GamspyException(
+            raise FatalError(
                 f"There was an error while receiving response from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:

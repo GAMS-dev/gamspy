@@ -9,6 +9,7 @@ GAMSPy 1.0.2
   - Fix debugging_level bug.
   - Allow generateGamsString function only if the debugging level is set to "keep".
   - Fix socket communication issue on license error.
+  - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
