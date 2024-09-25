@@ -24,7 +24,7 @@ from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._workspace import Workspace
-from gamspy.exceptions import FatalError, ValidationError
+from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -171,7 +171,7 @@ def check_response(response: bytes, job_name: str) -> None:
         except IndexError:  # pragma: no cover
             info = ""
 
-        raise FatalError(
+        raise GamspyException(
             f'{info} Check {job_name + ".lst"} for more information.',
             return_code,
         )
