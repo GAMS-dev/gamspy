@@ -132,10 +132,10 @@ This code snippet would redirect the log to standard output as well as saving a 
 Inspecting Generated GAMS String
 --------------------------------
 
-GAMSPy relies on the power of the GAMS execution system by sending its instructions. These instructions can represented as regular GAMS code.
-Hence a method debugging these GAMSPy instructions send to the execution system is to inspect this GAMS code. Instead of inspecting temporary
-files in the working directory that contains this GAMS code, one can use the ``generateGamsString`` function. This function returns the GAMS code 
-generated up to that point as a string.
+GAMSPy takes advantage of the high performance GAMS execution system by generating GAMS code and sending them to GAMS.
+Hence, a way to debug GAMSPy is to inspect this GAMS code. Instead of inspecting temporary files in the working directory 
+that contains this GAMS code, one can use the ``generateGamsString`` function. This function returns the GAMS code generated 
+up to that point as a string.
 
 .. code-block:: python
 

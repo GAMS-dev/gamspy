@@ -92,11 +92,6 @@ def test_set_string(data):
     assert a.gamsRepr() == "a"
     assert a.getDeclaration() == "Set a(m,n);"
 
-    s = Set(m, "s", is_singleton=True)
-    assert s.getDeclaration() == "Singleton Set s(*);"
-
-    pytest.raises(ValidationError, Set, m, "s2", None, True, ["i1", "i2"])
-
 
 def test_records_assignment(data):
     m, *_ = data
@@ -291,3 +286,25 @@ def test_expert_sync(data):
     assert i.records.uni.tolist() == ["i1"]
     i.synchronize = True
     assert i.records.uni.tolist() == ["i1", "i2"]
+
+
+def test_singleton():
+    m = Container()
+    s = Set(m, "s", is_singleton=True)
+    s2 = Set(m, "s2", is_singleton=True)
+    assert s.getDeclaration() == "Singleton Set s(*);"
+
+    with pytest.raises(ValidationError):
+        _ = Set(m, "s3", is_singleton=True, records=["i1", "i2"])
+
+    with pytest.raises(ValidationError):
+        _ = Set(m, "s4", domain=[s, s2], is_singleton=True)
+
+    node = Set(m, "node", records=range(1, 11))
+    T1 = Set(m, "T1", domain=node, is_singleton=True, records=["1"])
+
+    result = Parameter(m, "result", domain=["*"])
+    b = Parameter(m, "b", domain=node)
+
+    b[T1] = 1
+    result["b-T1"] = b[T1]

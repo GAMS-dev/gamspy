@@ -89,7 +89,7 @@ class ImplicitSymbol(ABC):
     def latexRepr(self):
         from .implicit_set import ImplicitSet
 
-        name = self.name.replace("_", "\_")
+        name = self.name.replace("_", "\\_")
         representation = f"{name}"
         domain = list(self.domain)
 

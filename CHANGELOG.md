@@ -10,15 +10,19 @@ GAMSPy 1.0.2
   - Allow generateGamsString function only if the debugging level is set to "keep".
   - Fix socket communication issue on license error.
   - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
+  - Fix singleton assignment bug.
+  - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
   - Add a test for Container output argument.
   - Add tests for debugging_level.
   - Add memory check script for the performance CI step.
+  - Add tests for the alternative syntax for variable/equation attributes.
 - Documentation
   - Fix broken links in the documentation.
   - Add a ci step to check doc links.
+  - Improve the wording of debugging document.
 
 GAMSPy 1.0.1
 ------------
