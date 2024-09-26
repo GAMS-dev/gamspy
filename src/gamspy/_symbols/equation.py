@@ -1009,6 +1009,30 @@ class Equation(gt.Equation, Symbol):
         output += ";"
         return output
 
+    def getAssignment(self) -> str:
+        """
+        Latest assignment to the Equation in GAMS
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> e = gp.Variable(m, "e", domain=[i])
+        >>> e.l[i] = 0;
+        >>> e.getAssignment()
+        'e.l(i) = 0;'
+
+        """
+        if not hasattr(self, "_assignment"):
+            raise ValidationError("Equation is not assigned!")
+
+        return self._assignment.getDeclaration()
+
     def getDefinition(self) -> str:
         """
         Definition of the Equation in GAMS
