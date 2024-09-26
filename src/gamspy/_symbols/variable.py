@@ -504,6 +504,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @scale.setter
     def scale(self, value: int | float | Expression):
+        if self.type in ["integer", "binary"]:
+            raise ValidationError(
+                "Scales cannot be applied to discrete variables."
+            )
+
         self._s[...] = value
 
     @property
@@ -560,6 +565,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @prior.setter
     def prior(self, value: int | float | Expression):
+        if self.type not in ["integer", "binary"]:
+            raise ValidationError(
+                "Priorities can only be used on discrete variables."
+            )
+
         self._prior[...] = value
 
     @property
@@ -847,7 +857,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         if not hasattr(self, "_assignment"):
-            raise ValidationError("Variable is not defined!")
+            raise ValidationError("Variable is not assigned!")
 
         return self._assignment.getDeclaration()
 

@@ -17,7 +17,7 @@ def test_version():
     assert gamspy.__version__ == "1.0.1"
 
 
-@pytest.mark.unit
+@pytest.mark.doc
 def test_switcher():
     this = os.path.dirname(os.path.abspath(__file__))
     root = this.rsplit(os.sep, maxsplit=1)[0]

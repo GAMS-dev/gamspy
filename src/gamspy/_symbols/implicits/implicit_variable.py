@@ -11,7 +11,8 @@ from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gams.transfer import Set, Variable
+    from gamspy import Set, Variable
+    from gamspy._algebra.expression import Expression
 
 
 class ImplicitVariable(ImplicitSymbol, operable.Operable):
@@ -46,6 +47,128 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
             permutation=self.permutation,
             scalar_domains=self._scalar_domains,
         )
+
+    @property
+    def l(self):  # noqa: E741,E743
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.l.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @l.setter
+    def l(self, value: int | float | Expression):
+        # b[t].l = 30 -> b.l[t] = 30
+        self.parent.l[self.domain] = value
+
+    @property
+    def m(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.m.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @m.setter
+    def m(self, value: int | float | Expression):
+        # b[t].m = 30 -> b.m[t] = 30
+        self.parent.m[self.domain] = value
+
+    @property
+    def lo(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.lo.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @lo.setter
+    def lo(self, value: int | float | Expression):
+        # b[t].lo = 30 -> b.lo[t] = 30
+        self.parent.lo[self.domain] = value
+
+    @property
+    def up(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.up.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @up.setter
+    def up(self, value: int | float | Expression):
+        # b[t].up = 30 -> b.up[t] = 30
+        self.parent.up[self.domain] = value
+
+    @property
+    def scale(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.scale.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @scale.setter
+    def scale(self, value: int | float | Expression):
+        if self.parent.type in ["integer", "binary"]:
+            raise ValidationError(
+                "Scales cannot be applied to discrete variables."
+            )
+
+        # b[t].scale = 30 -> b.scale[t] = 30
+        self.parent.scale[self.domain] = value
+
+    @property
+    def fx(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.fx.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @fx.setter
+    def fx(self, value: int | float | Expression):
+        # b[t].fx = 30 -> b.fx[t] = 30
+        self.parent.fx[self.domain] = value
+
+    @property
+    def prior(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.prior.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @prior.setter
+    def prior(self, value: int | float | Expression):
+        if self.parent.type not in ["integer", "binary"]:
+            raise ValidationError(
+                "Priorities can only be used on discrete variables."
+            )
+
+        # b[t].prior = 30 -> b.prior[t] = 30
+        self.parent.prior[self.domain] = value
+
+    @property
+    def stage(self):
+        return implicits.ImplicitParameter(
+            self.parent,
+            name=self.parent.stage.name,
+            domain=self.domain,
+            scalar_domains=self._scalar_domains,
+        )
+
+    @stage.setter
+    def stage(self, value: int | float | Expression):
+        # b[t].stage = 30 -> b.stage[t] = 30
+        self.parent.stage[self.domain] = value
 
     @property
     def T(self) -> implicits.ImplicitVariable:

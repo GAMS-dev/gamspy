@@ -1,0 +1,18 @@
+performance:
+  stage: performance
+  needs: []
+  tags: [puma]
+  image: python:3.12
+  script:
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
+    - gamspy install license $LOCAL_LICENSE
+    - python scripts/performance/main_IJKLM.py
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: manual
+    - when: never

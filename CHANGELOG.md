@@ -8,15 +8,19 @@ GAMSPy 1.0.2
   - Support output in Container constructor.
   - Fix debugging_level bug.
   - Add additional checks for the validity of the license.
+  - Fix singleton assignment bug.
+  - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
   - Add a test for Container output argument.
   - Add tests for debugging_level.
   - Add tests to verify the validity of the license.
+  - Add tests for the alternative syntax for variable/equation attributes.
 - Documentation
   - Fix broken links in the documentation.
   - Add a ci step to check doc links.
+  - Improve the wording of debugging document.
 
 GAMSPy 1.0.1
 ------------
@@ -63,6 +67,7 @@ GAMSPy 1.0.0
   - Fix missing links in api reference.
   - Set default problem type as MIP instead of LP.
   - Allow UniverseAlias in assignments.
+  - Add performance ci step to check model generation time difference.
   - Update gamspy_base and gamsapi to 47.5.0.
 - Documentation
   - Add a warning about the manipulation of records via .records. 

@@ -6,6 +6,7 @@ stages:
   - formatter
   - docs
   - test
+  - performance
   - website
   - upload
 
@@ -50,4 +51,5 @@ include: ['ci/.gitlab-ci-formatter.yml',
           'ci/.gitlab-ci-test-3.11.yml',
           'ci/.gitlab-ci-test-3.12.yml',
           'ci/.gitlab-ci-update-website.yml',
-          'ci/.gitlab-ci-upload.yml']
+          'ci/.gitlab-ci-upload.yml',
+          'ci/.gitlab-ci-performance.yml']
