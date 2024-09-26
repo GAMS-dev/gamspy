@@ -6,8 +6,9 @@ import json
 import os
 from os.path import join
 
-import gamspy
 import pytest
+
+import gamspy
 
 try:
     from dotenv import load_dotenv
