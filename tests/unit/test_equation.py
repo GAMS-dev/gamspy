@@ -1159,3 +1159,33 @@ def test_equation_listing2(data):
     )
 
     assert len(mr.getEquationListing(filters=[["steel"], []]).split("\n")) == 3
+
+
+def test_alternative_syntax():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    e = Equation(m, "e", domain=i)
+
+    assert e[i].l.gamsRepr() == "e.l(i)"
+    assert e[i].m.gamsRepr() == "e.m(i)"
+    assert e[i].lo.gamsRepr() == "e.lo(i)"
+    assert e[i].up.gamsRepr() == "e.up(i)"
+    assert e[i].scale.gamsRepr() == "e.scale(i)"
+    assert e[i].stage.gamsRepr() == "e.stage(i)"
+    assert e[i].range.gamsRepr() == "e.range(i)"
+    assert e[i].slacklo.gamsRepr() == "e.slacklo(i)"
+    assert e[i].slackup.gamsRepr() == "e.slackup(i)"
+    assert e[i].slack.gamsRepr() == "e.slack(i)"
+
+    e[i].l = 5
+    assert e.getAssignment() == "e.l(i) = 5;"
+    e[i].m = 5
+    assert e.getAssignment() == "e.m(i) = 5;"
+    e[i].lo = 5
+    assert e.getAssignment() == "e.lo(i) = 5;"
+    e[i].up = 5
+    assert e.getAssignment() == "e.up(i) = 5;"
+    e[i].scale = 5
+    assert e.getAssignment() == "e.scale(i) = 5;"
+    e[i].stage = 5
+    assert e.getAssignment() == "e.stage(i) = 5;"

@@ -273,11 +273,17 @@ def test_scalar_attr_assignment(data):
     a.up = 5
     assert a.getAssignment() == "a.up = 5;"
 
+    with pytest.raises(ValidationError):
+        b.scale = 5
+
     a.scale = 5
     assert a.getAssignment() == "a.scale = 5;"
 
     a.fx = 5
     assert a.getAssignment() == "a.fx = 5;"
+
+    with pytest.raises(ValidationError):
+        a.prior = 5
 
     b.prior = 5
     assert b.getAssignment() == "b.prior = 5;"
@@ -494,3 +500,44 @@ def test_variable_listing(data):
     transport2.solve()
     with pytest.raises(ValidationError):
         _ = transport2.getVariableListing()
+
+
+def test_alternative_syntax():
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    v = Variable(m, "v", domain=i)
+    v2 = Variable(m, "v2", domain=i, type="integer")
+
+    assert v[i].l.gamsRepr() == "v.l(i)"
+    assert v[i].m.gamsRepr() == "v.m(i)"
+    assert v[i].lo.gamsRepr() == "v.lo(i)"
+    assert v[i].up.gamsRepr() == "v.up(i)"
+    assert v[i].scale.gamsRepr() == "v.scale(i)"
+    assert v[i].fx.gamsRepr() == "v.fx(i)"
+    assert v[i].prior.gamsRepr() == "v.prior(i)"
+    assert v[i].stage.gamsRepr() == "v.stage(i)"
+
+    v[i].l = 5
+    assert v.getAssignment() == "v.l(i) = 5;"
+    v[i].m = 5
+    assert v.getAssignment() == "v.m(i) = 5;"
+    v[i].lo = 5
+    assert v.getAssignment() == "v.lo(i) = 5;"
+    v[i].up = 5
+    assert v.getAssignment() == "v.up(i) = 5;"
+
+    with pytest.raises(ValidationError):
+        v2[i].scale = 5
+
+    v[i].scale = 5
+    assert v.getAssignment() == "v.scale(i) = 5;"
+    v[i].fx = 5
+    assert v.getAssignment() == "v.fx(i) = 5;"
+
+    with pytest.raises(ValidationError):
+        v[i].prior = 5
+
+    v2[i].prior = 5
+    assert v2.getAssignment() == "v2.prior(i) = 5;"
+    v[i].stage = 5
+    assert v.getAssignment() == "v.stage(i) = 5;"
