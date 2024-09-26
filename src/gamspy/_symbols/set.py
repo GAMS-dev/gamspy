@@ -620,7 +620,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             else:
                 name = "s" + str(uuid.uuid4()).replace("-", "_")
 
-            singleton_check(is_singleton, records)
+            self._singleton_check(is_singleton, records, domain)
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False
@@ -686,6 +686,23 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __repr__(self) -> str:
         return f"Set(name={self.name}, domain={self.domain})"
+
+    def _singleton_check(
+        self,
+        is_singleton: bool,
+        records: Any | None,
+        domain: list[Set | Alias | str],
+    ):
+        if is_singleton:
+            if records is not None and len(records) != 1:
+                raise ValidationError(
+                    "Singleton set records size must be one."
+                )
+
+            if len(domain) != 1:
+                raise ValidationError(
+                    f"Length of the domain of the singleton set must be 1 but found {len(domain)}"
+                )
 
     @property
     def records(self):
@@ -808,7 +825,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         """
         output = f"Set {self.name}"
 
-        if self._is_singleton:
+        if self.is_singleton:
             output = f"Singleton {output}"
 
         output += self._get_domain_str()
@@ -842,10 +859,3 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             raise ValidationError("Set is not assigned!")
 
         return self._assignment.getDeclaration()
-
-
-def singleton_check(is_singleton: bool, records: Any | None):
-    if is_singleton and records is not None and len(records) > 1:
-        raise ValidationError(
-            "Singleton set records size cannot be more than one."
-        )
