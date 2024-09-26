@@ -239,7 +239,7 @@ class LatexConverter(Converter):
             if isinstance(symbol, symbol_type):
                 summary = symbol.summary
                 row = f'{summary["name"]} & {",".join(summary["domain"])} & {summary["description"]}\\\\'
-                row = row.replace("_", "\_")
+                row = row.replace("_", "\\_")
                 table.append(row)
 
         table.append(TABLE_FOOTER)
@@ -257,7 +257,7 @@ class LatexConverter(Converter):
                 continue
 
             domain_str = ",".join([elem.name for elem in equation.domain])
-            header = "\\subsubsection*{$" + equation.name.replace("_", "\_")
+            header = "\\subsubsection*{$" + equation.name.replace("_", "\\_")
             if domain_str:
                 header += f"_{{{domain_str}}}"
             header += "$}\n"
@@ -323,7 +323,7 @@ class LatexConverter(Converter):
 \\keepXColumns
 
 \\begin{document}
-\section*{Symbols}
+\\section*{Symbols}
 
 """
         return header

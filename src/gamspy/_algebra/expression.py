@@ -476,6 +476,9 @@ class Expression(operable.Operable):
                             )
                 elif isinstance(node, ImplicitSymbol):
                     for elem in node.domain:
+                        if hasattr(elem, "is_singleton") and elem.is_singleton:
+                            continue
+
                         if (
                             isinstance(elem, Symbol)
                             and elem not in control_stack
