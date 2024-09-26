@@ -7,6 +7,7 @@ GAMSPy 1.0.2
   - Change the default value of sense to Sense.FEASIBILITY.
   - Support output in Container constructor.
   - Fix debugging_level bug.
+  - Fix singleton assignment bug.
   - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
