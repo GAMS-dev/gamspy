@@ -28,16 +28,15 @@ def test_switcher():
 
 @pytest.mark.doc
 def test_docs():
-    src_path = join(os.getcwd(), "src", "gamspy")
     api_files = [
         file
-        for file in glob.glob("**", root_dir=src_path, recursive=True)
+        for file in glob.glob("src/**", recursive=True)
         if file.endswith(".py")
     ]
 
     for file in api_files:
         results = doctest.testfile(
-            join(src_path, file),
+            file,
             verbose=True,
             module_relative=False,
         )

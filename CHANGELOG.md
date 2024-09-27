@@ -13,6 +13,8 @@ GAMSPy 1.0.2
   - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
   - Fix singleton assignment bug.
   - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
+  - Add support for MaxPool2d/MinPool2d/AvgPool2d
+  - Add support for flatten_dims for flattening n domains into 1 domain
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
@@ -21,10 +23,12 @@ GAMSPy 1.0.2
   - Add tests to verify the validity of the license.
   - Add memory check script for the performance CI step.
   - Add tests for the alternative syntax for variable/equation attributes.
+  - Add tests for pooling layers and flatten_dims
 - Documentation
   - Fix broken links in the documentation.
   - Add a ci step to check doc links.
   - Improve the wording of debugging document.
+  - Add pooling and flatten_dims docs
 
 GAMSPy 1.0.1
 ------------
