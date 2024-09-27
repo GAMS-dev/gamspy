@@ -23,6 +23,7 @@ http://www.gams.com/docs/pdf/steel_investment.pdf
 from __future__ import annotations
 
 import pandas
+
 from gamspy import (
     Container,
     Equation,

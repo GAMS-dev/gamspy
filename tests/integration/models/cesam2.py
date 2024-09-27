@@ -83,6 +83,7 @@ Original version programmed by Sherman Robinson and Andrea Cattaneo.
 from __future__ import annotations
 
 import numpy as np
+
 from gamspy import (
     Alias,
     Card,

@@ -19,6 +19,7 @@ http://www.ce.utexas.edu/prof/mckynney/ce385d/papers/GAMS-Tutorial.pdf
 from __future__ import annotations
 
 import numpy as np
+
 from gamspy import (
     Card,
     Container,

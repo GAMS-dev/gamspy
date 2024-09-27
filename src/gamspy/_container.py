@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import atexit
-import logging
 import os
 import platform
 import signal
@@ -25,7 +24,7 @@ from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._workspace import Workspace
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -50,14 +49,6 @@ GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-
-logger = logging.getLogger("MODEL")
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
-stream_handler.setFormatter(formatter)
-logger.addHandler(stream_handler)
 
 
 def find_free_address() -> tuple[str, int]:
@@ -111,7 +102,7 @@ def open_connection(
             end = time.time()
 
             if end - start > TIMEOUT:  # pragma: no cover
-                raise GamspyException(
+                raise FatalError(
                     f"Timeout while establishing the connection with socket. {process.communicate()[0]}"
                 ) from e
 
@@ -166,18 +157,20 @@ def check_response(response: bytes, job_name: str) -> None:
         5000: "Driver error: internal error: cannot load option handling library.",
     }
 
-    try:
-        return_code = int(response[: response.find(b"#")].decode("ascii"))
-    except (ValueError, UnicodeError) as e:  # pragma: no cover
-        raise GamspyException(
-            "Error while getting the return code from GAMS backend"
-        ) from e
+    value = response[: response.find(b"#")].decode("ascii")
+    if not value:
+        raise FatalError(
+            "Error while getting the return code from GAMS backend. This means that GAMS is in a bad state. Try to backtrack for previous errors."
+        )
+
+    return_code = int(value)
 
     if return_code in GAMS_STATUS:
         try:
             info = GAMS_STATUS[return_code]
         except IndexError:  # pragma: no cover
             info = ""
+
         raise GamspyException(
             f'{info} Check {job_name + ".lst"} for more information.',
             return_code,
@@ -355,7 +348,7 @@ class Container(gt.Container):
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
         except ConnectionError as e:
-            raise GamspyException(
+            raise FatalError(
                 f"There was an error while sending pf file name to GAMS server: {e}",
             ) from e
 
@@ -370,9 +363,9 @@ class Container(gt.Container):
 
         # Receive response
         try:
-            response = self._socket.recv(4)
+            response = self._socket.recv(256)
         except ConnectionError as e:
-            raise GamspyException(
+            raise FatalError(
                 f"There was an error while receiving response from GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
@@ -590,7 +583,9 @@ class Container(gt.Container):
             strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
-        self._gams_string += gams_string + "\n"
+
+        if self._debugging_level == "keep":
+            self._gams_string += gams_string + "\n"
 
         return gams_string
 
@@ -716,6 +711,11 @@ class Container(gt.Container):
         >>> gams_code = m.generateGamsString()
 
         """
+        if self._debugging_level != "keep":
+            raise ValidationError(
+                "`debug_level` argument of the container must be set to 'keep' to use this function."
+            )
+
         if not show_raw:
             return self._gams_string
 

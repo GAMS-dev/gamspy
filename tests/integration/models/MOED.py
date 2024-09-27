@@ -24,6 +24,7 @@ DOI: doi.org/10.1007/978-3-319-62350-4
 from __future__ import annotations
 
 import pandas as pd
+
 from gamspy import (
     Card,
     Container,

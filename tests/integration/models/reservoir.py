@@ -18,6 +18,7 @@ Revista Romana de Informatica si Automatica, vol.16, no.1, 2006, pp.15-18.
 from __future__ import annotations
 
 import pandas as pd
+
 from gamspy import (
     Container,
     Equation,

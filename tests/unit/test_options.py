@@ -4,9 +4,11 @@ import os
 import subprocess
 import sys
 
+import pytest
+from pydantic import ValidationError
+
 import gamspy.exceptions as exceptions
 import gamspy.math as math
-import pytest
 from gamspy import (
     Alias,
     Container,
@@ -20,7 +22,6 @@ from gamspy import (
     Variable,
 )
 from gamspy.exceptions import GamspyException
-from pydantic import ValidationError
 
 pytestmark = pytest.mark.unit
 
@@ -633,7 +634,7 @@ def test_exception_on_solve_with_listing_file(data):
 
 def test_model_attribute_options(data):
     m, canning_plants, markets, capacities, demands, distances = data
-    m = Container()
+    m = Container(debugging_level="keep")
 
     # Set
     i = Set(

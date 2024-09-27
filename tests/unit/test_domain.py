@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from gamspy import Container, Domain, Parameter, Set, Sum
 from gamspy.exceptions import GamspyException, ValidationError
 

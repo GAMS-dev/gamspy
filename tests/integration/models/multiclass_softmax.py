@@ -12,8 +12,9 @@ from __future__ import annotations
 
 import sys
 
-import gamspy as gp
 import numpy as np
+
+import gamspy as gp
 from gamspy import (
     Container,
     Equation,

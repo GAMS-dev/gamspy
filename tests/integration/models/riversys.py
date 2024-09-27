@@ -15,8 +15,9 @@ for water and energy management", Revision 6, February 2003.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import pandas as pd
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Container,

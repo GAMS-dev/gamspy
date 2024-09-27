@@ -25,8 +25,9 @@ from __future__ import annotations
 
 import math
 
-import gamspy.math as gams_math
 import pandas as pd
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Card,

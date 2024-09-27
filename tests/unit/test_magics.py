@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from gamspy import Container, Parameter, Set, Variable
 
 pytestmark = pytest.mark.unit
