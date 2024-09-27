@@ -222,11 +222,19 @@ def install_license(args: argparse.Namespace):
 
         license_text = process.stdout
         lines = license_text.splitlines()
-        if lines[2][:2] not in ["00", "07", "08", "09"]:
-            raise ValidationError(
-                f"Given access code `{alp_id}` is not a valid for GAMSPy. "
-                "Make sure that you use a GAMSPy license, not a GAMS license."
-            )
+        license_type = lines[0][54]
+        if license_type == "+":
+            if lines[2][:2] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given access code `{alp_id}` is not a valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+        else:
+            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given access code `{alp_id}` is not a valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
 
         with open(license_path, "w", encoding="utf-8") as file:
             file.write(license_text)
@@ -234,11 +242,19 @@ def install_license(args: argparse.Namespace):
         with open(license) as file:
             lines = file.read().splitlines()
 
-        if lines[2][:2] not in ["00", "07", "08", "09"]:
-            raise ValidationError(
-                f"Given license file `{license}` is not a valid for GAMSPy. "
-                "Make sure that you use a GAMSPy license, not a GAMS license."
-            )
+        license_type = lines[0][54]
+        if license_type == "+":
+            if lines[2][:2] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given license file `{license}` is not a valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+        else:
+            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given access code `{license}` is not a valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
 
         shutil.copy(license, license_path)
 

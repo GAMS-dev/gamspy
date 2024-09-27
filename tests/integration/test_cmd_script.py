@@ -65,9 +65,25 @@ def test_install_license(teardown):
             check=True,
         )
 
-    # Try to install a GAMS license
+    # Try to install a GAMS license (+ license)
     with open(tmp_license_path, "w") as file:
         file.write(os.environ["GAMS_ACADEMIC_LICENSE"])
+
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                tmp_license_path,
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+    # Try to install a GAMS license (/ license)
+    with open(tmp_license_path, "w") as file:
+        file.write(os.environ["GAMS_ACADEMIC_LICENSE2"])
 
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
