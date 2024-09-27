@@ -51,6 +51,52 @@ def teardown():
 
 
 def test_install_license(teardown):
+    tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
+
+    # Try to install a license with GAMS access code
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                os.environ["GAMS_ACCESS_CODE"],
+            ],
+            check=True,
+        )
+
+    # Try to install a GAMS license (+ license)
+    with open(tmp_license_path, "w") as file:
+        file.write(os.environ["GAMS_ACADEMIC_LICENSE"])
+
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                tmp_license_path,
+            ],
+            check=True,
+            capture_output=True,
+        )
+
+    # Try to install a GAMS license (/ license)
+    with open(tmp_license_path, "w") as file:
+        file.write(os.environ["GAMS_ACADEMIC_LICENSE2"])
+
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            [
+                "gamspy",
+                "install",
+                "license",
+                tmp_license_path,
+            ],
+            check=True,
+            capture_output=True,
+        )
+
     m = Container()
     assert m._network_license is False
 
@@ -85,7 +131,6 @@ def test_install_license(teardown):
         )
 
     # Test installing a license from a file path.
-    tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
     shutil.copy(gamspy_license_path, tmp_license_path)
 
     _ = subprocess.run(

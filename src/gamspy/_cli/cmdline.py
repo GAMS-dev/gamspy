@@ -202,9 +202,11 @@ def install_license(args: argparse.Namespace):
         )
 
     gamspy_base_dir = utils._get_gamspy_base_directory()
+    license_path = os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
 
     if is_alp:
-        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), license]
+        alp_id = license
+        command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id]
 
         if args.uses_port:
             command.append("-u")
@@ -218,16 +220,43 @@ def install_license(args: argparse.Namespace):
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        with open(
-            os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt"),
-            "w",
-            encoding="utf-8",
-        ) as file:
-            file.write(process.stdout)
+        license_text = process.stdout
+        lines = license_text.splitlines()
+        license_type = lines[0][54]
+        if license_type == "+":
+            if lines[2][:2] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+        else:
+            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+
+        with open(license_path, "w", encoding="utf-8") as file:
+            file.write(license_text)
     else:
-        shutil.copy(
-            license, os.path.join(utils.DEFAULT_DIR, "gamspy_license.txt")
-        )
+        with open(license) as file:
+            lines = file.read().splitlines()
+
+        license_type = lines[0][54]
+        if license_type == "+":
+            if lines[2][:2] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given license file `{license}` is not valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+        else:
+            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+                raise ValidationError(
+                    f"Given license file `{license}` is not valid for GAMSPy. "
+                    "Make sure that you use a GAMSPy license, not a GAMS license."
+                )
+
+        shutil.copy(license, license_path)
 
 
 def uninstall_license():

@@ -10,18 +10,9 @@ import pytest
 
 import gamspy
 
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv(join(os.getcwd(), ".env"))
-except Exception:
-    pass
-
 
 @pytest.mark.unit
 def test_version():
-    import gamspy
-
     assert gamspy.__version__ == "1.0.1"
 
 

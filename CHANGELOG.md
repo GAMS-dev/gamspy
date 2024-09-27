@@ -7,6 +7,7 @@ GAMSPy 1.0.2
   - Change the default value of sense to Sense.FEASIBILITY.
   - Support output in Container constructor.
   - Fix debugging_level bug.
+  - Add additional checks for the validity of the license.
   - Allow generateGamsString function only if the debugging level is set to "keep".
   - Fix socket communication issue on license error.
   - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
@@ -19,6 +20,7 @@ GAMSPy 1.0.2
   - Add tests for the generated solve strings for different type of problems.
   - Add a test for Container output argument.
   - Add tests for debugging_level.
+  - Add tests to verify the validity of the license.
   - Add memory check script for the performance CI step.
   - Add tests for the alternative syntax for variable/equation attributes.
   - Add tests for pooling layers and flatten_dims
