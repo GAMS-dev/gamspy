@@ -226,13 +226,13 @@ def install_license(args: argparse.Namespace):
         if license_type == "+":
             if lines[2][:2] not in ["00", "07", "08", "09"]:
                 raise ValidationError(
-                    f"Given access code `{alp_id}` is not a valid for GAMSPy. "
+                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
             if lines[2][8:10] not in ["00", "07", "08", "09"]:
                 raise ValidationError(
-                    f"Given access code `{alp_id}` is not a valid for GAMSPy. "
+                    f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
 
@@ -246,13 +246,13 @@ def install_license(args: argparse.Namespace):
         if license_type == "+":
             if lines[2][:2] not in ["00", "07", "08", "09"]:
                 raise ValidationError(
-                    f"Given license file `{license}` is not a valid for GAMSPy. "
+                    f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
             if lines[2][8:10] not in ["00", "07", "08", "09"]:
                 raise ValidationError(
-                    f"Given access code `{license}` is not a valid for GAMSPy. "
+                    f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
 
