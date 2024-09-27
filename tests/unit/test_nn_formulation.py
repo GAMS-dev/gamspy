@@ -4,9 +4,16 @@ import numpy as np
 import pytest
 
 import gamspy as gp
-from gamspy import Container
+from gamspy import Container, ModelStatus
 from gamspy.exceptions import ValidationError
-from gamspy.formulations.nn import Conv2d
+from gamspy.formulations import flatten_dims
+from gamspy.formulations.nn import (
+    AvgPool2d,
+    Conv2d,
+    MaxPool2d,
+    MinPool2d,
+    _MPool2d,
+)
 from gamspy.math import dim
 
 pytestmark = pytest.mark.unit
@@ -66,7 +73,9 @@ def data():
         ]
     )
 
-    yield m, w1, b1, inp
+    par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
+    ii = gp.Set(m, "ii", records=range(20))
+    yield m, w1, b1, inp, par_input, ii
     m.close()
 
 
@@ -126,7 +135,7 @@ def test_conv2d_load_weights(data):
     pytest.raises(ValidationError, conv1.load_weights, w1, bad4)
 
 
-def test_same_indices(data):
+def test_conv2d_same_indices(data):
     m, *_ = data
     conv1 = Conv2d(m, 4, 4, 4, bias=True)
     w1 = np.random.rand(4, 4, 4, 4)
@@ -143,7 +152,7 @@ def test_same_indices(data):
     conv2.load_weights(w1, b1)
 
 
-def test_reloading_weights(data):
+def test_conv2d_reloading_weights(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
     w1 = np.random.rand(2, 1, 3, 3)
@@ -158,7 +167,7 @@ def test_reloading_weights(data):
     assert np.allclose(b1, conv1.bias.toDense())
 
 
-def test_make_variable(data):
+def test_conv2d_make_variable(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
     conv1.make_variable()
@@ -171,7 +180,7 @@ def test_make_variable(data):
     out, eqs = conv1(inp)
 
 
-def test_load_weight_make_var(data):
+def test_conv2d_load_weight_make_var(data):
     m, *_ = data
     conv1 = Conv2d(m, in_channels=1, out_channels=2, kernel_size=3, bias=True)
     w1 = np.random.rand(2, 1, 3, 3)
@@ -182,7 +191,7 @@ def test_load_weight_make_var(data):
     pytest.raises(ValidationError, conv1.make_variable)
 
 
-def test_call_bad(data):
+def test_conv2d_call_bad(data):
     m, *_ = data
     conv1 = Conv2d(m, 4, 4, 4, bias=True)
     inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
@@ -203,11 +212,10 @@ def test_call_bad(data):
     pytest.raises(ValidationError, conv1, bad_inp_2)
 
 
-def test_simple_correctness(data):
-    m, w1, b1, inp = data
+def test_conv2d_simple_correctness(data):
+    m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3)
     conv1.load_weights(w1, b1)
-    par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
     out, eqs = conv1(par_input)
     obj = gp.Sum(out.domain, out)
     model = gp.Model(
@@ -264,11 +272,10 @@ def test_simple_correctness(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
-def test_with_padding(data):
-    m, w1, b1, inp = data
+def test_conv2d_with_padding(data):
+    m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3, padding=(2, 1))
     conv1.load_weights(w1, b1)
-    par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
     out, eqs = conv1(par_input)
     obj = gp.Sum(out.domain, out)
     model = gp.Model(
@@ -601,11 +608,10 @@ def test_with_padding(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
-def test_with_stride(data):
-    m, w1, b1, inp = data
+def test_conv2d_with_stride(data):
+    m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1))
     conv1.load_weights(w1, b1)
-    par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
     out, eqs = conv1(par_input)
     obj = gp.Sum(out.domain, out)
     model = gp.Model(
@@ -656,11 +662,10 @@ def test_with_stride(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
-def test_with_padding_and_stride(data):
-    m, w1, b1, inp = data
+def test_conv2d_with_padding_and_stride(data):
+    m, w1, b1, inp, par_input, _ = data
     conv1 = Conv2d(m, 1, 2, 3, stride=(2, 1), padding=(1, 2))
     conv1.load_weights(w1, b1)
-    par_input = gp.Parameter(m, domain=dim(inp.shape), records=inp)
     out, eqs = conv1(par_input)
     obj = gp.Sum(out.domain, out)
     model = gp.Model(
@@ -859,3 +864,648 @@ def test_with_padding_and_stride(data):
     )
 
     assert np.allclose(out.toDense(), expected_out)
+
+
+def test_max_pooling(data):
+    m, w1, b1, inp, par_input, ii = data
+
+    mp1 = MaxPool2d(m, 2)
+    mp2 = MaxPool2d(m, (2, 1))
+    mp3 = MaxPool2d(m, 3, stride=(1, 1))
+    mp4 = MaxPool2d(m, 4, stride=(3, 2), padding=2)
+    out, eqs = mp1(par_input)
+    out2, eqs2 = mp2(par_input)
+    out3, eqs3 = mp3(par_input)
+    out4, eqs4 = mp4(par_input)
+    obj = (
+        gp.Sum(out.domain, out)
+        + gp.Sum(out2.domain, out2)
+        + gp.Sum(out3.domain, out3)
+        + gp.Sum(out4.domain, out4)
+    )
+    model = gp.Model(
+        m,
+        "maxpool",
+        equations=[*eqs, *eqs2, *eqs3, *eqs4],
+        objective=obj,
+        sense="min",
+        problem="MIP",
+    )
+    model.solve()
+    expected_out = np.array(
+        [
+            [[[0.64615000, 0.90273000], [0.66672000, 0.83690000]]],
+            [[[0.94010000, 0.80008000], [0.93950000, 0.97884000]]],
+            [[[0.92599000, 0.86881000], [0.90938000, 0.51248000]]],
+        ]
+    )
+    assert np.allclose(out.toDense(), expected_out)
+
+    expected_out_2 = np.array(
+        [
+            [
+                [
+                    [
+                        0.64615000,
+                        0.40183000,
+                        0.90273000,
+                        0.89937000,
+                        0.77734000,
+                    ],
+                    [
+                        0.42091000,
+                        0.66672000,
+                        0.83690000,
+                        0.49197000,
+                        0.82491000,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.52554000,
+                        0.94010000,
+                        0.75623000,
+                        0.80008000,
+                        0.55513000,
+                    ],
+                    [
+                        0.67074000,
+                        0.93950000,
+                        0.95293000,
+                        0.97884000,
+                        0.60580000,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.92599000,
+                        0.69301000,
+                        0.69718000,
+                        0.86881000,
+                        0.87645000,
+                    ],
+                    [
+                        0.49372000,
+                        0.90938000,
+                        0.49188000,
+                        0.51248000,
+                        0.64488000,
+                    ],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out2.toDense(), expected_out_2)
+
+    expected_out_3 = np.array(
+        [
+            [
+                [
+                    [0.90273000, 0.90273000, 0.90273000],
+                    [0.90273000, 0.90273000, 0.90273000],
+                    [0.83690000, 0.83690000, 0.83690000],
+                ]
+            ],
+            [
+                [
+                    [0.95293000, 0.97884000, 0.97884000],
+                    [0.95293000, 0.97884000, 0.97884000],
+                    [0.95293000, 0.97884000, 0.97884000],
+                ]
+            ],
+            [
+                [
+                    [0.92599000, 0.90938000, 0.87645000],
+                    [0.92599000, 0.90938000, 0.87645000],
+                    [0.90938000, 0.90938000, 0.64488000],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out3.toDense(), expected_out_3)
+
+    expected_out_4 = np.array(
+        [
+            [
+                [
+                    [0.64615000, 0.90273000, 0.90273000],
+                    [0.66672000, 0.90273000, 0.90273000],
+                ]
+            ],
+            [
+                [
+                    [0.94010000, 0.94010000, 0.80008000],
+                    [0.94010000, 0.97884000, 0.97884000],
+                ]
+            ],
+            [
+                [
+                    [0.92599000, 0.92599000, 0.87645000],
+                    [0.92599000, 0.92599000, 0.87645000],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out4.toDense(), expected_out_4)
+
+
+def test_pooling_with_bounds(data):
+    m, w1, b1, inp, par_input, ii = data
+    mp1 = MinPool2d(m, 2)
+    mp2 = MaxPool2d(m, 2)
+    ap1 = AvgPool2d(m, 2)
+    var_input = gp.Variable(m, domain=dim(inp.shape))
+
+    # input bounds should be passed to the output as well
+    var_input.lo["0", "0", var_input.domain[2], var_input.domain[3]] = 10
+    var_input.up["0", "0", var_input.domain[2], var_input.domain[3]] = 20
+
+    var_input.lo["1", "0", var_input.domain[2], var_input.domain[3]] = 1
+    var_input.up["1", "0", var_input.domain[2], var_input.domain[3]] = 100
+
+    var_input.lo["2", "0", var_input.domain[2], var_input.domain[3]] = -50
+    var_input.up["2", "0", var_input.domain[2], var_input.domain[3]] = 50
+
+    out, _ = mp1(var_input)
+    out2, _ = mp2(var_input)
+    out3, _ = ap1(var_input)
+
+    for recs in [out.records, out2.records, out3.records]:
+        assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == 10).all()
+        assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 20).all()
+
+        assert (recs[recs["DenseDim3_1"] == "1"]["lower"] == 1).all()
+        assert (recs[recs["DenseDim3_1"] == "1"]["upper"] == 100).all()
+
+        assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -50).all()
+        assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == 50).all()
+
+
+def test_min_pooling(data):
+    m, w1, b1, inp, par_input, ii = data
+    mp1 = MinPool2d(m, 2)
+    mp2 = MinPool2d(m, (2, 1))
+    mp3 = MinPool2d(m, 3, stride=(1, 1))
+    mp4 = MinPool2d(m, 4, stride=(3, 2), padding=2)
+    out, eqs = mp1(par_input)
+    out2, eqs2 = mp2(par_input)
+    out3, eqs3 = mp3(par_input)
+    out4, eqs4 = mp4(par_input)
+    obj = (
+        gp.Sum(out.domain, out)
+        + gp.Sum(out2.domain, out2)
+        + gp.Sum(out3.domain, out3)
+        + gp.Sum(out4.domain, out4)
+    )
+    model = gp.Model(
+        m,
+        "minpool",
+        equations=[*eqs, *eqs2, *eqs3, *eqs4],
+        objective=obj,
+        sense="min",
+        problem="MIP",
+    )
+    model.solve()
+    expected_out = np.array(
+        [
+            [[[0.27341000, 0.29883000], [0.40205000, 0.23754000]]],
+            [[[0.48203000, 0.36400000], [0.37691000, 0.19674000]]],
+            [[[0.54127000, 0.03598000], [0.19366000, 0.04328300]]],
+        ]
+    )
+    assert np.allclose(out.toDense(), expected_out)
+
+    expected_out_2 = np.array(
+        [
+            [
+                [
+                    [
+                        0.54191000,
+                        0.27341000,
+                        0.78980000,
+                        0.29883000,
+                        0.17423000,
+                    ],
+                    [
+                        0.40205000,
+                        0.55509000,
+                        0.67382000,
+                        0.23754000,
+                        0.64736000,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.48203000,
+                        0.92097000,
+                        0.71608000,
+                        0.36400000,
+                        0.02026600,
+                    ],
+                    [
+                        0.37691000,
+                        0.44264000,
+                        0.50225000,
+                        0.19674000,
+                        0.37108000,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.56254000,
+                        0.54127000,
+                        0.61562000,
+                        0.03598000,
+                        0.48145000,
+                    ],
+                    [
+                        0.38243000,
+                        0.19366000,
+                        0.18858000,
+                        0.04328300,
+                        0.26750000,
+                    ],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out2.toDense(), expected_out_2)
+
+    expected_out_3 = np.array(
+        [
+            [
+                [
+                    [0.27341000, 0.27341000, 0.17423000],
+                    [0.27341000, 0.23754000, 0.23754000],
+                    [0.33891000, 0.23754000, 0.23754000],
+                ]
+            ],
+            [
+                [
+                    [0.37691000, 0.36400000, 0.02026600],
+                    [0.37691000, 0.19674000, 0.02026600],
+                    [0.16820000, 0.06974300, 0.00961020],
+                ]
+            ],
+            [
+                [
+                    [0.38243000, 0.03598000, 0.03598000],
+                    [0.18858000, 0.04328300, 0.04328300],
+                    [0.18858000, 0.04328300, 0.04328300],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out3.toDense(), expected_out_3)
+
+    expected_out_4 = np.array(
+        [
+            [
+                [
+                    [0.27341000, 0.27341000, 0.17423000],
+                    [0.27341000, 0.23754000, 0.23754000],
+                ]
+            ],
+            [
+                [
+                    [0.48203000, 0.36400000, 0.02026600],
+                    [0.16820000, 0.06974300, 0.00961020],
+                ]
+            ],
+            [
+                [
+                    [0.54127000, 0.03598000, 0.03598000],
+                    [0.19366000, 0.04328300, 0.04328300],
+                ]
+            ],
+        ]
+    )
+    assert np.allclose(out4.toDense(), expected_out_4)
+
+
+def test_avg_pooling(data):
+    m, w1, b1, inp, par_input, ii = data
+    ap1 = AvgPool2d(m, 2)
+    ap2 = AvgPool2d(m, (2, 1))
+    ap3 = AvgPool2d(m, 3, stride=(1, 1))
+    ap4 = AvgPool2d(m, 4, stride=(3, 2), padding=2)
+    out, eqs = ap1(par_input)
+    out2, eqs2 = ap2(par_input)
+    out3, eqs3 = ap3(par_input)
+    out4, eqs4 = ap4(par_input)
+    obj = (
+        gp.Sum(out.domain, out)
+        + gp.Sum(out2.domain, out2)
+        + gp.Sum(out3.domain, out3)
+        + gp.Sum(out4.domain, out4)
+    )
+    model = gp.Model(
+        m,
+        "avgpool",
+        equations=[*eqs, *eqs2, *eqs3, *eqs4],
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+
+    expected_out = np.array(
+        [
+            [[[0.46582499, 0.72268248], [0.51119250, 0.56005752]]],
+            [[[0.71716005, 0.65909749], [0.60744750, 0.65768999]]],
+            [[[0.68070245, 0.55439746], [0.49479753, 0.30905575]]],
+        ]
+    )
+
+    expected_out_2 = np.array(
+        [
+            [
+                [
+                    [
+                        0.59403002,
+                        0.33761999,
+                        0.84626496,
+                        0.59909999,
+                        0.47578499,
+                    ],
+                    [
+                        0.41148001,
+                        0.61090499,
+                        0.75536001,
+                        0.36475500,
+                        0.73613501,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.50378501,
+                        0.93053502,
+                        0.73615503,
+                        0.58204001,
+                        0.28769800,
+                    ],
+                    [
+                        0.52382499,
+                        0.69106996,
+                        0.72758996,
+                        0.58779001,
+                        0.48843998,
+                    ],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.74426496,
+                        0.61714000,
+                        0.65639997,
+                        0.45239499,
+                        0.67895001,
+                    ],
+                    [
+                        0.43807501,
+                        0.55151999,
+                        0.34022999,
+                        0.27788150,
+                        0.45618999,
+                    ],
+                ]
+            ],
+        ]
+    )
+
+    expected_out_3 = np.array(
+        [
+            [
+                [
+                    [0.57630998, 0.58742785, 0.62838334],
+                    [0.58594882, 0.54855663, 0.63237786],
+                    [0.55955440, 0.58058667, 0.65012449],
+                ]
+            ],
+            [
+                [
+                    [0.73447669, 0.81874776, 0.63881731],
+                    [0.66924220, 0.71879554, 0.57156295],
+                    [0.62388670, 0.62716144, 0.50318259],
+                ]
+            ],
+            [
+                [
+                    [0.64658892, 0.59617889, 0.53859448],
+                    [0.54380774, 0.50185585, 0.50105363],
+                    [0.41795224, 0.40988812, 0.32560670],
+                ]
+            ],
+        ]
+    )
+
+    expected_out_4 = np.array(
+        [
+            [
+                [
+                    [0.11645625, 0.29712689, 0.24014375],
+                    [0.22423249, 0.52836502, 0.48937631],
+                ]
+            ],
+            [
+                [
+                    [0.17929001, 0.34406438, 0.20073663],
+                    [0.29626748, 0.61241204, 0.37906685],
+                ]
+            ],
+            [
+                [
+                    [0.17017561, 0.30877501, 0.22346812],
+                    [0.28089315, 0.49685395, 0.33070874],
+                ]
+            ],
+        ]
+    )
+
+    assert np.allclose(out.toDense(), expected_out)
+    assert np.allclose(out2.toDense(), expected_out_2)
+    assert np.allclose(out3.toDense(), expected_out_3)
+    assert np.allclose(out4.toDense(), expected_out_4)
+
+
+def test_avg_pool_bounds_neg(data):
+    m, w1, b1, _, par_input, ii = data
+    inp = np.array(
+        [
+            [
+                [
+                    [-0.64615, 0.40183, 0.7898, 0.89937, 0.17423],
+                    [0.54191, 0.27341, 0.90273, 0.29883, 0.77734],
+                    [0.40205, 0.55509, 0.67382, -0.49197, 0.64736],
+                    [0.42091, 0.66672, 0.8369, 0.23754, 0.82491],
+                    [0.38872, -0.33891, 0.75287, 0.67146, 0.71429],
+                ]
+            ],
+            [
+                [
+                    [0.64615, 0.40183, 0.7898, 0.89937, 0.17423],
+                    [0.54191, 0.27341, 0.91273, 0.29883, 0.77734],
+                    [0.40205, 0.55509, 0.67382, 0.49197, 0.64736],
+                    [0.42091, 0.66672, 0.8369, 0.23754, 0.82491],
+                    [0.38872, 0.33891, 0.75287, 0.67146, 0.71429],
+                ]
+            ],
+            [
+                [
+                    [-1, -1, -1, -1, -1],
+                    [-1, -1, -1, -1, -1],
+                    [-1, -1, -1, -1, -1],
+                    [-1, -1, -1, -1, -1],
+                    [-1, -1, -1, -1, -1],
+                ]
+            ],
+        ]
+    )
+    new_par = gp.Parameter(m, domain=dim(inp.shape), records=inp)
+    ap1 = AvgPool2d(m, 4, padding=2)
+
+    out, eqs = ap1(new_par)
+
+    recs = out.records
+
+    # nothing gets scaled
+    assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == -0.64615).all()
+    assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 0.90273).all()
+
+    # positive lower bounds must be scaled due to padding
+    assert (recs[recs["DenseDim3_1"] == "1"]["lower"] == (0.17423 / 4)).all()
+    assert (recs[recs["DenseDim3_1"] == "1"]["upper"] == 0.91273).all()
+
+    # negative upper bounds must be scaled due to padding
+    assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -1).all()
+    assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == (-1) / 4).all()
+
+    model = gp.Model(
+        m,
+        "avgpool_edge",
+        equations=[*eqs],
+        problem="mip",
+        objective=out["0", "0", "0", "0"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+    # bounds shouldn't make it infeasible
+    assert model.status == ModelStatus.OptimalGlobal
+
+
+def test_pool_call_bad(data):
+    m, w1, b1, inp, par_input, ii = data
+    avgpool1 = AvgPool2d(m, (2, 2))
+    minpool1 = MinPool2d(m, (2, 2))
+    maxpool1 = MaxPool2d(m, (2, 2))
+
+    new_par = gp.Parameter(m, "new_par", domain=dim([10]))
+    new_var = gp.Parameter(m, "new_var", domain=dim([10]))
+
+    for pool in [avgpool1, minpool1, maxpool1]:
+        pytest.raises(ValidationError, pool, "asd")
+        pytest.raises(ValidationError, pool, 5)
+        pytest.raises(ValidationError, pool, new_par)
+        pytest.raises(ValidationError, pool, new_var)
+
+    pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
+
+
+def test_flatten_bad(data):
+    m, w1, b1, inp, par_input, ii = data
+    # should only work for parameter or variable
+    pytest.raises(ValidationError, flatten_dims, w1, [2, 3])
+    pytest.raises(ValidationError, flatten_dims, par_input, [0])  # single dim
+    pytest.raises(ValidationError, flatten_dims, par_input, [])  # no dim
+    pytest.raises(ValidationError, flatten_dims, par_input, ["a", "b"])
+    pytest.raises(ValidationError, flatten_dims, par_input, [-1, 0])
+    pytest.raises(ValidationError, flatten_dims, par_input, [5, 6])
+    pytest.raises(
+        ValidationError, flatten_dims, par_input, [1, 3]
+    )  # non consecutive
+
+    i = gp.Set(m, "i")
+    j = gp.Set(m, "j")
+    k = gp.Set(m, "k")
+    var1 = gp.Variable(m, "var1", domain=[i, j, k])  # j, k not populated yet
+    pytest.raises(ValidationError, flatten_dims, var1, [1, 2])
+
+
+def test_flatten_par(data):
+    m, w1, b1, inp, par_input, ii = data
+    # 3x1x5x5 -> 3x25
+    par_flattened, eqs = flatten_dims(par_input, [1, 2, 3])
+    out_data = par_flattened.toDense()
+    assert np.allclose(out_data, inp.reshape(3, 25))
+    assert eqs == []  # for parameters no equation needed
+
+    # 3x1x5x5 -> 75
+    par_flattened, eqs = flatten_dims(par_input, [0, 1, 2, 3])
+    out_data = par_flattened.toDense()
+    assert np.allclose(out_data, inp.reshape(75))
+    assert eqs == []  # for parameters no equation needed
+
+    # 3x1x5x5 -> 3x1x25
+    par_flattened, eqs = flatten_dims(par_input, [2, 3])
+    out_data = par_flattened.toDense()
+    assert np.allclose(out_data, inp.reshape(3, 1, 25))
+    assert eqs == []  # for parameters no equation needed
+
+    # test flatten par with copied domain as well
+    data = np.random.rand(20, 20, 20, 20)
+    par = gp.Parameter(m, "par_iii", domain=[ii, ii, ii, ii], records=data)
+
+    par_flattened, eqs = flatten_dims(par, [2, 3])
+    out_data = par_flattened.toDense()
+    assert np.allclose(out_data, data.reshape(20, 20, 400))
+    assert eqs == []  # for parameters no equation needed
+
+
+def test_flatten_var_copied_domain(data):
+    m, w1, b1, inp, par_input, ii = data
+
+    a1 = gp.Alias(m, "ii2", alias_with=ii)
+    a2 = gp.Alias(m, "ii3", alias_with=ii)
+    a3 = gp.Alias(m, "ii4", alias_with=ii)
+
+    var = gp.Variable(
+        m,
+        "var_ii",
+        domain=[ii, ii, ii, ii],
+    )
+    data = np.random.rand(20, 20, 20, 20)
+
+    fix_var = gp.Parameter(m, "var_ii_data", domain=var.domain, records=data)
+    var.fx[ii, a1, a2, a3] = fix_var[ii, a1, a2, a3]
+    var_2, eqs = flatten_dims(var, [2, 3])
+    var_3, eqs_2 = flatten_dims(var_2, [0, 1])
+    var_4, eqs_3 = flatten_dims(var_3, [0, 1])
+
+    model = gp.Model(
+        m,
+        "flatten_everything",
+        equations=[*eqs, *eqs_2, *eqs_3],
+        problem="lp",
+        objective=var_4["240"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+
+    out_data = var_3.toDense()
+    assert np.allclose(out_data, data.reshape(400, 400))
+
+    out_data_2 = var_4.toDense()
+    assert np.allclose(out_data_2, data.reshape(400 * 400))
