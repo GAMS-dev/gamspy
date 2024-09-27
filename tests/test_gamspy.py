@@ -6,14 +6,13 @@ import json
 import os
 from os.path import join
 
-import gamspy
 import pytest
+
+import gamspy
 
 
 @pytest.mark.unit
 def test_version():
-    import gamspy
-
     assert gamspy.__version__ == "1.0.1"
 
 

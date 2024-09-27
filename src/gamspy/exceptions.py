@@ -9,9 +9,13 @@ if TYPE_CHECKING:
     from gamspy import Options
 
 
+class FatalError(Exception):
+    """Indicates an error that cannot be recovered from. This error should never be caught."""
+
+
 class GamspyException(Exception):
     """
-    Plain Gamspy exception.
+    Plain Gamspy exception. This exception can be caught and GAMSPy should be able to continue.
 
     Parameters
     ----------

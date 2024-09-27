@@ -16,8 +16,9 @@ Application A34, pp.397.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Parameter, Set, Variable
 
 

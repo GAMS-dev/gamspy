@@ -9,6 +9,7 @@ import time
 import pandas as pd
 import pytest
 from gams import GamsEngineConfiguration
+
 from gamspy import (
     Container,
     EngineClient,

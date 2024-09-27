@@ -5,6 +5,7 @@ import sys
 
 import pandas as pd
 import pytest
+
 from gamspy import (
     Container,
     Equation,

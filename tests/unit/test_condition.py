@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import gamspy.math as gamspy_math
 import pandas as pd
 import pytest
+
+import gamspy.math as gamspy_math
 from gamspy import (
     Container,
     Equation,

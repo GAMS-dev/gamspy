@@ -28,6 +28,8 @@ Options:
 import argparse
 from pathlib import Path
 
+from numpy import pi
+
 from gamspy import (
     Container,
     Domain,
@@ -43,7 +45,6 @@ from gamspy import (
     Variable,
 )
 from gamspy.math import Max, atan, cos, sin, sqr, sqrt
-from numpy import pi
 
 
 def main():

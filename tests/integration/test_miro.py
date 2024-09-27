@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 import pytest
+
 from gamspy import Container, Options, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
 from gamspy.exceptions import ValidationError

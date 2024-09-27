@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import gamspy._symbols.implicits as implicits
 import numpy as np
 import pandas as pd
 import pytest
+
+import gamspy._symbols.implicits as implicits
 from gamspy import (
     Alias,
     Card,

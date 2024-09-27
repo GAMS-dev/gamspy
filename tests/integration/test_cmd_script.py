@@ -6,6 +6,7 @@ import shutil
 import subprocess
 
 import pytest
+
 from gamspy import Container, Set
 
 pytestmark = pytest.mark.integration

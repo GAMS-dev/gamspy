@@ -20,6 +20,7 @@ from sys import argv
 
 import numpy as np
 import pandas as pd
+
 from gamspy import (
     Alias,
     Card,

@@ -32,8 +32,9 @@ from __future__ import annotations
 
 import os
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Container,

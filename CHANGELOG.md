@@ -8,6 +8,9 @@ GAMSPy 1.0.2
   - Support output in Container constructor.
   - Fix debugging_level bug.
   - Add additional checks for the validity of the license.
+  - Allow generateGamsString function only if the debugging level is set to "keep".
+  - Fix socket communication issue on license error.
+  - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
   - Fix singleton assignment bug.
   - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
 - Testing
@@ -16,6 +19,7 @@ GAMSPy 1.0.2
   - Add a test for Container output argument.
   - Add tests for debugging_level.
   - Add tests to verify the validity of the license.
+  - Add memory check script for the performance CI step.
   - Add tests for the alternative syntax for variable/equation attributes.
 - Documentation
   - Fix broken links in the documentation.

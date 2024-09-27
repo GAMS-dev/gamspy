@@ -9,7 +9,7 @@ from gams.core import gdx
 
 import gamspy._model as model
 import gamspy._symbols.implicits as implicits
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -378,14 +378,14 @@ def _open_gdx_file(system_directory: str, load_from: str):
         rc = gdx.gdxCreateD(gdx_handle, system_directory, gdx.GMS_SSSIZE)
         assert rc[0], rc[1]
     except AssertionError as e:
-        raise GamspyException("GAMSPy could not create gdx handle.") from e
+        raise FatalError("GAMSPy could not create the gdx handle.") from e
 
     try:
         rc = gdx.gdxOpenRead(gdx_handle, load_from)
         assert rc[0]
     except AssertionError as e:
-        raise GamspyException(
-            "GAMSPy could not open gdx file to read from."
+        raise FatalError(
+            "GAMSPy could not open the gdx file to read from."
         ) from e
 
     return gdx_handle

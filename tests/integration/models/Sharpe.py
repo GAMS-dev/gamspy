@@ -17,9 +17,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Container,
