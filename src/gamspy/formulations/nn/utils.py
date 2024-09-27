@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 
@@ -42,3 +43,18 @@ def _calc_hw(
         1 + ((w_in + (2 * padding[1]) - (kernel_size[1] - 1) - 1) / stride[1])
     )
     return h_out, w_out
+
+
+def _next_domains(
+    input_domain: list[gp.Set], check_domains: list[gp.Set]
+) -> list[gp.Set]:
+    names = set([x.name for x in check_domains])
+    output = []
+    for domain in input_domain:
+        while domain.name in names:
+            domain = gp.math.next_alias(domain)
+
+        output.append(domain)
+        names.add(domain.name)
+
+    return output

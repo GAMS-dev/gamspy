@@ -1,6 +1,3 @@
-# flake8: noqa
-# fmt: off
-
 from __future__ import annotations
 
 import concurrent.futures
@@ -9,10 +6,12 @@ import math
 import os
 import sys
 import time
+
+import numpy as np
 import pytest
 
 import gamspy._validation as validation
-import numpy as np
+import gamspy.math as gamspy_math
 from gamspy import (
     Card,
     Container,
@@ -29,12 +28,10 @@ from gamspy import (
     Sum,
     Variable,
 )
-import math
-import gamspy.math as gamspy_math
 from gamspy.exceptions import GamspyException, ValidationError
 
-import pytest
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def data():
@@ -78,13 +75,13 @@ def transport(f_value):
         m,
         name="i",
         records=["seattle", "san-diego"],
-        description="canning plants"
+        description="canning plants",
     )
     j = Set(
         m,
         name="j",
         records=["new-york", "chicago", "topeka"],
-        description="markets"
+        description="markets",
     )
 
     # Data
@@ -93,27 +90,27 @@ def transport(f_value):
         name="a",
         domain=i,
         records=capacities,
-        description="capacity of plant i in cases"
+        description="capacity of plant i in cases",
     )
     b = Parameter(
         m,
         name="b",
         domain=j,
         records=demands,
-        description="demand at market j in cases"
+        description="demand at market j in cases",
     )
     d = Parameter(
         m,
         name="d",
         domain=[i, j],
         records=distances,
-        description="distance in thousands of miles"
+        description="distance in thousands of miles",
     )
     c = Parameter(
         m,
         name="c",
         domain=[i, j],
-        description="transport cost in thousands of dollars per case"
+        description="transport cost in thousands of dollars per case",
     )
     f = Parameter(m, name="f", records=f_value)
     c[i, j] = f * d[i, j] / 1000
@@ -124,7 +121,7 @@ def transport(f_value):
         name="x",
         domain=[i, j],
         type="Positive",
-        description="shipment quantities in cases"
+        description="shipment quantities in cases",
     )
 
     # Equation
@@ -132,7 +129,7 @@ def transport(f_value):
         m,
         name="supply",
         domain=i,
-        description="observe supply limit at plant i"
+        description="observe supply limit at plant i",
     )
     demand = Equation(
         m, name="demand", domain=j, description="satisfy demand at market j"
@@ -155,6 +152,7 @@ def transport(f_value):
 
     return transport.objective_value
 
+
 def transport2(f_value):
     m = Container()
 
@@ -176,13 +174,13 @@ def transport2(f_value):
         m,
         name="i",
         records=["seattle", "san-diego"],
-        description="canning plants"
+        description="canning plants",
     )
     j = Set(
         m,
         name="j",
         records=["new-york", "chicago", "topeka"],
-        description="markets"
+        description="markets",
     )
 
     # Data
@@ -191,27 +189,27 @@ def transport2(f_value):
         name="a",
         domain=i,
         records=capacities,
-        description="capacity of plant i in cases"
+        description="capacity of plant i in cases",
     )
     b = Parameter(
         m,
         name="b",
         domain=j,
         records=demands,
-        description="demand at market j in cases"
+        description="demand at market j in cases",
     )
     d = Parameter(
         m,
         name="d",
         domain=[i, j],
         records=distances,
-        description="distance in thousands of miles"
+        description="distance in thousands of miles",
     )
     c = Parameter(
         m,
         name="c",
         domain=[i, j],
-        description="transport cost in thousands of dollars per case"
+        description="transport cost in thousands of dollars per case",
     )
     f = Parameter(m, name="f", records=f_value)
     c[i, j] = f * d[i, j] / 1000
@@ -222,7 +220,7 @@ def transport2(f_value):
         name="x",
         domain=[i, j],
         type="Positive",
-        description="shipment quantities in cases"
+        description="shipment quantities in cases",
     )
 
     # Equation
@@ -230,7 +228,7 @@ def transport2(f_value):
         m,
         name="supply",
         domain=i,
-        description="observe supply limit at plant i"
+        description="observe supply limit at plant i",
     )
     demand = Equation(
         m, name="demand", domain=j, description="satisfy demand at market j"
@@ -257,27 +255,23 @@ def transport2(f_value):
 
 def test_uel_order(data):
     m, *_ = data
-    i = Set(m,'i')
-    p = m.addParameter('base',[i])
-    d = Parameter(m,'d')
-    i.setRecords(['i1','i2'])
+    i = Set(m, "i")
+    p = m.addParameter("base", [i])
+    d = Parameter(m, "d")
+    i.setRecords(["i1", "i2"])
     d[...] = 0
-    i.setRecords(['i0','i1'])
+    i.setRecords(["i0", "i1"])
     p[i] = i.ord
-    assert(p.records.values.tolist() == [['i1', 1.0], ['i0', 2.0]])
+    assert p.records.values.tolist() == [["i1", 1.0], ["i0", 2.0]]
 
 
 def test_read_on_demand(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
-    k = Set(
-        m, name="k", records=["seattle", "san-diego", "california"]
-    )
+    k = Set(m, name="k", records=["seattle", "san-diego", "california"])
     k["seattle"] = False
-    assert(
-        k.records.loc[0, :].values.tolist() == ["san-diego", ""]
-    )
+    assert k.records.loc[0, :].values.tolist() == ["san-diego", ""]
 
     a = Parameter(m, name="a", domain=[i], records=capacities)
     b = Parameter(m, name="b", domain=[j], records=demands)
@@ -286,19 +280,16 @@ def test_read_on_demand(data):
     e = Parameter(m, name="e")
 
     c[i, j] = 90 * d[i, j] / 1000
-    assert(
-        c.records.values.tolist() ==
-        [
-            ["seattle", "new-york", 0.225],
-            ["seattle", "chicago", 0.153],
-            ["seattle", "topeka", 0.162],
-            ["san-diego", "new-york", 0.225],
-            ["san-diego", "chicago", 0.162],
-            ["san-diego", "topeka", 0.126],
-        ]
-    )
+    assert c.records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
     e[...] = 5
-    assert(e.records.values.tolist() == [[5.0]])
+    assert e.records.values.tolist() == [[5.0]]
 
     with pytest.raises(TypeError):
         e.records = 5
@@ -325,34 +316,50 @@ def test_read_on_demand(data):
     transport.solve()
 
     # Test the columns of a set
-    assert(i.records.columns.tolist() == ["uni", "element_text"])
+    assert i.records.columns.tolist() == ["uni", "element_text"]
 
     # Test the columns of a parameter
-    assert(a.records.columns.tolist() == ["i", "value"])
+    assert a.records.columns.tolist() == ["i", "value"]
 
     # Test the columns of scalar variable
-    assert(
-        z.records.columns.tolist()
-        == ["level", "marginal", "lower", "upper", "scale"]
-    )
+    assert z.records.columns.tolist() == [
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
 
     # Test the columns of indexed variable
-    assert(
-        x.records.columns.tolist()
-        == ["i", "j", "level", "marginal", "lower", "upper", "scale"]
-    )
+    assert x.records.columns.tolist() == [
+        "i",
+        "j",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
 
     # Test the columns of equation
-    assert(
-        cost.records.columns.tolist()
-        == ["level", "marginal", "lower", "upper", "scale"]
-    )
+    assert cost.records.columns.tolist() == [
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
 
     # Test the columns of indexed equation
-    assert(
-        supply.records.columns.tolist()
-        == ["i", "level", "marginal", "lower", "upper", "scale"]
-    )
+    assert supply.records.columns.tolist() == [
+        "i",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
+
 
 def test_after_first_solve(data):
     m, canning_plants, markets, capacities, demands, distances = data
@@ -389,11 +396,11 @@ def test_after_first_solve(data):
     )
     transport.solve()
 
-    assert(z.records is not None)
-    assert(x.records is not None)
-    assert(cost.records is not None)
-    assert(supply.records is not None)
-    assert(demand.records is not None)
+    assert z.records is not None
+    assert x.records is not None
+    assert cost.records is not None
+    assert supply.records is not None
+    assert demand.records is not None
 
     transport2 = Model(
         m,
@@ -406,6 +413,7 @@ def test_after_first_solve(data):
     transport2.solve()
     second_z2_value = z2.toValue()
     assert math.isclose(second_z2_value, 768.375, rel_tol=1e-3)
+
 
 def test_solve(data):
     m, canning_plants, markets, capacities, demands, distances = data
@@ -437,9 +445,10 @@ def test_solve(data):
         sense="min",
         objective=z,
     )
-    
-    
-    freeLinks = Set(m, "freeLinks", domain=[i,j], records=[('seattle', 'chicago')])
+
+    freeLinks = Set(
+        m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")]
+    )
     # Test limited variables
     transport2 = Model(
         m,
@@ -451,9 +460,9 @@ def test_solve(data):
         limited_variables=[x[freeLinks]],
     )
 
-    assert(
-        transport2.getDeclaration() ==
-        "Model transport2 / cost,supply,demand,x(freeLinks) /;"
+    assert (
+        transport2.getDeclaration()
+        == "Model transport2 / cost,supply,demand,x(freeLinks) /;"
     )
 
     # Test output redirection
@@ -466,8 +475,7 @@ def test_solve(data):
 
     # Redirect to an invalid stream
     class Dummy:
-        def write(self, data):
-            ...
+        def write(self, data): ...
 
     with pytest.raises(ValidationError):
         transport.solve(output=Dummy())
@@ -480,13 +488,12 @@ def test_solve(data):
     formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
-    
+
     class CustomOutput:
         def write(self, data):
             logger.info(data.strip())
 
-        def flush(self):
-            ...
+        def flush(self): ...
 
     custom_output = CustomOutput()
 
@@ -495,9 +502,9 @@ def test_solve(data):
         output=custom_output,
     )
 
-    assert(os.path.exists(redirection_path))
-    assert(transport.status == ModelStatus.OptimalGlobal)
-    assert(transport.solve_status == SolveStatus.NormalCompletion)
+    assert os.path.exists(redirection_path)
+    assert transport.status == ModelStatus.OptimalGlobal
+    assert transport.solve_status == SolveStatus.NormalCompletion
 
     pytest.raises(
         ValidationError,
@@ -513,26 +520,22 @@ def test_solve(data):
     from gamspy._model import ATTRIBUTE_MAP
 
     for attr_name in ATTRIBUTE_MAP.values():
-        assert(hasattr(transport, attr_name))
+        assert hasattr(transport, attr_name)
 
         # Make sure model attributes are not in the container
-        assert not attr_name in m.data.keys()
+        assert attr_name not in m.data
 
     # Make sure dummy variable and equation is not in the container
-    assert not any("dummy_" in name for name in m.data.keys())
+    assert not any("dummy_" in name for name in m.data)
 
     # Test invalid problem
     pytest.raises(ValueError, Model, m, "dummy", "bla", [cost])
 
     # Test invalid sense
-    pytest.raises(
-        ValueError, Model, m, "dummy", "LP", [cost], "bla"
-    )
+    pytest.raises(ValueError, Model, m, "dummy", "LP", [cost], "bla")
 
     # Test invalid objective variable
-    pytest.raises(
-        TypeError, Model, m, "dummy", "LP", [cost], "min", a
-    )
+    pytest.raises(TypeError, Model, m, "dummy", "LP", [cost], "min", a)
 
     # Test invalid commandline options
     pytest.raises(
@@ -549,6 +552,7 @@ def test_solve(data):
     cost = Equation(m, "cost")
     model = Model(m, "dummy", equations=[cost], problem="LP", sense="min")
     pytest.raises(Exception, model.solve)
+
 
 def test_interrupt(data):
     m, *_ = data
@@ -932,9 +936,7 @@ def test_interrupt(data):
         domain=[t],
         description="power from the spot market",
     )
-    LFCcost = Equation(
-        cont, name="LFCcost", description="cost for the LFC"
-    )
+    LFCcost = Equation(cont, name="LFCcost", description="cost for the LFC")
     LFCenergy = Equation(
         cont,
         name="LFCenergy",
@@ -1045,7 +1047,7 @@ def test_interrupt(data):
         sense=Sense.MIN,
         objective=c,
     )
-    
+
     def interrupt_gams(model):
         time.sleep(1)
         model.interrupt()
@@ -1053,12 +1055,13 @@ def test_interrupt(data):
     import threading
 
     threading.Thread(target=interrupt_gams, args=(energy,)).start()
-    
+
     try:
         energy.solve(options=Options(relative_optimality_gap=0.000001))
-        assert(energy.objective_value)
+        assert energy.objective_value
     except GamspyException:
         pass
+
 
 def test_solver_options(data):
     m, canning_plants, markets, capacities, demands, distances = data
@@ -1091,15 +1094,12 @@ def test_solver_options(data):
     # Test solver change
     transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
 
-    assert(
-        os.path.exists(
-            f"{m.working_directory}{os.sep}conopt.opt"
-        )
-    )
+    assert os.path.exists(f"{m.working_directory}{os.sep}conopt.opt")
 
     pytest.raises(
         ValidationError, transport.solve, None, None, {"rtmaxv": "1.e12"}
     )
+
 
 def test_ellipsis(data):
     m, canning_plants, markets, capacities, demands, distances = data
@@ -1114,7 +1114,7 @@ def test_ellipsis(data):
     f = Parameter(m)
 
     with pytest.raises(ValidationError):
-        f[i,j] = 5
+        f[i, j] = 5
 
     with pytest.raises(ValidationError):
         f[i] = 5
@@ -1139,23 +1139,26 @@ def test_ellipsis(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve()
-    assert(transport.objective_value== 153.675)
+    assert transport.objective_value == 153.675
 
     supply.l[...] = 5
-    assert(supply.records.level.to_list() == [5.0, 5.0])
-    
-    domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
-    assert(domain == ["a", "b", "c"])
+    assert supply.records.level.to_list() == [5.0, 5.0]
 
-    domain = validation._transform_given_indices(["a", "b", "c"], ["a", ..., "c"])
-    assert(domain == ["a", "b", "c"])
+    domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
+    assert domain == ["a", "b", "c"]
+
+    domain = validation._transform_given_indices(
+        ["a", "b", "c"], ["a", ..., "c"]
+    )
+    assert domain == ["a", "b", "c"]
 
     domain = validation._transform_given_indices(["a", "b", "c"], [..., "c"])
-    assert(domain == ["a", "b", "c"])
-    
+    assert domain == ["a", "b", "c"]
+
     with pytest.raises(ValidationError):
         c[..., ...] = 5
-    
+
+
 def test_slice(data):
     m, canning_plants, markets, capacities, _, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -1164,27 +1167,27 @@ def test_slice(data):
     i4 = Set(m, name="i4", records=canning_plants)
     j = Set(m, name="j", records=markets)
     k = Set(m, "k", domain=[i, i2, i3, i4])
-    assert(k[..., i4].gamsRepr() == "k(i,i2,i3,i4)")
-    assert(k[i, ..., i4].gamsRepr() == "k(i,i2,i3,i4)")
-    assert(k[i, ...].gamsRepr() == "k(i,i2,i3,i4)")
-    assert(k[..., i3, :].gamsRepr() == "k(i,i2,i3,i4)")
+    assert k[..., i4].gamsRepr() == "k(i,i2,i3,i4)"
+    assert k[i, ..., i4].gamsRepr() == "k(i,i2,i3,i4)"
+    assert k[i, ...].gamsRepr() == "k(i,i2,i3,i4)"
+    assert k[..., i3, :].gamsRepr() == "k(i,i2,i3,i4)"
 
     a = Parameter(m, name="a", domain=[i], records=capacities)
-    assert(a[:].gamsRepr() == "a(i)")
+    assert a[:].gamsRepr() == "a(i)"
     d = Parameter(m, name="d", domain=[i, j], records=distances)
     c = Parameter(m, name="c", domain=[i, j])
-    assert(c[:, :].gamsRepr() == "c(i,j)")
+    assert c[:, :].gamsRepr() == "c(i,j)"
     c[:, :] = 90 * d[:, :] / 1000
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
-    assert(x[:, :].gamsRepr() == "x(i,j)")
+    assert x[:, :].gamsRepr() == "x(i,j)"
 
     supply = Equation(m, name="supply", domain=[i])
-    assert(supply[:].gamsRepr() == "supply(i)")
+    assert supply[:].gamsRepr() == "supply(i)"
 
     supply.l[:] = 5
-    assert(supply.l[:].gamsRepr() == "supply.l(i)")
-    
+    assert supply.l[:].gamsRepr() == "supply.l(i)"
+
     date = Set(m, "date", description="trading date")
     ntd = Set(m, "ntd", domain=[date], description="none-training days")
     error = Parameter(m, "error", domain=[date], description="Absolute error")
@@ -1195,7 +1198,8 @@ def test_slice(data):
         is_miro_output=True,
     )
     error_test[:] = Sum(ntd, error[ntd])
-    
+
+
 def test_max_line_length(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -1205,16 +1209,23 @@ def test_max_line_length(data):
     b = Parameter(m, name="b", domain=[j], records=demands)
     d = Parameter(m, name="d", domain=[i, j], records=distances)
     c = Parameter(m, name="c", domain=[i, j])
-    f = Parameter(m, "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", records=1)
+    f = Parameter(
+        m,
+        "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        records=1,
+    )
     c[i, j] = 90 * d[i, j] / 1000
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
 
     supply = Equation(m, name="supply", domain=[i])
     demand = Equation(m, name="demand", domain=[j])
-    
+
     # This generates an equation with length > 80000
-    supply[i] = Sum(j, x[i, j])*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f*f <= a[i]
+    long_expr = f
+    for _ in range(2000):
+        long_expr *= f
+    supply[i] = Sum(j, x[i, j]) * long_expr <= a[i]
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
     transport = Model(
@@ -1226,7 +1237,8 @@ def test_max_line_length(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve()
-    
+
+
 def test_summary(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -1255,8 +1267,9 @@ def test_summary(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     summary = transport.solve()
-    assert(summary['Solver Status'].tolist()[0] == 'Normal')
-    
+    assert summary["Solver Status"].tolist()[0] == "Normal"
+
+
 def test_validation(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -1275,13 +1288,14 @@ def test_validation(data):
 
     with pytest.raises(ValidationError):
         supply[j] = Sum(j, x[i, j]) <= a[i]
-        
+
     with pytest.raises(ValidationError):
         demand[i, j] = Sum(i, x[i, j]) >= b[j]
-        
+
     with pytest.raises(TypeError):
         c[b[j]] = 90 * d[i, j] / 1000
-        
+
+
 def test_after_exception(data):
     m, *_ = data
     x = Variable(m, "x", type="positive")
@@ -1312,12 +1326,13 @@ def test_after_exception(data):
         t.solve()
     except GamspyException:
         pass
-    
+
     f = Parameter(m, "f")
     f[...] = 5
-    
-    assert(f.getAssignment() == "f = 5;")
-        
+
+    assert f.getAssignment() == "f = 5;"
+
+
 def test_invalid_arguments(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(
@@ -1391,17 +1406,17 @@ def test_invalid_arguments(data):
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    
+
     with pytest.raises(TypeError):
         transport.solve(solver=sys.stdout)
-        
+
     with pytest.raises(ValidationError):
         transport.solve(solver="sadwqeq")
-        
+
     # solver is not installed
     with pytest.raises(ValidationError):
         transport.solve(solver="SNOPT")
-    
+
     # solver is not capable of solving this problem type
     with pytest.raises(ValidationError):
         transport.solve(solver="PATH")
@@ -1409,7 +1424,8 @@ def test_invalid_arguments(data):
     # we do not accept dict anymore
     with pytest.raises(TypeError):
         transport.solve(options={"bla": "bla"})
-        
+
+
 def test_marking_updated_symbols(data):
     m, *_ = data
     height_data = [
@@ -1453,7 +1469,6 @@ def test_marking_updated_symbols(data):
     x_recs = np.ones((num_recs, 2))
     x_recs[:, 0] = height_data
 
-
     set_15 = Set(m, name="set15", records=range(15))
     set_2 = Set(m, name="set2", records=range(2))
 
@@ -1487,15 +1502,19 @@ def test_marking_updated_symbols(data):
     )
 
     model.solve()
-    assert(w.records is not None)
-    assert(loss.records is not None)
+    assert w.records is not None
+    assert loss.records is not None
+
 
 def test_multiprocessing():
     f_values = [90, 120, 150, 180]
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        for expected, objective in zip(expected_values, executor.map(transport, f_values)):
-            assert(math.isclose(expected, objective))
+        for expected, objective in zip(
+            expected_values, executor.map(transport, f_values)
+        ):
+            assert math.isclose(expected, objective)
+
 
 def test_selective_loading(data):
     m, canning_plants, markets, capacities, demands, distances = data
@@ -1527,7 +1546,7 @@ def test_selective_loading(data):
         objective=z,
     )
     with pytest.raises(ValidationError):
-        transport.solve(load_symbols=['x'])
+        transport.solve(load_symbols=["x"])
 
     with pytest.raises(ValidationError):
         transport.solve(load_symbols=x)
@@ -1536,13 +1555,14 @@ def test_selective_loading(data):
 
     assert x.records is None
     assert supply.records is None
-    assert(transport.objective_value == 153.675)
+    assert transport.objective_value == 153.675
 
     transport.solve(load_symbols=[x])
 
     assert x.records is not None
     assert supply.records is None
-    assert(transport.objective_value == 153.675)
+    assert transport.objective_value == 153.675
+
 
 def test_execution_error(data):
     m, *_ = data
@@ -1553,8 +1573,8 @@ def test_execution_error(data):
     model = Model(m, objective=obj, problem="nlp", sense="min")
     try:
         model.solve()  # this will trigger a division by 0 execution error
-    except:
+    except GamspyException:
         y.l = 1
 
     summary = model.solve()  # this should work
-    assert(summary is not None)
+    assert summary is not None

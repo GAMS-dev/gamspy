@@ -7,7 +7,7 @@ import numpy as np
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.math import dim, next_alias
+from gamspy.math import dim
 
 
 class Conv2d:
@@ -254,21 +254,10 @@ class Conv2d:
         )
 
         _, _, Hf, Wf = self.weight.domain
-
-        while C_in in out.domain:
-            C_in = next_alias(C_in)
-
-        while Hf in out.domain or Hf == C_in:
-            Hf = next_alias(Hf)
-
-        while Wf in out.domain or Wf in [C_in, Hf]:
-            Wf = next_alias(Wf)
-
-        while H_in in out.domain or H_in in [C_in, Hf, Wf]:
-            H_in = next_alias(H_in)
-
-        while W_in in out.domain or W_in in [C_in, Hf, Wf, H_in]:
-            W_in = next_alias(W_in)
+        C_in, Hf, Wf, H_in, W_in = utils._next_domains(
+            [C_in, Hf, Wf, H_in, W_in],
+            out.domain,
+        )
 
         name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
