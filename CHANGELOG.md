@@ -16,6 +16,7 @@ GAMSPy 1.0.2
   - Add support for MaxPool2d/MinPool2d/AvgPool2d.
   - Add support for flatten_dims for flattening n domains into 1 domain.
   - Show class members groupwise in the table of contents (first methods, then properties). 
+  - Use the new license server endpoint to verify the license type.
 
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
