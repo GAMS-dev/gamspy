@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import sys
 
 import pandas as pd
@@ -48,6 +49,90 @@ def data():
 
     yield m, canning_plants, markets, capacities, demands, distances
     m.close()
+
+
+@pytest.fixture
+def network_license():
+    print(sys.executable)
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["NETWORK_LICENSE_NON_ACADEMIC"],
+        ],
+        check=True,
+    )
+
+    m = Container()
+    canning_plants = ["seattle", "san-diego"]
+    markets = ["new-york", "chicago", "topeka"]
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    yield m, canning_plants, markets, capacities, demands, distances
+    m.close()
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+        ],
+        check=True,
+    )
+
+
+def test_network_license(network_license):
+    m, canning_plants, markets, capacities, demands, distances = (
+        network_license
+    )
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    client = NeosClient(
+        email=os.environ["NEOS_EMAIL"],
+    )
+    summary = transport.solve(backend="neos", client=client)
+    assert isinstance(summary, pd.DataFrame)
+
+    import math
+
+    assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
 
 def test_neos_blocking(data):

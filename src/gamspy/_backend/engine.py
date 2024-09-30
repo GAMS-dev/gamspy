@@ -748,7 +748,7 @@ class GAMSEngine(backend.Backend):
         model: Model,
         load_symbols: list[Symbol] | None,
     ) -> None:
-        if client is None:
+        if client is None or not isinstance(client, EngineClient):
             raise ValidationError(
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
@@ -912,13 +912,15 @@ class GAMSEngine(backend.Backend):
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
             "logoption": 0,
             "previouswork": 1,
             "license": utils._get_license_path(
                 self.container.system_directory
             ),
         }
+
+        if self.container._network_license:
+            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
         return extra_options
 
