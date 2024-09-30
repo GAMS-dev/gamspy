@@ -773,6 +773,10 @@ class Container(gt.Container):
         self._add_statement(gams_code)
         self._synch_with_gams()
 
+        for _, symbol in self:
+            symbol.modified = False
+        self._unsaved_statements = []
+
     def close(self) -> None:
         """
         Stops the socket and releases resources. The container should not be used afterwards
