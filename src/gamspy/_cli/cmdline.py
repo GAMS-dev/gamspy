@@ -185,6 +185,11 @@ def get_args():
 
 
 def install_license(args: argparse.Namespace):
+    import json
+    from urllib.parse import urlencode
+
+    import urllib3
+
     os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
     if not args.name or len(args.name) > 1:
@@ -206,6 +211,23 @@ def install_license(args: argparse.Namespace):
 
     if is_alp:
         alp_id = license
+        encoded_args = urlencode({"access_token": alp_id})
+        request = urllib3.request(
+            "GET", "https://license.gams.com/license-type?" + encoded_args
+        )
+        if request.status != 200:
+            raise ValidationError(
+                f"License server did not respond in an expected way. Request status: {request.status}. Please try again."
+            )
+
+        data = request.data.decode("utf-8", errors="replace")
+        cmex_type = json.loads(data)["cmex_type"]
+        if not cmex_type.startswith("gamspy"):
+            raise ValidationError(
+                f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
+                "Make sure that you use a GAMSPy license, not a GAMS license."
+            )
+
         command = [os.path.join(gamspy_base_dir, "gamsgetkey"), alp_id]
 
         if args.uses_port:

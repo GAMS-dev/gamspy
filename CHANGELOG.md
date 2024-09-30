@@ -13,8 +13,11 @@ GAMSPy 1.0.2
   - Distinguish GamspyException from FatalError. The user might catch GamspyException and continue but FatalError should never be caught.
   - Fix singleton assignment bug.
   - Allow an alternative syntax for variable/equation attributes (e.g. b[t].stage = 30).
-  - Add support for MaxPool2d/MinPool2d/AvgPool2d
-  - Add support for flatten_dims for flattening n domains into 1 domain
+  - Add support for MaxPool2d/MinPool2d/AvgPool2d.
+  - Add support for flatten_dims for flattening n domains into 1 domain.
+  - Show class members groupwise in the table of contents (first methods, then properties). 
+  - Use the new license server endpoint to verify the license type.
+
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.
