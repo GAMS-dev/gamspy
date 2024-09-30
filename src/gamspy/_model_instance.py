@@ -131,8 +131,6 @@ class ModelInstance:
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
-            "logoption": 0,
             "previouswork": 1,
             "license": utils._get_license_path(
                 self.container.system_directory
