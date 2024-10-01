@@ -247,6 +247,7 @@ def test_arbitrary_gams_code(data):
     m.addGamsCode("display demand;")
 
     T = m["T"]
+    demand = m["demand"]
     assert T.toList() == [
         "month0",
         "month1",
@@ -254,6 +255,7 @@ def test_arbitrary_gams_code(data):
         "month3",
         "month4",
     ]
+    assert demand.domain == [T]
 
 
 def test_add_gams_code_on_actual_models(data):
