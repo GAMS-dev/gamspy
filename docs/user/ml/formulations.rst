@@ -15,13 +15,16 @@ activation functions and layers so you can easily start optimizing.
 .. _nn-formulations:
 
 Layer Formulations
-------------------
+==================
 
+GAMSPy provides several formulations to help you embed your neural network
+structures into your into your optimization model. We started with formulations
+for computer vision-related structures such as convolution and pooling
+operations.
 
-We started formulating the layers with one of the most commonly used layers in
-ML, Conv2d. Convolution by definition requires no linearization, but it is
-tedious to write down. Now you can use :meth:`Conv2d <gamspy.formulations.Conv2d>`
-to easily embed your convolutional layer into your optimization model.
+Convolution by definition requires no linearization, but it is tedious to write
+down. Now you can use :meth:`Conv2d <gamspy.formulations.Conv2d>` to easily
+embed your convolutional layer into your optimization model.
 
 .. code-block:: python
 
@@ -38,23 +41,96 @@ to easily embed your convolutional layer into your optimization model.
         kernel_size=(3, 3)
    )
    conv1.load_weights(w1, b1)
+   maxpool1 = gp.formulations.MaxPool2d(m, (2, 2))
+
    inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
    out_var, eqs = conv1(inp)
+   print([len(d) for d in out_var.domain])
+   # [10, 2, 22, 22]
 
+   out_var_2, eqs2 = maxpool1(out_var)
+   print([len(d) for d in out_var_2.domain])
+   # [10, 2, 11, 11]
+
+   #out_var_2, eqs2 = maxpool1(out_var, big_m=10)
+
+   out_var_3, eqs3 = gp.formulations.flatten_dims(out_var_2, [1, 2, 3])
+   print([len(d) for d in out_var_3.domain])
+   # [10, 242]
 
 
 Supported formulations:
 
 - :meth:`Conv2d <gamspy.formulations.Conv2d>`
-- MaxPool2d # Coming next
-- MinPool2d # Coming next
-- AvgPool2d # Coming next
+- :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
+- :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
+- :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
+- :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
+
+
+.. _pooling-linearization:
+
+Max/Min Pooling Implementation
+------------------------------
+
+Max pooling and min pooling use big-M notation and binary variables to pick the
+minimum or maximum. If the input has upper and lower bounds, big-M is calculated
+using those bounds. Otherwise, big-M is 1000. Generated variables also contain
+the upper and lower bounds if the input already has them.
+
+The real formulation is more complicated because it is not scalar but indexed.
+For simplicity, let us demonstrate the following example.  We will do min/max
+pooling on a 4x4 input where the filter size is 2x2. From the 4 regions, we
+will have 4 values. :math:`a, b, c, d` are variables in the blue region, most
+likely continuous, but there is no restriction. :math:`p` is the variable that is
+the output of the pooling operation on the blue region. Depending on the operation,
+it is either min or max of the corresponding input points.
+
+|
+.. image:: ../images/pooling.png
+  :align: center
+
+|
+The linearization of the :math:`p = \max(a,b,c,d)` is as follows:
+
+.. math::
+
+   p \geq a \\
+   p \geq b \\
+   p \geq c \\
+   p \geq d \\
+   p \leq a + M(1 - x_a) \\
+   p \leq b + M(1 - x_b) \\
+   p \leq c + M(1 - x_c) \\
+   p \leq d + M(1 - x_d) \\
+   x_a + x_b + x_c + x_d = 1 \\
+   x_a, x_b, x_c, x_d \in \{0, 1\} \\
+
+:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`. 
+
+
+The linearization of the :math:`p = \min(a,b,c,d)` is as follows:
+
+.. math::
+
+   p + M(1 - x_a) \geq a \\
+   p + M(1 - x_b) \geq b \\
+   p + M(1 - x_c) \geq c \\
+   p + M(1 - x_d) \geq d \\
+   p \leq a \\
+   p \leq b \\
+   p \leq c\\
+   p \leq d\\
+   x_a + x_b + x_c + x_d = 1 \\
+   x_a, x_b, x_c, x_d \in \{0, 1\} \\
+
+:math:`x_i` is a binary variable when set to 1 it means :math:`p = i`. 
 
 
 .. _activation-functions:
 
 Activation Functions
---------------------
+====================
 
 One of the key reasons neural networks can learn a wide range of tasks is their
 ability to approximate complex functions, including non-linear ones. Activation

@@ -4,11 +4,12 @@ import os
 import platform
 import shutil
 import subprocess
-import time
-import unittest
 
-from gamspy import Container
+import pytest
 
+from gamspy import Container, Set
+
+pytestmark = pytest.mark.integration
 try:
     from dotenv import load_dotenv
 
@@ -27,59 +28,48 @@ elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
 
-class CmdSuite(unittest.TestCase):
-    def test_install_license(self):
-        # Test network license
+@pytest.fixture
+def teardown():
+    os.makedirs("tmp", exist_ok=True)
+    yield
+    _ = subprocess.run(
+        ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+        check=True,
+    )
+
+    _ = subprocess.run(
+        ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+        capture_output=True,
+        text=True,
+    )
+
+    _ = subprocess.run(
+        ["gamspy", "install", "solver", "scip", "mpsge"],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_install_license(teardown):
+    tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
+
+    # Try to install a license with GAMS access code
+    with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [
                 "gamspy",
                 "install",
                 "license",
-                os.environ["NETWORK_LICENSE"],
+                os.environ["GAMS_ACCESS_CODE"],
             ],
             check=True,
         )
 
-        gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
+    # Try to install a GAMS license (+ license)
+    with open(tmp_license_path, "w") as file:
+        file.write(os.environ["GAMS_ACADEMIC_LICENSE"])
 
-        self.assertTrue(os.path.exists(gamspy_license_path))
-
-        m = Container()
-        self.assertTrue(m._network_license)
-        m.close()
-        time.sleep(1)
-        _ = subprocess.run(
-            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
-            check=True,
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-        )
-
-        m = Container()
-        self.assertFalse(m._network_license)
-
-        # Test invalid access code / license
-        with self.assertRaises(subprocess.CalledProcessError):
-            _ = subprocess.run(
-                ["gamspy", "install", "license", "blabla"],
-                check=True,
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-            )
-
-        # Test installing a license from a file path.
-        tmp_license_path = os.path.join("tmp", "gamspy_license.txt")
-        shutil.copy(gamspy_license_path, tmp_license_path)
-
-        _ = subprocess.run(
-            [
-                "gamspy",
-                "uninstall",
-                "license",
-            ],
-            check=True,
-        )
-
+    with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [
                 "gamspy",
@@ -88,174 +78,199 @@ class CmdSuite(unittest.TestCase):
                 tmp_license_path,
             ],
             check=True,
+            capture_output=True,
         )
 
-        self.assertTrue(os.path.exists(gamspy_license_path))
+    # Try to install a GAMS license (/ license)
+    with open(tmp_license_path, "w") as file:
+        file.write(os.environ["GAMS_ACADEMIC_LICENSE2"])
 
-    def test_uninstall_license(self):
+    with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "uninstall", "license"],
-            check=True,
-        )
-
-        self.assertFalse(
-            os.path.exists(os.path.join(DEFAULT_DIR, "gamspy_license.txt"))
-        )
-
-    def test_install_solver(self):
-        with self.assertRaises(subprocess.CalledProcessError):
-            _ = subprocess.run(
-                ["gamspy", "install", "solver", "bla"],
-                check=True,
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-            )
-
-        process = subprocess.run(
-            ["gamspy", "install", "solver", "minos", "mosek"],
-            capture_output=True,
-            text=True,
-        )
-        print(process.stdout, process.stderr)
-        self.assertTrue(process.returncode == 0)
-
-        with self.assertRaises(subprocess.CalledProcessError):
-            _ = subprocess.run(
-                ["gamspy", "uninstall", "solver", "bla"],
-                check=True,
-                stderr=subprocess.DEVNULL,
-                stdout=subprocess.DEVNULL,
-            )
-
-        process = subprocess.run(
-            ["gamspy", "install", "solver", "--install-all-solvers"],
-            capture_output=True,
-            text=True,
-        )
-        print(process.stdout, process.stderr)
-        self.assertTrue(process.returncode == 0)
-
-        process = subprocess.run(
-            ["gamspy", "uninstall", "solver", "minos", "mosek"],
-            capture_output=True,
-            text=True,
-        )
-        print(process.stdout, process.stderr)
-        self.assertTrue(process.returncode == 0)
-
-        process = subprocess.run(
-            ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
-            capture_output=True,
-            text=True,
-        )
-        print(process.stdout, process.stderr)
-        self.assertTrue(process.returncode == 0)
-
-        process = subprocess.run(
-            ["gamspy", "install", "solver", "mpsge", "scip"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-        )
-        self.assertTrue(process.returncode == 0)
-
-    def test_list_solvers(self):
-        process = subprocess.run(
-            ["gamspy", "list", "solvers"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-        )
-
-        self.assertTrue(process.returncode == 0)
-
-        process = subprocess.run(
-            ["gamspy", "list", "solvers", "-a"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-        )
-
-        self.assertTrue(process.returncode == 0)
-
-    def test_show_license(self):
-        process = subprocess.run(
-            ["gamspy", "show", "license"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            text=True,
-        )
-
-        self.assertTrue(process.returncode == 0)
-        self.assertTrue(isinstance(process.stdout, str))
-
-    def test_show_base(self):
-        process = subprocess.run(
-            ["gamspy", "show", "base"],
-            stderr=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            text=True,
-        )
-
-        import gamspy_base
-
-        self.assertTrue(process.returncode == 0)
-        self.assertEqual(gamspy_base.directory, process.stdout.strip())
-
-    def test_probe(self):
-        node_info_path = os.path.join("tmp", "info.json")
-        process = subprocess.run(
-            ["gamspy", "probe", "-j", node_info_path],
-            capture_output=True,
-            text=True,
-        )
-
-        self.assertTrue(process.returncode == 0)
-
-        process = subprocess.run(
             [
                 "gamspy",
-                "retrieve",
+                "install",
                 "license",
-                os.environ["LOCAL_LICENSE"],
-                "-i",
-                node_info_path,
-                "-o",
-                node_info_path[:-5] + ".txt",
+                tmp_license_path,
             ],
+            check=True,
             capture_output=True,
-            text=True,
         )
 
-        print(process.stderr, process.stdout)
-        self.assertTrue(process.returncode == 0)
+    m = Container()
+    assert m._network_license is False
 
-    def test_license_in_default_location(self):
+    # Test network license
+    _ = subprocess.run(
+        [
+            "gamspy",
+            "install",
+            "license",
+            os.environ["NETWORK_LICENSE_NON_ACADEMIC"],
+        ],
+        check=True,
+    )
+
+    gamspy_license_path = os.path.join(DEFAULT_DIR, "gamspy_license.txt")
+
+    assert os.path.exists(gamspy_license_path)
+
+    m = Container()
+    assert m._network_license
+
+    _ = Set(m, "i", records=["bla"])
+    m.close()
+
+    # Test invalid access code / license
+    with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            ["gamspy", "install", "license", "blabla"],
             check=True,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
         )
 
-        m = Container()
-        self.assertEqual(
-            m._license_path, os.path.join(DEFAULT_DIR, "gamspy_license.txt")
-        )
+    # Test installing a license from a file path.
+    shutil.copy(gamspy_license_path, tmp_license_path)
 
-    @classmethod
-    def tearDown(cls):
+    _ = subprocess.run(
+        [
+            "gamspy",
+            "install",
+            "license",
+            tmp_license_path,
+        ],
+        check=True,
+    )
+
+    assert os.path.exists(gamspy_license_path)
+
+
+def test_install_solver(teardown):
+    with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+            ["gamspy", "install", "solver", "bla"],
             check=True,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
         )
 
+    process = subprocess.run(
+        ["gamspy", "install", "solver", "minos", "mosek"],
+        capture_output=True,
+        text=True,
+    )
+    print(process.stdout, process.stderr)
+    assert process.returncode == 0
 
-def cmd_suite():
-    suite = unittest.TestSuite()
-    tests = [
-        CmdSuite(name) for name in dir(CmdSuite) if name.startswith("test_")
-    ]
-    suite.addTests(tests)
+    with pytest.raises(subprocess.CalledProcessError):
+        _ = subprocess.run(
+            ["gamspy", "uninstall", "solver", "bla"],
+            check=True,
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+        )
 
-    return suite
+    process = subprocess.run(
+        ["gamspy", "install", "solver", "--install-all-solvers"],
+        capture_output=True,
+        text=True,
+    )
+    print(process.stdout, process.stderr)
+    assert process.returncode == 0
+
+    process = subprocess.run(
+        ["gamspy", "uninstall", "solver", "minos", "mosek"],
+        capture_output=True,
+        text=True,
+    )
+    print(process.stdout, process.stderr)
+    assert process.returncode == 0
+
+    process = subprocess.run(
+        ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+        capture_output=True,
+        text=True,
+    )
+    print(process.stdout, process.stderr)
+    assert process.returncode == 0
+
+    process = subprocess.run(
+        ["gamspy", "install", "solver", "mpsge", "scip"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+    )
+    assert process.returncode == 0
 
 
-if __name__ == "__main__":
-    runner = unittest.TextTestRunner()
-    runner.run(cmd_suite())
+def test_list_solvers():
+    process = subprocess.run(
+        ["gamspy", "list", "solvers"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+    )
+
+    assert process.returncode == 0
+
+    process = subprocess.run(
+        ["gamspy", "list", "solvers", "-a"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+    )
+
+    assert process.returncode == 0
+
+
+def test_show_license():
+    process = subprocess.run(
+        ["gamspy", "show", "license"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+
+    assert process.returncode == 0
+    assert isinstance(process.stdout, str)
+
+
+def test_show_base():
+    process = subprocess.run(
+        ["gamspy", "show", "base"],
+        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+
+    import gamspy_base
+
+    assert process.returncode == 0
+    assert gamspy_base.directory == process.stdout.strip()
+
+
+def test_probe():
+    node_info_path = os.path.join("tmp", "info.json")
+    process = subprocess.run(
+        ["gamspy", "probe", "-j", node_info_path],
+        capture_output=True,
+        text=True,
+    )
+
+    assert process.returncode == 0
+
+    process = subprocess.run(
+        [
+            "gamspy",
+            "retrieve",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+            "-i",
+            node_info_path,
+            "-o",
+            node_info_path[:-5] + ".txt",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    print(process.stderr, process.stdout)
+    assert process.returncode == 0

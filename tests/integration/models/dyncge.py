@@ -16,6 +16,7 @@ University of Tokyo Press. (in Japanese)
 from __future__ import annotations
 
 import numpy as np
+
 from gamspy import (
     Alias,
     Container,

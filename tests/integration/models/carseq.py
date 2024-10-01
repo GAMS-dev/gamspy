@@ -32,9 +32,10 @@ Y. Kodratoff, Ed. Pitmann Publishing, London, Munich, Germany, 290-295, 1988
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import numpy as np
 import pandas as pd
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Card,

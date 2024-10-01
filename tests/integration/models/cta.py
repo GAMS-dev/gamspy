@@ -32,6 +32,7 @@ import os
 import sys
 
 from gams.connect import ConnectDatabase
+
 from gamspy import (
     Container,
     Domain,

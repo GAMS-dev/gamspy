@@ -104,9 +104,7 @@ html_theme_options = {
     "pygments_dark_style": "lightbulb"
 }
 
-autodoc_default_options = {'member-order': 'bysource'}
-
-autodoc_member_order = "bysource"
+autodoc_member_order = "groupwise"
 
 # Display todos by setting to True
 todo_include_todos = False

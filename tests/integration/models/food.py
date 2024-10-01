@@ -51,8 +51,9 @@ and Sons, 1978.
 
 from __future__ import annotations
 
-import gamspy as gp
 import pandas as pd
+
+import gamspy as gp
 
 
 def main():

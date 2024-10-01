@@ -19,8 +19,9 @@ Journal of Economic Dynamics and Control 4, 2 (1982) pp.149-170.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Card,

@@ -118,15 +118,6 @@ class ModelInstance:
             "keep_on_error": DebugLevel.KeepFilesOnError,
             "keep": DebugLevel.KeepFiles,
         }
-        if (
-            not isinstance(debugging_level, str)
-            or debugging_level not in DEBUGGING_MAP
-        ):
-            raise ValidationError(
-                "Debugging level must be one of 'delete', 'keep',"
-                " 'keep_on_error'"
-            )
-
         return DEBUGGING_MAP[debugging_level]
 
     def _create_restart_file(self):
@@ -140,8 +131,6 @@ class ModelInstance:
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
-            "logoption": 0,
             "previouswork": 1,
             "license": utils._get_license_path(
                 self.container.system_directory
@@ -158,7 +147,7 @@ class ModelInstance:
 
         solve_string = f"{model.name} using {model.problem}"
 
-        if model.sense:
+        if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
             solve_string += f" {model.sense}"
 
         if model._objective_variable is not None:

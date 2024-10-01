@@ -24,6 +24,7 @@ Operation and Control. John Wiley and Sons, 1984, pp. 85-88.
 from __future__ import annotations
 
 import pandas as pd
+
 from gamspy import (
     Card,
     Container,

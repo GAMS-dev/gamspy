@@ -466,7 +466,7 @@ class Options(BaseModel):
 
             for line in lines:
                 if line == "\n" or line == "":
-                    continue
+                    continue  # pragma: no cover
 
                 key, value = line.split("=")
                 attributes[key.strip()] = value.strip()

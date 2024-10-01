@@ -13,8 +13,9 @@ EDC of a total power of 1980 MW using 15 power generating units.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Container,

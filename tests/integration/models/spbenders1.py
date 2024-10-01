@@ -20,8 +20,9 @@ sequential solves of the master and subproblems in a GAMS loop.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import pandas as pd
+
+import gamspy.math as gams_math
 from gamspy import (
     Container,
     Equation,

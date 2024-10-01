@@ -29,9 +29,6 @@ class Condition(operable.Operable):
     ----------
     symbol: ImplicitSymbol | Expression
         Reference to the symbol to be conditioned.
-
-    >>> muf[i, j] = (2.48 + 0.0084 * rd[i, j]).where[rd[i, j]]
-    >>> minw[t].where[tm[t]] = Sum(w.where[td[w, t]], x[w, t]) >= tm[t]
     """
 
     def __init__(

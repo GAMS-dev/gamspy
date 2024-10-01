@@ -16,6 +16,7 @@ X is the inverse of A.
 from __future__ import annotations
 
 import numpy as np
+
 from gamspy import (
     Alias,
     Container,

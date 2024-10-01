@@ -429,9 +429,9 @@ class NEOSServer(backend.Backend):
         model: Model,
         load_symbols: list[Symbol] | None,
     ) -> None:
-        if client is None:
+        if client is None or not isinstance(client, NeosClient):
             raise ValidationError(
-                "`neos_client` must be provided to solve on NEOS Server"
+                "`NeosClient` must be provided to solve on NEOS Server."
             )
 
         super().__init__(
@@ -454,7 +454,7 @@ class NEOSServer(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def run(self):
+    def run(self, relaxed_domain_mapping: bool = False):
         # Run a dummy job to get the restart file to be sent to NEOS Server
         self._create_restart_file()
 
@@ -562,13 +562,14 @@ class NEOSServer(backend.Backend):
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
             "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "writeoutput": 0,
-            "logoption": 0,
             "previouswork": 1,
             "license": utils._get_license_path(
                 self.container.system_directory
             ),
         }
+
+        if self.container._network_license:
+            extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
 
         return extra_options
 

@@ -1,92 +1,84 @@
 from __future__ import annotations
 
-import unittest
+import pytest
 
 import gamspy.utils as utils
 from gamspy import Container, Set
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import FatalError, ValidationError
+
+pytestmark = pytest.mark.unit
 
 
-class UtilsSuite(unittest.TestCase):
-    def setUp(self):
-        self.m = Container()
-
-    def test_utils(self):
-        i = Set(self.m, "i", records=["i1", "i2"])
-        self.assertEqual(utils._get_domain_str([i, "b", "*"]), '(i,"b",*)')
-        self.assertRaises(ValidationError, utils._get_domain_str, [5])
-
-        # invalid system directory
-        self.assertRaises(GamspyException, utils._open_gdx_file, "bla", "bla")
-
-        self.assertFalse(utils.checkAllSame([1, 2], [2]))
-        self.assertFalse(utils.checkAllSame([1, 2], [2, 3]))
-        self.assertTrue(utils.checkAllSame([1, 2], [1, 2]))
-
-        # invalid load from path
-        self.assertRaises(
-            Exception, utils._open_gdx_file, self.m.system_directory, "bla.gdx"
-        )
-
-    def test_isin(self):
-        i = Set(self.m, "i")
-        j = Set(self.m, "j")
-        k = Set(self.m, "k")
-        symbols = [i, j]
-
-        self.assertTrue(utils.isin(i, symbols))
-        self.assertFalse(utils.isin(k, symbols))
-
-    def test_available_solvers(self):
-        available_solvers = utils.getAvailableSolvers()
-
-        expected = [
-            "BARON",
-            "CBC",
-            "CONOPT",
-            "CONOPT3",
-            "CONVERT",
-            "COPT",
-            "CPLEX",
-            "DICOPT",
-            "EXAMINER",
-            "EXAMINER2",
-            "GUROBI",
-            "HIGHS",
-            "IPOPT",
-            "IPOPTH",
-            "KESTREL",
-            "KNITRO",
-            "MILES",
-            "MINOS",
-            "MOSEK",
-            "MPSGE",
-            "NLPEC",
-            "PATH",
-            "PATHNLP",
-            "SBB",
-            "SCIP",
-            "SHOT",
-            "SNOPT",
-            "SOPLEX",
-            "XPRESS",
-        ]
-
-        self.assertEqual(available_solvers, expected)
+@pytest.fixture
+def data():
+    m = Container()
+    yield m
+    m.close()
 
 
-def utils_suite():
-    suite = unittest.TestSuite()
-    tests = [
-        UtilsSuite(name)
-        for name in dir(UtilsSuite)
-        if name.startswith("test_")
+def test_utils(data):
+    m = data
+    i = Set(m, "i", records=["i1", "i2"])
+    assert utils._get_domain_str([i, "b", "*"]) == '(i,"b",*)'
+    pytest.raises(ValidationError, utils._get_domain_str, [5])
+
+    # invalid system directory
+    pytest.raises(FatalError, utils._open_gdx_file, "bla", "bla")
+
+    assert not utils.checkAllSame([1, 2], [2])
+    assert not utils.checkAllSame([1, 2], [2, 3])
+    assert utils.checkAllSame([1, 2], [1, 2])
+
+    # invalid load from path
+    pytest.raises(
+        Exception, utils._open_gdx_file, m.system_directory, "bla.gdx"
+    )
+
+
+def test_isin(data):
+    m = data
+    i = Set(m, "i")
+    j = Set(m, "j")
+    k = Set(m, "k")
+    symbols = [i, j]
+
+    assert utils.isin(i, symbols)
+    assert not utils.isin(k, symbols)
+
+
+def test_available_solvers(data):
+    available_solvers = utils.getAvailableSolvers()
+
+    expected = [
+        "BARON",
+        "CBC",
+        "CONOPT",
+        "CONOPT3",
+        "CONVERT",
+        "COPT",
+        "CPLEX",
+        "DICOPT",
+        "EXAMINER",
+        "EXAMINER2",
+        "GUROBI",
+        "HIGHS",
+        "IPOPT",
+        "IPOPTH",
+        "KESTREL",
+        "KNITRO",
+        "MILES",
+        "MINOS",
+        "MOSEK",
+        "MPSGE",
+        "NLPEC",
+        "PATH",
+        "PATHNLP",
+        "SBB",
+        "SCIP",
+        "SHOT",
+        "SNOPT",
+        "SOPLEX",
+        "XPRESS",
     ]
-    suite.addTests(tests)
 
-    return suite
-
-
-if __name__ == "__main__":
-    runner = unittest.TextTestRunner()
-    runner.run(utils_suite())
+    assert available_solvers == expected

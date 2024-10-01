@@ -19,8 +19,9 @@ Cambridge University Press, New York, 2009.
 
 from __future__ import annotations
 
-import gamspy.math as gams_math
 import numpy as np
+
+import gamspy.math as gams_math
 from gamspy import (
     Alias,
     Card,

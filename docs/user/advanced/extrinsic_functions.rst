@@ -23,7 +23,7 @@ and second derivatives) at specific points.
 
 Solvers that need to analyze the algebraic structure of the model instance are therefore 
 not able to work with extrinsic functions. This includes the class of deterministic global solvers, 
-see column "Global" in `this table <https://gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES/>`_.
+see column "Global" in `this table <https://gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES>`_.
 
 
 Building Your Own Extrinsic library

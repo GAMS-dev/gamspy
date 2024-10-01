@@ -19,6 +19,7 @@ Nonlinear Programming. John Wiley and Sons, New York, 1968, pp. 22-27.
 from __future__ import annotations
 
 import pandas as pd
+
 from gamspy import (
     Card,
     Container,

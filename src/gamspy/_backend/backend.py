@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal
 
 import pandas as pd
-from gams import DebugLevel
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
@@ -130,12 +129,12 @@ class Backend(ABC):
     def is_async(self): ...
 
     @abstractmethod
-    def run(self): ...
+    def run(self, relaxed_domain_mapping: bool = False): ...
 
     def get_job_name(self):
         job_name = self.container._job
 
-        if self.container._debugging_level == DebugLevel.KeepFiles:
+        if self.container._debugging_level == "keep":
             job_name = os.path.join(
                 self.container.working_directory, "_" + str(uuid.uuid4())
             )
@@ -158,7 +157,7 @@ class Backend(ABC):
 
         return gams_string
 
-    def postprocess(self):
+    def postprocess(self, relaxed_domain_mapping: bool = False):
         if self.load_symbols is not None:
             symbols = self.load_symbols
         else:
@@ -186,6 +185,24 @@ class Backend(ABC):
             self.container._load_records_from_gdx(
                 self.container._gdx_out, symbols
             )
+
+        if relaxed_domain_mapping:
+            # Best attempt approach to map relaxed domain to actual symbols
+            for name in symbols:
+                symbol = self.container[name]
+
+                new_domain = []
+                for elem in symbol.domain:
+                    if (
+                        isinstance(elem, str)
+                        and elem != "*"
+                        and elem in self.container
+                    ):
+                        new_domain.append(self.container[elem])
+                    else:
+                        new_domain.append(elem)
+
+                symbol.domain = new_domain
 
     def prepare_summary(self, trace_file: str) -> pd.DataFrame:
         from gamspy._model import ModelStatus
