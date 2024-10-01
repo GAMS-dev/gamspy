@@ -773,7 +773,7 @@ class GAMSEngine(backend.Backend):
     def is_async(self):
         return not self.client.is_blocking
 
-    def run(self):
+    def run(self, relaxed_domain_mapping: bool = False):
         # Run a dummy job to get the restart file to be sent to GAMS Engine
         self._create_restart_file()
 
