@@ -18,6 +18,7 @@ test-leg-3.8:
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch gamspy --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
+    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -50,6 +51,7 @@ test-deg-3.8:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
+    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -77,6 +79,7 @@ test-dac-3.8:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
+    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -108,6 +111,7 @@ test-wei-3.8:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
+    - pytest -m "doc"
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
