@@ -3,6 +3,7 @@ performance:
   needs: []
   tags: [puma]
   image: python:3.12
+  when: manual
   script:
     - pip install virtualenv
     - virtualenv venv
@@ -13,7 +14,3 @@ performance:
     - gamspy install license $LOCAL_LICENSE
     - python scripts/performance/main_IJKLM.py
     - python scripts/performance/memory_check.py
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: manual
-    - when: never

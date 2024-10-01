@@ -87,6 +87,7 @@ def open_connection(
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        errors="replace",
     )
 
     start = time.time()
@@ -521,9 +522,11 @@ class Container(gt.Container):
 
         return modified_names
 
-    def _synch_with_gams(self) -> DataFrame | None:
+    def _synch_with_gams(
+        self, relaxed_domain_mapping: bool = False
+    ) -> DataFrame | None:
         runner = backend_factory(self, self._options, output=self.output)
-        summary = runner.run()
+        summary = runner.run(relaxed_domain_mapping)
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
@@ -771,7 +774,11 @@ class Container(gt.Container):
 
         """
         self._add_statement(gams_code)
-        self._synch_with_gams()
+        self._synch_with_gams(relaxed_domain_mapping=True)
+
+        for _, symbol in self:
+            symbol.modified = False
+        self._unsaved_statements = []
 
     def close(self) -> None:
         """

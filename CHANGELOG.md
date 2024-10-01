@@ -17,7 +17,10 @@ GAMSPy 1.0.2
   - Add support for flatten_dims for flattening n domains into 1 domain.
   - Show class members groupwise in the table of contents (first methods, then properties). 
   - Use the new license server endpoint to verify the license type.
+  - Don't do extra unnecessary GAMSPy to GAMS synch after addGamsCode.
+  - Fix incorrect domain information of symbols created by addGamsCode 
   - Fix network license issue on NEOS Server.
+  - Replace non-utf8 bytes of stdout.
 - Testing
   - Remove license uninstall test to avoid crashing parallel tests on the same machine.
   - Add tests for the generated solve strings for different type of problems.

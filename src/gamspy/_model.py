@@ -1138,7 +1138,7 @@ class Model:
             load_symbols,
         )
 
-        summary = runner.run()
+        summary = runner.run(relaxed_domain_mapping=False)
 
         if IS_MIRO_INIT:
             self.container._write_default_gdx_miro()

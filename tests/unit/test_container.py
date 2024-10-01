@@ -240,6 +240,23 @@ def test_arbitrary_gams_code(data):
     assert "piHalf" in m.data
     assert m["piHalf"].records.values[0][0] == 1.5707963267948966
 
+    m = Container()
+    codestr = """set T /month0*month4/;
+    parameter demand(T) /month1 40, month2 60, month3 75, month4 25/;"""
+    m.addGamsCode(codestr)
+    m.addGamsCode("display demand;")
+
+    T = m["T"]
+    demand = m["demand"]
+    assert T.toList() == [
+        "month0",
+        "month1",
+        "month2",
+        "month3",
+        "month4",
+    ]
+    assert demand.domain == [T]
+
 
 def test_add_gams_code_on_actual_models(data):
     m, *_ = data
