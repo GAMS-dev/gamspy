@@ -1,5 +1,6 @@
 GAMSPy CHANGELOG
 ================
+
 GAMSPy 1.0.2
 ------------
 - General
@@ -34,7 +35,7 @@ GAMSPy 1.0.2
   - Fix broken links in the documentation.
   - Add a ci step to check doc links.
   - Improve the wording of debugging document.
-  - Add pooling and flatten_dims docs
+  - Add pooling and flatten_dims docs.
 
 GAMSPy 1.0.1
 ------------

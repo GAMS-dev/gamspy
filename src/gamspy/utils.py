@@ -326,7 +326,6 @@ def _get_license_path(system_directory: str) -> str:
         return gamspy_license_path
 
     # Check old license installation path.
-    # TODO: Remove this after 1.0.1 release.
     user_license_path = os.path.join(system_directory, "user_license.txt")
     if os.path.exists(user_license_path):
         return user_license_path
