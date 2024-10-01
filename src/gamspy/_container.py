@@ -709,7 +709,7 @@ class Container(gt.Container):
         Examples
         --------
         >>> import gamspy as gp
-        >>> m = gp.Container()
+        >>> m = gp.Container(debugging_level="keep")
         >>> i = gp.Set(m, name="i")
         >>> gams_code = m.generateGamsString()
 
