@@ -87,6 +87,7 @@ def open_connection(
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        errors="replace",
     )
 
     start = time.time()
