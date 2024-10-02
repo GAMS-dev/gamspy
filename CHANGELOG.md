@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.0.3
+------------
+- General
+  - Fix solver installation bug in case of a solver installation before the license installation.
+
 GAMSPy 1.0.2
 ------------
 - General

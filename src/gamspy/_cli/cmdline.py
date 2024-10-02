@@ -296,6 +296,7 @@ def install_solver(args: argparse.Namespace):
         raise e
 
     addons_path = os.path.join(utils.DEFAULT_DIR, "solvers.txt")
+    os.makedirs(utils.DEFAULT_DIR, exist_ok=True)
 
     def install_addons(addons: Iterable[str]):
         for item in addons:
