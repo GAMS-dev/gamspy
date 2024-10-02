@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import glob
 import math
 import os
 import pathlib
 import platform
+import shutil
 import sys
 
 import pytest
@@ -23,6 +25,7 @@ except Exception:
 
 @pytest.fixture
 def data():
+    # Arrange
     m = gp.Container()
     directory = str(pathlib.Path(__file__).parent.resolve())
     external_module = os.path.relpath(
@@ -42,8 +45,16 @@ def data():
     elif platform.system() == "Windows":
         external_module += ".dll"
 
-    external_module = external_module
+    # Act and assert
     yield m, external_module
+
+    # Clean up
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
+    tmp_dirs = glob.glob("tmp*")
+    for tmp_dir in tmp_dirs:
+        shutil.rmtree(tmp_dir)
     m.close()
 
 

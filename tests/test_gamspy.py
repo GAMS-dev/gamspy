@@ -4,6 +4,7 @@ import doctest
 import glob
 import json
 import os
+import shutil
 from os.path import join
 
 import pytest
@@ -24,6 +25,20 @@ def test_switcher():
         switcher = json.loads(file.read())
         versions = [elem["version"] for elem in switcher]
         assert f"v{gamspy.__version__}" in versions
+
+
+@pytest.fixture
+def teardown():
+    # Act and assert
+    yield
+
+    # Cleanup
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
+
+    if os.path.exists("test"):
+        shutil.rmtree("test")
 
 
 @pytest.mark.doc

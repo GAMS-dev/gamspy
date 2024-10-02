@@ -30,8 +30,14 @@ elif platform.system() == "Windows":
 
 @pytest.fixture
 def teardown():
+    # Arrange
     os.makedirs("tmp", exist_ok=True)
+
+    # Act and assert
     yield
+
+    # Clean up
+    shutil.rmtree("tmp")
     _ = subprocess.run(
         ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
         check=True,
@@ -247,7 +253,7 @@ def test_show_base():
     assert gamspy_base.directory == process.stdout.strip()
 
 
-def test_probe():
+def test_probe(teardown):
     node_info_path = os.path.join("tmp", "info.json")
     process = subprocess.run(
         ["gamspy", "probe", "-j", node_info_path],

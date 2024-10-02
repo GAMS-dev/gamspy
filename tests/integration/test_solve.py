@@ -4,6 +4,7 @@ import concurrent.futures
 import logging
 import math
 import os
+import shutil
 import sys
 import time
 
@@ -35,6 +36,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def data():
+    # Arrange
     os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
@@ -50,8 +52,12 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
+    # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
+
+    # Cleanup
     m.close()
+    shutil.rmtree("tmp")
 
 
 def transport(f_value):
