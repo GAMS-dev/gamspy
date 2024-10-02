@@ -10,7 +10,7 @@ test-leg-3.8:
     - pip install virtualenv
     - virtualenv venv38
     - source venv38/bin/activate
-    - pip install wheel build
+    - pip install wheel build requests
     - python scripts/reinstall.py
     - gamspy install solver mpsge
     - gamspy install solver scip
