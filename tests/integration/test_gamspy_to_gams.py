@@ -1,5 +1,6 @@
 import math
 import os
+import shutil
 import subprocess
 
 import numpy as np
@@ -32,10 +33,16 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def data():
+    # Arrange
     os.makedirs("tmp", exist_ok=True)
     m = Container()
+
+    # Act and assert
     yield m
+
+    # Cleanup
     m.close()
+    shutil.rmtree("tmp")
 
 
 def reformat_df(dataframe):

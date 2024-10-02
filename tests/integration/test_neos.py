@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import glob
 import os
+import shutil
 import subprocess
 import sys
 
@@ -32,6 +34,7 @@ except Exception:
 
 @pytest.fixture
 def data():
+    # Arrange
     os.makedirs("tmp", exist_ok=True)
     m = Container()
     canning_plants = ["seattle", "san-diego"]
@@ -47,13 +50,20 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
+    # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
+
+    # Cleanup
     m.close()
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
+
+    shutil.rmtree("tmp")
 
 
 @pytest.fixture
 def network_license():
-    print(sys.executable)
     subprocess.run(
         [
             sys.executable,
@@ -93,6 +103,9 @@ def network_license():
         ],
         check=True,
     )
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
 
 
 def test_network_license(network_license):
@@ -385,7 +398,7 @@ def test_solver_options(data):
         assert ">>  aggfill 11" in file.read()
 
 
-def test_mip():
+def test_mip(data):
     mdl = Container()
     x1 = Variable(mdl, type="integer")
     x2 = Variable(mdl, type="integer")

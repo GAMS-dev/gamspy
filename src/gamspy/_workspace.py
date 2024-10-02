@@ -59,5 +59,5 @@ class Workspace:
                     and not self._has_error
                 ):
                     shutil.rmtree(self.working_directory)
-            except PermissionError:  # pragma: no cover
+            except (PermissionError, FileNotFoundError):  # pragma: no cover
                 ...

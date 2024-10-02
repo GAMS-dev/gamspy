@@ -5,6 +5,8 @@ GAMSPy 1.0.3
 ------------
 - General
   - Fix solver installation bug in case of a solver installation before the license installation.
+- Testing
+  - Remove leftover files after running all tests.
 
 GAMSPy 1.0.2
 ------------

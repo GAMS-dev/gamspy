@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import glob
 import math
 import os
 
@@ -27,6 +28,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def data():
+    # Arrange
     m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
@@ -41,8 +43,21 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
+    # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
+
+    # Cleanup
     m.close()
+
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
+
+    if os.path.exists("dict.txt"):
+        os.remove("dict.txt")
+
+    if os.path.exists("gams.gms"):
+        os.remove("gams.gms")
 
 
 def test_parameter_change(data):
