@@ -63,7 +63,7 @@ test-deg-3.10:
 
 test-dac-3.10:
   stage: test
-  when: never
+  when: manual
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
