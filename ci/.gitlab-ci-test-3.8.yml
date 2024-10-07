@@ -115,6 +115,6 @@ test-wei-3.8:
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
