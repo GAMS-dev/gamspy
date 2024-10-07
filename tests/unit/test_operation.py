@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -9,10 +10,13 @@ from gamspy import (
     Container,
     Domain,
     Equation,
+    Number,
     Ord,
     Parameter,
+    Problem,
     Product,
     Sand,
+    Sense,
     Set,
     Smax,
     Smin,
@@ -357,3 +361,83 @@ def test_control_domain(data):
 
     with pytest.raises(ValidationError):
         minw[t].where[tm[t]] = Sum(t, tm[t]) >= tm[t]
+
+
+def test_multiple_ops(data):
+    m, *_ = data
+
+    activity = m.addSet(
+        "activity",
+        records=[
+            ("A", "Train Workers"),
+            ("B", "Purchase Raw Materials"),
+            ("C", "Make Subassembly 1"),
+            ("D", "Make Subassembly 2"),
+            ("E", "Inspect Subassembly 2"),
+            ("F", "Assemble Subassemblies"),
+        ],
+    )
+    I = m.addAlias("I", activity)
+    J = m.addAlias("J", activity)
+    pred = m.addSet(
+        "pred",
+        [I, J],
+        description="I preceeds J",
+        records=[
+            ("A", "C"),
+            ("B", "C"),
+            ("A", "D"),
+            ("B", "D"),
+            ("D", "E"),
+            ("C", "F"),
+            ("E", "F"),
+        ],
+    )
+    duration = m.addParameter(
+        "duration", [I], records=np.array([6, 9, 8, 7, 10, 12])
+    )
+
+    t = m.addVariable("t", "positive", [I], description="time activity starts")
+    projDur = m.addVariable("projDur", "free")
+
+    incidence = m.addEquation("incidence", domain=[I, J])
+    incidence[pred[I, J]] = t[J] >= t[I] + duration[I]
+
+    endTime = m.addEquation("endTime", domain=[I])
+    endTime[I] = projDur >= t[I] + duration[I]
+
+    cpm = m.addModel(
+        "cpm",
+        equations=m.getEquations(),
+        problem=Problem.LP,
+        sense=Sense.MIN,
+        objective=projDur,
+    )
+
+    cpm.solve()
+    duration["C"] = 17
+    cpm.solve()
+
+    critical = m.addSet("critical", [I], description="critical activities")
+    critical[I] = Number(1).where[
+        (Smax(J.where[pred[J, I]], incidence.m[J, I]) >= 1)
+        | (Smax(J.where[pred[I, J]], incidence.m[I, J]) >= 1)
+    ]
+
+    lamda = m.addVariable(
+        "lamda",
+        "positive",
+        [I, J],
+        description="Dual var for incidence (critical arc)",
+    )
+    pi = m.addVariable("pi", "positive", [I])
+    dual_obj = m.addVariable("dual_obj", "free")
+
+    dual_obj_def = m.addEquation("dual_obj_def")
+
+    try:
+        dual_obj_def[...] = dual_obj == Sum(
+            pred[I, J], lamda[I, J] * duration[I]
+        ) + Sum(I, duration[I] * pi[I])
+    except ValidationError:
+        pytest.fail("Unexpected ValidationError.")
