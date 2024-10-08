@@ -45,7 +45,7 @@ class SetMixin:
         [['seattle', 'position', 1.0], ['san-diego', 'position', 2.0], ['new-york', 'position', 3.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".pos")
+        return expression.Expression(self, ".", "pos")
 
     @property
     def ord(self):
@@ -67,7 +67,7 @@ class SetMixin:
         [['seattle', 'order', 1.0], ['san-diego', 'order', 2.0], ['new-york', 'order', 3.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".ord")
+        return expression.Expression(self, ".", "ord")
 
     @property
     def off(self):
@@ -89,7 +89,7 @@ class SetMixin:
         [['san-diego', 'off', 1.0], ['new-york', 'off', 2.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".off")
+        return expression.Expression(self, ".", "off")
 
     @property
     def rev(self):
@@ -112,7 +112,7 @@ class SetMixin:
         [['seattle', 'reverse', 2.0], ['san-diego', 'reverse', 1.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".rev")
+        return expression.Expression(self, ".", "rev")
 
     @property
     def uel(self):
@@ -134,7 +134,7 @@ class SetMixin:
         [['seattle', 'uel_position', 1.0], ['san-diego', 'uel_position', 2.0], ['new-york', 'uel_position', 3.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".uel")
+        return expression.Expression(self, ".", "uel")
 
     @property
     def len(self):
@@ -156,7 +156,7 @@ class SetMixin:
         [['seattle', 'length', 7.0], ['san-diego', 'length', 9.0], ['new-york', 'length', 8.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".len")
+        return expression.Expression(self, ".", "len")
 
     @property
     def tlen(self):
@@ -178,7 +178,7 @@ class SetMixin:
         [['seattle', 'text_length', 9.0], ['new-york', 'text_length', 1.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".tlen")
+        return expression.Expression(self, ".", "tlen")
 
     @property
     def val(self):
@@ -203,7 +203,7 @@ class SetMixin:
         [['12', 'value', 12.0], ['20', 'value', 20.0], ['-13.4', 'value', -13.4]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".val")
+        return expression.Expression(self, ".", "val")
 
     @property
     def tval(self):
@@ -228,7 +228,7 @@ class SetMixin:
         [['seattle', 'text_value', 12.0], ['new-york', 'text_value', -13.4]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".tval")
+        return expression.Expression(self, ".", "tval")
 
     @property
     def first(self):
@@ -250,7 +250,7 @@ class SetMixin:
         [['seattle', 'is_first', 1.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".first")
+        return expression.Expression(self, ".", "first")
 
     @property
     def last(self):
@@ -272,7 +272,7 @@ class SetMixin:
         [['new-york', 'is_last', 1.0]]
 
         """
-        return implicits.ImplicitSet(self, name=self.name, extension=".last")
+        return expression.Expression(self, ".", "last")
 
     def lag(
         self: Alias | Set,
