@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     import gamspy._algebra.expression as expression
     from gamspy import Alias, Set
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits import ImplicitSet
 
     OperandType = Optional[
         Union[
@@ -209,6 +210,9 @@ class Expression(operable.Operable):
             out_str = f"{left_str} {self.data}\n {right_str}"
         else:
             out_str = f"{left_str} {self.data} {right_str}"
+
+        if self.data == ".":
+            return out_str.replace(" ", "")
 
         if self.data in ["..", "="]:
             return f"{out_str};"
@@ -456,7 +460,9 @@ class Expression(operable.Operable):
 
         return symbols
 
-    def _validate_definition(self, control_stack):
+    def _validate_definition(
+        self, control_stack: list[Set | Alias | ImplicitSet]
+    ) -> None:
         stack = []
 
         node = self.right
@@ -468,7 +474,7 @@ class Expression(operable.Operable):
                 node = stack.pop()
 
                 if isinstance(node, operation.Operation):
-                    node._validate_operation(control_stack)
+                    node._validate_operation(control_stack.copy())
                     for elem in node.raw_domain:
                         if elem in control_stack:
                             raise ValidationError(

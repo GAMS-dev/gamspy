@@ -8,7 +8,30 @@ import pytest
 pytestmark = pytest.mark.model_library
 
 
-def test_full_models():
+@pytest.fixture
+def teardown():
+    # Act and assert
+    yield
+
+    # Cleanup
+    files = glob.glob("*.csv")
+    for file in files:
+        os.remove(file)
+
+    files = glob.glob("*.xlsx")
+    for file in files:
+        os.remove(file)
+
+    mpsge_file_path = os.path.join(os.getcwd(), "HANSEN.GEN")
+    if os.path.exists(mpsge_file_path):
+        os.remove(mpsge_file_path)
+
+    solution_file = os.path.join(os.getcwd(), "solution.txt")
+    if os.path.exists(solution_file):
+        os.remove(solution_file)
+
+
+def test_full_models(teardown):
     print("Running the models with the following license:")
     process = subprocess.run(
         ["gamspy", "show", "license"], capture_output=True

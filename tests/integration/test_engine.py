@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import glob
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -53,6 +55,10 @@ def data():
 
     yield m, canning_plants, markets, capacities, demands, distances
     m.close()
+    shutil.rmtree("tmp")
+    files = glob.glob("_*")
+    for file in files:
+        os.remove(file)
 
 
 @pytest.fixture
@@ -503,7 +509,7 @@ def test_non_blocking(data):
     assert x.records.equals(container["x"].records)
 
 
-def test_api_job():
+def test_api_job(data):
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
         username=os.environ["ENGINE_USER"],
@@ -526,7 +532,7 @@ def test_api_job():
     client.job.delete_results(token)
 
 
-def test_api_auth():
+def test_api_auth(data):
     # /api/auth -> post
     client = EngineClient(
         host=os.environ["ENGINE_URL"],

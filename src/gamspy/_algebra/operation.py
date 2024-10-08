@@ -103,7 +103,9 @@ class Operation(operable.Operable):
 
         return raw_domain
 
-    def _validate_operation(self, control_stack):
+    def _validate_operation(
+        self, control_stack: list[Set | Alias | ImplicitSet]
+    ) -> None:
         for elem in self.raw_domain:
             if isinstance(elem, implicits.ImplicitSet):
                 control_stack += [

@@ -507,7 +507,7 @@ def test_equation_assignment(data):
     e[...] = Sum(i.where[(i.val == L - 1)], sqr(x[i]) + sqr(y[i])) == 1
     assert (
         e.getDefinition()
-        == "e .. sum(i $ ((L - 1) eq i.val),(( sqr(x(i)) ) + ("
+        == "e .. sum(i $ (i.val eq (L - 1)),(( sqr(x(i)) ) + ("
         " sqr(y(i)) ))) =e= 1;"
     )
 

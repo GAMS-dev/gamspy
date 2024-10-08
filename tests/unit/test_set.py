@@ -224,6 +224,29 @@ def test_set_attributes(data):
     assert i.first.gamsRepr() == "i.first"
     assert i.last.gamsRepr() == "i.last"
 
+    i = Set(m, "i", records=range(5))
+    j = Set(m, "j", records=range(3))
+    a = Parameter(m, "a", domain=[i, j])
+    a[i, j].where[i.ord == j.ord] = 5
+    assert a.toList() == [("0", "0", 5.0), ("1", "1", 5.0), ("2", "2", 5.0)]
+
+    b = Parameter(m, "b", domain=[i, j])
+    b[i, j].where[i.ord != j.ord] = 5
+    assert b.toList() == [
+        ("0", "1", 5.0),
+        ("0", "2", 5.0),
+        ("1", "0", 5.0),
+        ("1", "2", 5.0),
+        ("2", "0", 5.0),
+        ("2", "1", 5.0),
+        ("3", "0", 5.0),
+        ("3", "1", 5.0),
+        ("3", "2", 5.0),
+        ("4", "0", 5.0),
+        ("4", "1", 5.0),
+        ("4", "2", 5.0),
+    ]
+
 
 def test_sameas(data):
     m, *_ = data

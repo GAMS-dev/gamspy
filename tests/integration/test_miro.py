@@ -17,9 +17,16 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def data():
+    # Arrange
     m = Container()
+
+    # Act and assert
     yield m
+
+    # Cleanup
     m.close()
+    if os.path.exists("miro.log"):
+        os.remove("miro.log")
 
 
 def test_domain_forwarding(data):
