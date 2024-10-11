@@ -4,12 +4,14 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
+import gamspy._algebra.operation as operation
 from gamspy.exceptions import ValidationError
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.symbol import Symbol
 
 if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
     from gamspy._symbols.symbol import Symbol
 
 
@@ -21,7 +23,7 @@ class MathOp:
         safe_cancel: bool = False,
     ):
         self.op_name = op_name
-        self.elements = elements
+        self.elements = list(elements)
         self.safe_cancel = safe_cancel
 
     def gamsRepr(self) -> str:
@@ -48,6 +50,21 @@ class MathOp:
             return f"{op_map[self.op_name]}{{{operands_str}}}"
 
         return f"{self.op_name}({operands_str})"
+    
+    def _find_all_symbols(self):
+        symbols = []
+        for elem in self.elements:
+            if isinstance(elem, expression.Expression):
+                symbols += elem._find_all_symbols()
+            elif isinstance(elem, operation.Operation):
+                symbols += elem.op_domain
+            elif isinstance(elem, ImplicitSymbol):
+                symbols.append(elem.parent)
+            elif isinstance(elem, Symbol):
+                symbols.append(elem)
+
+        return symbols
+
 
     def __str__(self):
         return self.gamsRepr()

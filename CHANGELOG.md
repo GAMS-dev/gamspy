@@ -8,6 +8,7 @@ GAMSPy 1.0.3
   - Fix the validation bug on multiple operations in a row.
   - Fix set attribute comparison bug.
   - Do not create a GDX file when it's not necessary. 
+  - Fix toGams bug of MathOp symbols.
 - Testing
   - Remove leftover files after running all tests.
 

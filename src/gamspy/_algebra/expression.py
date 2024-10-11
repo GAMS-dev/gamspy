@@ -415,7 +415,7 @@ class Expression(operable.Operable):
                 elif isinstance(node, Expression) and isinstance(
                     node.data, MathOp
                 ):
-                    stack += list(node.data.elements)
+                    symbols += node.data._find_all_symbols()
 
                 if isinstance(node, operation.Operation):
                     stack += node.op_domain
