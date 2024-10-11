@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
@@ -10,7 +10,7 @@ import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
 from gamspy._model import Problem, Sense
-from gamspy._options import Options
+from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
@@ -468,3 +468,27 @@ def validate_equations(model: Model):
             raise ValidationError(
                 f"`{equation.name}` has been declared as an equation but no equation definition was found."
             )
+
+
+def validate_global_options(options: Any) -> Options | None:
+    if options is not None and not isinstance(options, Options):
+        raise TypeError(
+            f"`options` must be of type Option but found {type(options)}"
+        )
+
+    if isinstance(options, Options):
+        options_dict = options.model_dump(exclude_none=True)
+        if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
+            raise ValidationError(
+                f"{MODEL_ATTR_OPTION_MAP.keys()} cannot be provided at Container creation time."
+            )
+
+        if any(option in options_dict for option in EXECUTION_OPTIONS):
+            raise ValidationError(
+                f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
+            )
+
+    if options is None:
+        return Options()
+
+    return options

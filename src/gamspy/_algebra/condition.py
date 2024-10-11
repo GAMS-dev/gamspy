@@ -84,7 +84,7 @@ class Condition(operable.Operable):
         if isinstance(self.conditioning_on, implicits.ImplicitEquation):
             self.conditioning_on.parent._definition = statement
 
-        self.conditioning_on.container._synch_with_gams()
+        self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
 
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"

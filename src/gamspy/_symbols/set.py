@@ -648,7 +648,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._synch_with_gams()
+                self.container._synch_with_gams(
+                    gams_to_gamspy=self._is_miro_input
+                )
 
             container._options.miro_protect = previous_state
 
@@ -681,7 +683,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
     def __repr__(self) -> str:
@@ -784,7 +786,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         super().setRecords(records, uels_on_axes)
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
     def gamsRepr(self) -> str:

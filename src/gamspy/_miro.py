@@ -54,6 +54,21 @@ def load_miro_symbol_records(container: Container):
         )
 
 
+def _write_default_gdx_miro(container: Container) -> None:
+    # create data_<model>/default.gdx
+    symbols = container._miro_input_symbols + container._miro_output_symbols
+
+    filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    directory = os.path.dirname(sys.argv[0])
+    data_path = os.path.join(directory, f"data_{filename}")
+    try:
+        os.mkdir(data_path)
+    except FileExistsError:
+        pass
+
+    container.write(os.path.join(data_path, "default.gdx"), symbols)
+
+
 class MiroJSONEncoder:
     def __init__(
         self,

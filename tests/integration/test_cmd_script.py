@@ -69,6 +69,7 @@ def test_install_license(teardown):
                 os.environ["GAMS_ACCESS_CODE"],
             ],
             check=True,
+            capture_output=True,
         )
 
     # Try to install a GAMS license (+ license)
