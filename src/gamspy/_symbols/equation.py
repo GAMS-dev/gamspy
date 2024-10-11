@@ -346,7 +346,7 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
     def __repr__(self) -> str:

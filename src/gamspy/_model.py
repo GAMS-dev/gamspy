@@ -12,6 +12,7 @@ from gams.core.gmd import gmdCloseLicenseSession
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
+import gamspy._miro as miro
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -1138,10 +1139,10 @@ class Model:
             load_symbols,
         )
 
-        summary = runner.run(relaxed_domain_mapping=False)
+        summary = runner.run(relaxed_domain_mapping=False, gams_to_gamspy=True)
 
         if IS_MIRO_INIT:
-            self.container._write_default_gdx_miro()
+            miro._write_default_gdx_miro(self.container)
 
         return summary
 

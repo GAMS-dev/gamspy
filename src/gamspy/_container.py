@@ -6,7 +6,6 @@ import platform
 import signal
 import socket
 import subprocess
-import sys
 import tempfile
 import time
 import uuid
@@ -17,12 +16,13 @@ import gams.transfer as gt
 
 import gamspy as gp
 import gamspy._miro as miro
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
@@ -45,6 +45,7 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._model import Sense
 
+LOOPBACK = "127.0.0.1"
 GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
@@ -53,20 +54,17 @@ MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 def find_free_address() -> tuple[str, int]:
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind(("127.0.0.1", 0))
+        s.bind((LOOPBACK, 0))
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()
 
 
 def open_connection(
-    system_directory: str, process_directory: str
+    system_directory: str, process_directory: str, license_path: str
 ) -> tuple[socket.socket, subprocess.Popen]:
     TIMEOUT = 30
-    license_path = utils._get_license_path(system_directory)
 
-    address = (
-        ("127.0.0.1", int(GAMS_PORT)) if GAMS_PORT else find_free_address()
-    )
+    address = (LOOPBACK, int(GAMS_PORT)) if GAMS_PORT else find_free_address()
 
     initial_pf_file = os.path.join(process_directory, "gamspy.pf")
     with open(initial_pf_file, "w") as file:
@@ -243,19 +241,19 @@ class Container(gt.Container):
             system_directory=self.system_directory
         )
 
-        self._options = self._validate_global_options(options)
+        self._options = validation.validate_global_options(options)
 
         # needed for miro
         self._miro_input_symbols: list[str] = []
         self._miro_output_symbols: list[str] = []
 
         self._socket, self._process = open_connection(
-            self.system_directory, self._process_directory
+            self.system_directory, self._process_directory, self._license_path
         )
 
         if load_from is not None:
             self.read(load_from)
-            self._synch_with_gams()
+            self._synch_with_gams(gams_to_gamspy=True)
 
     def __repr__(self) -> str:
         return f"Container(system_directory={self.system_directory}, working_directory={self.working_directory}, debugging_level={self._debugging_level})"
@@ -304,29 +302,6 @@ class Container(gt.Container):
 
         return bool("+" in lines[0] and lines[4][47] == "N")
 
-    def _validate_global_options(self, options: Any) -> Options | None:
-        if options is not None and not isinstance(options, Options):
-            raise TypeError(
-                f"`options` must be of type Option but found {type(options)}"
-            )
-
-        if isinstance(options, Options):
-            options_dict = options.model_dump(exclude_none=True)
-            if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
-                raise ValidationError(
-                    f"{MODEL_ATTR_OPTION_MAP.keys()} cannot be provided at Container creation time."
-                )
-
-            if any(option in options_dict for option in EXECUTION_OPTIONS):
-                raise ValidationError(
-                    f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
-                )
-
-        if options is None:
-            return Options()
-
-        return options
-
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:
             self._socket.sendall("stop".encode("ascii"))
@@ -348,26 +323,21 @@ class Container(gt.Container):
         # Send pf file
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
-        except ConnectionError as e:
-            raise FatalError(
-                f"There was an error while sending pf file name to GAMS server: {e}",
-            ) from e
 
-        # Read output
-        if output is not None:
-            while True:
-                data = self._process.stdout.readline()
-                output.write(data)
-                output.flush()
-                if data.startswith("--- Job ") and "elapsed" in data:
-                    break
+            # Read output
+            if output is not None:
+                while True:
+                    data = self._process.stdout.readline()
+                    output.write(data)
+                    output.flush()
+                    if data.startswith("--- Job ") and "elapsed" in data:
+                        break
 
-        # Receive response
-        try:
+            # Receive response
             response = self._socket.recv(256)
         except ConnectionError as e:
             raise FatalError(
-                f"There was an error while receiving response from GAMS server: {e}",
+                f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
             self._stop_socket()
@@ -382,23 +352,6 @@ class Container(gt.Container):
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
-
-    def _write_default_gdx_miro(self) -> None:
-        # create data_<model>/default.gdx
-        symbols = self._miro_input_symbols + self._miro_output_symbols
-
-        filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
-        directory = os.path.dirname(sys.argv[0])
-        data_path = os.path.join(directory, f"data_{filename}")
-        try:
-            os.mkdir(data_path)
-        except FileExistsError:
-            pass
-
-        super().write(
-            os.path.join(data_path, "default.gdx"),
-            symbols,
-        )
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
@@ -523,17 +476,19 @@ class Container(gt.Container):
         return modified_names
 
     def _synch_with_gams(
-        self, relaxed_domain_mapping: bool = False
+        self,
+        relaxed_domain_mapping: bool = False,
+        gams_to_gamspy: bool = False,
     ) -> DataFrame | None:
         runner = backend_factory(self, self._options, output=self.output)
-        summary = runner.run(relaxed_domain_mapping)
+        summary = runner.run(relaxed_domain_mapping, gams_to_gamspy)
 
         if self._options and self._options.seed is not None:
             # Required for correct seeding. Seed can only be set in the first run.
             self._options.seed = None
 
         if IS_MIRO_INIT:
-            self._write_default_gdx_miro()
+            miro._write_default_gdx_miro(self)
 
         return summary
 
@@ -774,7 +729,7 @@ class Container(gt.Container):
 
         """
         self._add_statement(gams_code)
-        self._synch_with_gams(relaxed_domain_mapping=True)
+        self._synch_with_gams(relaxed_domain_mapping=True, gams_to_gamspy=True)
 
         for _, symbol in self:
             symbol.modified = False

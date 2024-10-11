@@ -14,7 +14,7 @@ requires-python = ">=3.8"
 license.file = "LICENSE"
 keywords = ["Optimization", "GAMS"]
 classifiers = [
-  "Development Status :: 4 - Beta",
+  "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
   "Programming Language :: Python",
   "Topic :: Software Development",

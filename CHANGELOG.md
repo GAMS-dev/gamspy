@@ -7,6 +7,7 @@ GAMSPy 1.0.3
   - Fix solver installation bug in case of a solver installation before the license installation.
   - Fix the validation bug on multiple operations in a row.
   - Fix set attribute comparison bug.
+  - Do not create a GDX file when it's not necessary. 
 - Testing
   - Remove leftover files after running all tests.
 

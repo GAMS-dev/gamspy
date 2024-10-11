@@ -129,7 +129,11 @@ class Backend(ABC):
     def is_async(self): ...
 
     @abstractmethod
-    def run(self, relaxed_domain_mapping: bool = False): ...
+    def run(
+        self,
+        relaxed_domain_mapping: bool = False,
+        gams_to_gamspy: bool = False,
+    ): ...
 
     def get_job_name(self):
         job_name = self.container._job
@@ -157,7 +161,7 @@ class Backend(ABC):
 
         return gams_string
 
-    def postprocess(self, relaxed_domain_mapping: bool = False):
+    def load_records(self, relaxed_domain_mapping: bool = False):
         if self.load_symbols is not None:
             symbols = self.load_symbols
         else:
@@ -203,6 +207,18 @@ class Backend(ABC):
                         new_domain.append(elem)
 
                 symbol.domain = new_domain
+
+    def parse_listings(self):
+        listing_file = (
+            self.options.listing_file
+            if self.options.listing_file
+            else self.job_name + ".lst"
+        )
+        if self.options.equation_listing_limit:
+            utils._parse_generated_equations(self.model, listing_file)
+
+        if self.options.variable_listing_limit:
+            utils._parse_generated_variables(self.model, listing_file)
 
     def prepare_summary(self, trace_file: str) -> pd.DataFrame:
         from gamspy._model import ModelStatus

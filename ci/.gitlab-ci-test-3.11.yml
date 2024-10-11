@@ -63,7 +63,7 @@ test-deg-3.11:
 
 test-dac-3.11:
   stage: test
-  when: manual
+  when: on_success
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -84,10 +84,10 @@ test-dac-3.11:
     name: macos_arm64_3.11
     expire_in: 2 hours
     paths: [dist/*]
-  # rules:
-  #   - if: $CI_COMMIT_BRANCH != "master"
-  #     when: never
-  #   - when: on_success
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-wei-3.11:
   stage: test
