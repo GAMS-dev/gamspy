@@ -495,6 +495,7 @@ class NEOSServer(backend.Backend):
 
         extra_options = {
             "gdx": "output.gdx",
+            "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
         }
         self.options._set_extra_options(extra_options)
@@ -550,6 +551,7 @@ class NEOSServer(backend.Backend):
 
         extra_options = {
             "gdx": self.container._gdx_out,
+            "gdxSymbols": "newOrChanged",
             "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,

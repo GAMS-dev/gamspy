@@ -810,6 +810,7 @@ class GAMSEngine(backend.Backend):
     def execute_gams(self, gams_string: str):
         extra_options = {
             "gdx": os.path.basename(self.container._gdx_out),
+            "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
             "restart": os.path.basename(self.restart_file),
             "input": os.path.basename(self.gms_file),
@@ -904,6 +905,7 @@ class GAMSEngine(backend.Backend):
 
         extra_options = {
             "gdx": self.container._gdx_out,
+            "gdxSymbols": "newOrChanged",
             "trace": self.trace_file,
             "input": self.gms_file,
             "sysdir": self.container.system_directory,

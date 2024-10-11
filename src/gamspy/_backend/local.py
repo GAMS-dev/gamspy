@@ -60,6 +60,7 @@ class Local(backend.Backend):
 
         if gams_to_gamspy:
             extra_options["gdx"] = self.container._gdx_out
+            extra_options["gdxSymbols"] = "newOrChanged"
 
         if self.container._network_license:
             extra_options["netlicense"] = os.path.join(scrdir, "gamslice.dat")
