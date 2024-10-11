@@ -323,26 +323,21 @@ class Container(gt.Container):
         # Send pf file
         try:
             self._socket.sendall(pf_file.encode("utf-8"))
-        except ConnectionError as e:
-            raise FatalError(
-                f"There was an error while sending pf file name to GAMS server: {e}",
-            ) from e
 
-        # Read output
-        if output is not None:
-            while True:
-                data = self._process.stdout.readline()
-                output.write(data)
-                output.flush()
-                if data.startswith("--- Job ") and "elapsed" in data:
-                    break
+            # Read output
+            if output is not None:
+                while True:
+                    data = self._process.stdout.readline()
+                    output.write(data)
+                    output.flush()
+                    if data.startswith("--- Job ") and "elapsed" in data:
+                        break
 
-        # Receive response
-        try:
+            # Receive response
             response = self._socket.recv(256)
         except ConnectionError as e:
             raise FatalError(
-                f"There was an error while receiving response from GAMS server: {e}",
+                f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
             self._stop_socket()
