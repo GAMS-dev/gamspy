@@ -57,11 +57,11 @@ class MathOp:
             if isinstance(elem, expression.Expression):
                 symbols += elem._find_all_symbols()
             elif isinstance(elem, operation.Operation):
-                symbols += elem.op_domain
+                symbols += [symbol.name for symbol in elem.op_domain]
             elif isinstance(elem, ImplicitSymbol):
-                symbols.append(elem.parent)
+                symbols.append(elem.parent.name)
             elif isinstance(elem, Symbol):
-                symbols.append(elem)
+                symbols.append(elem.name)
 
         return symbols
 
