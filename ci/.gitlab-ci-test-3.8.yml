@@ -64,7 +64,7 @@ test-deg-3.8:
 
 test-dac-3.8:
   stage: test
-  when: manual
+  when: on_success
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -84,10 +84,10 @@ test-dac-3.8:
     name: macos_arm64_3.8
     expire_in: 2 hours
     paths: [dist/*]
-  # rules:
-  #   - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
-  #     when: never
-  #   - when: on_success
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - when: on_success
 
 test-wei-3.8:
   stage: test
