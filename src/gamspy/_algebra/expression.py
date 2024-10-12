@@ -387,42 +387,37 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, ImplicitSymbol):
-                    stack.append(node.parent)
-
-                if isinstance(node, (ImplicitSymbol, Symbol)):
-                    for index, elem in enumerate(node.domain):
-                        if isinstance(elem, (Symbol, ImplicitSymbol)):
-                            path = validation.get_domain_path(elem)
-                            for name in path:
-                                if name not in symbols and " " not in name:
-                                    symbols.append(name)
-
-                        if (
-                            isinstance(node, ImplicitSymbol)
-                            and isinstance(elem, str)
-                            and elem != "*"
-                        ):
-                            symbol = node.parent.domain[index]
-                            if (
-                                not isinstance(symbol, str)
-                                and symbol.name not in symbols
-                            ):
-                                symbols.append(symbol.name)
-
-                    if node.name not in symbols:
-                        symbols.append(node.name)
-                elif isinstance(node, Expression) and isinstance(
-                    node.data, MathOp
-                ):
-                    symbols += node.data._find_all_symbols()
-
-                if isinstance(node, operation.Operation):
+                if isinstance(node, Symbol):
+                    symbols.append(node.name)
+                    stack += node.domain
+                    node = None
+                elif isinstance(node, ImplicitSymbol):
+                    symbols.append(node.parent.name)
+                    stack += node.domain
+                    stack += node.container[node.parent.name].domain
+                    node = None
+                elif isinstance(node, operation.Operation):
                     stack += node.op_domain
                     node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
                     node = node.condition
+                elif isinstance(node, (operation.Ord, operation.Card)):
+                    stack.append(node._symbol)
+                    node = None
+                elif isinstance(node, MathOp):
+                    if isinstance(node.elements[0], Expression):
+                        node = node.elements[0]
+                    else:
+                        stack += node.elements
+                        node = None
+                elif isinstance(node, ExtrinsicFunction):
+                    stack += list(node.args)
+                    node = None
+                elif isinstance(node, Expression) and isinstance(
+                    node.data, MathOp
+                ):
+                    node = node.data
                 else:
                     node = getattr(node, "right", None)
             else:
