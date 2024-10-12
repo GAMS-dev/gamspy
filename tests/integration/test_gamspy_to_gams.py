@@ -187,9 +187,11 @@ def test_lp_transport(data):
         "tests", "integration", "gms_references", "transport.gms"
     )
     with open(os.path.join("tmp", "to_gams", "transport.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
-
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+        
+    assert content1 == content2
 
 def test_mip_cutstock(data):
     m = data
@@ -322,9 +324,11 @@ def test_mip_cutstock(data):
         "tests", "integration", "gms_references", "master.gms"
     )
     with open(os.path.join("tmp", "to_gams", "master.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
 
+    assert content1 == content2
 
 def test_nlp_weapons(data):
     m = data
@@ -568,8 +572,11 @@ def test_nlp_weapons(data):
         "tests", "integration", "gms_references", "war.gms"
     )
     with open(os.path.join("tmp", "to_gams", "war.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+
+    assert content1 == content2
 
 
 def test_mcp_qp6(data):
@@ -695,8 +702,11 @@ def test_mcp_qp6(data):
         "tests", "integration", "gms_references", "qp6.gms"
     )
     with open(os.path.join("tmp", "to_gams", "qp6.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+
+    assert content1 == content2
 
 
 def test_dnlp_inscribedsquare(data):
@@ -853,9 +863,11 @@ def test_dnlp_inscribedsquare(data):
         "tests", "integration", "gms_references", "square.gms"
     )
     with open(os.path.join("tmp", "to_gams", "square.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
 
+    assert content1 == content2
 
 def test_minlp_minlphix(data):
     m = data
@@ -1560,8 +1572,11 @@ def test_minlp_minlphix(data):
         "tests", "integration", "gms_references", "skip.gms"
     )
     with open(os.path.join("tmp", "to_gams", "skip.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+    
+    assert content1 == content2
 
 
 def test_qcp_EDsensitivity(data):
@@ -1632,8 +1647,11 @@ def test_qcp_EDsensitivity(data):
         "tests", "integration", "gms_references", "ECD.gms"
     )
     with open(os.path.join("tmp", "to_gams", "ECD.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+
+    assert content1 == content2
 
 
 def test_set_attributes(data):
@@ -1676,8 +1694,11 @@ def test_set_attributes(data):
         "tests", "integration", "gms_references", "attr.gms"
     )
     with open(os.path.join("tmp", "to_gams", "attr.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+
+    assert content1 == content2
 
 def test_math_op(data):
     ct = data
@@ -1695,7 +1716,7 @@ def test_math_op(data):
         Problem.QCP,
         equations=ct.getEquations(),
         sense=Sense.MIN,
-        objective=Sum(S, x[S])
+        objective=Sum(S, x[S]),
     )
 
     tmp_path = os.path.join("tmp", "to_gams")
@@ -1705,5 +1726,8 @@ def test_math_op(data):
         "tests", "integration", "gms_references", "math.gms"
     )
     with open(os.path.join("tmp", "to_gams", "math.gms")) as file1:
-        with open(reference_path) as file2:
-            assert file1.read() == file2.read()
+        content1 = file1.read()
+    with open(reference_path) as file2:
+        content2 = file2.read()
+    
+    assert content1 == content2
