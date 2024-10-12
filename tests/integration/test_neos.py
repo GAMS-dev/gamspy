@@ -140,7 +140,7 @@ def test_network_license(network_license):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
-    summary = transport.solve(backend="neos", client=client)
+    summary = transport.solve(solver="cplex", backend="neos", client=client)
     assert isinstance(summary, pd.DataFrame)
 
     import math
@@ -178,7 +178,7 @@ def test_neos_blocking(data):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
-    summary = transport.solve(backend="neos", client=client)
+    summary = transport.solve(solver="cplex", backend="neos", client=client)
     assert isinstance(summary, pd.DataFrame)
 
     import math
@@ -285,7 +285,7 @@ def test_neos_non_blocking(data):
         email=os.environ["NEOS_EMAIL"],
         is_blocking=False,
     )
-    transport.solve(backend="neos", client=client)
+    transport.solve(solver="cplex", backend="neos", client=client)
 
     job_number, job_password = client.jobs[-1]
     client.get_final_results(job_number, job_password)
@@ -387,7 +387,6 @@ def test_solver_options(data):
         email=os.environ["NEOS_EMAIL"],
     )
     transport.solve(
-        output=sys.stdout,
         solver="cplex",
         solver_options={"aggfill": "11"},
         backend="neos",

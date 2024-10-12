@@ -958,11 +958,11 @@ class GAMSEngine(backend.Backend):
             self.restart_file,
         ]
 
-        if hasattr(self.options, "_solver_options_file"):
+        if self.solver_options:
             extra_model_files.append(
                 os.path.join(
                     self.container.working_directory,
-                    f"{self.options._solver[1].lower()}.opt",
+                    f"{self.solver.lower()}.opt",
                 )
             )
 

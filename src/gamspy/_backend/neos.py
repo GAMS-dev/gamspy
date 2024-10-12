@@ -262,6 +262,9 @@ class NeosClient:
     def _prepare_xml(
         self,
         gams_string: str,
+        solver: str | None,
+        solver_options: dict | None,
+        problem: str,
         gdx_path: str,
         restart_path: str,
         options: Options,
@@ -285,9 +288,10 @@ class NeosClient:
             pass
 
         solver_options_str = ""
-        if hasattr(options, "_solver_options_file"):
-            with open(options._solver_options_file_name) as file:
-                solver_options_str = file.read()
+        if solver_options:
+            solver_options_str = "\n".join(
+                [f"{key} {value}" for key, value in solver_options.items()]
+            )
 
         options._export(os.path.join(working_directory, "parameters"))
         with open(
@@ -301,11 +305,7 @@ class NeosClient:
 
         parameter_string = "\n".join(parameters + extras)
 
-        solver = "cbc"
-        problem = "milp"
-        if hasattr(options, "_solver"):
-            problem = options._solver[0].lower()
-            solver = options._solver[1]
+        solver = solver if solver else "cbc"
 
         problem_mapping = {
             "mip": "milp",
@@ -502,6 +502,9 @@ class NEOSServer(backend.Backend):
 
         self.client._prepare_xml(
             gams_string,
+            solver=self.solver,
+            solver_options=self.solver_options,
+            problem=str(self.model.problem).lower(),
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,

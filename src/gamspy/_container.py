@@ -1053,7 +1053,7 @@ class Container(gt.Container):
     def addModel(
         self,
         name: str | None = None,
-        problem: Problem | str = Problem.LP,
+        problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
         sense: Sense | str | None = None,
         objective: Variable | Expression | None = None,

@@ -430,7 +430,6 @@ class Options(BaseModel):
                     solver_file.write(f"{key} {value}\n")
 
             self._solver_options_file = "1"
-            self._solver_options_file_name = solver_options_file_name
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
