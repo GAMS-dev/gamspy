@@ -848,3 +848,95 @@ def test_loadpoint(data):
 
     transport.solve(options=Options(loadpoint="transport_p.gdx"))
     assert transport.num_iterations == 0
+
+
+def test_solver_options_twice(data):
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(
+        m,
+        name="i",
+        records=canning_plants,
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=markets,
+        description="markets",
+    )
+
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m,
+        name="demand",
+        domain=j,
+        description="satisfy demand at market j",
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    log_file_path = os.path.join("tmp", "log.log")
+    transport.solve(
+        solver="cplex",
+        solver_options={"lpmethod": 4},
+        options=Options(log_file=log_file_path),
+    )
+    with open(log_file_path) as file:
+        assert "OptFile 1" in file.read()
+
+    transport.solve(options=Options(log_file=log_file_path))
+    with open(log_file_path) as file:
+        assert "OptFile 1" not in file.read()
