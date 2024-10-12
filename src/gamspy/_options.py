@@ -415,7 +415,7 @@ class Options(BaseModel):
         """Set the solver and the solver options"""
         if solver:
             self._solver = (str(problem), solver)
-
+        
         if solver_options:
             if solver is None:
                 raise ValidationError(
@@ -499,13 +499,16 @@ class Options(BaseModel):
         if hasattr(self, "_solver"):
             problem_type, solver = self._solver
             all_options[problem_type] = solver
+            delattr(self, "_solver")
 
         if hasattr(self, "_solver_options_file"):
             all_options["optfile"] = self._solver_options_file
+            delattr(self, "_solver_options_file")
 
         # Extra options
         if hasattr(self, "_extra_options") and self._extra_options:
             all_options.update(**self._extra_options)
+            delattr(self, "_extra_options")
 
         # User options
         user_options = self._get_gams_compatible_options(output)

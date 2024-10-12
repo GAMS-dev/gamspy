@@ -304,7 +304,7 @@ class Container(gt.Container):
 
         return bool("+" in lines[0] and lines[4][47] == "N")
 
-    def _validate_global_options(self, options: Any) -> Options | None:
+    def _validate_global_options(self, options: Any) -> Options:
         if options is not None and not isinstance(options, Options):
             raise TypeError(
                 f"`options` must be of type Option but found {type(options)}"
