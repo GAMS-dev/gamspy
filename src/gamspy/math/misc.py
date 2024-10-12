@@ -51,20 +51,6 @@ class MathOp:
 
         return f"{self.op_name}({operands_str})"
 
-    def _find_all_symbols(self):
-        symbols = []
-        for elem in self.elements:
-            if isinstance(elem, expression.Expression):
-                symbols += elem._find_all_symbols()
-            elif isinstance(elem, operation.Operation):
-                symbols += [symbol.name for symbol in elem.op_domain]
-            elif isinstance(elem, ImplicitSymbol):
-                symbols.append(elem.parent.name)
-            elif isinstance(elem, Symbol):
-                symbols.append(elem.name)
-
-        return symbols
-
     def __str__(self):
         return self.gamsRepr()
 

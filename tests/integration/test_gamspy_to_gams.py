@@ -183,6 +183,13 @@ def test_lp_transport(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("153.675")
 
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "transport.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "transport.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
+
 
 def test_mip_cutstock(data):
     m = data
@@ -310,6 +317,13 @@ def test_mip_cutstock(data):
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("452.25")
+
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "master.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "master.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
 
 
 def test_nlp_weapons(data):
@@ -550,6 +564,13 @@ def test_nlp_weapons(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("1735.569579")
 
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "war.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "war.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
+
 
 def test_mcp_qp6(data):
     m = data
@@ -669,6 +690,13 @@ def test_mcp_qp6(data):
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("8.499300")
+
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "qp6.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "qp6.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
 
 
 def test_dnlp_inscribedsquare(data):
@@ -820,6 +848,13 @@ def test_dnlp_inscribedsquare(data):
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("9.80076")
+
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "square.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "square.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
 
 
 def test_minlp_minlphix(data):
@@ -1521,6 +1556,13 @@ def test_minlp_minlphix(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         print(f"{objective=}")
 
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "skip.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "skip.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
+
 
 def test_qcp_EDsensitivity(data):
     m = data
@@ -1586,6 +1628,13 @@ def test_qcp_EDsensitivity(data):
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert objective.startswith("911044.089")
 
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "ECD.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "ECD.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
+
 
 def test_set_attributes(data):
     m = data
@@ -1596,7 +1645,7 @@ def test_set_attributes(data):
 
     model = m.addModel(
         problem="LP",
-        name="test",
+        name="attr",
         sense=Sense.MIN,
         equations=[eq],
         objective=Sum(s, x[s]),
@@ -1607,10 +1656,10 @@ def test_set_attributes(data):
     process = subprocess.run(
         [
             os.path.join(m.system_directory, "gams"),
-            os.path.join("tmp", "to_gams", "test.gms"),
+            os.path.join("tmp", "to_gams", "attr.gms"),
             "traceopt=2",
             "trace=trace.txt",
-            f'output={os.path.join("tmp", "to_gams", "test.lst")}',
+            f'output={os.path.join("tmp", "to_gams", "attr.lst")}',
         ],
         capture_output=True,
         text=True,
@@ -1622,3 +1671,39 @@ def test_set_attributes(data):
         lines = trace.read().splitlines()
         objective = lines[-1].split("//")[0].split(" ")[-3]
         assert float(objective) == 1
+
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "attr.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "attr.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
+
+def test_math_op(data):
+    ct = data
+
+    S = ct.addSet("S", records=["a"])
+    p = ct.addParameter("p", domain=S)
+    p[S] = 2
+    x = ct.addVariable("x", domain=S, type="positive")
+    e = ct.addEquation("e", domain=S)
+
+    e[S] = (p[S] * x[S]) ** 2 <= 4
+
+    m = ct.addModel(
+        "math",
+        Problem.QCP,
+        equations=ct.getEquations(),
+        sense=Sense.MIN,
+        objective=Sum(S, x[S])
+    )
+
+    tmp_path = os.path.join("tmp", "to_gams")
+    m.toGams(tmp_path)
+
+    reference_path = os.path.join(
+        "tests", "integration", "gms_references", "math.gms"
+    )
+    with open(os.path.join("tmp", "to_gams", "math.gms")) as file1:
+        with open(reference_path) as file2:
+            assert file1.read() == file2.read()
