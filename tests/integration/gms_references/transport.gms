@@ -9,7 +9,6 @@ Equation demand(j) "satisfy demand at market j";
 free Variable transport_objective_variable;
 Equation transport_objective;
 Model transport / supply,demand,transport_objective /;
-$gdxLoadAll C:\Users\muhammet\Documents\gams_workspace\gamspy\tmp\to_gams\transport_data.gdx
 supply(i) .. sum(j,x(i,j)) =l= a(i);
 demand(j) .. sum(i,x(i,j)) =g= b(j);
 transport_objective .. sum((i,j),(c(i,j) * x(i,j))) =e= transport_objective_variable;

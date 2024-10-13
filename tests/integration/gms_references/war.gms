@@ -10,7 +10,6 @@ Equation minw(t) "minimum number of weapons required per target";
 free Variable war_objective_variable;
 Equation war_objective;
 Model war / maxw,minw,war_objective /;
-$gdxLoadAll C:\Users\muhammet\Documents\gams_workspace\gamspy\tmp\to_gams\war_data.gdx
 maxw(w) .. sum(t $ td(w,t),x(w,t)) =l= wa(w);
 minw(t) $ tm(t) .. sum(w $ td(w,t),x(w,t)) =g= tm(t);
 war_objective .. sum(t,(mv(t) * (1 - prod(w $ td(w,t),( rPower((1 - td(w,t)),x(w,t)) ))))) =e= war_objective_variable;

@@ -15,7 +15,6 @@ Equation e4y "define y-coordinate of upper-right corner";
 free Variable square_objective_variable;
 Equation square_objective;
 Model square / e1x,e1y,e2x,e2y,e3x,e3y,e4x,e4y,square_objective /;
-$gdxLoadAll C:\Users\muhammet\Documents\gams_workspace\gamspy\tmp\to_gams\square_data.gdx
 e1x .. (( sin(t("1")) ) * ( cos((t("1") - (t("1") * t("1")))) )) =e= x;
 e1y .. (t("1") * ( sin(t("1")) )) =e= y;
 e2x .. (( sin(t("2")) ) * ( cos((t("2") - (t("2") * t("2")))) )) =e= (x + a);
