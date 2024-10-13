@@ -11,6 +11,7 @@ GAMSPy 1.0.3
   - Fix toGams bug of MathOp symbols.
 - Testing
   - Remove leftover files after running all tests.
+  - Add one to one comparison tests with reference files in toGams tests.
 
 GAMSPy 1.0.2
 ------------
