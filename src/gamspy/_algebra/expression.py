@@ -479,11 +479,6 @@ class Expression(operable.Operable):
 
                 if isinstance(node, operation.Operation):
                     node._validate_operation(control_stack.copy())
-                    for elem in node.raw_domain:
-                        if elem in control_stack:
-                            raise ValidationError(
-                                f"Set `{elem}` is already in control!"
-                            )
                 elif isinstance(node, ImplicitSymbol):
                     for elem in node.domain:
                         if hasattr(elem, "is_singleton") and elem.is_singleton:
