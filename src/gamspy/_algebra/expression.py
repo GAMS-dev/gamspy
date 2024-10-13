@@ -376,6 +376,8 @@ class Expression(operable.Operable):
         self.representation = self._create_output_str()
 
     def _find_all_symbols(self) -> list[str]:
+        # Finds all symbols in an expression with a stack based inorder
+        # traversal algorithm (O(N)).
         symbols: list[str] = []
         stack = []
 
@@ -388,11 +390,13 @@ class Expression(operable.Operable):
                 node = stack.pop()
 
                 if isinstance(node, Symbol):
-                    symbols.append(node.name)
+                    if node.name not in symbols:
+                        symbols.append(node.name)
                     stack += node.domain
                     node = None
                 elif isinstance(node, ImplicitSymbol):
-                    symbols.append(node.parent.name)
+                    if node.parent.name not in symbols:
+                        symbols.append(node.parent.name)
                     stack += node.domain
                     stack += node.container[node.parent.name].domain
                     node = None
@@ -401,7 +405,12 @@ class Expression(operable.Operable):
                     node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
-                    node = node.condition
+
+                    if isinstance(node.condition, Expression):
+                        node = node.condition
+                    else:
+                        stack.append(node.condition)
+                        node = None
                 elif isinstance(node, (operation.Ord, operation.Card)):
                     stack.append(node._symbol)
                     node = None
