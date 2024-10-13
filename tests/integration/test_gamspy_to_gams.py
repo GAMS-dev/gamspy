@@ -190,8 +190,9 @@ def test_lp_transport(data):
         content1 = file1.read()
     with open(reference_path) as file2:
         content2 = file2.read()
-        
+
     assert content1 == content2
+
 
 def test_mip_cutstock(data):
     m = data
@@ -329,6 +330,7 @@ def test_mip_cutstock(data):
         content2 = file2.read()
 
     assert content1 == content2
+
 
 def test_nlp_weapons(data):
     m = data
@@ -868,6 +870,7 @@ def test_dnlp_inscribedsquare(data):
         content2 = file2.read()
 
     assert content1 == content2
+
 
 def test_minlp_minlphix(data):
     m = data
@@ -1575,7 +1578,7 @@ def test_minlp_minlphix(data):
         content1 = file1.read()
     with open(reference_path) as file2:
         content2 = file2.read()
-    
+
     assert content1 == content2
 
 
@@ -1700,6 +1703,7 @@ def test_set_attributes(data):
 
     assert content1 == content2
 
+
 def test_math_op(data):
     ct = data
 
@@ -1729,5 +1733,5 @@ def test_math_op(data):
         content1 = file1.read()
     with open(reference_path) as file2:
         content2 = file2.read()
-    
+
     assert content1 == content2
