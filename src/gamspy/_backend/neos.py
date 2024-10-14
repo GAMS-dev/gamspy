@@ -84,6 +84,20 @@ NEOS_CATEGORY_MAP = {
     "XPRESS": ["LP", "MILP", "SOCP"],
 }
 
+PROBLEM_MAP = {
+    "MIP": "MILP",
+    "RMIP": "MILP",
+    "MCP": "CP",
+    "CNS": "CP",
+    "MINLP": "MINCO",
+    "RMINLP": "MINCO",
+    "QCP": "MINCO",
+    "MIQCP": "MINCO",
+    "RMIQCP": "MINCO",
+    "NLP": "NCO",
+    "DNLP": "NCO",
+}
+
 
 def validate_matching(problem: str, solver: str):
     can_solve = NEOS_CATEGORY_MAP[solver]
@@ -495,22 +509,8 @@ class NEOSServer(backend.Backend):
         problem = str(model.problem).upper()
         solver = solver.upper() if solver else DEFAULT_SOLVERS[problem]
 
-        problem_mapping = {
-            "MIP": "MILP",
-            "RMIP": "MILP",
-            "MCP": "CP",
-            "CNS": "CP",
-            "MINLP": "MINCO",
-            "RMINLP": "MINCO",
-            "QCP": "MINCO",
-            "MIQCP": "MINCO",
-            "RMIQCP": "MINCO",
-            "NLP": "NCO",
-            "DNLP": "NCO",
-        }
-
-        if problem in problem_mapping:
-            problem = problem_mapping[problem]
+        if problem in PROBLEM_MAP:
+            problem = PROBLEM_MAP[problem]
 
         if solver == "CBC" and problem in ["LP", "RMIP"]:
             problem = "MILP"
