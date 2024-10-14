@@ -443,6 +443,10 @@ def validate_solver_args(
         if not isinstance(solver, str):
             raise TypeError("`solver` argument must be a string.")
 
+        if backend != "local":
+            # No need to check whether the solver is installed on client's machine for NEOS or ENGINE.
+            return
+
         installed_solvers = utils.getInstalledSolvers(system_directory)
         if backend == "local" and solver.upper() not in installed_solvers:
             raise ValidationError(
