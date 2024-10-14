@@ -185,6 +185,10 @@ def test_neos_blocking(data):
 
     assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
 
+    summary = transport.solve(solver="cbc", backend="neos", client=client)
+    assert isinstance(summary, pd.DataFrame)
+    assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
+
 
 def test_no_client(data):
     m, canning_plants, markets, capacities, demands, distances = data

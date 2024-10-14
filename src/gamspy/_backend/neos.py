@@ -305,17 +305,38 @@ class NeosClient:
 
         parameter_string = "\n".join(parameters + extras)
 
-        solver = solver if solver else "cbc"
+        # TODO: use gamspy_base.default_solvers after GAMS 48
+        default_solvers = {
+            "CNS": "PATH",
+            "DNLP": "IPOPTH",
+            "EMP": "CONVERT",
+            "LP": "CPLEX",
+            "MCP": "PATH",
+            "MINLP": "SHOT",
+            "MIP": "CPLEX",
+            "MIQCP": "SHOT",
+            "MPEC": "NLPEC",
+            "NLP": "IPOPTH",
+            "QCP": "IPOPTH",
+            "RMINLP": "IPOPTH",
+            "RMIP": "CPLEX",
+            "RMIQCP": "IPOPTH",
+        }
+
+        solver = solver if solver else default_solvers[problem]
 
         problem_mapping = {
-            "mip": "milp",
-            "mcp": "cp",
-            "minlp": "minco",
-            "nlp": "nco",
+            "MIP": "milp",
+            "MCP": "cp",
+            "MINLP": "minco",
+            "NLP": "nco",
         }
 
         if problem in problem_mapping:
             problem = problem_mapping[problem]
+
+        if solver.lower() == "cbc" and problem in ["LP", "RMIP"]:
+            problem = "milp"
 
         template = f"""
             <document>
@@ -504,7 +525,7 @@ class NEOSServer(backend.Backend):
             gams_string,
             solver=self.solver,
             solver_options=self.solver_options,
-            problem=str(self.model.problem).lower(),
+            problem=str(self.model.problem),
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,

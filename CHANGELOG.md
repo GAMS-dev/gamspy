@@ -9,6 +9,7 @@ GAMSPy 1.0.3
   - Fix set attribute comparison bug.
   - Do not create a GDX file when it's not necessary. 
   - Do not carry solver options from the previous solve to the new solve.
+  - Implicitly convert problem type to milp if the backend is NEOS Server and the problem type is LP or RMIP.
 - Testing
   - Remove leftover files after running all tests.
 

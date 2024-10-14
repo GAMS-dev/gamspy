@@ -410,29 +410,6 @@ def validate_solver_args(
     output: io.TextIOWrapper | None,
     load_symbols: list[str] | None,
 ) -> None:
-    # Check validity of solver
-    if solver is not None:
-        if not isinstance(solver, str):
-            raise TypeError("`solver` argument must be a string.")
-
-        solver = solver.upper()
-        installed_solvers = utils.getInstalledSolvers(system_directory)
-        if backend == "local" and solver not in installed_solvers:
-            raise ValidationError(
-                f"Provided solver name `{solver}` is not installed on your"
-                f" machine. Install `{solver}` with `gamspy install solver"
-                f" {solver.lower()}`"
-            )
-
-        capabilities = utils.getSolverCapabilities(system_directory)
-        if str(problem) not in capabilities[solver]:
-            raise ValidationError(
-                f"Given solver `{solver}` is not capable of solving given"
-                f" problem type `{problem}`. See capability matrix "
-                "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
-                " to choose a suitable solver"
-            )
-
     # Check validity of options
     if options is not None and not isinstance(options, Options):
         raise TypeError(
@@ -460,6 +437,33 @@ def validate_solver_args(
                 raise ValidationError(
                     f"Elements of `load_symbols` must be of type Symbol but found {elem}"
                 )
+
+    # Check validity of solver
+    if solver is not None:
+        if not isinstance(solver, str):
+            raise TypeError("`solver` argument must be a string.")
+
+        if backend == "neos":
+            # No need to check whether the solver is installed on client's machine for NEOS.
+            return
+
+        solver = solver.upper()
+        installed_solvers = utils.getInstalledSolvers(system_directory)
+        if backend == "local" and solver not in installed_solvers:
+            raise ValidationError(
+                f"Provided solver name `{solver}` is not installed on your"
+                f" machine. Install `{solver}` with `gamspy install solver"
+                f" {solver.lower()}`"
+            )
+
+        capabilities = utils.getSolverCapabilities(system_directory)
+        if str(problem) not in capabilities[solver]:
+            raise ValidationError(
+                f"Given solver `{solver}` is not capable of solving given"
+                f" problem type `{problem}`. See capability matrix "
+                "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                " to choose a suitable solver"
+            )
 
 
 def validate_equations(model: Model):
