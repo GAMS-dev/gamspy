@@ -178,7 +178,7 @@ def test_neos_blocking(data):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
-    summary = transport.solve(solver="cplex", backend="neos", client=client)
+    summary = transport.solve(backend="neos", client=client)
     assert isinstance(summary, pd.DataFrame)
 
     import math

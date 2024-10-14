@@ -680,9 +680,7 @@ def test_solver_options(data):
     )
 
     with open(m.gamsJobName() + ".lst") as file:
-        content = file.read()
-        print(content)
-        assert ">>  rtmaxv 1.e12" in content
+        assert ">>  rtmaxv 1.e12" in file.read()
 
 
 def test_savepoint(data):
