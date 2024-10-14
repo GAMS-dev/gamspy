@@ -35,6 +35,64 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
+# TODO: use gamspy_base.default_solvers after GAMS 48
+DEFAULT_SOLVERS = {
+    "CNS": "PATH",
+    "DNLP": "IPOPTH",
+    "EMP": "CONVERT",
+    "LP": "CPLEX",
+    "MCP": "PATH",
+    "MINLP": "SHOT",
+    "MIP": "CPLEX",
+    "MIQCP": "SHOT",
+    "MPEC": "NLPEC",
+    "NLP": "IPOPTH",
+    "QCP": "IPOPTH",
+    "RMINLP": "IPOPTH",
+    "RMIP": "CPLEX",
+    "RMIQCP": "IPOPTH",
+}
+
+NEOS_CATEGORY_MAP = {
+    "BARON": ["MINCO", "GO"],
+    "CBC": ["MILP"],
+    "CONOPT": ["NCO"],
+    "CONVERT": ["APPLICATION"],
+    "COPT": ["LP", "MILP"],
+    "CPLEX": ["LP", "MILP", "SOCP"],
+    "DICOPT": ["MINCO"],
+    "EXAMINER": [],
+    "EXAMINER2": [],
+    "GUROBI": ["LP", "MILP", "SOCP"],
+    "HIGHS": ["LP", "MILP"],
+    "IPOPT": ["NCO"],
+    "IPOPTH": [],
+    "KESTREL": [],
+    "KNITRO": ["CP", "MPEC", "MINCO", "NCO"],
+    "MILES": ["CP"],
+    "MINOS": ["NCO"],
+    "MOSEK": ["LP", "MILP", "SOCP"],
+    "MPSGE": [],
+    "NLPEC": ["CP", "MPEc"],
+    "PATH": ["CP", "NCO"],
+    "PATHNLP": ["NCO"],
+    "SBB": ["MINCO"],
+    "SCIP": ["GO", "MILP", "MINCO"],
+    "SHOT": ["MINCO"],
+    "SNOPT": ["NCO"],
+    "SOPLEX": ["LP", "MILP"],
+    "XPRESS": ["LP", "MILP", "SOCP"],
+}
+
+
+def validate_matching(problem: str, solver: str):
+    can_solve = NEOS_CATEGORY_MAP[solver]
+    if len(can_solve) == 0 or problem not in can_solve:
+        raise ValidationError(
+            f"`{solver}:{problem}` pair is not supported on NEOS Server. All possible pairs:\n\n{NEOS_CATEGORY_MAP}"
+        )
+
+
 class NeosClient:
     def __init__(
         self,
@@ -305,39 +363,6 @@ class NeosClient:
 
         parameter_string = "\n".join(parameters + extras)
 
-        # TODO: use gamspy_base.default_solvers after GAMS 48
-        default_solvers = {
-            "CNS": "PATH",
-            "DNLP": "IPOPTH",
-            "EMP": "CONVERT",
-            "LP": "CPLEX",
-            "MCP": "PATH",
-            "MINLP": "SHOT",
-            "MIP": "CPLEX",
-            "MIQCP": "SHOT",
-            "MPEC": "NLPEC",
-            "NLP": "IPOPTH",
-            "QCP": "IPOPTH",
-            "RMINLP": "IPOPTH",
-            "RMIP": "CPLEX",
-            "RMIQCP": "IPOPTH",
-        }
-
-        solver = solver if solver else default_solvers[problem]
-
-        problem_mapping = {
-            "MIP": "milp",
-            "MCP": "cp",
-            "MINLP": "minco",
-            "NLP": "nco",
-        }
-
-        if problem in problem_mapping:
-            problem = problem_mapping[problem]
-
-        if solver.lower() == "cbc" and problem in ["LP", "RMIP"]:
-            problem = "milp"
-
         template = f"""
             <document>
             <category>{problem}</category>
@@ -464,6 +489,35 @@ class NEOSServer(backend.Backend):
             output,
             load_symbols,
         )
+        if solver:
+            solver = solver.upper()
+
+        problem = str(model.problem).upper()
+        solver = solver.upper() if solver else DEFAULT_SOLVERS[problem]
+
+        problem_mapping = {
+            "MIP": "MILP",
+            "RMIP": "MILP",
+            "MCP": "CP",
+            "CNS": "CP",
+            "MINLP": "MINCO",
+            "RMINLP": "MINCO",
+            "QCP": "MINCO",
+            "MIQCP": "MINCO",
+            "RMIQCP": "MINCO",
+            "NLP": "NCO",
+            "DNLP": "NCO",
+        }
+
+        if problem in problem_mapping:
+            problem = problem_mapping[problem]
+
+        if solver == "CBC" and problem in ["LP", "RMIP"]:
+            problem = "MILP"
+
+        validate_matching(problem, solver)
+        self.problem = problem
+        self.solver = solver
 
         self.client = client
         self.job_name = self.get_job_name()
@@ -525,7 +579,7 @@ class NEOSServer(backend.Backend):
             gams_string,
             solver=self.solver,
             solver_options=self.solver_options,
-            problem=str(self.model.problem),
+            problem=self.problem,
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,

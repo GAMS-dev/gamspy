@@ -443,13 +443,8 @@ def validate_solver_args(
         if not isinstance(solver, str):
             raise TypeError("`solver` argument must be a string.")
 
-        if backend == "neos":
-            # No need to check whether the solver is installed on client's machine for NEOS.
-            return
-
-        solver = solver.upper()
         installed_solvers = utils.getInstalledSolvers(system_directory)
-        if backend == "local" and solver not in installed_solvers:
+        if backend == "local" and solver.upper() not in installed_solvers:
             raise ValidationError(
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
@@ -457,7 +452,7 @@ def validate_solver_args(
             )
 
         capabilities = utils.getSolverCapabilities(system_directory)
-        if str(problem) not in capabilities[solver]:
+        if str(problem) not in capabilities[solver.upper()]:
             raise ValidationError(
                 f"Given solver `{solver}` is not capable of solving given"
                 f" problem type `{problem}`. See capability matrix "
