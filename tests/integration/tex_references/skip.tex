@@ -20,17 +20,17 @@
 \endhead
 
 i & * & condensers-columns\\
-zcrhx & i,j & condenser to reboiler allowable matches\\
 j & * & reboilers\\
-zcr & i,j & reboiler-condenser pairs\\
+hu & * & hot utilities\\
+cu & * & cold utilities\\
+n & * & index\\
 m & * & intermediates\\
 pm & i,m & products\\
 fm & i,m & feeds\\
 zlead & i & leading columns in superstructure\\
-n & * & index\\
-cu & * & cold utilities\\
-hu & * & hot utilities\\
+zcrhx & i,j & condenser to reboiler allowable matches\\
 zlim & i,j & direction of heat integration\\
+zcr & i,j & reboiler-condenser pairs\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -40,26 +40,26 @@ zlim & i,j & direction of heat integration\\
 \hline
 \endhead
 
-tcout &  & outlet temperature of cold water\\
-tcin &  & inlet temperature of cold water\\
-u &  & large number for logical constraints\\
 spltfrc & i,m & split fraction of distillation columns\\
-totflow &  & total flow to superstructure\\
-kf & i,n & coeff. for heat duty temperature fits\\
 tcmin & i & minimum condenser temperatures\\
-dtmin &  & minimum temperature approach\\
-thu & hu & hot utility temperatures\\
-af & i,n & coeff. for column temperature fits\\
-uint &  & upper bound for integer logical\\
-alpha &  & one over payout time factor in years\\
 fc & i & fixed charge for distillation columns\\
 vc & i & variable charge for distillation columns\\
+thu & hu & hot utility temperatures\\
+costhu & hu & hot utility cost coefficients\\
+kf & i,n & coeff. for heat duty temperature fits\\
+af & i,n & coeff. for column temperature fits\\
+totflow &  & total flow to superstructure\\
 fchx &  & fixed charge for heat exchangers scaled\\
 vchx &  & variable charge for heat exchangers scaled\\
 htc &  & overall heat transfer coefficient\\
-beta &  & income tax correction factor\\
+dtmin &  & minimum temperature approach\\
+tcin &  & inlet temperature of cold water\\
+tcout &  & outlet temperature of cold water\\
 costcw &  & cooling water cost coefficient\\
-costhu & hu & hot utility cost coefficients\\
+beta &  & income tax correction factor\\
+alpha &  & one over payout time factor in years\\
+u &  & large number for logical constraints\\
+uint &  & upper bound for integer logical\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -69,9 +69,14 @@ costhu & hu & hot utility cost coefficients\\
 \hline
 \endhead
 
+f & i & flowrates to columns\\
+qr & j & reboiler duties for column with reboiler j\\
+qc & i & condenser duties for column i\\
+qcr & i,j & heat integration heat transfer\\
+qhu & hu,j & hot utility heat transfer\\
+qcu & i,cu & cold utility heat transfer\\
 tc & i & condenser temperature for column with cond. i\\
 tr & j & reboiler temperature for column with reb. j\\
-ycol & i & columns in superstructure\\
 lmtd & i & lmtd for cooling water exchanges\\
 sl1 & i & artificial slack variable for lmtd equalities\\
 sl2 & i & artificial slack variable for lmtd equalities\\
@@ -79,15 +84,10 @@ s1 & i & artificial slack variable for reb-con equalities\\
 s2 & i & artificial slack variable for reb-con equalities\\
 s3 & i & artificial slack variable for duty equalities\\
 s4 & i & artificial slack variable for duty equalities\\
-f & i & flowrates to columns\\
-qc & i & condenser duties for column i\\
-qr & j & reboiler duties for column with reboiler j\\
-qcr & i,j & heat integration heat transfer\\
-qcu & i,cu & cold utility heat transfer\\
-qhu & hu,j & hot utility heat transfer\\
 yhx & i,j & heat integration matches condenser i reboiler j\\
 yhu & hu,j & hot utility matches hot utility hu reboiler j\\
 ycu & i,cu & cold utility matches condenser i cold util cu\\
+ycol & i & columns in superstructure\\
 skip\_objective\_variable &  & \\
 \hline
 \end{tabularx}
@@ -294,9 +294,14 @@ $
 \vspace{5pt}
 \hrule
 \bigskip
+$f_{i}\geq 0 ~ \forall i\\$
+$qr_{j}\geq 0 ~ \forall j\\$
+$qc_{i}\geq 0 ~ \forall i\\$
+$qcr_{i,j}\geq 0 ~ \forall i,j\\$
+$qhu_{hu,j}\geq 0 ~ \forall hu,j\\$
+$qcu_{i,cu}\geq 0 ~ \forall i,cu\\$
 $tc_{i}\geq 0 ~ \forall i\\$
 $tr_{j}\geq 0 ~ \forall j\\$
-$ycol_{i}\in \{0,1\} ~ \forall i\\$
 $lmtd_{i}\geq 0 ~ \forall i\\$
 $sl1_{i}\geq 0 ~ \forall i\\$
 $sl2_{i}\geq 0 ~ \forall i\\$
@@ -304,13 +309,8 @@ $s1_{i}\geq 0 ~ \forall i\\$
 $s2_{i}\geq 0 ~ \forall i\\$
 $s3_{i}\geq 0 ~ \forall i\\$
 $s4_{i}\geq 0 ~ \forall i\\$
-$f_{i}\geq 0 ~ \forall i\\$
-$qc_{i}\geq 0 ~ \forall i\\$
-$qr_{j}\geq 0 ~ \forall j\\$
-$qcr_{i,j}\geq 0 ~ \forall i,j\\$
-$qcu_{i,cu}\geq 0 ~ \forall i,cu\\$
-$qhu_{hu,j}\geq 0 ~ \forall hu,j\\$
 $yhx_{i,j}\in \{0,1\} ~ \forall i,j\\$
 $yhu_{hu,j}\in \{0,1\} ~ \forall hu,j\\$
 $ycu_{i,cu}\in \{0,1\} ~ \forall i,cu\\$
+$ycol_{i}\in \{0,1\} ~ \forall i\\$
 \end{document}

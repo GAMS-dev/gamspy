@@ -152,7 +152,10 @@ class LatexConverter(Converter):
         self.model = model
         self.container = model.container
         self.path = path
-        self.symbols = get_symbols(model)
+        symbols = get_symbols(model)
+        self.symbols = sorted(
+            symbols, key=list(self.container.data.keys()).index
+        )
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
         self.param_header = "\\subsection*{Parameters}"

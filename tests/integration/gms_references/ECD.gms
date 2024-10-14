@@ -1,0 +1,11 @@
+Set gen(*);
+Parameter load;
+Parameter data(gen,*);
+free Variable P(gen);
+Equation eq2;
+free Variable ECD_objective_variable;
+Equation ECD_objective;
+Model ECD / eq2,ECD_objective /;
+eq2 .. sum(gen,P(gen)) =g= load;
+ECD_objective .. sum(gen,((((data(gen,"a") * P(gen)) * P(gen)) + (data(gen,"b") * P(gen))) + data(gen,"c"))) =e= ECD_objective_variable;
+solve ECD using QCP MIN ECD_objective_variable;
