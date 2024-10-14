@@ -448,7 +448,7 @@ def validate_solver_args(
             return
 
         installed_solvers = utils.getInstalledSolvers(system_directory)
-        if backend == "local" and solver.upper() not in installed_solvers:
+        if solver.upper() not in installed_solvers:
             raise ValidationError(
                 f"Provided solver name `{solver}` is not installed on your"
                 f" machine. Install `{solver}` with `gamspy install solver"
