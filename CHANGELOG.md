@@ -10,8 +10,10 @@ GAMSPy 1.0.3
   - Do not create a GDX file when it's not necessary. 
   - Do not carry solver options from the previous solve to the new solve.
   - Implicitly convert problem type to milp if the backend is NEOS Server and the problem type is LP or RMIP.
+  - Fix toGams bug of MathOp symbols.
 - Testing
   - Remove leftover files after running all tests.
+  - Add one to one comparison tests with reference files in toGams tests.
 
 GAMSPy 1.0.2
 ------------
