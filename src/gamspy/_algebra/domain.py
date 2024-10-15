@@ -35,7 +35,7 @@ class Domain:
 
     """
 
-    def __init__(self, *sets: Set | Alias | ImplicitSet) -> None:
+    def __init__(self, *sets: tuple[Set | Alias | ImplicitSet]) -> None:
         self._sanity_check(sets)
         self.sets = sets
         self.container = self._find_container()  # type: ignore
@@ -46,7 +46,12 @@ class Domain:
 
     def _sanity_check(self, sets: tuple[Set | Alias | ImplicitSet, ...]):
         if len(sets) < 2:
-            raise ValidationError("Domain requires at least 2 sets")
+            error_message = (
+                f"Domain requires at least 2 sets but found {len(sets)}. "
+            )
+            if len(sets) == 1:
+                error_message += f"You can directly limit the domain with {sets[0].name}.where[<your_limitation>]."
+            raise ValidationError(error_message)
 
         if all(not hasattr(set, "container") for set in sets):
             raise ValidationError(

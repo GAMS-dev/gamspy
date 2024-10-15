@@ -1103,6 +1103,9 @@ class Model:
         >>> solved = my_model.solve()
 
         """
+        if solver is None:
+            solver = utils.DEFAULT_SOLVERS[str(self.problem).upper()]
+
         validation.validate_solver_args(
             self.container.system_directory,
             backend,

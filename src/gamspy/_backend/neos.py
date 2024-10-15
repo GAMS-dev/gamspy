@@ -262,6 +262,7 @@ class NeosClient:
     def _prepare_xml(
         self,
         gams_string: str,
+        solver_options: dict | None,
         gdx_path: str,
         restart_path: str,
         options: Options,
@@ -285,9 +286,10 @@ class NeosClient:
             pass
 
         solver_options_str = ""
-        if hasattr(options, "_solver_options_file"):
-            with open(options._solver_options_file_name) as file:
-                solver_options_str = file.read()
+        if solver_options:
+            solver_options_str = "\n".join(
+                [f"{key} {value}" for key, value in solver_options.items()]
+            )
 
         options._export(os.path.join(working_directory, "parameters"))
         with open(
@@ -301,26 +303,10 @@ class NeosClient:
 
         parameter_string = "\n".join(parameters + extras)
 
-        solver = "cbc"
-        problem = "milp"
-        if hasattr(options, "_solver"):
-            problem = options._solver[0].lower()
-            solver = options._solver[1]
-
-        problem_mapping = {
-            "mip": "milp",
-            "mcp": "cp",
-            "minlp": "minco",
-            "nlp": "nco",
-        }
-
-        if problem in problem_mapping:
-            problem = problem_mapping[problem]
-
         template = f"""
             <document>
-            <category>{problem}</category>
-            <solver>{solver}</solver>
+            <category>lp</category>
+            <solver>cplex</solver>
             <inputType>GAMS</inputType>
             <email>{self.email}</email>
             <priority>{self.priority}</priority>
@@ -422,7 +408,7 @@ class NEOSServer(backend.Backend):
         self,
         container: Container,
         options: Options,
-        solver: str | None,
+        solver: str,
         solver_options: dict | None,
         client: NeosClient | None,
         output: io.TextIOWrapper | None,
@@ -443,7 +429,6 @@ class NEOSServer(backend.Backend):
             output,
             load_symbols,
         )
-
         self.client = client
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
@@ -502,6 +487,7 @@ class NEOSServer(backend.Backend):
 
         self.client._prepare_xml(
             gams_string,
+            solver_options=self.solver_options,
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,
@@ -521,10 +507,14 @@ class NEOSServer(backend.Backend):
                 working_directory=self.container.working_directory,
             )
 
-            shutil.move(
-                os.path.join(self.container.working_directory, "output.gdx"),
-                self.container._gdx_out,
+            out_gdx = os.path.join(
+                self.container.working_directory, "output.gdx"
             )
+            if not os.path.exists(out_gdx):
+                raise ValidationError(
+                    "There was a problem while solving the model on NEOS Server. Please check the logs to understand the problem."
+                )
+            shutil.move(out_gdx, self.container._gdx_out)
 
             if not os.path.exists(self.container._gdx_out):
                 raise GamspyException(

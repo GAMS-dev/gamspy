@@ -742,7 +742,7 @@ class GAMSEngine(backend.Backend):
         container: Container,
         client: EngineClient | None,
         options: Options,
-        solver: str | None,
+        solver: str,
         solver_options: dict | None,
         output: io.TextIOWrapper | None,
         model: Model,
@@ -751,6 +751,11 @@ class GAMSEngine(backend.Backend):
         if client is None or not isinstance(client, EngineClient):
             raise ValidationError(
                 "`engine_client` must be provided to solve on GAMS Engine"
+            )
+
+        if solver.lower() in ["mpsge"]:
+            raise ValidationError(
+                f"`{solver}` is not a valid solver for GAMS Engine."
             )
 
         super().__init__(
@@ -958,11 +963,11 @@ class GAMSEngine(backend.Backend):
             self.restart_file,
         ]
 
-        if hasattr(self.options, "_solver_options_file"):
+        if self.solver_options:
             extra_model_files.append(
                 os.path.join(
                     self.container.working_directory,
-                    f"{self.options._solver[1].lower()}.opt",
+                    f"{self.solver.lower()}.opt",
                 )
             )
 

@@ -407,14 +407,13 @@ class Options(BaseModel):
     def _set_solver_options(
         self,
         working_directory: str,
-        solver: str | None,
+        solver: str,
         problem: Problem,
         solver_options: dict | None,
     ):
         """Set the solver and the solver options"""
-        if solver:
-            self._solver = (str(problem), solver)
-
+        self._solver = (str(problem), solver)
+        
         if solver_options:
             if solver is None:
                 raise ValidationError(
@@ -430,7 +429,6 @@ class Options(BaseModel):
                     solver_file.write(f"{key} {value}\n")
 
             self._solver_options_file = "1"
-            self._solver_options_file_name = solver_options_file_name
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
@@ -498,13 +496,16 @@ class Options(BaseModel):
         if hasattr(self, "_solver"):
             problem_type, solver = self._solver
             all_options[problem_type] = solver
+            delattr(self, "_solver")
 
         if hasattr(self, "_solver_options_file"):
             all_options["optfile"] = self._solver_options_file
+            delattr(self, "_solver_options_file")
 
         # Extra options
         if hasattr(self, "_extra_options") and self._extra_options:
             all_options.update(**self._extra_options)
+            delattr(self, "_extra_options")
 
         # User options
         user_options = self._get_gams_compatible_options(output)

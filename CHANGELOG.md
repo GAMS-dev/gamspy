@@ -1,17 +1,23 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.0.4
+------------
+- General
+  - Do not create a GDX file when it's not necessary. 
+  - Do not carry solver options from the previous solve to the new solve.
+  - Fix toGams bug of MathOp symbols.
+- Testing
+  - Add one to one comparison tests with reference files in toGams tests.
+
 GAMSPy 1.0.3
 ------------
 - General
   - Fix solver installation bug in case of a solver installation before the license installation.
   - Fix the validation bug on multiple operations in a row.
   - Fix set attribute comparison bug.
-  - Do not create a GDX file when it's not necessary. 
-  - Fix toGams bug of MathOp symbols.
 - Testing
   - Remove leftover files after running all tests.
-  - Add one to one comparison tests with reference files in toGams tests.
 
 GAMSPy 1.0.2
 ------------

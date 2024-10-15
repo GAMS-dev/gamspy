@@ -390,7 +390,7 @@ def main():
     trnsdiscB.solve()
 
     # Now restart the local solver from this approximate point
-    transport.solve()
+    transport.solve(options=Options(nlp="conopt"))
 
     print(
         "Improved Objective Function Value: ",
@@ -398,7 +398,7 @@ def main():
     )
 
     # Ensure that we are better off transport.objective_value
-    if transport.objective_value - localopt.records.value[0] > 1e-6:
+    if transport.objective_value - localopt.toValue() > 1e-6:
         raise Exception("we should get an improved transport.objective_value")
 
 
