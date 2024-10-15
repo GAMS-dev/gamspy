@@ -753,6 +753,11 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
+        if solver.lower() in ["mpsge"]:
+            raise ValidationError(
+                f"`{solver}` is not a valid solver for GAMS Engine."
+            )
+
         super().__init__(
             container,
             model,

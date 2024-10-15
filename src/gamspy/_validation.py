@@ -442,26 +442,34 @@ def validate_solver_args(
     if not isinstance(solver, str):
         raise TypeError("`solver` argument must be a string.")
 
-    if backend != "local":
+    if backend == "neos" and solver.lower() in ["mpsge", "kestrel"]:
+        raise ValidationError(
+            f"`{solver}` is not a valid solver for NEOS Server."
+        )
+
+    if backend == "engine" and solver.lower() in ["mpsge"]:
+        raise ValidationError(
+            f"`{solver}` is not a valid solver for GAMS Engine."
+        )
+
+    if backend == "local":
         # No need to check whether the solver is installed on client's machine for NEOS or ENGINE.
-        return
+        installed_solvers = utils.getInstalledSolvers(system_directory)
+        if solver.upper() not in installed_solvers:
+            raise ValidationError(
+                f"Provided solver name `{solver}` is not installed on your"
+                f" machine. Install `{solver}` with `gamspy install solver"
+                f" {solver.lower()}`"
+            )
 
-    installed_solvers = utils.getInstalledSolvers(system_directory)
-    if solver.upper() not in installed_solvers:
-        raise ValidationError(
-            f"Provided solver name `{solver}` is not installed on your"
-            f" machine. Install `{solver}` with `gamspy install solver"
-            f" {solver.lower()}`"
-        )
-
-    capabilities = utils.getSolverCapabilities(system_directory)
-    if str(problem).upper() not in capabilities[solver.upper()]:
-        raise ValidationError(
-            f"Given solver `{solver}` is not capable of solving given"
-            f" problem type `{problem}`. See capability matrix "
-            "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
-            " to choose a suitable solver"
-        )
+        capabilities = utils.getSolverCapabilities(system_directory)
+        if str(problem).upper() not in capabilities[solver.upper()]:
+            raise ValidationError(
+                f"Given solver `{solver}` is not capable of solving given"
+                f" problem type `{problem}`. See capability matrix "
+                "(https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES)"
+                " to choose a suitable solver"
+            )
 
 
 def validate_equations(model: Model):

@@ -160,6 +160,12 @@ def test_network_license(network_license):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
+    with pytest.raises(ValidationError):
+        transport.solve(backend="neos", client=client, solver="mpsge")
+
+    with pytest.raises(ValidationError):
+        transport.solve(backend="neos", client=client, solver="kestrel")
+
     summary = transport.solve(
         output=sys.stdout, solver="cplex", backend="neos", client=client
     )
