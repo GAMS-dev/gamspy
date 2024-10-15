@@ -407,13 +407,12 @@ class Options(BaseModel):
     def _set_solver_options(
         self,
         working_directory: str,
-        solver: str | None,
+        solver: str,
         problem: Problem,
         solver_options: dict | None,
     ):
         """Set the solver and the solver options"""
-        if solver:
-            self._solver = (str(problem), solver)
+        self._solver = (str(problem), solver)
         
         if solver_options:
             if solver is None:

@@ -742,7 +742,7 @@ class GAMSEngine(backend.Backend):
         container: Container,
         client: EngineClient | None,
         options: Options,
-        solver: str | None,
+        solver: str,
         solver_options: dict | None,
         output: io.TextIOWrapper | None,
         model: Model,

@@ -41,6 +41,24 @@ CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
 
+# TODO: use gamspy_base.default_solvers after GAMS 48
+DEFAULT_SOLVERS = {
+    "CNS": "PATH",
+    "DNLP": "IPOPTH",
+    "EMP": "CONVERT",
+    "LP": "CPLEX",
+    "MCP": "PATH",
+    "MINLP": "SHOT",
+    "MIP": "CPLEX",
+    "MIQCP": "SHOT",
+    "MPEC": "NLPEC",
+    "NLP": "IPOPTH",
+    "QCP": "IPOPTH",
+    "RMINLP": "IPOPTH",
+    "RMIP": "CPLEX",
+    "RMIQCP": "IPOPTH",
+}
+
 user_dir = os.path.expanduser("~")
 if platform.system() == "Linux":
     DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")

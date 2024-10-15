@@ -1102,10 +1102,6 @@ def test_solver_options(data):
 
     assert os.path.exists(f"{m.working_directory}{os.sep}conopt.opt")
 
-    pytest.raises(
-        ValidationError, transport.solve, None, None, {"rtmaxv": "1.e12"}
-    )
-
 
 def test_ellipsis(data):
     m, canning_plants, markets, capacities, demands, distances = data

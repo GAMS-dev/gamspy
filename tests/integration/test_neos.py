@@ -160,7 +160,9 @@ def test_network_license(network_license):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
-    summary = transport.solve(solver="cplex", backend="neos", client=client)
+    summary = transport.solve(
+        output=sys.stdout, solver="cplex", backend="neos", client=client
+    )
     assert isinstance(summary, pd.DataFrame)
 
     import math

@@ -35,78 +35,6 @@ if TYPE_CHECKING:
     from gamspy._symbols.symbol import Symbol
 
 
-# TODO: use gamspy_base.default_solvers after GAMS 48
-DEFAULT_SOLVERS = {
-    "CNS": "PATH",
-    "DNLP": "IPOPTH",
-    "EMP": "CONVERT",
-    "LP": "CPLEX",
-    "MCP": "PATH",
-    "MINLP": "SHOT",
-    "MIP": "CPLEX",
-    "MIQCP": "SHOT",
-    "MPEC": "NLPEC",
-    "NLP": "IPOPTH",
-    "QCP": "IPOPTH",
-    "RMINLP": "IPOPTH",
-    "RMIP": "CPLEX",
-    "RMIQCP": "IPOPTH",
-}
-
-NEOS_CATEGORY_MAP = {
-    "BARON": ["MINCO", "GO"],
-    "CBC": ["MILP"],
-    "CONOPT": ["NCO"],
-    "CONVERT": ["APPLICATION"],
-    "COPT": ["LP", "MILP"],
-    "CPLEX": ["LP", "MILP", "SOCP"],
-    "DICOPT": ["MINCO"],
-    "EXAMINER": [],
-    "EXAMINER2": [],
-    "GUROBI": ["LP", "MILP", "SOCP"],
-    "HIGHS": ["LP", "MILP"],
-    "IPOPT": ["NCO"],
-    "IPOPTH": [],
-    "KESTREL": [],
-    "KNITRO": ["CP", "MPEC", "MINCO", "NCO"],
-    "MILES": ["CP"],
-    "MINOS": ["NCO"],
-    "MOSEK": ["LP", "MILP", "SOCP"],
-    "MPSGE": [],
-    "NLPEC": ["CP", "MPEc"],
-    "PATH": ["CP", "NCO"],
-    "PATHNLP": ["NCO"],
-    "SBB": ["MINCO"],
-    "SCIP": ["GO", "MILP", "MINCO"],
-    "SHOT": ["MINCO"],
-    "SNOPT": ["NCO"],
-    "SOPLEX": ["LP", "MILP"],
-    "XPRESS": ["LP", "MILP", "SOCP"],
-}
-
-PROBLEM_MAP = {
-    "MIP": "MILP",
-    "RMIP": "MILP",
-    "MCP": "CP",
-    "CNS": "CP",
-    "MINLP": "MINCO",
-    "RMINLP": "MINCO",
-    "QCP": "MINCO",
-    "MIQCP": "MINCO",
-    "RMIQCP": "MINCO",
-    "NLP": "NCO",
-    "DNLP": "NCO",
-}
-
-
-def validate_matching(problem: str, solver: str):
-    can_solve = NEOS_CATEGORY_MAP[solver]
-    if len(can_solve) == 0 or problem not in can_solve:
-        raise ValidationError(
-            f"`{solver}:{problem}` pair is not supported on NEOS Server. All possible pairs:\n\n{NEOS_CATEGORY_MAP}"
-        )
-
-
 class NeosClient:
     def __init__(
         self,
@@ -334,9 +262,7 @@ class NeosClient:
     def _prepare_xml(
         self,
         gams_string: str,
-        solver: str | None,
         solver_options: dict | None,
-        problem: str,
         gdx_path: str,
         restart_path: str,
         options: Options,
@@ -379,8 +305,8 @@ class NeosClient:
 
         template = f"""
             <document>
-            <category>{problem}</category>
-            <solver>{solver}</solver>
+            <category>lp</category>
+            <solver>cplex</solver>
             <inputType>GAMS</inputType>
             <email>{self.email}</email>
             <priority>{self.priority}</priority>
@@ -482,7 +408,7 @@ class NEOSServer(backend.Backend):
         self,
         container: Container,
         options: Options,
-        solver: str | None,
+        solver: str,
         solver_options: dict | None,
         client: NeosClient | None,
         output: io.TextIOWrapper | None,
@@ -503,22 +429,6 @@ class NEOSServer(backend.Backend):
             output,
             load_symbols,
         )
-        if solver:
-            solver = solver.upper()
-
-        problem = str(model.problem).upper()
-        solver = solver.upper() if solver else DEFAULT_SOLVERS[problem]
-
-        if problem in PROBLEM_MAP:
-            problem = PROBLEM_MAP[problem]
-
-        if solver == "CBC" and problem in ["LP", "RMIP"]:
-            problem = "MILP"
-
-        validate_matching(problem, solver)
-        self.problem = problem
-        self.solver = solver
-
         self.client = client
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
@@ -577,9 +487,7 @@ class NEOSServer(backend.Backend):
 
         self.client._prepare_xml(
             gams_string,
-            solver=self.solver,
             solver_options=self.solver_options,
-            problem=self.problem,
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,
@@ -599,10 +507,14 @@ class NEOSServer(backend.Backend):
                 working_directory=self.container.working_directory,
             )
 
-            shutil.move(
-                os.path.join(self.container.working_directory, "output.gdx"),
-                self.container._gdx_out,
+            out_gdx = os.path.join(
+                self.container.working_directory, "output.gdx"
             )
+            if not os.path.exists(out_gdx):
+                raise ValidationError(
+                    "There was a problem while solving the model on NEOS Server. Please check the logs to understand the problem."
+                )
+            shutil.move(out_gdx, self.container._gdx_out)
 
             if not os.path.exists(self.container._gdx_out):
                 raise GamspyException(
