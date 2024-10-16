@@ -29,13 +29,27 @@ def _check_tuple_int(
     return value
 
 
+def _calc_same_padding(
+    kernel_size: tuple[int, int],
+    h_in: int,
+    w_in: int,
+) -> tuple[int, int]:
+    # assumes stride = 1
+    pad_h = math.floor((kernel_size[0] - 1) / 2)
+    pad_w = math.floor((kernel_size[1] - 1) / 2)
+    return pad_h, pad_w
+
+
 def _calc_hw(
-    padding: tuple[int, int],
+    padding: tuple[int, int] | str,
     kernel_size: tuple[int, int],
     stride: tuple[int, int],
     h_in: int,
     w_in: int,
 ) -> tuple[int, int]:
+    if isinstance(padding, str):
+        return h_in, w_in
+
     h_out = math.floor(
         1 + ((h_in + (2 * padding[0]) - (kernel_size[0] - 1) - 1) / stride[0])
     )

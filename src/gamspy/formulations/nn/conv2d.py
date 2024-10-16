@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 import numpy as np
 
@@ -29,8 +30,11 @@ class Conv2d:
         Filter size
     stride : int | tuple[int, int]
         Stride in the convolution, by default 1
-    padding : int | tuple[int, int]
-        Amount of padding to be added to input, by default 0
+    padding : int | tuple[int, int] | Literal["same", "valid"]
+        Specifies the amount of padding to apply to the input, by default 0.
+        If an integer is provided, the same padding is applied to both the height and width.
+        If a tuple of two integers is given, the first value determines the padding for the
+        top and bottom, while the second value sets the padding for the left and right.
     bias : bool
         Is bias added after the convolution, by default True
 
@@ -62,7 +66,7 @@ class Conv2d:
         out_channels: int,
         kernel_size: int | tuple[int, int],
         stride: int | tuple[int, int] = 1,
-        padding: int | tuple[int, int] = 0,
+        padding: int | tuple[int, int] | Literal["same", "valid"] = 0,
         bias: bool = True,
     ):
         if not (isinstance(in_channels, int) and in_channels > 0):
@@ -73,7 +77,24 @@ class Conv2d:
 
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         _stride = utils._check_tuple_int(stride, "stride")
-        _padding = utils._check_tuple_int(padding, "padding", allow_zero=True)
+
+        if isinstance(padding, str):
+            if padding not in {"same", "valid"}:
+                raise ValidationError(
+                    "padding must be 'same' or 'valid' when it is a string"
+                )
+
+            if padding == "same" and _stride != (1, 1):
+                raise ValidationError(
+                    "'same' padding can only be used with stride=1"
+                )
+
+            _padding = (0, 0) if padding == "valid" else "same"
+
+        else:
+            _padding = utils._check_tuple_int(
+                padding, "padding", allow_zero=True
+            )
 
         if not isinstance(bias, bool):
             raise ValidationError("bias must be a boolean")
@@ -245,13 +266,14 @@ class Conv2d:
 
         set_out = gp.Equation(self.container, domain=out.domain)
 
+        if isinstance(self.padding, str):
+            padding = utils._calc_same_padding(self.kernel_size, h_in, w_in)
+        else:
+            padding = self.padding
+
         # expr must have domain N, C_out, H_out, W_out
-        top_index = (
-            (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
-        )
-        left_index = (
-            (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
-        )
+        top_index = (self.stride[0] * (gp.Ord(H_out) - 1)) - padding[0] + 1
+        left_index = (self.stride[1] * (gp.Ord(W_out) - 1)) - padding[1] + 1
 
         _, _, Hf, Wf = self.weight.domain
         C_in, Hf, Wf, H_in, W_in = utils._next_domains(
