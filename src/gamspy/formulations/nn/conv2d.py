@@ -32,9 +32,10 @@ class Conv2d:
         Stride in the convolution, by default 1
     padding : int | tuple[int, int] | Literal["same", "valid"]
         Specifies the amount of padding to apply to the input, by default 0.
-        If an integer is provided, the same padding is applied to both the height and width.
+        If an integer is provided, that padding is applied to both the height and width.
         If a tuple of two integers is given, the first value determines the padding for the
         top and bottom, while the second value sets the padding for the left and right.
+        It is also possible to provide string literals "same" and "valid".
     bias : bool
         Is bias added after the convolution, by default True
 
