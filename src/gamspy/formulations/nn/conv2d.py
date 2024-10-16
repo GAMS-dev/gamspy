@@ -35,7 +35,9 @@ class Conv2d:
         If an integer is provided, that padding is applied to both the height and width.
         If a tuple of two integers is given, the first value determines the padding for the
         top and bottom, while the second value sets the padding for the left and right.
-        It is also possible to provide string literals "same" and "valid".
+        It is also possible to provide string literals "same" and "valid". "same" pads 
+        the input so the output has the shape as the input. "valid" is the same as no 
+        padding. 
     bias : bool
         Is bias added after the convolution, by default True
 
