@@ -6,10 +6,12 @@ import platform
 import signal
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
 from contextlib import closing
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -219,6 +221,13 @@ class Container(gt.Container):
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
+        if self.in_miro:
+            # Create _miro_gdxout_.gdx to make MIRO happy for models without solve
+            directory = os.path.dirname(sys.argv[0])
+            Path(os.path.join(directory, "_miro_gdxout_.gdx")).touch(
+                exist_ok=True
+            )
+
         self._is_socket_open = True
 
         system_directory = get_system_directory(system_directory)
@@ -256,7 +265,7 @@ class Container(gt.Container):
             self._synch_with_gams(gams_to_gamspy=True)
 
     def __repr__(self) -> str:
-        return f"Container(system_directory={self.system_directory}, working_directory={self.working_directory}, debugging_level={self._debugging_level})"
+        return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 
     def __str__(self):
         if len(self):
@@ -527,8 +536,9 @@ class Container(gt.Container):
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        miro_names = loadable.domain_names + [loadable.name]
-                        miro_load = miro.get_load_input_str(miro_names, gdx_in)
+                        miro_load = miro.get_load_input_str(
+                            loadable.name, gdx_in
+                        )
                         strings.append(miro_load)
                     else:
                         strings.append(f"$loadDC {loadable.name}")

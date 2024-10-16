@@ -687,7 +687,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self._winner = "gams"
 
     def __repr__(self) -> str:
-        return f"Set(name={self.name}, domain={self.domain})"
+        return f"Set(name='{self.name}', domain={self.domain})"
 
     def _singleton_check(
         self,
@@ -830,7 +830,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if self.is_singleton:
             output = f"Singleton {output}"
 
-        output += self._get_domain_str()
+        output += self._get_domain_str(self.domain_forwarding)
 
         if self.description:
             output += f' "{self.description}"'

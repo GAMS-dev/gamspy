@@ -93,11 +93,17 @@ class Symbol:
         else:
             self._synchronize = False
 
-    def _get_domain_str(self: SymbolType):
+    def _get_domain_str(self: SymbolType, forwardings: bool | list[bool]):
+        if isinstance(forwardings, bool):
+            forwardings = [forwardings] * self.dimension
+
         set_strs = []
-        for elem in self.domain:
+        for elem, forwarding in zip(self.domain, forwardings):
             if isinstance(elem, (gt.Set, gt.Alias, implicits.ImplicitSet)):
-                set_strs.append(elem.gamsRepr())
+                elem_str = elem.gamsRepr()
+                if forwarding:
+                    elem_str += "<"
+                set_strs.append(elem_str)
             elif isinstance(elem, (str, gt.UniverseAlias)):
                 set_strs.append("*")
 

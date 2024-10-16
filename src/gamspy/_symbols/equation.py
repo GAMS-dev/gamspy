@@ -350,7 +350,7 @@ class Equation(gt.Equation, Symbol):
         self._winner = "gams"
 
     def __repr__(self) -> str:
-        return f"Equation(name={self.name}, type={self.type}, domain={self.domain})"
+        return f"Equation(name='{self.name}', type={self.type}, domain={self.domain})"
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
@@ -1001,7 +1001,7 @@ class Equation(gt.Equation, Symbol):
         output = f"Equation {self.name}"
 
         if self.domain:
-            output += self._get_domain_str()
+            output += self._get_domain_str(self.domain_forwarding)
 
         if self.description:
             output += ' "' + self.description + '"'

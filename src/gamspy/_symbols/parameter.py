@@ -306,7 +306,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return expression.Expression(None, "-", self)
 
     def __repr__(self) -> str:
-        return f"Parameter(name={self.name}, domain={self.domain})"
+        return f"Parameter(name='{self.name}', domain={self.domain})"
 
     @property
     def T(self) -> implicits.ImplicitParameter:
@@ -451,7 +451,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         representation = self.name
         if self.domain:
-            representation += self._get_domain_str()
+            representation += self._get_domain_str(self.domain_forwarding)
 
         return representation
 
@@ -473,11 +473,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         'Parameter a(i);'
 
         """
-        statement_name = self.name
-        if self.domain:
-            statement_name += self._get_domain_str()
-
-        output = f"Parameter {statement_name}"
+        output = f"Parameter {self.gamsRepr()}"
 
         if self.description:
             output += ' "' + self.description + '"'

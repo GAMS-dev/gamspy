@@ -7,6 +7,7 @@ GAMSPy 1.0.4
   - Do not create a GDX file when it's not necessary. 
   - Do not carry solver options from the previous solve to the new solve.
   - Fix toGams bug of MathOp symbols.
+  - Use symbol< syntax of GAMS to handle domain forwarding.
 - Testing
   - Add one to one comparison tests with reference files in toGams tests.
 

@@ -152,7 +152,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         )
 
     def __repr__(self) -> str:
-        return f"Alias(name={self.name}, alias_with={self.alias_with})"
+        return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)

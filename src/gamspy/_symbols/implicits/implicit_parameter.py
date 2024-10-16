@@ -115,7 +115,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
-        return f"ImplicitParameter(parent={self.parent}, name={self.name}, domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
+        return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
     @property
     def T(self) -> ImplicitParameter:

@@ -17,6 +17,8 @@ def main():
         is_miro_input=True,
     )
 
+    print(i.records.values.tolist())
+    print(p.records.values.tolist())
     assert i.records.values.tolist() == [["i1", ""]]
     assert p.records.values.tolist() == [["i1", 1.0]]
 

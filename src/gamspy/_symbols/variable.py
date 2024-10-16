@@ -307,7 +307,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         return expression.Expression(self, "=e=", other)
 
     def __repr__(self) -> str:
-        return f"Variable(name={self.name}, domain={self.domain}, type={self.type})"
+        return f"Variable(name='{self.name}', domain={self.domain}, type={self.type})"
 
     @property
     def T(self) -> implicits.ImplicitVariable:
@@ -800,7 +800,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         """
         representation = self.name
         if self.domain:
-            representation += self._get_domain_str()
+            representation += self._get_domain_str(self.domain_forwarding)
 
         return representation
 
@@ -823,12 +823,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         """
         output = self.type + " "
-
-        statement_name = self.name
-        if self.domain:
-            statement_name += self._get_domain_str()
-
-        output += f"Variable {statement_name}"
+        output += f"Variable {self.gamsRepr()}"
 
         if self.description:
             output += ' "' + self.description + '"'

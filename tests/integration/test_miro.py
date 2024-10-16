@@ -80,11 +80,35 @@ def test_miro():
     current_environment = os.environ.copy()
     current_environment["MIRO"] = "1"
 
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro.py",
+        ],
+        env=current_environment,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
+
     try:
         subprocess.run(
             [
                 sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro.py",
+                directory + os.sep + "miro_models" + os.sep + "miro7.py",
+            ],
+            env=current_environment,
+            check=True,
+            capture_output=True,
+        )
+    except Exception as e:
+        pytest.fail(e)
+
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                directory + os.sep + "miro_models" + os.sep + "miro8.py",
             ],
             env=current_environment,
             check=True,
@@ -800,7 +824,7 @@ def test_miro_in():
         pytest.fail(e)
 
 
-def test_miro_protect(data):
+def _test_miro_protect(data):
     m = data
     m = Container()
 

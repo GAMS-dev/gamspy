@@ -32,7 +32,7 @@ class ImplicitEquation(ImplicitSymbol):
         self.type = type
 
     def __repr__(self) -> str:
-        return f"ImplicitEquation(parent={self.parent}, name={self.name}, domain={self.domain}, type={self.type})"
+        return f"ImplicitEquation(parent={self.parent}, name='{self.name}', domain={self.domain}, type={self.type})"
 
     @property
     def l(self):  # noqa: E741,E743
