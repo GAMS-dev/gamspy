@@ -69,10 +69,13 @@ def test_domain_forwarding_2():
     subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
-    try:
-        subprocess.run(["python", model_path], env=subprocess_env, check=True)
-    except subprocess.CalledProcessError:
-        pytest.fail("Records are not as expected.")
+    process = subprocess.run(
+        ["python", model_path],
+        env=subprocess_env,
+        text=True,
+        capture_output=True,
+    )
+    assert process.returncode == 0, process.stderr
 
 
 def test_miro():
@@ -91,31 +94,27 @@ def test_miro():
     )
     assert process.returncode == 0, process.stderr
 
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro7.py",
-            ],
-            env=current_environment,
-            check=True,
-            capture_output=True,
-        )
-    except Exception as e:
-        pytest.fail(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro7.py",
+        ],
+        env=current_environment,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro8.py",
-            ],
-            env=current_environment,
-            check=True,
-            capture_output=True,
-        )
-    except Exception as e:
-        pytest.fail(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro8.py",
+        ],
+        env=current_environment,
+        check=True,
+        capture_output=True,
+    )
+    assert process.returncode == 0, process.stderr
 
     # Test default.gdx
     new_container = Container()
@@ -277,18 +276,16 @@ def test_contract():
     directory = str(pathlib.Path(__file__).parent.resolve())
     current_environment = os.environ.copy()
     current_environment["MIRO"] = "1"
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro2.py",
-            ],
-            env=current_environment,
-            check=True,
-            capture_output=True,
-        )
-    except Exception as e:
-        exit(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro2.py",
+        ],
+        env=current_environment,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
     with open(
         f"{directory}{os.sep}miro_models{os.sep}conf_miro2{os.sep}miro2_io.json"
@@ -458,10 +455,13 @@ def test_table_columns():
     subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
-    try:
-        subprocess.run(["python", model_path], env=subprocess_env, check=True)
-    except subprocess.CalledProcessError:
-        pytest.fail("Columns are not as expected.")
+    process = subprocess.run(
+        ["python", model_path],
+        env=subprocess_env,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
 
 def test_miro_encoder(data):
@@ -772,18 +772,16 @@ def test_non_init():
     subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro5.py",
-            ],
-            env=subprocess_env,
-            check=True,
-            capture_output=True,
-        )
-    except subprocess.CalledProcessError as e:
-        pytest.fail(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro5.py",
+        ],
+        env=subprocess_env,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
 
 def test_miro_in():
@@ -794,34 +792,30 @@ def test_miro_in():
     subprocess_env["GAMS_IDC_GDX_INPUT"] = miro_gdx_in
 
     # m.in_miro = True
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro6.py",
-            ],
-            env=subprocess_env,
-            check=True,
-            capture_output=True,
-        )
-    except subprocess.CalledProcessError as e:
-        pytest.fail(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro6.py",
+        ],
+        env=subprocess_env,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
     subprocess_env = os.environ.copy()
 
     # m.in_miro = False
-    try:
-        subprocess.run(
-            [
-                sys.executable,
-                directory + os.sep + "miro_models" + os.sep + "miro6.py",
-            ],
-            env=subprocess_env,
-            check=True,
-            capture_output=True,
-        )
-    except subprocess.CalledProcessError as e:
-        pytest.fail(e)
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro6.py",
+        ],
+        env=subprocess_env,
+        capture_output=True,
+        text=True,
+    )
+    assert process.returncode == 0, process.stderr
 
 
 def _test_miro_protect(data):

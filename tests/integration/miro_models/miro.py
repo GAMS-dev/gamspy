@@ -33,7 +33,7 @@ from gamspy import (
 
 
 def main():
-    m = Container(working_directory=".")
+    m = Container()
 
     # Prepare data
     distances = [
