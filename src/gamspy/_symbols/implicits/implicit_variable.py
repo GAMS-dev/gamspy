@@ -36,7 +36,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         super().__init__(parent, name, domain, permutation, scalar_domains)
 
     def __repr__(self) -> str:
-        return f"ImplicitVariable(parent={self.parent}, name={self.name}, domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
+        return f"ImplicitVariable(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
 
     def __getitem__(self, indices: list | str) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)

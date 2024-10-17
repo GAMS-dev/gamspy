@@ -1,0 +1,20 @@
+{
+    "modelTitle": "GAMSPy App",
+    "inputSymbols": {
+        "letters": {
+            "alias": "letters",
+            "symtype": "set",
+            "headers": {
+                "uni": {
+                    "type": "string",
+                    "alias": "uni"
+                },
+                "element_text": {
+                    "type": "string",
+                    "alias": "element_text"
+                }
+            }
+        }
+    },
+    "outputSymbols": {}
+}

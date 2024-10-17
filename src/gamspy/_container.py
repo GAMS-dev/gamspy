@@ -256,7 +256,7 @@ class Container(gt.Container):
             self._synch_with_gams(gams_to_gamspy=True)
 
     def __repr__(self) -> str:
-        return f"Container(system_directory={self.system_directory}, working_directory={self.working_directory}, debugging_level={self._debugging_level})"
+        return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 
     def __str__(self):
         if len(self):
@@ -346,9 +346,6 @@ class Container(gt.Container):
         check_response(response, job_name)
 
     def _write_miro_files(self):
-        if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
-            return
-
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
@@ -527,8 +524,9 @@ class Container(gt.Container):
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN
                     ):
-                        miro_names = loadable.domain_names + [loadable.name]
-                        miro_load = miro.get_load_input_str(miro_names, gdx_in)
+                        miro_load = miro.get_load_input_str(
+                            loadable.name, gdx_in
+                        )
                         strings.append(miro_load)
                     else:
                         strings.append(f"$loadDC {loadable.name}")
@@ -537,7 +535,7 @@ class Container(gt.Container):
 
         strings.append("$offUNDF")
 
-        if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
+        if not IS_MIRO_INIT and MIRO_GDX_OUT:
             strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
