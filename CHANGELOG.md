@@ -8,8 +8,10 @@ GAMSPy 1.0.4
   - Do not carry solver options from the previous solve to the new solve.
   - Fix toGams bug of MathOp symbols.
   - Use symbol< syntax of GAMS to handle domain forwarding.
+  - Add "same" and "valid" options for Conv2d padding.
 - Testing
   - Add one to one comparison tests with reference files in toGams tests.
+  - Add tests for "same" and "valid" padding options of Conv2d.
 
 GAMSPy 1.0.3
 ------------
