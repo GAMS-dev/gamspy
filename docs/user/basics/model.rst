@@ -133,6 +133,7 @@ num_nodes_used         Number of nodes used by the MIP solver
 solve_number           Number of the last solve
 num_dependencies       Number of dependencies in a CNS model
 num_discrete_variables Number of discrete variables
+num_equations          Number of equations
 num_infeasibilities    Number of infeasibilities
 num_nonlinear_insts    Number of nonlinear instructions
 num_nonlinear_zeros    Number of nonlinear nonzeros

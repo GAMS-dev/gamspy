@@ -633,13 +633,13 @@ class Model:
         return self._solve_model_time
 
     @property
-    def solve_status(self) -> float | None:
+    def solve_status(self) -> SolveStatus | None:
         """
         Indicates the solver termination condition.
 
         Returns
         -------
-        float | None
+        SolveStatus | None
         """
         return self._solve_status
 
