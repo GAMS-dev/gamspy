@@ -185,6 +185,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
+        if is_miro_output and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         # miro support
         self._is_miro_output = is_miro_output
 

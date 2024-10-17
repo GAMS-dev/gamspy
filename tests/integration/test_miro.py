@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from gamspy import Container, Options, Parameter, Set, Variable
+from gamspy import Container, Equation, Options, Parameter, Set, Variable
 from gamspy._miro import MiroJSONEncoder
 from gamspy.exceptions import ValidationError
 
@@ -478,6 +478,30 @@ def test_miro_encoder(data):
 
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    with pytest.raises(ValidationError):
+        _ = Set(m, is_miro_input=True)
+
+    with pytest.raises(ValidationError):
+        _ = Set(m, is_miro_output=True)
+
+    with pytest.raises(ValidationError):
+        _ = Set(m, is_miro_input=True, is_miro_output=True)
+
+    with pytest.raises(ValidationError):
+        _ = Parameter(m, is_miro_input=True)
+
+    with pytest.raises(ValidationError):
+        _ = Parameter(m, is_miro_output=True)
+
+    with pytest.raises(ValidationError):
+        _ = Parameter(m, is_miro_input=True, is_miro_output=True)
+
+    with pytest.raises(ValidationError):
+        _ = Variable(m, is_miro_output=True)
+
+    with pytest.raises(ValidationError):
+        _ = Equation(m, is_miro_output=True)
 
     i = Set(
         m,

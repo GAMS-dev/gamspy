@@ -206,6 +206,9 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
+        if is_miro_output and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         # miro support
         self._is_miro_output = is_miro_output
 

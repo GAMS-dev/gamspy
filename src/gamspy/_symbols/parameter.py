@@ -157,6 +157,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
+        if (is_miro_input or is_miro_output) and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         # miro support
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output

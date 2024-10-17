@@ -33,10 +33,6 @@ MIRO input and symbol `x` as a MIRO output: ::
     ...
     ...
     model.solve()
-    
-.. warning::
-    Omitting the name while declaring a miro symbol might result in unpredictable behaviour. It is recommended to 
-    give an explicit name to each miro symbol. 
 
 After you mark your MIRO symbols with `is_miro_input` and `is_miro_output`, you can run MIRO with the following GAMSPy
 command-line utility: ::
