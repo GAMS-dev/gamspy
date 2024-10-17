@@ -1,6 +1,6 @@
-name: darwinenv38
+name: darwinenv313
 channels:
   - anaconda
 dependencies:
   - freetds
-  - python=3.8
+  - python=3.13

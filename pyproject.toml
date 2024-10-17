@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.0.3"
+version = "1.0.4"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
 readme = "README_PYPI.md"
 description = "Python-based algebraic modeling interface to GAMS"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license.file = "LICENSE"
 keywords = ["Optimization", "GAMS"]
 classifiers = [
@@ -25,11 +25,11 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: POSIX",
   "Operating System :: Unix",
   "Operating System :: MacOS",
@@ -135,8 +135,8 @@ exclude = [
 line-length = 79
 indent-width = 4
 
-# Assume Python 3.8
-target-version = "py38"
+# Assume Python 9
+target-version = "py39"
 
 [tool.ruff.lint]
 select = [
