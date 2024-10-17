@@ -91,6 +91,13 @@ def test_conv2d_bad_init(data):
     pytest.raises(ValidationError, Conv2d, m, -4, 4, 3)
     # out channel must be positive
     pytest.raises(ValidationError, Conv2d, m, 4, -4, 3)
+
+    # padding when string must be valid or same
+    pytest.raises(ValidationError, Conv2d, m, 1, 2, 3, 1, "asd")
+
+    # same padding requires stride = 1
+    pytest.raises(ValidationError, Conv2d, m, 1, 2, 3, 2, "same")
+
     # kernel size must be integer or tuple of integer
     bad_values = [(3, "a"), ("a", 3), 2.4, -1, 0]
     for bad_value in bad_values:
@@ -272,8 +279,331 @@ def test_conv2d_simple_correctness(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+def test_conv2d_with_same_padding_odd_kernel(data):
+    # when kernel size is odd
+    m, w1, b1, inp, par_input, _ = data
+
+    conv1 = Conv2d(m, 1, 1, 3, padding="same", bias=True)
+    keep_same = np.array(
+        [
+            [
+                [
+                    [0, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 0],
+                ]
+            ]
+        ]
+    )
+    add_one = np.array([1])
+    conv1.load_weights(keep_same, add_one)
+
+    out, eqs = conv1(par_input)
+    obj = gp.Sum(out.domain, out)
+    model = gp.Model(
+        m,
+        "convolve",
+        equations=eqs,
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+    assert np.allclose(out.toDense(), inp + 1)
+
+
+def test_conv2d_with_same_padding_even_kernel(data):
+    # when kernel size is even
+    m, w1, b1, inp, par_input, _ = data
+
+    conv1 = Conv2d(m, 1, 1, 2, padding="same", bias=False)
+    keep_same = np.array(
+        [
+            [
+                [
+                    [1, 0],
+                    [0, 0],
+                ]
+            ]
+        ]
+    )
+    conv1.load_weights(keep_same)
+
+    out, eqs = conv1(par_input)
+    obj = gp.Sum(out.domain, out)
+    model = gp.Model(
+        m,
+        "convolve",
+        equations=eqs,
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+    assert np.allclose(out.toDense(), inp)
+
+
+def test_conv2d_with_same_padding_even_kernel_2(data):
+    # when kernel size is odd
+    m, w1, b1, inp, par_input, _ = data
+
+    conv1 = Conv2d(m, 1, 2, 2, padding="same", bias=True)
+    conv1.load_weights(w1[:, :, :2, :2], b1)
+
+    out, eqs = conv1(par_input)
+    obj = gp.Sum(out.domain, out)
+    model = gp.Model(
+        m,
+        "convolve",
+        equations=eqs,
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+
+    expected_out = np.array(
+        [
+            [
+                [
+                    [
+                        1.625492362,
+                        1.831020399,
+                        2.074811448,
+                        1.949193639,
+                        1.320707505,
+                    ],
+                    [
+                        1.676575121,
+                        1.825233887,
+                        2.045062188,
+                        1.750769834,
+                        1.518886772,
+                    ],
+                    [
+                        1.739361268,
+                        2.182634389,
+                        1.871283841,
+                        1.768675940,
+                        1.604790037,
+                    ],
+                    [
+                        1.456248628,
+                        1.901950465,
+                        2.224367490,
+                        1.933974614,
+                        1.600900934,
+                    ],
+                    [
+                        0.792228761,
+                        0.803098530,
+                        1.008683930,
+                        0.970616023,
+                        0.929699696,
+                    ],
+                ],
+                [
+                    [
+                        1.989642237,
+                        2.331308922,
+                        2.732532466,
+                        2.291186359,
+                        1.165601731,
+                    ],
+                    [
+                        1.911615902,
+                        2.289122410,
+                        2.402451849,
+                        2.164851606,
+                        1.686090769,
+                    ],
+                    [
+                        2.073993977,
+                        2.581295621,
+                        2.232052203,
+                        2.237492228,
+                        1.662072268,
+                    ],
+                    [
+                        1.920337806,
+                        2.559152521,
+                        2.467719982,
+                        2.293567862,
+                        1.772644566,
+                    ],
+                    [
+                        1.171485701,
+                        1.429711668,
+                        1.779075395,
+                        1.730294061,
+                        1.242035090,
+                    ],
+                ],
+            ],
+            [
+                [
+                    [
+                        2.116932766,
+                        2.511731088,
+                        2.270286885,
+                        1.503704789,
+                        0.865328703,
+                    ],
+                    [
+                        2.005340874,
+                        2.716170531,
+                        2.641717508,
+                        2.325581132,
+                        1.094038321,
+                    ],
+                    [
+                        1.787231320,
+                        1.931375667,
+                        1.735580121,
+                        1.599498191,
+                        1.193099388,
+                    ],
+                    [
+                        1.695021842,
+                        2.159671421,
+                        1.620438092,
+                        0.764438783,
+                        0.761570065,
+                    ],
+                    [
+                        0.712479172,
+                        1.006866173,
+                        1.001301633,
+                        0.599276914,
+                        0.567524580,
+                    ],
+                ],
+                [
+                    [
+                        2.701160679,
+                        3.078839627,
+                        2.552822524,
+                        1.793918220,
+                        1.096404400,
+                    ],
+                    [
+                        2.609892372,
+                        3.238318246,
+                        3.105523792,
+                        2.355734422,
+                        0.912041700,
+                    ],
+                    [
+                        2.320455077,
+                        2.795927285,
+                        2.643403462,
+                        2.337474751,
+                        1.353383002,
+                    ],
+                    [
+                        2.146012877,
+                        2.377427706,
+                        1.724706729,
+                        1.053355860,
+                        0.907902065,
+                    ],
+                    [
+                        1.236397505,
+                        1.873128785,
+                        1.419942866,
+                        0.611034633,
+                        0.544359913,
+                    ],
+                ],
+            ],
+            [
+                [
+                    [
+                        2.277089480,
+                        2.014599858,
+                        2.182283439,
+                        2.105873144,
+                        1.563848010,
+                    ],
+                    [
+                        2.191232684,
+                        2.167709605,
+                        1.808435209,
+                        1.751474886,
+                        1.243114652,
+                    ],
+                    [
+                        1.426328333,
+                        1.398039294,
+                        1.059038334,
+                        1.427672402,
+                        1.254717934,
+                    ],
+                    [
+                        1.591004737,
+                        1.380324608,
+                        1.283963575,
+                        1.136078616,
+                        0.934567582,
+                    ],
+                    [
+                        0.761236039,
+                        0.896806832,
+                        0.714964186,
+                        0.838569987,
+                        0.586811741,
+                    ],
+                ],
+                [
+                    [
+                        2.539326575,
+                        2.440968140,
+                        2.240982654,
+                        2.072073217,
+                        1.528195358,
+                    ],
+                    [
+                        2.847413970,
+                        2.568970141,
+                        2.449173707,
+                        2.541086065,
+                        1.560280100,
+                    ],
+                    [
+                        2.019722140,
+                        2.050710014,
+                        1.544939781,
+                        1.731307436,
+                        1.179856643,
+                    ],
+                    [
+                        1.776538432,
+                        1.377596789,
+                        1.256271748,
+                        1.402568837,
+                        1.201103294,
+                    ],
+                    [
+                        1.270046896,
+                        1.296650580,
+                        1.131551899,
+                        1.093507107,
+                        0.581513691,
+                    ],
+                ],
+            ],
+        ]
+    )
+
+    assert np.allclose(out.toDense(), expected_out)
+
+
 def test_conv2d_with_padding(data):
     m, w1, b1, inp, par_input, _ = data
+
+    conv_with_valid_padding = Conv2d(m, 1, 2, 3, padding="valid")
+    assert conv_with_valid_padding.padding == (0, 0)
+
     conv1 = Conv2d(m, 1, 2, 3, padding=(2, 1))
     conv1.load_weights(w1, b1)
     out, eqs = conv1(par_input)
