@@ -46,7 +46,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         return expression.Expression(self, "<=", other)
 
     def __repr__(self) -> str:
-        return f"ImplicitSet(parent={self.parent}, name={self.name}, domain={self.domain}, extension={self.extension}, parent_scalar_domains={self.parent_scalar_domains})"
+        return f"ImplicitSet(parent={self.parent}, name='{self.name}', domain={self.domain}, extension={self.extension}, parent_scalar_domains={self.parent_scalar_domains})"
 
     @property
     def dimension(self):

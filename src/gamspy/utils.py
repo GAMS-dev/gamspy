@@ -12,8 +12,7 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Iterable
+    from collections.abc import Iterable, Sequence
 
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
@@ -41,7 +40,6 @@ CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
 
-# TODO: use gamspy_base.default_solvers after GAMS 48
 DEFAULT_SOLVERS = {
     "CNS": "PATH",
     "DNLP": "IPOPTH",

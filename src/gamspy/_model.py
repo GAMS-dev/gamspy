@@ -23,7 +23,8 @@ from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from typing import Iterable, Literal
+    from collections.abc import Iterable
+    from typing import Literal
 
     import pandas as pd
 
@@ -314,7 +315,7 @@ class Model:
         self.container._synch_with_gams()
 
     def __repr__(self) -> str:
-        return f"Model(name={self.name}, problem={self.problem}, equations={self.equations}, sense={self.sense}, objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
+        return f"Model(name='{self.name}', problem='{str(self.problem)}', equations={self.equations}, sense='{str(self.sense)}', objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
 
     def __str__(self) -> str:
         return (

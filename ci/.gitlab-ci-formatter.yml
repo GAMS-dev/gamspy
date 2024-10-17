@@ -2,7 +2,7 @@ run_formatter:
   stage: formatter
   when: on_success
   tags: [linux]
-  image: python:3.8
+  image: python:3.12
   script:
     - pip install virtualenv
     - virtualenv venv

@@ -15,11 +15,11 @@ MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
-def get_load_input_str(names: list[str], gdx_in: str) -> str:
+def get_load_input_str(name: str, gdx_in: str) -> str:
     strings = [
         "$gdxIn",  # close the old one
         f"$gdxIn {MIRO_GDX_IN}",  # open the new one
-        f"$loadDC {','.join(names)}",
+        f"$loadDC {name}",
         "$gdxIn",  # close the new one
         f"$gdxIn {gdx_in}",  # reopen the previous one
     ]

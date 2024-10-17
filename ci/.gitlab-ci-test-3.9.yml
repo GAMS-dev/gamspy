@@ -3,21 +3,24 @@ test-leg-3.9:
   when: on_success
   tags: [linux]
   image: python:3.9
+  before_script:
+    - git config --global user.email "puma@noreply.gams.com"
+    - git config --global user.name "Gitlab Runner (puma)"
   script:
     - pip install virtualenv
     - virtualenv venv39
     - source venv39/bin/activate
-    - pip install wheel build
+    - pip install wheel build requests
     - python scripts/reinstall.py
     - gamspy install solver mpsge
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch gamspy --single-branch miro
+    - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
-    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-
   artifacts:
     reports:
       coverage_report:
@@ -28,14 +31,13 @@ test-leg-3.9:
     paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
   rules:
-    - if: $CI_COMMIT_BRANCH != "master"
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
-
-
 test-deg-3.9:
   stage: test
+  when: on_success
   tags: [macos]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -48,18 +50,17 @@ test-deg-3.9:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
-    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
-    name: macos_x86_64
+    name: macos_x86_64_3.9
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH != "master"
-      when: never
-    - when: on_success
+    - if: $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
 
 test-dac-3.9:
   stage: test
@@ -76,22 +77,21 @@ test-dac-3.9:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
-    - pytest -m "doc"
     - if [ "$?" == "0" ]; then echo "All tests passed!"; else exit 1; fi
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
-    name: macos_arm64
+    name: macos_arm64_3.9
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH != "master"
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
 
-
 test-wei-3.9:
   stage: test
+  when: on_success
   tags: [windows]
   image:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
@@ -108,14 +108,13 @@ test-wei-3.9:
     - gamspy install solver scip
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
-    - pytest -m "doc"
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
-    name: windows
+    name: windows_3.9
     expire_in: 2 hours
     paths: [dist/*]
   rules:
-    - if: $CI_COMMIT_BRANCH != "master"
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     - when: on_success
