@@ -8,6 +8,9 @@ GAMSPy 1.0.4
   - Do not carry solver options from the previous solve to the new solve.
   - Fix toGams bug of MathOp symbols.
   - Add "same" and "valid" options for Conv2d padding.
+- Documentation
+  - Fix documented type of model.solve_status.
+  - Add num_equations attribute to the model page of user guide.
 - Testing
   - Add one to one comparison tests with reference files in toGams tests.
   - Add tests for "same" and "valid" padding options of Conv2d.
