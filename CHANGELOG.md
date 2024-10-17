@@ -8,6 +8,9 @@ GAMSPy 1.0.4
   - Do not carry solver options from the previous solve to the new solve.
   - Fix toGams bug of MathOp symbols.
   - Add "same" and "valid" options for Conv2d padding.
+  - Update dependencies. gamspy_base -> 48.1.1 and gamsapi -> 48.1.0.
+- Documentation
+  - Add synchronization docs to reference api.
 - Testing
   - Add one to one comparison tests with reference files in toGams tests.
   - Add tests for "same" and "valid" padding options of Conv2d.
