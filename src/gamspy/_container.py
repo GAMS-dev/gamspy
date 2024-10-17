@@ -6,12 +6,10 @@ import platform
 import signal
 import socket
 import subprocess
-import sys
 import tempfile
 import time
 import uuid
 from contextlib import closing
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -220,13 +218,6 @@ class Container(gt.Container):
         self._gams_string = ""
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
-
-        if self.in_miro:
-            # Create _miro_gdxout_.gdx to make MIRO happy for models without solve
-            directory = os.path.dirname(sys.argv[0])
-            Path(os.path.join(directory, "_miro_gdxout_.gdx")).touch(
-                exist_ok=True
-            )
 
         self._is_socket_open = True
 
@@ -547,7 +538,7 @@ class Container(gt.Container):
 
         strings.append("$offUNDF")
 
-        if self._miro_output_symbols and not IS_MIRO_INIT and MIRO_GDX_OUT:
+        if not IS_MIRO_INIT and MIRO_GDX_OUT:
             strings.append(miro.get_unload_output_str(self))
 
         gams_string = "\n".join(strings)
