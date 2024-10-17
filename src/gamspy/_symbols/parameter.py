@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import itertools
 import uuid
-from typing import TYPE_CHECKING, Any, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
