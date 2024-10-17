@@ -818,7 +818,7 @@ def test_miro_in():
     assert process.returncode == 0, process.stderr
 
 
-def _test_miro_protect(data):
+def test_miro_protect(data):
     m = data
     m = Container()
 
