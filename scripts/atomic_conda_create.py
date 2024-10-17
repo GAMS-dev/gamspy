@@ -43,8 +43,6 @@ def main():
                 f"scripts/env_{sys.argv[2].split('=')[-1]}.yml",
                 "-p",
                 sys.argv[1],
-                "-c",
-                "conda-forge",
             ],
             check=True,
         )
