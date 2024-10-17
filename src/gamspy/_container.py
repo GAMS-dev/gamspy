@@ -28,7 +28,8 @@ from gamspy.exceptions import FatalError, GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
-    from typing import Any, Iterable, Literal
+    from collections.abc import Iterable
+    from typing import Any, Literal
 
     from pandas import DataFrame
 

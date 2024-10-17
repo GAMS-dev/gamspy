@@ -12,8 +12,7 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Iterable
+    from collections.abc import Iterable, Sequence
 
     import pandas as pd
     from gams.core.numpy import Gams2Numpy

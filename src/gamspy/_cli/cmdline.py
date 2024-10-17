@@ -7,7 +7,7 @@ import platform
 import shutil
 import subprocess
 import sys
-from typing import Iterable
+from collections.abc import Iterable
 
 import gamspy.utils as utils
 from gamspy.exceptions import GamspyException, ValidationError

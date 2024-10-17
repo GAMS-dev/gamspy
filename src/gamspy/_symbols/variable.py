@@ -3,8 +3,9 @@ from __future__ import annotations
 import builtins
 import itertools
 import uuid
+from collections.abc import Sequence
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Sequence
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
