@@ -50,7 +50,7 @@ def teardown():
     )
 
     _ = subprocess.run(
-        ["gamspy", "install", "solver", "scip", "mpsge"],
+        ["gamspy", "install", "solver", "scip", "mpsge", "reshop"],
         capture_output=True,
         text=True,
     )
@@ -203,7 +203,7 @@ def test_install_solver(teardown):
     assert process.returncode == 0
 
     process = subprocess.run(
-        ["gamspy", "install", "solver", "mpsge", "scip"],
+        ["gamspy", "install", "solver", "mpsge", "scip", "reshop"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
