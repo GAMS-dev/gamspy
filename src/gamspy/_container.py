@@ -346,9 +346,6 @@ class Container(gt.Container):
         check_response(response, job_name)
 
     def _write_miro_files(self):
-        if len(self._miro_input_symbols) + len(self._miro_output_symbols) == 0:
-            return
-
         # create conf_<model>/<model>_io.json
         encoder = MiroJSONEncoder(self)
         encoder.write_json()
