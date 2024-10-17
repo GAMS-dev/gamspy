@@ -1,29 +1,11 @@
 from __future__ import annotations
 
 import os
-import platform
 from dataclasses import dataclass, field
 
 import gamspy.utils as utils
 
 __all__ = ["SolverInfo", "add_solver_entry", "remove_solver_entry"]
-
-platform_to_capabilities_file = {
-    "windows": "gmscmpNT.txt",
-    "linux": "gmscmpun.txt",
-    "mac_x86_64": "gmscmpun.txt",
-    "mac_arm64": "gmscmpun.txt",
-}
-
-
-def get_platform() -> str:
-    operating_system = platform.system().lower()
-    architecture = platform.machine()
-
-    if operating_system == "darwin":
-        return f"mac_{architecture}"
-
-    return operating_system
 
 
 @dataclass

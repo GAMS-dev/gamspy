@@ -19,10 +19,10 @@
 \hline
 \endhead
 
-stocks & stocks & 170 selected stocks\\
-s & stocks & selected stocks\\
 days & days & 100 days from 95-11-27 to 96-04-29\\
+stocks & stocks & 170 selected stocks\\
 d & days & selected days\\
+s & stocks & selected stocks\\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -32,8 +32,8 @@ d & days & selected days\\
 \hline
 \endhead
 
-dev & stocks,days & deviations\\
 mean & stocks & mean of daily return\\
+dev & stocks,days & deviations\\
 totmean &  & total mean return\\
 \hline
 \end{tabularx}
@@ -44,11 +44,11 @@ totmean &  & total mean return\\
 \hline
 \endhead
 
+x & stocks & investments\\
+w & days & intermediate variables\\
+m\_budget &  & \\
 m\_wdef & days & \\
 m\_retcon &  & \\
-m\_budget &  & \\
-w & days & intermediate variables\\
-x & stocks & investments\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -58,16 +58,16 @@ x & stocks & investments\\
 \hline
 \endhead
 
+budget &  & \\
+retcon &  & returns constraint\\
+wdef & days & \\
 d\_x & stocks & \\
 d\_w & days & \\
-retcon &  & returns constraint\\
-budget &  & \\
-wdef & days & \\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
 
 \bigskip
-$m\_retcon\geq 0 ~ \forall \\$
 $x_{stocks_{*}}\geq 0 ~ \forall stocks\\$
+$m\_retcon\geq 0 ~ \forall \\$
 \end{document}

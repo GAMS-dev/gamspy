@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import itertools
 import uuid
-from typing import TYPE_CHECKING, Any, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 import pandas as pd
@@ -157,6 +158,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
+        if (is_miro_input or is_miro_output) and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         # miro support
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
@@ -244,7 +248,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._synch_with_gams()
+                self.container._synch_with_gams(
+                    gams_to_gamspy=self._is_miro_input
+                )
 
             container._options.miro_protect = previous_state
 
@@ -284,7 +290,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
     def __eq__(self, other):  # type: ignore
@@ -304,7 +310,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         return expression.Expression(None, "-", self)
 
     def __repr__(self) -> str:
-        return f"Parameter(name={self.name}, domain={self.domain})"
+        return f"Parameter(name='{self.name}', domain={self.domain})"
 
     @property
     def T(self) -> implicits.ImplicitParameter:
@@ -426,7 +432,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         super().setRecords(records, uels_on_axes)
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
     def gamsRepr(self) -> str:
@@ -449,7 +455,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         """
         representation = self.name
         if self.domain:
-            representation += self._get_domain_str()
+            representation += self._get_domain_str(self.domain_forwarding)
 
         return representation
 
@@ -471,11 +477,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         'Parameter a(i);'
 
         """
-        statement_name = self.name
-        if self.domain:
-            statement_name += self._get_domain_str()
-
-        output = f"Parameter {statement_name}"
+        output = f"Parameter {self.gamsRepr()}"
 
         if self.description:
             output += ' "' + self.description + '"'

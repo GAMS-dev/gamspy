@@ -1,0 +1,20 @@
+{
+    "modelTitle": "GAMSPy App",
+    "inputSymbols": {
+        "p": {
+            "alias": "p",
+            "symtype": "parameter",
+            "headers": {
+                "i": {
+                    "type": "string",
+                    "alias": "i"
+                },
+                "value": {
+                    "type": "numeric",
+                    "alias": "value"
+                }
+            }
+        }
+    },
+    "outputSymbols": {}
+}

@@ -376,6 +376,8 @@ class Expression(operable.Operable):
         self.representation = self._create_output_str()
 
     def _find_all_symbols(self) -> list[str]:
+        # Finds all symbols in an expression with a stack based inorder
+        # traversal algorithm (O(N)).
         symbols: list[str] = []
         stack = []
 
@@ -387,42 +389,44 @@ class Expression(operable.Operable):
             elif stack:
                 node = stack.pop()
 
-                if isinstance(node, ImplicitSymbol):
-                    stack.append(node.parent)
-
-                if isinstance(node, (ImplicitSymbol, Symbol)):
-                    for index, elem in enumerate(node.domain):
-                        if isinstance(elem, (Symbol, ImplicitSymbol)):
-                            path = validation.get_domain_path(elem)
-                            for name in path:
-                                if name not in symbols and " " not in name:
-                                    symbols.append(name)
-
-                        if (
-                            isinstance(node, ImplicitSymbol)
-                            and isinstance(elem, str)
-                            and elem != "*"
-                        ):
-                            symbol = node.parent.domain[index]
-                            if (
-                                not isinstance(symbol, str)
-                                and symbol.name not in symbols
-                            ):
-                                symbols.append(symbol.name)
-
+                if isinstance(node, Symbol):
                     if node.name not in symbols:
                         symbols.append(node.name)
-                elif isinstance(node, Expression) and isinstance(
-                    node.data, MathOp
-                ):
-                    stack += list(node.data.elements)
-
-                if isinstance(node, operation.Operation):
+                    stack += node.domain
+                    node = None
+                elif isinstance(node, ImplicitSymbol):
+                    if node.parent.name not in symbols:
+                        symbols.append(node.parent.name)
+                    stack += node.domain
+                    stack += node.container[node.parent.name].domain
+                    node = None
+                elif isinstance(node, operation.Operation):
                     stack += node.op_domain
                     node = node.rhs
                 elif isinstance(node, condition.Condition):
                     stack.append(node.conditioning_on)
-                    node = node.condition
+
+                    if isinstance(node.condition, Expression):
+                        node = node.condition
+                    else:
+                        stack.append(node.condition)
+                        node = None
+                elif isinstance(node, (operation.Ord, operation.Card)):
+                    stack.append(node._symbol)
+                    node = None
+                elif isinstance(node, MathOp):
+                    if isinstance(node.elements[0], Expression):
+                        node = node.elements[0]
+                    else:
+                        stack += node.elements
+                        node = None
+                elif isinstance(node, ExtrinsicFunction):
+                    stack += list(node.args)
+                    node = None
+                elif isinstance(node, Expression) and isinstance(
+                    node.data, MathOp
+                ):
+                    node = node.data
                 else:
                     node = getattr(node, "right", None)
             else:
@@ -475,11 +479,6 @@ class Expression(operable.Operable):
 
                 if isinstance(node, operation.Operation):
                     node._validate_operation(control_stack.copy())
-                    for elem in node.raw_domain:
-                        if elem in control_stack:
-                            raise ValidationError(
-                                f"Set `{elem}` is already in control!"
-                            )
                 elif isinstance(node, ImplicitSymbol):
                     for elem in node.domain:
                         if hasattr(elem, "is_singleton") and elem.is_singleton:

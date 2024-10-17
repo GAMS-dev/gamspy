@@ -12,8 +12,7 @@ import gamspy._symbols.implicits as implicits
 from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from typing import Iterable
+    from collections.abc import Iterable, Sequence
 
     import pandas as pd
     from gams.core.numpy import Gams2Numpy
@@ -40,6 +39,23 @@ SPECIAL_VALUE_MAP = {
 CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
+
+DEFAULT_SOLVERS = {
+    "CNS": "PATH",
+    "DNLP": "IPOPTH",
+    "EMP": "CONVERT",
+    "LP": "CPLEX",
+    "MCP": "PATH",
+    "MINLP": "SHOT",
+    "MIP": "CPLEX",
+    "MIQCP": "SHOT",
+    "MPEC": "NLPEC",
+    "NLP": "IPOPTH",
+    "QCP": "IPOPTH",
+    "RMINLP": "IPOPTH",
+    "RMIP": "CPLEX",
+    "RMIQCP": "IPOPTH",
+}
 
 user_dir = os.path.expanduser("~")
 if platform.system() == "Linux":

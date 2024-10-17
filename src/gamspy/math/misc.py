@@ -4,12 +4,13 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy.utils as utils
+from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
     from gamspy._symbols.symbol import Symbol
 
 
@@ -21,7 +22,7 @@ class MathOp:
         safe_cancel: bool = False,
     ):
         self.op_name = op_name
-        self.elements = elements
+        self.elements = list(elements)
         self.safe_cancel = safe_cancel
 
     def gamsRepr(self) -> str:

@@ -140,6 +140,10 @@ def test_network_license(network_license):
         password=os.environ["ENGINE_PASSWORD"],
         namespace=os.environ["ENGINE_NAMESPACE"],
     )
+
+    with pytest.raises(ValidationError):
+        transport.solve(backend="engine", client=client, solver="mpsge")
+
     summary = transport.solve(backend="engine", client=client)
     assert isinstance(summary, pd.DataFrame)
 

@@ -113,7 +113,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self,
         container: Container,
         name: str | None = None,
-        alias_with: Set | Alias | None = None,
+        alias_with: Set | Alias = None,
     ):
         # does symbol exist
         has_symbol = False
@@ -152,7 +152,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         )
 
     def __repr__(self) -> str:
-        return f"Alias(name={self.name}, alias_with={self.alias_with})"
+        return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
     def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
@@ -178,7 +178,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self._assignment = statement
 
         if self.alias_with.synchronize:  # type: ignore
-            self.container._synch_with_gams()
+            self.container._synch_with_gams(gams_to_gamspy=True)
 
     @property
     def synchronize(self):
@@ -189,7 +189,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     @synchronize.setter
     def synchronize(self, value: bool):
         raise ValidationError(
-            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."  # type: ignore
+            f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
             f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."
         )
 

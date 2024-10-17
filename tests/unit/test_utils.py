@@ -73,6 +73,7 @@ def test_available_solvers(data):
         "NLPEC",
         "PATH",
         "PATHNLP",
+        "RESHOP",
         "SBB",
         "SCIP",
         "SHOT",

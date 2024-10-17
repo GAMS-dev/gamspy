@@ -77,7 +77,7 @@ def main():
     # extract data from Excel
     file_dir = os.path.dirname(os.path.abspath(__file__))
     cdb = ConnectDatabase(m.system_directory)
-    cdb.exec_task(
+    cdb.execute(
         {
             "ExcelReader": {
                 "file": os.path.join(file_dir, "cta.xlsx"),
@@ -212,7 +212,7 @@ def main():
     adjrep[k, i, j] = -adjn.l[i, j, k] + adjp.l[i, j, k]
 
     cdb = ConnectDatabase(m.system_directory, m)
-    cdb.exec_task(
+    cdb.execute(
         {
             "ExcelWriter": {
                 "file": os.path.join(file_dir, "results.xlsx"),
@@ -294,7 +294,7 @@ def main():
         solve_time = cox3c.total_solve_time
 
     cdb = ConnectDatabase(m.system_directory, m)
-    cdb.exec_task(
+    cdb.execute(
         {
             "ExcelWriter": {
                 "file": os.path.join(file_dir, "results.xlsx"),

@@ -9,8 +9,7 @@ test-leg-3.10:
     - source venv310/bin/activate
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install solver mpsge
-    - gamspy install solver scip
+    - gamspy install solver mpsge scip reshop
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
     - pytest -m "doc"
@@ -44,8 +43,7 @@ test-deg-3.10:
     - conda activate "$(pwd)/gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install solver mpsge
-    - gamspy install solver scip
+    - gamspy install solver mpsge scip reshop
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
     - pytest -m "doc"
@@ -63,7 +61,7 @@ test-deg-3.10:
 
 test-dac-3.10:
   stage: test
-  when: manual
+  when: on_success
   tags: [macos-arm64]
   script:
     - eval "$($MINICONDA shell.bash hook)"
@@ -72,8 +70,7 @@ test-dac-3.10:
     - conda activate "$(pwd)/gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install solver mpsge
-    - gamspy install solver scip
+    - gamspy install solver mpsge scip reshop
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
     - pytest -m "doc"
@@ -84,10 +81,10 @@ test-dac-3.10:
     name: macos_arm64_3.10
     expire_in: 2 hours
     paths: [dist/*]
-  # rules:
-  #   - if: $CI_COMMIT_BRANCH != "master"
-  #     when: never
-  #   - when: on_success
+  rules:
+    - if: $CI_COMMIT_BRANCH != "master"
+      when: never
+    - when: on_success
 
 test-wei-3.10:
   stage: test
@@ -103,8 +100,7 @@ test-wei-3.10:
     - python --version
     - python -m pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install solver mpsge
-    - gamspy install solver scip
+    - gamspy install solver mpsge scip reshop
     - gamspy install license $LOCAL_LICENSE
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or engine or model_library' tests
     - pytest -m "doc"

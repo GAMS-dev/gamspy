@@ -36,7 +36,6 @@ class Workspace:
         self.debugging_level = debugging_level
         self.using_tmp_working_dir = False
         self._has_error = False
-        self._first_try = True
 
         if working_directory is None:
             self.using_tmp_working_dir = True
@@ -59,5 +58,5 @@ class Workspace:
                     and not self._has_error
                 ):
                     shutil.rmtree(self.working_directory)
-            except (PermissionError, FileNotFoundError):  # pragma: no cover
+            except Exception:  # pragma: no cover
                 ...

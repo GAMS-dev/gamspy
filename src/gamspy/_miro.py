@@ -15,11 +15,11 @@ MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
 
 
-def get_load_input_str(names: list[str], gdx_in: str) -> str:
+def get_load_input_str(name: str, gdx_in: str) -> str:
     strings = [
         "$gdxIn",  # close the old one
         f"$gdxIn {MIRO_GDX_IN}",  # open the new one
-        f"$loadDC {','.join(names)}",
+        f"$loadDC {name}",
         "$gdxIn",  # close the new one
         f"$gdxIn {gdx_in}",  # reopen the previous one
     ]
@@ -52,6 +52,21 @@ def load_miro_symbol_records(container: Container):
         container._load_records_from_gdx(
             MIRO_GDX_OUT, container._miro_output_symbols
         )
+
+
+def _write_default_gdx_miro(container: Container) -> None:
+    # create data_<model>/default.gdx
+    symbols = container._miro_input_symbols + container._miro_output_symbols
+
+    filename = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    directory = os.path.dirname(sys.argv[0])
+    data_path = os.path.join(directory, f"data_{filename}")
+    try:
+        os.mkdir(data_path)
+    except FileExistsError:
+        pass
+
+    container.write(os.path.join(data_path, "default.gdx"), symbols)
 
 
 class MiroJSONEncoder:

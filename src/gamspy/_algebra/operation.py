@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -622,13 +623,13 @@ class Ord(operable.Operable):
 
     """
 
-    def __init__(self, set: Set | Alias):
-        if not isinstance(set, (syms.Set, syms.Alias)):
+    def __init__(self, symbol: Set | Alias):
+        if not isinstance(symbol, (syms.Set, syms.Alias)):
             raise ValidationError(
                 "Ord operation is only for Set and Alias objects!"
             )
 
-        self._set = set
+        self._symbol = symbol
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
@@ -661,7 +662,7 @@ class Ord(operable.Operable):
         'ord(i)'
 
         """
-        return f"ord({self._set.name})"
+        return f"ord({self._symbol.name})"
 
     def latexRepr(self) -> str:
         """
@@ -671,7 +672,7 @@ class Ord(operable.Operable):
         -------
         str
         """
-        return f"ord({self._set.name})"
+        return f"ord({self._symbol.name})"
 
 
 class Card(operable.Operable):

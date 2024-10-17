@@ -206,6 +206,9 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
+        if is_miro_output and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         # miro support
         self._is_miro_output = is_miro_output
 
@@ -346,11 +349,11 @@ class Equation(gt.Equation, Symbol):
 
         self._set_definition(domain, rhs)
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
     def __repr__(self) -> str:
-        return f"Equation(name={self.name}, type={self.type}, domain={self.domain})"
+        return f"Equation(name='{self.name}', type={self.type}, domain={self.domain})"
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")
@@ -1001,7 +1004,7 @@ class Equation(gt.Equation, Symbol):
         output = f"Equation {self.name}"
 
         if self.domain:
-            output += self._get_domain_str()
+            output += self._get_domain_str(self.domain_forwarding)
 
         if self.description:
             output += ' "' + self.description + '"'

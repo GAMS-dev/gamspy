@@ -552,6 +552,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
+        if (is_miro_input or is_miro_output) and name is None:
+            raise ValidationError("Please specify a name for miro symbols.")
+
         self._is_miro_input = is_miro_input
         self._is_miro_output = is_miro_output
 
@@ -648,7 +651,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
-                self.container._synch_with_gams()
+                self.container._synch_with_gams(
+                    gams_to_gamspy=self._is_miro_input
+                )
 
             container._options.miro_protect = previous_state
 
@@ -681,11 +686,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         self.container._add_statement(statement)
         self._assignment = statement
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
     def __repr__(self) -> str:
-        return f"Set(name={self.name}, domain={self.domain})"
+        return f"Set(name='{self.name}', domain={self.domain})"
 
     def _singleton_check(
         self,
@@ -784,7 +789,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         super().setRecords(records, uels_on_axes)
 
-        self.container._synch_with_gams()
+        self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
         self._winner = "python"
 
     def gamsRepr(self) -> str:
@@ -828,7 +833,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if self.is_singleton:
             output = f"Singleton {output}"
 
-        output += self._get_domain_str()
+        output += self._get_domain_str(self.domain_forwarding)
 
         if self.description:
             output += f' "{self.description}"'

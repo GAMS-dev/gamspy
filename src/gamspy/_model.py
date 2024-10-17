@@ -12,6 +12,7 @@ from gams.core.gmd import gmdCloseLicenseSession
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
+import gamspy._miro as miro
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -22,7 +23,8 @@ from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
-    from typing import Iterable, Literal
+    from collections.abc import Iterable
+    from typing import Literal
 
     import pandas as pd
 
@@ -313,7 +315,7 @@ class Model:
         self.container._synch_with_gams()
 
     def __repr__(self) -> str:
-        return f"Model(name={self.name}, problem={self.problem}, equations={self.equations}, sense={self.sense}, objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
+        return f"Model(name='{self.name}', problem='{str(self.problem)}', equations={self.equations}, sense='{str(self.sense)}', objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
 
     def __str__(self) -> str:
         return (
@@ -632,13 +634,13 @@ class Model:
         return self._solve_model_time
 
     @property
-    def solve_status(self) -> float | None:
+    def solve_status(self) -> SolveStatus | None:
         """
         Indicates the solver termination condition.
 
         Returns
         -------
-        float | None
+        SolveStatus | None
         """
         return self._solve_status
 
@@ -750,7 +752,7 @@ class Model:
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
-            if self.problem in [gp.Problem.CNS, gp.Problem.MCP]:
+            if self.problem in [Problem.CNS, Problem.MCP, Problem.EMP]:
                 return None
 
             variable, equation = self._generate_obj_var_and_equation()
@@ -811,7 +813,7 @@ class Model:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense.MIN
 
-        if self.problem not in [Problem.MCP, Problem.CNS]:
+        if self.problem not in [Problem.MCP, Problem.CNS, Problem.EMP]:
             solve_string += f" {self.sense}"
 
         if self._objective_variable is not None:
@@ -1102,6 +1104,9 @@ class Model:
         >>> solved = my_model.solve()
 
         """
+        if solver is None:
+            solver = utils.DEFAULT_SOLVERS[str(self.problem).upper()]
+
         validation.validate_solver_args(
             self.container.system_directory,
             backend,
@@ -1138,10 +1143,10 @@ class Model:
             load_symbols,
         )
 
-        summary = runner.run(relaxed_domain_mapping=False)
+        summary = runner.run(relaxed_domain_mapping=False, gams_to_gamspy=True)
 
         if IS_MIRO_INIT:
-            self.container._write_default_gdx_miro()
+            miro._write_default_gdx_miro(self.container)
 
         return summary
 

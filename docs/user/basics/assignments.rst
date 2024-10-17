@@ -134,10 +134,10 @@ Bitwise Operators
 -----------------
 
 Logical operators can be used to combine two or more logical conditions to build complex logical 
-expressions. For example, if several expressions are required to be TRUE simultaneously, they may 
+expressions. For example, if several expressions are required to be True simultaneously, they may 
 be connected with the Python bitwise operator ``&``. For all available bitwise operators in Python 
-read more `here <https://www.w3schools.com/python/gloss_python_bitwise_operators.asp>`_. Another 
-way to construct complex logical conditions is by nesting them. For details, see subsection 
+read more `here <https://docs.python.org/3/library/operator.html#mapping-operators-to-functions>`_. 
+Another way to construct complex logical conditions is by nesting them. For details, see subsection 
 :ref:`nested-conditions` below.
 
 The following somewhat artificial examples serve as illustrations. ::
