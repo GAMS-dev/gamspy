@@ -94,7 +94,7 @@ test-wei-3.13:
     name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
     entrypoint: [""]
   script:
-    - conda create -y -n gamspy-env-3.13 python=3.13
+    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
     - conda env list
     - conda activate gamspy-env-3.13
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
