@@ -752,7 +752,7 @@ class Model:
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
-            if self.problem in [gp.Problem.CNS, gp.Problem.MCP]:
+            if self.problem in [Problem.CNS, Problem.MCP, Problem.EMP]:
                 return None
 
             variable, equation = self._generate_obj_var_and_equation()
@@ -813,7 +813,7 @@ class Model:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense.MIN
 
-        if self.problem not in [Problem.MCP, Problem.CNS]:
+        if self.problem not in [Problem.MCP, Problem.CNS, Problem.EMP]:
             solve_string += f" {self.sense}"
 
         if self._objective_variable is not None:
