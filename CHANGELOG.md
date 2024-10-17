@@ -12,6 +12,8 @@ GAMSPy 1.0.4
   - Update dependencies. gamspy_base -> 48.1.1 and gamsapi -> 48.1.0.
   - Make minimum supported Python version 3.9 and add support for Python 3.13.
 - Documentation
+  - Fix documented type of model.solve_status.
+  - Add num_equations attribute to the model page of user guide.
   - Add synchronization docs to reference api.
 - Testing
   - Add one to one comparison tests with reference files in toGams tests.

@@ -40,7 +40,6 @@ CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
 
-# TODO: use gamspy_base.default_solvers after GAMS 48
 DEFAULT_SOLVERS = {
     "CNS": "PATH",
     "DNLP": "IPOPTH",
