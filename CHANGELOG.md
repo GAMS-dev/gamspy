@@ -9,6 +9,7 @@ GAMSPy 1.0.4
   - Fix toGams bug of MathOp symbols.
   - Add "same" and "valid" options for Conv2d padding.
   - Update dependencies. gamspy_base -> 48.1.1 and gamsapi -> 48.1.0.
+  - Make minimum supported Python version 3.9 and add support for Python 3.13.
 - Documentation
   - Add synchronization docs to reference api.
 - Testing
