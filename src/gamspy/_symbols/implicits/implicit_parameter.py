@@ -137,7 +137,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         >>> v_t = v.t() # v_t is an ImplicitParameter
         >>> v_t_t = v_t.t() # you can get transpose of ImplicitParameter as well
         >>> v_t_t.domain
-        [Set(name=i, domain=['*']), Set(name=j, domain=['*'])]
+        [Set(name='i', domain=['*']), Set(name='j', domain=['*'])]
 
         """
         dims = [x for x in range(len(self.domain))]

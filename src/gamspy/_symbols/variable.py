@@ -332,7 +332,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> v = gp.Variable(m, "v", domain=[i, j])
         >>> v_t = v.t()
         >>> v_t.domain
-        [Set(name=j, domain=['*']), Set(name=i, domain=['*'])]
+        [Set(name='j', domain=['*']), Set(name='i', domain=['*'])]
         >>> v_t[i, j] # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         gamspy.exceptions.ValidationError:

@@ -97,9 +97,9 @@ def relu_with_sos1_var(
     >>> y, eqs = relu_with_sos1_var(x)
     >>> y, s, eqs = relu_with_sos1_var(x, return_slack_var=True)
     >>> y.domain # implicit activation variable has the same domain
-    [Set(name=i, domain=['*'])]
+    [Set(name='i', domain=['*'])]
     >>> s.domain # implicit slack variable has the same domain as well
-    [Set(name=i, domain=['*'])]
+    [Set(name='i', domain=['*'])]
     >>> y.name == s.name # In the background that y and s are parts of the same variable
     True
     >>> id(y.parent) == id(s.parent)
@@ -187,9 +187,9 @@ def relu_with_binary_var(
     >>> b.type
     'binary'
     >>> y.domain # i many activation variables
-    [Set(name=i, domain=['*'])]
+    [Set(name='i', domain=['*'])]
     >>> b.domain # i many binary variables
-    [Set(name=i, domain=['*'])]
+    [Set(name='i', domain=['*'])]
 
     """
 
@@ -346,7 +346,7 @@ def log_softmax(x: Variable, dim: int = -1, skip_intrinsic: bool = False):
     >>> x = Variable(m, "x", domain=dim([500, 10]))
     >>> y, eqs1 = log_softmax(x) # uses LSE because 10 <= 20
     >>> y.domain
-    [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
+    [Set(name='DenseDim500_1', domain=['*']), Set(name='DenseDim10_1', domain=['*'])]
     >>> y2, eqs2 = log_softmax(x, dim=0) # cannot use LSE because 500 > 20
     >>> y3, eqs3 = log_softmax(x, skip_intrinsic=True) # don't use LSE because of skip_intrinsic
 
@@ -421,7 +421,7 @@ def softmax(x: Variable, dim: int = -1):
     >>> x = Variable(m, "x", domain=dim([500, 10]))
     >>> y, eqs = softmax(x)
     >>> y.domain
-    [Set(name=DenseDim500_1, domain=['*']), Set(name=DenseDim10_1, domain=['*'])]
+    [Set(name='DenseDim500_1', domain=['*']), Set(name='DenseDim10_1', domain=['*'])]
 
     """
     if not isinstance(x, Variable):
