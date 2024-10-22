@@ -309,8 +309,6 @@ class Container(gt.Container):
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
-            self._process.stdout = subprocess.DEVNULL
-            self._process.stderr = subprocess.DEVNULL
             if platform.system() == "Windows":
                 self._process.send_signal(signal.SIGTERM)
             else:

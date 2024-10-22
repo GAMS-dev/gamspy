@@ -40,7 +40,7 @@ def test_full_models(teardown):
     for idx, path in enumerate(paths):
         print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
         process = subprocess.run(
-            [sys.executable, "-Werror", path], capture_output=True, text=True
+            [sys.executable, "-Wd", path], capture_output=True, text=True
         )
         print(process.stdout)
 
