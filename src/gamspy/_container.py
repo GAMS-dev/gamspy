@@ -310,10 +310,6 @@ class Container(gt.Container):
             self._socket.close()
             self._is_socket_open = False
 
-            # close stdout pipe
-            if not self._process.stdout.closed:
-                self._process.stdout.close()
-
             if platform.system() == "Windows":
                 self._process.send_signal(signal.SIGTERM)
             else:
@@ -322,6 +318,9 @@ class Container(gt.Container):
             # gams process is still running. wait until it dies.
             while self._process.poll() is None:
                 ...
+
+            if not self._process.stdout.closed:
+                self._process.stdout.close()
 
     def _send_job(
         self,
