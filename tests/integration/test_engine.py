@@ -63,7 +63,6 @@ def data():
 
 @pytest.fixture
 def network_license():
-    print(sys.executable, os.environ["NETWORK_LICENSE_NON_ACADEMIC"])
     subprocess.run(
         [
             sys.executable,
@@ -508,8 +507,6 @@ def test_non_blocking(data):
     container = Container(load_from=gdx_out_path)
     assert "x" in container.data
     x.setRecords(container["x"].records)
-    print(x.records)
-    print(container["x"].records)
     assert x.records.equals(container["x"].records)
 
 

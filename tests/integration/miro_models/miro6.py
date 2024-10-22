@@ -15,8 +15,6 @@ def main():
         is_miro_input=True,
     )
 
-    print(f.records)
-
     if m.in_miro:
         assert f.toValue() == 120
     else:

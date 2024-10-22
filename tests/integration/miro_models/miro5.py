@@ -134,7 +134,6 @@ def main():
 
     import math
 
-    print(z.toValue())
     assert math.isclose(z.toValue(), 204.900000, rel_tol=0.001)
 
 
