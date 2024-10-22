@@ -1,5 +1,6 @@
 leg-build-docs:
   stage: docs
+  when: on_success
   tags: [linux]
   image: python:3.10
   script:
@@ -16,5 +17,5 @@ leg-build-docs:
     - cd docs && make linkcheck && make html
   rules:
     - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
-      when: manual
+      when: never
     - when: on_success
