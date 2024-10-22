@@ -8,6 +8,7 @@ GAMSPy 1.0.5
   - Allow printing the records of a subset of a parameter with print(parameter['literal'].records) syntax.
 - Testing
   - Fix race conditions in the pipeline.
+  - Add sq.py model to the test model suite.
 
 GAMSPy 1.0.4
 ------------
