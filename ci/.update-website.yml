@@ -1,4 +1,4 @@
-update-website:
+leg-update-website:
   stage: website
   needs: []
   tags: [puma]

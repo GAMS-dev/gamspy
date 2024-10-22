@@ -1,4 +1,4 @@
-upload-wheel:
+leg-upload-wheel:
   stage: upload
   needs: []
   tags: [puma]

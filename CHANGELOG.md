@@ -6,6 +6,8 @@ GAMSPy 1.0.5
 - General
   - Allow printing the records of variable/equation attributes with a print(variable.attribute[domain].records) syntax.
   - Allow printing the records of a subset of a parameter with print(parameter['literal'].records) syntax.
+- Testing
+  - Fix race conditions in the pipeline.
 
 GAMSPy 1.0.4
 ------------

@@ -42,6 +42,4 @@ def test_full_models(teardown):
         process = subprocess.run(
             [sys.executable, "-Wd", path], capture_output=True, text=True
         )
-        print(process.stdout)
-
         assert process.returncode == 0, process.stderr

@@ -1,0 +1,125 @@
+leg-cli-3.13:
+  stage: cli
+  tags: [linux]
+  image: python:3.13
+  script:
+    - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+
+leg-cli-3.9:
+  stage: cli
+  tags: [linux]
+  image: python:3.9
+  script:
+    - pip install virtualenv
+    - virtualenv venv39
+    - source venv39/bin/activate
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+
+dac-cli-3.13:
+  stage: cli
+  when: on_success
+  tags: [macos-arm64]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
+    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
+    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+
+dac-cli-3.9:
+  stage: cli
+  needs: [dac-cli-3.13]
+  tags: [macos-arm64]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
+    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
+    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+
+deg-cli-3.13:
+  stage: cli
+  tags: [macos]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
+    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
+    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install solver mpsge scip reshop
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
+
+deg-cli-3.9:
+  stage: cli
+  needs: [deg-cli-3.13]
+  tags: [macos]
+  script:
+    - eval "$($MINICONDA shell.bash hook)"
+    - ulimit -n 10240
+    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
+    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
+    - pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install solver mpsge scip reshop
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - when: never
+
+wei-cli-3.13:
+  stage: cli
+  tags: [windows]
+  image:
+    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
+    entrypoint: [""]
+  script:
+    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
+    - conda env list
+    - conda activate gamspy-env-3.13
+    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
+    - python --version
+    - python -m pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install solver mpsge scip reshop
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests
+
+wei-cli-3.9:
+  stage: cli
+  needs: [wei-cli-3.13]
+  tags: [windows]
+  image:
+    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
+    entrypoint: [""]
+  script:
+    - conda create -y -n gamspy-env-3.9 python=3.9
+    - conda env list
+    - conda activate gamspy-env-3.9
+    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
+    - python --version
+    - python -m pip install wheel build
+    - python scripts/reinstall.py
+    - gamspy install solver mpsge scip reshop
+    - gamspy install license $LOCAL_LICENSE
+    - pytest -x -v -s -m 'cli' tests

@@ -190,10 +190,11 @@ You can install GAMSPy from source using the following command::
 Testing
 -------
 
-Tests are classified into three categories: unit tests, integration tests, and doc tests. The tests can be run with::
+Tests have several markers such as unit tests, integration tests, and doc tests. 
+The tests can be run with adding desired markers to the pytest command below. 
+For example, unit tests and integrations tests can be run with: ::
 
-    pytest -m 'unit or integration or doc' tests
+    pytest -m 'unit or integration' tests
 
 .. note::
-    To enable GAMS Engine backend tests, add ``engine`` marker to the command above.
-    To enable NEOS Server backend tests, add ``neos`` market to the command above.
+    To see all markers, one can run `pytest --markers`.
