@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 
 class Symbol:
     def __bool__(self):
-        raise ValidationError(
-            "A symbol cannot be used as a truth value. Use len(<symbol>.records) instead."
-        )
+        raise ValidationError("A symbol cannot be used as a truth value.")
 
     def latexRepr(self: SymbolType):
         """

@@ -153,6 +153,16 @@ It is also possible to define an empty parameter at declaration and fill it with
     b = Parameter(m, domain=[i, j])
     b.setRecords(a.records)
 
+The records of the parameter can be filtered with the following syntax: ::
+
+    In [1]: a[i,'new-york'].records
+    Out[1]:
+    	        i	       j	value
+    0	  seattle	new-york	  2.5
+    3	san-diego	new-york	  2.5
+
+This example gathers records only where the element of set `j` is `new-york`.
+
 The Assignment Statement
 ========================
 

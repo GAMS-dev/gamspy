@@ -799,7 +799,7 @@ def main():
     dst.l[i] = sectres["dst", i]
     dk.l[i] = sectres["dk", i]
     it[i] = Number(1).where[e.l[i] | m.l[i]]
-    inn[i] = not it[i]
+    inn[i] = ~it[i]
     k.fx[i] = k.l[i]
     m.fx[inn] = 0
     e.fx[inn] = 0

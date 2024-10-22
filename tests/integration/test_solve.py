@@ -271,7 +271,7 @@ def test_uel_order(data):
     assert p.records.values.tolist() == [["i1", 1.0], ["i0", 2.0]]
 
 
-def test_read_on_demand(data):
+def test_records(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -283,6 +283,7 @@ def test_read_on_demand(data):
     b = Parameter(m, name="b", domain=[j], records=demands)
     d = Parameter(m, name="d", domain=[i, j], records=distances)
     c = Parameter(m, name="c", domain=[i, j])
+    assert c.records is None
     e = Parameter(m, name="e")
 
     c[i, j] = 90 * d[i, j] / 1000
@@ -294,6 +295,42 @@ def test_read_on_demand(data):
         ["san-diego", "chicago", 0.162],
         ["san-diego", "topeka", 0.126],
     ]
+    assert c[i, j].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[...].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[:, :].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["san-diego", "new-york", 0.225],
+    ]
+    assert c["san-diego", j].records.values.tolist() == [
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c["san-diego", "new-york"].records.values.tolist() == [
+        ["san-diego", "new-york", 0.225],
+    ]
     e[...] = 5
     assert e.records.values.tolist() == [[5.0]]
 
@@ -301,10 +338,19 @@ def test_read_on_demand(data):
         e.records = 5
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
+    assert x.records is None
+    assert x.l[i, j].records is None
+    assert x.l[i, "new-york"].records is None
+    assert x.l["san-diego", j].records is None
+    assert x.l["san-diego", "new-york"].records is None
     z = Variable(m, name="z")
 
     cost = Equation(m, name="cost")
     supply = Equation(m, name="supply", domain=[i])
+    assert supply.records is None
+    assert supply.l[i].records is None
+    assert supply.l["seattle"].records is None
+
     demand = Equation(m, name="demand", domain=[j])
 
     cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
@@ -347,6 +393,51 @@ def test_read_on_demand(data):
         "scale",
     ]
 
+    # Test the columns of the attribute records
+    assert x.l[i, j].records.columns.tolist() == ["i", "j", "level"]
+    assert x.m[i, j].records.columns.tolist() == ["i", "j", "marginal"]
+    assert x.up[i, j].records.columns.tolist() == ["i", "j", "upper"]
+    assert x.lo[i, j].records.columns.tolist() == ["i", "j", "lower"]
+    assert x.scale[i, j].records.columns.tolist() == ["i", "j", "scale"]
+
+    # Test the records of the filtered attribute records
+    assert x.l.records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[i, j].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[...].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["san-diego", "new-york", 275.0],
+    ]
+    assert x.l["san-diego", j].records.values.tolist() == [
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l["san-diego", "new-york"].records.values.tolist() == [
+        ["san-diego", "new-york", 275.0],
+    ]
+
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
         "level",
@@ -364,6 +455,92 @@ def test_read_on_demand(data):
         "lower",
         "upper",
         "scale",
+    ]
+
+    # Test the columns of the attribute records
+    assert supply.l[i].records.columns.tolist() == ["i", "level"]
+    assert supply.m[i].records.columns.tolist() == ["i", "marginal"]
+    assert supply.up[i].records.columns.tolist() == ["i", "upper"]
+    assert supply.lo[i].records.columns.tolist() == ["i", "lower"]
+    assert supply.scale[i].records.columns.tolist() == ["i", "scale"]
+
+    # Test the records of the filtered attribute records
+    assert supply.l[i].records.values.tolist() == [
+        ["seattle", 350.0],
+        ["san-diego", 550.0],
+    ]
+    assert supply.l["seattle"].records.values.tolist() == [
+        ["seattle", 350.0],
+    ]
+
+    i1 = Set(m, name="i1", records=range(2))
+    i2 = Set(m, name="i2", records=range(2))
+    i3 = Set(m, name="i3", records=range(2))
+    i4 = Set(m, name="i4", records=range(2))
+    v1 = Variable(m, "v1", domain=[i1, i2, i3, i4])
+    v1.generateRecords(seed=1)
+    assert v1.l[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l[i1, :, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l[i1, ..., i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l["0", ..., "1"].records.values.tolist() == [
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "1", 0.4091991363691613],
     ]
 
 
@@ -1055,7 +1232,7 @@ def test_interrupt(data):
     )
 
     def interrupt_gams(model):
-        time.sleep(1)
+        time.sleep(0.5)
         model.interrupt()
 
     import threading

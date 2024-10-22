@@ -99,6 +99,7 @@ def open_connection(
             new_socket.connect(address)
             break
         except (ConnectionRefusedError, OSError) as e:
+            new_socket.close()
             end = time.time()
 
             if end - start > TIMEOUT:  # pragma: no cover
@@ -308,8 +309,6 @@ class Container(gt.Container):
             self._socket.sendall("stop".encode("ascii"))
             self._is_socket_open = False
 
-            self._process.stdout = subprocess.DEVNULL
-            self._process.stderr = subprocess.DEVNULL
             if platform.system() == "Windows":
                 self._process.send_signal(signal.SIGTERM)
             else:
@@ -321,8 +320,8 @@ class Container(gt.Container):
         pf_file: str,
         output: io.TextIOWrapper | None = None,
     ):
-        # Send pf file
         try:
+            # Send pf file
             self._socket.sendall(pf_file.encode("utf-8"))
 
             # Read output
