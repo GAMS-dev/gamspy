@@ -47,12 +47,12 @@ variables:
 
 
 include: ['ci/.formatter.yml',
+          'ci/.docs.yml',
           'ci/.cli.yml',
           'ci/.test-leg.yml',
           'ci/.test-dac.yml',
           'ci/.test-deg.yml',
           'ci/.test-wei.yml',
-          'ci/.docs.yml',
           'ci/.update-website.yml',
           'ci/.upload.yml',
           'ci/.performance.yml']
