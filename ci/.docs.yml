@@ -1,6 +1,5 @@
 leg-build-docs:
   stage: docs
-  needs: []
   tags: [linux]
   image: python:3.10
   script:
