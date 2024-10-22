@@ -1,5 +1,11 @@
-# Simple example to illustrate how to model the CVaR as a support function
-# Author: Olivier Huber <oli.huber@gmail.com>
+"""
+## LICENSETYPE: Demo
+## MODELTYPE: EMP
+## KEYWORDS: Extended Mathematical Programming, EMP, RESHOP
+
+Simple example to illustrate how to model the CVaR as a support function.
+Author: Olivier Huber <oli.huber@gmail.com>
+"""
 
 import sys
 
