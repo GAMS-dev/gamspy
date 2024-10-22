@@ -9,7 +9,7 @@ import pytest
 
 from gamspy import Container, Set
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.cli
 try:
     from dotenv import load_dotenv
 
@@ -167,8 +167,7 @@ def test_install_solver(teardown):
         capture_output=True,
         text=True,
     )
-    print(process.stdout, process.stderr)
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
@@ -183,31 +182,28 @@ def test_install_solver(teardown):
         capture_output=True,
         text=True,
     )
-    print(process.stdout, process.stderr)
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
         ["gamspy", "uninstall", "solver", "minos", "mosek"],
         capture_output=True,
         text=True,
     )
-    print(process.stdout, process.stderr)
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
         ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
         capture_output=True,
         text=True,
     )
-    print(process.stdout, process.stderr)
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
         ["gamspy", "install", "solver", "mpsge", "scip", "reshop"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_list_solvers():
@@ -217,7 +213,7 @@ def test_list_solvers():
         stdout=subprocess.DEVNULL,
     )
 
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
         ["gamspy", "list", "solvers", "-a"],
@@ -225,7 +221,7 @@ def test_list_solvers():
         stdout=subprocess.DEVNULL,
     )
 
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
 
 def test_show_license():
@@ -236,7 +232,7 @@ def test_show_license():
         text=True,
     )
 
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
     assert isinstance(process.stdout, str)
 
 
@@ -250,7 +246,7 @@ def test_show_base():
 
     import gamspy_base
 
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
     assert gamspy_base.directory == process.stdout.strip()
 
 
@@ -262,7 +258,7 @@ def test_probe(teardown):
         text=True,
     )
 
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
         [
@@ -279,5 +275,4 @@ def test_probe(teardown):
         text=True,
     )
 
-    print(process.stderr, process.stdout)
-    assert process.returncode == 0
+    assert process.returncode == 0, process.stdout + process.stderr

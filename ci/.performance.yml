@@ -1,4 +1,4 @@
-performance:
+leg-performance:
   stage: performance
   needs: []
   tags: [puma]

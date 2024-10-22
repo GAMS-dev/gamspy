@@ -1588,8 +1588,8 @@ def test_minlp_minlphix(data):
 
     with open("trace.txt") as trace:
         lines = trace.read().splitlines()
-        objective = lines[-1].split("//")[0].split(" ")[-3]
-        print(f"{objective=}")
+        objective = float(lines[-1].split("//")[0].split(" ")[-3])
+        assert math.isclose(objective, 316.692694176485, rel_tol=1e-4)
 
     reference_path = os.path.join(
         "tests", "integration", "gms_references", "skip.gms"

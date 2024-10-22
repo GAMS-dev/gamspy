@@ -93,7 +93,7 @@ ignore_missing_imports = true
 where = ["src"]
 
 [tool.coverage.run]
-omit = ["*/_cli/*.py", "__main__.py", "*__init__.py"]
+omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
 
 [tool.coverage.report]
 exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "@property"]
@@ -179,6 +179,7 @@ line-ending = "auto"
 markers = [
     "unit: unit tests",
     "integration: integration tests",
+    "cli: cli tests",
     "doc: doctests",
     "engine: engine tests",
     "neos: neos tests",
