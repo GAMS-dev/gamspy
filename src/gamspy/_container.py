@@ -99,6 +99,7 @@ def open_connection(
             new_socket.connect(address)
             break
         except (ConnectionRefusedError, OSError) as e:
+            new_socket.close()
             end = time.time()
 
             if end - start > TIMEOUT:  # pragma: no cover
@@ -306,14 +307,21 @@ class Container(gt.Container):
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:
             self._socket.sendall("stop".encode("ascii"))
+            self._socket.close()
             self._is_socket_open = False
 
-            self._process.stdout = subprocess.DEVNULL
-            self._process.stderr = subprocess.DEVNULL
+            # close stdout pipe
+            if not self._process.stdout.closed:
+                self._process.stdout.close()
+
             if platform.system() == "Windows":
                 self._process.send_signal(signal.SIGTERM)
             else:
                 self._process.send_signal(signal.SIGINT)
+
+            # gams process is still running. wait until it dies.
+            while self._process.poll() is None:
+                ...
 
     def _send_job(
         self,
@@ -321,8 +329,8 @@ class Container(gt.Container):
         pf_file: str,
         output: io.TextIOWrapper | None = None,
     ):
-        # Send pf file
         try:
+            # Send pf file
             self._socket.sendall(pf_file.encode("utf-8"))
 
             # Read output

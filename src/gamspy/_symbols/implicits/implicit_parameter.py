@@ -9,12 +9,15 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._symbols.implicits.implicit_equation import ImplicitEquation
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 from gamspy.exceptions import ValidationError
 from gamspy.math.matrix import permute
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Equation, Parameter, Set, Variable
     from gamspy._algebra.expression import Expression
 
@@ -25,6 +28,14 @@ stream_handler.setLevel(logging.WARNING)
 formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
+
+ATTR_MAPPING = {
+    "l": "level",
+    "m": "marginal",
+    "lo": "lower",
+    "up": "upper",
+    "scale": "scale",
+}
 
 
 class ImplicitParameter(ImplicitSymbol, operable.Operable):
@@ -116,6 +127,41 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
     def __repr__(self) -> str:
         return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        if self.parent.records is None:
+            return None
+
+        if isinstance(self.parent, syms.Parameter):
+            recs = self.parent.records
+            for idx, literal in self._scalar_domains:
+                column_name = recs.columns[idx]
+                recs = recs[recs[column_name] == literal]
+
+            return recs
+
+        if isinstance(
+            self.parent,
+            (
+                syms.Variable,
+                syms.Equation,
+                ImplicitVariable,
+                ImplicitEquation,
+            ),
+        ):
+            extension = self.name.split(".")[-1]
+            domain_names = [symbol.name for symbol in self.parent.domain] + [
+                ATTR_MAPPING[extension]
+            ]
+            recs = self.parent.records[domain_names]
+            for idx, literal in self._scalar_domains:
+                column_name = recs.columns[idx]
+                recs = recs[recs[column_name] == literal]
+
+            return recs
+
+        return None
 
     @property
     def T(self) -> ImplicitParameter:

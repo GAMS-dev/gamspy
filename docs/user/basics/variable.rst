@@ -242,6 +242,41 @@ interpret the activity levels as a feasible integer solution via a solver option
       can be used to limit the tuples of a variable during model generation in the :meth:`solve <gamspy.Model.solve>`
       function.
 
+Printing Filtered Variable Records
+----------------------------------
+
+It is often useful to print the records of Variable symbols but the number of records in a Variable symbol can sometimes 
+be quite large or you might just be interested in values of only one attribute of the symbol (e.g. marginals). In this case,
+instead of printing the whole records with: ::
+
+  print(your_variable.records)
+
+you can print only the records of only one attribute as follows: ::
+  
+  from gamspy import Container, Set, Variable
+  m = Container()
+  i = Set(m, records=['elem1', 'elem2', 'elem3'])
+  j = Set(m, records=['elem4', 'elem5', 'elem6'])
+  v = Variable(m, domain=[i,j])
+
+  ...
+  ...
+  ...
+  your_model_definition here
+  ...
+  ...
+  ...
+
+  model.solve()
+
+  print(your_variable.m[i, j].records)
+  print(your_variable.m[i, 'elem6'].records)
+  print(your_variable.m['elem1', 'elem6'].records)
+
+The first print would only print the marginals of the variable. 
+The second print would only print the marginals of the records where the `j` element is equal to `elem6`. 
+And the third print would only print the marginal of 'elem1', 'elem6' pair. 
+
 
 Variables in Assignment Statements
 ==================================
