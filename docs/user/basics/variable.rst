@@ -277,6 +277,60 @@ The first print would only print the marginals of the variable.
 The second print would only print the marginals of the records where the `j` element is equal to `elem6`. 
 And the third print would only print the marginal of 'elem1', 'elem6' pair. 
 
+One can also use slice and ellipsis operators to match certain indices: ::
+
+  import gamspy as gp
+
+  m = gp.Container()
+  i1 = gp.Set(m, name="i1", records=range(2))
+  i2 = gp.Set(m, name="i2", records=range(2))
+  i3 = gp.Set(m, name="i3", records=range(2))
+  i4 = gp.Set(m, name="i4", records=range(2))
+  v1 = gp.Variable(m, "v1", domain=[i1, i2, i3, i4])
+  v1.generateRecords(seed=1)
+  
+::
+
+  In [0]: v1.l[i1, i2, i3, i4].records
+  Out[0]:
+     i1 i2 i3 i4     level
+  0   0  0  0  0  0.511822
+  1   0  0  0  1  0.950464
+  2   0  0  1  0  0.144160
+  3   0  0  1  1  0.948649
+  4   0  1  0  0  0.311831
+  5   0  1  0  1  0.423326
+  6   0  1  1  0  0.827703
+  7   0  1  1  1  0.409199
+  8   1  0  0  0  0.549594
+  9   1  0  0  1  0.027559
+  10  1  0  1  0  0.753513
+  11  1  0  1  1  0.538143
+  12  1  1  0  0  0.329732
+  13  1  1  0  1  0.788429
+  14  1  1  1  0  0.303195
+  15  1  1  1  1  0.453498
+
+  In [1]: v1.l['0', ..., '1'].records
+  Out[1]:
+    i1 i2 i3 i4     level
+  1  0  0  0  1  0.950464
+  3  0  0  1  1  0.948649
+  5  0  1  0  1  0.423326
+  7  0  1  1  1  0.409199
+
+  In [2]: v1.l['0', :, '1', '1'].records
+  Out[2]:
+    i1 i2 i3 i4     level
+  3  0  0  1  1  0.948649
+  7  0  1  1  1  0.409199
+
+Here we first show all the generated level values in cell 0. Then, cell 1 matches all 
+records where the first dimension is '0' and the last dimension is '1'. It uses the ellipsis operator 
+to match all elements of the second and the third column. Cell 2 matches all records where the first dimension is 
+'0', and the third and fourth dimensions are '1'. It makes use of the slice operator 
+to match all elements of the second dimension. 
+
 
 Variables in Assignment Statements
 ==================================
