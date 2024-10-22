@@ -8,6 +8,8 @@ import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
 
@@ -51,6 +53,18 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
     @property
     def dimension(self):
         return self.parent.dimension
+
+    @property
+    def records(self) -> pd.DataFrame | None:
+        if self.parent.records is None:
+            return None
+
+        recs = self.parent.records
+        for idx, literal in self._scalar_domains:
+            column_name = recs.columns[idx]
+            recs = recs[recs[column_name] == literal]
+
+        return recs
 
     def gamsRepr(self) -> str:
         representation = self.name
