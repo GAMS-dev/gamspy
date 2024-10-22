@@ -240,6 +240,64 @@ to express one-to-one and many-to-many mappings between sets.
         0    i1    e1
         1    i2    e2
 
+The records of the multi-dimensional sets can be filtered as follows: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+
+    i = gp.Set(m, "i", records=[f"i{i}" for i in range(2)])
+    j = gp.Set(m, "j", records=[f"j{i}" for i in range(2)])
+    k = gp.Set(m, "k", records=[f"k{i}" for i in range(2)])
+    l = gp.Set(m, "l", records=[f"l{i}" for i in range(2)])
+    a = gp.Set(m, "a", [i, j, k, l])
+    a.generateRecords()
+  
+::
+
+  In [0]: a.records
+  Out[0]:
+         i   j   k   l element_text
+    0   i0  j0  k0  l0             
+    1   i0  j0  k0  l1             
+    2   i0  j0  k1  l0             
+    3   i0  j0  k1  l1             
+    4   i0  j1  k0  l0             
+    5   i0  j1  k0  l1             
+    6   i0  j1  k1  l0             
+    7   i0  j1  k1  l1             
+    8   i1  j0  k0  l0             
+    9   i1  j0  k0  l1             
+    10  i1  j0  k1  l0             
+    11  i1  j0  k1  l1             
+    12  i1  j1  k0  l0             
+    13  i1  j1  k0  l1             
+    14  i1  j1  k1  l0             
+    15  i1  j1  k1  l1
+
+  In [1]: a['i0', ...].records
+  Out[1]:
+        i   j   k   l element_text
+    0  i0  j0  k0  l0             
+    1  i0  j0  k0  l1             
+    2  i0  j0  k1  l0             
+    3  i0  j0  k1  l1             
+    4  i0  j1  k0  l0             
+    5  i0  j1  k0  l1             
+    6  i0  j1  k1  l0             
+    7  i0  j1  k1  l1
+
+  In [2]: a["i0", :, 'k1', 'l0'].records
+  Out[2]:
+        i   j   k   l element_text
+    2  i0  j0  k1  l0             
+    6  i0  j1  k1  l0
+
+Cell 0 shows all the elements of the multi-dimensional set `a`.
+Cell 1 shows all rows where `i` dimension is 'i0' and matches all the rest with an ellipsis operator.
+Cell 2 shows all rows where `i` dimension is 'i0', `k` dimension is 'k1' and `l` dimension is 'l0'. It also 
+matches all elements of `j` dimension with a slice operator. 
+
 One-to-one Mapping
 -------------------
 
