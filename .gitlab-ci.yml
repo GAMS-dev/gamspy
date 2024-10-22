@@ -4,11 +4,11 @@ default:
 
 stages:
   - formatter
-  - docs
   - cli
   - test
   - engine
   - neos
+  - docs
   - performance
   - website
   - upload
