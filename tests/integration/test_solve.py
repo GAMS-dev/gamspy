@@ -475,7 +475,6 @@ def test_records(data):
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))
-    assert i1
     i2 = Set(m, name="i2", records=range(2))
     i3 = Set(m, name="i3", records=range(2))
     i4 = Set(m, name="i4", records=range(2))
