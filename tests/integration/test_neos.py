@@ -418,14 +418,17 @@ def test_solver_options(data):
     client = NeosClient(
         email=os.environ["NEOS_EMAIL"],
     )
+
+    log_path = os.path.join("tmp", "neos.log")
     transport.solve(
         solver="cplex",
         solver_options={"aggfill": "11"},
         backend="neos",
         client=client,
+        options=Options(log_file=log_path),
     )
 
-    with open(os.path.join(m.working_directory, "solve.log")) as file:
+    with open(log_path) as file:
         assert ">>  aggfill 11" in file.read()
 
 
