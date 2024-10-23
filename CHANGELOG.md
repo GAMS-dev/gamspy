@@ -8,6 +8,7 @@ GAMSPy 1.0.5
   - Allow printing the records of a subset of a parameter with print(parameter['literal'].records) syntax.
   - Allow printing the records of a subset of a set with print(set['literal'].records) syntax.
   - Update variable/equation attribute domains on addGamsCode call.
+  - Show log file instead of listing file on solve statements with NEOS backend.
 - Testing
   - Fix race conditions in the pipeline.
   - Remove redundant setRecords in gapmin.py example.
