@@ -9,6 +9,7 @@ GAMSPy 1.0.5
   - Allow printing the records of a subset of a set with print(set['literal'].records) syntax.
 - Testing
   - Fix race conditions in the pipeline.
+  - Remove redundant setRecords in gapmin.py example.
   - Add sq.py model to the test model suite.
 
 GAMSPy 1.0.4

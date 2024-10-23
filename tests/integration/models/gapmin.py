@@ -130,11 +130,6 @@ def main():
     f.setRecords(table_records()[1])
     b.setRecords(np.array([28, 20, 27, 24, 19]))
 
-    # PARAMETERS
-    a.setRecords(table_records()[0])
-    f.setRecords(table_records()[1])
-    b.setRecords(np.array([28, 20, 27, 24, 19]))
-
     capacity[i] = Sum(j, a[i, j] * x[i, j]) <= b[i]
 
     choice[j] = Sum(i, x[i, j]) == 1
