@@ -240,6 +240,42 @@ def test_enums(data):
     assert Sense.values() == ["MIN", "MAX", "FEASIBILITY"]
 
 
+def test_add_gams_code(data):
+    m = Container(
+        os.path.join(os.getcwd(), "integration", "models", "hansmge.gdx")
+    )
+    c, _, _, _, _, _, _, _ = (
+        m[sym] for sym in ["c", "n", "h", "s", "e", "d", "esub", "data"]
+    )
+
+    m.addGamsCode("""
+$onText
+$MODEL:HANSEN
+
+$SECTORS:
+   Y(S)
+
+$COMMODITIES:
+   P(C)
+
+$CONSUMERS:
+   HH(H)
+
+$PROD:Y(S)
+   O:P(C)   Q:DATA("OUTPUT",C,S)
+   I:P(C)   Q:DATA("INPUT" ,C,S)
+
+$DEMAND:HH(H) s:ESUB(H)
+   D:P(C)   Q:D(C,H)
+   E:P(C)   Q:E(C,H)
+$offText
+
+$sysInclude mpsgeset HANSEN
+""")
+    _, p = (m[sym] for sym in ["y", "p"])
+    p.fx[c].where[c.ord == 1] = 1
+
+
 def test_arbitrary_gams_code(data):
     m, *_ = data
     m = Container()
