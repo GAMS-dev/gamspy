@@ -473,6 +473,7 @@ def test_records(data):
         ["seattle", 350.0],
     ]
 
+    m = Container()
     i1 = Set(m, name="i1", records=range(2))
     i2 = Set(m, name="i2", records=range(2))
     i3 = Set(m, name="i3", records=range(2))
@@ -541,6 +542,45 @@ def test_records(data):
         ["0", "0", "1", "1", 0.9486494471372439],
         ["0", "1", "0", "1", 0.42332644897257565],
         ["0", "1", "1", "1", 0.4091991363691613],
+    ]
+
+    i = Set(m, "i", records=[f"i{i}" for i in range(2)])
+    j = Set(m, "j", records=[f"j{i}" for i in range(2)])
+    k = Set(m, "k", records=[f"k{i}" for i in range(2)])
+    l = Set(m, "l", records=[f"l{i}" for i in range(2)])
+    a = Set(m, domain=[i, j, k, l])
+    a.generateRecords()
+    assert a.records.values.tolist() == [
+        ["i0", "j0", "k0", "l0", ""],
+        ["i0", "j0", "k0", "l1", ""],
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j0", "k1", "l1", ""],
+        ["i0", "j1", "k0", "l0", ""],
+        ["i0", "j1", "k0", "l1", ""],
+        ["i0", "j1", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l1", ""],
+        ["i1", "j0", "k0", "l0", ""],
+        ["i1", "j0", "k0", "l1", ""],
+        ["i1", "j0", "k1", "l0", ""],
+        ["i1", "j0", "k1", "l1", ""],
+        ["i1", "j1", "k0", "l0", ""],
+        ["i1", "j1", "k0", "l1", ""],
+        ["i1", "j1", "k1", "l0", ""],
+        ["i1", "j1", "k1", "l1", ""],
+    ]
+    assert a["i0", ...].records.values.tolist() == [
+        ["i0", "j0", "k0", "l0", ""],
+        ["i0", "j0", "k0", "l1", ""],
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j0", "k1", "l1", ""],
+        ["i0", "j1", "k0", "l0", ""],
+        ["i0", "j1", "k0", "l1", ""],
+        ["i0", "j1", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l1", ""],
+    ]
+    assert a["i0", :, "k1", "l0"].records.values.tolist() == [
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l0", ""],
     ]
 
 
