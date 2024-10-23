@@ -242,7 +242,9 @@ def test_enums(data):
 
 def test_add_gams_code(data):
     m = Container(
-        os.path.join(os.getcwd(), "integration", "models", "hansmge.gdx")
+        os.path.join(
+            os.getcwd(), "tests", "integration", "models", "hansmge.gdx"
+        )
     )
     c, _, _, _, _, _, _, _ = (
         m[sym] for sym in ["c", "n", "h", "s", "e", "d", "esub", "data"]
