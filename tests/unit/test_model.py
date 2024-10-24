@@ -1069,3 +1069,109 @@ def test_solve_string_cns(data):
     x.l = 1
     m = Model(m, name="m", equations=[f], problem="CNS", sense="FEASIBILITY")
     assert m._generate_solve_string() == "solve m using CNS;"
+
+
+def test_models_with_same_name():
+    import gamspy as gp
+
+    m = gp.Container()
+
+    slot = gp.Set(
+        m, "slot", records=list("abcdefghijklmnopqrs"), description="position"
+    )
+    t = gp.Set(m, "t", records=[f"t{i}" for i in range(1, 20)])
+
+    tiles = gp.Parameter(
+        m, "tiles", domain=t, description="numerical value of tile"
+    )
+
+    tiles[t] = gp.Ord(t)
+
+    axis = gp.Set(
+        m, "axis", records=[f"ax{i}" for i in range(1, 16)], description="axis"
+    )
+
+    data = [
+        ("ax1", list("abc")),
+        ("ax2", list("defg")),
+        ("ax3", list("hijkl")),
+        ("ax4", list("mnop")),
+        ("ax5", list("qrs")),
+        ("ax6", list("cgl")),
+        ("ax7", list("bfkp")),
+        ("ax8", list("aejos")),
+        ("ax9", list("dinr")),
+        ("ax10", list("hmq")),
+        ("ax11", list("lps")),
+        ("ax12", list("gkor")),
+        ("ax13", list("cfjnq")),
+        ("ax14", list("beim")),
+        ("ax15", list("adh")),
+    ]
+    axis_sum = gp.Set(
+        m,
+        "axis_sum",
+        domain=[axis, slot],
+        records=[(ax, s) for ax, slt in data for s in slt],
+        description="axes to sum",
+    )
+
+    corner = gp.Set(
+        m,
+        "corner",
+        domain=[slot],
+        records=list("achlqs"),
+        description="corners",
+    )
+
+    z = gp.Variable(m, "z", "free")
+    x = gp.Variable(m, "x", "binary", domain=[slot, t])
+    v = gp.Variable(m, "v", "free", domain=[slot])
+
+    obj = gp.Equation(m, "obj")
+    obj[...] = z == 1
+
+    axessum = gp.Equation(m, "axessum", domain=[axis])
+    axessum[axis] = gp.Sum(axis_sum[axis, slot], v[slot]) == 38
+
+    onetileperslot = gp.Equation(m, "onetileperslot", domain=[slot])
+    onetileperslot[slot] = gp.Sum(t, x[slot, t]) == 1
+
+    useall = gp.Equation(m, "useall", domain=[t])
+    useall[t] = gp.Sum(slot, x[slot, t]) == 1
+
+    vdef = gp.Equation(m, "vdef", domain=[slot])
+    vdef[slot] = gp.Sum(t, x[slot, t] * tiles[t]) == v[slot]
+
+    rotations = gp.Equation(m, "rotations", domain=[slot])
+    rotations[corner[slot]].where[~gp.math.same_as(slot, "a")] = (
+        v[slot] >= v["a"] + 1
+    )
+
+    reflect = gp.Equation(m, "reflect")
+    reflect[...] = v["h"] == v["c"] + 1
+
+    magic = gp.Model(
+        m,
+        name="hexagon",
+        equations=[obj, axessum, onetileperslot, useall, vdef],
+        problem="MIP",
+        sense="min",
+        objective=z,
+    )
+
+    df_magic = magic.solve()
+
+    magic_unique = gp.Model(
+        m,
+        name="hexagon",
+        equations=m.getEquations(),
+        problem="MIP",
+        sense="min",
+        objective=z,
+    )
+
+    df_magic_unique = magic_unique.solve()
+
+    assert df_magic["Model Status"].tolist()[0] == "OptimalGlobal"
+    assert df_magic_unique["Model Status"].tolist()[0] == "IntegerInfeasible"
