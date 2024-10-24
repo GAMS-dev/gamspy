@@ -240,6 +240,16 @@ def test_enums(data):
     assert Sense.values() == ["MIN", "MAX", "FEASIBILITY"]
 
 
+def test_add_gams_code_domain_recovery(data):
+    m, *_ = data
+    i = Set(m, name="i", records=range(10))
+    m.addGamsCode("positive variable x(i); x.l(i)=1;")
+    x = m["x"]
+    x.fx[i].where[i.ord == 1] = 1
+    assert x.domain == [i]
+    assert x.fx.domain == [i]
+
+
 def test_arbitrary_gams_code(data):
     m, *_ = data
     m = Container()

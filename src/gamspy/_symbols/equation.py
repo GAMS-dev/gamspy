@@ -371,6 +371,74 @@ class Equation(gt.Equation, Symbol):
             domain=self.domain,
         )
 
+    def _update_attr_domains(self):
+        self._l.__init__(
+            self,
+            name=f"{self.name}.l",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._m.__init__(
+            self,
+            name=f"{self.name}.m",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._lo.__init__(
+            self,
+            name=f"{self.name}.lo",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._up.__init__(
+            self,
+            name=f"{self.name}.up",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._s.__init__(
+            self,
+            name=f"{self.name}.scale",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._stage.__init__(
+            self,
+            name=f"{self.name}.stage",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._range.__init__(
+            self,
+            name=f"{self.name}.range",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._slackup.__init__(
+            self,
+            name=f"{self.name}.slackup",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._slacklo.__init__(
+            self,
+            name=f"{self.name}.slacklo",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._slack.__init__(
+            self,
+            name=f"{self.name}.slack",
+            records=self.records,
+            domain=self.domain,
+        )
+        self._infeas.__init__(
+            self,
+            name=f"{self.name}.infeas",
+            records=self.records,
+            domain=self.domain,
+        )
+
     def _init_definition(
         self,
         assignment: Variable | Operation | Expression | None = None,
