@@ -52,7 +52,7 @@ def main():
         sum(c.where[a.sameAs(f"a{i}")] for i, c in enumerate(cterms)) >= 0
     )
 
-    x.lo["a1", "0"] = 0
+    x.lo["a0", "0"] = 0
     x.fx["a1", "0"] = 0
 
     nash = Model(m, name="nash", equations=[defobj, cons], problem="emp")

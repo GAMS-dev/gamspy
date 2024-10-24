@@ -14,6 +14,7 @@ GAMSPy 1.0.5
   - Remove redundant setRecords in gapmin.py example.
   - Add sq.py model to the test model suite.
   - Update hansmge model.
+  - Fix lower bound in reshop model.
 
 GAMSPy 1.0.4
 ------------
