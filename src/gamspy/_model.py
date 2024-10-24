@@ -845,7 +845,6 @@ class Model:
                 )
 
     def _append_solve_string(self) -> None:
-        self.container._add_statement(self.getDeclaration())
         solve_string = self._generate_solve_string()
         self.container._add_statement(solve_string + "\n")
 
@@ -1132,6 +1131,7 @@ class Model:
             self.instance.solve(solver, model_instance_options, output)
             return None
 
+        self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)
         self._append_solve_string()
         self._create_model_attributes()
