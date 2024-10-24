@@ -83,7 +83,7 @@ class ImplicitSymbol(ABC):
         self.permutation = new_perm
 
     @property
-    def dimension(self):
+    def dimension(self) -> int:
         return self.parent.dimension - len(self._scalar_domains)
 
     @abstractmethod

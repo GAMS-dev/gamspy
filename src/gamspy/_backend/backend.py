@@ -207,6 +207,9 @@ class Backend(ABC):
                         new_domain.append(elem)
 
                 symbol.domain = new_domain
+                symbol.dimension = len(new_domain)
+                if isinstance(symbol, (syms.Variable, syms.Equation)):
+                    symbol._update_attr_domains()
 
     def parse_listings(self):
         listing_file = (
