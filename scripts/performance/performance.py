@@ -73,7 +73,7 @@ def main():
 
         final_df[model_name] = df[model_name]
 
-    final_df = final_df.T.round(2)
+    final_df = final_df.T.sort_values("overhead", ascending=False).round(2)
     print(final_df)
     final_df.to_csv("stats.csv")
 
