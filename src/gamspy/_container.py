@@ -21,7 +21,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
-from gamspy._model import Problem
+from gamspy._model import Problem, Sense
 from gamspy._options import Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._model import Sense
 
 LOOPBACK = "127.0.0.1"
 GAMS_PORT = os.getenv("GAMS_PORT", None)
