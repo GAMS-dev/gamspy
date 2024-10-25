@@ -17,6 +17,7 @@ GAMSPy 1.0.5
   - Add sq.py model to the test model suite.
   - Update hansmge model.
   - Fix lower bound in reshop model.
+  - Add a script to measure the overhead of GAMSPy and Python in general for each model in the model library.
 
 GAMSPy 1.0.4
 ------------

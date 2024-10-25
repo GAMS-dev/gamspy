@@ -38,100 +38,108 @@ from gamspy import (
 )
 from gamspy.math import sqr
 
-# take number of circles as first argument
-k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-print("Number of circles =", k)
 
-c = Container()
+def main():
+    # take number of circles as first argument
+    k = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+    print("Number of circles =", k)
 
-# Set
-i = Set(c, name="i", description="circles", records=[str(i) for i in range(k)])
-j = Alias(c, name="j", alias_with=i)
-ij = Set(c, name="ij", domain=[i, j])
-ij[i, j].where[Ord(i) < Ord(j)] = True
+    c = Container()
 
-# Variables
-r = Variable(c, name="r", description="radius of circles")
-x = Variable(c, name="x", domain=i, description="abscissa of circle")
-y = Variable(c, name="y", domain=i, description="ordinate of circle")
+    # Set
+    i = Set(
+        c, name="i", description="circles", records=[str(i) for i in range(k)]
+    )
+    j = Alias(c, name="j", alias_with=i)
+    ij = Set(c, name="ij", domain=[i, j])
+    ij[i, j].where[Ord(i) < Ord(j)] = True
 
-# Equations
-circumscribe = Equation(
-    c,
-    name="circumscribe",
-    domain=i,
-    description="enforce circle is enclosed in unit circle",
-)
-circumscribe[i] = sqr(1 - r) >= sqr(x[i]) + sqr(y[i])
+    # Variables
+    r = Variable(c, name="r", description="radius of circles")
+    x = Variable(c, name="x", domain=i, description="abscissa of circle")
+    y = Variable(c, name="y", domain=i, description="ordinate of circle")
 
-nonoverlap = Equation(
-    c,
-    name="nonoverlap",
-    domain=[i, j],
-    description="enforce that circles do not overlap",
-)
-nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)
+    # Equations
+    circumscribe = Equation(
+        c,
+        name="circumscribe",
+        domain=i,
+        description="enforce circle is enclosed in unit circle",
+    )
+    circumscribe[i] = sqr(1 - r) >= sqr(x[i]) + sqr(y[i])
 
-x.lo[i] = -1
-x.up[i] = 1
-y.lo[i] = -1
-y.up[i] = 1
+    nonoverlap = Equation(
+        c,
+        name="nonoverlap",
+        domain=[i, j],
+        description="enforce that circles do not overlap",
+    )
+    nonoverlap[ij[i, j]] = sqr(x[i] - x[j]) + sqr(y[i] - y[j]) >= 4 * sqr(r)
 
-x.l[i] = -0.2 + Ord(i) * 0.1
-y.l[i] = -0.2 + Ord(i) * 0.1
+    x.lo[i] = -1
+    x.up[i] = 1
+    y.lo[i] = -1
+    y.up[i] = 1
 
-r.lo = 0.05
-r.up = 0.4
+    x.l[i] = -0.2 + Ord(i) * 0.1
+    y.l[i] = -0.2 + Ord(i) * 0.1
 
-m = Model(
-    c,
-    name="cpack",
-    equations=c.getEquations(),
-    problem=Problem.QCP,
-    sense=Sense.MAX,
-    objective=r,
-)
+    r.lo = 0.05
+    r.up = 0.4
 
-# solve with a good global solver
-print("Starting solve, be patient (log only shown afterwards)...")
-m.solve(solver="scip", options=Options(relative_optimality_gap=0.01))
+    m = Model(
+        c,
+        name="cpack",
+        equations=c.getEquations(),
+        problem=Problem.QCP,
+        sense=Sense.MAX,
+        objective=r,
+    )
 
-print(f"{m.objective_value=}")
-assert math.isclose(m.objective_value, 0.3701919131257)
+    # solve with a good global solver
+    print("Starting solve, be patient (log only shown afterwards)...")
+    m.solve(solver="scip", options=Options(relative_optimality_gap=0.01))
 
-rval = r.records.loc[0, "level"]
-print("Maximized radius:", rval)
+    print(f"{m.objective_value=}")
+    assert math.isclose(m.objective_value, 0.3701919131257)
 
-# draw solution
-width = 100
-height = int(width / 2)
-picture = bytearray(b" " * (width * height))
+    rval = r.records.loc[0, "level"]
+    print("Maximized radius:", rval)
 
-# enclosing circle at origin of radius 1
-for v in range(1000):
-    phi = 2.0 * math.pi * v / 1000.0
-    # shift coordinates by 1.1 and scale down by 2.2
-    xcoord = (math.cos(phi) + 1.1) / 2.2 * width
-    ycoord = (math.sin(phi) + 1.1) / 2.2 * height
-    pos = int(xcoord) + int(ycoord) * width
-    if pos < len(picture):
-        picture[int(xcoord) + int(ycoord) * width] = 42
+    # draw solution
+    width = 100
+    height = int(width / 2)
+    picture = bytearray(b" " * (width * height))
 
-# circles that were packed
-for circle in range(k):
-    xl = x.records.loc[circle, "lower"]
-    yl = y.records.loc[circle, "lower"]
-    # print('circle at', xl, yl, 'radius', rval)
+    # enclosing circle at origin of radius 1
     for v in range(1000):
         phi = 2.0 * math.pi * v / 1000.0
-        xcoord = (xl + rval * math.cos(phi) + 1.1) / 2.2 * width
-        ycoord = (yl + rval * math.sin(phi) + 1.1) / 2.2 * height
+        # shift coordinates by 1.1 and scale down by 2.2
+        xcoord = (math.cos(phi) + 1.1) / 2.2 * width
+        ycoord = (math.sin(phi) + 1.1) / 2.2 * height
         pos = int(xcoord) + int(ycoord) * width
         if pos < len(picture):
-            picture[pos] = 97 + circle
+            picture[int(xcoord) + int(ycoord) * width] = 42
 
-# linebreaks
-for v in range(height):
-    picture[v * width] = 10
+    # circles that were packed
+    for circle in range(k):
+        xl = x.records.loc[circle, "lower"]
+        yl = y.records.loc[circle, "lower"]
+        # print('circle at', xl, yl, 'radius', rval)
+        for v in range(1000):
+            phi = 2.0 * math.pi * v / 1000.0
+            xcoord = (xl + rval * math.cos(phi) + 1.1) / 2.2 * width
+            ycoord = (yl + rval * math.sin(phi) + 1.1) / 2.2 * height
+            pos = int(xcoord) + int(ycoord) * width
+            if pos < len(picture):
+                picture[pos] = 97 + circle
 
-# print(picture.decode())
+    # linebreaks
+    for v in range(height):
+        picture[v * width] = 10
+
+    # print(picture.decode())
+
+
+if __name__ == "__main__":
+    main()
