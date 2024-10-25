@@ -62,7 +62,7 @@ def _calc_hw(
 def _next_domains(
     input_domain: list[gp.Set], check_domains: list[gp.Set]
 ) -> list[gp.Set]:
-    names = set([x.name for x in check_domains])
+    names = {x.name for x in check_domains}
     output = []
     for domain in input_domain:
         while domain.name in names:
