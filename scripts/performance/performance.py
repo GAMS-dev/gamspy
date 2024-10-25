@@ -47,12 +47,13 @@ def main():
     for model in all_models:
         model_name = model.split("/")[-1][:-3]
         print(f"Running {model_name}...")
-        subprocess.run(
+        process = subprocess.run(
             [sys.executable, "-m", "cProfile", "-o", "profile.pstats", model],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
         )
+        assert process.returncode == 0, process.stderr
+
         pstats_dict = load_pstats_as_dict("profile.pstats")
         df = pd.DataFrame(
             pstats_dict.values(),
