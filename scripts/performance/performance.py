@@ -75,6 +75,7 @@ def main():
 
     final_df = final_df.T.sort_values("overhead", ascending=False).round(2)
     print(final_df)
+    print(f"Average overhead {final_df['overhead'].mean(axis=0):.2f}.")
     final_df.to_csv("stats.csv")
 
 
