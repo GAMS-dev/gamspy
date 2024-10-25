@@ -1053,7 +1053,7 @@ class Container(gt.Container):
         name: str | None = None,
         problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
-        sense: Sense | str | None = None,
+        sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
         matches: dict[Equation, Variable] | None = None,
         limited_variables: Iterable[Variable] | None = None,
