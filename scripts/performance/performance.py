@@ -41,7 +41,7 @@ def main():
             "execute_gams",
             "postprocess",
             "_send_job",
-            "main",
+            "overhead",
         ]
     )
     for model in all_models:
@@ -55,13 +55,23 @@ def main():
         assert process.returncode == 0, process.stderr
 
         pstats_dict = load_pstats_as_dict("profile.pstats")
+        main_time = pstats_dict.pop("main")
+        for key, value in pstats_dict.items():
+            pstats_dict[key] = value / main_time
+
+        pstats_dict["overhead"] = (
+            pstats_dict["preprocess"]
+            + pstats_dict["execute_gams"]
+            + pstats_dict["postprocess"]
+            - pstats_dict["_send_job"]
+        )
         df = pd.DataFrame(
             pstats_dict.values(),
             index=pstats_dict.keys(),
             columns=[model_name],
         )
 
-        final_df[model_name] = df[model_name] * 100 / pstats_dict["main"]
+        final_df[model_name] = df[model_name]
 
     final_df = final_df.T.round(2)
     print(final_df)
