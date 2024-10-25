@@ -4,10 +4,11 @@ import sys
 import timeit
 
 import gams.transfer as gt
-import gamspy as gp
 import gamspy_base
 import numpy as np
 import pandas as pd
+
+import gamspy as gp
 
 logging.disable(sys.maxsize)
 import warnings  # noqa: E402

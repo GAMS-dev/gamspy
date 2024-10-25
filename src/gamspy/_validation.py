@@ -408,7 +408,7 @@ def validate_solver_args(
     problem: Problem | str,
     options: Options | None,
     output: io.TextIOWrapper | None,
-    load_symbols: list[str] | None,
+    load_symbols: list[Symbol] | None,
 ) -> None:
     # Check validity of options
     if options is not None and not isinstance(options, Options):
@@ -480,7 +480,7 @@ def validate_equations(model: Model):
             )
 
 
-def validate_global_options(options: Any) -> Options | None:
+def validate_global_options(options: Any) -> Options:
     if options is not None and not isinstance(options, Options):
         raise TypeError(
             f"`options` must be of type Option but found {type(options)}"

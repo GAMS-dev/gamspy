@@ -278,7 +278,7 @@ class Model:
             self.container._add_statement(self)
 
         # allow freezing
-        self._is_frozen = False
+        self._is_frozen: bool = False
 
         # Attributes
         self._num_domain_violations = None
