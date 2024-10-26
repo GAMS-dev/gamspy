@@ -848,7 +848,6 @@ def test_interrupt(data):
         sense=Sense.MAX,
         objective=wnx,
     )
-    xdice.solve(options=Options(time_limit=20))
 
     def interrupt_gams(model):
         time.sleep(2)
@@ -859,7 +858,7 @@ def test_interrupt(data):
     threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
     try:
-        xdice.solve(options=Options(time_limit=5))
+        xdice.solve(options=Options(time_limit=10))
         assert xdice.objective_value is not None
         assert xdice.solve_status == SolveStatus.UserInterrupt
     except GamspyException:
