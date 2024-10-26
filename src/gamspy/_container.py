@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import atexit
 import os
+import platform
 import signal
 import socket
 import subprocess
@@ -324,7 +325,11 @@ class Container(gt.Container):
                     break
 
     def _interrupt(self, output: io.TextIOWrapper | None) -> None:
-        self._process.send_signal(signal.SIGINT)
+        if platform.system() in ("Linux", "Darwin"):
+            self._process.send_signal(signal.SIGINT)
+        else:
+            self._process.send_signal(signal.CTRL_C_EVENT)
+
         self._read_output(output)
 
     def _send_job(
@@ -348,7 +353,8 @@ class Container(gt.Container):
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
-            self._process.send_signal(signal.SIGINT)
+            if platform.system() in ("Linux", "Darwin"):
+                self._process.send_signal(signal.SIGINT)
             self._read_output(output)
 
     def _write_miro_files(self):

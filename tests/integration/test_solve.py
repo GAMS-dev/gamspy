@@ -857,12 +857,9 @@ def test_interrupt(data):
 
     threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
-    try:
-        xdice.solve(options=Options(time_limit=10))
-        assert xdice.objective_value is not None
-        assert xdice.solve_status == SolveStatus.UserInterrupt
-    except GamspyException:
-        pass
+    xdice.solve(output=sys.stdout, options=Options(time_limit=10))
+    assert xdice.objective_value is not None
+    assert xdice.solve_status == SolveStatus.UserInterrupt
 
     after_interrupt = Set(m, records=range(3))
     assert after_interrupt.toList() == ["0", "1", "2"]
