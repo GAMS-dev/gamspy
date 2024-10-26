@@ -328,7 +328,7 @@ class Container(gt.Container):
         if platform.system() in ("Linux", "Darwin"):
             self._process.send_signal(signal.SIGINT)
         else:
-            self._process.send_signal(signal.CTRL_C_EVENT)
+            os.kill(self._process.pid, signal.CTRL_C_EVENT)
 
         self._read_output(output)
 
