@@ -994,16 +994,16 @@ class Model:
 
         return "\n".join(listings)
 
-    def interrupt(self) -> None:
+    def interrupt(self, output: io.TextIOWrapper | None = None) -> None:
         """
         Sends interrupt signal to the running job.
 
-        Raises
-        ------
-        ValidationError
-            If the job is not initialized
+        Parameters
+        ----------
+        output : io.TextIOWrapper | None, None by default
+            Output stream to redirect logs.
         """
-        self.container._stop_socket()
+        self.container._interrupt(output=output)
 
     def freeze(
         self,

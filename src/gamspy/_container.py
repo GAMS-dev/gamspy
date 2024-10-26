@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import atexit
 import os
-import platform
 import signal
 import socket
 import subprocess
@@ -306,12 +305,27 @@ class Container(gt.Container):
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:
             self._socket.sendall(b"stop")
+            self._socket.close()
             self._is_socket_open = False
 
-            if platform.system() == "Windows":
-                self._process.send_signal(signal.SIGTERM)
-            else:
-                self._process.send_signal(signal.SIGINT)
+            if not self._process.stdout.closed:
+                self._process.stdout.close()
+
+            while self._process.poll() is None:
+                ...
+
+    def _read_output(self, output: io.TextIOWrapper | None) -> None:
+        if output is not None:
+            while True:
+                data = self._process.stdout.readline()
+                output.write(data)
+                output.flush()
+                if data.startswith("--- Job ") and "elapsed" in data:
+                    break
+
+    def _interrupt(self, output: io.TextIOWrapper | None) -> None:
+        self._process.send_signal(signal.SIGINT)
+        self._read_output(output)
 
     def _send_job(
         self,
@@ -324,25 +338,18 @@ class Container(gt.Container):
             self._socket.sendall(pf_file.encode("utf-8"))
 
             # Read output
-            if output is not None:
-                while True:
-                    data = self._process.stdout.readline()
-                    output.write(data)
-                    output.flush()
-                    if data.startswith("--- Job ") and "elapsed" in data:
-                        break
+            self._read_output(output)
 
             # Receive response
             response = self._socket.recv(256)
+            check_response(response, job_name)
         except ConnectionError as e:
             raise FatalError(
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
         except KeyboardInterrupt:
-            self._stop_socket()
-            return
-
-        check_response(response, job_name)
+            self._process.send_signal(signal.SIGINT)
+            self._read_output(output)
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
