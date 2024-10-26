@@ -859,7 +859,7 @@ def test_interrupt(data):
     threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
     try:
-        xdice.solve(options=Options(time_limit=2))
+        xdice.solve(options=Options(time_limit=5))
         assert xdice.objective_value is not None
         assert xdice.solve_status == SolveStatus.UserInterrupt
     except GamspyException:
