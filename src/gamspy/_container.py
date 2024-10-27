@@ -88,6 +88,11 @@ def open_connection(
         errors="replace",
     )
 
+    def handler(signum, frame):
+        os.kill(process.pid, signal.SIGINT)
+
+    signal.signal(signal.SIGINT, handler)
+
     start = time.time()
     while True:
         if process.poll() is not None:  # pragma: no cover
@@ -324,13 +329,11 @@ class Container(gt.Container):
                 if data.startswith("--- Job ") and "elapsed" in data:
                     break
 
-    def _interrupt(self, output: io.TextIOWrapper | None) -> None:
+    def _interrupt(self) -> None:
         if platform.system() in ("Linux", "Darwin"):
             self._process.send_signal(signal.SIGINT)
         else:
             os.kill(self._process.pid, signal.CTRL_C_EVENT)
-
-        self._read_output(output)
 
     def _send_job(
         self,
@@ -352,10 +355,6 @@ class Container(gt.Container):
             raise FatalError(
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
-        except KeyboardInterrupt:
-            if platform.system() in ("Linux", "Darwin"):
-                self._process.send_signal(signal.SIGINT)
-            self._read_output(output)
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json

@@ -857,7 +857,7 @@ def test_interrupt(data):
 
     threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
-    xdice.solve(output=sys.stdout, options=Options(time_limit=10))
+    xdice.solve(options=Options(time_limit=10))
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
 
@@ -866,6 +866,7 @@ def test_interrupt(data):
 
     summary = xdice.solve(options=Options(time_limit=2))
     assert summary is not None
+    assert xdice.solve_status == SolveStatus.ResourceInterrupt
 
 
 def test_solver_options(data):

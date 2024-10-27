@@ -994,16 +994,9 @@ class Model:
 
         return "\n".join(listings)
 
-    def interrupt(self, output: io.TextIOWrapper | None = None) -> None:
-        """
-        Sends interrupt signal to the running job.
-
-        Parameters
-        ----------
-        output : io.TextIOWrapper | None, None by default
-            Output stream to redirect logs.
-        """
-        self.container._interrupt(output=output)
+    def interrupt(self) -> None:
+        """Sends interrupt signal to the running job."""
+        self.container._interrupt()
 
     def freeze(
         self,
