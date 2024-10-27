@@ -850,7 +850,7 @@ def test_interrupt(data):
     )
 
     def interrupt_gams(model):
-        time.sleep(5)
+        time.sleep(30)
         model.interrupt()
 
     import threading
