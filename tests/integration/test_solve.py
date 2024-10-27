@@ -850,21 +850,21 @@ def test_interrupt(data):
     )
 
     def interrupt_gams(model):
-        time.sleep(2)
+        time.sleep(5)
         model.interrupt()
 
     import threading
 
     threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
-    xdice.solve()
+    xdice.solve(output=sys.stdout)
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
 
     after_interrupt = Set(m, records=range(3))
     assert after_interrupt.toList() == ["0", "1", "2"]
 
-    summary = xdice.solve(options=Options(time_limit=2))
+    summary = xdice.solve(output=sys.stdout, options=Options(time_limit=2))
     assert summary is not None
     assert xdice.solve_status == SolveStatus.ResourceInterrupt
 
