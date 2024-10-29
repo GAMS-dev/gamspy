@@ -1034,3 +1034,17 @@ def test_transpose(data):
     pytest.raises(ValidationError, lambda: a2.T)  # var
     pytest.raises(ValidationError, lambda: b[i].T)  # imp par
     pytest.raises(ValidationError, lambda: a2[i].T)  # imp var
+
+
+def test_domain_conflict_resolution_3(data):
+    m = data
+    mat1 = Parameter(m, name="mat1", domain=dim([30, 20, 30, 20]))
+    mat2 = Parameter(m, name="mat2", domain=dim([20, 30]))
+
+    expr = mat1 @ mat2
+    assert len(expr.domain) == 4
+    assert len(set([x.name for x in expr.domain])) == 4
+
+    expr2 = mat2 @ mat1
+    assert len(expr2.domain) == 4
+    assert len(set([x.name for x in expr2.domain])) == 4
