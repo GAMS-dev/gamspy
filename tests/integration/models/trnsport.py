@@ -24,8 +24,6 @@ comments.
 
 from __future__ import annotations
 
-import sys
-
 from gamspy import (
     Container,
     Equation,
@@ -129,7 +127,7 @@ def main():
         sense=Sense.MIN,
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
-    transport.solve(output=sys.stdout)
+    transport.solve()
 
     import math
 

@@ -408,7 +408,7 @@ def validate_solver_args(
     problem: Problem | str,
     options: Options | None,
     output: io.TextIOWrapper | None,
-    load_symbols: list[str] | None,
+    load_symbols: list[Symbol] | None,
 ) -> None:
     # Check validity of options
     if options is not None and not isinstance(options, Options):
@@ -480,7 +480,7 @@ def validate_equations(model: Model):
             )
 
 
-def validate_global_options(options: Any) -> Options | None:
+def validate_global_options(options: Any) -> Options:
     if options is not None and not isinstance(options, Options):
         raise TypeError(
             f"`options` must be of type Option but found {type(options)}"
@@ -490,12 +490,12 @@ def validate_global_options(options: Any) -> Options | None:
         options_dict = options.model_dump(exclude_none=True)
         if any(option in options_dict for option in MODEL_ATTR_OPTION_MAP):
             raise ValidationError(
-                f"{MODEL_ATTR_OPTION_MAP.keys()} cannot be provided at Container creation time."
+                f"The following model options cannot be provided at Container creation time: {', '.join(MODEL_ATTR_OPTION_MAP.keys())}."
             )
 
         if any(option in options_dict for option in EXECUTION_OPTIONS):
             raise ValidationError(
-                f"{EXECUTION_OPTIONS.keys()} cannot be provided at Container creation time."
+                f"The following runtime options cannot be provided at Container creation time: {', '.join(EXECUTION_OPTIONS.keys())}."
             )
 
     if options is None:

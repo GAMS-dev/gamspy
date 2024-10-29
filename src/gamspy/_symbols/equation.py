@@ -300,7 +300,7 @@ class Equation(gt.Equation, Symbol):
 
             self.where = condition.Condition(self)
             self.container._add_statement(self)
-            self._definition = None
+            self._definition: Expression | None = None
             self._definition_domain = definition_domain
             self._init_definition(definition)
 

@@ -33,6 +33,15 @@ import pandas as pd
 import gamspy as gap
 
 
+def main():
+    process_time, last_machine, last_item = prepare_data()
+    flow_shop(
+        process_time_df=process_time,
+        last_machine=last_machine,
+        last_item=last_item,
+    )
+
+
 def flow_shop(process_time_df, last_machine, last_item):
     c = gap.Container()
 
@@ -168,9 +177,4 @@ def prepare_data():
 
 
 if __name__ == "__main__":
-    process_time, last_machine, last_item = prepare_data()
-    flow_shop(
-        process_time_df=process_time,
-        last_machine=last_machine,
-        last_item=last_item,
-    )
+    main()

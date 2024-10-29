@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Union
 
 import gams.transfer as gt
@@ -13,9 +14,13 @@ if TYPE_CHECKING:
     SymbolType = Union[Alias, Set, Parameter, Variable, Equation]
 
 
-class Symbol:
+class Symbol(ABC):
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
+
+    @abstractmethod
+    def gamsRepr(self):
+        """Representation of the implicit symbol in GAMS"""
 
     def latexRepr(self: SymbolType):
         """

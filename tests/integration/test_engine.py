@@ -365,20 +365,17 @@ def test_extra_files(data):
 
         transport.solve(backend="engine", client=client)
 
-    file = tempfile.NamedTemporaryFile(delete=False)
-    client = EngineClient(
-        host=os.environ["ENGINE_URL"],
-        username=os.environ["ENGINE_USER"],
-        password=os.environ["ENGINE_PASSWORD"],
-        namespace=os.environ["ENGINE_NAMESPACE"],
-        extra_model_files=[file.name],
-    )
+    with tempfile.NamedTemporaryFile() as file:
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            extra_model_files=[file.name],
+        )
 
-    with pytest.raises(ValidationError):
-        transport.solve(backend="engine", client=client)
-
-    file.close()
-    os.unlink(file.name)
+        with pytest.raises(ValidationError):
+            transport.solve(backend="engine", client=client)
 
 
 def test_solve_twice(data):

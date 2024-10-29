@@ -75,17 +75,6 @@ class Local(backend.Backend):
         relaxed_domain_mapping: bool = False,
         gams_to_gamspy: bool = False,
     ):
-        if self.model is not None:
-            self.model._add_runtime_options(self.options)
-            self.model._append_solve_string()
-            self.model._create_model_attributes()
-            self.options._set_solver_options(
-                working_directory=self.container.working_directory,
-                solver=self.solver,
-                problem=self.model.problem,
-                solver_options=self.solver_options,
-            )
-
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess(self.container._gdx_in)
 
