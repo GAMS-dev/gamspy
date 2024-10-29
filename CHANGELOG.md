@@ -11,7 +11,6 @@ GAMSPy 1.0.5
   - Show log file instead of listing file on solve statements with NEOS backend.
   - Improve the error messages of the thrown exceptions in case the user provide a model option at Container creation time.
   - Do not allow models with the same name to override each other.
-  - KeyboardInterrupt does not kill the socket anymore.
 - Testing
   - Fix race conditions in the pipeline.
   - Remove redundant setRecords in gapmin.py example.
