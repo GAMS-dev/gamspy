@@ -36,8 +36,9 @@ class Linear:
     >>> l1.load_weights(w, b)
     >>> x = gp.Variable(m, "x", domain=dim([10, 128]))
     >>> y, set_y = l1(x)
-    >>> print([d.name for d in y.domain])
+    >>> [d.name for d in y.domain]
     ['DenseDim10_1', 'DenseDim64_1']
+
     """
 
     def __init__(
