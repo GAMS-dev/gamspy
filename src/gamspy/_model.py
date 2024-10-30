@@ -1098,7 +1098,7 @@ class Model:
 
         """
         if solver is None:
-            solver = utils.DEFAULT_SOLVERS[str(self.problem).upper()]
+            solver = utils.getDefaultSolvers()[str(self.problem).upper()]
 
         validation.validate_solver_args(
             self.container.system_directory,

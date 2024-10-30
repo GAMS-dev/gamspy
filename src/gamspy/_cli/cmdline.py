@@ -19,7 +19,7 @@ USAGE = """gamspy [-h] [-v]
        gamspy uninstall license
        gamspy install solver <solver_name> [--skip-pip-install] [--existing-solvers] [--install-all-solvers]
        gamspy uninstall solver <solver_name> [--skip-pip-uninstall] [--uninstall-all-solvers]
-       gamspy list solvers [--all]
+       gamspy list solvers [--all] [--defaults]
        gamspy show license
        gamspy show base
        gamspy probe [-j <json_output_path>]
@@ -123,6 +123,9 @@ def get_args():
     )
     list_group.add_argument(
         "-a", "--all", action="store_true", help="Shows all available solvers."
+    )
+    list_group.add_argument(
+        "-d", "--defaults", action="store_true", help="Shows default solvers."
     )
 
     probe_group = parser.add_argument_group(
@@ -583,20 +586,30 @@ def list_solvers(args: argparse.Namespace):
                     print(f"{solver:<10}: {', '.join(capabilities[solver])}")
                 except KeyError:
                     ...
-            return
+        elif args.defaults:
+            default_solvers = utils.getDefaultSolvers()
+            print("Default Solvers")
+            print("=" * 17)
+            for problem in default_solvers:
+                try:
+                    print(f"{problem:<10}: {default_solvers[problem]}")
+                except KeyError:
+                    ...
+        else:
+            solvers = utils.getInstalledSolvers(gamspy_base.directory)
+            print("Installed Solvers")
+            print("=" * 17)
+            print(", ".join(solvers))
 
-        solvers = utils.getInstalledSolvers(gamspy_base.directory)
-        print("Installed Solvers")
-        print("=" * 17)
-        print(", ".join(solvers))
-
-        print("\nModel types that can be solved with the installed solvers")
-        print("=" * 57)
-        for solver in solvers:
-            try:
-                print(f"{solver:<10}: {', '.join(capabilities[solver])}")
-            except KeyError:
-                ...
+            print(
+                "\nModel types that can be solved with the installed solvers"
+            )
+            print("=" * 57)
+            for solver in solvers:
+                try:
+                    print(f"{solver:<10}: {', '.join(capabilities[solver])}")
+                except KeyError:
+                    ...
     else:
         raise ValidationError(
             "gamspy list requires a third argument (solvers)."

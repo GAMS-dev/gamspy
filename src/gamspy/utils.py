@@ -40,23 +40,6 @@ CAPABILITIES_FILE = (
     "gmscmpNT.txt" if platform.system() == "Windows" else "gmscmpun.txt"
 )
 
-DEFAULT_SOLVERS = {
-    "CNS": "PATH",
-    "DNLP": "IPOPTH",
-    "EMP": "CONVERT",
-    "LP": "CPLEX",
-    "MCP": "PATH",
-    "MINLP": "SHOT",
-    "MIP": "CPLEX",
-    "MIQCP": "SHOT",
-    "MPEC": "NLPEC",
-    "NLP": "IPOPTH",
-    "QCP": "IPOPTH",
-    "RMINLP": "IPOPTH",
-    "RMIP": "CPLEX",
-    "RMIQCP": "IPOPTH",
-}
-
 user_dir = os.path.expanduser("~")
 if platform.system() == "Linux":
     DEFAULT_DIR = os.path.join(user_dir, ".local", "share", "GAMSPy")
@@ -66,6 +49,16 @@ elif platform.system() == "Darwin":
     )
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
+
+
+def getDefaultSolvers() -> dict:
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:  # pragma: no cover
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return gamspy_base.defaults
 
 
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:

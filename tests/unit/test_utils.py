@@ -54,6 +54,7 @@ def test_available_solvers(data):
         "CBC",
         "CONOPT",
         "CONOPT3",
+        "CONOPT4",
         "CONVERT",
         "COPT",
         "CPLEX",
@@ -83,3 +84,26 @@ def test_available_solvers(data):
     ]
 
     assert available_solvers == expected
+
+
+def test_default_solvers():
+    default_solvers = utils.getDefaultSolvers()
+
+    expected = {
+        "CNS": "PATH",
+        "DNLP": "IPOPTH",
+        "EMP": "CONVERT",
+        "LP": "CPLEX",
+        "MCP": "PATH",
+        "MINLP": "SHOT",
+        "MIP": "CPLEX",
+        "MIQCP": "SHOT",
+        "MPEC": "NLPEC",
+        "NLP": "IPOPTH",
+        "QCP": "IPOPTH",
+        "RMINLP": "IPOPTH",
+        "RMIP": "CPLEX",
+        "RMIQCP": "IPOPTH",
+    }
+
+    assert default_solvers == expected

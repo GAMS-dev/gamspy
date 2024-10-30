@@ -1,7 +1,7 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 1.0.5
+GAMSPy 1.1.0
 ------------
 - General
   - Allow printing the records of variable/equation attributes with a print(variable.attribute[domain].records) syntax.

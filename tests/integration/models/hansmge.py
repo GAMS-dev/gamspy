@@ -50,8 +50,6 @@ $DEMAND:HH(H) s:ESUB(H)
 $offText
 
 $sysInclude mpsgeset HANSEN
-* The next line can go when #6341 gets fixed
-hh.l(h) = 1; 
 """)
     dummy01, y, p, hh = (m[sym] for sym in ["dummy01", "y", "p", "hh"])
     dummy01[:] = Sum(s, y[s]) + Sum(c, p[c]) + Sum(h, hh[h]) == 0
