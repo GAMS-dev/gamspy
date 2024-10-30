@@ -26,8 +26,18 @@ class Linear:
 
     Examples
     --------
-    # TODO
-
+    >>> import gamspy as gp
+    >>> import numpy as np
+    >>> from gamspy.math import dim
+    >>> m = gp.Container()
+    >>> l1 = gp.formulations.Linear(m, 128, 64)
+    >>> w = np.random.rand(64, 128)
+    >>> b = np.random.rand(64)
+    >>> l1.load_weights(w, b)
+    >>> x = gp.Variable(m, "x", domain=dim([10, 128]))
+    >>> y, set_y = l1(x)
+    >>> print([d.name for d in y.domain])
+    ['DenseDim10_1', 'DenseDim64_1']
     """
 
     def __init__(
