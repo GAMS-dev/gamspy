@@ -195,7 +195,7 @@ class Linear:
         expr = input @ self.weight.t()
 
         if self.bias is not None:
-            expr = expr + self.bias
+            expr = expr + self.bias[expr.domain[-1]]
 
         name = "lin_eq" + str(uuid.uuid4()).split("-")[0]
         vname = "lin_var" + str(uuid.uuid4()).split("-")[0]

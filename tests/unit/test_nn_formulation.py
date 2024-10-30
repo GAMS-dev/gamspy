@@ -1989,3 +1989,37 @@ def test_linear_simple_correctness(data):
 
     expected_out = (par_input.toDense() @ w1.T + b1) @ w2.T
     assert np.allclose(out2.toDense(), expected_out)
+
+
+def test_linear_bias_domain_conflict(data):
+    m, *_ = data
+    lin1 = Linear(m, 20, 30, bias=True)
+    w1 = np.random.rand(30, 20)
+    b1 = np.random.rand(30)
+    lin1.load_weights(w1, b1)
+
+    input_data = np.random.rand(30, 20, 30, 20)
+    par_input = gp.Parameter(
+        m, domain=dim([30, 20, 30, 20]), records=input_data
+    )
+    out1, eqs1 = lin1(par_input)
+
+    last_domain = out1.domain[-1].name
+    # get rhs of equality
+    definition = eqs1[0].getDefinition().split("=e=")[1]
+    # 1 from weight 1 from bias
+    assert definition.count(last_domain) == 2
+
+    obj = gp.Sum(out1.domain, out1)
+
+    model = gp.Model(
+        m,
+        "affine2",
+        equations=eqs1,
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+    expected_out = input_data @ w1.T + b1
+    assert np.allclose(out1.toDense(), expected_out)
