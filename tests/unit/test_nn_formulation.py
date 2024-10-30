@@ -10,6 +10,7 @@ from gamspy.formulations import flatten_dims
 from gamspy.formulations.nn import (
     AvgPool2d,
     Conv2d,
+    Linear,
     MaxPool2d,
     MinPool2d,
     _MPool2d,
@@ -1839,3 +1840,186 @@ def test_flatten_var_copied_domain(data):
 
     out_data_2 = var_4.toDense()
     assert np.allclose(out_data_2, data.reshape(400 * 400))
+
+
+def test_linear_bad_init(data):
+    m, *_ = data
+    # in feature must be integer
+    pytest.raises(ValidationError, Linear, m, 2.5, 4, False)
+    pytest.raises(ValidationError, Linear, m, "2", 4, True)
+    # out feature must be integer
+    pytest.raises(ValidationError, Linear, m, 2, 4.1, True)
+    pytest.raises(ValidationError, Linear, m, 2, "4.1", False)
+    # in feature must be positive
+    pytest.raises(ValidationError, Linear, m, -4, 4, False)
+    # out feature must be positive
+    pytest.raises(ValidationError, Linear, m, 4, -4, False)
+    # bias must be a bool
+    pytest.raises(ValidationError, Linear, m, 4, 4, bias=10)
+
+
+def test_linear_load_weights(data):
+    m, *_ = data
+    lin1 = Linear(m, 1, 2, bias=True)
+    lin2 = Linear(m, 1, 2, bias=False)
+
+    w1 = np.random.rand(2, 1)
+    b1 = np.random.rand(2)
+
+    # needs bias as well
+    pytest.raises(ValidationError, lin1.load_weights, w1)
+
+    # conv2 does not have bias
+    pytest.raises(ValidationError, lin2.load_weights, w1, b1)
+
+    # test bad shape
+    bad1 = np.random.rand(1)
+    pytest.raises(ValidationError, lin1.load_weights, bad1, b1)
+    pytest.raises(ValidationError, lin1.load_weights, w1, bad1)
+
+    bad2 = np.random.rand(2, 2)
+    pytest.raises(ValidationError, lin1.load_weights, bad2, b1)
+
+    bad3 = np.random.rand(6)
+    pytest.raises(ValidationError, lin1.load_weights, w1, bad3)
+
+    bad4 = np.random.rand(6, 2)
+    pytest.raises(ValidationError, lin1.load_weights, w1, bad4)
+
+
+def test_linear_same_indices(data):
+    m, *_ = data
+    lin1 = Linear(m, 4, 4, bias=True)
+    w1 = np.random.rand(4, 4)
+    b1 = np.random.rand(4)
+    lin1.load_weights(w1, b1)
+    inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
+    out, eqs = lin1(inp)
+    lin2 = Linear(m, 4, 4, bias=True)
+    lin2.load_weights(w1, b1)
+    out2, eqs2 = lin2(inp)
+
+
+def test_linear_reloading_weights(data):
+    m, *_ = data
+    lin1 = Linear(m, 1, 2, bias=True)
+    w1 = np.random.rand(2, 1)
+    b1 = np.random.rand(2)
+    lin1.load_weights(w1, b1)
+
+    w1 = np.ones((2, 1))
+    b1 = np.ones(2)
+    lin1.load_weights(w1, b1)
+
+    assert np.allclose(w1, lin1.weight.toDense())
+    assert np.allclose(b1, lin1.bias.toDense())
+
+
+def test_linear_make_variable(data):
+    m, *_ = data
+    lin1 = Linear(m, 4, 2)
+    lin1.make_variable()
+    w1 = np.random.rand(2, 4)
+    b1 = np.random.rand(2)
+    pytest.raises(ValidationError, lin1.load_weights, w1, b1)
+    assert isinstance(lin1.weight, gp.Variable)
+    assert isinstance(lin1.bias, gp.Variable)
+    inp = gp.Variable(m, domain=dim([4, 1, 2, 4]))
+    out, eqs = lin1(inp)
+    assert len(out.domain) == 4
+    assert len(set([x.name for x in out.domain])) == 4
+
+
+def test_linear_load_weight_make_var(data):
+    m, *_ = data
+    lin1 = Linear(m, 1, 2, bias=True)
+    w1 = np.random.rand(2, 1)
+    b1 = np.random.rand(2)
+    lin1.load_weights(w1, b1)
+    assert isinstance(lin1.weight, gp.Parameter)
+    assert isinstance(lin1.bias, gp.Parameter)
+    pytest.raises(ValidationError, lin1.make_variable)
+
+
+def test_linear_call_bad(data):
+    m, *_ = data
+    lin1 = Linear(m, 4, 4, bias=True)
+    inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
+    # requires initialization before
+    pytest.raises(ValidationError, lin1, inp)
+
+    w1 = np.random.rand(4, 4)
+    b1 = np.random.rand(4)
+    lin1.load_weights(w1, b1)
+
+    # needs at least 1 dim
+    bad_inp = gp.Variable(m, domain=[])
+    pytest.raises(ValidationError, lin1, bad_inp)
+
+    # in channel must match 4
+    bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 5]))
+    pytest.raises(ValidationError, lin1, bad_inp_2)
+
+
+def test_linear_simple_correctness(data):
+    m, _, _, _, par_input, _ = data
+    lin1 = Linear(m, 5, 128, bias=True)
+    lin2 = Linear(m, 128, 64, bias=False)
+    w1 = np.random.rand(128, 5)
+    b1 = np.random.rand(128)
+    w2 = np.random.rand(64, 128)
+
+    lin1.load_weights(w1, b1)
+    lin2.load_weights(w2)
+
+    out1, eqs1 = lin1(par_input)
+    out2, eqs2 = lin2(out1)
+
+    obj = gp.Sum(out2.domain, out2)
+
+    model = gp.Model(
+        m,
+        "affine",
+        equations=[*eqs1, *eqs2],
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+
+    expected_out = (par_input.toDense() @ w1.T + b1) @ w2.T
+    assert np.allclose(out2.toDense(), expected_out)
+
+
+def test_linear_bias_domain_conflict(data):
+    m, *_ = data
+    lin1 = Linear(m, 20, 30, bias=True)
+    w1 = np.random.rand(30, 20)
+    b1 = np.random.rand(30)
+    lin1.load_weights(w1, b1)
+
+    input_data = np.random.rand(30, 20, 30, 20)
+    par_input = gp.Parameter(
+        m, domain=dim([30, 20, 30, 20]), records=input_data
+    )
+    out1, eqs1 = lin1(par_input)
+
+    last_domain = out1.domain[-1].name
+    # get rhs of equality
+    definition = eqs1[0].getDefinition().split("=e=")[1]
+    # 1 from weight 1 from bias
+    assert definition.count(last_domain) == 2
+
+    obj = gp.Sum(out1.domain, out1)
+
+    model = gp.Model(
+        m,
+        "affine2",
+        equations=eqs1,
+        objective=obj,
+        sense="min",
+        problem="LP",
+    )
+    model.solve()
+    expected_out = input_data @ w1.T + b1
+    assert np.allclose(out1.toDense(), expected_out)

@@ -201,7 +201,7 @@ class Conv2d:
 
             if bias.shape != (self.out_channels,):
                 raise ValidationError(
-                    f"weight expected to be ({self.out_channels},)"
+                    f"bias expected to be ({self.out_channels},)"
                 )
 
         if self.weight is None:

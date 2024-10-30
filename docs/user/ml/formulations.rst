@@ -58,9 +58,20 @@ embed your convolutional layer into your optimization model.
    print([len(d) for d in out_var_3.domain])
    # [10, 242]
 
+   w2 = np.random.rand(20, 242)
+   b2 = np.random.rand(20)
+   l1 = gp.formulations.Linear(m, 242, 20)
+   l1.load_weights(w2, b2)
+
+   out_var_4, eqs4 = l1(out_var_3)
+   print([len(d) for d in out_var_4.domain])
+   # [10, 20]
+
+
 
 Supported formulations:
 
+- :meth:`Linear <gamspy.formulations.Linear>`
 - :meth:`Conv2d <gamspy.formulations.Conv2d>`
 - :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
 - :meth:`MinPool2d <gamspy.formulations.MinPool2d>`

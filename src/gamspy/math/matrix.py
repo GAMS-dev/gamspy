@@ -516,7 +516,10 @@ def _validate_matrix_mult_dims(left, right):
 
         left_domain = left.domain[-2]
         right_domain = right.domain[-1]
-        if left_domain == right_domain:
+        while right_domain == left_domain or right_domain in batch_dim_1:
+            right_domain = next_alias(right_domain)
+
+        while left_domain == right_domain or left_domain in batch_dim_2:
             left_domain = next_alias(left_domain)
 
         sum_domain = left.domain[-1]
