@@ -423,7 +423,8 @@ def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
         return list(obj)
 
     if not isinstance(obj, list):
-        obj = [obj]
+        return [obj]
+
     return obj
 
 

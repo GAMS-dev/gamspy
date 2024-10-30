@@ -29,8 +29,6 @@ Problem 7.3.6. Test problem 16, page 103.
 
 from __future__ import annotations
 
-import sys
-
 import gamspy.math as gams_math
 from gamspy import Container, Equation, Model, Variable
 
@@ -306,8 +304,7 @@ def main():
         objective=k,
     )
 
-    fiat.solve(output=sys.stdout)
-
+    fiat.solve()
     print("Objective Function Value:  ", fiat.objective_value)
     # End Fiat
 

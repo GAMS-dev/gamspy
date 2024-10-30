@@ -1,9 +1,8 @@
 import os
 
+import IJKLM.data_generation as data
 import numpy as np
 import pandas as pd
-
-import IJKLM.data_generation as data
 from IJKLM.help import (
     below_time_limit,
     create_data_frame,

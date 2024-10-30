@@ -278,7 +278,7 @@ class Model:
             self.container._add_statement(self)
 
         # allow freezing
-        self._is_frozen = False
+        self._is_frozen: bool = False
 
         # Attributes
         self._num_domain_violations = None
@@ -995,15 +995,8 @@ class Model:
         return "\n".join(listings)
 
     def interrupt(self) -> None:
-        """
-        Sends interrupt signal to the running job.
-
-        Raises
-        ------
-        ValidationError
-            If the job is not initialized
-        """
-        self.container._stop_socket()
+        """Sends interrupt signal to the running job."""
+        self.container._interrupt()
 
     def freeze(
         self,
@@ -1130,6 +1123,17 @@ class Model:
             )
             self.instance.solve(solver, model_instance_options, output)
             return None
+
+        self.container._add_statement(self.getDeclaration())
+        self._add_runtime_options(options, backend)
+        self._append_solve_string()
+        self._create_model_attributes()
+        options._set_solver_options(
+            working_directory=self.container.working_directory,
+            solver=solver,
+            problem=self.problem,
+            solver_options=solver_options,
+        )
 
         runner = backend_factory(
             self.container,

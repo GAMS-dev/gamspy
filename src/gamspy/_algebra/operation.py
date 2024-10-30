@@ -262,7 +262,7 @@ class Sum(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "sum")
 
@@ -325,7 +325,7 @@ class Product(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "prod")
 
@@ -388,7 +388,7 @@ class Smin(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "smin")
 
@@ -451,7 +451,7 @@ class Smax(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "smax")
 
@@ -514,7 +514,7 @@ class Sand(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "sand")
 
@@ -576,7 +576,7 @@ class Sor(Operation):
     def __init__(
         self,
         domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | int | bool,
+        expression: Expression | ImplicitParameter | int | bool,
     ):
         super().__init__(domain, expression, "sor")
 

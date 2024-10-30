@@ -94,7 +94,7 @@ class Expression(operable.Operable):
         left_control = getattr(left, "controlled_domain", [])
         right_control = getattr(right, "controlled_domain", [])
         self.controlled_domain: list[Set | Alias] = list(
-            set([*left_control, *right_control])
+            {*left_control, *right_control}
         )
         self.container = None
         if left is not None and hasattr(left, "container"):

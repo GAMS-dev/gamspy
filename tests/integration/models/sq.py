@@ -7,8 +7,6 @@ Simple example to illustrate how to model the CVaR as a support function.
 Author: Olivier Huber <oli.huber@gmail.com>
 """
 
-import sys
-
 import numpy as np
 
 import gamspy as gp
@@ -19,7 +17,7 @@ def main():
     # START PROBLEM DATA DEFINITION
     nSamples = 950
 
-    m = gp.Container(output=sys.stdout)
+    m = gp.Container()
     i = gp.Set(
         m, name="i", records=range(nSamples), description="realizations"
     )
@@ -82,7 +80,7 @@ def main():
     """,
     )
     reset(x)
-    superquantile.solve(output=sys.stdout, solver="reshop")
+    superquantile.solve(solver="reshop")
 
     # Solve via Fenchel dual
     ReSHOPAnnotation(
@@ -94,7 +92,7 @@ def main():
     """,
     )
     reset(x)
-    superquantile.solve(output=sys.stdout, solver="reshop")
+    superquantile.solve(solver="reshop")
 
     # Solve as kkt conditions
     ReSHOPAnnotation(
@@ -107,7 +105,7 @@ def main():
     """,
     )
     reset(x)
-    superquantile.solve(output=sys.stdout, solver="reshop")
+    superquantile.solve(solver="reshop")
 
 
 if __name__ == "__main__":

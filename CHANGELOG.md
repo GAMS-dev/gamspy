@@ -11,6 +11,8 @@ GAMSPy 1.0.5
   - Show log file instead of listing file on solve statements with NEOS backend.
   - Add Linear layer formulation
   - Fix minor bug of domain conflict in batched matrix multiplication
+  - Improve the error messages of the thrown exceptions in case the user provide a model option at Container creation time.
+  - Do not allow models with the same name to override each other.
 - Testing
   - Fix race conditions in the pipeline.
   - Remove redundant setRecords in gapmin.py example.
@@ -18,6 +20,7 @@ GAMSPy 1.0.5
   - Update hansmge model.
   - Fix lower bound in reshop model.
   - Add tests for the Linear layer
+  - Add a script to measure the overhead of GAMSPy and Python in general for each model in the model library.
 - Documentation
   - Add documentation for the Linear layer
 
