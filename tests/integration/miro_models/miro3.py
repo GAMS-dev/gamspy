@@ -35,7 +35,6 @@ def main():
         is_miro_table=True,
         records=initial_state_data,
     )
-    print(initial_state.records)
     assert initial_state.records.columns.tolist() == ["row", "col", "value"]
 
 

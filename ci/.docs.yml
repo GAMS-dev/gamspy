@@ -1,4 +1,4 @@
-build-docs:
+leg-build-docs:
   stage: docs
   when: on_success
   tags: [linux]
@@ -14,10 +14,7 @@ build-docs:
     - ipython kernel install --name "python3" --user
     - wget https://github.com/jgm/pandoc/releases/download/3.1.8/pandoc-3.1.8-linux-amd64.tar.gz && tar xvzf pandoc-3.1.8-linux-amd64.tar.gz --strip-components 1
     - PATH=$(pwd)/bin/:$PATH
-    - cd docs && make linkcheck
-    - if [ "$?" == "0" ]; then echo "Link check passed!"; else exit 1; fi
-    - cd docs && make html
-    - if [ "$?" == "0" ]; then echo "Docs build passed!"; else exit 1; fi
+    - cd docs && make linkcheck && make html
   rules:
     - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "develop"
       when: never

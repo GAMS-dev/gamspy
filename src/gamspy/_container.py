@@ -21,7 +21,7 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
-from gamspy._model import Problem
+from gamspy._model import Problem, Sense
 from gamspy._options import Options
 from gamspy._workspace import Workspace
 from gamspy.exceptions import FatalError, GamspyException, ValidationError
@@ -44,7 +44,6 @@ if TYPE_CHECKING:
     )
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
-    from gamspy._model import Sense
 
 LOOPBACK = "127.0.0.1"
 GAMS_PORT = os.getenv("GAMS_PORT", None)
@@ -89,6 +88,11 @@ def open_connection(
         errors="replace",
     )
 
+    def handler(signum, frame):
+        os.kill(process.pid, signal.SIGINT)
+
+    signal.signal(signal.SIGINT, handler)
+
     start = time.time()
     while True:
         if process.poll() is not None:  # pragma: no cover
@@ -99,6 +103,7 @@ def open_connection(
             new_socket.connect(address)
             break
         except (ConnectionRefusedError, OSError) as e:
+            new_socket.close()
             end = time.time()
 
             if end - start > TIMEOUT:  # pragma: no cover
@@ -305,15 +310,30 @@ class Container(gt.Container):
 
     def _stop_socket(self):
         if hasattr(self, "_socket") and self._is_socket_open:
-            self._socket.sendall("stop".encode("ascii"))
+            self._socket.sendall(b"stop")
+            self._socket.close()
             self._is_socket_open = False
 
-            self._process.stdout = subprocess.DEVNULL
-            self._process.stderr = subprocess.DEVNULL
-            if platform.system() == "Windows":
-                self._process.send_signal(signal.SIGTERM)
-            else:
-                self._process.send_signal(signal.SIGINT)
+            if not self._process.stdout.closed:
+                self._process.stdout.close()
+
+            while self._process.poll() is None:
+                ...
+
+    def _read_output(self, output: io.TextIOWrapper | None) -> None:
+        if output is not None:
+            while True:
+                data = self._process.stdout.readline()
+                output.write(data)
+                output.flush()
+                if data.startswith("--- Job ") and "elapsed" in data:
+                    break
+
+    def _interrupt(self) -> None:
+        if platform.system() in ("Linux", "Darwin"):
+            self._process.send_signal(signal.SIGINT)
+        else:
+            os.kill(self._process.pid, signal.CTRL_C_EVENT)
 
     def _send_job(
         self,
@@ -321,30 +341,20 @@ class Container(gt.Container):
         pf_file: str,
         output: io.TextIOWrapper | None = None,
     ):
-        # Send pf file
         try:
+            # Send pf file
             self._socket.sendall(pf_file.encode("utf-8"))
 
             # Read output
-            if output is not None:
-                while True:
-                    data = self._process.stdout.readline()
-                    output.write(data)
-                    output.flush()
-                    if data.startswith("--- Job ") and "elapsed" in data:
-                        break
+            self._read_output(output)
 
             # Receive response
             response = self._socket.recv(256)
+            check_response(response, job_name)
         except ConnectionError as e:
             raise FatalError(
                 f"There was an error while communicating with GAMS server: {e}",
             ) from e
-        except KeyboardInterrupt:
-            self._stop_socket()
-            return
-
-        check_response(response, job_name)
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
@@ -1054,7 +1064,7 @@ class Container(gt.Container):
         name: str | None = None,
         problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
-        sense: Sense | str | None = None,
+        sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
         matches: dict[Equation, Variable] | None = None,
         limited_variables: Iterable[Variable] | None = None,

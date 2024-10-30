@@ -6,6 +6,7 @@ import gams.transfer as gt
 
 import gamspy._algebra.condition as condition
 import gamspy.utils as utils
+from gamspy.exceptions import ValidationError
 
 
 class ImplicitSymbol(ABC):
@@ -36,6 +37,9 @@ class ImplicitSymbol(ABC):
         self.parent_scalar_domains = parent_scalar_domains
 
         self.fix_domain_scalars(parent_scalar_domains)
+
+    def __bool__(self):
+        raise ValidationError("A symbol cannot be used as a truth value.")
 
     def fix_domain_scalars(self, parent_scalar_domains):
         if len(self.domain) == 1 and self.domain[0] == "*":
@@ -79,7 +83,7 @@ class ImplicitSymbol(ABC):
         self.permutation = new_perm
 
     @property
-    def dimension(self):
+    def dimension(self) -> int:
         return self.parent.dimension - len(self._scalar_domains)
 
     @abstractmethod

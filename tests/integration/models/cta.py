@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import math
 import os
-import sys
 
 from gams.connect import ConnectDatabase
 
@@ -189,7 +188,6 @@ def main():
     cmd_params = Options(absolute_optimality_gap=0.99, time_limit=10)
     cox3.solve(
         options=cmd_params,
-        output=sys.stdout,
     )
 
     rep = Parameter(
@@ -288,7 +286,7 @@ def main():
             objective=Sum([i, j, k], adjn[i, j, k] + adjp[i, j, k]),
         )
 
-        cox3c.solve(options=cmd_params, output=sys.stdout)
+        cox3c.solve(options=cmd_params)
         obj = cox3c.objective_value
         num_nodes_used = cox3c.num_nodes_used
         solve_time = cox3c.total_solve_time

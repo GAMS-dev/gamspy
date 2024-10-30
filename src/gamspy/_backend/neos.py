@@ -4,7 +4,6 @@ import base64
 import logging
 import os
 import shutil
-import time
 import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
@@ -338,9 +337,7 @@ class NeosClient:
 
     def submit_job(
         self,
-        output: io.TextIOWrapper | None,
         xml_path: str = "neos.xml",
-        is_blocking: bool = True,
         working_directory: str = ".",
     ) -> tuple[int, str]:
         """
@@ -383,22 +380,6 @@ class NeosClient:
 
         if job_number == 0:
             raise NeosClientException(f"NEOS Server error! {job_password}")
-
-        if is_blocking:
-            offset = 0
-            status = ""
-            while status != "Done":
-                time.sleep(1)
-                msg, offset = self.neos.getIntermediateResults(
-                    job_number, job_password, offset
-                )
-                if output is not None:
-                    output.write(msg.data.decode())
-                status = self.neos.getJobStatus(job_number, job_password)
-
-            msg = self.neos.getFinalResults(job_number, job_password)
-            if output is not None:
-                output.write(msg.data.decode())
 
         return job_number, job_password
 
@@ -447,16 +428,6 @@ class NEOSServer(backend.Backend):
         # Run a dummy job to get the restart file to be sent to NEOS Server
         self._create_restart_file()
 
-        self.model._add_runtime_options(self.options)
-        self.options._set_solver_options(
-            working_directory=self.container.working_directory,
-            solver=self.solver,
-            problem=self.model.problem,
-            solver_options=self.solver_options,
-        )
-        self.model._append_solve_string()
-        self.model._create_model_attributes()
-
         # Generate gams string and write modified symbols to gdx
         gams_string = self.preprocess("in.gdx")
 
@@ -475,6 +446,7 @@ class NEOSServer(backend.Backend):
         return summary
 
     def execute_gams(self, gams_string: str):
+        working_directory = self.container.working_directory
         if self.container._debugging_level == DebugLevel.KeepFiles:
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
@@ -491,37 +463,39 @@ class NEOSServer(backend.Backend):
             gdx_path=self.container._gdx_in,
             restart_path=self.restart_file,
             options=self.options,
-            working_directory=self.container.working_directory,
+            working_directory=working_directory,
         )
 
         job_number, job_password = self.client.submit_job(
-            output=self.output,
-            is_blocking=self.client.is_blocking,
-            working_directory=self.container.working_directory,
+            working_directory=working_directory
         )
 
         if self.client.is_blocking:
+            _ = self.client.get_final_results(job_number, job_password)
+
             self.client.download_output(
                 job_number,
                 job_password,
-                working_directory=self.container.working_directory,
+                working_directory=working_directory,
             )
 
-            out_gdx = os.path.join(
-                self.container.working_directory, "output.gdx"
-            )
+            out_gdx = os.path.join(working_directory, "output.gdx")
+            log_path = os.path.join(working_directory, "solve.log")
             if not os.path.exists(out_gdx):
-                raise ValidationError(
-                    "There was a problem while solving the model on NEOS Server. Please check the logs to understand the problem."
+                raise GamspyException(
+                    "The job was not completed successfully. Check"
+                    f" {log_path} for details."
                 )
             shutil.move(out_gdx, self.container._gdx_out)
 
-            if not os.path.exists(self.container._gdx_out):
-                raise GamspyException(
-                    "The job was not completed successfully. Check"
-                    f" {os.path.join(self.container.working_directory, 'solve.log')} for"
-                    " details."
-                )
+            if self.output is not None:
+                with open(log_path) as file:
+                    self.output.write(file.read())
+
+            if self.options.log_file is not None and not os.path.exists(
+                self.options.log_file
+            ):
+                shutil.copy(log_path, self.options.log_file)
 
         self.container._unsaved_statements = []
         if not self.is_async() and self.model:

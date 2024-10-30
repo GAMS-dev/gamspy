@@ -1,4 +1,4 @@
-performance:
+leg-performance:
   stage: performance
   needs: []
   tags: [puma]
@@ -12,5 +12,12 @@ performance:
     - python scripts/reinstall.py
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
     - gamspy install license $LOCAL_LICENSE
+    - gamspy install solver mpsge scip reshop
+    - python scripts/performance/performance.py
     - python scripts/performance/main_IJKLM.py
     - python scripts/performance/memory_check.py
+  artifacts:
+    name: performance_stats
+    expire_in: 2 hours
+    paths:
+      - stats.csv

@@ -63,7 +63,6 @@ def data():
 
 @pytest.fixture
 def network_license():
-    print(sys.executable, os.environ["NETWORK_LICENSE_NON_ACADEMIC"])
     subprocess.run(
         [
             sys.executable,
@@ -366,20 +365,17 @@ def test_extra_files(data):
 
         transport.solve(backend="engine", client=client)
 
-    file = tempfile.NamedTemporaryFile(delete=False)
-    client = EngineClient(
-        host=os.environ["ENGINE_URL"],
-        username=os.environ["ENGINE_USER"],
-        password=os.environ["ENGINE_PASSWORD"],
-        namespace=os.environ["ENGINE_NAMESPACE"],
-        extra_model_files=[file.name],
-    )
+    with tempfile.NamedTemporaryFile() as file:
+        client = EngineClient(
+            host=os.environ["ENGINE_URL"],
+            username=os.environ["ENGINE_USER"],
+            password=os.environ["ENGINE_PASSWORD"],
+            namespace=os.environ["ENGINE_NAMESPACE"],
+            extra_model_files=[file.name],
+        )
 
-    with pytest.raises(ValidationError):
-        transport.solve(backend="engine", client=client)
-
-    file.close()
-    os.unlink(file.name)
+        with pytest.raises(ValidationError):
+            transport.solve(backend="engine", client=client)
 
 
 def test_solve_twice(data):
@@ -508,8 +504,6 @@ def test_non_blocking(data):
     container = Container(load_from=gdx_out_path)
     assert "x" in container.data
     x.setRecords(container["x"].records)
-    print(x.records)
-    print(container["x"].records)
     assert x.records.equals(container["x"].records)
 
 

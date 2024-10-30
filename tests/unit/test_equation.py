@@ -225,7 +225,6 @@ def test_equation_definition(data):
     with pytest.raises(TypeError):
         cost.records = 5
 
-    assert cost[...]
     assert (
         cost.getDefinition() == "cost .. sum((i,j),(c(i,j) * x(i,j))) =e= z;"
     )

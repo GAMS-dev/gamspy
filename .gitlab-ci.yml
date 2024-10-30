@@ -4,8 +4,11 @@ default:
 
 stages:
   - formatter
-  - docs
+  - cli
   - test
+  - engine
+  - neos
+  - docs
   - performance
   - website
   - upload
@@ -43,13 +46,13 @@ variables:
     description: "Password for PyPI"
 
 
-include: ['ci/.gitlab-ci-formatter.yml',
-          'ci/.gitlab-ci-docs.yml',
-          'ci/.gitlab-ci-test-3.9.yml',
-          'ci/.gitlab-ci-test-3.10.yml',
-          'ci/.gitlab-ci-test-3.11.yml',
-          'ci/.gitlab-ci-test-3.12.yml',
-          'ci/.gitlab-ci-test-3.13.yml',
-          'ci/.gitlab-ci-update-website.yml',
-          'ci/.gitlab-ci-upload.yml',
-          'ci/.gitlab-ci-performance.yml']
+include: ['ci/.formatter.yml',
+          'ci/.cli.yml',
+          'ci/.test-leg.yml',
+          'ci/.test-dac.yml',
+          'ci/.test-deg.yml',
+          'ci/.test-wei.yml',
+          'ci/.docs.yml',
+          'ci/.update-website.yml',
+          'ci/.upload.yml',
+          'ci/.performance.yml']

@@ -1,4 +1,4 @@
-run_formatter:
+leg-formatter:
   stage: formatter
   when: on_success
   tags: [linux]
@@ -9,10 +9,6 @@ run_formatter:
     - source venv/bin/activate
     - pip install ruff==0.6.7
     - ruff format src/gamspy --check
-    - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
     - ruff format tests --check
-    - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi
     - ruff check src/gamspy --fix --exit-non-zero-on-fix
-    - if [ "$?" == "0" ]; then echo "Linter passed!"; else exit 1; fi
     - ruff check tests --fix --exit-non-zero-on-fix
-    - if [ "$?" == "0" ]; then echo "Formatter passed!"; else exit 1; fi

@@ -1,6 +1,7 @@
 import glob
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -32,22 +33,13 @@ def teardown():
 
 
 def test_full_models(teardown):
-    print("Running the models with the following license:")
-    process = subprocess.run(
-        ["gamspy", "show", "license"], capture_output=True
-    )
-    assert process.returncode == 0
-    print(process.stdout)
-
     paths = glob.glob(
-        str(Path(__file__).parent) + os.sep + "models" + os.sep + "*.py"
+        os.path.join(str(Path(__file__).parent), "models", "*.py")
     )
 
-    print()
     for idx, path in enumerate(paths):
         print(f"[{idx + 1}/{len(paths)}] {path.split(os.sep)[-1]}")
-        process = subprocess.run(["python", path], capture_output=True)
-        print(process.stdout.decode())
-        print(process.stderr.decode())
-
-        assert process.returncode == 0
+        process = subprocess.run(
+            [sys.executable, "-Wd", path], capture_output=True, text=True
+        )
+        assert process.returncode == 0, process.stderr

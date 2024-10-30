@@ -10,8 +10,6 @@ whole neural network.
 
 from __future__ import annotations
 
-import sys
-
 import numpy as np
 
 import gamspy as gp
@@ -90,7 +88,7 @@ def main():
         sense="min",
         objective=nll,
     )
-    classification.solve(output=sys.stdout)
+    classification.solve()
     verify_output(x.records, y.records, y2.records)
 
 

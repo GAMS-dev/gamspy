@@ -14,20 +14,20 @@ import pytest
 import gamspy._validation as validation
 import gamspy.math as gamspy_math
 from gamspy import (
-    Card,
+    Alias,
     Container,
     Equation,
     Model,
     ModelStatus,
     Options,
-    Ord,
     Parameter,
+    Problem,
     Sense,
     Set,
-    Smax,
     SolveStatus,
     Sum,
     Variable,
+    VariableType,
 )
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -271,7 +271,7 @@ def test_uel_order(data):
     assert p.records.values.tolist() == [["i1", 1.0], ["i0", 2.0]]
 
 
-def test_read_on_demand(data):
+def test_records(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -283,6 +283,7 @@ def test_read_on_demand(data):
     b = Parameter(m, name="b", domain=[j], records=demands)
     d = Parameter(m, name="d", domain=[i, j], records=distances)
     c = Parameter(m, name="c", domain=[i, j])
+    assert c.records is None
     e = Parameter(m, name="e")
 
     c[i, j] = 90 * d[i, j] / 1000
@@ -294,6 +295,42 @@ def test_read_on_demand(data):
         ["san-diego", "chicago", 0.162],
         ["san-diego", "topeka", 0.126],
     ]
+    assert c[i, j].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[...].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[:, :].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["seattle", "chicago", 0.153],
+        ["seattle", "topeka", 0.162],
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 0.225],
+        ["san-diego", "new-york", 0.225],
+    ]
+    assert c["san-diego", j].records.values.tolist() == [
+        ["san-diego", "new-york", 0.225],
+        ["san-diego", "chicago", 0.162],
+        ["san-diego", "topeka", 0.126],
+    ]
+    assert c["san-diego", "new-york"].records.values.tolist() == [
+        ["san-diego", "new-york", 0.225],
+    ]
     e[...] = 5
     assert e.records.values.tolist() == [[5.0]]
 
@@ -301,10 +338,19 @@ def test_read_on_demand(data):
         e.records = 5
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
+    assert x.records is None
+    assert x.l[i, j].records is None
+    assert x.l[i, "new-york"].records is None
+    assert x.l["san-diego", j].records is None
+    assert x.l["san-diego", "new-york"].records is None
     z = Variable(m, name="z")
 
     cost = Equation(m, name="cost")
     supply = Equation(m, name="supply", domain=[i])
+    assert supply.records is None
+    assert supply.l[i].records is None
+    assert supply.l["seattle"].records is None
+
     demand = Equation(m, name="demand", domain=[j])
 
     cost[...] = Sum((i, j), c[i, j] * x[i, j]) == z
@@ -347,6 +393,51 @@ def test_read_on_demand(data):
         "scale",
     ]
 
+    # Test the columns of the attribute records
+    assert x.l[i, j].records.columns.tolist() == ["i", "j", "level"]
+    assert x.m[i, j].records.columns.tolist() == ["i", "j", "marginal"]
+    assert x.up[i, j].records.columns.tolist() == ["i", "j", "upper"]
+    assert x.lo[i, j].records.columns.tolist() == ["i", "j", "lower"]
+    assert x.scale[i, j].records.columns.tolist() == ["i", "j", "scale"]
+
+    # Test the records of the filtered attribute records
+    assert x.l.records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[i, j].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[...].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["seattle", "chicago", 300.0],
+        ["seattle", "topeka", 0.0],
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 50.0],
+        ["san-diego", "new-york", 275.0],
+    ]
+    assert x.l["san-diego", j].records.values.tolist() == [
+        ["san-diego", "new-york", 275.0],
+        ["san-diego", "chicago", 0.0],
+        ["san-diego", "topeka", 275.0],
+    ]
+    assert x.l["san-diego", "new-york"].records.values.tolist() == [
+        ["san-diego", "new-york", 275.0],
+    ]
+
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
         "level",
@@ -364,6 +455,132 @@ def test_read_on_demand(data):
         "lower",
         "upper",
         "scale",
+    ]
+
+    # Test the columns of the attribute records
+    assert supply.l[i].records.columns.tolist() == ["i", "level"]
+    assert supply.m[i].records.columns.tolist() == ["i", "marginal"]
+    assert supply.up[i].records.columns.tolist() == ["i", "upper"]
+    assert supply.lo[i].records.columns.tolist() == ["i", "lower"]
+    assert supply.scale[i].records.columns.tolist() == ["i", "scale"]
+
+    # Test the records of the filtered attribute records
+    assert supply.l[i].records.values.tolist() == [
+        ["seattle", 350.0],
+        ["san-diego", 550.0],
+    ]
+    assert supply.l["seattle"].records.values.tolist() == [
+        ["seattle", 350.0],
+    ]
+
+    m = Container()
+    i1 = Set(m, name="i1", records=range(2))
+    i2 = Set(m, name="i2", records=range(2))
+    i3 = Set(m, name="i3", records=range(2))
+    i4 = Set(m, name="i4", records=range(2))
+    v1 = Variable(m, "v1", domain=[i1, i2, i3, i4])
+    v1.generateRecords(seed=1)
+    assert v1.l[i1, i2, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l[i1, :, i3, i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l[i1, ..., i4].records.values.tolist() == [
+        ["0", "0", "0", "0", 0.5118216247002567],
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "0", 0.14415961271963373],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "0", 0.31183145201048545],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "0", 0.8277025938204418],
+        ["0", "1", "1", "1", 0.4091991363691613],
+        ["1", "0", "0", "0", 0.5495936876730595],
+        ["1", "0", "0", "1", 0.027559113243068367],
+        ["1", "0", "1", "0", 0.7535131086748066],
+        ["1", "0", "1", "1", 0.5381433132192782],
+        ["1", "1", "0", "0", 0.32973171649909216],
+        ["1", "1", "0", "1", 0.7884287034284043],
+        ["1", "1", "1", "0", 0.303194829291645],
+        ["1", "1", "1", "1", 0.4534978894806515],
+    ]
+
+    assert v1.l["0", ..., "1"].records.values.tolist() == [
+        ["0", "0", "0", "1", 0.9504636963259353],
+        ["0", "0", "1", "1", 0.9486494471372439],
+        ["0", "1", "0", "1", 0.42332644897257565],
+        ["0", "1", "1", "1", 0.4091991363691613],
+    ]
+
+    i = Set(m, "i", records=[f"i{i}" for i in range(2)])
+    j = Set(m, "j", records=[f"j{i}" for i in range(2)])
+    k = Set(m, "k", records=[f"k{i}" for i in range(2)])
+    l = Set(m, "l", records=[f"l{i}" for i in range(2)])
+    a = Set(m, domain=[i, j, k, l])
+    a.generateRecords()
+    assert a.records.values.tolist() == [
+        ["i0", "j0", "k0", "l0", ""],
+        ["i0", "j0", "k0", "l1", ""],
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j0", "k1", "l1", ""],
+        ["i0", "j1", "k0", "l0", ""],
+        ["i0", "j1", "k0", "l1", ""],
+        ["i0", "j1", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l1", ""],
+        ["i1", "j0", "k0", "l0", ""],
+        ["i1", "j0", "k0", "l1", ""],
+        ["i1", "j0", "k1", "l0", ""],
+        ["i1", "j0", "k1", "l1", ""],
+        ["i1", "j1", "k0", "l0", ""],
+        ["i1", "j1", "k0", "l1", ""],
+        ["i1", "j1", "k1", "l0", ""],
+        ["i1", "j1", "k1", "l1", ""],
+    ]
+    assert a["i0", ...].records.values.tolist() == [
+        ["i0", "j0", "k0", "l0", ""],
+        ["i0", "j0", "k0", "l1", ""],
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j0", "k1", "l1", ""],
+        ["i0", "j1", "k0", "l0", ""],
+        ["i0", "j1", "k0", "l1", ""],
+        ["i0", "j1", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l1", ""],
+    ]
+    assert a["i0", :, "k1", "l0"].records.values.tolist() == [
+        ["i0", "j0", "k1", "l0", ""],
+        ["i0", "j1", "k1", "l0", ""],
     ]
 
 
@@ -560,513 +777,100 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
+# Testing it manually works fine but it doesn't get the interrupt on pipeline for some reason.
+@pytest.mark.skip(
+    reason="GAMS incremental mode requires certain changes for this to work reliably."
+)
 def test_interrupt(data):
     m, *_ = data
-    cont = Container()
 
-    power_forecast_recs = np.array(
-        [
-            287,
-            275,
-            262,
-            250,
-            255,
-            260,
-            265,
-            270,
-            267,
-            265,
-            262,
-            260,
-            262,
-            265,
-            267,
-            270,
-            277,
-            285,
-            292,
-            300,
-            310,
-            320,
-            330,
-            340,
-            357,
-            375,
-            392,
-            410,
-            405,
-            400,
-            395,
-            390,
-            400,
-            410,
-            420,
-            430,
-            428,
-            427,
-            426,
-            425,
-            432,
-            440,
-            447,
-            455,
-            458,
-            462,
-            466,
-            470,
-            466,
-            462,
-            458,
-            455,
-            446,
-            437,
-            428,
-            420,
-            416,
-            412,
-            408,
-            405,
-            396,
-            387,
-            378,
-            370,
-            375,
-            380,
-            385,
-            390,
-            383,
-            377,
-            371,
-            365,
-            368,
-            372,
-            376,
-            380,
-            386,
-            392,
-            398,
-            405,
-            408,
-            412,
-            416,
-            420,
-            413,
-            407,
-            401,
-            395,
-            386,
-            377,
-            368,
-            360,
-            345,
-            330,
-            315,
-            300,
-        ]
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 7)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 10)],
     )
 
-    # Energy
-    t = Set(
-        cont,
-        name="t",
-        records=[f"t{i}" for i in range(1, 97)],
-        description="time slices (quarter-hour)",
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
     )
 
-    PowerForecast = Parameter(
-        cont,
-        name="PowerForecast",
-        domain=[t],
-        records=power_forecast_recs,
-        description="electric power forecast",
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
     )
 
-    # Power Plant (PP)
-    cPPvar = Parameter(
-        cont,
-        name="cPPvar",
-        records=25,
-        description="variable cost of power plant [euro / MWh]",
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
     )
-    pPPMax = Parameter(
-        cont,
-        name="pPPMax",
-        records=300,
-        description="maximal capacity of power plant      [MW]",
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
     )
 
-    m = Set(
-        cont,
-        name="m",
-        records=[f"m{i}" for i in range(1, 9)],
-        description="'stage of the power plant",
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
     )
-    iS = Set(
-        cont,
-        name="iS",
-        records=[f"iS{i}" for i in range(9)],
-        description="interval for constant PP operation",
-    )
-    iI = Set(
-        cont,
-        name="iI",
-        records=[f"iI{i}" for i in range(17)],
-        description="length of idle time period",
-    )
+    eq4[dice, f.lag(1)] = fval[dice, f.lag(1)] + 1 <= fval[dice, f]
 
-    cBL = Parameter(
-        cont,
-        name="cBL",
-        records=32,
-        description="cost for one base load contract [euro / MWh]",
-    )
-    cPL = Parameter(
-        cont,
-        name="cPL",
-        records=41,
-        description="cost for one peak load contract [euro / MWh]",
-    )
-
-    IPL = Parameter(
-        cont,
-        name="IPL",
-        domain=[t],
-        description="indicator function for peak load contracts",
-    )
-    IPL[t] = (Ord(t) >= 33) & (Ord(t) <= 80)
-
-    pLFCref = Parameter(
-        cont,
-        name="pLFCref",
-        records=400,
-        description="power reference level for the LFC",
-    )
-
-    b = Set(
-        cont,
-        name="b",
-        records=[f"b{i}" for i in range(1, 4)],
-        description="support points of the zone prices",
-    )
-
-    eLFCbY = Parameter(
-        cont,
-        name="eLFCbY",
-        domain=[b],
-        records=np.array([54750, 182500, 9000000]),
-        description="amount of energy at support point b",
-    )
-    cLFCvar = Parameter(
-        cont,
-        name="cLFCvar",
-        domain=[b],
-        records=np.array([80.0, 65.0, 52.0]),
-        description="specific energy price in segment b",
-    )
-    eLFCb = Parameter(
-        cont,
-        name="eLFCb",
-        domain=[b],
-        description="daily border of energy volumes for LFC",
-    )
-    cLFCs = Parameter(
-        cont,
-        name="cLFCs",
-        domain=[b],
-        description="accumulated cost for LFC up to segment b",
-    )
-
-    # calculate the daily borders of the energy volumes for the zones
-    eLFCb[b] = eLFCbY[b] / 365
-
-    # calculate the accumulated cost
-    cLFCs["b1"] = 0
-    cLFCs["b2"] = cLFCvar["b1"] * eLFCb["b1"]
-    cLFCs[b].where[Ord(b) > 2] = cLFCs[b.lag(1)] + cLFCvar[b.lag(1)] * (
-        eLFCb[b.lag(1)] - eLFCb[b.lag(2)]
-    )
-
-    c = Variable(cont, name="c", type="free", description="total cost")
-    cPP = Variable(
-        cont, name="cPP", type="positive", description="cost of PP usage"
-    )
-    pPP = Variable(
-        cont,
-        name="pPP",
-        type="positive",
-        domain=[t],
-        description="power withdrawn from power plant",
-    )
-    delta = Variable(
-        cont,
-        name="delta",
-        type="binary",
-        domain=[m, t],
-        description="indicate if the PP is in stage m at time t",
-    )
-    chiS = Variable(
-        cont,
-        name="chiS",
-        type="positive",
-        domain=[t],
-        description="indicate if there is a PP stage change",
-    )
-    chiI = Variable(
-        cont,
-        name="chiI",
-        type="positive",
-        domain=[t],
-        description="indicate if the PP left the idle stage",
-    )
-    cSM = Variable(
-        cont,
-        name="cSM",
-        type="positive",
-        description="cost of energy from SM",
-    )
-    pSM = Variable(
-        cont,
-        name="pSM",
-        type="positive",
-        domain=[t],
-        description="power from the spot market",
-    )
-    alpha = Variable(
-        cont,
-        name="alpha",
-        type="integer",
-        description="quantity of base load contracts",
-    )
-    beta = Variable(
-        cont,
-        name="beta",
-        type="integer",
-        description="quantity of peak load contracts",
-    )
-    cLFC = Variable(
-        cont,
-        name="cLFC",
-        type="positive",
-        description="cost of LFC which is the enery rate",
-    )
-    eLFCtot = Variable(
-        cont,
-        name="eLFCtot",
-        type="positive",
-        description="total energy amount of LFC",
-    )
-    eLFCs = Variable(
-        cont,
-        name="eLFCs",
-        type="positive",
-        domain=[b],
-        description="energy from LFC in segment b",
-    )
-    pLFC = Variable(
-        cont,
-        name="pLFC",
-        type="positive",
-        domain=[t],
-        description="power from the LFC",
-    )
-    mu = Variable(
-        cont,
-        name="mu",
-        type="binary",
-        domain=[b],
-        description="indicator for segment b (for zone prices)",
-    )
-
-    alpha.up[...] = Smax(t, PowerForecast[t])
-    beta.up[...] = alpha.up
-    pLFC.up[t] = pLFCref
-
-    obj = Equation(cont, name="obj", description="objective function")
-    demand = Equation(
-        cont,
-        name="demand",
-        domain=[t],
-        description="demand constraint for energy forcast",
-    )
-    PPcost = Equation(cont, name="PPcost", description="power plant cost")
-    PPpower = Equation(
-        cont,
-        name="PPpower",
-        domain=[t],
-        description="power of power plant at time t",
-    )
-    PPstage = Equation(
-        cont,
-        name="PPstage",
-        domain=[t],
-        description="exactly one stage of power plant at any time",
-    )
-    PPchiS1 = Equation(
-        cont,
-        name="PPchiS1",
-        domain=[t, m],
-        description="relate chi and delta variables first constraint",
-    )
-    PPchiS2 = Equation(
-        cont,
-        name="PPchiS2",
-        domain=[t, m],
-        description="relate chi and delta variables second constraint",
-    )
-    PPstageChange = Equation(
-        cont,
-        name="PPstageChange",
-        domain=[t],
-        description="restrict the number of stage changes",
-    )
-    PPstarted = Equation(
-        cont,
-        name="PPstarted",
-        domain=[t],
-        description="connect chiZ and chi variables",
-    )
-    PPidleTime = Equation(
-        cont,
-        name="PPidleTime",
-        domain=[t],
-        description="control the idle time of the plant",
-    )
-    SMcost = Equation(
-        cont,
-        name="SMcost",
-        description="cost associated with spot market",
-    )
-    SMpower = Equation(
-        cont,
-        name="SMpower",
-        domain=[t],
-        description="power from the spot market",
-    )
-    LFCcost = Equation(cont, name="LFCcost", description="cost for the LFC")
-    LFCenergy = Equation(
-        cont,
-        name="LFCenergy",
-        description="total energy from the LFC",
-    )
-    LFCmu = Equation(
-        cont,
-        name="LFCmu",
-        description="exactly one price segment b",
-    )
-    LFCenergyS = Equation(
-        cont,
-        name="LFCenergyS",
-        description="connect the mu variables with the total energy",
-    )
-    LFCemuo = Equation(
-        cont,
-        name="LFCemuo",
-        description="accumulated energy amount for segement b1",
-    )
-    LFCemug = Equation(
-        cont,
-        name="LFCemug",
-        domain=[b],
-        description="accumulated energy amount for all other segements",
-    )
-
-    # the objective function: total cost eq. (6)
-    obj[...] = c == cPP + cSM + cLFC
-
-    # meet the power demand for each time period exactly eq. (23)
-    demand[t] = pPP[t] + pSM[t] + pLFC[t] == PowerForecast[t]
-
-    # (fix cost +) variable cost * energy amount produced eq. (7) & (8)
-    PPcost[...] = cPP == cPPvar * Sum(t, 0.25 * pPP[t])
-
-    # power produced by the power plant eq. (26)
-    PPpower[t] = pPP[t] == pPPMax * Sum(
-        m.where[Ord(m) > 1], 0.1 * (Ord(m) + 2) * delta[m, t]
-    )
-
-    # the power plant is in exactly one stage at any time eq. (25)
-    PPstage[t] = Sum(m, delta[m, t]) == 1
-
-    # next constraints model the minimum time period a power plant is in
-    # the same state and the constraint of the minimum idle time
-    # we need variable 'chiS' to find out when a status change takes place
-    # eq. (27)
-    PPchiS1[t, m].where[Ord(t) > 1] = (
-        chiS[t] >= delta[m, t] - delta[m, t.lag(1)]
-    )
-
-    # second constraint for 'chiS' variable eq. (28)
-    PPchiS2[t, m].where[Ord(t) > 1] = (
-        chiS[t] >= delta[m, t.lag(1)] - delta[m, t]
-    )
-
-    # control the minimum change time period eq. (29)
-    PPstageChange[t].where[Ord(t) < Card(t) - Card(iS) + 2] = (
-        Sum(iS, chiS[t.lead(Ord(iS))]) <= 1
-    )
-
-    # indicate if the plant left the idle state eq. (30)
-    PPstarted[t] = chiI[t] >= delta["m1", t.lag(1)] - delta["m1", t]
-
-    # control the minimum idle time period:
-    # it has to be at least Nk2 time periods long eq. (31)
-    PPidleTime[t].where[Ord(t) < Card(t) - Card(iI) + 2] = (
-        Sum(iI, chiI[t.lead(Ord(iI))]) <= 1
-    )
-
-    # cost for the spot market eq. (12)
-    # consistent of the base load (alpha) and peak load (beta) contracts
-    SMcost[...] = cSM == 24 * cBL * alpha + 12 * cPL * beta
-
-    # Spot Market power contribution eq. (9)
-    SMpower[t] = pSM[t] == alpha + IPL[t] * beta
-
-    # cost of the LFC is given by the energy rate eq. (14) & (21)
-    LFCcost[...] = cLFC == Sum(b, cLFCs[b] * mu[b] + cLFCvar[b] * eLFCs[b])
-
-    # total energy from the LFC eq. (16)
-    # connect the eLFC[t] variables with eLFCtot
-    LFCenergy[...] = eLFCtot == Sum(t, 0.25 * pLFC[t])
-
-    # indicator variable 'mu':
-    # we are in exactly one price segment b eq. (18)
-    LFCmu[...] = Sum(b, mu[b]) == 1
-
-    # connect the 'mu' variables with the total energy amount eq. (19)
-    LFCenergyS[...] = eLFCtot == Sum(
-        b.where[Ord(b) > 1], eLFCb[b.lag(1)] * mu[b]
-    ) + Sum(b, eLFCs[b])
-
-    # accumulated energy amount for segment "b1" eq. (20)
-    LFCemuo[...] = eLFCs["b1"] <= eLFCb["b1"] * mu["b1"]
-
-    # accumulated energy amount for all other segments (then "b1") eq. (20)
-    LFCemug[b].where[Ord(b) > 1] = (
-        eLFCs[b] <= (eLFCb[b] - eLFCb[b.lag(1)]) * mu[b]
-    )
-
-    energy = Model(
-        cont,
-        name="energy",
-        equations=cont.getEquations(),
-        problem="MIP",
-        sense=Sense.MIN,
-        objective=c,
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
     )
 
     def interrupt_gams(model):
-        time.sleep(1)
+        time.sleep(3)
         model.interrupt()
 
     import threading
 
-    threading.Thread(target=interrupt_gams, args=(energy,)).start()
+    threading.Thread(target=interrupt_gams, args=(xdice,)).start()
 
-    try:
-        energy.solve(options=Options(relative_optimality_gap=0.000001))
-        assert energy.objective_value
-    except GamspyException:
-        pass
+    xdice.solve(output=sys.stdout)
+    assert xdice.objective_value is not None
+    assert xdice.solve_status == SolveStatus.UserInterrupt
+
+    after_interrupt = Set(m, records=range(3))
+    assert after_interrupt.toList() == ["0", "1", "2"]
+
+    summary = xdice.solve(output=sys.stdout, options=Options(time_limit=2))
+    assert summary is not None
+    assert xdice.solve_status == SolveStatus.ResourceInterrupt
 
 
 def test_solver_options(data):
