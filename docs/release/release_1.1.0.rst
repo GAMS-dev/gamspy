@@ -17,6 +17,7 @@ Release Date: 30.10.2024
   - Upgrade gamspy_base and gamsapi versions to 48.2.0.
 
 - Testing
+
   - Fix race conditions in the pipeline.
   - Remove redundant setRecords in gapmin.py example.
   - Add sq.py model to the test model suite.
@@ -26,5 +27,6 @@ Release Date: 30.10.2024
   - Add a script to measure the overhead of GAMSPy and Python in general for each model in the model library.
 
 - Documentation
+  
   - Add documentation for the Linear layer
   
