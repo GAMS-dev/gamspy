@@ -111,10 +111,19 @@ def test_miro():
             directory + os.sep + "miro_models" + os.sep + "miro8.py",
         ],
         env=current_environment,
-        check=True,
         capture_output=True,
     )
     assert process.returncode == 0, process.stderr
+
+    process = subprocess.run(
+        [
+            sys.executable,
+            directory + os.sep + "miro_models" + os.sep + "miro9.py",
+        ],
+        env=current_environment,
+        capture_output=True,
+    )
+    assert process.returncode == 1, "Expected non-zero return code but got 0."
 
     # Test default.gdx
     new_container = Container()

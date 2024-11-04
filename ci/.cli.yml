@@ -6,7 +6,6 @@ leg-cli-3.13:
     - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 leg-cli-3.9:
@@ -19,7 +18,6 @@ leg-cli-3.9:
     - source venv39/bin/activate
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.13:
@@ -33,7 +31,6 @@ dac-cli-3.13:
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.9:
@@ -47,7 +44,6 @@ dac-cli-3.9:
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
     - pip install wheel build
     - python scripts/reinstall.py
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 deg-cli-3.13:
@@ -61,7 +57,6 @@ deg-cli-3.13:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge scip reshop
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -80,7 +75,6 @@ deg-cli-3.9:
     - pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge scip reshop
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -102,7 +96,6 @@ wei-cli-3.13:
     - python -m pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge scip reshop
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 wei-cli-3.9:
@@ -121,5 +114,4 @@ wei-cli-3.9:
     - python -m pip install wheel build
     - python scripts/reinstall.py
     - gamspy install solver mpsge scip reshop
-    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
