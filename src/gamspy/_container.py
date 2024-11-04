@@ -8,6 +8,7 @@ import socket
 import subprocess
 import tempfile
 import time
+import traceback
 import uuid
 from contextlib import closing
 from typing import TYPE_CHECKING
@@ -358,8 +359,12 @@ class Container(gt.Container):
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
-        encoder = MiroJSONEncoder(self)
-        encoder.write_json()
+        try:
+            encoder = MiroJSONEncoder(self)
+            encoder.write_json()
+        except Exception:
+            traceback.print_exc()
+            os._exit(1)
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
