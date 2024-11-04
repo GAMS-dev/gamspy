@@ -184,13 +184,21 @@ def test_lag_and_lead(data):
     # Linear lag
     new_set = set.lag(n=5, type="linear")
     assert new_set.gamsRepr() == "S - 5"
+    new_set = set - 5
+    assert new_set.gamsRepr() == "S - 5"
     new_set = alias.lag(n=5, type="linear")
+    assert new_set.gamsRepr() == "A - 5"
+    new_set = alias - 5
     assert new_set.gamsRepr() == "A - 5"
 
     # Linear lead
     new_set = set.lead(n=5, type="linear")
     assert new_set.gamsRepr() == "S + 5"
+    new_set = set + 5
+    assert new_set.gamsRepr() == "S + 5"
     new_set = alias.lead(n=5, type="linear")
+    assert new_set.gamsRepr() == "A + 5"
+    new_set = alias + 5
     assert new_set.gamsRepr() == "A + 5"
 
     # Incorrect type

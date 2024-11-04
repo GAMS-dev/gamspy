@@ -885,8 +885,8 @@ def main():
     ] = (
         V_pw_cost[gen]
         >= (
-            (costpts_y[gen, costptset.lead(1)] - costpts_y[gen, costptset])
-            / (costpts_x[gen, costptset.lead(1)] - costpts_x[gen, costptset])
+            (costpts_y[gen, costptset + 1] - costpts_y[gen, costptset])
+            / (costpts_x[gen, costptset + 1] - costpts_x[gen, costptset])
         )
         * (V_P[gen] * baseMVA - costpts_x[gen, costptset])
         + costpts_y[gen, costptset]
@@ -1108,11 +1108,8 @@ def main():
         Smax(
             costptset.where[Ord(costptset) < numcostpts[gen]],
             (
-                (costpts_y[gen, costptset.lead(1)] - costpts_y[gen, costptset])
-                / (
-                    costpts_x[gen, costptset.lead(1)]
-                    - costpts_x[gen, costptset]
-                )
+                (costpts_y[gen, costptset + 1] - costpts_y[gen, costptset])
+                / (costpts_x[gen, costptset + 1] - costpts_x[gen, costptset])
             )
             * (V_P.l[gen] * baseMVA - costpts_x[gen, costptset])
             + costpts_y[gen, costptset]

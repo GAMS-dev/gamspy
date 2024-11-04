@@ -95,24 +95,15 @@ def main():
     ek1[nh[k]] = k1[k] == 4000 * gams_math.exp(-2500 / t[k])
     ek2[nh[k]] = k2[k] == 620000 * gams_math.exp(-5000 / t[k])
 
-    state1[nh[k.lead(1, "linear")]] = ca[k.lead(1, "linear")] == ca[k] + (
-        h / 2
-    ) * (
-        -k1[k] * ca[k] * ca[k]
-        - k1[k.lead(1, "linear")]
-        * ca[k.lead(1, "linear")]
-        * ca[k.lead(1, "linear")]
+    state1[nh[k + 1]] = ca[k + 1] == ca[k] + (h / 2) * (
+        -k1[k] * ca[k] * ca[k] - k1[k + 1] * ca[k + 1] * ca[k + 1]
     )
 
-    state2[nh[k.lead(1, "linear")]] = cb[k.lead(1, "linear")] == cb[k] + (
-        h / 2
-    ) * (
+    state2[nh[k + 1]] = cb[k + 1] == cb[k] + (h / 2) * (
         k1[k] * ca[k] * ca[k]
         - k2[k] * cb[k]
-        + k1[k.lead(1, "linear")]
-        * ca[k.lead(1, "linear")]
-        * ca[k.lead(1, "linear")]
-        - k2[k.lead(1, "linear")] * cb[k.lead(1, "linear")]
+        + k1[k + 1] * ca[k + 1] * ca[k + 1]
+        - k2[k + 1] * cb[k + 1]
     )
 
     ca.l[nh] = 1.0

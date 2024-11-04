@@ -205,7 +205,7 @@ def main():
             fromi[j] = nextj[j]
 
             if nextj.toList()[0] in visited.toList():  # if already visited...
-                tt[t] = tt[t.lag(1)]
+                tt[t] = tt[t - 1]
                 for ix_loop in ix.toList():
                     if (
                         ix_loop in visited.toList()
@@ -237,7 +237,7 @@ def main():
                 #        cutcoeff(curcut, i, j)$(x.l[i,j] < 0.5) = -1
                 rhs[curcut] = rhs[curcut] + 1
             allcuts[curcut] = True  # include this cut in set
-            curcut[cc] = curcut[cc.lag(1)]
+            curcut[cc] = curcut[cc - 1]
 
         tspcut.solve()
         print(

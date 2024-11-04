@@ -104,8 +104,8 @@ def main():
     pot_energy = (
         Sum(n.where[Ord(n) > 1 & (Ord(n) < Card(n))], m[n] * g * y[n]) + k * v
     )
-    delta_x_eq[n] = delta_x[n] == x[n] - x[n.lag(1)]
-    delta_y_eq[n] = delta_y[n] == y[n] - y[n.lag(1)]
+    delta_x_eq[n] = delta_x[n] == x[n] - x[n - 1]
+    delta_y_eq[n] = delta_y[n] == y[n] - y[n - 1]
 
     link_L0[n] = t_L0[n] == L0 + t[n]
     link_up[n].where[Ord(n) > 1] = (

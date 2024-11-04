@@ -216,14 +216,14 @@ def main():
 
     AssetInventoryCon[t, i, l] = (
         buy[t, i, l].where[Ord(t) < Card(t)]
-        + (Yield[i, t.lag(1), l] * hold[t.lag(1), i, l]).where[Ord(t) > 1]
+        + (Yield[i, t - 1, l] * hold[t - 1, i, l]).where[Ord(t) > 1]
         == sell[t, i, l].where[Ord(t) > 1]
         + hold[t, i, l].where[Ord(t) < Card(t)]
     )
 
     CashInventoryCon[t, l] = (
         Sum(i, sell[t, i, l] * (1 - PropCost)).where[Ord(t) > 1]
-        + (CashYield[t.lag(1), l] * cash[t.lag(1), l]).where[Ord(t) > 1]
+        + (CashYield[t - 1, l] * cash[t - 1, l]).where[Ord(t) > 1]
         + Number(100).where[Ord(t) == 1]
         == Sum(i, buy[t, i, l]).where[Ord(t) < Card(t)]
         + cash[t, l]
@@ -231,11 +231,11 @@ def main():
     )
 
     NonAnticConOne[i, l].where[Ord(l) < Card(l)] = (
-        hold["t0", i, l] == hold["t0", i, l.lead(1)]
+        hold["t0", i, l] == hold["t0", i, l + 1]
     )
 
     NonAnticConTwo[i, l].where[(Ord(l) == 1) | (Ord(l) == 3)] = (
-        hold["t1", i, l] == hold["t1", i, l.lead(1)]
+        hold["t1", i, l] == hold["t1", i, l + 1]
     )
 
     WealthRatioDef[l] = wealth[l] == cash["t2", l] / FinalLiability[l]

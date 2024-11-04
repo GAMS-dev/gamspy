@@ -120,8 +120,8 @@ def flow_shop(process_time_df, last_machine, last_item):
 
     oneInPosition[k] = gap.Sum(i, rank[i, k]) == 1
     oneRankPer[i] = gap.Sum(k, rank[i, k]) == 1
-    onMachRel[m, k.lead(1)] = start[m, k.lead(1)] >= comp[m, k]
-    perMachRel[m.lead(1), k] = start[m.lead(1), k] >= comp[m, k]
+    onMachRel[m, k + 1] = start[m, k + 1] >= comp[m, k]
+    perMachRel[m + 1, k] = start[m + 1, k] >= comp[m, k]
     defComp[m, k] = comp[m, k] == start[m, k] + gap.Sum(
         i, proctime[m, i] * rank[i, k]
     )

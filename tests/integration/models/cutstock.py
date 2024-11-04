@@ -142,7 +142,7 @@ def main():
 
         aip[i, pi] = gams_math.Round(y.l[i])
         pp[pi] = True
-        pi[p] = pi[p.lag(1)]
+        pi[p] = pi[p - 1]
 
     master.problem = "mip"
     master.solve(options=Options(relative_optimality_gap=0))

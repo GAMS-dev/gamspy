@@ -171,14 +171,14 @@ def main():
         + gendata[g, "c"],
     )
 
-    Genconst3[g, t] = p[g, t.lead(1)] - p[g, t] <= gendata[g, "RU0"]
+    Genconst3[g, t] = p[g, t + 1] - p[g, t] <= gendata[g, "RU0"]
 
-    Genconst4[g, t] = p[g, t.lag(1)] - p[g, t] <= gendata[g, "RD0"]
+    Genconst4[g, t] = p[g, t - 1] - p[g, t] <= gendata[g, "RD0"]
 
     constESS[t] = (
         SOC[t]
         == SOC0.where[Ord(t) == 1]
-        + SOC[t.lag(1)].where[Ord(t) > 1]
+        + SOC[t - 1].where[Ord(t) > 1]
         + Pc[t] * eta_c
         - Pd[t] / eta_d
     )

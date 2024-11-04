@@ -134,8 +134,8 @@ def main():
         + gendata[i, "c"],
     )
 
-    Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU"]
-    Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD"]
+    Genconst3[i, t] = p[i, t + 1] - p[i, t] <= gendata[i, "RU"]
+    Genconst4[i, t] = p[i, t - 1] - p[i, t] <= gendata[i, "RD"]
     balance[t] = Sum(i, p[i, t]) >= demand[t]
     EMcalc[...] = (
         Sum(

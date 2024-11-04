@@ -139,7 +139,7 @@ def main():
     utility = Sum(t, beta[t] * gams_math.log(C[t]))
     production[t] = Y[t] == a * (K[t] ** b) * (L[t] ** (1 - b))
     allocation[t] = Y[t] == C[t] + I[t]
-    accumulation[tnotlast[t]] = K[t.lead(1)] == (1 - delta) * K[t] + I[t]
+    accumulation[tnotlast[t]] = K[t + 1] == (1 - delta) * K[t] + I[t]
     final[tlast] = I[tlast] >= (g + delta) * K[tlast]
 
     # Bounds.

@@ -306,7 +306,7 @@ def main():
     R_nl[n, t].where[nl[n]] = (
         s[n, t]
         == Ini_S[n].where[Ord(t) == 1]
-        + s[n, t.lag(1)].where[Ord(t) >= 1]
+        + s[n, t - 1].where[Ord(t) >= 1]
         + q[n, t]
         - r[n, t]
     )

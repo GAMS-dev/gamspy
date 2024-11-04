@@ -229,11 +229,11 @@ def main():
         Sum(i, F[t, i] * x[i])
         + (Budget - Sum(i, Price[i] * x[i])).where[tau[t] == 0]
         + borrow[t].where[tau[t] < Horizon]
-        + ((1 + rf[t.lag(1)]) * surplus[t.lag(1)]).where[tau[t] > 0]
+        + ((1 + rf[t - 1]) * surplus[t - 1]).where[tau[t] > 0]
         == Liability[t].where[tau[t] > 0]
         + surplus[t].where[tau[t] < Horizon]
         + HorizonRet.where[tau[t] == Horizon]
-        + ((1 + rf[t.lag(1)] + spread) * borrow[t.lag(1)]).where[tau[t] > 0]
+        + ((1 + rf[t - 1] + spread) * borrow[t - 1]).where[tau[t] > 0]
     )
 
     HorizonMod = Model(
