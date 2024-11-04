@@ -28,7 +28,7 @@ json_url = "https://gamspy.readthedocs.io/en/latest/_static/switcher.json"
 
 is_readthedocs = os.environ.get("READTHEDOCS_VERSION", "dev")
 if is_readthedocs == "dev":
-    json_url = f"docs/_build/html/_static/switcher.json"
+    json_url = "docs/_build/html/_static/switcher.json"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
