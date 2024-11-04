@@ -168,13 +168,13 @@ class MiroJSONEncoder:
     ):
         if symbol.dimension < 2:
             raise ValidationError(
-                "The symbol for miro table must have at least two"
-                " domain elements."
+                f"miro table symbol `{symbol}` must have at least 2"
+                " domain elements " + f"but got {symbol.dimension}."
             )
 
         if not isinstance(last_item, (gp.Set, gp.Alias)):
             raise ValidationError(
-                "The last domain of the miro table must be a set or an alias"
+                f"The last domain of the miro table symbol `{symbol}` must be a set or an alias"
                 f" but found {type(last_item)}"
             )
 
