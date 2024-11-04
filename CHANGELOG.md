@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.1.1
+------------
+- Documentation
+  - Add a favicon.
+
 GAMSPy 1.1.0
 ------------
 - General

@@ -28,7 +28,7 @@ json_url = "https://gamspy.readthedocs.io/en/latest/_static/switcher.json"
 
 is_readthedocs = os.environ.get("READTHEDOCS_VERSION", "dev")
 if is_readthedocs == "dev":
-    json_url = "docs/_static/switcher.json"
+    json_url = f"docs/_build/html/_static/switcher.json"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -55,6 +55,7 @@ extensions = [
     "sphinx_design",
     "sphinx_copybutton",
     "sphinx.ext.napoleon",
+    "sphinx_favicon"
 ]
 
 copybutton_prompt_text = ">>> "
@@ -108,3 +109,5 @@ autodoc_member_order = "groupwise"
 
 # Display todos by setting to True
 todo_include_todos = False
+
+favicons = ["gams.ico"]
