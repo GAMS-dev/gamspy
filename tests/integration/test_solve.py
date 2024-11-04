@@ -4,6 +4,7 @@ import concurrent.futures
 import logging
 import math
 import os
+import platform
 import shutil
 import sys
 import time
@@ -778,8 +779,9 @@ def test_solve(data):
 
 
 # Testing it manually works fine but it doesn't get the interrupt on pipeline for some reason.
-@pytest.mark.skip(
-    reason="GAMS incremental mode requires certain changes for this to work reliably."
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="GAMS incremental mode requires certain changes for this to work reliably.",
 )
 def test_interrupt(data):
     m, *_ = data

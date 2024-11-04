@@ -87,10 +87,12 @@ def open_connection(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         errors="replace",
+        start_new_session=platform.system() != "Windows",
     )
 
     def handler(signum, frame):
-        os.kill(process.pid, signal.SIGINT)
+        if platform.system() != "Windows":
+            os.kill(process.pid, signal.SIGINT)
 
     signal.signal(signal.SIGINT, handler)
 
@@ -331,10 +333,10 @@ class Container(gt.Container):
                     break
 
     def _interrupt(self) -> None:
-        if platform.system() in ("Linux", "Darwin"):
-            self._process.send_signal(signal.SIGINT)
-        else:
+        if platform.system() == "Windows":
             os.kill(self._process.pid, signal.CTRL_C_EVENT)
+        else:
+            os.kill(self._process.pid, signal.SIGINT)
 
     def _send_job(
         self,
