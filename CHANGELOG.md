@@ -5,6 +5,7 @@ GAMSPy 1.1.1
 ------------
 - General
   - Fix non-zero return code issue in case there is an error in the script. In case the return code is non-zero, GAMSPy will not launch GAMS MIRO.
+  - Allow alternative `set +/- n` syntax for lead and lag operations. 
 - Documentation
   - Add a favicon.
 
