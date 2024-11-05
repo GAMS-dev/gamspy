@@ -365,6 +365,7 @@ class Container(gt.Container):
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
+            self._stop_socket()
             traceback.print_exc()
             os._exit(1)
 
