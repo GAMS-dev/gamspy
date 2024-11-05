@@ -5,12 +5,11 @@ leg-test-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
-    - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library' tests
-    - pytest -m "doc"
+    - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   artifacts:
@@ -29,12 +28,11 @@ leg-test-3.12:
   tags: [linux]
   image: python:3.12
   script:
-    - pip install virtualenv && virtualenv venv312 && source venv312/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv312 && source venv312/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
-    - pytest -m "doc"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -46,12 +44,11 @@ leg-test-3.11:
   tags: [linux]
   image: python:3.11
   script:
-    - pip install virtualenv && virtualenv venv311 && source venv311/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv311 && source venv311/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
-    - pytest -m "doc"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -63,12 +60,11 @@ leg-test-3.10:
   tags: [linux]
   image: python:3.10
   script:
-    - pip install virtualenv && virtualenv venv310 && source venv310/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv310 && source venv310/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
-    - pytest -m "doc"
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -80,13 +76,13 @@ leg-test-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - pip install wheel build requests
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
+    - python -m pip install wheel build requests
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch gamspy --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi
-    - pytest -x -v -s -m 'unit or integration or model_library' tests
+    - pytest -x -v -s -m 'unit or integration or model_library or doc' tests
 
 #### ENGINE #####
 leg-engine-3.13:
@@ -96,9 +92,9 @@ leg-engine-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 leg-engine-3.9:
@@ -108,9 +104,9 @@ leg-engine-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
@@ -121,9 +117,9 @@ leg-neos-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
 leg-neos-3.9:
@@ -133,7 +129,7 @@ leg-neos-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests

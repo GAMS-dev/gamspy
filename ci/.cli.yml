@@ -3,9 +3,9 @@ leg-cli-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 leg-cli-3.9:
@@ -13,11 +13,11 @@ leg-cli-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - pip install virtualenv
+    - python -m pip install virtualenv
     - virtualenv venv39
     - source venv39/bin/activate
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.13:
@@ -29,8 +29,8 @@ dac-cli-3.13:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.9:
@@ -42,8 +42,8 @@ dac-cli-3.9:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 deg-cli-3.13:
@@ -54,8 +54,8 @@ deg-cli-3.13:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
   rules:
@@ -72,8 +72,8 @@ deg-cli-3.9:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install wheel build
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
   rules:
@@ -94,7 +94,7 @@ wei-cli-3.13:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
     - python -m pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
 
@@ -112,6 +112,6 @@ wei-cli-3.9:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
     - python -m pip install wheel build
-    - python scripts/reinstall.py
+    - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
