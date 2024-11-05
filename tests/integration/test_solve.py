@@ -4,6 +4,7 @@ import concurrent.futures
 import logging
 import math
 import os
+import platform
 import shutil
 import sys
 import time
@@ -777,12 +778,12 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
-# Testing it manually works fine but it doesn't get the interrupt on pipeline for some reason.
-@pytest.mark.skip(
-    reason="GAMS incremental mode requires certain changes for this to work reliably."
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="It doesn't work in Docker Windows Server container.",
 )
-def test_interrupt(data):
-    m, *_ = data
+def test_interrupt():
+    m = Container()
 
     f = Set(
         m,
@@ -854,16 +855,18 @@ def test_interrupt(data):
     )
 
     def interrupt_gams(model):
-        time.sleep(3)
+        time.sleep(4)
         model.interrupt()
 
     import threading
 
-    threading.Thread(target=interrupt_gams, args=(xdice,)).start()
+    thread = threading.Thread(target=interrupt_gams, args=(xdice,))
+    thread.start()
 
     xdice.solve(output=sys.stdout)
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
+    thread.join()
 
     after_interrupt = Set(m, records=range(3))
     assert after_interrupt.toList() == ["0", "1", "2"]
