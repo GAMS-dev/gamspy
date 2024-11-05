@@ -6,6 +6,7 @@ leg-cli-3.13:
     - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 leg-cli-3.9:
@@ -18,6 +19,7 @@ leg-cli-3.9:
     - source venv39/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.13:
@@ -31,6 +33,7 @@ dac-cli-3.13:
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.9:
@@ -44,6 +47,7 @@ dac-cli-3.9:
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - pytest -x -v -s -m 'cli' tests
 
 deg-cli-3.13:
@@ -56,6 +60,7 @@ deg-cli-3.13:
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
   rules:
@@ -74,6 +79,7 @@ deg-cli-3.9:
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
   rules:
@@ -95,6 +101,7 @@ wei-cli-3.13:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
 
@@ -113,5 +120,6 @@ wei-cli-3.9:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests

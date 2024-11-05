@@ -8,6 +8,7 @@ leg-test-3.13:
     - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
@@ -31,6 +32,7 @@ leg-test-3.12:
     - python -m pip install virtualenv && virtualenv venv312 && source venv312/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -47,6 +49,7 @@ leg-test-3.11:
     - python -m pip install virtualenv && virtualenv venv311 && source venv311/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -63,6 +66,7 @@ leg-test-3.10:
     - python -m pip install virtualenv && virtualenv venv310 && source venv310/bin/activate
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -79,6 +83,7 @@ leg-test-3.9:
     - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
     - python -m pip install wheel build requests
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/fproske/gmswebui.git --branch gamspy --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then cd miro && git status && ./scripts/test_gamspy_models.sh && cd ..; fi

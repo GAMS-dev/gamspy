@@ -11,6 +11,7 @@ leg-performance:
     - python -m pip install wheel build psutil
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
+    - gamspy install license $LOCAL_LICENSE
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
     - gamspy install solver mpsge scip reshop
     - python scripts/performance/performance.py

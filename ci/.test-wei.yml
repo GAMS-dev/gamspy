@@ -14,6 +14,7 @@ wei-test-3.13:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
@@ -38,6 +39,7 @@ wei-test-3.12:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -60,6 +62,7 @@ wei-test-3.11:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -82,6 +85,7 @@ wei-test-3.10:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -104,6 +108,7 @@ wei-test-3.9:
     - python --version
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
+    - gamspy install license $LOCAL_LICENSE
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library or doc' tests
 
