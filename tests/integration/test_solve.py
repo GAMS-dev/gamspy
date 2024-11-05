@@ -4,7 +4,6 @@ import concurrent.futures
 import logging
 import math
 import os
-import platform
 import shutil
 import sys
 import time
@@ -778,13 +777,8 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
-# Testing it manually works fine but it doesn't get the interrupt on pipeline for some reason.
-@pytest.mark.skipif(
-    platform.system() == "Windows",
-    reason="GAMS incremental mode requires certain changes for this to work reliably.",
-)
-def test_interrupt(data):
-    m, *_ = data
+def test_interrupt():
+    m = Container()
 
     f = Set(
         m,
@@ -856,7 +850,7 @@ def test_interrupt(data):
     )
 
     def interrupt_gams(model):
-        time.sleep(3)
+        time.sleep(4)
         model.interrupt()
 
     import threading
