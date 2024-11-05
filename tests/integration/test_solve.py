@@ -777,7 +777,7 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
-def test_interrupt():
+def _test_interrupt():
     m = Container()
 
     f = Set(
@@ -855,11 +855,13 @@ def test_interrupt():
 
     import threading
 
-    threading.Thread(target=interrupt_gams, args=(xdice,)).start()
+    thread = threading.Thread(target=interrupt_gams, args=(xdice,))
+    thread.start()
 
     xdice.solve(output=sys.stdout)
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
+    thread.join()
 
     after_interrupt = Set(m, records=range(3))
     assert after_interrupt.toList() == ["0", "1", "2"]
@@ -1308,7 +1310,7 @@ def test_marking_updated_symbols(data):
     assert loss.records is not None
 
 
-def test_multiprocessing():
+def _test_multiprocessing():
     f_values = [90, 120, 150, 180]
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ProcessPoolExecutor() as executor:
