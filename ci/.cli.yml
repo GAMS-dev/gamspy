@@ -61,12 +61,7 @@ deg-cli-3.13:
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
-    - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 deg-cli-3.9:
   stage: cli
@@ -80,12 +75,7 @@ deg-cli-3.9:
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
-    - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
-  rules:
-    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
-      when: on_success
-    - when: never
 
 wei-cli-3.13:
   stage: cli
@@ -102,7 +92,6 @@ wei-cli-3.13:
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
-    - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
 
 wei-cli-3.9:
@@ -121,5 +110,4 @@ wei-cli-3.9:
     - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install license $LOCAL_LICENSE
-    - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'cli' tests
