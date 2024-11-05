@@ -4,10 +4,10 @@ leg-upload-wheel:
   tags: [puma]
   image: python:3.12
   script:
-    - pip install virtualenv
+    - python -m pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - pip install wheel build twine pip-audit
+    - python -m pip install wheel build twine pip-audit
     - pip-audit -v
     - if [ "$?" == "0" ]; then echo "Audit passed!"; else exit 1; fi
     - python -m build && twine upload dist/* -u $PF_PYPI_USERNAME -p $PF_PYPI_PASSWORD
