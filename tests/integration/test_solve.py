@@ -4,6 +4,7 @@ import concurrent.futures
 import logging
 import math
 import os
+import platform
 import shutil
 import sys
 import time
@@ -777,6 +778,10 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Windows",
+    reason="It doesn't work in Docker Windows Server container.",
+)
 def test_interrupt():
     m = Container()
 
