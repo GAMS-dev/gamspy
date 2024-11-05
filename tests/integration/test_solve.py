@@ -777,7 +777,7 @@ def test_solve(data):
     pytest.raises(Exception, model.solve)
 
 
-def _test_interrupt():
+def test_interrupt():
     m = Container()
 
     f = Set(
@@ -1310,7 +1310,7 @@ def test_marking_updated_symbols(data):
     assert loss.records is not None
 
 
-def _test_multiprocessing():
+def test_multiprocessing():
     f_values = [90, 120, 150, 180]
     expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
     with concurrent.futures.ProcessPoolExecutor() as executor:
