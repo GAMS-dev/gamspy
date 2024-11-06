@@ -95,7 +95,8 @@ wei-cli-3.13:
     - conda activate gamspy-env-3.13
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build && python -m build
+    - python -m pip install wheel build
+    - python -m build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
