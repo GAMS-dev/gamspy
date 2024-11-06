@@ -81,7 +81,7 @@ The following example shows the use of ``lag()`` on the right-hand side of an as
     
     a[t] = 1986 + gp.Ord(t)
     b[t] = -1
-    b[t] = a - 1 # or a[t.lag(1, "linear")]
+    b[t] = a[t - 1] # or a[t.lag(1, "linear")]
 
 This sets the values for the parameter ``a`` to ``1987``, ``1988`` up to ``1991``
 corresponding to the labels ``"y-1987"``, ``"y-1988"`` and so on.
