@@ -13,7 +13,7 @@ wei-test-3.13:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
     - python -m pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
@@ -33,7 +33,7 @@ wei-test-3.12:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.12;C:\Miniconda\envs\gamspy-env-3.12\Scripts;" + $env:Path
     - python --version
     - python -m pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -55,7 +55,7 @@ wei-test-3.11:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.11;C:\Miniconda\envs\gamspy-env-3.11\Scripts;" + $env:Path
     - python --version
     - python -m pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -77,7 +77,7 @@ wei-test-3.10:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.10;C:\Miniconda\envs\gamspy-env-3.10\Scripts;" + $env:Path
     - python --version
     - python -m pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
@@ -99,7 +99,7 @@ wei-test-3.9:
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
     - python -m pip install .[dev,test] --force-reinstall
-    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
+    - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
     - pytest -x -v -s -m 'doc'
