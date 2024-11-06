@@ -8,16 +8,11 @@ deg-test-3.13:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-  artifacts:
-    name: macos_x86_64_3.13
-    expire_in: 2 hours
-    paths: [dist/*]
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -32,7 +27,6 @@ deg-test-3.12:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" python=3.12
     - conda activate "$(pwd)/gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
@@ -50,7 +44,6 @@ deg-test-3.11:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
     - conda activate "$(pwd)/gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
@@ -68,7 +61,6 @@ deg-test-3.10:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.10${CI_COMMIT_SHORT_SHA}" python=3.10
     - conda activate "$(pwd)/gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
@@ -86,7 +78,6 @@ deg-test-3.9:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - gamspy install solver mpsge scip reshop
     - pytest -x -v -s -m 'unit or integration or model_library' tests
@@ -107,7 +98,6 @@ deg-engine-3.13:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -121,7 +111,6 @@ deg-engine-3.9:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -136,7 +125,6 @@ deg-neos-3.13:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
     - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
@@ -150,6 +138,5 @@ deg-neos-3.9:
     - ulimit -n 10240
     - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
     - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests

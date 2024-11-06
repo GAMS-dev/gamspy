@@ -12,17 +12,12 @@ wei-test-3.13:
     - conda activate gamspy-env-3.13
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
     - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
-  artifacts:
-    name: windows_3.13
-    expire_in: 2 hours
-    paths: [dist/*]
 
 wei-test-3.12:
   stage: test
@@ -37,7 +32,6 @@ wei-test-3.12:
     - conda activate gamspy-env-3.12
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.12;C:\Miniconda\envs\gamspy-env-3.12\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -60,7 +54,6 @@ wei-test-3.11:
     - conda activate gamspy-env-3.11
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.11;C:\Miniconda\envs\gamspy-env-3.11\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -83,7 +76,6 @@ wei-test-3.10:
     - conda activate gamspy-env-3.10
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.10;C:\Miniconda\envs\gamspy-env-3.10\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -106,7 +98,6 @@ wei-test-3.9:
     - conda activate gamspy-env-3.9
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -128,7 +119,6 @@ wei-engine-3.13:
     - conda activate gamspy-env-3.13
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -146,7 +136,6 @@ wei-engine-3.9:
     - conda activate gamspy-env-3.9
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -165,7 +154,6 @@ wei-neos-3.13:
     - conda activate gamspy-env-3.13
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
@@ -183,6 +171,5 @@ wei-neos-3.9:
     - conda activate gamspy-env-3.9
     - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests

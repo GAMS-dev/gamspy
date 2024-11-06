@@ -8,7 +8,6 @@ leg-build-docs:
     - python -m pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[test,doc]
     - pytest --nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user

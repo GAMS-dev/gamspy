@@ -6,7 +6,6 @@ leg-test-3.13:
   image: python:3.13
   script:
     - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -18,9 +17,6 @@ leg-test-3.13:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
-    name: linux_3.13
-    expire_in: 2 hours
-    paths: [dist/*]
   coverage: '/TOTAL.*\s+(\d+\%)/'
 
 leg-test-3.12:
@@ -30,7 +26,6 @@ leg-test-3.12:
   image: python:3.12
   script:
     - python -m pip install virtualenv && virtualenv venv312 && source venv312/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -47,7 +42,6 @@ leg-test-3.11:
   image: python:3.11
   script:
     - python -m pip install virtualenv && virtualenv venv311 && source venv311/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -64,7 +58,6 @@ leg-test-3.10:
   image: python:3.10
   script:
     - python -m pip install virtualenv && virtualenv venv310 && source venv310/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -81,7 +74,6 @@ leg-test-3.9:
   image: python:3.9
   script:
     - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/gamspy_license.txt
     - gamspy install solver mpsge scip reshop
@@ -99,7 +91,6 @@ leg-engine-3.13:
   image: python:3.13
   script:
     - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -111,7 +102,6 @@ leg-engine-3.9:
   image: python:3.9
   script:
     - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
@@ -124,7 +114,6 @@ leg-neos-3.13:
   image: python:3.13
   script:
     - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
@@ -136,6 +125,5 @@ leg-neos-3.9:
   image: python:3.9
   script:
     - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install wheel build
     - python -m pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
