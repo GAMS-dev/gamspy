@@ -134,7 +134,7 @@ def main():
     cost = Sum(t, 300 + 6 * others[t] + 0.0025 * (others[t] ** 2))
     lowoil[t] = poil[t] >= 100 * status[t]
     maxoil[t] = poil[t] <= 500 * status[t]
-    floweq[t] = volume[t] == volume[t.lag(1)] + 500 - oil[t] + initlev[t]
+    floweq[t] = volume[t] == volume[t - 1] + 500 - oil[t] + initlev[t]
     oileq[t] = oil[t] == 50 * status[t] + poil[t] + 0.005 * (poil[t] ** 2)
     demcons[t] = poil[t] + others[t] >= load[t]
 

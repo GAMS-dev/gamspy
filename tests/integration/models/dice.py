@@ -99,7 +99,7 @@ def main():
         fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
         >= fval[dice.lead(1, type="circular"), fp] + 1
     )
-    eq4[dice, f.lag(1)] = fval[dice, f.lag(1)] + 1 <= fval[dice, f]
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
 
     xdice = Model(
         m,

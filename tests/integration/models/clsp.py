@@ -162,7 +162,7 @@ def main():
     stock = Equation(
         m, name="stock", domain=[k, t], description="Stock balance equation"
     )
-    stock[...] = Z[k, t] == Z[k, t.lag(1)] + X[k, t] - d[k, t]
+    stock[...] = Z[k, t] == Z[k, t - 1] + X[k, t] - d[k, t]
 
     production = Equation(
         m, name="production", domain=[k, t], description="Ensure production"

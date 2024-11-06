@@ -1562,80 +1562,52 @@ def main():
     dpy[j, t].where[py0[j, t]] = (py1[j, t] / py0[j, t] - 1) * 100
     depsilon[t].where[epsilon0[t]] = (epsilon1[t] / epsilon0[t] - 1) * 100
     dpk[t].where[pk0[t]] = (pk1[t] / pk0[t] - 1) * 100
-    gY0[j, t.lead(1)].where[Y0[j, t]] = (Y0[j, t.lead(1)] / Y0[j, t] - 1) * 100
-    gF0[h, j, t.lead(1)].where[F0[h, j, t]] = (
-        F0[h, j, t.lead(1)] / F0[h, j, t] - 1
+    gY0[j, t + 1].where[Y0[j, t]] = (Y0[j, t + 1] / Y0[j, t] - 1) * 100
+    gF0[h, j, t + 1].where[F0[h, j, t]] = (
+        F0[h, j, t + 1] / F0[h, j, t] - 1
     ) * 100
-    gX0[i, j, t.lead(1)].where[X0[i, j, t]] = (
-        X0[i, j, t.lead(1)] / X0[i, j, t] - 1
+    gX0[i, j, t + 1].where[X0[i, j, t]] = (
+        X0[i, j, t + 1] / X0[i, j, t] - 1
     ) * 100
-    gZ0[j, t.lead(1)].where[Z0[j, t]] = (Z0[j, t.lead(1)] / Z0[j, t] - 1) * 100
-    gXp0[i, t.lead(1)].where[Xp0[i, t]] = (
-        Xp0[i, t.lead(1)] / Xp0[i, t] - 1
+    gZ0[j, t + 1].where[Z0[j, t]] = (Z0[j, t + 1] / Z0[j, t] - 1) * 100
+    gXp0[i, t + 1].where[Xp0[i, t]] = (Xp0[i, t + 1] / Xp0[i, t] - 1) * 100
+    gXv0[i, t + 1].where[Xv0[i, t]] = (Xv0[i, t + 1] / Xv0[i, t] - 1) * 100
+    gE0[i, t + 1].where[E0[i, t]] = (E0[i, t + 1] / E0[i, t] - 1) * 100
+    gM0[i, t + 1].where[M0[i, t]] = (M0[i, t + 1] / M0[i, t] - 1) * 100
+    gQ0[i, t + 1].where[Q0[i, t]] = (Q0[i, t + 1] / Q0[i, t] - 1) * 100
+    gD0[i, t + 1].where[D0[i, t]] = (D0[i, t + 1] / D0[i, t] - 1) * 100
+    gSp0[t + 1].where[Sp0[t]] = (Sp0[t + 1] / Sp0[t] - 1) * 100
+    gTd0[t + 1].where[Td0[t]] = (Td0[t + 1] / Td0[t] - 1) * 100
+    gTz0[j, t + 1].where[Tz0[j, t]] = (Tz0[j, t + 1] / Tz0[j, t] - 1) * 100
+    gTm0[i, t + 1].where[Tm0[i, t]] = (Tm0[i, t + 1] / Tm0[i, t] - 1) * 100
+    gFF0[h, t + 1].where[FF0[h, t]] = (FF0[h, t + 1] / FF0[h, t] - 1) * 100
+    gII0[j, t + 1].where[II0[j, t]] = (II0[j, t + 1] / II0[j, t] - 1) * 100
+    gIII0[t + 1].where[III0[t]] = (III0[t + 1] / III0[t] - 1) * 100
+    gKK0[j, t + 1].where[KK0[j, t]] = (KK0[j, t + 1] / KK0[j, t] - 1) * 100
+    gCC0[t + 1].where[CC0[t]] = (CC0[t + 1] / CC0[t] - 1) * 100
+    gY1[j, t + 1].where[Y1[j, t]] = (Y1[j, t + 1] / Y1[j, t] - 1) * 100
+    gF1[h, j, t + 1].where[F1[h, j, t]] = (
+        F1[h, j, t + 1] / F1[h, j, t] - 1
     ) * 100
-    gXv0[i, t.lead(1)].where[Xv0[i, t]] = (
-        Xv0[i, t.lead(1)] / Xv0[i, t] - 1
+    gX1[i, j, t + 1].where[X1[i, j, t]] = (
+        X1[i, j, t + 1] / X1[i, j, t] - 1
     ) * 100
-    gE0[i, t.lead(1)].where[E0[i, t]] = (E0[i, t.lead(1)] / E0[i, t] - 1) * 100
-    gM0[i, t.lead(1)].where[M0[i, t]] = (M0[i, t.lead(1)] / M0[i, t] - 1) * 100
-    gQ0[i, t.lead(1)].where[Q0[i, t]] = (Q0[i, t.lead(1)] / Q0[i, t] - 1) * 100
-    gD0[i, t.lead(1)].where[D0[i, t]] = (D0[i, t.lead(1)] / D0[i, t] - 1) * 100
-    gSp0[t.lead(1)].where[Sp0[t]] = (Sp0[t.lead(1)] / Sp0[t] - 1) * 100
-    gTd0[t.lead(1)].where[Td0[t]] = (Td0[t.lead(1)] / Td0[t] - 1) * 100
-    gTz0[j, t.lead(1)].where[Tz0[j, t]] = (
-        Tz0[j, t.lead(1)] / Tz0[j, t] - 1
-    ) * 100
-    gTm0[i, t.lead(1)].where[Tm0[i, t]] = (
-        Tm0[i, t.lead(1)] / Tm0[i, t] - 1
-    ) * 100
-    gFF0[h, t.lead(1)].where[FF0[h, t]] = (
-        FF0[h, t.lead(1)] / FF0[h, t] - 1
-    ) * 100
-    gII0[j, t.lead(1)].where[II0[j, t]] = (
-        II0[j, t.lead(1)] / II0[j, t] - 1
-    ) * 100
-    gIII0[t.lead(1)].where[III0[t]] = (III0[t.lead(1)] / III0[t] - 1) * 100
-    gKK0[j, t.lead(1)].where[KK0[j, t]] = (
-        KK0[j, t.lead(1)] / KK0[j, t] - 1
-    ) * 100
-    gCC0[t.lead(1)].where[CC0[t]] = (CC0[t.lead(1)] / CC0[t] - 1) * 100
-    gY1[j, t.lead(1)].where[Y1[j, t]] = (Y1[j, t.lead(1)] / Y1[j, t] - 1) * 100
-    gF1[h, j, t.lead(1)].where[F1[h, j, t]] = (
-        F1[h, j, t.lead(1)] / F1[h, j, t] - 1
-    ) * 100
-    gX1[i, j, t.lead(1)].where[X1[i, j, t]] = (
-        X1[i, j, t.lead(1)] / X1[i, j, t] - 1
-    ) * 100
-    gZ1[j, t.lead(1)].where[Z1[j, t]] = (Z1[j, t.lead(1)] / Z1[j, t] - 1) * 100
-    gXp1[i, t.lead(1)].where[Xp1[i, t]] = (
-        Xp1[i, t.lead(1)] / Xp1[i, t] - 1
-    ) * 100
-    gXv1[i, t.lead(1)].where[Xv1[i, t]] = (
-        Xv1[i, t.lead(1)] / Xv1[i, t] - 1
-    ) * 100
-    gE1[i, t.lead(1)].where[E1[i, t]] = (E1[i, t.lead(1)] / E1[i, t] - 1) * 100
-    gM1[i, t.lead(1)].where[M1[i, t]] = (M1[i, t.lead(1)] / M1[i, t] - 1) * 100
-    gQ1[i, t.lead(1)].where[Q1[i, t]] = (Q1[i, t.lead(1)] / Q1[i, t] - 1) * 100
-    gD1[i, t.lead(1)].where[D1[i, t]] = (D1[i, t.lead(1)] / D1[i, t] - 1) * 100
-    gSp1[t.lead(1)].where[Sp1[t]] = (Sp1[t.lead(1)] / Sp1[t] - 1) * 100
-    gTd1[t.lead(1)].where[Td1[t]] = (Td1[t.lead(1)] / Td1[t] - 1) * 100
-    gTz1[j, t.lead(1)].where[Tz1[j, t]] = (
-        Tz1[j, t.lead(1)] / Tz1[j, t] - 1
-    ) * 100
-    gTm1[i, t.lead(1)].where[Tm1[i, t]] = (
-        Tm1[i, t.lead(1)] / Tm1[i, t] - 1
-    ) * 100
-    gFF1[h, t.lead(1)].where[FF1[h, t]] = (
-        FF1[h, t.lead(1)] / FF1[h, t] - 1
-    ) * 100
-    gII1[j, t.lead(1)].where[II1[j, t]] = (
-        II1[j, t.lead(1)] / II1[j, t] - 1
-    ) * 100
-    gIII1[t.lead(1)].where[III1[t]] = (III1[t.lead(1)] / III1[t] - 1) * 100
-    gKK1[j, t.lead(1)].where[KK1[j, t]] = (
-        KK1[j, t.lead(1)] / KK1[j, t] - 1
-    ) * 100
-    gCC1[t.lead(1)].where[CC1[t]] = (CC1[t.lead(1)] / CC1[t] - 1) * 100
+    gZ1[j, t + 1].where[Z1[j, t]] = (Z1[j, t + 1] / Z1[j, t] - 1) * 100
+    gXp1[i, t + 1].where[Xp1[i, t]] = (Xp1[i, t + 1] / Xp1[i, t] - 1) * 100
+    gXv1[i, t + 1].where[Xv1[i, t]] = (Xv1[i, t + 1] / Xv1[i, t] - 1) * 100
+    gE1[i, t + 1].where[E1[i, t]] = (E1[i, t + 1] / E1[i, t] - 1) * 100
+    gM1[i, t + 1].where[M1[i, t]] = (M1[i, t + 1] / M1[i, t] - 1) * 100
+    gQ1[i, t + 1].where[Q1[i, t]] = (Q1[i, t + 1] / Q1[i, t] - 1) * 100
+    gD1[i, t + 1].where[D1[i, t]] = (D1[i, t + 1] / D1[i, t] - 1) * 100
+    gSp1[t + 1].where[Sp1[t]] = (Sp1[t + 1] / Sp1[t] - 1) * 100
+    gTd1[t + 1].where[Td1[t]] = (Td1[t + 1] / Td1[t] - 1) * 100
+    gTz1[j, t + 1].where[Tz1[j, t]] = (Tz1[j, t + 1] / Tz1[j, t] - 1) * 100
+    gTm1[i, t + 1].where[Tm1[i, t]] = (Tm1[i, t + 1] / Tm1[i, t] - 1) * 100
+    gFF1[h, t + 1].where[FF1[h, t]] = (FF1[h, t + 1] / FF1[h, t] - 1) * 100
+    gII1[j, t + 1].where[II1[j, t]] = (II1[j, t + 1] / II1[j, t] - 1) * 100
+    gIII1[t + 1].where[III1[t]] = (III1[t + 1] / III1[t] - 1) * 100
+    gKK1[j, t + 1].where[KK1[j, t]] = (KK1[j, t + 1] / KK1[j, t] - 1) * 100
+    gCC1[t + 1].where[CC1[t]] = (CC1[t + 1] / CC1[t] - 1) * 100
 
     # Welfare measure: Hicksian equivalent variations ---------------
     EV[t] = (CC1[t] - CC0[t]) / a / Product(i, (alpha[i] / 1) ** alpha[i])

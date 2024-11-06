@@ -342,11 +342,11 @@ def main():
     )
 
     eq6[i, t].where[(GenD[i, "Pmax"]) & (Ord(t) > 1)] = (
-        Pg[i, t] - Pg[i, t.lag(1)] <= GenD[i, "RU"] / Sbase
+        Pg[i, t] - Pg[i, t - 1] <= GenD[i, "RU"] / Sbase
     )
 
     eq7[i, t].where[(GenD[i, "Pmax"]) & (Ord(t) < Card(t))] = (
-        Pg[i, t] - Pg[i, t.lead(1)] <= GenD[i, "RD"] / Sbase
+        Pg[i, t] - Pg[i, t + 1] <= GenD[i, "RD"] / Sbase
     )
 
     loadflow = Model(

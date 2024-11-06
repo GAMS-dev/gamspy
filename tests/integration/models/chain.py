@@ -109,21 +109,20 @@ def main():
         0.5
         * h
         * Sum(
-            nh[i.lead(1)],
+            nh[i + 1],
             x[i] * gams_math.sqrt(1 + sqr(u[i]))
-            + x[i.lead(1)] * gams_math.sqrt(1 + sqr(u[i.lead(1)])),
+            + x[i + 1] * gams_math.sqrt(1 + sqr(u[i + 1])),
         )
     )
 
-    x_eqn[i.lead(1)] = x[i.lead(1)] == x[i] + 0.5 * h * (u[i] + u[i.lead(1)])
+    x_eqn[i + 1] = x[i + 1] == x[i] + 0.5 * h * (u[i] + u[i + 1])
 
     length_eqn[...] = (
         0.5
         * h
         * Sum(
-            nh[i.lead(1)],
-            gams_math.sqrt(1 + sqr(u[i]))
-            + gams_math.sqrt(1 + sqr(u[i.lead(1)])),
+            nh[i + 1],
+            gams_math.sqrt(1 + sqr(u[i])) + gams_math.sqrt(1 + sqr(u[i + 1])),
         )
         == L
     )

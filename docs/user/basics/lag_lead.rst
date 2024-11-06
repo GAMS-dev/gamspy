@@ -9,7 +9,7 @@ Lag and Lead
 ************
 
 ``Lag`` and ``Lead`` operators can be used on static sets only, via the methods
-``lag()`` and ``lead()``. They are used to relate the current member of an
+``lag()`` and ``lead()`` or via regular Python addition syntax. They are used to relate the current member of an
 ordered set to the previous or next member of the set. Both ``lag()`` and
 ``lead()`` require the argument ``n`` indicating the element offset to be
 applied. The optional argument ``type="linear"`` can be used to specify
@@ -22,9 +22,9 @@ table gives an overview of the available combinations:
 
    * - Operation
      - Description
-   * - ``i.lag(n, "linear")``
+   * - ``i.lag(n, "linear")`` or ``i - n``.
      - Refers to the element of the ordered set ``i`` whose relative position in the set is ``Ord(i)-n``.
-   * - ``i.lead(n, "linear")``
+   * - ``i.lead(n, "linear")`` or ``i + n``
      - Refers to the element of the ordered set ``i`` whose relative position in the set is ``Ord(i)+n``.
    * - ``i.lag(n, "circular")``
      - Same as ``i.lag(n, "linear")``, only here the first element of the set is assumed to be preceded by the last element of the set, thus forming a circle of elements.
@@ -81,7 +81,7 @@ The following example shows the use of ``lag()`` on the right-hand side of an as
     
     a[t] = 1986 + gp.Ord(t)
     b[t] = -1
-    b[t] = a[t.lag(1, "linear")]
+    b[t] = a[t - 1] # or a[t.lag(1, "linear")]
 
 This sets the values for the parameter ``a`` to ``1987``, ``1988`` up to ``1991``
 corresponding to the labels ``"y-1987"``, ``"y-1988"`` and so on.
@@ -112,7 +112,7 @@ left-hand side of an assignment::
     
     a[t] = 1986 + gp.Ord(t)
     c[t] = -1
-    c[t.lead(2, "linear")] = a[t]
+    c[t + 2] = a[t] # or c[t.lead(2, "linear")] = a[t]
     
 Here, the assignment to ``c`` involves the ``lead()`` operator on the left-hand
 side. It is best to spell out step-by-step how this assignment is made. For
@@ -198,7 +198,7 @@ complete model and encourage users to solve it and further explore it::
     
     kk = gp.Equation(m, domain=t)
     dummy = gp.Equation(m)
-    kk[t.lead(1)] = k[t.lead(1)] == k[t] + i[t]
+    kk[t + 1] = k[t + 1] == k[t] + i[t]
     dummy[...] = z == 0
     
     m1 = gp.Model(
@@ -211,12 +211,12 @@ complete model and encourage users to solve it and further explore it::
     m1.solve()
 
 Note that the equation ``kk`` is declared over the set ``t``, but it is defined
-over the domain ``t.lead(1)``. Therefore the first equation that will be generated is the following::
+over the domain ``t + 1``. Therefore the first equation that will be generated is the following::
 
     k["1"]  ==  k["0"] + i["0"]
 
 Note that the value of the variable ``k["0"]`` is fixed at the value of scalar
-``k0``. Observe that for the last element of ``t``, the term ``k[t.lead(1)]``
+``k0``. Observe that for the last element of ``t``, the term ``k[t + 1]``
 is not defined and therefore the equation will not be generated.
 
 To summarize, the lead operator in the domain of definition has restricted the
@@ -234,10 +234,10 @@ lead operator for domain control in combination with fixing the variable
 ``k[tfirst]`` and use a lag operator and a condition in the expression of the
 equation while the domain of definition is unrestricted::
 
-    kk[t] = k[t] == k[t.lag(1)] + i[t.lag(1)] + k0.where[tfirst[t]]
+    kk[t] = k[t] == k[t - 1] + i[t - 1] + k0.where[tfirst[t]]
 
-Note that for the first element of the set ``t`` the terms ``k[t.lag(1)]`` and
-``i[t.lag(1)]`` are not defined and therefore vanish. Without the conditional
+Note that for the first element of the set ``t`` the terms ``k[t - 1]`` and
+``i[t - 1]`` are not defined and therefore vanish. Without the conditional
 term, the resulting equation would be::
 
     k["0"] == 0

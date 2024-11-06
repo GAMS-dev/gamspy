@@ -323,8 +323,8 @@ def main():
         description="relative increase of sqrtx in segment",
     )
 
-    nseg[s].where[g[s]] = p[s.lead(1, "linear")] - p[s]
-    ninc[s].where[g[s]] = sqrtp[s.lead(1, "linear")] - sqrtp[s]
+    nseg[s].where[g[s]] = p[s + 1] - p[s]
+    ninc[s].where[g[s]] = sqrtp[s + 1] - sqrtp[s]
 
     # Variables
     seg = Variable(

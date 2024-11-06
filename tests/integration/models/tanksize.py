@@ -149,8 +149,8 @@ def main():
     DefsH[p, n] = (
         sH[p, n] == 0.5 * (s[p, n.lead(1, "circular")] + s[p, n]) - SLB[p]
     )
-    SEQUENCE[p, n] = 1 - omega[p, n] >= omega[p, n.lead(1, "linear")]
-    SYMMETRY[n] = Sum(p, omega[p, n]) >= Sum(p, omega[p, n.lead(1, "linear")])
+    SEQUENCE[p, n] = 1 - omega[p, n] >= omega[p, n + 1]
+    SYMMETRY[n] = Sum(p, omega[p, n]) >= Sum(p, omega[p, n + 1])
 
     s.lo[p, n] = SLB[p]
     s.up[p, n] = SUB[p]

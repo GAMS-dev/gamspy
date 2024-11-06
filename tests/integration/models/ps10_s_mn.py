@@ -96,7 +96,7 @@ def main():
 
     F[i, t] = Sum(j.where[Ord(j) <= Ord(i)], pt[j, t])
     noMHRC0[i, t].where[Ord(i) < Card(i)] = Number(1).where[
-        F[i, t] / pt[i.lead(1), t] < F[i.lag(1), t] / pt[i, t]
+        F[i, t] / pt[i + 1, t] < F[i - 1, t] / pt[i, t]
     ]
     noMHRC[t].where[Sum(i, noMHRC0[i, t]) >= 1] = 1
 
@@ -153,13 +153,13 @@ def main():
 
     pc[i] = w[i] - theta[i] * x[i] >= ru
 
-    licd[i] = w[i] - theta[i] * x[i] >= w[i.lead(1)] - theta[i] * x[i.lead(1)]
+    licd[i] = w[i] - theta[i] * x[i] >= w[i + 1] - theta[i] * x[i + 1]
 
-    licu[i] = w[i] - theta[i] * x[i] >= w[i.lag(1)] - theta[i] * x[i.lag(1)]
+    licu[i] = w[i] - theta[i] * x[i] >= w[i - 1] - theta[i] * x[i - 1]
 
     ic[i, j] = w[i] - theta[i] * x[i] >= w[j] - theta[i] * x[j]
 
-    mn[i] = x[i] >= x[i.lead(1)]
+    mn[i] = x[i] >= x[i + 1]
 
     # Setting Lower Bounds on Variables to Avoid Division by Zero
     x.lo[i] = 0.0001
@@ -223,7 +223,7 @@ def main():
         Util_lic[tt] = SB_lic.objective_value
         x_lic[i, tt] = x.l[i]
         MN_lic[tt] = Sum(
-            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i.lead(1)], 10)]
+            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)]
         )
 
         #  Solving the model w/ MN
@@ -232,7 +232,7 @@ def main():
         Util_lic2[tt] = SB_lic2.objective_value
         x_lic2[i, tt] = x.l[i]
         MN_lic2[tt] = Sum(
-            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i.lead(1)], 10)]
+            i, Number(1).where[Round(x.l[i], 10) < Round(x.l[i + 1], 10)]
         )
 
     Util_gap[t] = Number(1).where[

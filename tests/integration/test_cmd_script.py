@@ -38,22 +38,6 @@ def teardown():
 
     # Clean up
     shutil.rmtree("tmp")
-    _ = subprocess.run(
-        ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
-        check=True,
-    )
-
-    _ = subprocess.run(
-        ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
-        capture_output=True,
-        text=True,
-    )
-
-    _ = subprocess.run(
-        ["gamspy", "install", "solver", "scip", "mpsge", "reshop"],
-        capture_output=True,
-        text=True,
-    )
 
 
 def test_install_license(teardown):
@@ -140,20 +124,30 @@ def test_install_license(teardown):
     # Test installing a license from a file path.
     shutil.copy(gamspy_license_path, tmp_license_path)
 
-    _ = subprocess.run(
+    process = subprocess.run(
         [
             "gamspy",
             "install",
             "license",
             tmp_license_path,
         ],
-        check=True,
+        capture_output=True,
+        text=True,
     )
 
-    assert os.path.exists(gamspy_license_path)
+    assert process.returncode == 0, process.stderr
+
+    # Recover local license
+    process = subprocess.run(
+        ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+        text=True,
+        capture_output=True,
+    )
+
+    assert process.returncode == 0, process.stderr
 
 
-def test_install_solver(teardown):
+def test_install_solver():
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             ["gamspy", "install", "solver", "bla"],

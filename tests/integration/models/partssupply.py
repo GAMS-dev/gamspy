@@ -141,14 +141,12 @@ def main():
     pc[i] = w[i] - theta[i] * x[i] >= ru
     ic[i, j] = w[i] - icweight[i] * x[i] >= w[j] - icweight[i] * x[j]
     licd[i].where[Ord(i) < Card(i)] = (
-        w[i] - icweight[i] * x[i]
-        >= w[i.lead(1, "linear")] - icweight[i] * x[i.lead(1, "linear")]
+        w[i] - icweight[i] * x[i] >= w[i + 1] - icweight[i] * x[i + 1]
     )
     licu[i].where[Ord(i) > 1] = (
-        w[i] - icweight[i] * x[i]
-        >= w[i.lag(1, "linear")] - icweight[i] * x[i.lag(1, "linear")]
+        w[i] - icweight[i] * x[i] >= w[i - 1] - icweight[i] * x[i - 1]
     )
-    mn[i].where[Ord(i) < Card(i)] = x[i] >= x[i.lead(1, "linear")]
+    mn[i].where[Ord(i) < Card(i)] = x[i] >= x[i + 1]
 
     x.lo[i] = 0.0001
 
