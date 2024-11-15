@@ -1115,8 +1115,10 @@ class Model:
         if options is None:
             options = self.container._options
 
-        frame = inspect.currentframe().f_back
-        options._frame = frame
+        # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
+        if solver == "local":
+            frame = inspect.currentframe().f_back
+            options._frame = frame
 
         if self._is_frozen:
             options._set_solver_options(
