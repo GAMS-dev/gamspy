@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import io
 import logging
 import os
@@ -1113,6 +1114,9 @@ class Model:
 
         if options is None:
             options = self.container._options
+
+        frame = inspect.currentframe().f_back
+        options._frame = frame
 
         if self._is_frozen:
             options._set_solver_options(

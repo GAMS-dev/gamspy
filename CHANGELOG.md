@@ -8,6 +8,7 @@ GAMSPy 1.1.1
   - Fix the behaviour of CTRL+C. 
   - Allow alternative `set +/- n` syntax for lead and lag operations. 
   - Upgrade gamspy_base and gamsapi dependencies.
+  - Expose the filename and the line number of the solve to the listing file.
 - Documentation
   - Add a favicon.
 
