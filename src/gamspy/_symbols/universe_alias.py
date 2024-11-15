@@ -40,7 +40,12 @@ class UniverseAlias(gt.UniverseAlias):
     """
 
     @classmethod
-    def _constructor_bypass(cls, container: Container, name: str):
+    def _constructor_bypass(
+        cls,
+        container: Container,
+        name: str,
+        add_statement: bool = False,
+    ):
         # create new symbol object
         obj = UniverseAlias.__new__(cls, container, name)
 
@@ -61,8 +66,8 @@ class UniverseAlias(gt.UniverseAlias):
         # gamspy attributes
         obj.where = condition.Condition(obj)
 
-        # add statement
-        obj.container._add_statement(obj)
+        if add_statement:
+            obj.container._add_statement(obj)
 
         return obj
 

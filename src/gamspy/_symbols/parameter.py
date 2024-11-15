@@ -70,6 +70,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         domain: list[Set | Alias | str] | Set | Alias | str = [],
         records: Any | None = None,
         description: str = "",
+        add_statement: bool = False,
     ):
         obj = Parameter.__new__(
             cls, container, name, domain, records, description=description
@@ -95,9 +96,10 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._synchronize = True
-
         obj.where = condition.Condition(obj)
-        obj.container._add_statement(obj)
+
+        if add_statement:
+            obj.container._add_statement(obj)
 
         # miro support
         obj._is_miro_input = False

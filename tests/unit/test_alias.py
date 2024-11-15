@@ -185,7 +185,7 @@ def test_alias_modified_list(m):
     nodes = m.addSet("nodes", description="nodes", records=["s"])
     i = m.addAlias("i", nodes)
     _ = m.addSet("s", domain=[i], description="sources", records=["s"])
-    modified_names = m._get_touched_symbol_names()
+    modified_names = m._get_modified_symbols()
     assert modified_names == []
 
 

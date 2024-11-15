@@ -46,7 +46,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     @classmethod
     def _constructor_bypass(
-        cls, container: Container, name: str, alias_with: Set | Alias
+        cls,
+        container: Container,
+        name: str,
+        alias_with: Set | Alias,
+        add_statement: bool = False,
     ):
         # create new symbol object
         obj = Alias.__new__(cls, container, name, alias_with)
@@ -68,8 +72,10 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj.container._add_statement(obj)
         obj._current_index = 0
+
+        if add_statement:
+            obj.container._add_statement(obj)
 
         return obj
 
