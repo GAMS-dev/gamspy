@@ -44,7 +44,7 @@ class UniverseAlias(gt.UniverseAlias):
         cls,
         container: Container,
         name: str,
-        add_statement: bool = True,
+        add_statement: bool = False,
     ):
         # create new symbol object
         obj = UniverseAlias.__new__(cls, container, name)

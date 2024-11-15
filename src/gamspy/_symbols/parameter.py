@@ -70,7 +70,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         domain: list[Set | Alias | str] | Set | Alias | str = [],
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = True,
+        add_statement: bool = False,
     ):
         obj = Parameter.__new__(
             cls, container, name, domain, records, description=description
