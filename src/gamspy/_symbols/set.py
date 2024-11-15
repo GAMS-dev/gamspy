@@ -457,7 +457,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_singleton: bool = False,
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = False,
     ):
         # create new symbol object
         obj = Set.__new__(
@@ -494,9 +493,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj.where = condition.Condition(obj)
         obj._current_index = 0
         obj._synchronize = True
-
-        if add_statement:
-            obj.container._add_statement(obj)
+        obj.container._add_statement(obj)
 
         # miro support
         obj._is_miro_input = False

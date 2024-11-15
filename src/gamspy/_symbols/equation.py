@@ -104,7 +104,6 @@ class Equation(gt.Equation, Symbol):
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = False,
     ):
         # create new symbol object
         obj = Equation.__new__(
@@ -139,9 +138,7 @@ class Equation(gt.Equation, Symbol):
         obj._definition = None
         obj.where = condition.Condition(obj)
         obj._synchronize = True
-
-        if add_statement:
-            obj.container._add_statement(obj)
+        obj.container._add_statement(obj)
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()

@@ -91,7 +91,6 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = False,
     ):
         # create new symbol object
         obj = Variable.__new__(
@@ -125,9 +124,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj._synchronize = True
-
-        if add_statement:
-            obj.container._add_statement(obj)
+        obj.container._add_statement(obj)
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
