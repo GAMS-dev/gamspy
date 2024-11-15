@@ -457,7 +457,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_singleton: bool = False,
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = False,
+        add_statement: bool = True,
     ):
         # create new symbol object
         obj = Set.__new__(

@@ -50,7 +50,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         container: Container,
         name: str,
         alias_with: Set | Alias,
-        add_statement: bool = False,
+        add_statement: bool = True,
     ):
         # create new symbol object
         obj = Alias.__new__(cls, container, name, alias_with)

@@ -91,7 +91,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         records: Any | None = None,
         description: str = "",
-        add_statement: bool = False,
+        add_statement: bool = True,
     ):
         # create new symbol object
         obj = Variable.__new__(
