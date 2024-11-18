@@ -7,6 +7,8 @@ GAMSPy 1.1.1
   - Fix non-zero return code issue in case there is an error in the script. In case the return code is non-zero, GAMSPy will not launch GAMS MIRO.
   - Fix the behaviour of CTRL+C. 
   - Allow alternative `set +/- n` syntax for lead and lag operations. 
+  - Upgrade gamspy_base and gamsapi dependencies.
+  - Expose the filename and the line number of the solve to the listing file.
 - Documentation
   - Add a favicon.
 
