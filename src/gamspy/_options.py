@@ -507,6 +507,12 @@ class Options(BaseModel):
             all_options.update(**self._extra_options)
             delattr(self, "_extra_options")
 
+        if hasattr(self, "_frame"):
+            filename = self._frame.f_code.co_filename
+            line_number = self._frame.f_lineno
+            all_options['GP_SolveLine'] = f"{filename} line {line_number}"
+            delattr(self, "_frame")
+
         # User options
         user_options = self._get_gams_compatible_options(output)
         all_options.update(**user_options)
