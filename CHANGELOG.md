@@ -1,7 +1,7 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 1.1.1
+GAMSPy 1.2.0
 ------------
 - General
   - Fix non-zero return code issue in case there is an error in the script. In case the return code is non-zero, GAMSPy will not launch GAMS MIRO.
