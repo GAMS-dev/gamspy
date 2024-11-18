@@ -491,9 +491,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+        obj.container._add_statement(obj)
         obj._current_index = 0
         obj._synchronize = True
-        obj.container._add_statement(obj)
 
         # miro support
         obj._is_miro_input = False

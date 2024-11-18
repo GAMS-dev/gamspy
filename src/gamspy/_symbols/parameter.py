@@ -95,6 +95,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._synchronize = True
+
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
 

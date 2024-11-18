@@ -123,8 +123,8 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj._synchronize = True
         obj.container._add_statement(obj)
+        obj._synchronize = True
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()

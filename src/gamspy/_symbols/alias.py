@@ -68,8 +68,8 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
-        obj._current_index = 0
         obj.container._add_statement(obj)
+        obj._current_index = 0
 
         return obj
 

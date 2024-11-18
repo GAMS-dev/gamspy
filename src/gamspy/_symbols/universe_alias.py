@@ -60,6 +60,8 @@ class UniverseAlias(gt.UniverseAlias):
 
         # gamspy attributes
         obj.where = condition.Condition(obj)
+
+        # add statement
         obj.container._add_statement(obj)
 
         return obj
