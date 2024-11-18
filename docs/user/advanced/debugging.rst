@@ -135,12 +135,12 @@ Inspecting Generated GAMS String
 GAMSPy takes advantage of the high performance GAMS execution system by generating GAMS code and sending them to GAMS.
 Hence, a way to debug GAMSPy is to inspect this GAMS code. Instead of inspecting temporary files in the working directory 
 that contains this GAMS code, one can use the ``generateGamsString`` function. This function returns the GAMS code generated 
-up to that point as a string.
+up to that point as a string. In order to use this function, ``debugging_level`` of the Container must be set to "keep".
 
 .. code-block:: python
 
     from gamspy import Container
-    m = Container()
+    m = Container(debugging_level="keep")
     ... # Definition of your model
     print(m.generateGamsString())
 
