@@ -14,6 +14,7 @@ leg-performance:
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
     - gamspy install solver mpsge scip reshop
     - python scripts/performance/performance.py
+    - python scripts/performance/read.py
     - python scripts/performance/main_IJKLM.py
     - python scripts/performance/memory_check.py
   artifacts:
