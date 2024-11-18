@@ -3,6 +3,7 @@ import os
 import timeit
 
 import gams.transfer as gt
+import gamspy_base
 
 import gamspy as gp
 
@@ -29,7 +30,9 @@ def write_gdx(N: int, m: gt.Container):
 
 
 def run_gtp():  # read from a gdx file
-    _ = gt.Container(load_from="in.gdx")
+    _ = gt.Container(
+        system_directory=gamspy_base.directory, load_from="in.gdx"
+    )
 
 
 def run_gp():  # read from a gdx file
@@ -37,7 +40,7 @@ def run_gp():  # read from a gdx file
 
 
 def run_gtp2(m: gt.Container):  # read from a Container
-    _ = gt.Container(load_from=m)
+    _ = gt.Container(system_directory=gamspy_base.directory, load_from=m)
 
 
 def run_gp2(m: gt.Container):  # read from a Container
@@ -50,7 +53,7 @@ def main():
     R = 10
     NUM = 1
 
-    m = gt.Container()
+    m = gt.Container(system_directory=gamspy_base.directory)
     write_gdx(N, m)
 
     setup = {"func": run_gtp}
