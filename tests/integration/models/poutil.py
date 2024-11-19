@@ -378,8 +378,8 @@ def main():
     # calculate the accumulated cost
     cLFCs["b1"] = 0
     cLFCs["b2"] = cLFCvar["b1"] * eLFCb["b1"]
-    cLFCs[b].where[Ord(b) > 2] = cLFCs[b.lag(1)] + cLFCvar[b.lag(1)] * (
-        eLFCb[b.lag(1)] - eLFCb[b.lag(2)]
+    cLFCs[b].where[Ord(b) > 2] = cLFCs[b - 1] + cLFCvar[b - 1] * (
+        eLFCb[b - 1] - eLFCb[b - 2]
     )
 
     # Variables
@@ -584,14 +584,10 @@ def main():
     # same state and the constraint of the minimum idle time
     # we need variable 'chiS' to find out when a status change takes place
     # eq. (27)
-    PPchiS1[t, m].where[Ord(t) > 1] = (
-        chiS[t] >= delta[m, t] - delta[m, t.lag(1)]
-    )
+    PPchiS1[t, m].where[Ord(t) > 1] = chiS[t] >= delta[m, t] - delta[m, t - 1]
 
     # second constraint for 'chiS' variable eq. (28)
-    PPchiS2[t, m].where[Ord(t) > 1] = (
-        chiS[t] >= delta[m, t.lag(1)] - delta[m, t]
-    )
+    PPchiS2[t, m].where[Ord(t) > 1] = chiS[t] >= delta[m, t - 1] - delta[m, t]
 
     # control the minimum change time period eq. (29)
     PPstageChange[t].where[Ord(t) < Card(t) - Card(iS) + 2] = (
@@ -599,7 +595,7 @@ def main():
     )
 
     # indicate if the plant left the idle state eq. (30)
-    PPstarted[t] = chiI[t] >= delta["m1", t.lag(1)] - delta["m1", t]
+    PPstarted[t] = chiI[t] >= delta["m1", t - 1] - delta["m1", t]
 
     # control the minimum idle time period:
     # it has to be at least Nk2 time periods long eq. (31)
@@ -627,7 +623,7 @@ def main():
 
     # connect the 'mu' variables with the total energy amount eq. (19)
     LFCenergyS[...] = eLFCtot == Sum(
-        b.where[Ord(b) > 1], eLFCb[b.lag(1)] * mu[b]
+        b.where[Ord(b) > 1], eLFCb[b - 1] * mu[b]
     ) + Sum(b, eLFCs[b])
 
     # accumulated energy amount for segment "b1" eq. (20)
@@ -635,7 +631,7 @@ def main():
 
     # accumulated energy amount for all other segments (then "b1") eq. (20)
     LFCemug[b].where[Ord(b) > 1] = (
-        eLFCs[b] <= (eLFCb[b] - eLFCb[b.lag(1)]) * mu[b]
+        eLFCs[b] <= (eLFCb[b] - eLFCb[b - 1]) * mu[b]
     )
 
     energy = Model(

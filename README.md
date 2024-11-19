@@ -46,4 +46,4 @@ Here are just a few of the things that **GAMSPy** does well:
 ## Getting Help
 
 For usage questions, the best place to go to is [GAMSPy Documentation](https://gamspy.readthedocs.io/en/latest/index.html).
-General questions and discussions can also take place on the [GAMSPy Discourse Platform](https://forum.gams.com/c/gamspy-help).
+General questions and discussions can also take place on the [GAMSPy Discourse Platform](https://forum.gams.com).

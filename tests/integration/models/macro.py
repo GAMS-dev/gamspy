@@ -164,8 +164,8 @@ def main():
         (u[m, ku] - utilde[m, ku]) * rk[m, mp] * (u[mp, ku] - utilde[mp, ku]),
     )
 
-    stateq[n, k.lead(1)] = (
-        x[n, k.lead(1)]
+    stateq[n, k + 1] = (
+        x[n, k + 1]
         == Sum(nn, a[n, nn] * x[nn, k]) + Sum(m, b[n, m] * u[m, k]) + c[n]
     )
 

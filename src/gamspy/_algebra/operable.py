@@ -42,12 +42,22 @@ class Operable:
 
     # +, -, /, *, **, %
     def __add__(self: OperableType, other: OperableType):
+        from gamspy._symbols import Alias, Set
+
+        if isinstance(self, (Alias, Set)) and isinstance(other, int):
+            return self.lead(other)
+
         return expression.Expression(self, "+", other)
 
     def __radd__(self: OperableType, other: OperableType):
         return expression.Expression(other, "+", self)
 
     def __sub__(self: OperableType, other: OperableType):
+        from gamspy._symbols import Alias, Set
+
+        if isinstance(self, (Alias, Set)) and isinstance(other, int):
+            return self.lag(other)
+
         return expression.Expression(self, "-", other)
 
     def __rsub__(self: OperableType, other: OperableType):

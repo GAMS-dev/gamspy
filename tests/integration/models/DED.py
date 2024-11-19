@@ -136,9 +136,9 @@ def main():
         + gendata[i, "c"],
     )
 
-    Genconst3[i, t] = p[i, t.lead(1)] - p[i, t] <= gendata[i, "RU0"]
+    Genconst3[i, t] = p[i, t + 1] - p[i, t] <= gendata[i, "RU0"]
 
-    Genconst4[i, t] = p[i, t.lag(1)] - p[i, t] <= gendata[i, "RD0"]
+    Genconst4[i, t] = p[i, t - 1] - p[i, t] <= gendata[i, "RD0"]
 
     balance[t] = Sum(i, p[i, t]) >= demand[t]
 

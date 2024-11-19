@@ -269,13 +269,14 @@ you can print only the records of only one attribute as follows: ::
 
   model.solve()
 
+  print(your_variable.m.records)
   print(your_variable.m[i, j].records)
   print(your_variable.m[i, 'elem6'].records)
   print(your_variable.m['elem1', 'elem6'].records)
 
-The first print would only print the marginals of the variable. 
-The second print would only print the marginals of the records where the `j` element is equal to `elem6`. 
-And the third print would only print the marginal of 'elem1', 'elem6' pair. 
+The first and second print would only print the marginals of the variable. 
+The third print would only print the marginals of the records where the `j` element is equal to `elem6`. 
+And the fourth print would only print the marginal of 'elem1', 'elem6' pair. 
 
 One can also use slice and ellipsis operators to match certain indices: ::
 

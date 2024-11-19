@@ -86,13 +86,11 @@ def main():
     CashFlowCon[t, l] = (
         Sum(i, SF[t, i, l] * x[i]).where[tau[t] > 0]
         + (v0 - Sum(i, Price[i] * x[i])).where[tau[t] == 0]
-        + ((1 + Srf[t.lag(1), l]) * surplus[t.lag(1), l]).where[tau[t] > 0]
+        + ((1 + Srf[t - 1, l]) * surplus[t - 1, l]).where[tau[t] > 0]
         + borrow[t, l].where[tau[t] < Horizon]
         == surplus[t, l]
         + SLiability[t, l].where[tau[t] > 0]
-        + ((1 + Srf[t.lag(1), l] + spread) * borrow[t.lag(1), l]).where[
-            tau[t] > 0
-        ]
+        + ((1 + Srf[t - 1, l] + spread) * borrow[t - 1, l]).where[tau[t] > 0]
     )
 
     StochDedicationBL = Model(

@@ -126,7 +126,7 @@ def main():
     # Objective Function
     objdef = Sum((j, t), dis[t] * p[j] * x[j, t]) + w / Card(s) * Sum(s, z[s])
 
-    capbal[t] = cap[t] == cap[t.lag(1)] + Sum(j, c[j] * x[j, t])
+    capbal[t] = cap[t] == cap[t - 1] + Sum(j, c[j] * x[j, t])
 
     dembal[t, s] = cap[t] + z[s] >= d[t, s]
 

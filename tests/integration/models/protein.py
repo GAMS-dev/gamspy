@@ -114,53 +114,51 @@ def main():
 
     eobj = x4[str(n)] * x5[str(n)]  # Objective function
 
-    state1[nh[k.lead(1)]] = x1[k.lead(1)] == (
+    state1[nh[k + 1]] = x1[k + 1] == (
         x1[k]
         + (h / 2)
         * (
             a1[k] * x1[k]
             - u[k] * x1[k] / x5[k]
-            + a1[k.lead(1)] * x1[k.lead(1)]
-            - u[k.lead(1)] * x1[k.lead(1)] / x5[k.lead(1)]
+            + a1[k + 1] * x1[k + 1]
+            - u[k + 1] * x1[k + 1] / x5[k + 1]
         )
     )
 
-    state2[nh[k.lead(1)]] = x2[k.lead(1)] == (
+    state2[nh[k + 1]] = x2[k + 1] == (
         x2[k]
         + (h / 2)
         * (
             -7.3 * a1[k] * x1[k]
             - u[k] * (x2[k] - 20) / x5[k]
-            - 7.3 * a1[k.lead(1)] * x1[k.lead(1)]
-            - u[k.lead(1)] * (x2[k.lead(1)] - 20) / x5[k.lead(1)]
+            - 7.3 * a1[k + 1] * x1[k + 1]
+            - u[k + 1] * (x2[k + 1] - 20) / x5[k + 1]
         )
     )
 
-    state3[nh[k.lead(1)]] = x3[k.lead(1)] == (
+    state3[nh[k + 1]] = x3[k + 1] == (
         x3[k]
         + (h / 2)
         * (
             a2[k] * x1[k]
             - u[k] * x3[k] / x5[k]
-            + a2[k.lead(1)] * x1[k.lead(1)]
-            - u[k.lead(1)] * x3[k.lead(1)] / x5[k.lead(1)]
+            + a2[k + 1] * x1[k + 1]
+            - u[k + 1] * x3[k + 1] / x5[k + 1]
         )
     )
 
-    state4[nh[k.lead(1)]] = x4[k.lead(1)] == (
+    state4[nh[k + 1]] = x4[k + 1] == (
         x4[k]
         + (h / 2)
         * (
             a3[k] * (x3[k] - x4[k])
             - u[k] * x4[k] / x5[k]
-            + a3[k.lead(1)] * (x3[k.lead(1)] - x4[k.lead(1)])
-            - u[k.lead(1)] * x4[k.lead(1)] / x5[k.lead(1)]
+            + a3[k + 1] * (x3[k + 1] - x4[k + 1])
+            - u[k + 1] * x4[k + 1] / x5[k + 1]
         )
     )
 
-    state5[nh[k.lead(1)]] = x5[k.lead(1)] == x5[k] + (h / 2) * (
-        u[k] + u[k.lead(1)]
-    )
+    state5[nh[k + 1]] = x5[k + 1] == x5[k] + (h / 2) * (u[k] + u[k + 1])
 
     ea1[nh[k]] = a1[k] == 21.87 * x2[k] / ((x2[k] + 0.4) * (x2[k] + 62.5))
     ea2[nh[k]] = a2[k] == (x2[k] * gams_math.exp(-5 * x2[k])) / (0.1 + x2[k])

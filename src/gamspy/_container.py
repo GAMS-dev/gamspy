@@ -8,6 +8,7 @@ import socket
 import subprocess
 import tempfile
 import time
+import traceback
 import uuid
 from contextlib import closing
 from typing import TYPE_CHECKING
@@ -86,10 +87,12 @@ def open_connection(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         errors="replace",
+        start_new_session=platform.system() != "Windows",
     )
 
     def handler(signum, frame):
-        os.kill(process.pid, signal.SIGINT)
+        if platform.system() != "Windows":
+            os.kill(process.pid, signal.SIGINT)
 
     signal.signal(signal.SIGINT, handler)
 
@@ -188,7 +191,7 @@ class Container(gt.Container):
 
     Parameters
     ----------
-    load_from : str, optional
+    load_from : str, Container, gt.Container, optional
         Path to the GDX file to be loaded from, by default None
     system_directory : str, optional
         Path to the directory that holds the GAMS installation, by default None
@@ -211,7 +214,7 @@ class Container(gt.Container):
 
     def __init__(
         self,
-        load_from: str | None = None,
+        load_from: str | Container | gt.Container | None = None,
         system_directory: str | None = None,
         working_directory: str | None = None,
         debugging_level: Literal[
@@ -259,7 +262,12 @@ class Container(gt.Container):
 
         if load_from is not None:
             self.read(load_from)
-            self._synch_with_gams(gams_to_gamspy=True)
+            if not isinstance(load_from, gt.Container):
+                self._unsaved_statements = []
+                self._clean_modified_symbols()
+                self._add_statement(f"$declareAndLoad {load_from}")
+
+            self._synch_with_gams(gams_to_gamspy=False)
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
@@ -330,10 +338,10 @@ class Container(gt.Container):
                     break
 
     def _interrupt(self) -> None:
-        if platform.system() in ("Linux", "Darwin"):
-            self._process.send_signal(signal.SIGINT)
-        else:
+        if platform.system() == "Windows":
             os.kill(self._process.pid, signal.CTRL_C_EVENT)
+        else:
+            os.kill(self._process.pid, signal.SIGINT)
 
     def _send_job(
         self,
@@ -358,8 +366,13 @@ class Container(gt.Container):
 
     def _write_miro_files(self):
         # create conf_<model>/<model>_io.json
-        encoder = MiroJSONEncoder(self)
-        encoder.write_json()
+        try:
+            encoder = MiroJSONEncoder(self)
+            encoder.write_json()
+        except Exception:
+            self._stop_socket()
+            traceback.print_exc()
+            os._exit(1)
 
     def _add_statement(self, statement) -> None:
         self._unsaved_statements.append(statement)
@@ -468,7 +481,7 @@ class Container(gt.Container):
 
         return names
 
-    def _get_touched_symbol_names(self) -> list[str]:
+    def _get_modified_symbols(self) -> list[str]:
         modified_names = []
 
         for name, symbol in self:
@@ -482,6 +495,13 @@ class Container(gt.Container):
                 modified_names.append(name)
 
         return modified_names
+
+    def _clean_modified_symbols(self) -> None:
+        for symbol in self.data.values():
+            if isinstance(symbol, gp.Alias):
+                symbol.alias_with.modified = False
+
+            symbol.modified = False
 
     def _synch_with_gams(
         self,
@@ -587,7 +607,7 @@ class Container(gt.Container):
 
     def read(
         self,
-        load_from: str,
+        load_from: str | Container | gt.Container,
         symbol_names: list[str] | None = None,
         load_records: bool = True,
         mode: str | None = None,
@@ -599,7 +619,7 @@ class Container(gt.Container):
 
         Parameters
         ----------
-        load_from : str
+        load_from : str, Container, gt.Container
         symbol_names : List[str], optional
         load_records : bool
         mode : str, optional

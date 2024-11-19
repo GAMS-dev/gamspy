@@ -146,7 +146,7 @@ class Backend(ABC):
         return job_name
 
     def preprocess(self, gdx_in: str):
-        modified_names = self.container._get_touched_symbol_names()
+        modified_names = self.container._get_modified_symbols()
 
         if len(modified_names) != 0:
             self.container.write(

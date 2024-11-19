@@ -135,12 +135,10 @@ def main():
     )
 
     bal1[n, t].where[~tt[t]] = (
-        s["res1", t] - s["res1", t.lag(1, "linear")]
+        s["res1", t] - s["res1", t - 1]
         == q["res1", t] + r2[t] - q2[t] - r["res1", t]
     )
-    bal2[n, t].where[~tt[t]] = (
-        s["res2", t] - s["res2", t.lag(1, "linear")] == q2[t] - r2[t]
-    )
+    bal2[n, t].where[~tt[t]] = s["res2", t] - s["res2", t - 1] == q2[t] - r2[t]
     dec[n, t].where[~tt[t]] = (s["res2", t] - s["res1", t]) - (
         s["res2", t] - s["res1", t]
     ) * (1.0 - q2[t] / (q2[t] + 0.000001)) == 0.0

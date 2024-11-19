@@ -68,9 +68,9 @@ def main():
         domain=[n, k],
         description="state equation",
     )
-    stateq[n, k.lead(1)] = x[n, k.lead(1)] == 2 * x[n, k] + 2 * u[
-        k
-    ] * gams_math.sqrt(x[n, k])
+    stateq[n, k + 1] = x[n, k + 1] == 2 * x[n, k] + 2 * u[k] * gams_math.sqrt(
+        x[n, k]
+    )
 
     # OBJECTIVE #
     j = 0.5 * Sum([k, n], (x[n, k]) + 0.5 * Sum(ku, (u[ku]) * rk * (u[ku])))
