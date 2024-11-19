@@ -19,8 +19,9 @@
 \hline
 \endhead
 
-w & * & weapons\\
-t & * & targets\\
+i & * & canning plants\\
+j & * & markets\\
+freeLinks & i,j & \\
 \hline
 \end{tabularx}
 \subsection*{Parameters}
@@ -30,10 +31,9 @@ t & * & targets\\
 \hline
 \endhead
 
-td & w,t & target data\\
-wa & w & weapons availability\\
-tm & t & minimum number of weapons per target\\
-mv & t & military value of target\\
+a & i & capacity of plant i in cases\\
+b & j & demand at market j in cases\\
+c & i,j & transport cost in thousands of dollars per case\\
 \hline
 \end{tabularx}
 \subsection*{Variables}
@@ -43,7 +43,7 @@ mv & t & military value of target\\
 \hline
 \endhead
 
-x & w,t & weapons assignment\\
+x & freeLinks & shipment quantities in cases\\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -53,25 +53,25 @@ x & w,t & weapons assignment\\
 \hline
 \endhead
 
-maxw & w & weapons balance\\
-minw & t & minimum number of weapons required per target\\
+supply & i & observe supply limit at plant i\\
+demand & j & satisfy demand at market j\\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}
-\textbf{max} $\sum_{t} mv_{t} \cdot 1 - \prod_{w ~ | ~ td_{w,t}}  rPower((1 - td(w,t)),x(w,t)) $\\
+\textbf{min} $\sum_{i,j} c_{i,j} \cdot x_{i,j}$\\
 \textbf{s.t.}
-\subsubsection*{$maxw_{w}$}
+\subsubsection*{$supply_{i}$}
 $
-\sum_{t ~ | ~ td_{w,t}} x_{w,t} \leq wa_{w}\hfill \forall w
+\sum_{j} x_{i,j} \leq a_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
-\subsubsection*{$minw_{t}$}
+\subsubsection*{$demand_{j}$}
 $
-\sum_{w ~ | ~ td_{w,t}} x_{w,t} \geq tm_{t}\hfill \forall t ~ | ~ tm_{t}
+\sum_{i} x_{i,j} \geq b_{j}\hfill \forall j
 $
 \vspace{5pt}
 \hrule
 \bigskip
-$x_{w,t}\geq 0 ~ \forall w,t\\$
+$x_{i,j}\geq 0 ~ \forall i,j\\$
 \end{document}

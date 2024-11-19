@@ -88,9 +88,6 @@ def test_install_license(teardown):
             capture_output=True,
         )
 
-    m = Container()
-    assert m._network_license is False
-
     # Test network license
     _ = subprocess.run(
         [

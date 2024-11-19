@@ -27,6 +27,8 @@ n & * & index\\
 m & * & intermediates\\
 pm & i,m & products\\
 fm & i,m & feeds\\
+ip & * & condensers-columns\\
+jp & * & reboilers\\
 zlead & i & leading columns in superstructure\\
 zcrhx & i,j & condenser to reboiler allowable matches\\
 zlim & i,j & direction of heat integration\\
@@ -88,7 +90,6 @@ yhx & i,j & heat integration matches condenser i reboiler j\\
 yhu & hu,j & hot utility matches hot utility hu reboiler j\\
 ycu & i,cu & cold utility matches condenser i cold util cu\\
 ycol & i & columns in superstructure\\
-skip\_objective\_variable &  & \\
 \hline
 \end{tabularx}
 \subsection*{Equations}
@@ -125,7 +126,6 @@ lead &  & sequence control\\
 limutil & j & limits columns to have a single hot utility\\
 hidirect & i,j & requires a single direction of heat integration\\
 heat & i & logical integer constraint\\
-skip\_objective &  & \\
 \hline
 \end{tabularx}
 \subsection*{Model Definition}

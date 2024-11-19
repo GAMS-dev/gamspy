@@ -551,7 +551,7 @@ In addition to solve options, user can specify solver options as a dictionary.::
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
 Exporting Model To LaTeX
-------------------------
+========================
 GAMSPy models can be exported to a `.tex` file in LaTeX format by using the :meth:`toLatex <gamspy.Model.toLatex>` function of the model.
 The generated `.tex` file can be automatically compiled into a PDF file by using ``pdflatex`` ::
 
@@ -567,3 +567,68 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
     The :meth:`toLatex <gamspy.Model.toLatex>` function uses the *names* of the GAMSPy symbols. If names are not
     supplied, GAMSPy invents (ugly) names which would show up in the LaTeX source. So for this feature to be useful
     the GAMSPy set, parameter, variable, and equations should be specified with a name.
+
+Limiting Domain for Variables
+=============================
+
+It is possible to limit the domain of variables used in a model in the `Model` constructor. This allows to restrict the 
+generation of blocks of variables in a single place instead of using, e.g., `where` statements at every place where 
+this variable block is used in equations. 
+
+The following examples are based on the `transportation model <https://github.com/GAMS-dev/gamspy-examples/blob/master/models/trnsport/trnsport.py>`_. 
+To limit the transportation network in that model to certain links (e.g. because some are blocked because of some reason) one could introduce a subset 
+of the possible links and use that with `where` conditions (equation `supply`) or indexing a subset (equation `demand`) in the equations like this:
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    # Define symbols here
+    ...
+
+    # Initialize whole network as free
+    free_links = gp.Set(
+        m, domain=[i,j], description="usable links in the network", 
+        records=i.toList() + j.toList()
+    )
+    cost[...] = z == gp.Sum((i,j), (c[i,j] * x[i,j]).where[free_links[i,j]])
+    supply[i] = gp.Sum(j, x[i,j].where[free_links[i,j]]) <= a[i] 
+    demand[j] = gp.Sum(free_links[i,j], x[i,j]) >= b[j]
+
+    # Block a particular link
+    free_links['san-diego','topeka'] = False
+
+    transport = gp.Model(
+        m, equations=m.getEquations(), problem="LP", 
+        sense="MIN", objective=z
+    )
+    transport.solve()
+
+Instead of adding the `where` condition or index subset to each appearance of x in the model, one could simply add a domain restriction 
+for that variable to the model statement directly by specifying a variable and the set that limits its domain. Using 
+this approach, the previous example looks like the following:
+
+.. code-block:: python
+
+    import gamspy as gp
+
+    # Define symbols here
+    ...
+
+    # Initialize whole network as free
+    free_links = gp.Set(
+        m, domain=[i,j], description="usable links in the network", 
+        records=i.toList() + j.toList()
+    )
+    cost[...] = z == gp.Sum((i,j), c[i,j] * x[i,j])
+    supply[i] = gp.Sum(j, x[i,j]) <= a[i] 
+    demand[j] = gp.Sum(i, x[i,j]) >= b[j]
+
+    # Block a particular link
+    free_links['san-diego','topeka'] = False
+
+    transport = gp.Model(
+        m, limited_variables=[x[free_links]], equations=m.getEquations(), 
+        problem="LP", sense="MIN", objective=z
+    )
+    transport.solve()
