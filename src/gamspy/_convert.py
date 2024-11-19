@@ -4,10 +4,19 @@ import logging
 import os
 import subprocess
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 import gamspy._symbols as syms
+import gamspy.utils as utils
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy.exceptions import LatexException, ValidationError
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
+    from gamspy import Alias, Equation, Model, Parameter, Set, Variable
+
+    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
 
 logger = logging.getLogger("CONVERTER")
 logger.setLevel(logging.INFO)
@@ -43,7 +52,7 @@ class Converter(ABC):
 
 
 class GamsConverter(Converter):
-    def __init__(self, model, path) -> None:
+    def __init__(self, model: Model, path: str) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
         self.container = model.container
@@ -71,7 +80,7 @@ class GamsConverter(Converter):
 
         return all_needed_symbols
 
-    def convert(self, options: Options | None = None):
+    def convert(self, options: Options | None = None) -> None:
         """Generates .gms and .gdx file"""
         symbols = self.get_all_symbols()
 
@@ -147,15 +156,30 @@ TABLE_FOOTER = "\\hline\n\\end{tabularx}"
 
 
 class LatexConverter(Converter):
-    def __init__(self, model, path) -> None:
+    def __init__(self, model: Model, path: str) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
         self.container = model.container
         self.path = path
         symbols = get_symbols(model)
+        if self.model._limited_variables:
+            for var in self.model._limited_variables:
+                domain = var.domain
+                for elem in domain:
+                    if (
+                        isinstance(elem, (syms.Set, syms.Alias))
+                        and elem.name not in symbols
+                    ):
+                        symbols.append(elem.name)
+
         self.symbols = sorted(
             symbols, key=list(self.container.data.keys()).index
         )
+
+        for name in self.model._autogen_symbols:
+            if name in self.symbols:
+                self.symbols.remove(name)
+
         self.header = self.get_header()
         self.set_header = "\\subsection*{Sets}"
         self.param_header = "\\subsection*{Parameters}"
@@ -170,7 +194,7 @@ class LatexConverter(Converter):
 
         # Sets
         latex_strs.append(self.set_header)
-        latex_strs.append(self.get_table(syms.Set))
+        latex_strs.append(self.get_table((syms.Set, syms.Alias)))
 
         # Parameters
         latex_strs.append(self.param_header)
@@ -218,7 +242,7 @@ class LatexConverter(Converter):
 
         self.latex_str = latex_str
 
-    def to_pdf(self):
+    def to_pdf(self) -> None:
         process = subprocess.run(["pdflatex", "-v"])
         if process.returncode:
             raise ValidationError(
@@ -235,13 +259,27 @@ class LatexConverter(Converter):
                 f"Could not generate pdf file: {process.stderr}"
             )
 
-    def get_table(self, symbol_type) -> str:
+    def get_table(
+        self, symbol_type: tuple[Set, Alias] | Parameter | Variable | Equation
+    ) -> str:
         table = [TABLE_HEADER]
         for name in self.symbols:
-            symbol = self.container[name]
+            symbol: SymbolType = self.container[name]
+
             if isinstance(symbol, symbol_type):
                 summary = symbol.summary
-                row = f'{summary["name"]} & {",".join(summary["domain"])} & {summary["description"]}\\\\'
+                domain_str = ",".join(summary["domain"])
+                if (
+                    isinstance(symbol, syms.Variable)
+                    and self.model._limited_variables
+                ):
+                    for elem in self.model._limited_variables:
+                        if elem.name == symbol.name:
+                            domain_str = utils._get_domain_str(elem.domain)[
+                                1:-1
+                            ]
+
+                row = f'{summary["name"]} & {domain_str} & {summary["description"]}\\\\'
                 row = row.replace("_", "\\_")
                 table.append(row)
 
@@ -252,11 +290,7 @@ class LatexConverter(Converter):
     def get_definitions(self) -> str:
         definitions = []
         for equation in self.model.equations:
-            if (
-                not isinstance(self.model._objective, syms.Variable)
-                and self.model._objective is not None
-                and equation.name == f"{self.model.name}_objective"
-            ):
+            if equation.name in self.model._autogen_symbols:
                 continue
 
             domain_str = ",".join([elem.name for elem in equation.domain])

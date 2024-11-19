@@ -8,8 +8,13 @@
 Container
 *********
 
-The :meth:`Container <gamspy.Container>` class in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
-and constraints, providing a structured approach for optimization problems. 
+A :meth:`Container <gamspy.Container>` object in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
+and constraints, providing a structured approach for optimization problems. It is also responsible for creating the connection between with GAMS and GAMSPy.
+
+.. note::
+    GAMSPy tries to find an open port by default to communicate with GAMS. In case you want to point to a specific port for this communication, 
+    you can set that port by defining an environment variable called "GAMS_PORT".
+
 
 ===============
 Symbol Creation
@@ -110,7 +115,7 @@ To create a :meth:`Container <gamspy.Container>` with symbols from a GDX file, u
 
 We can verify that symbol ``i`` is in the container ``m``.
 
-Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to populate the container.
+Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to populate the container:
 
 .. code-block:: python
 
@@ -119,6 +124,19 @@ Alternatively, you can use the :meth:`read <gamspy.Container.read>` function to 
     m = Container()
     m.read("data.gdx")
     print(m.listSymbols())
+
+One can also read from another :meth:`Container <gamspy.Container>` instead of reading the records from a gdx file:
+
+.. code-block:: python
+
+    from gamspy import Container, Set
+
+    m1 = Container()
+    i = Set(m1, "i", records=range(3))
+    
+    m2 = Container()
+    m2.read(m1)
+    print(m2.listSymbols())
 
 Loading Records to Existing Symbols
 -----------------------------------

@@ -4,6 +4,14 @@ GAMSPy CHANGELOG
 GAMSPy 1.2.0
 ------------
 - General
+  - Change the way to show limited variables in latex file.
+- Documentation
+  - Add a section for limited variables. 
+  - Add an example that shows how to read from another Container.
+
+GAMSPy 1.2.0
+------------
+- General
   - Fix non-zero return code issue in case there is an error in the script. In case the return code is non-zero, GAMSPy will not launch GAMS MIRO.
   - Fix the behaviour of CTRL+C. 
   - Allow alternative `set +/- n` syntax for lead and lag operations. 

@@ -170,6 +170,33 @@ def test_lp_transport(data):
 
     assert reference_tex == generated_tex
 
+    freeLinks = Set(
+        m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")]
+    )
+    transport2 = Model(
+        m,
+        name="transport2",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+        limited_variables=[x[freeLinks]],
+    )
+    transport2.toLatex(output_path, generate_pdf=False)
+
+    reference_path = os.path.join(
+        "tests", "integration", "tex_references", "transport2.tex"
+    )
+    with open(reference_path, encoding="utf-8") as file:
+        reference_tex = file.read()
+
+    with open(
+        os.path.join(output_path, "transport2.tex"), encoding="utf-8"
+    ) as file:
+        generated_tex = file.read()
+
+    assert reference_tex == generated_tex
+
 
 def test_mip_cutstock(data):
     m = data
