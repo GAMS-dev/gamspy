@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.3.0
+------------
+- General
+  - Fix the bug in new lag/lead syntax.
+
 GAMSPy 1.2.0
 ------------
 - General
