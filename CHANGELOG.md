@@ -4,12 +4,8 @@ GAMSPy CHANGELOG
 GAMSPy 1.3.0
 ------------
 - General
-  - Support __neg__ overload for Card and Ord operations.
-
-GAMSPy 1.2.0
-------------
-- General
   - Change the way to show limited variables in latex file.
+  - Support __neg__ overload for Card and Ord operations.
 - Documentation
   - Add a section for limited variables. 
   - Add an example that shows how to read from another Container.
