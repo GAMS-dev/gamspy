@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.3.0
+------------
+- General
+  - Support __neg__ overload for Card and Ord operations.
+
 GAMSPy 1.2.0
 ------------
 - General
