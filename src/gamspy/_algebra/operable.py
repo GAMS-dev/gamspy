@@ -97,6 +97,10 @@ class Operable:
 
         return gamspy_math.rpower(self, other)
 
+    def __rpow__(self, other: int | float):
+        # e.g. 2 ** a[i] -> where 2 is other and a[i] is self.
+        return gamspy_math.rpower(other, self)
+
     def __mod__(self: OperableType, other: OperableType):
         return gamspy_math.mod(self, other)
 

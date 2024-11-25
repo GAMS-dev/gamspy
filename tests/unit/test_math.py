@@ -378,6 +378,10 @@ def test_math_2(data):
     op3 = a[i] ** 2.5
     assert op3.gamsRepr() == "( rPower(a(i),2.5) )"
 
+    # rpower
+    op1 = 3 ** a[i]
+    assert op1.gamsRepr() == "( rPower(3,a(i)) )"
+
 
 def test_logical(data):
     m, _, _ = data
