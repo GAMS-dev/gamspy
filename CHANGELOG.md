@@ -4,12 +4,8 @@ GAMSPy CHANGELOG
 GAMSPy 1.3.0
 ------------
 - General
-  - Fix the bug in new lag/lead syntax.
-
-GAMSPy 1.2.0
-------------
-- General
   - Change the way to show limited variables in latex file.
+  - Fix the bug in new lag/lead syntax.
 - Documentation
   - Add a section for limited variables. 
   - Add an example that shows how to read from another Container.
