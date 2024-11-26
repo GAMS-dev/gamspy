@@ -1,10 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 1.2.0
+GAMSPy 1.3.0
 ------------
 - General
   - Change the way to show limited variables in latex file.
+  - Add a verification step for working directory path length.
 - Documentation
   - Add a section for limited variables. 
   - Add an example that shows how to read from another Container.
