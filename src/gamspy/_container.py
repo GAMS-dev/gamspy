@@ -240,8 +240,12 @@ class Container(gt.Container):
 
         self._debugging_level = debugging_level
         self._workspace = Workspace(debugging_level, working_directory)
-
         self._working_directory = self._workspace.working_directory
+        if len(self._working_directory) > 204:
+            raise ValidationError(
+                f"Working directory path length cannot be greater than 204! Given working directory path `{self._working_directory}` has length of `{len(self._working_directory)}`"
+            )
+
         self._process_directory = tempfile.mkdtemp(dir=self.working_directory)
 
         self._job, self._gdx_in, self._gdx_out = self._setup_paths()

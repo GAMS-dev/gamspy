@@ -67,6 +67,9 @@ def test_container(data):
     with pytest.raises(ValidationError):
         _ = Container(working_directory="")
 
+    with pytest.raises(ValidationError):
+        _ = Container(working_directory="a" * 205)
+
     with pytest.raises(TypeError):
         m = Container(options={"bla": "bla"})
 
