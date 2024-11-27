@@ -136,6 +136,12 @@ def test_operations(data):
     assert expression.gamsRepr() == "(ord(i) eq ord(j))"
     expression = Ord(i) != Ord(j)
     assert expression.gamsRepr() == "(ord(i) ne ord(j))"
+    expression = Ord(i) <= 5
+    assert expression.gamsRepr() == "(ord(i) <= 5)"
+    expression = Ord(i) >= 5
+    assert expression.gamsRepr() == "(ord(i) >= 5)"
+    expression = -Ord(i)
+    assert expression.gamsRepr() == "( - ord(i))"
     expression = Card(i) == 5
     assert expression.gamsRepr() == "(card(i) eq 5)"
     expression = Card(i) != 5
@@ -144,6 +150,8 @@ def test_operations(data):
     assert expression.gamsRepr() == "(card(i) <= 5)"
     expression = Card(i) >= 5
     assert expression.gamsRepr() == "(card(i) >= 5)"
+    expression = -Card(i)
+    assert expression.gamsRepr() == "( - card(i))"
 
     sum_op = Sum((i, j), c[i, j] * x[i, j])
     expression = sum_op != sum_op
