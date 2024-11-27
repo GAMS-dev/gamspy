@@ -6,6 +6,8 @@ GAMSPy 1.3.0
 - General
   - Change the way to show limited variables in latex file.
   - Overload __rpower__ for operables.
+  - Support __neg__ overload for Card and Ord operations.
+  - Fix the bug in new lag/lead syntax.
   - Add a verification step for working directory path length.
 - Documentation
   - Add a section for limited variables. 

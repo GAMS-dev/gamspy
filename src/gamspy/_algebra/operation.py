@@ -645,6 +645,9 @@ class Ord(operable.Operable):
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
 
+    def __neg__(self):
+        return expression.Expression(None, "-", self)
+
     def gamsRepr(self) -> str:
         """
         Representation of the Ord operation in GAMS language.
@@ -717,6 +720,9 @@ class Card(operable.Operable):
 
     def __ne__(self, other):  # type: ignore
         return expression.Expression(self, "ne", other)
+
+    def __neg__(self):
+        return expression.Expression(None, "-", self)
 
     def __bool__(self):
         raise ValidationError(
