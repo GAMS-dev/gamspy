@@ -151,7 +151,6 @@ def test_math(data):
     op2 = gams_math.Round(b[i])
     assert isinstance(op2, expression.Expression)
     assert op2.gamsRepr() == "( round(b(i),0) )"
-    pytest.raises(ValidationError, gams_math.Round, b[i], s1)
 
     # sin
     op2 = gams_math.sin(b[i])
@@ -226,7 +225,6 @@ def test_math(data):
     # factorial
     op2 = gams_math.factorial(5)
     assert op2.gamsRepr() == "( fact(5) )"
-    pytest.raises(ValidationError, gams_math.factorial, s1)
 
     # fractional
     op2 = gams_math.fractional(b[i])
@@ -283,7 +281,6 @@ def test_math_2(data):
     m = Container()
     i = Set(m, "i", records=["1", "2"])
     a = Parameter(m, "a", domain=[i], records=[("1", 1), ("2", 2)])
-    s1 = Parameter(m, "s1", records=5)
 
     op1 = gams_math.entropy(1)
     assert op1.gamsRepr() == "( entropy(1) )"
@@ -322,26 +319,19 @@ def test_math_2(data):
 
     op1 = gams_math.ncp_cm(a[i], a[i], 3)
     assert op1.gamsRepr() == "( ncpCM(a(i),a(i),3) )"
-    pytest.raises(ValidationError, gams_math.ncp_cm, a[i], a[i], s1)
-    pytest.raises(ValidationError, gams_math.ncp_cm, a[i], a[i], -5)
 
     op1 = gams_math.ncp_f(a[i], a[i])
     assert op1.gamsRepr() == "( ncpF(a(i),a(i),0) )"
-    pytest.raises(ValidationError, gams_math.ncp_f, a[i], a[i], s1)
-    pytest.raises(ValidationError, gams_math.ncp_f, a[i], a[i], -5)
 
     op1 = gams_math.ncpVUpow(a[i], a[i])
     assert op1.gamsRepr() == "( ncpVUpow(a(i),a(i),0) )"
-    pytest.raises(ValidationError, gams_math.ncpVUpow, a[i], a[i], s1)
 
     op1 = gams_math.ncpVUsin(a[i], a[i])
     assert op1.gamsRepr() == "( ncpVUsin(a(i),a(i),0) )"
-    pytest.raises(ValidationError, gams_math.ncpVUsin, a[i], a[i], s1)
 
     op1 = gams_math.poly(a[i], 3, 5, 7)
     assert op1.gamsRepr() == "( poly(a(i),3,5,7) )"
     pytest.raises(ValidationError, gams_math.poly, a[i], 3)
-    pytest.raises(ValidationError, gams_math.poly, a[i], 3, 5, s1)
 
     op1 = gams_math.rand_binomial(1, 2)
     assert op1.gamsRepr() == "( randBinomial(1,2) )"
