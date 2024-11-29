@@ -306,6 +306,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             op = "=e="
         return expression.Expression(self, op, other)
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     def __neg__(self):
         return expression.Expression(None, "-", self)
 
