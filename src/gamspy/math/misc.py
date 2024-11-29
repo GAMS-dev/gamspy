@@ -1571,6 +1571,10 @@ def map_value(x: int | float | Symbol | ImplicitSymbol) -> Expression:
     >>> b[...] = map_value(a)
     >>> b.toValue()
     np.float64(0.0)
+    >>> a[...] = float('inf')
+    >>> b[...] = map_value(a)
+    >>> b.toValue()
+    np.float64(6.0)
 
     """
     return expression.Expression(None, MathOp("mapval", (x,)), None)
