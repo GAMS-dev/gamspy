@@ -11,6 +11,7 @@ GAMSPy 1.3.0
   - Add a verification step for working directory path length.
   - Add `map_value` function to the math library.
   - Allow conditioning on conditions.
+  - Upgrade gamspy_base and gamsapi dependencies. 
 - Documentation
   - Add a section for limited variables. 
   - Add an example that shows how to read from another Container.
