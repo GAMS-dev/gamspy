@@ -60,6 +60,7 @@ from gamspy.math.misc import (
     lse_max_sc,
     lse_min,
     lse_min_sc,
+    map_value,
     mod,
     ncp_cm,
     ncp_f,
@@ -202,4 +203,5 @@ __all__ = [
     "relu_with_complementarity_var",
     "log_softmax",
     "softmax",
+    "map_value",
 ]
