@@ -436,3 +436,15 @@ def test_operator_comparison_in_condition(data):
     c[s].where[Ord(s) <= Ord(s)] = 1
 
     assert c.getAssignment() == "c(s) $ (ord(s) <= ord(s)) = 1;"
+
+
+def test_condition_on_condition():
+    m = Container()
+    i = Set(m, "i")
+    a = Parameter(m, "a", domain=i)
+
+    assert a[i].where[a[i]].where[a[i]].gamsRepr() == "((a(i) $ a(i)) $ a(i))"
+    assert (
+        a[i].where[a[i]].where[a[i]].where[a[i]].gamsRepr()
+        == "(((a(i) $ a(i)) $ a(i)) $ a(i))"
+    )

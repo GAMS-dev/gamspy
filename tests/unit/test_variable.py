@@ -124,8 +124,8 @@ def test_variable_string(data):
         records=pd.DataFrame(data=[3.14159], columns=["level"]),
     )
     assert pi.getDeclaration() == "free Variable pi;"
-    new_pi = -pi
-    assert new_pi.gamsRepr() == "( - pi)"
+    assert (-pi).gamsRepr() == "( - pi)"
+    assert (pi != 3).gamsRepr() == "(pi ne 3)"
 
     # 1D variable with records
     v = Variable(

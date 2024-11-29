@@ -228,9 +228,6 @@ def factorial(x: int) -> Expression:
     >>> b[...] = factorial(2)
 
     """
-    if not isinstance(x, int):
-        raise ValidationError("Factorial requires an integer")
-
     return expression.Expression(None, MathOp("fact", (x,)), None)
 
 
@@ -376,9 +373,6 @@ def Round(x: float | Symbol, num_decimals: int = 0) -> Expression:
     np.float64(66.67)
 
     """
-    if not isinstance(num_decimals, int):
-        raise ValidationError("Round requires num_decimals to be an integer")
-
     return expression.Expression(
         None, MathOp("round", (x, num_decimals)), None
     )
@@ -767,12 +761,6 @@ def ncp_cm(x: Symbol, y: Symbol, z: float | int) -> Expression:
     np.float64(0.9365359944785137)
 
     """
-    if not isinstance(z, (int, float)):
-        raise ValidationError("ncp_cm requires z to be an integer or a float")
-
-    if z <= 0:
-        raise ValidationError("ncp_cm requires z to be greater than 0")
-
     return expression.Expression(None, MathOp("ncpCM", (x, y, z)), None)
 
 
@@ -802,14 +790,6 @@ def ncp_f(x: Symbol, y: Symbol, z: int | float = 0) -> Expression:
     np.float64(-0.5505102572168221)
 
     """
-    if not isinstance(z, (int, float)):
-        raise ValidationError("ncp_f requires z to be an integer or a float")
-
-    if z < 0:
-        raise ValidationError(
-            "ncp_f requires z to be greater than or equal to 0"
-        )
-
     return expression.Expression(None, MathOp("ncpF", (x, y, z)), None)
 
 
@@ -843,11 +823,6 @@ def ncpVUpow(
     np.float64(1.0)
 
     """
-    if not isinstance(mu, (int, float)):
-        raise ValidationError(
-            "ncpVUpow requires mu to be an integer or a float"
-        )
-
     return expression.Expression(None, MathOp("ncpVUpow", (r, s, mu)), None)
 
 
@@ -877,11 +852,6 @@ def ncpVUsin(r: Symbol, s: Symbol, mu: int | float = 0) -> Expression:
     np.float64(1.0)
 
     """
-    if not isinstance(mu, (int, float)):
-        raise ValidationError(
-            "ncpVUsin requires mu to be an integer or a float"
-        )
-
     return expression.Expression(None, MathOp("ncpVUsin", (r, s, mu)), None)
 
 
@@ -913,11 +883,6 @@ def poly(x, *args) -> Expression:
     """
     if len(args) < 3:
         raise ValidationError("poly requires at least 3 arguments after x")
-
-    if not all(isinstance(arg, (int, float)) for arg in args):
-        raise ValidationError(
-            "poly requires all args to be integers or floats"
-        )
 
     return expression.Expression(None, MathOp("poly", (x,) + args), None)
 
@@ -1575,3 +1540,41 @@ def rel_ne(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
 
     """
     return expression.Expression(None, MathOp("rel_ne", (x, y)), None)
+
+
+def map_value(x: int | float | Symbol | ImplicitSymbol) -> Expression:
+    """
+    Returns an integer value that indicates what special value (if any) is stored in the input.
+    Possible results:
+    0: is not a special value
+    4: is UNDF (undefined)
+    5: is NA (not available)
+    6: is INF
+    7: is -INF
+    8: is EPS
+
+    Parameters
+    ----------
+    x : int | float | Symbol | ImplicitSymbol
+
+    Returns
+    -------
+    Expression
+
+    Examples
+    --------
+    >>> from gamspy import Container, Parameter
+    >>> from gamspy.math import map_value
+    >>> m = Container()
+    >>> a = Parameter(m, "a", records=12)
+    >>> b = Parameter(m, "b")
+    >>> b[...] = map_value(a)
+    >>> b.toValue()
+    np.float64(0.0)
+    >>> a[...] = float('inf')
+    >>> b[...] = map_value(a)
+    >>> b.toValue()
+    np.float64(6.0)
+
+    """
+    return expression.Expression(None, MathOp("mapval", (x,)), None)
