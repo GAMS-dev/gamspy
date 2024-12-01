@@ -44,10 +44,19 @@ class Condition(operable.Operable):
         | Number
         | Card
         | Ord,
-        condition: Expression | ImplicitParameter | ImplicitSet | None = None,
+        condition: Expression
+        | ImplicitParameter
+        | ImplicitSet
+        | int
+        | None = None,
     ):
         self.conditioning_on = conditioning_on
         self.condition = condition
+        self._where = None
+
+    @property
+    def where(self):
+        return Condition(self)
 
     def __getitem__(
         self, condition: Expression | ImplicitParameter | ImplicitSet
@@ -86,11 +95,19 @@ class Condition(operable.Operable):
 
         self.conditioning_on.container._synch_with_gams(gams_to_gamspy=True)
 
+    def __neg__(self) -> Expression:
+        return expression.Expression(None, "-", self)
+
     def __repr__(self) -> str:
         return f"Condition(conditioning_on={self.conditioning_on}, condition={self.condition})"
 
     def gamsRepr(self) -> str:
-        return f"({self.conditioning_on.gamsRepr()} $ {self.condition.gamsRepr()})"  # type: ignore
+        condition_str = (
+            self.condition.gamsRepr()  # type: ignore
+            if hasattr(self.condition, "gamsRepr")
+            else str(self.condition)
+        )
+        return f"({self.conditioning_on.gamsRepr()} $ {condition_str})"  # type: ignore
 
     def getDeclaration(self) -> str:
         return self.gamsRepr()
@@ -103,4 +120,9 @@ class Condition(operable.Operable):
         -------
         str
         """
-        return f"{self.conditioning_on.latexRepr()} ~ | ~ {self.condition.latexRepr()}"  # type: ignore
+        condition_str = (
+            self.condition.latexRepr()  # type: ignore
+            if hasattr(self.condition, "latexRepr")
+            else str(self.condition)
+        )
+        return f"{self.conditioning_on.latexRepr()} ~ | ~ {condition_str}"  # type: ignore
