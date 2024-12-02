@@ -310,6 +310,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __eq__(self, other):  # type: ignore
         return expression.Expression(self, "=e=", other)
 
+    def __ne__(self, other):  # type: ignore
+        return expression.Expression(self, "ne", other)
+
     def __repr__(self) -> str:
         return f"Variable(name='{self.name}', domain={self.domain}, type={self.type})"
 

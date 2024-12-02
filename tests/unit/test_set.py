@@ -216,6 +216,20 @@ def test_lag_and_lead(data):
 
     assert sMinDown.getAssignment() == "sMinDown(s,t + (ord(t) - ord(s))) = 1;"
 
+    i = Set(m, "i", records=range(3))
+    t = Set(m, "t", records=range(3))
+    a = Parameter(m, "a", domain=i)
+    b = Parameter(m, "b", domain=i)
+    a[i.lag(i.val)] = 5
+    b[i - i.val] = 5
+    assert a.records.equals(b.records)
+
+    c = Parameter(m, "c", domain=i)
+    d = Parameter(m, "d", domain=i)
+    c[i.lead(i.val)] = 5
+    d[i + i.val] = 5
+    assert c.records.equals(d.records)
+
 
 def test_set_attributes(data):
     m, *_ = data

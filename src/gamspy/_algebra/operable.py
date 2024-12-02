@@ -43,8 +43,11 @@ class Operable:
     # +, -, /, *, **, %
     def __add__(self: OperableType, other: OperableType):
         from gamspy._symbols import Alias, Set
+        from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(self, (Alias, Set)) and isinstance(other, int):
+        if isinstance(self, (Alias, Set)) and not isinstance(
+            other, (Alias, Set, ImplicitSet)
+        ):
             return self.lead(other)
 
         return expression.Expression(self, "+", other)
@@ -54,8 +57,11 @@ class Operable:
 
     def __sub__(self: OperableType, other: OperableType):
         from gamspy._symbols import Alias, Set
+        from gamspy._symbols.implicits import ImplicitSet
 
-        if isinstance(self, (Alias, Set)) and isinstance(other, int):
+        if isinstance(self, (Alias, Set)) and not isinstance(
+            other, (Alias, Set, ImplicitSet)
+        ):
             return self.lag(other)
 
         return expression.Expression(self, "-", other)
@@ -96,6 +102,10 @@ class Operable:
                 return gamspy_math.power(self, other)
 
         return gamspy_math.rpower(self, other)
+
+    def __rpow__(self, other: int | float):
+        # e.g. 2 ** a[i] -> where 2 is other and a[i] is self.
+        return gamspy_math.rpower(other, self)
 
     def __mod__(self: OperableType, other: OperableType):
         return gamspy_math.mod(self, other)
