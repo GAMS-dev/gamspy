@@ -78,7 +78,7 @@ def read_solution(df: pd.DataFrame, cost: float) -> None:
 
     # Print readable output
     for commodity, move_data in solution.items():
-        print(f"\n{'-'*20}")
+        print(f"\v{'-'*20}")
         print(f"{commodity}: ${sum([flow['cost'] for flow in move_data])}")
         for flow in move_data:
             print(
@@ -95,7 +95,7 @@ def main():
 
     # DATA
 
-    nodes = [f"n{i}" for i in range(1, 6)]
+    nodes = [f"v{i}" for i in range(1, 6)]
     commodities = [f"k{i}" for i in range(1, 5)]
     possible_paths = [f"p{i}" for i in range(1, 51)]
     edges = [
@@ -192,27 +192,27 @@ def main():
 
     # SETS
 
-    n = Set(m, "n", records=nodes, description="Nodes")
+    v = Set(m, "v", records=nodes, description="Nodes")
     k = Set(m, "k", records=commodities, description="Commodities")
     p = Set(m, "p", records=possible_paths, description="Possible paths")
-    e = Set(m, "e", [n, n], records=edges, description="Edges")
-    ks = Set(m, "ks", [k, n], records=sources, description="Commodity Sources")
-    kt = Set(m, "kt", [k, n], records=targets, description="Commodity Sinks")
+    e = Set(m, "e", [v, v], records=edges, description="Edges")
+    ks = Set(m, "ks", [k, v], records=sources, description="Commodity Sources")
+    kt = Set(m, "kt", [k, v], records=targets, description="Commodity Sinks")
 
     pp = Set(m, "pp", p, description="Dynamic subset of p")
     pp[p] = Ord(p) <= Card(k)
 
-    u = Alias(m, "u", n)
+    u = Alias(m, "u", v)
 
     # PARAMETERS
 
     paths = Parameter(
-        m, "paths", [p, n, n], initial_paths, description="All paths"
+        m, "paths", [p, v, v], initial_paths, description="All paths"
     )
     cost = Parameter(
         m,
         "cost",
-        [k, n, n],
+        [k, v, v],
         edge_cost,
         description="Cost of transporting one unit of K_i on edge (u, v)",
     )
@@ -222,7 +222,7 @@ def main():
     )
 
     capacity = Parameter(
-        m, "capacity", [n, n], cap, description="Capacity of edge (u,v)"
+        m, "capacity", [v, v], cap, description="Capacity of edge (u,v)"
     )
 
     path_commodity = Parameter(
@@ -257,7 +257,7 @@ def main():
     cap_constraint = Equation(
         m,
         name="cap_constraint",
-        domain=[n, n],
+        domain=[v, v],
         description="Capacity constraint for each edge",
     )
     flow_conserve = Equation(
@@ -272,7 +272,7 @@ def main():
     )
 
     # Capacity constraint: Sum of all flows on each edge `e` across all paths does not exceed cap(e)
-    cap_constraint[e[u, n]] = (
+    cap_constraint[e[u, v]] = (
         -Sum([k, pp], paths[pp, e] * f[k, pp]) >= -capacity[e]
     )
 
@@ -291,17 +291,17 @@ def main():
 
     # Pricing problem - Shortest path model
     # SETS
-    s = Set(m, name="s", domain=n, description="Source node")
-    t = Set(m, name="t", domain=n, description="Sink   node")
+    s = Set(m, name="s", domain=v, description="Source node")
+    t = Set(m, name="t", domain=v, description="Sink   node")
 
     # PARAMETERS
-    sub_cost = Parameter(m, name="sub_cost", domain=[n, n])
+    sub_cost = Parameter(m, name="sub_cost", domain=[v, v])
     sub_demand = Parameter(m, name="sub_demand")
     alpha = Parameter(m, name="alpha")
 
     # VARIABLES
     y = Variable(
-        m, name="y", type="positive", domain=[u, n], description="New path"
+        m, name="y", type="positive", domain=[u, v], description="New path"
     )
 
     # EQUATIONS
@@ -313,7 +313,7 @@ def main():
     pricing_cap = Equation(
         m,
         name="pricing_cap",
-        domain=[n, u],
+        domain=[u, v],
         description="Capacity constraint for edge (u,v)",
     )
     pricing_source = Equation(
@@ -329,18 +329,18 @@ def main():
     pricing_flow = Equation(
         m,
         name="pricing_flow",
-        domain=n,
+        domain=v,
         description="Flow conservation at intermediate nodes",
     )
 
     pricing_obj[...] = z == -(alpha * sub_demand) + Sum(
         e, (sub_cost[e] + cap_constraint.m[e]) * y[e]
     )
-    pricing_cap[e[u, n]] = y[e] <= capacity[e]
-    pricing_source[...] = Sum(e[s, n], y[e]) == sub_demand
+    pricing_cap[e[u, v]] = y[e] <= capacity[e]
+    pricing_source[...] = Sum(e[s, v], y[e]) == sub_demand
     pricing_target[...] = Sum(e[u, t], y[e]) == sub_demand
-    pricing_flow[n].where[(~s[n]) & (~t[n])] = Sum(e[n, u], y[e]) == Sum(
-        e[u, n], y[e]
+    pricing_flow[v].where[(~s[v]) & (~t[v])] = Sum(e[v, u], y[e]) == Sum(
+        e[u, v], y[e]
     )
 
     pricing = Model(
@@ -370,8 +370,8 @@ def main():
         rmp.solve()
 
         for commodity in k.toList():
-            s[n] = ks[commodity, n]
-            t[n] = kt[commodity, n]
+            s[v] = ks[commodity, v]
+            t[v] = kt[commodity, v]
             sub_cost[e] = cost[commodity, e]
             alpha[...] = flow_conserve.m[commodity]
             sub_demand[...] = demand[commodity]
