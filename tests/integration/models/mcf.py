@@ -82,7 +82,7 @@ def read_solution(df: pd.DataFrame, cost: float) -> None:
         print(f"{commodity}: ${sum([flow['cost'] for flow in move_data])}")
         for flow in move_data:
             print(
-                f"  {flow['from']} → {flow['to']}: {flow['amount']} (${flow['cost']})"
+                f"  {flow['from']} -> {flow['to']}: {flow['amount']} (${flow['cost']})"
             )
 
 
