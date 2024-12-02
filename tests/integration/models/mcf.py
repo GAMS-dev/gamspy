@@ -95,7 +95,7 @@ def main():
 
     # DATA
 
-    nodes = [f"v{i}" for i in range(1, 6)]
+    nodes = [f"n{i}" for i in range(1, 6)]
     commodities = [f"k{i}" for i in range(1, 5)]
     possible_paths = [f"p{i}" for i in range(1, 51)]
     edges = [
@@ -405,7 +405,7 @@ def main():
     print("Total paths generated:", len(pp) - len(k))
     read_solution(
         (
-            f.pivot() @ paths.pivot(index=["p_0"], columns=["n_1", "n_2"])
+            f.pivot() @ paths.pivot(index=["p_0"], columns=["v_1", "v_2"])
         ).T.sort_index(level=0),
         edge_cost,
     )
