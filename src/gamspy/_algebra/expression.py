@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -41,6 +41,12 @@ LINE_LENGTH_OFFSET = 79000
 @dataclass
 class DomainPlaceHolder:
     indices: list[tuple[str, int]]
+
+
+def peek(stack):
+    if len(stack) > 0:
+        return stack[-1]
+    return None
 
 
 class Expression(operable.Operable):
@@ -88,6 +94,7 @@ class Expression(operable.Operable):
 
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
+
         self.representation = self._create_output_str()
         self.where = condition.Condition(self)
         self._create_domain()
@@ -350,30 +357,41 @@ class Expression(operable.Operable):
         # Equality operations on Parameter and Variable objects generate
         # GAMS equality signs: =g=, =e=, =l=. If these signs appear on
         # assignments, replace them with regular equality ops.
-        EQ_MAP: dict[Any, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
+        # Uses a stack based post-order traversal algorithm.
+        EQ_MAP: dict[str, str] = {"=g=": ">=", "=e=": "eq", "=l=": "<="}
         stack = []
+        root = self
 
-        node = self
         while True:
-            if node is not None:
-                stack.append(node)
-                node = getattr(node, "left", None)  # type: ignore
-            elif stack:
-                node = stack.pop()
+            while root is not None:
+                if hasattr(root, "right"):
+                    stack.append(root.right)
 
-                if isinstance(node, Expression) and node.data in EQ_MAP:
-                    node._replace_operator(EQ_MAP[node.data])
+                stack.append(root)
+                root = root.left if hasattr(root, "left") else None
 
-                if isinstance(node, operation.Operation) and isinstance(
-                    node.rhs, Expression
-                ):
-                    node.rhs._fix_equalities()
+            if len(stack) == 0:
+                break
 
-                node = getattr(node, "right", None)
+            root = stack.pop()
+
+            if isinstance(root, Expression):
+                if root.data in EQ_MAP:
+                    root._replace_operator(EQ_MAP[root.data])
+                else:
+                    root.representation = root._create_output_str()
+
+            last_item = peek(stack)
+            if (
+                hasattr(root, "right")
+                and last_item is not None
+                and last_item is root.right
+            ):
+                stack.pop()
+                stack.append(root)
+                root = root.right
             else:
-                break  # pragma: no cover
-
-        self.representation = self._create_output_str()
+                root = None
 
     def _find_all_symbols(self) -> list[str]:
         # Finds all symbols in an expression with a stack based inorder

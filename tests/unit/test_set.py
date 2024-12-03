@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from gamspy import Alias, Card, Container, Ord, Parameter, Set
+from gamspy import Alias, Card, Container, Number, Ord, Parameter, Set
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -268,6 +268,31 @@ def test_set_attributes(data):
         ("4", "1", 5.0),
         ("4", "2", 5.0),
     ]
+
+    m = Container()
+    N = Parameter(m, "N", records=20)
+    L = Parameter(m, "L", records=int(N.toValue()) / 2)
+    v = Set(m, "v", records=range(1, int(N.toValue()) + 1))
+    i = Set(m, "i", domain=v)
+    i[v] = Number(1).where[v.val < L]
+    j = Alias(m, "j", i)
+
+    tight = Set(
+        m,
+        "tight",
+        description="diameter constraints that are conjectured tight",
+        domain=[v, v],
+    )
+    tight[i, j] = Number(1).where[
+        (i.val >= (L - 1) / 2)
+        & (j.val >= L - 1 - i.val)
+        & (j.val <= i.val)
+        & (j.val <= L - i.val)
+    ]
+    assert (
+        tight._assignment.gamsRepr()
+        == "tight(i,j) = (1 $ ((((i.val >= ((L - 1) / 2)) and (j.val >= ((L - 1) - i.val))) and (j.val <= i.val)) and (j.val <= (L - i.val))));"
+    )
 
 
 def test_sameas(data):
