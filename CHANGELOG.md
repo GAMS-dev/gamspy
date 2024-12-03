@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.3.1
+------------
+- General
+  - Fix the bug in equality type traversal. Use post-traversal instead of in-order traversal.
+
 GAMSPy 1.3.0
 ------------
 - General
