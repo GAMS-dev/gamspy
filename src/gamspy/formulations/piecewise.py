@@ -8,7 +8,7 @@ import numpy as np
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 
-number = int | float
+number = typing.Union[int, float]
 
 
 def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
