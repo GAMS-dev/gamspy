@@ -55,7 +55,7 @@ def _check_points(
     return x_vals, y_vals
 
 
-def enforce_sos2_with_binary(lambda_var: gp.Variable):
+def _enforce_sos2_with_binary(lambda_var: gp.Variable):
     equations = []
     m = lambda_var.container
     count_x = len(lambda_var.domain[-1])
@@ -141,7 +141,7 @@ def piecewise_linear_function(
     equations.append(set_y)
 
     if using == "binary":
-        _, extra_eqs = enforce_sos2_with_binary(lambda_var)
+        _, extra_eqs = _enforce_sos2_with_binary(lambda_var)
         equations.extend(extra_eqs)
 
     return out_y, equations
