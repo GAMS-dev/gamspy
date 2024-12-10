@@ -9,6 +9,7 @@ import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 number = typing.Union[int, float]
+linear_expression = typing.Union["gp.Expression", "gp.Variable", number]
 
 
 def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
@@ -26,31 +27,68 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     return numbers_in_bit_array
 
 
+def _get_linear_coefficients(expr: linear_expression) -> tuple[float, float]:
+    """
+    Assuming the provided expression is in shape y = mx +n, it returns the
+    coefficients m, n
+    """
+    # constant y = c
+    if isinstance(expr, (int, float)):
+        return 0, expr
+
+    # y = x
+    if isinstance(expr, gp.Variable):
+        return 1, 0
+
+    # TODO implement
+    return 1, 2
+
+
 def _check_points(
-    x_to_fx: dict[number, number],
+    intervals: dict[tuple[number, number], linear_expression],
 ) -> tuple[list[number], list[number]]:
-    if not isinstance(x_to_fx, dict):
+    if not isinstance(intervals, dict):
         raise ValidationError("Function mapping must be a dictionary")
 
+    last_b = None
+    last_y = None
     x_vals = []
     y_vals = []
 
-    old_k = None
-    for k in x_to_fx:
-        if not isinstance(k, (float, int)):
-            raise ValidationError("Keys need to be float or integer")
+    for a, b in intervals:
+        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+            raise ValidationError(
+                "Intervals must be specified using integers or floats"
+            )
 
-        v = x_to_fx[k]
-        if not isinstance(v, (float, int)):
-            raise ValidationError("Values need to be float or integer")
+        if a > b:
+            raise ValidationError("Interval's start is greater than its end")
 
-        if old_k is None:
-            old_k = k
-        elif k <= old_k:
-            raise ValidationError("Keys need to be sorted")
+        if last_b is None:
+            last_b = a
 
-        x_vals.append(k)
-        y_vals.append(v)
+        # TODO maybe we will relax it
+        if last_b != a:
+            raise ValidationError("Intervals cannot have any gap")
+
+        last_b = b
+        expr = intervals[(a, b)]
+        if not isinstance(expr, (int, float, gp.Expression, gp.Variable)):
+            raise ValidationError("Expression was in an unrecognized format")
+
+        m, n = _get_linear_coefficients(expr)
+
+        y1 = m * a + n
+        y2 = m * b + n
+
+        # discontinuity
+        if last_y != y1:
+            x_vals.append(a)
+            y_vals.append(y1)
+
+        x_vals.append(b)
+        y_vals.append(y2)
+        last_y = y2
 
     return x_vals, y_vals
 
@@ -98,7 +136,7 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
 
 def piecewise_linear_function(
     input_x: gp.Variable,
-    points: dict[number, number],
+    intervals: dict[tuple[number, number], linear_expression],
     using: typing.Literal["binary", "sos2"] = "sos2",
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     if using not in {"binary", "sos2"}:
@@ -107,7 +145,7 @@ def piecewise_linear_function(
             "Possible values are 'binary' and 'sos2'"
         )
 
-    x_vals, y_vals = _check_points(points)
+    x_vals, y_vals = _check_points(intervals)
 
     m = input_x.container
     out_y = m.addVariable()
@@ -149,13 +187,13 @@ def piecewise_linear_function(
 
 def piecewise_linear_function_with_binary(
     input_x: gp.Variable,
-    points: dict[number, number],
+    intervals: dict[tuple[number, number], linear_expression],
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    return piecewise_linear_function(input_x, points, using="binary")
+    return piecewise_linear_function(input_x, intervals, using="binary")
 
 
 def piecewise_linear_function_with_sos2(
     input_x: gp.Variable,
-    points: dict[number, number],
+    intervals: dict[tuple[number, number], linear_expression],
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    return piecewise_linear_function(input_x, points, using="sos2")
+    return piecewise_linear_function(input_x, intervals, using="sos2")
