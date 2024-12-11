@@ -18,7 +18,7 @@ Layer Formulations
 ==================
 
 GAMSPy provides several formulations to help you embed your neural network
-structures into your into your optimization model. We started with formulations
+structures into your optimization model. We started with formulations
 for computer vision-related structures such as convolution and pooling
 operations.
 
