@@ -6,7 +6,11 @@ from gamspy.formulations.nn import (
     MaxPool2d,
     MinPool2d,
 )
-from gamspy.formulations.piecewise import piecewise_linear_function
+from gamspy.formulations.piecewise import (
+    piecewise_linear_function,
+    piecewise_linear_function_with_binary,
+    piecewise_linear_function_with_sos2,
+)
 from gamspy.formulations.shape import flatten_dims
 
 __all__ = [
@@ -18,4 +22,6 @@ __all__ = [
     "Linear",
     "flatten_dims",
     "piecewise_linear_function",
+    "piecewise_linear_function_with_sos2",
+    "piecewise_linear_function_with_binary",
 ]

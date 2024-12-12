@@ -27,73 +27,14 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     return numbers_in_bit_array
 
 
-def _get_linear_coefficients(expr: linear_expression) -> tuple[float, float]:
-    """
-    Assuming the provided expression is in shape y = mx +n, it returns the
-    coefficients m, n
-    """
-    # constant y = c
-    if isinstance(expr, (int, float)):
-        return 0, expr
-
-    # y = x
-    if isinstance(expr, gp.Variable):
-        return 1, 0
-
-    # TODO implement
-    return 1, 2
-
-
-def _check_points(
-    intervals: dict[tuple[number, number], linear_expression],
-) -> tuple[list[number], list[number]]:
-    if not isinstance(intervals, dict):
-        raise ValidationError("Function mapping must be a dictionary")
-
-    last_b = None
-    last_y = None
-    x_vals = []
-    y_vals = []
-
-    for a, b in intervals:
-        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
-            raise ValidationError(
-                "Intervals must be specified using integers or floats"
-            )
-
-        if a > b:
-            raise ValidationError("Interval's start is greater than its end")
-
-        if last_b is None:
-            last_b = a
-
-        # TODO maybe we will relax it
-        if last_b != a:
-            raise ValidationError("Intervals cannot have any gap")
-
-        last_b = b
-        expr = intervals[(a, b)]
-        if not isinstance(expr, (int, float, gp.Expression, gp.Variable)):
-            raise ValidationError("Expression was in an unrecognized format")
-
-        m, n = _get_linear_coefficients(expr)
-
-        y1 = m * a + n
-        y2 = m * b + n
-
-        # discontinuity
-        if last_y != y1:
-            x_vals.append(a)
-            y_vals.append(y1)
-
-        x_vals.append(b)
-        y_vals.append(y2)
-        last_y = y2
-
-    return x_vals, y_vals
-
-
 def _enforce_sos2_with_binary(lambda_var: gp.Variable):
+    """
+    Enforces SOS2 constraints using binary variables.
+
+    Based on paper:
+    `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
+    <https://www.academia.edu/download/43527291/Modeling_Disjunctive_Constraints_with_a_20160308-26796-1g6hb4g.pdf>`_
+    """
     equations = []
     m = lambda_var.container
     count_x = len(lambda_var.domain[-1])
@@ -131,32 +72,109 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
     sos2_eq_2[L] = gp.Sum(use_set_2[L, J], lambda_var[J]) <= 1 - bin_var[L]
     equations.append(sos2_eq_2)
 
-    return lambda_var, equations
+    return equations
+
+
+def _check_points(
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
+) -> None:
+    if not isinstance(x_points, typing.Sequence):
+        raise ValidationError("x_points are expected to be a sequence")
+
+    if not isinstance(y_points, typing.Sequence):
+        raise ValidationError("y_points are expected to be a sequence")
+
+    if len(x_points) <= 2:
+        raise ValidationError(
+            "piecewise linear functions require at least 2 points"
+        )
+
+    if len(y_points) != len(x_points):
+        raise ValidationError("x_points and y_points have different lenghts")
+
+    for li, name in [(x_points, "x_points"), (y_points, "y_points")]:
+        for item in li:
+            if not isinstance(item, (float, int)):
+                raise ValidationError(f"{name} contains non-numerical items")
+
+    for i in range(len(x_points) - 1):
+        if x_points[i + 1] < x_points[i]:
+            raise ValidationError(
+                "x_points should be in an non-decreasing order"
+            )
 
 
 def piecewise_linear_function(
     input_x: gp.Variable,
-    intervals: dict[tuple[number, number], linear_expression],
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
     using: typing.Literal["binary", "sos2"] = "sos2",
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    This function implements a piecewise linear function. Given an input
+    (independent) variable `input_x`, along with the defining `x_points` and
+    corresponding `y_points` of the piecewise function, it constructs the
+    dependent variable `y` and formulates the equations necessary to define the
+    function.
+
+    The implementation supports discontinuities. If the function is
+    discontinuous at a specific point `x_i`, you can specify `x_i` twice in
+    `x_points` with distinct y_points values. For instance, with `x_points`
+    = `[1, 3, 3, 5]` and `y_points` = `[10, 30, 50, 70]`, the function allows
+    `y` to take either 30 or 50 at `x=3`.
+
+    The input variable `input_x` is restricted to the range defined by
+    `x_points`.
+
+    Internally, the function uses SOS2 (Special Ordered Set Type 2) variables
+    by default. If preferred, you can switch to binary variables by setting the
+    `using` parameter to "binary".
+
+    Returns the dependent variable `y` and the equations required to model the
+    piecewise linear relationship.
+
+    Parameters
+    ----------
+    x : gp.Variable
+        Independent variable of the piecewise linear function
+    x_points: typing.Sequence[int | float]
+        Break points of the piecewise linear function in the x-axis
+    y_points: typing.Sequence[int| float]
+        Break points of the piecewise linear function in the y-axis
+    using: str = "sos2"
+
+    Returns
+    -------
+    tuple[gp.Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.formulations import piecewise_linear_function
+    >>> m = Container()
+    >>> x = Variable(m, "x")
+    >>> y, eqs = piecewise_linear_function(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
+
+    """
     if using not in {"binary", "sos2"}:
         raise ValidationError(
             "Invalid value for the using argument."
             "Possible values are 'binary' and 'sos2'"
         )
 
-    x_vals, y_vals = _check_points(intervals)
+    _check_points(x_points, y_points)
 
     m = input_x.container
     out_y = m.addVariable()
     equations = []
 
-    J = gp.math._generate_dims(m, [len(x_vals)])[0]
-    x_par = m.addParameter(domain=[J], records=np.array(x_vals))
-    y_par = m.addParameter(domain=[J], records=np.array(y_vals))
+    J = gp.math._generate_dims(m, [len(x_points)])[0]
+    x_par = m.addParameter(domain=[J], records=np.array(x_points))
+    y_par = m.addParameter(domain=[J], records=np.array(y_points))
 
-    min_y = min(y_vals)
-    max_y = max(y_vals)
+    min_y = min(y_points)
+    max_y = max(y_points)
     out_y.lo[...] = min_y
     out_y.up[...] = max_y
 
@@ -179,7 +197,7 @@ def piecewise_linear_function(
     equations.append(set_y)
 
     if using == "binary":
-        _, extra_eqs = _enforce_sos2_with_binary(lambda_var)
+        extra_eqs = _enforce_sos2_with_binary(lambda_var)
         equations.extend(extra_eqs)
 
     return out_y, equations
@@ -187,13 +205,45 @@ def piecewise_linear_function(
 
 def piecewise_linear_function_with_binary(
     input_x: gp.Variable,
-    intervals: dict[tuple[number, number], linear_expression],
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    return piecewise_linear_function(input_x, intervals, using="binary")
+    """
+    Calls the piecewise_linear_function setting `using` keyword argument
+    to `binary`
+
+    Parameters
+    ----------
+    x : gp.Variable
+        Independent variable of the piecewise linear function
+    x_points: typing.Sequence[int | float]
+        Break points of the piecewise linear function in the x-axis
+    y_points: typing.Sequence[int| float]
+        Break points of the piecewise linear function in the y-axis
+
+    """
+    return piecewise_linear_function(
+        input_x, x_points, y_points, using="binary"
+    )
 
 
 def piecewise_linear_function_with_sos2(
     input_x: gp.Variable,
-    intervals: dict[tuple[number, number], linear_expression],
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
 ) -> tuple[gp.Variable, list[gp.Equation]]:
-    return piecewise_linear_function(input_x, intervals, using="sos2")
+    """
+    Calls the piecewise_linear_function setting `using` keyword argument
+    to `sos2`.
+
+    Parameters
+    ----------
+    x : gp.Variable
+        Independent variable of the piecewise linear function
+    x_points: typing.Sequence[int | float]
+        Break points of the piecewise linear function in the x-axis
+    y_points: typing.Sequence[int| float]
+        Break points of the piecewise linear function in the y-axis
+
+    """
+    return piecewise_linear_function(input_x, x_points, y_points, using="sos2")
