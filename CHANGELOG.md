@@ -1,13 +1,18 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.4.0
+------------
+- Testing
+  - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
+- Documentation
+  - Add an example demonstrating how to solve the Minimum Cost Multi-Commodity Flow Problem using Column Generation in GAMSPy.
+
+
 GAMSPy 1.3.1
 ------------
 - General
   - Fix the bug in equality type traversal. Use post-traversal instead of in-order traversal.
-- Documentation
-  - Add a section in the installation docs that explains how to create a virtual environment.
-  - Add an example demonstrating how to solve the Minimum Cost Multi-Commodity Flow Problem using Column Generation in GAMSPy.
 
 GAMSPy 1.3.0
 ------------

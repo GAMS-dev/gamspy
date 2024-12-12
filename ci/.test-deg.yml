@@ -11,7 +11,7 @@ deg-test-3.13:
     - python -m pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - gamspy install solver mpsge scip reshop
-    - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
+    - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
   rules:
