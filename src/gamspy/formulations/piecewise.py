@@ -163,6 +163,9 @@ def piecewise_linear_function(
             "Possible values are 'binary' and 'sos2'"
         )
 
+    if not isinstance(input_x, gp.Variable):
+        raise ValidationError("input_x is expected to be a Variable")
+
     _check_points(x_points, y_points)
 
     m = input_x.container
