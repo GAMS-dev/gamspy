@@ -35,9 +35,13 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
     <https://www.academia.edu/download/43527291/Modeling_Disjunctive_Constraints_with_a_20160308-26796-1g6hb4g.pdf>`_
     """
-    equations = []
+    equations: list[gp.Equation] = []
     m = lambda_var.container
     count_x = len(lambda_var.domain[-1])
+    # edge case
+    if count_x == 2:
+        # if there are only 2 elements, it is already sos2
+        return equations
 
     J = lambda_var.domain[-1]
 
@@ -85,7 +89,7 @@ def _check_points(
     if not isinstance(y_points, typing.Sequence):
         raise ValidationError("y_points are expected to be a sequence")
 
-    if len(x_points) <= 2:
+    if len(x_points) < 2:
         raise ValidationError(
             "piecewise linear functions require at least 2 points"
         )
