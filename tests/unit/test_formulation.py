@@ -204,3 +204,11 @@ def test_pwl_validation(data):
         [1, 3, 2],
         [10, 20, 30],
     )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [1],
+        [10],
+    )
