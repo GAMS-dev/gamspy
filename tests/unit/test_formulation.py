@@ -81,6 +81,9 @@ def test_pwl_with_sos2(data):
     y_points = data["y_points"]
     y, eqs = piecewise_linear_function_with_sos2(x, x_points, y_points)
     y2, eqs2 = piecewise_linear_function(x, x_points, y_points, using="sos2")
+    y3, eqs2 = piecewise_linear_function_with_sos2(
+        x, x_points, y_points, bound_domain=False
+    )
 
     # there should be no binary variables
     var_count = get_var_count_by_type(m)
@@ -88,6 +91,7 @@ def test_pwl_with_sos2(data):
     assert var_count["sos2"] == 2  # since we called it twice
     assert y.type == "free"
     assert y2.type == "free"
+    assert y3.type == "free"
     assert len(eqs) == len(eqs2)
 
 
@@ -211,4 +215,14 @@ def test_pwl_validation(data):
         x,
         [1],
         [10],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [1, 2, 3],
+        [10, 20, 40],
+        using="binary",
+        bound_domain=True,
     )
