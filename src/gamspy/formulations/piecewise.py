@@ -114,6 +114,7 @@ def piecewise_linear_function(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
     using: typing.Literal["binary", "sos2"] = "sos2",
+    bound_domain: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     This function implements a piecewise linear function. Given an input
@@ -129,7 +130,9 @@ def piecewise_linear_function(
     `y` to take either 30 or 50 at `x=3`.
 
     The input variable `input_x` is restricted to the range defined by
-    `x_points`.
+    `x_points` unless `bound_domain` is set to False. `bound_domain` can be set
+    to False only if using is "sos2". When `input_x` is not bound, you can assume
+    as if the first and the last line segments are extended.
 
     Internally, the function uses SOS2 (Special Ordered Set Type 2) variables
     by default. If preferred, you can switch to binary variables by setting the
@@ -147,6 +150,9 @@ def piecewise_linear_function(
     y_points: typing.Sequence[int| float]
         Break points of the piecewise linear function in the y-axis
     using: str = "sos2"
+        What type of variable is used during implementing piecewise function
+    bound_domain: bool = True
+        If input_x should be limited to interval defined by min(x_points), max(x_points)
 
     Returns
     -------
@@ -170,6 +176,11 @@ def piecewise_linear_function(
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
+    if bound_domain is False and using == "binary":
+        raise ValidationError(
+            "bound_domain can only be false when using is sos2"
+        )
+
     _check_points(x_points, y_points)
 
     m = input_x.container
@@ -180,16 +191,25 @@ def piecewise_linear_function(
     x_par = m.addParameter(domain=[J], records=np.array(x_points))
     y_par = m.addParameter(domain=[J], records=np.array(y_points))
 
-    min_y = min(y_points)
-    max_y = max(y_points)
-    out_y.lo[...] = min_y
-    out_y.up[...] = max_y
-
     lambda_var = m.addVariable(
         domain=[J], type="free" if using == "binary" else "sos2"
     )
+
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
+    if not bound_domain:
+        # lower bounds
+        lambda_var.lo[J].where[gp.Ord(J) == 2] = float("-inf")
+        lambda_var.lo[J].where[gp.Ord(J) == gp.Card(J) - 1] = float("-inf")
+
+        # upper bound
+        lambda_var.up[J].where[gp.Ord(J) == 1] = float("inf")
+        lambda_var.up[J].where[gp.Ord(J) == gp.Card(J)] = float("inf")
+    else:
+        min_y = min(y_points)
+        max_y = max(y_points)
+        out_y.lo[...] = min_y
+        out_y.up[...] = max_y
 
     lambda_sum = m.addEquation()
     lambda_sum[...] = gp.Sum(J, lambda_var) == 1
@@ -238,6 +258,7 @@ def piecewise_linear_function_with_sos2(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
+    bound_domain: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     Calls the piecewise_linear_function setting `using` keyword argument
@@ -253,4 +274,6 @@ def piecewise_linear_function_with_sos2(
         Break points of the piecewise linear function in the y-axis
 
     """
-    return piecewise_linear_function(input_x, x_points, y_points, using="sos2")
+    return piecewise_linear_function(
+        input_x, x_points, y_points, using="sos2", bound_domain=bound_domain
+    )
