@@ -137,6 +137,21 @@ def main():
     assert math.isclose(y.toDense(), -5), "Case 10 failed !"
     print("Case 10 passed !")
 
+    # test discontinuous function not allowing in between value
+    x_points = [1, 4, 4, 10]
+    y_points = [1, 4, 8, 25]
+    y, eqs = gp.formulations.piecewise_linear_function(
+        x, x_points, y_points, bound_domain=True
+    )
+    x.fx[...] = 4
+    y.fx[...] = 6
+    model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
+    res = model.solve()
+    assert (
+        res["Model Status"].item() == "IntegerInfeasible"
+    ), "Case 11 failed !"
+    print("Case 11 passed !")
+
 
 if __name__ == "__main__":
     main()

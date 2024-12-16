@@ -82,7 +82,9 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
 def _check_points(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
-) -> None:
+) -> list[int]:
+    discontinuous_indices = []
+
     if not isinstance(x_points, typing.Sequence):
         raise ValidationError("x_points are expected to be a sequence")
 
@@ -107,6 +109,11 @@ def _check_points(
             raise ValidationError(
                 "x_points should be in an non-decreasing order"
             )
+
+        if x_points[i] == x_points[i + 1]:
+            discontinuous_indices.append(i)
+
+    return discontinuous_indices
 
 
 def piecewise_linear_function(
@@ -181,13 +188,20 @@ def piecewise_linear_function(
             "bound_domain can only be false when using is sos2"
         )
 
-    _check_points(x_points, y_points)
+    discontinuous_indices = _check_points(x_points, y_points)
 
     m = input_x.container
     out_y = m.addVariable()
     equations = []
 
-    J = gp.math._generate_dims(m, [len(x_points)])[0]
+    if len(discontinuous_indices) > 0:
+        J, J2, SB = gp.math._generate_dims(
+            m, [len(x_points), len(x_points), len(discontinuous_indices)]
+        )
+    else:
+        J = gp.math._generate_dims(m, [len(x_points)])[0]
+        SB = None
+
     x_par = m.addParameter(domain=[J], records=np.array(x_points))
     y_par = m.addParameter(domain=[J], records=np.array(y_points))
 
@@ -226,6 +240,26 @@ def piecewise_linear_function(
     if using == "binary":
         extra_eqs = _enforce_sos2_with_binary(lambda_var)
         equations.extend(extra_eqs)
+
+    if len(discontinuous_indices) > 0:
+        di_param = [
+            (str(i), str(j), str(j + 1))
+            for i, j in enumerate(discontinuous_indices)
+        ]
+        select_set = m.addSet(domain=[SB, J, J2], records=di_param)
+        select_var = m.addVariable(domain=[SB], type="binary")
+
+        select_equation = m.addEquation(domain=[SB, J, J2])
+        select_equation[select_set[SB, J, J2]] = (
+            lambda_var[J] <= select_var[SB]
+        )
+        equations.append(select_equation)
+
+        select_equation_2 = m.addEquation(domain=[SB, J, J2])
+        select_equation_2[select_set[SB, J, J2]] = lambda_var[J2] <= (
+            1 - select_var[SB]
+        )
+        equations.append(select_equation_2)
 
     return out_y, equations
 
