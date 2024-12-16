@@ -224,5 +224,5 @@ def test_pwl_validation(data):
         [1, 2, 3],
         [10, 20, 40],
         using="binary",
-        bound_domain=True,
+        bound_domain=False,
     )
