@@ -130,11 +130,12 @@ def piecewise_linear_function(
     dependent variable `y` and formulates the equations necessary to define the
     function.
 
-    The implementation supports discontinuities. If the function is
-    discontinuous at a specific point `x_i`, you can specify `x_i` twice in
-    `x_points` with distinct y_points values. For instance, with `x_points`
-    = `[1, 3, 3, 5]` and `y_points` = `[10, 30, 50, 70]`, the function allows
-    `y` to take either 30 or 50 at `x=3`.
+    The implementation handles discontinuities in the function. To represent a
+    discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
+    array with corresponding values in `y_points`. For example, if `x_points` =
+    [1, 3, 3, 5] and `y_points` = [10, 30, 50, 70], the function allows y to take
+    either 30 or 50 when x = 3. Note that discontinuities always introduce
+    additional binary variables, regardless of the value of the using argument.
 
     The input variable `input_x` is restricted to the range defined by
     `x_points` unless `bound_domain` is set to False. `bound_domain` can be set

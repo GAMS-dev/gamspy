@@ -144,7 +144,7 @@ def main():
         x, x_points, y_points, bound_domain=True
     )
     x.fx[...] = 4
-    y.fx[...] = 6
+    y.fx[...] = 6  # y can be either 4 or 8 but not their convex combination
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
     assert (
