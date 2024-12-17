@@ -217,7 +217,11 @@ class Linear:
 
         set_out[...] = out == expr
 
-        if propagate_bounds and self._state == 1:
+        if (
+            propagate_bounds
+            and self._state == 1
+            and isinstance(input, gp.Variable)
+        ):
             x_lb = input.container.addParameter(
                 f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
             )
