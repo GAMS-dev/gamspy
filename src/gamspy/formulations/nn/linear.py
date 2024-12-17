@@ -222,27 +222,26 @@ class Linear:
             and self._state == 1
             and isinstance(input, gp.Variable)
         ):
-            x_lb = input.container.addParameter(
-                f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
-            )
+            x_lb_name = "x_lb_" + str(uuid.uuid4()).split("-")[0]
+            x_ub_name = "x_ub_" + str(uuid.uuid4()).split("-")[0]
+            w_pos_name = "w_pos_" + str(uuid.uuid4()).split("-")[0]
+            w_neg_name = "w_neg_" + str(uuid.uuid4()).split("-")[0]
+
+            x_lb = gp.Parameter(self.container, x_lb_name, domain=input.domain)
             x_lb[...] = input.lo[...]
             x_lb[...].where[x_lb[...] == "-inf"] = -1e9
 
-            x_ub = input.container.addParameter(
-                f"x_ub_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
-            )
+            x_ub = gp.Parameter(self.container, x_ub_name, domain=input.domain)
             x_ub[...] = input.up[...]
             x_ub[...].where[x_ub[...] == "inf"] = 1e9
 
-            w_pos = input.container.addParameter(
-                f"w_pos_{uuid.uuid4()}".replace("-", "_"),
-                domain=self.weight.domain,
+            w_pos = gp.Parameter(
+                self.container, w_pos_name, domain=self.weight.domain
             )
             w_pos[...] = self.weight.where[self.weight[...] > 0]
 
-            w_neg = input.container.addParameter(
-                f"w_neg_{uuid.uuid4()}".replace("-", "_"),
-                domain=self.weight.domain,
+            w_neg = gp.Parameter(
+                self.container, w_neg_name, domain=self.weight.domain
             )
             w_neg[...] = self.weight.where[self.weight[...] < 0]
 
