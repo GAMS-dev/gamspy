@@ -112,6 +112,13 @@ def test_pwl_with_binary(data):
     assert len(eqs) == len(eqs2)
 
 
+def test_pwl_with_none(data):
+    x = data["x"]
+    x_points = [1, None, 2, 3]
+    y_points = [10, None, 20, 45]
+    y, eqs = piecewise_linear_function(x, x_points, y_points)
+
+
 def test_pwl_validation(data):
     x = data["x"]
     x_points = data["x_points"]
@@ -225,4 +232,60 @@ def test_pwl_validation(data):
         [10, 20, 40],
         using="binary",
         bound_domain=False,
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [None, 2, 3],
+        [None, 20, 40],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [2, 3, None],
+        [20, 40, None],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [None, 2, 3, None],
+        [None, 20, 40, None],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [0, None, 2, 3],
+        [0, 10, 20, 40],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [0, 1, 2, 3],
+        [0, None, 20, 40],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [1, None, None, 2, 3],
+        [10, None, None, 20, 40],
+    )
+
+    pytest.raises(
+        ValidationError,
+        piecewise_linear_function,
+        x,
+        [2, None, 2, 3],
+        [10, None, 20, 40],
     )
