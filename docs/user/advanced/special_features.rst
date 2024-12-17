@@ -318,7 +318,7 @@ may be written in GAMSPy using the following equations: ::
     obj = gp.Sum(n, d[n] / x[n])
     e1[...] = gp.Sum(n, a[n] * x[n]) <= b
 
-    orig = Model(m, equations=[e1], problem=Problem.NLP, sense=Sense.Min, objective=obj)
+    orig = Model(m, equations=[e1], problem=Problem.NLP, sense=Sense.MIN, objective=obj)
 
     x.lo[n] = l[n]
     x.up[n] = u[n]
@@ -344,7 +344,7 @@ of this QCP is: ::
     coneqcp[n] = t[n] * x[n] >= 1
 
     cqcp = Model(
-        m, equations=[e1, coneqcp], problem=Problem.QCP, sense=Sense.Min, objective=obj
+        m, equations=[e1, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=obj
     )
 
     t.lo[n] = 0
@@ -371,7 +371,7 @@ The GAMSPy formulation using conic equations is as follows: ::
     coneperfect[n] = 2 * x[n] * t[n] >= gp.math.sqr(z[n])
 
     cperfect = Model(
-        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.Min, objective=obj
+        m, equations=[e1, e2, coneqcp], problem=Problem.QCP, sense=Sense.MIN, objective=obj
     )
 
     t.lo[n] = 0
