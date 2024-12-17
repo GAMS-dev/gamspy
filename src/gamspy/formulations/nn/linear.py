@@ -7,7 +7,6 @@ import numpy as np
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
-import uuid
 
 
 class Linear:
@@ -219,18 +218,28 @@ class Linear:
         set_out[...] = out == expr
 
         if propagate_bounds:
-            x_lb = input.container.addParameter(f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain)
+            x_lb = input.container.addParameter(
+                f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
+            )
             x_lb[...] = input.lo[...]
             x_lb[...].where[x_lb[...] == "-inf"] = -1e9
 
-            x_ub = input.container.addParameter(f"x_ub_{uuid.uuid4()}".replace("-", "_"), domain=input.domain)
+            x_ub = input.container.addParameter(
+                f"x_ub_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
+            )
             x_ub[...] = input.up[...]
             x_ub[...].where[x_ub[...] == "inf"] = 1e9
 
-            w_pos = input.container.addParameter(f"w_pos_{uuid.uuid4()}".replace("-", "_"), domain=self.weight.domain)
+            w_pos = input.container.addParameter(
+                f"w_pos_{uuid.uuid4()}".replace("-", "_"),
+                domain=self.weight.domain,
+            )
             w_pos[...] = self.weight.where[self.weight[...] > 0]
 
-            w_neg = input.container.addParameter(f"w_neg_{uuid.uuid4()}".replace("-", "_"), domain=self.weight.domain)
+            w_neg = input.container.addParameter(
+                f"w_neg_{uuid.uuid4()}".replace("-", "_"),
+                domain=self.weight.domain,
+            )
             w_neg[...] = self.weight.where[self.weight[...] < 0]
 
             lo_out_expr = (x_lb @ w_pos.t()) + (x_ub @ w_neg.t())
