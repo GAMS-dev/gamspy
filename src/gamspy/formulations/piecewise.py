@@ -82,8 +82,11 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
 def _check_points(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
-) -> list[int]:
+) -> tuple[list[int | float], list[int | float], list[int], list[int]]:
+    return_x = []
+    return_y = []
     discontinuous_indices = []
+    none_indices = []
 
     if not isinstance(x_points, typing.Sequence):
         raise ValidationError("x_points are expected to be a sequence")
@@ -99,21 +102,55 @@ def _check_points(
     if len(y_points) != len(x_points):
         raise ValidationError("x_points and y_points have different lenghts")
 
-    for li, name in [(x_points, "x_points"), (y_points, "y_points")]:
-        for item in li:
-            if not isinstance(item, (float, int)):
-                raise ValidationError(f"{name} contains non-numerical items")
+    if x_points[0] is None or x_points[-1] is None:
+        raise ValidationError("x_points cannot start or end with a None value")
+
+    for x_p, y_p in zip(x_points, y_points):
+        if (x_p is None and y_p is not None) or (
+            x_p is not None and y_p is None
+        ):
+            raise ValidationError(
+                "Both x and y must either be None or neither of them should be None"
+            )
+
+        if not isinstance(x_p, (float, int)) and x_p is not None:
+            raise ValidationError("x_points contains non-numerical items")
+
+        if not isinstance(y_p, (float, int)) and y_p is not None:
+            raise ValidationError("y_points contains non-numerical items")
 
     for i in range(len(x_points) - 1):
-        if x_points[i + 1] < x_points[i]:
+        if x_points[i] is None and x_points[i + 1] is None:
+            raise ValidationError(
+                "x_points cannot contain two consecutive None values"
+            )
+
+        if x_points[i] is None and x_points[i - 1] >= x_points[i + 1]:
+            raise ValidationError(
+                "A value following a None must be strictly greater than the value preceding the None"
+            )
+
+        if (
+            (x_points[i] is not None)
+            and (x_points[i + 1] is not None)
+            and (x_points[i + 1] < x_points[i])
+        ):
             raise ValidationError(
                 "x_points should be in an non-decreasing order"
             )
 
-        if x_points[i] == x_points[i + 1]:
-            discontinuous_indices.append(i)
+        if x_points[i] is not None:
+            return_x.append(x_points[i])
+            return_y.append(y_points[i])
 
-    return discontinuous_indices
+        if x_points[i] == x_points[i + 1]:
+            discontinuous_indices.append(len(return_x) - 1)
+        elif x_points[i] is None:
+            none_indices.append(len(return_x) - 1)
+
+    return_x.append(x_points[-1])
+    return_y.append(y_points[-1])
+    return return_x, return_y, discontinuous_indices, none_indices
 
 
 def piecewise_linear_function(
@@ -141,6 +178,15 @@ def piecewise_linear_function(
     [1, 3, 3, 5] and `y_points` = [10, 30, 50, 70], the function allows y to take
     either 30 or 50 when x = 3. Note that discontinuities always introduce
     additional binary variables, regardless of the value of the using argument.
+
+    It is possible to disallow a specific range by including `None` in both
+    `x_points` and the corresponding `y_points`. For example, with
+    `x_points` = `[1, 3, None, 5, 7]` and `y_points` = `[10, 35, None, -20, 40]`,
+    the range between 3 and 5 is disallowed for `input_x`.
+
+    However, `x_points` cannot start or end with a `None` value, and a `None`
+    value cannot be followed by another `None`. Additionally, if `x_i` is `None`,
+    then `y_i` must also be `None`."
 
     The input variable `input_x` is restricted to the range defined by
     `x_points` unless `bound_domain` is set to False. `bound_domain` can be set
@@ -190,15 +236,18 @@ def piecewise_linear_function(
             "bound_domain can only be false when using is sos2"
         )
 
-    discontinuous_indices = _check_points(x_points, y_points)
+    x_points, y_points, discontinuous_indices, none_indices = _check_points(
+        x_points, y_points
+    )
+    combined_indices = {*discontinuous_indices, *none_indices}
 
     m = input_x.container
     out_y = m.addVariable()
     equations = []
 
-    if len(discontinuous_indices) > 0:
+    if len(combined_indices) > 0:
         J, J2, SB = gp.math._generate_dims(
-            m, [len(x_points), len(x_points), len(discontinuous_indices)]
+            m, [len(x_points), len(x_points), len(combined_indices)]
         )
     else:
         J = gp.math._generate_dims(m, [len(x_points)])[0]
@@ -243,10 +292,10 @@ def piecewise_linear_function(
         extra_eqs = _enforce_sos2_with_binary(lambda_var)
         equations.extend(extra_eqs)
 
-    if len(discontinuous_indices) > 0:
+    if len(combined_indices) > 0:
         di_param = [
             (str(i), str(j), str(j + 1))
-            for i, j in enumerate(discontinuous_indices)
+            for i, j in enumerate(combined_indices)
         ]
         select_set = m.addSet(domain=[SB, J, J2], records=di_param)
         select_var = m.addVariable(domain=[SB], type="binary")
