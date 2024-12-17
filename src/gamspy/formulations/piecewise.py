@@ -204,7 +204,7 @@ def piecewise_linear_function(
         Break points of the piecewise linear function in the x-axis
     y_points: typing.Sequence[int| float]
         Break points of the piecewise linear function in the y-axis
-    using: str = "sos2"
+    using: str = "binary"
         What type of variable is used during implementing piecewise function
     bound_domain: bool = True
         If input_x should be limited to interval defined by min(x_points), max(x_points)
