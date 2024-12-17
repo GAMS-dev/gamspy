@@ -217,7 +217,7 @@ class Linear:
 
         set_out[...] = out == expr
 
-        if propagate_bounds:
+        if propagate_bounds and self._state == 1:
             x_lb = input.container.addParameter(
                 f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain
             )
@@ -245,7 +245,7 @@ class Linear:
             lo_out_expr = (x_lb @ w_pos.t()) + (x_ub @ w_neg.t())
             up_out_expr = (x_ub @ w_pos.t()) + (x_lb @ w_neg.t())
 
-            if self.bias is not None:
+            if self.use_bias:
                 lo_out_expr = lo_out_expr + self.bias[lo_out_expr.domain[-1]]
                 up_out_expr = up_out_expr + self.bias[up_out_expr.domain[-1]]
 
