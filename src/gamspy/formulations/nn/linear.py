@@ -7,6 +7,7 @@ import numpy as np
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
+import uuid
 
 
 class Linear:
@@ -178,7 +179,7 @@ class Linear:
         self._state = 2
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable
+        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
@@ -216,5 +217,30 @@ class Linear:
         set_out = gp.Equation(self.container, name, domain=out.domain)
 
         set_out[...] = out == expr
+
+        if propagate_bounds:
+            x_lb = input.container.addParameter(f"x_lb_{uuid.uuid4()}".replace("-", "_"), domain=input.domain)
+            x_lb[...] = input.lo[...]
+            x_lb[...].where[x_lb[...] == "-inf"] = -1e9
+
+            x_ub = input.container.addParameter(f"x_ub_{uuid.uuid4()}".replace("-", "_"), domain=input.domain)
+            x_ub[...] = input.up[...]
+            x_ub[...].where[x_ub[...] == "inf"] = 1e9
+
+            w_pos = input.container.addParameter(f"w_pos_{uuid.uuid4()}".replace("-", "_"), domain=self.weight.domain)
+            w_pos[...] = self.weight.where[self.weight[...] > 0]
+
+            w_neg = input.container.addParameter(f"w_neg_{uuid.uuid4()}".replace("-", "_"), domain=self.weight.domain)
+            w_neg[...] = self.weight.where[self.weight[...] < 0]
+
+            lo_out_expr = (x_lb @ w_pos.t()) + (x_ub @ w_neg.t())
+            up_out_expr = (x_ub @ w_pos.t()) + (x_lb @ w_neg.t())
+
+            if self.bias is not None:
+                lo_out_expr = lo_out_expr + self.bias[lo_out_expr.domain[-1]]
+                up_out_expr = up_out_expr + self.bias[up_out_expr.domain[-1]]
+
+            out.lo[...] = lo_out_expr
+            out.up[...] = up_out_expr
 
         return out, [set_out]
