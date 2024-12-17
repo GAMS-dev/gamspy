@@ -120,7 +120,7 @@ def piecewise_linear_function(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
-    using: typing.Literal["binary", "sos2"] = "sos2",
+    using: typing.Literal["binary", "sos2"] = "binary",
     bound_domain: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
@@ -129,6 +129,11 @@ def piecewise_linear_function(
     corresponding `y_points` of the piecewise function, it constructs the
     dependent variable `y` and formulates the equations necessary to define the
     function.
+
+    Internally, the function uses binary variables by default. If preferred,
+    you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
+    parameter to "sos2". `bound_domain` cannot be set to False while using
+    binary variable implementation.
 
     The implementation handles discontinuities in the function. To represent a
     discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
@@ -141,10 +146,6 @@ def piecewise_linear_function(
     `x_points` unless `bound_domain` is set to False. `bound_domain` can be set
     to False only if using is "sos2". When `input_x` is not bound, you can assume
     as if the first and the last line segments are extended.
-
-    Internally, the function uses SOS2 (Special Ordered Set Type 2) variables
-    by default. If preferred, you can switch to binary variables by setting the
-    `using` parameter to "binary".
 
     Returns the dependent variable `y` and the equations required to model the
     piecewise linear relationship.
