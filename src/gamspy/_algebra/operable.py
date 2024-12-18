@@ -7,31 +7,7 @@ import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
 
 if typing.TYPE_CHECKING:
-    from gamspy import Alias, Equation, Parameter, Set, Variable
-    from gamspy._algebra.expression import Expression
-    from gamspy._algebra.number import Number
-    from gamspy._algebra.operation import Card, Operation, Ord
-    from gamspy._symbols.implicits import (
-        ImplicitParameter,
-        ImplicitSet,
-        ImplicitVariable,
-    )
-
-    OperableType = typing.Union[
-        Alias,
-        Equation,
-        Parameter,
-        Set,
-        Variable,
-        ImplicitParameter,
-        ImplicitSet,
-        ImplicitVariable,
-        Expression,
-        Number,
-        Operation,
-        Ord,
-        Card,
-    ]
+    from gamspy._types import OperableType
 
 
 class Operable:
@@ -41,7 +17,7 @@ class Operable:
     """
 
     # +, -, /, *, **, %
-    def __add__(self: OperableType, other: OperableType):
+    def __add__(self, other: OperableType):
         from gamspy._symbols import Alias, Set
         from gamspy._symbols.implicits import ImplicitSet
 
@@ -52,10 +28,10 @@ class Operable:
 
         return expression.Expression(self, "+", other)
 
-    def __radd__(self: OperableType, other: OperableType):
+    def __radd__(self, other: OperableType):
         return expression.Expression(other, "+", self)
 
-    def __sub__(self: OperableType, other: OperableType):
+    def __sub__(self, other: OperableType):
         from gamspy._symbols import Alias, Set
         from gamspy._symbols.implicits import ImplicitSet
 
@@ -66,23 +42,23 @@ class Operable:
 
         return expression.Expression(self, "-", other)
 
-    def __rsub__(self: OperableType, other: OperableType):
+    def __rsub__(self, other: OperableType):
         return expression.Expression(other, "-", self)
 
-    def __truediv__(self: OperableType, other: OperableType):
+    def __truediv__(self, other: OperableType):
         return expression.Expression(self, "/", other)
 
-    def __rtruediv__(self: OperableType, other: OperableType):
+    def __rtruediv__(self, other: OperableType):
         return expression.Expression(other, "/", self)
 
-    def __mul__(self: OperableType, other: OperableType):
+    def __mul__(self, other: OperableType):
         return expression.Expression(self, "*", other)
 
-    def __rmul__(self: OperableType, other: OperableType):
+    def __rmul__(self, other: OperableType):
         return expression.Expression(other, "*", self)
 
     @typing.no_type_check
-    def __pow__(self: OperableType, other: OperableType):
+    def __pow__(self, other: OperableType):
         if (
             isinstance(other, int)
             and other == 2
@@ -107,43 +83,43 @@ class Operable:
         # e.g. 2 ** a[i] -> where 2 is other and a[i] is self.
         return gamspy_math.rpower(other, self)
 
-    def __mod__(self: OperableType, other: OperableType):
+    def __mod__(self, other: OperableType):
         return gamspy_math.mod(self, other)
 
     # not, and, or, xor
-    def __and__(self: OperableType, other: OperableType):
+    def __and__(self, other: OperableType):
         return expression.Expression(self, "and", other)
 
-    def __rand__(self: OperableType, other: OperableType):
+    def __rand__(self, other: OperableType):
         return expression.Expression(other, "and", self)
 
-    def __or__(self: OperableType, other: OperableType):
+    def __or__(self, other: OperableType):
         return expression.Expression(self, "or", other)
 
-    def __ror__(self: OperableType, other: OperableType):
+    def __ror__(self, other: OperableType):
         return expression.Expression(other, "or", self)
 
-    def __xor__(self: OperableType, other: OperableType):
+    def __xor__(self, other: OperableType):
         return expression.Expression(self, "xor", other)
 
-    def __rxor__(self: OperableType, other: OperableType):
+    def __rxor__(self, other: OperableType):
         return expression.Expression(other, "xor", self)
 
     # <, <=, >, >=, ==, !=
-    def __lt__(self: OperableType, other: OperableType):
+    def __lt__(self, other: OperableType):
         return expression.Expression(self, "<", other)
 
-    def __le__(self: OperableType, other: OperableType):
+    def __le__(self, other: OperableType):
         return expression.Expression(self, "=l=", other)
 
-    def __gt__(self: OperableType, other: OperableType):
+    def __gt__(self, other: OperableType):
         return expression.Expression(self, ">", other)
 
-    def __ge__(self: OperableType, other: OperableType):
+    def __ge__(self, other: OperableType):
         return expression.Expression(self, "=g=", other)
 
     # ~ -> not
-    def __invert__(self: OperableType):
+    def __invert__(self):
         return expression.Expression("", "not", self)
 
     # a @ b

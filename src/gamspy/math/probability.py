@@ -7,17 +7,17 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.symbol import Symbol
+    from gamspy._types import OperableType
 
 
-def binomial(n: int | float | Symbol, k: int | float | Symbol) -> Expression:
+def binomial(n: OperableType, k: OperableType) -> Expression:
     """
     (Generalized) Binomial coefficient for ``n > -1`` and ``-1 < k < n + 1``
 
     Parameters
     ----------
-    n : int | float | Symbol
-    k : int | float | Symbol
+    n : OperableType
+    k : OperableType
 
     Returns
     -------
@@ -38,8 +38,8 @@ def binomial(n: int | float | Symbol, k: int | float | Symbol) -> Expression:
 
 
 def centropy(
-    x: int | float | Symbol,
-    y: int | float | Symbol,
+    x: OperableType,
+    y: OperableType,
     z: float = 1e-20,
 ) -> Expression:
     """
@@ -47,8 +47,8 @@ def centropy(
 
     Parameters
     ----------
-    x : float | Symbol
-    y : float | Symbol
+    x : OperableType
+    y : OperableType
     z : float, optional
 
     Returns

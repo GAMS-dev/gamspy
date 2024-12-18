@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
 import gamspy._algebra.expression as expression
@@ -9,7 +10,6 @@ import gamspy._algebra.operation as operation
 import gamspy._symbols as syms
 import gamspy._validation as validation
 import gamspy.utils as utils
-from gamspy._symbols.implicits.implicit_equation import ImplicitEquation
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.implicits.implicit_variable import ImplicitVariable
 from gamspy.exceptions import ValidationError
@@ -61,13 +61,13 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self._records = records
         self._assignment = None
 
-    def __neg__(self) -> ImplicitParameter:
+    def __neg__(self) -> Expression:
         return expression.Expression(None, "-", self)
 
     def __invert__(self):
         return expression.Expression("", "not", self)
 
-    def __getitem__(self, indices: list | str) -> ImplicitParameter:
+    def __getitem__(self, indices: Iterable | str) -> ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
         return ImplicitParameter(
@@ -78,7 +78,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             scalar_domains=self._scalar_domains,
         )
 
-    def __setitem__(self, indices: list | str, rhs: Expression) -> None:
+    def __setitem__(self, indices: Iterable | str, rhs: Expression) -> None:
         if (
             isinstance(self.parent, (syms.Variable, syms.Equation))
             and len(self.parent.domain) > 0
@@ -113,7 +113,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         self.container._synch_with_gams(gams_to_gamspy=True)
         self.parent._winner = "gams"
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         op = "eq"
         if isinstance(
             other,
@@ -122,7 +122,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
@@ -141,15 +141,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
 
             return recs
 
-        if isinstance(
-            self.parent,
-            (
-                syms.Variable,
-                syms.Equation,
-                ImplicitVariable,
-                ImplicitEquation,
-            ),
-        ):
+        if isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
             domain_names = [symbol.name for symbol in self.parent.domain] + [
                 ATTR_MAPPING[extension]
@@ -195,7 +187,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)
+        return permute(self, dims)  # type: ignore
 
     def gamsRepr(self) -> str:
         """Representation of the parameter in GAMS syntax.

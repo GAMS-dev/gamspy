@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Union, no_type_check
 
 import gams.transfer as gt
 
@@ -22,7 +22,7 @@ class Symbol(ABC):
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""
 
-    def latexRepr(self: SymbolType):
+    def latexRepr(self):
         """
         Representation of symbol in Latex.
 
@@ -52,7 +52,7 @@ class Symbol(ABC):
         return representation
 
     @property
-    def synchronize(self: SymbolType) -> bool:
+    def synchronize(self) -> bool:
         """
         Synchronization state of the symbol. If True, the symbol data
         will be communicated with GAMS. Otherwise, GAMS state will not be updated.
@@ -78,7 +78,8 @@ class Symbol(ABC):
         return self._synchronize
 
     @synchronize.setter
-    def synchronize(self: SymbolType, value: bool):
+    @no_type_check
+    def synchronize(self, value: bool):
         """
         If set to True, the current state will be synchronized with GAMS.
         Else, the symbol will not be synchronized with GAMS.
@@ -96,7 +97,8 @@ class Symbol(ABC):
         else:
             self._synchronize = False
 
-    def _get_domain_str(self: SymbolType, forwardings: bool | list[bool]):
+    @no_type_check
+    def _get_domain_str(self, forwardings: bool | list[bool]):
         if isinstance(forwardings, bool):
             forwardings = [forwardings] * self.dimension
 
