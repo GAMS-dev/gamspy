@@ -5,6 +5,7 @@ GAMSPy 1.4.0
 ------------
 - General
   - Resolve static code analysis issues to improve code quality.
+  - Allow GAMS to find the available port and connect to it.
 - Testing
   - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
 - Documentation
