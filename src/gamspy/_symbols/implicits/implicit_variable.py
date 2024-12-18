@@ -204,15 +204,15 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)
+        return permute(self, dims)  # type: ignore
 
     def __neg__(self):
         return expression.Expression(None, "-", self)
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def gamsRepr(self) -> str:

@@ -7,10 +7,10 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy._algebra.expression import Expression
-    from gamspy._symbols.symbol import Symbol
+    from gamspy._types import OperableType
 
 
-def cos(x: int | float | Symbol) -> Expression:
+def cos(x: OperableType) -> Expression:
     """
     Cosine of ``x``.
 
@@ -33,7 +33,7 @@ def cos(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("cos", (x,)), None)
 
 
-def cosh(x: int | float | Symbol) -> Expression:
+def cosh(x: OperableType) -> Expression:
     """
     Hyperbolic cosine of ``x``.
 
@@ -55,7 +55,7 @@ def cosh(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("cosh", (x,)), None)
 
 
-def sin(x: float | Symbol) -> Expression:
+def sin(x: OperableType) -> Expression:
     """
     Sine of ``x``.
 
@@ -78,7 +78,7 @@ def sin(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("sin", (x,)), None)
 
 
-def sinh(x: float | Symbol) -> Expression:
+def sinh(x: OperableType) -> Expression:
     """
     Hyperbolic sine of ``x``.
 
@@ -100,7 +100,7 @@ def sinh(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("sinh", (x,)), None)
 
 
-def tan(x: float | Symbol) -> Expression:
+def tan(x: OperableType) -> Expression:
     """
     Tangent of ``x``.
 
@@ -123,7 +123,7 @@ def tan(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("tan", (x,)), None)
 
 
-def tanh(x: float | Symbol) -> Expression:
+def tanh(x: OperableType) -> Expression:
     """
     Hyperbolic tangent of ``x``.
 
@@ -145,7 +145,7 @@ def tanh(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("tanh", (x,)), None)
 
 
-def acos(x: float | Symbol) -> Expression:
+def acos(x: OperableType) -> Expression:
     """
     Inverse cosine of ``x``.
 
@@ -167,7 +167,7 @@ def acos(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("arccos", (x,)), None)
 
 
-def asin(x: float | Symbol) -> Expression:
+def asin(x: OperableType) -> Expression:
     """
     Inver sinus of ``x``.
 
@@ -189,7 +189,7 @@ def asin(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("arcsin", (x,)), None)
 
 
-def atan(x: float | Symbol) -> Expression:
+def atan(x: OperableType) -> Expression:
     """
     Inverse tangent of ``x``.
 
@@ -211,7 +211,7 @@ def atan(x: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("arctan", (x,)), None)
 
 
-def atan2(y: int | float | Symbol, x: int | float | Symbol) -> Expression:
+def atan2(y: OperableType, x: OperableType) -> Expression:
     """
     Four-quadrant arctan function yielding ``arctan(y/x)``, which is the angle the vector ``(x,y)`` makes with ``(1,0)`` in radians.
 

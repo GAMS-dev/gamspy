@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Container
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.implicits.implicit_set import ImplicitSet
+    from gamspy._types import OperableType
 
 
 class SetMixin:
@@ -275,8 +276,8 @@ class SetMixin:
         return expression.Expression(self, ".", "last")
 
     def lag(
-        self: Alias | Set,
-        n: int | Symbol | Expression,
+        self,
+        n: OperableType,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
         """
@@ -284,7 +285,7 @@ class SetMixin:
 
         Parameters
         ----------
-        n : int | Symbol | Expression
+        n : OperableType
         type : 'linear' or 'circular', optional
 
         Returns
@@ -315,6 +316,7 @@ class SetMixin:
         [['y-1987', 1991.0], ['y-1988', 1987.0], ['y-1989', 1988.0], ['y-1990', 1989.0], ['y-1991', 1990.0]]
 
         """
+        assert isinstance(self, (gp.Set, gp.Alias))
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
@@ -330,8 +332,8 @@ class SetMixin:
         raise ValueError("Lag type must be linear or circular")
 
     def lead(
-        self: Set | Alias,
-        n: int | Symbol | Expression,
+        self,
+        n: OperableType,
         type: Literal["linear", "circular"] = "linear",
     ) -> ImplicitSet:
         """
@@ -339,7 +341,7 @@ class SetMixin:
 
         Parameters
         ----------
-        n : int | Symbol | Expression
+        n : OperableType
         type : 'linear' or 'circular', optional
 
         Returns
@@ -370,6 +372,7 @@ class SetMixin:
         [['y-1987', 1990.0], ['y-1988', 1991.0], ['y-1989', 1987.0], ['y-1990', 1988.0], ['y-1991', 1989.0]]
 
         """
+        assert isinstance(self, (gp.Set, gp.Alias))
         jump = n if isinstance(n, int) else n.gamsRepr()  # type: ignore
 
         if type == "circular":
@@ -384,7 +387,7 @@ class SetMixin:
 
         raise ValueError("Lead type must be linear or circular")
 
-    def sameAs(self: Set | Alias, other: Set | Alias | str) -> Expression:
+    def sameAs(self, other: Set | Alias | str) -> Expression:
         """
         Evaluates to true if this set is identical to the given set or alias, false otherwise.
 
@@ -409,6 +412,8 @@ class SetMixin:
         [['seattle', 'seattle', 1.0]]
 
         """
+        assert isinstance(self, (gt.Set, gt.Alias))
+        assert isinstance(other, (gt.Set, gt.Alias, str))
         return gp.math.same_as(self, other)
 
 
@@ -568,7 +573,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             domain = [domain]
 
         if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False

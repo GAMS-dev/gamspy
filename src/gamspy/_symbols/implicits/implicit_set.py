@@ -39,7 +39,7 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
         self.extension = extension
 
     def __invert__(self) -> Expression:
-        return expression.Expression("", "not", self)
+        return expression.Expression(None, "not", self)
 
     def __ge__(self, other) -> Expression:
         return expression.Expression(self, ">=", other)
