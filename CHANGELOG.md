@@ -3,10 +3,13 @@ GAMSPy CHANGELOG
 
 GAMSPy 1.4.0
 ------------
+- General
+  - Resolve static code analysis issues to improve code quality.
 - Testing
   - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
 - Documentation
   - Add an example demonstrating how to solve the Minimum Cost Multi-Commodity Flow Problem using Column Generation in GAMSPy.
+  - Remove non-negative variable type from the docs.
 
 
 GAMSPy 1.3.1

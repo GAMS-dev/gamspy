@@ -175,7 +175,7 @@ class Dim:
     dims: list[int]
 
 
-def dim(dims: list[int]) -> Dim:
+def dim(dims: list[int] | tuple[int, ...]) -> Dim:
     """Returns an array where each element
     corresponds to a set where the dimension of the
     set is equal to the element in dims. If same dimension
@@ -185,7 +185,7 @@ def dim(dims: list[int]) -> Dim:
 
     Parameters
     ----------
-    dims: list[int]
+    dims: list[int] | tuple[int, ...]
 
     Returns
     -------
@@ -214,7 +214,9 @@ def dim(dims: list[int]) -> Dim:
     return Dim(dims=dims)  # type: ignore
 
 
-def _generate_dims(m: Container, dims: list[int]) -> list[Alias | Set]:
+def _generate_dims(
+    m: Container, dims: list[int] | tuple[int, ...]
+) -> list[Alias | Set]:
     sets_so_far = []
     for x in dims:
         expected_name = f"DenseDim{x}_1"

@@ -23,6 +23,9 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
+    from gamspy._types import EllipsisType
+    from gamspy.math.matrix import Dim
 
 
 class Parameter(gt.Parameter, operable.Operable, Symbol):
@@ -67,7 +70,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str,
-        domain: list[Set | Alias | str] | Set | Alias | str = [],
+        domain: list[Set | Alias | str] | Set | Alias | Dim | str = [],
         records: Any | None = None,
         description: str = "",
     ):
@@ -110,7 +113,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         cls,
         container: Container,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: list[Set | Alias | str]
+        | Set
+        | Alias
+        | Dim
+        | str
+        | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -149,7 +157,12 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self,
         container: Container,
         name: str | None = None,
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: list[Set | Alias | str]
+        | Set
+        | Alias
+        | Dim
+        | str
+        | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -176,7 +189,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             domain = [domain]
 
         if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False
@@ -255,7 +268,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             container._options.miro_protect = previous_state
 
     def __getitem__(
-        self, indices: Sequence | str
+        self, indices: EllipsisType | slice | Sequence | str
     ) -> implicits.ImplicitParameter:
         domain = validation.validate_domain(self, indices)
 
@@ -263,8 +276,8 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __setitem__(
         self,
-        indices: tuple | str | implicits.ImplicitSet,
-        rhs: Expression | float | int,
+        indices: EllipsisType | slice | tuple | str | implicits.ImplicitSet,
+        rhs: Operation | Expression | float | int,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)
@@ -293,7 +306,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         self.container._synch_with_gams(gams_to_gamspy=True)
         self._winner = "gams"
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         op = "eq"
         if isinstance(
             other,
@@ -306,7 +319,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             op = "=e="
         return expression.Expression(self, op, other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __neg__(self):
@@ -353,7 +366,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)
+        return permute(self, dims)  # type: ignore
 
     @property
     def records(self):

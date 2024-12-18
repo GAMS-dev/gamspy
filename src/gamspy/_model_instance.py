@@ -213,8 +213,9 @@ class ModelInstance:
                 "Type of a modifiable must be either Parameter or a Variable attribute (e.g. variable.up)"
             )
 
-        symbols_in_conditions = []
+        symbols_in_conditions: list[str] = []
         for equation in self.model.equations:
+            assert equation._definition is not None
             symbols_in_conditions += (
                 equation._definition._find_symbols_in_conditions()
             )
@@ -253,13 +254,13 @@ class ModelInstance:
         return will_be_modified
 
     def _prepare_gams_options(
-        self, given_options: Options | dict | None
+        self, given_options: Options | None
     ) -> GamsOptions:
         options = GamsOptions(self.workspace)
         if given_options is None:
             return options
 
-        options_dict = given_options._get_gams_compatible_options()  # type: ignore
+        options_dict = given_options._get_gams_compatible_options()
 
         for key, value in options_dict.items():
             setattr(options, key, value)

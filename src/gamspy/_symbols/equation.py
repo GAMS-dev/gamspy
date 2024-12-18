@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Container, Set, Variable
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._types import EllipsisType
 
 
 eq_types = ["=e=", "=l=", "=g="]
@@ -222,7 +223,7 @@ class Equation(gt.Equation, Symbol):
             domain = [domain]
 
         if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False
@@ -329,7 +330,7 @@ class Equation(gt.Equation, Symbol):
     def __hash__(self):
         return id(self)
 
-    def __getitem__(self, indices: tuple | str):
+    def __getitem__(self, indices: EllipsisType | slice | tuple | str):
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitEquation(
@@ -341,7 +342,7 @@ class Equation(gt.Equation, Symbol):
 
     def __setitem__(
         self,
-        indices: tuple | str | implicits.ImplicitSet,
+        indices: EllipsisType | slice | tuple | str | implicits.ImplicitSet,
         rhs: Expression,
     ):
         # self[domain] = rhs
@@ -1033,11 +1034,14 @@ class Equation(gt.Equation, Symbol):
             domain_str = ",".join(
                 [
                     symbol.name
-                    for symbol in self._definition.left.conditioning_on.domain
+                    for symbol in self._definition.left.conditioning_on.domain  # type: ignore
                 ]
             )
             domain_str = f"\\forall {domain_str}"
-            constraint_str = self._definition.left.condition.latexRepr()
+
+            constraint_str = str(self._definition.left.condition)
+            if hasattr(self._definition.left.condition, "latexRepr"):
+                constraint_str = self._definition.left.condition.latexRepr()  # type: ignore
             right_side = f"\\hfill {domain_str} ~ | ~ {constraint_str}"
 
         equation_str = (

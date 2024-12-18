@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -9,6 +9,9 @@ import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
+
+if TYPE_CHECKING:
+    from gamspy import Parameter, Variable
 
 
 class Conv2d:
@@ -92,7 +95,9 @@ class Conv2d:
                     "'same' padding can only be used with stride=1"
                 )
 
-            _padding = (0, 0) if padding == "valid" else "same"
+            _padding: tuple[int, int] | str = (
+                (0, 0) if padding == "valid" else "same"
+            )
 
         else:
             _padding = utils._check_tuple_int(
@@ -111,8 +116,8 @@ class Conv2d:
         self.use_bias = bias
 
         self._state = 0
-        self.weight = None
-        self.bias = None
+        self.weight: Parameter | Variable | None = None
+        self.bias: Parameter | Variable | None = None
 
     def make_variable(self) -> None:
         """
@@ -309,6 +314,7 @@ class Conv2d:
         )
 
         if self.use_bias:
+            assert self.bias is not None
             expr = expr + self.bias[C_out]
 
         set_out[N, C_out, H_out, W_out] = out[N, C_out, H_out, W_out] == expr

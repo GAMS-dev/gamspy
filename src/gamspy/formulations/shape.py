@@ -10,7 +10,7 @@ from gamspy.exceptions import ValidationError
 
 def _get_new_domain(
     x: gp.Variable | gp.Parameter, dims: list[int]
-) -> tuple[list[gp.Set | gp.Alias], list[gp.Set]]:
+) -> tuple[list[gp.Set | gp.Alias], gp.Set]:
     lens = [len(x.domain[d]) for d in dims]
     new_card = math.prod(lens)
 

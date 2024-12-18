@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
@@ -16,11 +16,17 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
-    from gamspy._symbols.implicits import ImplicitParameter, ImplicitSet
+    from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits import (
+        ImplicitParameter,
+        ImplicitSet,
+        ImplicitVariable,
+    )
+    from gamspy._types import EllipsisType
 
 
 def get_dimension(
-    domain: list[Set | Alias | ImplicitSet | str],
+    domain: Sequence[Set | Alias | ImplicitSet | str],
 ):
     dimension = 0
 
@@ -48,13 +54,19 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
         if isinstance(domain, symbols.Alias):
             path.insert(0, domain.alias_with.name)
 
-        domain = "*" if isinstance(domain, str) else domain.domain[0]
+        domain = "*" if isinstance(domain, str) else domain.domain[0]  # type: ignore
 
     return path
 
 
 def validate_dimension(
-    symbol: Set | Parameter | Variable | Equation | ImplicitParameter,
+    symbol: Set
+    | Parameter
+    | Variable
+    | Equation
+    | ImplicitParameter
+    | ImplicitVariable
+    | Operation,
     domain: list[Set | Alias | ImplicitSet | str],
 ):
     dimension = get_dimension(domain)
@@ -137,7 +149,7 @@ def _get_ellipsis_range(domain, given_domain):
 
 def _transform_given_indices(
     domain: list[Set | Alias | str],
-    indices: Set | Alias | str | tuple | ImplicitSet,
+    indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
     new_domain: list = []
     given_domain = utils._to_list(indices)
@@ -182,10 +194,16 @@ def _transform_given_indices(
 
 
 def validate_domain(
-    symbol: Set | Parameter | Equation | ImplicitParameter,
-    indices: Set | Alias | str | tuple | ImplicitSet,
+    symbol: Set
+    | Parameter
+    | Variable
+    | Equation
+    | ImplicitParameter
+    | ImplicitVariable
+    | Operation,
+    indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
-    domain = _transform_given_indices(symbol.domain, indices)
+    domain = _transform_given_indices(symbol.domain, indices)  # type: ignore
     validate_container(symbol, domain)
     validate_dimension(symbol, domain)
 
@@ -215,17 +233,23 @@ def validate_domain(
 
 
 def validate_container(
-    self: Set | Parameter | Variable | Equation,
+    symbol: Set
+    | Parameter
+    | Variable
+    | Equation
+    | ImplicitParameter
+    | ImplicitVariable
+    | Operation,
     domain: list[str | Set | Alias],
 ):
     for set in domain:
         if (
             isinstance(set, (symbols.Set, symbols.Alias))
-            and set.container != self.container
+            and set.container != symbol.container
         ):
             raise ValidationError(
-                f"`Domain `{set.name}` must be in the same container"
-                f" with `{self.name}`"
+                f"`Domain `{set}` must be in the same container"
+                f" with `{symbol}`"
             )
 
 
