@@ -63,7 +63,9 @@ class Linear:
         self.use_bias = bias
         self._state = 0
         self.weight = None
+        self.weight_array = None
         self.bias = None
+        self.bias_array = None
 
     def load_weights(
         self, weight: np.ndarray, bias: np.ndarray | None = None
@@ -130,6 +132,7 @@ class Linear:
             )
         else:
             self.weight.setRecords(weight)
+        self.weight_array = weight
 
         if self.use_bias:
             if self.bias is None:
@@ -142,6 +145,8 @@ class Linear:
                 )
             else:
                 self.bias.setRecords(bias)
+
+            self.bias_array = bias
 
         self._state = 1
 
@@ -222,37 +227,38 @@ class Linear:
             and self._state == 1
             and isinstance(input, gp.Variable)
         ):
-            x_lb_name = "x_lb_" + str(uuid.uuid4()).split("-")[0]
-            x_ub_name = "x_ub_" + str(uuid.uuid4()).split("-")[0]
-            w_pos_name = "w_pos_" + str(uuid.uuid4()).split("-")[0]
-            w_neg_name = "w_neg_" + str(uuid.uuid4()).split("-")[0]
+            x_bounds_name = "x_bounds_" + str(uuid.uuid4()).split("-")[0]
+            out_bounds_name = "out_bounds_" + str(uuid.uuid4()).split("-")[0]
 
-            x_lb = gp.Parameter(self.container, x_lb_name, domain=input.domain)
-            x_lb[...] = input.lo[...]
-            x_lb[...].where[x_lb[...] == "-inf"] = -1e9
-
-            x_ub = gp.Parameter(self.container, x_ub_name, domain=input.domain)
-            x_ub[...] = input.up[...]
-            x_ub[...].where[x_ub[...] == "inf"] = 1e9
-
-            w_pos = gp.Parameter(
-                self.container, w_pos_name, domain=self.weight.domain
+            x_bounds = gp.Parameter(
+                self.container, x_bounds_name, domain=dim([2, *input.shape])
             )
-            w_pos[...] = self.weight.where[self.weight[...] > 0]
+            x_bounds["0", *input.domain] = input.lo[...]
+            x_bounds["1", *input.domain] = input.up[...]
 
-            w_neg = gp.Parameter(
-                self.container, w_neg_name, domain=self.weight.domain
-            )
-            w_neg[...] = self.weight.where[self.weight[...] < 0]
+            x_lb = x_bounds.toDense["0"]
+            x_ub = x_bounds.toDense["1"]
 
-            lo_out_expr = (x_lb @ w_pos.t()) + (x_ub @ w_neg.t())
-            up_out_expr = (x_ub @ w_pos.t()) + (x_lb @ w_neg.t())
+            w_pos = np.maximum(self.weight_array, 1e-9)
+            w_neg = np.minimum(self.weight_array, -1e-9)
+
+            lo_out = (x_lb @ w_pos.T) + (x_ub @ w_neg.T)
+            up_out = (x_ub @ w_pos.T) + (x_lb @ w_neg.T)
 
             if self.use_bias:
-                lo_out_expr = lo_out_expr + self.bias[lo_out_expr.domain[-1]]
-                up_out_expr = up_out_expr + self.bias[up_out_expr.domain[-1]]
+                lo_out = lo_out + self.bias_array
+                up_out = up_out + self.bias_array
 
-            out.lo[...] = lo_out_expr
-            out.up[...] = up_out_expr
+            out_bounds_array = np.stack([lo_out, up_out], axis=0)
+
+            out_bounds = gp.Parameter(
+                self.container,
+                out_bounds_name,
+                domain=dim([2, *out.shape]),
+                records=out_bounds_array,
+            )
+
+            out.lo[...] = out_bounds["0", *out.domain]
+            out.up[...] = out_bounds["1", *out.domain]
 
         return out, [set_out]
