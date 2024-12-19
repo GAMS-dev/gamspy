@@ -27,7 +27,7 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
     return numbers_in_bit_array
 
 
-def _enforce_sos2_with_binary(lambda_var: gp.Variable):
+def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     """
     Enforces SOS2 constraints using binary variables.
 
@@ -44,6 +44,7 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
         return equations
 
     J = lambda_var.domain[-1]
+    previous_domains = lambda_var.domain[:-1]
 
     l_len = math.ceil(math.log2(count_x - 1))
     I, L = gp.math._generate_dims(
@@ -54,7 +55,10 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
         ],
     )
 
-    bin_var = m.addVariable(domain=[L], type="binary")
+    J, I, L = gp.formulations.nn.utils._next_domains(
+        [J, I, L], previous_domains
+    )
+    bin_var = m.addVariable(domain=[*previous_domains, L], type="binary")
     gray_code = _generate_gray_code(count_x - 1, l_len)
 
     B = m.addParameter(domain=[I, L], records=gray_code)
@@ -68,12 +72,18 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
     use_set_2 = m.addSet(domain=[L, J])
     use_set_2[L, J].where[gp.Smax(JI[J, I], B[I, L]) == 0] = 1
 
-    sos2_eq_1 = m.addEquation(domain=[L])
-    sos2_eq_1[L] = gp.Sum(use_set_1[L, J], lambda_var[J]) <= bin_var[L]
+    sos2_eq_1 = m.addEquation(domain=[*previous_domains, L])
+    sos2_eq_1[[*previous_domains, L]] = (
+        gp.Sum(use_set_1[L, J], lambda_var[[*previous_domains, J]])
+        <= bin_var[*previous_domains, L]
+    )
     equations.append(sos2_eq_1)
 
-    sos2_eq_2 = m.addEquation(domain=[L])
-    sos2_eq_2[L] = gp.Sum(use_set_2[L, J], lambda_var[J]) <= 1 - bin_var[L]
+    sos2_eq_2 = m.addEquation(domain=[*previous_domains, L])
+    sos2_eq_2[[*previous_domains, L]] = (
+        gp.Sum(use_set_2[L, J], lambda_var[[*previous_domains, J]])
+        <= 1 - bin_var[*previous_domains, L]
+    )
     equations.append(sos2_eq_2)
 
     return equations

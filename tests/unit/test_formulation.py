@@ -55,6 +55,40 @@ def test_pwl_enforce_sos2_log_binary():
     assert var_count["binary"] == 1
 
 
+def test_pwl_enforce_sos2_log_binary_with_domain():
+    m = gp.Container()
+    j = gp.Set(m, name="j", records=["1", "2"])
+    i = gp.Set(m, name="i", records=["1", "2", "3"])
+    lambda_var = gp.Variable(m, name="lambda", domain=[j, i])
+    # this will create binary variables
+    eqs = piecewise._enforce_sos2_with_binary(lambda_var)
+    assert len(eqs) == 2
+    var_count = get_var_count_by_type(m)
+    assert var_count["binary"] == 1
+
+    for k in m.data:
+        sym = m.data[k]
+        if isinstance(sym, gp.Equation):
+            assert len(sym.domain) == 2
+            assert sym.domain[0] == j
+
+
+def test_pwl_enforce_sos2_log_binary_with_domain_2():
+    m = gp.Container()
+    lambda_var = gp.Variable(m, name="lambda", domain=gp.math.dim([3, 8]))
+    # this will create binary variables
+    eqs = piecewise._enforce_sos2_with_binary(lambda_var)
+    assert len(eqs) == 2
+    var_count = get_var_count_by_type(m)
+    assert var_count["binary"] == 1
+
+    for k in m.data:
+        sym = m.data[k]
+        if isinstance(sym, gp.Equation):
+            assert len(sym.domain) == 2
+            print(sym.getDefinition())
+
+
 def test_pwl_gray_code():
     for n, m in [(2, 1), (3, 2), (4, 2), (5, 3), (8, 3), (513, 10), (700, 10)]:
         code = piecewise._generate_gray_code(n, m)
