@@ -198,7 +198,14 @@ class Linear:
         input : gp.Parameter | gp.Variable
                 input to the linear layer, must be in shape
                 (* x in_features)
+        propagate_bounds : bool = True
+                If True, propagate bounds of the input to the output.
         """
+        if not isinstance(propagate_bounds, bool):
+            raise TypeError(
+                f"propagate_bounds should be a boolean, not '{type(propagate_bounds).__name__}'."
+            )
+
         if self.weight is None:
             raise ValidationError(
                 "You must call load_weights or make_variable first before using the Linear"
