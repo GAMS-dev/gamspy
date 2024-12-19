@@ -240,14 +240,37 @@ class Linear:
             x_bounds["0", *input.domain] = input.lo[...]
             x_bounds["1", *input.domain] = input.up[...]
 
-            x_lb = x_bounds.toDense["0"]
-            x_ub = x_bounds.toDense["1"]
+            x_lb = x_bounds.toDense()[0]
+            x_ub = x_bounds.toDense()[1]
 
-            w_pos = np.maximum(self.weight_array, 1e-9)
-            w_neg = np.minimum(self.weight_array, -1e-9)
+            x_lb = np.where(x_lb == -np.inf, 0 - 1j, x_lb)
+            x_ub = np.where(x_ub == np.inf, 0 + 1j, x_ub)
+
+            w_pos = np.maximum(self.weight_array, 0)
+            w_neg = np.minimum(self.weight_array, 0)
 
             lo_out = (x_lb @ w_pos.T) + (x_ub @ w_neg.T)
             up_out = (x_ub @ w_pos.T) + (x_lb @ w_neg.T)
+
+            def _decode_complex_number(z: np.complex128) -> float:
+                """
+                Decode complex number to real number.
+                5 + 0j -> 5
+                3 + 1j -> inf
+                7 - 1j -> -inf
+                """
+                # If imaginary part is zero, return real part
+                if z.imag == 0:
+                    return z.real
+                # If imaginary part is positive, return positive infinity
+                elif z.imag > 0:
+                    return np.inf
+                # If imaginary part is negative, return negative infinity
+                else:
+                    return -np.inf
+
+            lo_out = np.vectorize(_decode_complex_number)(lo_out)
+            up_out = np.vectorize(_decode_complex_number)(up_out)
 
             if self.use_bias:
                 lo_out = lo_out + self.bias_array
