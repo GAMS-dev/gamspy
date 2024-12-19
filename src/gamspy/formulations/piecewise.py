@@ -89,6 +89,47 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     return equations
 
 
+def _enforce_discontinuity(
+    lambda_var: gp.Variable,
+    combined_indices: typing.Sequence[int],
+) -> list[gp.Equation]:
+    equations: list[gp.Equation] = []
+
+    len_x_points = len(lambda_var.domain[-1])
+    previous_domains = lambda_var.domain[:-1]
+
+    m = lambda_var.container
+    J, J2, SB = gp.math._generate_dims(
+        m, [len_x_points, len_x_points, len(combined_indices)]
+    )
+
+    J, J2, SB = gp.formulations.nn.utils._next_domains(
+        [J, J2, SB], previous_domains
+    )
+
+    di_param = [
+        (str(i), str(j), str(j + 1)) for i, j in enumerate(combined_indices)
+    ]
+
+    select_set = m.addSet(domain=[SB, J, J2], records=di_param)
+    select_var = m.addVariable(domain=[*previous_domains, SB], type="binary")
+
+    select_equation = m.addEquation(domain=[*previous_domains, SB, J, J2])
+    select_equation[[*previous_domains, select_set[SB, J, J2]]] = (
+        lambda_var[[*previous_domains, J]] <= select_var[*previous_domains, SB]
+    )
+    equations.append(select_equation)
+
+    select_equation_2 = m.addEquation(domain=[*previous_domains, SB, J, J2])
+    select_equation_2[[*previous_domains, select_set[SB, J, J2]]] = (
+        lambda_var[[*previous_domains, J2]]
+        <= 1 - select_var[*previous_domains, SB]
+    )
+    equations.append(select_equation_2)
+
+    return equations
+
+
 def _check_points(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
@@ -251,52 +292,52 @@ def piecewise_linear_function(
     x_points, y_points, discontinuous_indices, none_indices = _check_points(
         x_points, y_points
     )
-    combined_indices = {*discontinuous_indices, *none_indices}
+    combined_indices = list({*discontinuous_indices, *none_indices})
 
     m = input_x.container
-    out_y = m.addVariable()
+    input_domain = input_x.domain
+    out_y = m.addVariable(domain=input_domain)
     equations = []
 
-    if len(combined_indices) > 0:
-        J, J2, SB = gp.math._generate_dims(
-            m, [len(x_points), len(x_points), len(combined_indices)]
-        )
-    else:
-        J = gp.math._generate_dims(m, [len(x_points)])[0]
-        SB = None
+    J = gp.math._generate_dims(m, [len(x_points)])[0]
+    J = gp.formulations.nn.utils._next_domains([J], input_domain)[0]
 
     x_par = m.addParameter(domain=[J], records=np.array(x_points))
     y_par = m.addParameter(domain=[J], records=np.array(y_points))
 
     lambda_var = m.addVariable(
-        domain=[J], type="free" if using == "binary" else "sos2"
+        domain=[*input_domain, J], type="free" if using == "binary" else "sos2"
     )
 
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
     if not bound_domain:
         # lower bounds
-        lambda_var.lo[J].where[gp.Ord(J) == 2] = float("-inf")
-        lambda_var.lo[J].where[gp.Ord(J) == gp.Card(J) - 1] = float("-inf")
+        lambda_var.lo[*input_domain, J].where[gp.Ord(J) == 2] = float("-inf")
+        lambda_var.lo[*input_domain, J].where[gp.Ord(J) == gp.Card(J) - 1] = (
+            float("-inf")
+        )
 
         # upper bound
-        lambda_var.up[J].where[gp.Ord(J) == 1] = float("inf")
-        lambda_var.up[J].where[gp.Ord(J) == gp.Card(J)] = float("inf")
+        lambda_var.up[*input_domain, J].where[gp.Ord(J) == 1] = float("inf")
+        lambda_var.up[*input_domain, J].where[gp.Ord(J) == gp.Card(J)] = float(
+            "inf"
+        )
     else:
         min_y = min(y_points)
         max_y = max(y_points)
         out_y.lo[...] = min_y
         out_y.up[...] = max_y
 
-    lambda_sum = m.addEquation()
+    lambda_sum = m.addEquation(domain=input_x.domain)
     lambda_sum[...] = gp.Sum(J, lambda_var) == 1
     equations.append(lambda_sum)
 
-    set_x = m.addEquation()
+    set_x = m.addEquation(domain=input_x.domain)
     set_x[...] = input_x == gp.Sum(J, x_par * lambda_var)
     equations.append(set_x)
 
-    set_y = m.addEquation()
+    set_y = m.addEquation(domain=input_x.domain)
     set_y[...] = out_y == gp.Sum(J, y_par * lambda_var)
     equations.append(set_y)
 
@@ -305,24 +346,8 @@ def piecewise_linear_function(
         equations.extend(extra_eqs)
 
     if len(combined_indices) > 0:
-        di_param = [
-            (str(i), str(j), str(j + 1))
-            for i, j in enumerate(combined_indices)
-        ]
-        select_set = m.addSet(domain=[SB, J, J2], records=di_param)
-        select_var = m.addVariable(domain=[SB], type="binary")
-
-        select_equation = m.addEquation(domain=[SB, J, J2])
-        select_equation[select_set[SB, J, J2]] = (
-            lambda_var[J] <= select_var[SB]
-        )
-        equations.append(select_equation)
-
-        select_equation_2 = m.addEquation(domain=[SB, J, J2])
-        select_equation_2[select_set[SB, J, J2]] = lambda_var[J2] <= (
-            1 - select_var[SB]
-        )
-        equations.append(select_equation_2)
+        extra_eqs = _enforce_discontinuity(lambda_var, combined_indices)
+        equations.extend(extra_eqs)
 
     return out_y, equations
 

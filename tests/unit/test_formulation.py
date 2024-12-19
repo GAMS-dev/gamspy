@@ -18,11 +18,13 @@ pytestmark = pytest.mark.unit
 def data():
     m = gp.Container()
     x = gp.Variable(m, "x")
+    x2 = gp.Variable(m, "x2", domain=gp.math.dim([2, 4, 3]))
     x_points = [-10, 2.2, 5, 10]
     y_points = [10, 20, -2, -5]
     return {
         "m": m,
         "x": x,
+        "x2": x2,
         "x_points": x_points,
         "y_points": y_points,
     }
@@ -89,6 +91,16 @@ def test_pwl_enforce_sos2_log_binary_with_domain_2():
             print(sym.getDefinition())
 
 
+def test_pwl_enforce_discontinuity():
+    m = gp.Container()
+    lambda_var = gp.Variable(m, name="lambda", domain=gp.math.dim([5, 5]))
+    # this will create binary variables
+    eqs = piecewise._enforce_discontinuity(lambda_var, [1, 3])
+    assert len(eqs) == 2
+    assert len(eqs[0].domain) == 4
+    assert len(eqs[1].domain) == 4
+
+
 def test_pwl_gray_code():
     for n, m in [(2, 1), (3, 2), (4, 2), (5, 3), (8, 3), (513, 10), (700, 10)]:
         code = piecewise._generate_gray_code(n, m)
@@ -144,6 +156,18 @@ def test_pwl_with_binary(data):
     assert y.type == "free"
     assert y2.type == "free"
     assert len(eqs) == len(eqs2)
+
+
+def test_pwl_with_domain(data):
+    x2 = data["x2"]
+    x_points = data["x_points"]
+    y_points = data["y_points"]
+    y, eqs = piecewise_linear_function(x2, x_points, y_points, using="binary")
+    y2, eqs2 = piecewise_linear_function(x2, x_points, y_points, using="sos2")
+
+    assert len(y.domain) == len(x2.domain)
+    assert len(y2.domain) == len(x2.domain)
+    print(eqs[2].domain)
 
 
 def test_pwl_with_none(data):

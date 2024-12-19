@@ -186,6 +186,27 @@ def main():
     assert y.toDense() == 45, "Case 14 failed !"
     print("Case 14 passed !")
 
+    # test piecewise_linear_function with a non-scalar input
+    i = gp.Set(m, name="i", records=["1", "2", "3", "4", "5"])
+    x2 = gp.Variable(m, name="x2", domain=[i])
+    x_points = [1, 4, None, 6, 10, 10, 20]
+    y_points = [1, 45, None, 30, 25, 30, 12]
+    y, eqs = gp.formulations.piecewise_linear_function(x2, x_points, y_points)
+    x2.fx["1"] = 1
+    x2.fx["2"] = 2.5
+    x2.fx["3"] = 8
+    x2.fx["4"] = 4
+    x2.fx["5"] = 15
+    model = gp.Model(
+        m,
+        equations=eqs,
+        objective=gp.Sum(y.domain, y),
+        sense="max",
+        problem="mip",
+    )
+    model.solve()
+    assert np.allclose(y.toDense(), np.array([1, 23, 27.5, 45, 21]))
+
 
 if __name__ == "__main__":
     main()
