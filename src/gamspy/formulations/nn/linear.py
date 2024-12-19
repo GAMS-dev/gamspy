@@ -202,9 +202,7 @@ class Linear:
                 If True, propagate bounds of the input to the output.
         """
         if not isinstance(propagate_bounds, bool):
-            raise TypeError(
-                f"propagate_bounds should be a boolean, not '{type(propagate_bounds).__name__}'."
-            )
+            raise TypeError("propagate_bounds should be a boolean.")
 
         if self.weight is None:
             raise ValidationError(
@@ -249,8 +247,7 @@ class Linear:
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
             x_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
-            x_lb = x_bounds.toDense()[0]
-            x_ub = x_bounds.toDense()[1]
+            x_lb, x_ub = x_bounds.toDense()
 
             # To deal with infinity values in the input bounds, we convert them into complex numbers
             # where if the value is -inf, we convert it to 0 - 1j
