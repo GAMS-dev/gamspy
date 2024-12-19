@@ -33,7 +33,7 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable):
 
     Based on paper:
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
-    <https://www.academia.edu/download/43527291/Modeling_Disjunctive_Constraints_with_a_20160308-26796-1g6hb4g.pdf>`_
+    <https://www.researchgate.net/publication/225976267_Modeling_Disjunctive_Constraints_with_a_Logarithmic_Number_of_Binary_Variables_and_Constraints>`_
     """
     equations: list[gp.Equation] = []
     m = lambda_var.container
@@ -186,7 +186,9 @@ def piecewise_linear_function(
 
     However, `x_points` cannot start or end with a `None` value, and a `None`
     value cannot be followed by another `None`. Additionally, if `x_i` is `None`,
-    then `y_i` must also be `None`."
+    then `y_i` must also be `None`. Similar to the discontinuities, disallowed
+    ranges always introduce additional binary variables, regardless of the value
+    of the using argument.
 
     The input variable `input_x` is restricted to the range defined by
     `x_points` unless `bound_domain` is set to False. `bound_domain` can be set
