@@ -6,6 +6,7 @@ GAMSPy 1.4.0
 - General
   - Resolve static code analysis issues to improve code quality.
   - Return the value as a float if the given domain sets are all literals.
+  - Add an automation script to update pyproject.toml, switcher, version test, and the release notes.
 - Testing
   - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
 - Documentation
