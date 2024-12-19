@@ -149,13 +149,23 @@ inputs. We then ensure that `a1` stays within the valid range, so that the
 
 We are ready to implement our first linear layer:
 
-.. code-block:: python
+.. tabs::
+   .. group-tab:: Matrix Multiplication
+      .. code-block:: python
 
-   forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
-   forward_1[...] = z2 == w1 @ a1 + b1
+         forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
+         forward_1[...] = z2 == w1 @ a1 + b1
 
-   a2, _ = gp.math.relu_with_binary_var(z2)
+         a2, _ = gp.math.relu_with_binary_var(z2)
 
+   .. group-tab:: Linear Operation
+      .. code-block:: python
+
+         l1 = gp.formulations.Linear(m, 784, 20, bias=True) 
+         l1.load_weights(w1, b1)
+         z2, _ = l1(a1) 
+
+         a2, _ = gp.math.relu_with_binary_var(z2)
 
 We define `z2` as the matrix multiplication of the weights and the previous
 layer, plus the bias term. Note that we use
@@ -165,10 +175,19 @@ constraints and the activated variable for us.
 
 Similarly, we can define `z3`:
 
-.. code-block:: python
+.. tabs::
+   .. group-tab:: Matrix Multiplication
+      .. code-block:: python
 
-   forward_2 = gp.Equation(m, "eq3", domain=dim([10]))
-   forward_2[...] = z3 == w2 @ a2 + b2
+         forward_2 = gp.Equation(m, "eq3", domain=dim([10]))
+         forward_2[...] = z3 == w2 @ a2 + b2
+
+   .. group-tab:: Linear Operation
+      .. code-block:: python
+
+         l2 = gp.formulations.Linear(m, 20, 10, bias=True)
+         l2.load_weights(w2, b2)
+         z3, _ = l2(a2)
 
 
 This essentially completes the embedding of the neural network into our

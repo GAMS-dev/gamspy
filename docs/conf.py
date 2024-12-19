@@ -55,7 +55,8 @@ extensions = [
     "sphinx_design",
     "sphinx_copybutton",
     "sphinx.ext.napoleon",
-    "sphinx_favicon"
+    "sphinx_favicon",
+    "sphinx_tabs.tabs",
 ]
 
 copybutton_prompt_text = ">>> "
@@ -102,7 +103,7 @@ html_theme_options = {
     "show_nav_level": 2,
     "show_toc_level": 2,
     "pygments_light_style": "tango",
-    "pygments_dark_style": "lightbulb"
+    "pygments_dark_style": "lightbulb",
 }
 
 autodoc_member_order = "groupwise"
