@@ -237,8 +237,8 @@ class Linear:
             x_bounds = gp.Parameter(
                 self.container, x_bounds_name, domain=dim([2, *input.shape])
             )
-            x_bounds["0", *input.domain] = input.lo[...]
-            x_bounds["1", *input.domain] = input.up[...]
+            x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+            x_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
             x_lb = x_bounds.toDense()[0]
             x_ub = x_bounds.toDense()[1]
@@ -285,7 +285,7 @@ class Linear:
                 records=out_bounds_array,
             )
 
-            out.lo[...] = out_bounds["0", *out.domain]
-            out.up[...] = out_bounds["1", *out.domain]
+            out.lo[...] = out_bounds[("0",) + tuple(out.domain)]
+            out.up[...] = out_bounds[("1",) + tuple(out.domain)]
 
         return out, [set_out]
