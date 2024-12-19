@@ -233,6 +233,8 @@ class Linear:
 
         set_out[...] = out == expr
 
+        # If propagate_bounds is True, weight is a parameter and input is a variable,
+        # we will propagate the bounds of the input to the output
         if (
             propagate_bounds
             and self._state == 1
@@ -250,9 +252,13 @@ class Linear:
             x_lb = x_bounds.toDense()[0]
             x_ub = x_bounds.toDense()[1]
 
+            # To deal with infinity values in the input bounds, we convert them into complex numbers
+            # where if the value is -inf, we convert it to 0 - 1j
+            # and if the value is inf, we convert it to 0 + 1j
             x_lb = np.where(x_lb == -np.inf, 0 - 1j, x_lb)
             x_ub = np.where(x_ub == np.inf, 0 + 1j, x_ub)
 
+            # get the positive and negative weights separately
             w_pos = np.maximum(self.weight_array, 0)
             w_neg = np.minimum(self.weight_array, 0)
 
@@ -264,7 +270,7 @@ class Linear:
                 Decode complex number to real number.
                 5 + 0j -> 5
                 3 + 1j -> inf
-                7 - 1j -> -inf
+                7 - 3j -> -inf
                 """
                 # If imaginary part is zero, return real part
                 if z.imag == 0:
