@@ -434,6 +434,7 @@ def test_records(data):
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l["san-diego", "new-york"].records == 275.0
+    assert z.l.records == 153.675
 
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
