@@ -129,7 +129,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
         return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
     @property
-    def records(self) -> pd.DataFrame | None:
+    def records(self) -> pd.DataFrame | float | None:
         if self.parent.records is None:
             return None
 
@@ -139,9 +139,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 column_name = recs.columns[idx]
                 recs = recs[recs[column_name] == literal]
 
-            return recs
+            if all(isinstance(elem, str) for elem in self.domain):
+                return float(recs["value"].squeeze())
 
-        if isinstance(self.parent, (syms.Variable, syms.Equation)):
+            return recs
+        elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
             domain_names = [symbol.name for symbol in self.parent.domain] + [
                 ATTR_MAPPING[extension]
@@ -150,6 +152,9 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             for idx, literal in self._scalar_domains:
                 column_name = recs.columns[idx]
                 recs = recs[recs[column_name] == literal]
+
+            if all(isinstance(elem, str) for elem in self.domain):
+                return float(recs["level"].squeeze())
 
             return recs
 
