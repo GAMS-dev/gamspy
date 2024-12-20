@@ -113,7 +113,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         self,
         container: Container,
         name: str | None = None,
-        alias_with: Set | Alias = None,
+        alias_with: Set | Alias = None,  # type: ignore
     ):
         # does symbol exist
         has_symbol = False
@@ -188,6 +188,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     @synchronize.setter
     def synchronize(self, value: bool):
+        assert self.alias_with is not None
         raise ValidationError(
             f"Alias `{self.name}` object is tied to a Set `{self.alias_with.name}`."
             f"Change the synchronization setting of the Set `{self.alias_with.name}` instead."

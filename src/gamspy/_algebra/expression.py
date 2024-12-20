@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -16,23 +16,9 @@ from gamspy.exceptions import ValidationError
 from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
-    import gamspy._algebra.expression as expression
     from gamspy import Alias, Set
-    from gamspy._algebra.operation import Operation
-    from gamspy._symbols.implicits import ImplicitSet
-
-    OperandType = Optional[
-        Union[
-            int,
-            float,
-            str,
-            Symbol,
-            ImplicitSymbol,
-            Operation,
-            expression.Expression,
-            MathOp,
-        ]
-    ]
+    from gamspy._symbols.implicits import ImplicitEquation, ImplicitSet
+    from gamspy._types import OperableType
 
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
@@ -76,9 +62,9 @@ class Expression(operable.Operable):
 
     def __init__(
         self,
-        left: OperandType,
+        left: OperableType | ImplicitEquation | None,
         data: str | MathOp | ExtrinsicFunction,
-        right: OperandType,
+        right: OperableType | None,
     ):
         self.left = (
             utils._map_special_values(left)
@@ -229,10 +215,10 @@ class Expression(operable.Operable):
 
         return f"({out_str})"
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         return Expression(self, "=e=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return Expression(self, "ne", other)
 
     def __neg__(self):

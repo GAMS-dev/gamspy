@@ -112,3 +112,12 @@ autodoc_member_order = "groupwise"
 todo_include_todos = False
 
 favicons = ["gams.ico"]
+
+# Analytics
+def setup(app):
+    app.add_js_file(
+        "https://plausible.io/js/plausible.js",
+        async_="async",
+        defer="defer",
+        data_domain="gamspy.readthedocs.io"
+    )

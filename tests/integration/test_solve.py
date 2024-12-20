@@ -329,9 +329,7 @@ def test_records(data):
         ["san-diego", "chicago", 0.162],
         ["san-diego", "topeka", 0.126],
     ]
-    assert c["san-diego", "new-york"].records.values.tolist() == [
-        ["san-diego", "new-york", 0.225],
-    ]
+    assert c["san-diego", "new-york"].records == 0.225
     e[...] = 5
     assert e.records.values.tolist() == [[5.0]]
 
@@ -435,9 +433,8 @@ def test_records(data):
         ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
-    assert x.l["san-diego", "new-york"].records.values.tolist() == [
-        ["san-diego", "new-york", 275.0],
-    ]
+    assert x.l["san-diego", "new-york"].records == 275.0
+    assert z.l.records == 153.675
 
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
@@ -470,9 +467,7 @@ def test_records(data):
         ["seattle", 350.0],
         ["san-diego", 550.0],
     ]
-    assert supply.l["seattle"].records.values.tolist() == [
-        ["seattle", 350.0],
-    ]
+    assert supply.l["seattle"].records == 350.0
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))

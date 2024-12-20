@@ -107,6 +107,8 @@ def relu_with_sos1_var(
 
     """
     domain = x.domain
+
+    assert x.container
     last_dim = gamspy.math._generate_dims(x.container, [2])[0]
 
     y = x.container.addVariable(
@@ -192,7 +194,7 @@ def relu_with_binary_var(
     [Set(name='i', domain=['*'])]
 
     """
-
+    assert x.container
     domain = x.domain
     sigma = x.container.addVariable(
         _get_random_name("bin"),
@@ -277,6 +279,7 @@ def relu_with_complementarity_var(
     2
 
     """
+    assert x.container
     domain = x.domain
 
     y = x.container.addVariable(

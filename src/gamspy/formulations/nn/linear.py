@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
+
+if TYPE_CHECKING:
+    from gamspy import Parameter, Variable
 
 
 class Linear:
@@ -62,8 +66,8 @@ class Linear:
         self.out_features = out_features
         self.use_bias = bias
         self._state = 0
-        self.weight = None
-        self.bias = None
+        self.weight: Parameter | Variable | None = None
+        self.bias: Parameter | Variable | None = None
 
     def load_weights(
         self, weight: np.ndarray, bias: np.ndarray | None = None

@@ -492,7 +492,7 @@ class Container(gt.Container):
             if symbol.modified:
                 if (
                     isinstance(symbol, gp.Alias)
-                    and symbol.alias_with.name not in modified_names
+                    and symbol.alias_with.name not in modified_names  # type: ignore
                 ):
                     modified_names.append(symbol.alias_with.name)
 
@@ -779,7 +779,7 @@ class Container(gt.Container):
     def addAlias(
         self,
         name: str | None = None,
-        alias_with: Set | Alias | None = None,
+        alias_with: Set | Alias = None,  # type: ignore
     ) -> Alias:
         """
         Creates a new Alias and adds it to the container
@@ -788,7 +788,7 @@ class Container(gt.Container):
         ----------
         name : str, optional
             Name of the alias.
-        alias_with : Set | Alias | None
+        alias_with : Set | Alias
             Alias set object.
 
         Returns

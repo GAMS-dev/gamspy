@@ -112,7 +112,7 @@ class MiroJSONEncoder:
             elif isinstance(symbol, (gp.Variable, gp.Equation)):
                 ve_names.append(name)
                 ve_texts.append(
-                    symbol.description if symbol.description else symbol.name
+                    symbol.description if symbol.description else symbol.name  # type: ignore
                 )
                 ve_types.append(type(symbol).__name__.lower())
 
@@ -267,7 +267,7 @@ class MiroJSONEncoder:
                         if symbol.description
                         else symbol.name
                     ),
-                    "symtype": type_map[type(symbol)],
+                    "symtype": type_map[type(symbol)],  # type: ignore
                     "headers": headers_dict,
                 }
             )
