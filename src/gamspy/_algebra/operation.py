@@ -112,7 +112,7 @@ class Operation(operable.Operable):
                     member
                     for member in elem.domain
                     if member not in control_stack
-                ]
+                ] + [elem.parent]
 
             if elem in control_stack:
                 raise ValidationError(f"Set {elem} is already in control")

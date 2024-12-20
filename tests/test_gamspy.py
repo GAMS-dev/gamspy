@@ -14,7 +14,7 @@ import gamspy
 
 @pytest.mark.unit
 def test_version():
-    assert gamspy.__version__ == "1.3.1"
+    assert gamspy.__version__ == "1.4.0"
 
 
 @pytest.mark.doc

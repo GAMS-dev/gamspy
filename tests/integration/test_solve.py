@@ -1100,6 +1100,38 @@ def test_validation(data):
         c[b[j]] = 90 * d[i, j] / 1000
 
 
+def test_validation_2():
+    m = Container()
+    c = Set(m, "c")
+    i = Set(m, "i")
+    s = Set(m, "s")
+    key = Set(m, "key", domain=[i, s, c])
+    cost = Parameter(m, "cost", domain=i)
+    a1 = Parameter(m, "a1", domain=i)
+    a2 = Parameter(m, "a2", domain=[i, s])
+    a3 = Parameter(m, "a3", domain=[i, c])
+    cobj = Variable(m, "cobj")
+    y = Variable(m, "y", domain=[i])
+    fin = Variable(m, "fin", domain=[i])
+    xin = Variable(m, "xin", domain=[i, c])
+    rec = Variable(m, "rec", domain=[i, s, c])
+    obj = Equation(m, "obj")
+
+    obj[...] = cobj == Sum(
+        i,
+        (
+            (cost[i] * y[i])
+            + (
+                (
+                    (a1[i] + Sum(key[i, s, c], (a2[i, s] * rec[key])))
+                    + Sum(c, (a3[i, c] * xin[i, c]))
+                )
+                * fin[i]
+            )
+        ),
+    )
+
+
 def test_after_exception(data):
     m, *_ = data
     x = Variable(m, "x", type="positive")
