@@ -157,36 +157,46 @@ We are ready to implement our first linear layer:
          forward_1[...] = z2 == w1 @ a1 + b1
 
          a2, _ = gp.math.relu_with_binary_var(z2)
+      
+      We define `z2` as the matrix multiplication of the weights and the previous
+      layer, plus the bias term. Note that we use
+      :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
+      to declare the `a2` variable, which automatically creates the necessary
+      constraints and the activated variable for us.
 
    .. group-tab:: Linear Operation
       .. code-block:: python
 
-         l1 = gp.formulations.Linear(m, 784, 20, bias=True) 
-         l1.load_weights(w1, b1)
-         z2, _ = l1(a1) 
+         l1 = gp.formulations.Linear(m, 784, 20, bias=True)
+         l1.load_weights(l1_weight, b1_weight)
+         z2, _ = l1(a1)
 
          a2, _ = gp.math.relu_with_binary_var(z2)
 
-We define `z2` as the matrix multiplication of the weights and the previous
-layer, plus the bias term. Note that we use
-:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-to declare the `a2` variable, which automatically creates the necessary
-constraints and the activated variable for us.
-
-Similarly, we can define `z3`:
+      We define `l1` as a linear formulation with 784 input neurons and 20
+      output neurons. Since we add bias in our NN, we select bias as `True`.
+      We load the weights and biases from the neural network into the linear 
+      formulation directly without requiring creating variables. Then `z2` is created 
+      as output of the linear operation. Finally, we apply the 
+      :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>` to obtain `a2`.
+      
 
 .. tabs::
    .. group-tab:: Matrix Multiplication
+      Similarly, we can define `z3`:
+
       .. code-block:: python
 
          forward_2 = gp.Equation(m, "eq3", domain=dim([10]))
          forward_2[...] = z3 == w2 @ a2 + b2
 
    .. group-tab:: Linear Operation
+      Similarly, `z3` is created by the second linear operation `l2`:
+
       .. code-block:: python
 
          l2 = gp.formulations.Linear(m, 20, 10, bias=True)
-         l2.load_weights(w2, b2)
+         l2.load_weights(l2_weight, b2_weight)
          z3, _ = l2(a2)
 
 
