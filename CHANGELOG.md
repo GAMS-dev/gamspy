@@ -13,6 +13,7 @@ GAMSPy 1.4.0
   - Add an example demonstrating how to solve the Minimum Cost Multi-Commodity Flow Problem using Column Generation in GAMSPy.
   - Remove non-negative variable type from the docs.
   - Add plausible.js for analytics.
+  - Minor update in embedding nn documentation.
 
 
 GAMSPy 1.3.1
