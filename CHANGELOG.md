@@ -8,6 +8,8 @@ GAMSPy 1.4.0
   - Return the value as a float if the given domain sets are all literals.
   - Add an automation script to update pyproject.toml, switcher, version test, and the release notes.
   - Allow propagating bounds of the output in the Linear class.
+  - Allow GAMS to find the available port and connect to it.
+  - Upgrade gamspy_base and gamsapi dependencies.
 - Testing
   - Set COVERAGE_CORE to sysmon to make use of the new sys.monitoring package in Python.
 - Documentation
