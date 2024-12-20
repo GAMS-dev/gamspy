@@ -2036,7 +2036,7 @@ def test_linear_propagate_bounds_non_boolean(data):
     pytest.raises(TypeError, lin1, par_input, "True")
 
 
-def test_linear_propagate_bounded_input():
+def test_linear_propagate_bounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 4, 3)
     w1 = np.random.rand(3, 4)
@@ -2071,7 +2071,7 @@ def test_linear_propagate_bounded_input():
     )
 
 
-def test_linear_propagate_unbounded_input():
+def test_linear_propagate_unbounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=True)
     w1 = np.random.rand(30, 20)
@@ -2087,7 +2087,7 @@ def test_linear_propagate_unbounded_input():
     assert out1.up.records is None
 
 
-def test_linear_propagate_partially_bounded_input():
+def test_linear_propagate_partially_bounded_input(data):
     m, *_ = data
     lin1 = Linear(m, 4, 3, bias=False)
     w1 = np.array([[-3, 2, 1, 0], [1, -1, 0, 1], [0, 1, -1, 3]])
@@ -2121,7 +2121,7 @@ def test_linear_propagate_partially_bounded_input():
     assert np.allclose(out1_ub.toDense(), expected_ub)
 
 
-def test_linear_propagate_unbounded_input_with_zero_weight():
+def test_linear_propagate_unbounded_input_with_zero_weight(data):
     m, *_ = data
     lin1 = Linear(m, 20, 30, bias=False)
     w1 = np.zeros((30, 20))
