@@ -27,6 +27,7 @@ from gamspy.exceptions import ValidationError
 if TYPE_CHECKING:
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
+    from gamspy.math.matrix import Dim
 
 
 class VariableType(Enum):
@@ -88,7 +89,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str,
         type: str = "free",
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: list[Set | Alias | str]
+        | Set
+        | Alias
+        | Dim
+        | str
+        | None = None,
         records: Any | None = None,
         description: str = "",
     ):
@@ -142,7 +148,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str | None = None,
         type: str = "free",
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: list[Set | Alias | str]
+        | Set
+        | Alias
+        | Dim
+        | str
+        | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -179,7 +190,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         container: Container,
         name: str | None = None,
         type: str = "free",
-        domain: list[Set | Alias | str] | Set | Alias | str | None = None,
+        domain: list[Set | Alias | str]
+        | Set
+        | Alias
+        | Dim
+        | str
+        | None = None,
         records: Any | None = None,
         domain_forwarding: bool = False,
         description: str = "",
@@ -202,7 +218,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             domain = [domain]
 
         if isinstance(domain, gp.math.Dim):
-            domain = gp.math._generate_dims(container, domain.dims)
+            domain = gp.math._generate_dims(container, domain.dims)  # type: ignore
 
         # does symbol exist
         has_symbol = False
@@ -307,10 +323,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
     def __neg__(self):
         return expression.Expression(None, "-", self)
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __repr__(self) -> str:
@@ -354,7 +370,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         x = dims[-1]
         dims[-1] = dims[-2]
         dims[-2] = x
-        return permute(self, dims)
+        return permute(self, dims)  # type: ignore
 
     def _init_attributes(self):
         level = self._create_attr("l")

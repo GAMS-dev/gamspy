@@ -876,6 +876,7 @@ class GAMSEngine(backend.Backend):
                     except FileNotFoundError:
                         ...
 
+                assert self.model is not None
                 self.model._update_model_attributes()
 
                 if self.client.remove_results:
@@ -954,6 +955,7 @@ class GAMSEngine(backend.Backend):
         ]
 
         if self.solver_options:
+            assert self.solver is not None
             extra_model_files.append(
                 os.path.join(
                     self.container.working_directory,
@@ -964,6 +966,7 @@ class GAMSEngine(backend.Backend):
         if self.options.loadpoint is not None:
             extra_model_files.append(self.options.loadpoint)
 
+        assert self.model is not None
         if self.model.external_module is not None:
             extra_model_files.append(self.model.external_module)
 

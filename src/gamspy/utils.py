@@ -28,6 +28,7 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._symbols.implicits import ImplicitSet
+    from gamspy._types import EllipsisType
 
 SPECIAL_VALUE_MAP = {
     gt.SpecialValues.NA: "NA",
@@ -404,19 +405,17 @@ def _open_gdx_file(system_directory: str, load_from: str):
     return gdx_handle
 
 
-def _to_list(obj: Set | Alias | str | tuple | ImplicitSet) -> list:
-    """
-    Converts the given object to a list
-
-    Parameters
-    ----------
-    obj : Set | Alias | str | tuple | list | Domain | Expression | ImplicitSet
-        Object to be converted
-
-    Returns
-    -------
-    list
-    """
+def _to_list(
+    obj: EllipsisType
+    | slice
+    | Set
+    | Alias
+    | str
+    | Iterable
+    | Sequence
+    | ImplicitSet,
+) -> list:
+    """Converts the given object to a list"""
     if isinstance(obj, tuple):
         return list(obj)
 
@@ -532,9 +531,9 @@ def setBaseEqual(set_a: Set | Alias, set_b: Set | Alias) -> bool:
     True
 
     """
-    set_a = getattr(set_a, "alias_with", set_a)
-    set_b = getattr(set_b, "alias_with", set_b)
-    return set_a == set_b
+    a = getattr(set_a, "alias_with", set_a)
+    b = getattr(set_b, "alias_with", set_b)
+    return a == b
 
 
 # TODO either add description or make private

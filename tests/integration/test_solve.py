@@ -329,9 +329,7 @@ def test_records(data):
         ["san-diego", "chicago", 0.162],
         ["san-diego", "topeka", 0.126],
     ]
-    assert c["san-diego", "new-york"].records.values.tolist() == [
-        ["san-diego", "new-york", 0.225],
-    ]
+    assert c["san-diego", "new-york"].records == 0.225
     e[...] = 5
     assert e.records.values.tolist() == [[5.0]]
 
@@ -435,9 +433,8 @@ def test_records(data):
         ["san-diego", "chicago", 0.0],
         ["san-diego", "topeka", 275.0],
     ]
-    assert x.l["san-diego", "new-york"].records.values.tolist() == [
-        ["san-diego", "new-york", 275.0],
-    ]
+    assert x.l["san-diego", "new-york"].records == 275.0
+    assert z.l.records == 153.675
 
     # Test the columns of equation
     assert cost.records.columns.tolist() == [
@@ -470,9 +467,7 @@ def test_records(data):
         ["seattle", 350.0],
         ["san-diego", 550.0],
     ]
-    assert supply.l["seattle"].records.values.tolist() == [
-        ["seattle", 350.0],
-    ]
+    assert supply.l["seattle"].records == 350.0
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))
@@ -1103,6 +1098,38 @@ def test_validation(data):
 
     with pytest.raises(TypeError):
         c[b[j]] = 90 * d[i, j] / 1000
+
+
+def test_validation_2():
+    m = Container()
+    c = Set(m, "c")
+    i = Set(m, "i")
+    s = Set(m, "s")
+    key = Set(m, "key", domain=[i, s, c])
+    cost = Parameter(m, "cost", domain=i)
+    a1 = Parameter(m, "a1", domain=i)
+    a2 = Parameter(m, "a2", domain=[i, s])
+    a3 = Parameter(m, "a3", domain=[i, c])
+    cobj = Variable(m, "cobj")
+    y = Variable(m, "y", domain=[i])
+    fin = Variable(m, "fin", domain=[i])
+    xin = Variable(m, "xin", domain=[i, c])
+    rec = Variable(m, "rec", domain=[i, s, c])
+    obj = Equation(m, "obj")
+
+    obj[...] = cobj == Sum(
+        i,
+        (
+            (cost[i] * y[i])
+            + (
+                (
+                    (a1[i] + Sum(key[i, s, c], (a2[i, s] * rec[key])))
+                    + Sum(c, (a3[i, c] * xin[i, c]))
+                )
+                * fin[i]
+            )
+        ),
+    )
 
 
 def test_after_exception(data):

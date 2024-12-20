@@ -14,11 +14,10 @@ import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gams.transfer import Alias, Parameter, Set
-
     from gamspy._algebra import Domain
     from gamspy._algebra.condition import Condition
     from gamspy._algebra.expression import Expression
+    from gamspy._symbols import Alias, Parameter, Set
     from gamspy._symbols.implicits import (
         ImplicitParameter,
         ImplicitSet,
@@ -32,7 +31,7 @@ class Operation(operable.Operable):
         domain: Set
         | Alias
         | ImplicitSet
-        | tuple[Set | Alias]
+        | Sequence[Set | Alias]
         | Domain
         | Condition,
         rhs: (
@@ -45,7 +44,7 @@ class Operation(operable.Operable):
         ),
         op_name: str,
     ):
-        self.op_domain = utils._to_list(domain)
+        self.op_domain = utils._to_list(domain)  # type: ignore
         assert len(self.op_domain) > 0, "Operation requires at least one index"
         self.rhs = rhs
         self._op_name = op_name
@@ -60,7 +59,7 @@ class Operation(operable.Operable):
 
         self._operation_indices = []
         if isinstance(rhs, condition.Condition):
-            rhs = rhs.conditioning_on
+            rhs = rhs.conditioning_on  # type: ignore
 
         if not isinstance(rhs, (bool, float, int)):
             for i, x in enumerate(rhs.domain):  # type: ignore
@@ -113,7 +112,7 @@ class Operation(operable.Operable):
                     member
                     for member in elem.domain
                     if member not in control_stack
-                ]
+                ] + [elem.parent]
 
             if elem in control_stack:
                 raise ValidationError(f"Set {elem} is already in control")
@@ -141,10 +140,10 @@ class Operation(operable.Operable):
             + ")"
         )
 
-    def __eq__(self, other):  # type: ignore
+    def __eq__(self, other):
         return expression.Expression(self, "=e=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __neg__(self):
@@ -216,7 +215,10 @@ class Operation(operable.Operable):
         index_str = ",".join([index.latexRepr() for index in indices])
 
         if given_condition is not None:
-            index_str += " ~ | ~ " + given_condition.latexRepr()
+            condition_str = str(given_condition)
+            if hasattr(given_condition, "latexRepr"):
+                condition_str = given_condition.latexRepr()
+            index_str += " ~ | ~ " + condition_str
 
         expression_str = (
             str(self.rhs)
@@ -235,7 +237,7 @@ class Sum(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | ImplicitSet | Sequence[Set | Alias], Domain, Condition
     expression : (
             Expression
             | ImplicitVariable
@@ -261,8 +263,18 @@ class Sum(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "sum")
 
@@ -298,7 +310,7 @@ class Product(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
             | ImplicitVariable
@@ -324,8 +336,18 @@ class Product(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "prod")
 
@@ -361,7 +383,7 @@ class Smin(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
             | ImplicitVariable
@@ -387,8 +409,18 @@ class Smin(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "smin")
 
@@ -424,7 +456,7 @@ class Smax(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
             | ImplicitVariable
@@ -450,8 +482,18 @@ class Smax(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "smax")
 
@@ -487,7 +529,7 @@ class Sand(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
             | ImplicitVariable
@@ -513,8 +555,18 @@ class Sand(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "sand")
 
@@ -549,7 +601,7 @@ class Sor(Operation):
 
     Parameters
     ----------
-    domain : Set | Alias | Tuple[Set | Alias], Domain, Expression
+    domain : Set | Alias | Sequence[Set | Alias], Domain, Expression
     expression : (
             Expression
             | ImplicitVariable
@@ -575,8 +627,18 @@ class Sor(Operation):
 
     def __init__(
         self,
-        domain: Set | Alias | tuple[Set | Alias] | Domain | Expression,
-        expression: Expression | ImplicitParameter | int | bool,
+        domain: Set
+        | Alias
+        | ImplicitSet
+        | Sequence[Set | Alias]
+        | Domain
+        | Condition,
+        expression: Operation
+        | Expression
+        | ImplicitParameter
+        | ImplicitVariable
+        | int
+        | bool,
     ):
         super().__init__(domain, expression, "sor")
 
@@ -633,7 +695,7 @@ class Ord(operable.Operable):
         self.domain: list[Set | Alias] = []
         self.where = condition.Condition(self)
 
-    def __eq__(self, other) -> Expression:  # type: ignore
+    def __eq__(self, other):
         return expression.Expression(self, "eq", other)
 
     def __ge__(self, other):
@@ -642,7 +704,7 @@ class Ord(operable.Operable):
     def __le__(self, other):
         return expression.Expression(self, "<=", other)
 
-    def __ne__(self, other):  # type: ignore
+    def __ne__(self, other):
         return expression.Expression(self, "ne", other)
 
     def __neg__(self):

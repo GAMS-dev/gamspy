@@ -820,7 +820,7 @@ class Model:
 
         if self.sense == gp.Sense.FEASIBILITY:
             # Set sense as min or max for feasibility
-            self.sense = gp.Sense.MIN
+            self.sense = gp.Sense("MIN")
 
         if self.problem not in [Problem.MCP, Problem.CNS, Problem.EMP]:
             solve_string += f" {self.sense}"

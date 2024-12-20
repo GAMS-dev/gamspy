@@ -10,7 +10,6 @@ import tempfile
 import time
 import traceback
 import uuid
-from contextlib import closing
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -47,17 +46,9 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
 
 LOOPBACK = "127.0.0.1"
-GAMS_PORT = os.getenv("GAMS_PORT", None)
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
-
-
-def find_free_address() -> tuple[str, int]:
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
-        s.bind((LOOPBACK, 0))
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return s.getsockname()
 
 
 def open_connection(
@@ -65,12 +56,10 @@ def open_connection(
 ) -> tuple[socket.socket, subprocess.Popen]:
     TIMEOUT = 30
 
-    address = (LOOPBACK, int(GAMS_PORT)) if GAMS_PORT else find_free_address()
-
     initial_pf_file = os.path.join(process_directory, "gamspy.pf")
     with open(initial_pf_file, "w") as file:
         file.write(
-            f'incrementalMode="{address[1]}"\n'
+            'incrementalMode="2"\n'
             f'procdir="{process_directory}"\n'
             f'license="{license_path}"\n'
             f'curdir="{os.getcwd()}"\n'
@@ -90,6 +79,15 @@ def open_connection(
         start_new_session=platform.system() != "Windows",
     )
 
+    port_info = process.stdout.readline().strip()
+
+    try:
+        port = int(port_info.removeprefix("port: "))
+    except ValueError as e:
+        raise ValidationError(
+            f"Error while reading the port! {port_info=}"
+        ) from e
+
     def handler(signum, frame):
         if platform.system() != "Windows":
             os.kill(process.pid, signal.SIGINT)
@@ -103,7 +101,7 @@ def open_connection(
 
         try:
             new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            new_socket.connect(address)
+            new_socket.connect((LOOPBACK, port))
             break
         except (ConnectionRefusedError, OSError) as e:
             new_socket.close()
@@ -492,7 +490,7 @@ class Container(gt.Container):
             if symbol.modified:
                 if (
                     isinstance(symbol, gp.Alias)
-                    and symbol.alias_with.name not in modified_names
+                    and symbol.alias_with.name not in modified_names  # type: ignore
                 ):
                     modified_names.append(symbol.alias_with.name)
 
@@ -779,7 +777,7 @@ class Container(gt.Container):
     def addAlias(
         self,
         name: str | None = None,
-        alias_with: Set | Alias | None = None,
+        alias_with: Set | Alias = None,  # type: ignore
     ) -> Alias:
         """
         Creates a new Alias and adds it to the container
@@ -788,7 +786,7 @@ class Container(gt.Container):
         ----------
         name : str, optional
             Name of the alias.
-        alias_with : Set | Alias | None
+        alias_with : Set | Alias
             Alias set object.
 
         Returns
