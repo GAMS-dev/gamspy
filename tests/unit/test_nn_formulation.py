@@ -2034,3 +2034,108 @@ def test_linear_propagate_bounds_non_boolean(data):
 
     par_input = gp.Parameter(m, domain=dim([30, 20, 30, 20]))
     pytest.raises(TypeError, lin1, par_input, "True")
+
+
+def test_linear_propagate_bounded_input():
+    m, *_ = data
+    lin1 = Linear(m, 4, 3)
+    w1 = np.random.rand(3, 4)
+    b1 = np.random.rand(3)
+    lin1.load_weights(w1, b1)
+
+    # bounds for the input
+    xlb = np.random.randint(-5, 1, (2, 4))
+    xub = np.random.randint(1, 5, (2, 4))
+
+    x_lb = gp.Parameter(m, "x_lb", domain=dim([2, 4]), records=xlb)
+    x_ub = gp.Parameter(m, "x_ub", domain=dim([2, 4]), records=xub)
+
+    x = gp.Variable(m, "x", domain=dim([2, 4]))
+    x.up[...] = x_ub[...]
+    x.lo[...] = x_lb[...]
+
+    out1, _ = lin1(x)
+
+    wpos = np.maximum(w1, 0)
+    wneg = np.minimum(w1, 0)
+
+    expected_lb = np.dot(xlb, wpos.T) + np.dot(xub, wneg.T) + b1
+    expected_ub = np.dot(xub, wpos.T) + np.dot(xlb, wneg.T) + b1
+
+    # check if the bounds are propagated correctly
+    assert np.allclose(
+        np.array(out1.lo.records.lower).reshape(2, 3), expected_lb
+    )
+    assert np.allclose(
+        np.array(out1.up.records.upper).reshape(2, 3), expected_ub
+    )
+
+
+def test_linear_propagate_unbounded_input():
+    m, *_ = data
+    lin1 = Linear(m, 20, 30, bias=True)
+    w1 = np.random.rand(30, 20)
+    b1 = np.random.rand(30)
+    lin1.load_weights(w1, b1)
+
+    x = gp.Variable(m, "x", domain=dim([30, 20, 30, 20]))
+
+    out1, _ = lin1(x)
+
+    # Data to bounds is not added; which means its unbounded
+    assert out1.lo.records is None
+    assert out1.up.records is None
+
+
+def test_linear_propagate_partially_bounded_input():
+    m, *_ = data
+    lin1 = Linear(m, 4, 3, bias=False)
+    w1 = np.array([[-3, 2, 1, 0], [1, -1, 0, 1], [0, 1, -1, 3]])
+    lin1.load_weights(w1)
+
+    x = gp.Variable(m, "x", domain=dim([2, 4]))
+
+    xlb = np.array([[-4, -np.inf, -5, 0], [-1, -2, -1, -4]])
+    xub = np.array([[4, 5, np.inf, 0], [np.inf, 1, 2, 1]])
+
+    x_lb = gp.Parameter(m, "x_lb", domain=dim([2, 4]), records=xlb)
+    x_ub = gp.Parameter(m, "x_ub", domain=dim([2, 4]), records=xub)
+
+    x.up[...] = x_ub[...]
+    x.lo[...] = x_lb[...]
+
+    out1, _ = lin1(x)
+
+    out1_lb = gp.Parameter(m, "out1_lb", domain=dim([2, 3]))
+    out1_ub = gp.Parameter(m, "out1_ub", domain=dim([2, 3]))
+
+    out1_lb[...] = out1.lo[...]
+    out1_ub[...] = out1.up[...]
+
+    expected_lb = np.array([[-np.inf, -9, -np.inf], [-np.inf, -6, -16]])
+
+    expected_ub = np.array([[np.inf, np.inf, 10], [7, np.inf, 5]])
+
+    # check if the bounds are propagated correctly
+    assert np.allclose(out1_lb.toDense(), expected_lb)
+    assert np.allclose(out1_ub.toDense(), expected_ub)
+
+
+def test_linear_propagate_unbounded_input_with_zero_weight():
+    m, *_ = data
+    lin1 = Linear(m, 20, 30, bias=False)
+    w1 = np.zeros((30, 20))
+    lin1.load_weights(w1)
+
+    x = gp.Variable(m, "x", domain=dim([30, 20, 30, 20]))
+
+    out1, _ = lin1(x)
+
+    out1_ub = np.array(out1.up.records.upper).reshape(30, 20, 30, 30)
+    out1_lb = np.array(out1.lo.records.lower).reshape(30, 20, 30, 30)
+
+    expected_bounds = np.zeros((30, 20, 30, 30))
+
+    # check if the bounds are zeros, since the weights are all zeros
+    assert np.allclose(out1_ub, expected_bounds)
+    assert np.allclose(out1_lb, expected_bounds)
