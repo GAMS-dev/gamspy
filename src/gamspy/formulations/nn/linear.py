@@ -191,7 +191,9 @@ class Linear:
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
-        calculating the linear transformation.
+        calculating the linear transformation. If `propagate_bounds` is True,
+        the `input` is of type variable, and `load_weights` was called, then
+        the bounds of the input are propagated to the output.
 
         Parameters
         ----------
@@ -199,7 +201,7 @@ class Linear:
                 input to the linear layer, must be in shape
                 (* x in_features)
         propagate_bounds : bool = True
-                If True, propagate bounds of the input to the output.
+                If True, propagate bounds of the input to the output. Otherwise, the output is unbounded.
         """
         if not isinstance(propagate_bounds, bool):
             raise TypeError("propagate_bounds should be a boolean.")
