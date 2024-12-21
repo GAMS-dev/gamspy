@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import uuid
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 from gamspy.math import dim
+
+if TYPE_CHECKING:
+    from gamspy import Parameter, Variable
 
 
 class Linear:
@@ -62,8 +66,10 @@ class Linear:
         self.out_features = out_features
         self.use_bias = bias
         self._state = 0
-        self.weight = None
-        self.bias = None
+        self.weight: Parameter | Variable | None = None
+        self.weight_array = None
+        self.bias: Parameter | Variable | None = None
+        self.bias_array = None
 
     def load_weights(
         self, weight: np.ndarray, bias: np.ndarray | None = None
@@ -130,6 +136,7 @@ class Linear:
             )
         else:
             self.weight.setRecords(weight)
+        self.weight_array = weight
 
         if self.use_bias:
             if self.bias is None:
@@ -142,6 +149,8 @@ class Linear:
                 )
             else:
                 self.bias.setRecords(bias)
+
+            self.bias_array = bias
 
         self._state = 1
 
@@ -178,18 +187,26 @@ class Linear:
         self._state = 2
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable
+        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
-        calculating the linear transformation.
+        calculating the linear transformation. If `propagate_bounds` is True,
+        the `input` is of type variable, and `load_weights` was called, then
+        the bounds of the input are propagated to the output.
 
         Parameters
         ----------
         input : gp.Parameter | gp.Variable
                 input to the linear layer, must be in shape
                 (* x in_features)
+        propagate_bounds : bool = True
+                If True, propagate bounds of the input to the output.
+                Otherwise, the output variable is unbounded.
         """
+        if not isinstance(propagate_bounds, bool):
+            raise TypeError("propagate_bounds should be a boolean.")
+
         if self.weight is None:
             raise ValidationError(
                 "You must call load_weights or make_variable first before using the Linear"
@@ -216,5 +233,72 @@ class Linear:
         set_out = gp.Equation(self.container, name, domain=out.domain)
 
         set_out[...] = out == expr
+
+        # If propagate_bounds is True, weight is a parameter and input is a variable,
+        # we will propagate the bounds of the input to the output
+        if (
+            propagate_bounds
+            and self._state == 1
+            and isinstance(input, gp.Variable)
+        ):
+            x_bounds_name = "x_bounds_" + str(uuid.uuid4()).split("-")[0]
+            out_bounds_name = "out_bounds_" + str(uuid.uuid4()).split("-")[0]
+
+            x_bounds = gp.Parameter(
+                self.container, x_bounds_name, domain=dim([2, *input.shape])
+            )
+            x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+            x_bounds[("1",) + tuple(input.domain)] = input.up[...]
+
+            x_lb, x_ub = x_bounds.toDense()
+
+            # To deal with infinity values in the input bounds, we convert them into complex numbers
+            # where if the value is -inf, we convert it to 0 - 1j
+            # and if the value is inf, we convert it to 0 + 1j
+            x_lb = np.where(x_lb == -np.inf, 0 - 1j, x_lb)
+            x_ub = np.where(x_ub == np.inf, 0 + 1j, x_ub)
+
+            # get the positive and negative weights separately
+            w_pos = np.maximum(self.weight_array, 0)
+            w_neg = np.minimum(self.weight_array, 0)
+
+            lo_out = (x_lb @ w_pos.T) + (x_ub @ w_neg.T)
+            up_out = (x_ub @ w_pos.T) + (x_lb @ w_neg.T)
+
+            def _decode_complex_number(z: np.complex128) -> float:
+                """
+                Decode complex number to real number.
+                5 + 0j -> 5
+                3 + 1j -> inf
+                7 - 3j -> -inf
+                """
+                # If imaginary part is zero, return real part
+                if z.imag == 0:
+                    return z.real
+                # If imaginary part is positive, return positive infinity
+                elif z.imag > 0:
+                    return np.inf
+                # If imaginary part is negative, return negative infinity
+                else:
+                    return -np.inf
+
+            lo_out = np.vectorize(_decode_complex_number)(lo_out)
+            up_out = np.vectorize(_decode_complex_number)(up_out)
+
+            if self.use_bias:
+                lo_out = lo_out + self.bias_array
+                up_out = up_out + self.bias_array
+
+            out_bounds_array = np.stack([lo_out, up_out], axis=0)
+
+            out_bounds = gp.Parameter(
+                self.container,
+                out_bounds_name,
+                domain=dim([2, *out.shape]),
+                records=out_bounds_array,
+            )
+
+            out.lo[...] = out_bounds[("0",) + tuple(out.domain)]
+            out.up[...] = out_bounds[("1",) + tuple(out.domain)]
 
         return out, [set_out]

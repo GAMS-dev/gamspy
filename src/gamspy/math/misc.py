@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
     from gamspy._symbols.symbol import Symbol
+    from gamspy._types import OperableType
 
 
 class MathOp:
@@ -68,7 +69,7 @@ def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
     return x.gamsRepr()
 
 
-def abs(x: int | float | Symbol) -> Expression:
+def abs(x: OperableType) -> Expression:
     """
     Absolute value of ``x`` (i.e. ``|x|``)
 
@@ -91,7 +92,7 @@ def abs(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("abs", (x,)), None)
 
 
-def ceil(x: int | float | Symbol) -> Expression:
+def ceil(x: OperableType) -> Expression:
     """
     The smallest integer greater than or equal to ``x`` (i.e. ``ceil(4.1)`` returns ``5``)
 
@@ -114,16 +115,14 @@ def ceil(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("ceil", (x,)), None)
 
 
-def div(
-    dividend: int | float | Symbol, divisor: int | float | Symbol
-) -> Expression:
+def div(dividend: OperableType, divisor: OperableType) -> Expression:
     """
     Dividing operation, Error if the divisor is ``0``. To avoid the error, ``div0`` can be used instead.
 
     Parameters
     ----------
-    dividend : int | float | Symbol
-    divisor : int | float | Symbol
+    dividend : OperableType
+    divisor : OperableType
 
     Returns
     -------
@@ -146,16 +145,14 @@ def div(
     )
 
 
-def div0(
-    dividend: int | float | Symbol, divisor: int | float | Symbol
-) -> Expression:
+def div0(dividend: OperableType, divisor: OperableType) -> Expression:
     """
     Dividing operation, returns ``1e+299`` if the divisor is ``0``
 
     Parameters
     ----------
-    dividend : int | float | Symbol
-    divisor : int | float | Symbol
+    dividend : OperableType
+    divisor : OperableType
 
     Returns
     -------
@@ -179,8 +176,8 @@ def div0(
 
 
 def dist(
-    x1: int | float | Symbol,
-    x2: int | float | Symbol,
+    x1: OperableType,
+    x2: OperableType,
 ) -> Expression:
     """
     Euclidean or L-2 Norm: ``sqrt(x1^2 + x2^2 + ... + xn^2)``
@@ -231,7 +228,7 @@ def factorial(x: int) -> Expression:
     return expression.Expression(None, MathOp("fact", (x,)), None)
 
 
-def floor(x: int | float | Symbol) -> Expression:
+def floor(x: OperableType) -> Expression:
     """
     The greatest integer less than or equal to ``x`` (i.e. ``floor(4.9)`` returns ``4``)
 
@@ -254,7 +251,7 @@ def floor(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("floor", (x,)), None)
 
 
-def fractional(x: int | float | Symbol) -> Expression:
+def fractional(x: OperableType) -> Expression:
     """
     Returns the fractional part of ``x`` (i.e. ``fractional(3.9)`` returns ``0.9``)
 
@@ -325,7 +322,7 @@ def Max(*values) -> Expression:
     return expression.Expression(None, MathOp("max", values), None)
 
 
-def mod(x: float | Symbol, y: float | Symbol) -> Expression:
+def mod(x: OperableType, y: OperableType) -> Expression:
     """
     Remainder of ``x`` divided by ``y`` (i.e. ``mod(10, 3)`` returns ``1``)
 
@@ -348,13 +345,13 @@ def mod(x: float | Symbol, y: float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("mod", (x, y)), None)
 
 
-def Round(x: float | Symbol, num_decimals: int = 0) -> Expression:
+def Round(x: OperableType, num_decimals: int = 0) -> Expression:
     """
     Round ``x`` to ``num_decimals`` decimal places (i.e. ``Round(3.14159, 2)`` returns ``3.14``)
 
     Parameters
     ----------
-    x : float | Symbol
+    x : OperableType
     num_decimals : int, optional
 
     Returns
@@ -406,13 +403,13 @@ def sign(x: Symbol) -> Expression:
     return expression.Expression(None, MathOp("sign", (x,)), None)
 
 
-def slexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
+def slexp(x: OperableType, S: int | float = 150) -> Expression:
     """
     Smooth (linear) exponential where ``S <= 150``. (Default ``S = 150``)
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
     S : int | float, by default 150
 
     Returns
@@ -434,13 +431,13 @@ def slexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     return expression.Expression(None, MathOp("slexp", (x, S)), None)
 
 
-def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
+def sqexp(x: OperableType, S: int | float = 150) -> Expression:
     """
     Smooth (quadratic) exponential where ``S <= 150``. (Default ``S = 150``)
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
     S : int | float, by default 150
 
     Returns
@@ -462,7 +459,7 @@ def sqexp(x: int | float | Symbol, S: int | float = 150) -> Expression:
     return expression.Expression(None, MathOp("sqexp", (x, S)), None)
 
 
-def sqrt(x: int | float | Symbol, safe_cancel: bool = False) -> Expression:
+def sqrt(x: OperableType, safe_cancel: bool = False) -> Expression:
     """
     Square root of ``x``
 
@@ -488,7 +485,7 @@ def sqrt(x: int | float | Symbol, safe_cancel: bool = False) -> Expression:
     )
 
 
-def truncate(x: int | float | Symbol) -> Expression:
+def truncate(x: OperableType) -> Expression:
     """
     Returns the integer part of ``x`` (i.e. ``truncate(3.9)`` returns ``3``)
 
@@ -511,14 +508,14 @@ def truncate(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("trunc", (x,)), None)
 
 
-def beta(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def beta(x: OperableType, y: OperableType) -> Expression:
     """
     Beta function: ``B(x, y) = gamma(x) * gamma(y) / gamma(x + y) = (x-1)! * (y-1)! / (x + y - 1)!``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -570,7 +567,7 @@ def regularized_beta(
     return expression.Expression(None, MathOp("betaReg", (x, y, z)), None)
 
 
-def gamma(x: int | float | Symbol) -> Expression:
+def gamma(x: OperableType) -> Expression:
     """
     Gamma function: ``gamma(x) = (x-1)!``
 
@@ -887,13 +884,13 @@ def poly(x, *args) -> Expression:
     return expression.Expression(None, MathOp("poly", (x,) + args), None)
 
 
-def sigmoid(x: int | float | Symbol) -> Expression:
+def sigmoid(x: OperableType) -> Expression:
     """
     Sigmoid of ``x`` (i.e. ``1 / (1 + exp(-x))``)
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
 
     Returns
     -------
@@ -1043,13 +1040,13 @@ def same_as(self: Set | Alias, other: Set | Alias | str) -> Expression:
     return expression.Expression(None, MathOp("sameAs", (self, other)), None)
 
 
-def slrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
+def slrec(x: OperableType, S: int | float = 1e-10) -> Expression:
     """
     Smooth (linear) reciprocal, where ``S >= 1e-10``. (Default ``S = 1e-10``)
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
     S : int | float, by default 1e-10
 
     Returns
@@ -1072,13 +1069,13 @@ def slrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
     return expression.Expression(None, MathOp("slrec", (x, S)), None)
 
 
-def sqrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
+def sqrec(x: OperableType, S: int | float = 1e-10) -> Expression:
     """
     Smooth (quadratic) reciprocal, where ``S >= 1e-10``. (Default ``S = 1e-10``)
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
     S : int | float, by default 1e-10
 
     Returns
@@ -1101,13 +1098,13 @@ def sqrec(x: int | float | Symbol, S: int | float = 1e-10) -> Expression:
     return expression.Expression(None, MathOp("sqrec", (x, S)), None)
 
 
-def entropy(x: int | float | Symbol) -> Expression:
+def entropy(x: OperableType) -> Expression:
     """
     Entropy function: ``-x*ln(x)`` where ``x >= 0``
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
 
     Returns
     -------
@@ -1129,7 +1126,7 @@ def entropy(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("entropy", (x,)), None)
 
 
-def errorf(x: int | float | Symbol) -> Expression:
+def errorf(x: OperableType) -> Expression:
     """
     Integral of the standard normal distribution from negative infinity to ``x``
 
@@ -1195,14 +1192,14 @@ def ifthen(
     )
 
 
-def bool_and(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def bool_and(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff both ``x and y`` are true
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1224,14 +1221,14 @@ def bool_and(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_and", (x, y)), None)
 
 
-def bool_eqv(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def bool_eqv(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``false`` iff exactly one argument is false
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1253,14 +1250,14 @@ def bool_eqv(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_eqv", (x, y)), None)
 
 
-def bool_imp(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def bool_imp(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x is false`` or ``y is true``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1282,13 +1279,13 @@ def bool_imp(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_imp", (x, y)), None)
 
 
-def bool_not(x: int | float | Symbol) -> Expression:
+def bool_not(x: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x is false``
 
     Parameters
     ----------
-    x : int | float | Symbol
+    x : OperableType
 
     Returns
     -------
@@ -1310,14 +1307,14 @@ def bool_not(x: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_not", (x,)), None)
 
 
-def bool_or(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def bool_or(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x is true`` or ``y is true``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1339,14 +1336,14 @@ def bool_or(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_or", (x, y)), None)
 
 
-def bool_xor(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def bool_xor(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff exactly one argument is ``false``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1368,14 +1365,14 @@ def bool_xor(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("bool_xor", (x, y)), None)
 
 
-def rel_eq(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_eq(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x == y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1397,14 +1394,14 @@ def rel_eq(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_eq", (x, y)), None)
 
 
-def rel_ge(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_ge(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x >= y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1426,14 +1423,14 @@ def rel_ge(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_ge", (x, y)), None)
 
 
-def rel_gt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_gt(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x > y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1455,14 +1452,14 @@ def rel_gt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_gt", (x, y)), None)
 
 
-def rel_le(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_le(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x <= y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1484,14 +1481,14 @@ def rel_le(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_le", (x, y)), None)
 
 
-def rel_lt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_lt(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x < y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1513,14 +1510,14 @@ def rel_lt(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_lt", (x, y)), None)
 
 
-def rel_ne(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
+def rel_ne(x: OperableType, y: OperableType) -> Expression:
     """
     Returns ``true`` iff ``x != y``
 
     Parameters
     ----------
-    x : int | float | Symbol
-    y : int | float | Symbol
+    x : OperableType
+    y : OperableType
 
     Returns
     -------
@@ -1542,7 +1539,7 @@ def rel_ne(x: int | float | Symbol, y: int | float | Symbol) -> Expression:
     return expression.Expression(None, MathOp("rel_ne", (x, y)), None)
 
 
-def map_value(x: int | float | Symbol | ImplicitSymbol) -> Expression:
+def map_value(x: OperableType) -> Expression:
     """
     Returns an integer value that indicates what special value (if any) is stored in the input.
     Possible results:
@@ -1555,7 +1552,7 @@ def map_value(x: int | float | Symbol | ImplicitSymbol) -> Expression:
 
     Parameters
     ----------
-    x : int | float | Symbol | ImplicitSymbol
+    x : OperableType
 
     Returns
     -------

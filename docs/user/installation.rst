@@ -7,6 +7,26 @@ Installation and Licensing
 Basic Installation
 ------------------
 
+Creating a virtual environment is highly recommended whenever you start working on a new Python project.
+You can create a virtual environment and activate it as follows:
+
+.. tab-set-code::
+
+    .. code-block:: Linux-MacOS
+
+        python -m venv .venv
+        source .venv/bin/activate
+
+    .. code-block:: Windows(Bash)
+
+        python -m venv .venv
+        source .venv/Scripts/activate
+
+    .. code-block:: Windows(PowerShell)
+
+        python -m venv .venv
+        .venv\Scripts\Activate.ps1
+
 You can run the following command to install GAMSPy from PyPI::
 
     pip install gamspy

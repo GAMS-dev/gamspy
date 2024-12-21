@@ -30,7 +30,7 @@ The general syntax for creating a model is as follows: ::
         name="myModel",
         equations=[e1, e2],
         problem=Problem.LP,
-        sense=Sense.Max,
+        sense=Sense.MAX,
         objective=z,
     )
 
@@ -166,7 +166,7 @@ The ``Model`` class has a function named :meth:`solve <gamspy.Model.solve>` that
     e2 = Equation(m)
     e2[...] = ... # definition of the equation
     
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
     summary = model.solve(solver="conopt", options=Options(iteration_limit=2), solver_options={"rtmaxv": "1.e12"})
 
 ::
@@ -206,7 +206,7 @@ the :meth:`solve <gamspy.Model.solve>` function.::
     e2 = Equation(m)
     e2[...] = ... # definition of the equation
     
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
     
     # redirect output to stdout
     model.solve(output=sys.stdout)
@@ -250,7 +250,7 @@ This can be done by importing ``EngineClient`` and creating an instance. The use
     e2 = Equation(m)
     e2[...] = ... # definition of the equation
     
-    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=[e1, e2], problem=Problem.LP, sense=Sense.MAX, objective=z)
 
     client = EngineClient(
         host=os.environ["ENGINE_URL"],
@@ -389,7 +389,7 @@ Solve options can be specified using the :meth:`gamspy.Options` class. For examp
 
     m = Container()
     ... # Definition of your model
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
     model.solve(options=Options(iteration_limit=2))
 
 
@@ -530,7 +530,7 @@ In addition to solve options, user can specify solver options as a dictionary.::
 
     m = Container()
     ... # Definition of your model
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
     model.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
 
     
@@ -545,7 +545,7 @@ The generated `.tex` file can be automatically compiled into a PDF file by using
 
     m = Container()
     ... # Definition of your model    
-    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.Max, objective=z)
+    model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
     model.toLatex(path=<latex_path>, generate_pdf=True)
 
 .. note::

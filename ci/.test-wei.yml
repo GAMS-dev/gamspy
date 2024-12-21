@@ -18,7 +18,7 @@ wei-test-3.13:
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver mpsge scip reshop
-    - coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
+    - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
 

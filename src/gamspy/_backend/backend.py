@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, no_type_check
 
 import pandas as pd
 
@@ -48,6 +48,7 @@ HEADER = [
 ]
 
 
+@no_type_check
 def backend_factory(
     container: Container,
     options: Options | None = None,
@@ -64,10 +65,10 @@ def backend_factory(
 
         return NEOSServer(
             container,
-            options,  # type: ignore
+            options,
             solver,
             solver_options,
-            client,  # type: ignore
+            client,
             output,
             model,
             load_symbols,
@@ -77,8 +78,8 @@ def backend_factory(
 
         return GAMSEngine(
             container,
-            client,  # type: ignore
-            options,  # type: ignore
+            client,
+            options,
             solver,
             solver_options,
             output,
@@ -108,7 +109,7 @@ class Backend(ABC):
     def __init__(
         self,
         container: Container,
-        model: Model,
+        model: Model | None,
         options: Options,
         solver: str | None,
         solver_options: dict | None,
@@ -121,9 +122,11 @@ class Backend(ABC):
         self.solver = solver
         self.solver_options = solver_options
         self.output = output
-        self.load_symbols = load_symbols
         if load_symbols is not None:
-            self.load_symbols = [symbol.name for symbol in load_symbols]  # type: ignore
+            self.load_symbols: list[str] = [
+                symbol.name  # type: ignore
+                for symbol in load_symbols
+            ]
 
     @abstractmethod
     def is_async(self): ...
@@ -162,7 +165,7 @@ class Backend(ABC):
         return gams_string
 
     def load_records(self, relaxed_domain_mapping: bool = False):
-        if self.load_symbols is not None:
+        if hasattr(self, "load_symbols"):
             symbols = self.load_symbols
         else:
             symbols = utils._get_symbol_names_from_gdx(
