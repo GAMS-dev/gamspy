@@ -75,14 +75,14 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     sos2_eq_1 = m.addEquation(domain=[*previous_domains, L])
     sos2_eq_1[[*previous_domains, L]] = (
         gp.Sum(use_set_1[L, J], lambda_var[[*previous_domains, J]])
-        <= bin_var[*previous_domains, L]
+        <= bin_var[[*previous_domains, L]]
     )
     equations.append(sos2_eq_1)
 
     sos2_eq_2 = m.addEquation(domain=[*previous_domains, L])
     sos2_eq_2[[*previous_domains, L]] = (
         gp.Sum(use_set_2[L, J], lambda_var[[*previous_domains, J]])
-        <= 1 - bin_var[*previous_domains, L]
+        <= 1 - bin_var[[*previous_domains, L]]
     )
     equations.append(sos2_eq_2)
 
@@ -116,14 +116,15 @@ def _enforce_discontinuity(
 
     select_equation = m.addEquation(domain=[*previous_domains, SB, J, J2])
     select_equation[[*previous_domains, select_set[SB, J, J2]]] = (
-        lambda_var[[*previous_domains, J]] <= select_var[*previous_domains, SB]
+        lambda_var[[*previous_domains, J]]
+        <= select_var[[*previous_domains, SB]]
     )
     equations.append(select_equation)
 
     select_equation_2 = m.addEquation(domain=[*previous_domains, SB, J, J2])
     select_equation_2[[*previous_domains, select_set[SB, J, J2]]] = (
         lambda_var[[*previous_domains, J2]]
-        <= 1 - select_var[*previous_domains, SB]
+        <= 1 - select_var[[*previous_domains, SB]]
     )
     equations.append(select_equation_2)
 
@@ -313,15 +314,15 @@ def piecewise_linear_function(
     lambda_var.up[...] = 1
     if not bound_domain:
         # lower bounds
-        lambda_var.lo[*input_domain, J].where[gp.Ord(J) == 2] = float("-inf")
-        lambda_var.lo[*input_domain, J].where[gp.Ord(J) == gp.Card(J) - 1] = (
-            float("-inf")
-        )
+        lambda_var.lo[[*input_domain, J]].where[gp.Ord(J) == 2] = float("-inf")
+        lambda_var.lo[[*input_domain, J]].where[
+            gp.Ord(J) == gp.Card(J) - 1
+        ] = float("-inf")
 
         # upper bound
-        lambda_var.up[*input_domain, J].where[gp.Ord(J) == 1] = float("inf")
-        lambda_var.up[*input_domain, J].where[gp.Ord(J) == gp.Card(J)] = float(
-            "inf"
+        lambda_var.up[[*input_domain, J]].where[gp.Ord(J) == 1] = float("inf")
+        lambda_var.up[[*input_domain, J]].where[gp.Ord(J) == gp.Card(J)] = (
+            float("inf")
         )
     else:
         min_y = min(y_points)
