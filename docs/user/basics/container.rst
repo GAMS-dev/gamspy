@@ -11,11 +11,6 @@ Container
 A :meth:`Container <gamspy.Container>` object in GAMSPy serves as a central hub for managing essential data structures such as sets, parameters, variables, 
 and constraints, providing a structured approach for optimization problems. It is also responsible for creating the connection between with GAMS and GAMSPy.
 
-.. note::
-    GAMSPy tries to find an open port by default to communicate with GAMS. In case you want to point to a specific port for this communication, 
-    you can set that port by defining an environment variable called "GAMS_PORT".
-
-
 ===============
 Symbol Creation
 ===============
