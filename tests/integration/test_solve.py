@@ -1132,6 +1132,18 @@ def test_validation_2():
     )
 
 
+def test_validation_3():
+    m = Container()
+
+    v = Set(m, "v")
+    k = Set(m, "k")
+    z = Variable(m, "z", domain=[v, k])
+    vk = Set(m, "vk", domain=[v, k])
+    n = Parameter(m, domain=k)
+
+    z.up[vk[v, k]] = n[k]
+
+
 def test_after_exception(data):
     m, *_ = data
     x = Variable(m, "x", type="positive")
