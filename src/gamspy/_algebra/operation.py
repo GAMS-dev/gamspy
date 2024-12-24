@@ -119,15 +119,9 @@ class Operation(operable.Operable):
 
         stack = control_stack + self.raw_domain
         if isinstance(self.rhs, expression.Expression):
-            self.rhs._validate_definition(stack)
+            self.rhs._validate_definition(utils._unpack(stack))
         elif isinstance(self.rhs, Operation):
-            self.rhs._validate_operation(stack)
-        elif isinstance(self.rhs, implicits.ImplicitSymbol):
-            for elem in self.rhs.domain:
-                if elem not in stack:
-                    raise ValidationError(
-                        f"Uncontrolled set `{elem}` entered as constant"
-                    )
+            self.rhs._validate_operation(utils._unpack(stack))
 
     def _get_index_str(self) -> str:
         if len(self.op_domain) == 1:
