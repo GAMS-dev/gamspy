@@ -105,6 +105,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             rhs,
         )
 
+        print(f"{domain=}")
         statement._validate_definition(utils._unpack(domain))
 
         self.container._add_statement(statement)

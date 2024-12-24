@@ -1135,13 +1135,21 @@ def test_validation_2():
 def test_validation_3():
     m = Container()
 
+    i = Set(m, "i")
+    j = Set(m, "j")
     v = Set(m, "v")
     k = Set(m, "k")
     z = Variable(m, "z", domain=[v, k])
     vk = Set(m, "vk", domain=[v, k])
     n = Parameter(m, domain=k)
+    a = Variable(m, "a", domain=i)
 
     z.up[vk[v, k]] = n[k]
+
+    with pytest.raises(ValidationError):
+        a.up[i] = Sum(vk, Sum(j, n[k]))
+
+    a.up[i] = Sum(vk[v, k], Sum(j, n[k]))
 
 
 def test_after_exception(data):
