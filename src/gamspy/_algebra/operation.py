@@ -117,7 +117,6 @@ class Operation(operable.Operable):
             if elem in control_stack:
                 raise ValidationError(f"Set {elem} is already in control")
 
-        print(f"{control_stack=}, {self.raw_domain=}")
         stack = control_stack + self.raw_domain
         if isinstance(self.rhs, expression.Expression):
             self.rhs._validate_definition(stack)
