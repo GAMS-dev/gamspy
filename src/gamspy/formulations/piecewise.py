@@ -29,7 +29,9 @@ def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
 
 def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     """
-    Enforces SOS2 constraints using binary variables.
+    Enforces SOS2 constraints using binary variables. This function is not suitable
+    for generic SOS2 implementation since it restricts the lambda_var values to be
+    between 0 and 1. However, it is usually faster than using SOS2 variables.
 
     Based on paper:
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
@@ -218,10 +220,27 @@ def piecewise_linear_function_convexity_formulation(
     and corresponding `y_points` of the piecewise function, it constructs the dependent
     variable `y` and formulates the equations necessary to define the function.
 
-    Internally, the function uses binary variables by default. If preferred,
-    you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
-    parameter to "sos2". `bound_domain` cannot be set to False while using
-    binary variable implementation.
+    Here is the convexity formulation:
+
+    .. math::
+        x = \sum_{i}{x\_points_i * \lambda_i}
+
+        y = \sum_{i}{y\_points_i * \lambda_i}
+
+        \sum_{i}{\lambda_i} = 1
+
+        \lambda_i \in SOS2
+
+    By default, SOS2 variables are implemented using binary variables.
+    See
+    `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
+    <https://www.researchgate.net/publication/225976267_Modeling_Disjunctive_Constraints_with_a_Logarithmic_Number_of_Binary_Variables_and_Constraints>`_
+    .
+
+    Internally, the function employs binary variables as the default implementation.
+    However, you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
+    parameter to `"sos2"`. Note that when using the binary variable implementation, the
+    `bound_domain` parameter must not be set to `False`.
 
     The implementation handles discontinuities in the function. To represent a
     discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
@@ -269,10 +288,12 @@ def piecewise_linear_function_convexity_formulation(
     Examples
     --------
     >>> from gamspy import Container, Variable, Set
-    >>> from gamspy.formulations import piecewise_linear_function
+    >>> from gamspy.formulations import piecewise_linear_function_convexity_formulation
     >>> m = Container()
     >>> x = Variable(m, "x")
-    >>> y, eqs = piecewise_linear_function(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
+    >>> y, eqs = piecewise_linear_function_convexity_formulation(
+    >>>     x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37]
+    >>> )
 
     """
     if using not in {"binary", "sos2"}:
