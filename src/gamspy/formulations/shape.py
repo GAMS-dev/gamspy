@@ -58,10 +58,10 @@ def _propagate_bounds(x, out):
     bounds[("0",) + tuple(x.domain)] = x.lo[...]
     bounds[("1",) + tuple(x.domain)] = x.up[...]
 
-    new_bounds = m.addParameter(
-        domain=dim([2, *out.shape]),
-        records=bounds.toDense().reshape((2,) + out.shape),
-    )
+    nb_dom = dim([2, *out.shape])
+    nb_data = bounds.toDense().reshape((2,) + out.shape)
+
+    new_bounds = m.addParameter(domain=nb_dom, records=nb_data)
     out.lo[...] = new_bounds[("0",) + tuple(out.domain)]
     out.up[...] = new_bounds[("1",) + tuple(out.domain)]
 
