@@ -205,7 +205,7 @@ def _check_points(
     return return_x, return_y, discontinuous_indices, none_indices
 
 
-def piecewise_linear_function(
+def piecewise_linear_function_convexity_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
@@ -213,11 +213,10 @@ def piecewise_linear_function(
     bound_domain: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
-    This function implements a piecewise linear function. Given an input
-    (independent) variable `input_x`, along with the defining `x_points` and
-    corresponding `y_points` of the piecewise function, it constructs the
-    dependent variable `y` and formulates the equations necessary to define the
-    function.
+    This function implements a piecewise linear function using the convexity formulation.
+    Given an input (independent) variable `input_x`, along with the defining `x_points`
+    and corresponding `y_points` of the piecewise function, it constructs the dependent
+    variable `y` and formulates the equations necessary to define the function.
 
     Internally, the function uses binary variables by default. If preferred,
     you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
@@ -351,52 +350,3 @@ def piecewise_linear_function(
         equations.extend(extra_eqs)
 
     return out_y, equations
-
-
-def piecewise_linear_function_with_binary(
-    input_x: gp.Variable,
-    x_points: typing.Sequence[int | float],
-    y_points: typing.Sequence[int | float],
-) -> tuple[gp.Variable, list[gp.Equation]]:
-    """
-    Calls the piecewise_linear_function setting `using` keyword argument
-    to `binary`
-
-    Parameters
-    ----------
-    x : gp.Variable
-        Independent variable of the piecewise linear function
-    x_points: typing.Sequence[int | float]
-        Break points of the piecewise linear function in the x-axis
-    y_points: typing.Sequence[int| float]
-        Break points of the piecewise linear function in the y-axis
-
-    """
-    return piecewise_linear_function(
-        input_x, x_points, y_points, using="binary"
-    )
-
-
-def piecewise_linear_function_with_sos2(
-    input_x: gp.Variable,
-    x_points: typing.Sequence[int | float],
-    y_points: typing.Sequence[int | float],
-    bound_domain: bool = True,
-) -> tuple[gp.Variable, list[gp.Equation]]:
-    """
-    Calls the piecewise_linear_function setting `using` keyword argument
-    to `sos2`.
-
-    Parameters
-    ----------
-    x : gp.Variable
-        Independent variable of the piecewise linear function
-    x_points: typing.Sequence[int | float]
-        Break points of the piecewise linear function in the x-axis
-    y_points: typing.Sequence[int| float]
-        Break points of the piecewise linear function in the y-axis
-
-    """
-    return piecewise_linear_function(
-        input_x, x_points, y_points, using="sos2", bound_domain=bound_domain
-    )

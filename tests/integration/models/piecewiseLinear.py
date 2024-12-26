@@ -72,11 +72,13 @@ def main():
             ("max", exp_max, x_at_max),
         ]:
             for using in ["sos2", "binary"]:
-                y, eqs = gp.formulations.piecewise_linear_function(
-                    x,
-                    x_points,
-                    y_points,
-                    using=using,
+                y, eqs = (
+                    gp.formulations.piecewise_linear_function_convexity_formulation(
+                        x,
+                        x_points,
+                        y_points,
+                        using=using,
+                    )
                 )
                 model = gp.Model(
                     m, equations=eqs, objective=y, sense=sense, problem="mip"
@@ -91,7 +93,7 @@ def main():
     # y is not bounded
     x_points = [-4, -2, 1, 3]
     y_points = [-2, 0, 0, 2]
-    y, eqs = gp.formulations.piecewise_linear_function(
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
         x, x_points, y_points, using="sos2", bound_domain=False
     )
     x.fx[...] = -5
@@ -108,7 +110,7 @@ def main():
     # y is upper bounded
     x_points = [-4, -2, 1, 3]
     y_points = [-2, 0, 0, 0]
-    y, eqs = gp.formulations.piecewise_linear_function(
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
         x, x_points, y_points, using="sos2", bound_domain=False
     )
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
@@ -123,7 +125,7 @@ def main():
     # y is lower bounded
     x_points = [-4, -2, 1, 3]
     y_points = [-5, -5, 0, 2]
-    y, eqs = gp.formulations.piecewise_linear_function(
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
         x, x_points, y_points, using="sos2", bound_domain=False
     )
     x.lo[...] = "-inf"
@@ -140,7 +142,9 @@ def main():
     # test discontinuous function not allowing in between value
     x_points = [1, 4, 4, 10]
     y_points = [1, 4, 8, 25]
-    y, eqs = gp.formulations.piecewise_linear_function(x, x_points, y_points)
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points
+    )
     x.fx[...] = 4
     y.fx[...] = 6  # y can be either 4 or 8 but not their convex combination
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
@@ -153,7 +157,9 @@ def main():
     # test None case
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 4, None, 8, 25]
-    y, eqs = gp.formulations.piecewise_linear_function(x, x_points, y_points)
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points
+    )
     x.fx[...] = 5  # should be IntegerInfeasible since 5 \in [4, 6]
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
@@ -165,7 +171,9 @@ def main():
     # test None case
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 4, None, 30, 25]
-    y, eqs = gp.formulations.piecewise_linear_function(x, x_points, y_points)
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points
+    )
     x.lo[...] = "-inf"
     x.up[...] = "inf"
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
@@ -177,7 +185,9 @@ def main():
     # test None case
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 45, None, 30, 25]
-    y, eqs = gp.formulations.piecewise_linear_function(x, x_points, y_points)
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points
+    )
     x.lo[...] = "-inf"
     x.up[...] = "inf"
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
@@ -191,7 +201,9 @@ def main():
     x2 = gp.Variable(m, name="x2", domain=[i])
     x_points = [1, 4, None, 6, 10, 10, 20]
     y_points = [1, 45, None, 30, 25, 30, 12]
-    y, eqs = gp.formulations.piecewise_linear_function(x2, x_points, y_points)
+    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
+        x2, x_points, y_points
+    )
     x2.fx["1"] = 1
     x2.fx["2"] = 2.5
     x2.fx["3"] = 8

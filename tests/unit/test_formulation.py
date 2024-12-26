@@ -6,9 +6,7 @@ import gamspy as gp
 import gamspy.formulations.piecewise as piecewise
 from gamspy.exceptions import ValidationError
 from gamspy.formulations import (
-    piecewise_linear_function,
-    piecewise_linear_function_with_binary,
-    piecewise_linear_function_with_sos2,
+    piecewise_linear_function_convexity_formulation,
 )
 
 pytestmark = pytest.mark.unit
@@ -125,10 +123,15 @@ def test_pwl_with_sos2(data):
     x = data["x"]
     x_points = data["x_points"]
     y_points = data["y_points"]
-    y, eqs = piecewise_linear_function_with_sos2(x, x_points, y_points)
-    y2, eqs2 = piecewise_linear_function(x, x_points, y_points, using="sos2")
-    y3, eqs2 = piecewise_linear_function_with_sos2(
-        x, x_points, y_points, bound_domain=False
+    y, eqs = piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points, using="sos2"
+    )
+    y2, eqs2 = piecewise_linear_function_convexity_formulation(
+        x,
+        x_points,
+        y_points,
+        bound_domain=False,
+        using="sos2",
     )
 
     # there should be no binary variables
@@ -137,7 +140,6 @@ def test_pwl_with_sos2(data):
     assert var_count["sos2"] == 3  # since we called it twice
     assert y.type == "free"
     assert y2.type == "free"
-    assert y3.type == "free"
     assert len(eqs) == len(eqs2)
 
 
@@ -146,8 +148,12 @@ def test_pwl_with_binary(data):
     x = data["x"]
     x_points = data["x_points"]
     y_points = data["y_points"]
-    y, eqs = piecewise_linear_function_with_binary(x, x_points, y_points)
-    y2, eqs2 = piecewise_linear_function(x, x_points, y_points, using="binary")
+    y, eqs = piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points, using="binary"
+    )
+    y2, eqs2 = piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points, using="binary"
+    )
 
     # there should be no sos2 variables
     var_count = get_var_count_by_type(m)
@@ -162,8 +168,12 @@ def test_pwl_with_domain(data):
     x2 = data["x2"]
     x_points = data["x_points"]
     y_points = data["y_points"]
-    y, eqs = piecewise_linear_function(x2, x_points, y_points, using="binary")
-    y2, eqs2 = piecewise_linear_function(x2, x_points, y_points, using="sos2")
+    y, eqs = piecewise_linear_function_convexity_formulation(
+        x2, x_points, y_points, using="binary"
+    )
+    y2, eqs2 = piecewise_linear_function_convexity_formulation(
+        x2, x_points, y_points, using="sos2"
+    )
 
     assert len(y.domain) == len(x2.domain)
     assert len(y2.domain) == len(x2.domain)
@@ -174,7 +184,9 @@ def test_pwl_with_none(data):
     x = data["x"]
     x_points = [1, None, 2, 3]
     y_points = [10, None, 20, 45]
-    y, eqs = piecewise_linear_function(x, x_points, y_points)
+    y, eqs = piecewise_linear_function_convexity_formulation(
+        x, x_points, y_points
+    )
 
 
 def test_pwl_validation(data):
@@ -185,7 +197,7 @@ def test_pwl_validation(data):
     # incorrect using value
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         x_points,
         y_points,
@@ -195,7 +207,7 @@ def test_pwl_validation(data):
     # x not a variable
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         10,
         x_points,
         y_points,
@@ -204,7 +216,7 @@ def test_pwl_validation(data):
     # incorrect x_points, y_points
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         10,
         y_points,
@@ -212,7 +224,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         x_points,
         10,
@@ -220,7 +232,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [1],
         [10],
@@ -228,7 +240,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         x_points,
         [10],
@@ -236,7 +248,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [*x_points, "a"],
         [*y_points, 5],
@@ -244,7 +256,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [*x_points, 16],
         [*y_points, "a"],
@@ -252,7 +264,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [3, 2, 1],
         [10, 20, 30],
@@ -260,7 +272,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [3, 1, 2],
         [10, 20, 30],
@@ -268,7 +280,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [1, 3, 2],
         [10, 20, 30],
@@ -276,7 +288,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [1],
         [10],
@@ -284,7 +296,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [1, 2, 3],
         [10, 20, 40],
@@ -294,7 +306,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [None, 2, 3],
         [None, 20, 40],
@@ -302,7 +314,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [2, 3, None],
         [20, 40, None],
@@ -310,7 +322,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [None, 2, 3, None],
         [None, 20, 40, None],
@@ -318,7 +330,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [0, None, 2, 3],
         [0, 10, 20, 40],
@@ -326,7 +338,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [0, 1, 2, 3],
         [0, None, 20, 40],
@@ -334,7 +346,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [1, None, None, 2, 3],
         [10, None, None, 20, 40],
@@ -342,7 +354,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        piecewise_linear_function,
+        piecewise_linear_function_convexity_formulation,
         x,
         [2, None, 2, 3],
         [10, None, 20, 40],

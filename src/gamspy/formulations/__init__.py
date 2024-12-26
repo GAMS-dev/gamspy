@@ -7,9 +7,7 @@ from gamspy.formulations.nn import (
     MinPool2d,
 )
 from gamspy.formulations.piecewise import (
-    piecewise_linear_function,
-    piecewise_linear_function_with_binary,
-    piecewise_linear_function_with_sos2,
+    piecewise_linear_function_convexity_formulation,
 )
 from gamspy.formulations.shape import flatten_dims
 
@@ -21,7 +19,5 @@ __all__ = [
     "AvgPool2d",
     "Linear",
     "flatten_dims",
-    "piecewise_linear_function",
-    "piecewise_linear_function_with_sos2",
-    "piecewise_linear_function_with_binary",
+    "piecewise_linear_function_convexity_formulation",
 ]
