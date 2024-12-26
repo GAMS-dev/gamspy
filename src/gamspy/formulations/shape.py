@@ -51,15 +51,20 @@ def _generate_index_matching_statement(
     domains_str = ",".join([x.name for x in domains])
     return base_txt.format(matching_set.name, domains_str, flattened.name)
 
+
 def _propagate_bounds(x, out):
     m = x.container
     bounds = m.addParameter(domain=dim([2, *x.shape]))
     bounds[("0",) + tuple(x.domain)] = x.lo[...]
     bounds[("1",) + tuple(x.domain)] = x.up[...]
 
-    new_bounds = m.addParameter(domain=dim([2, *out.shape]), records=bounds.toDense().reshape((2,) + out.shape))
+    new_bounds = m.addParameter(
+        domain=dim([2, *out.shape]),
+        records=bounds.toDense().reshape((2,) + out.shape),
+    )
     out.lo[...] = new_bounds[("0",) + tuple(out.domain)]
     out.up[...] = new_bounds[("1",) + tuple(out.domain)]
+
 
 def _flatten_dims_var(
     x: gp.Variable, dims: list[int], propagate_bounds: bool = True
@@ -99,7 +104,9 @@ def _flatten_dims_var(
 
 
 def flatten_dims(
-    x: gp.Variable | gp.Parameter, dims: list[int], propagate_bounds: bool = True
+    x: gp.Variable | gp.Parameter,
+    dims: list[int],
+    propagate_bounds: bool = True,
 ) -> tuple[gp.Parameter | gp.Variable, list[gp.Equation]]:
     """
     Flatten domains indicated by `dims` into a single domain.
