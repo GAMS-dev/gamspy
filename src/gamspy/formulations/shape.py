@@ -6,6 +6,7 @@ import uuid
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
+from gamspy.math import dim
 
 
 def _get_new_domain(
@@ -50,9 +51,18 @@ def _generate_index_matching_statement(
     domains_str = ",".join([x.name for x in domains])
     return base_txt.format(matching_set.name, domains_str, flattened.name)
 
+def _propagate_bounds(x, out):
+    m = x.container
+    bounds = m.addParameter(domain=dim([2, *x.shape]))
+    bounds[("0",) + tuple(x.domain)] = x.lo[...]
+    bounds[("1",) + tuple(x.domain)] = x.up[...]
+
+    new_bounds = m.addParameter(domain=dim([2, *out.shape]), records=bounds.toDense().reshape((2,) + out.shape))
+    out.lo[...] = new_bounds[("0",) + tuple(out.domain)]
+    out.up[...] = new_bounds[("1",) + tuple(out.domain)]
 
 def _flatten_dims_var(
-    x: gp.Variable, dims: list[int]
+    x: gp.Variable, dims: list[int], propagate_bounds: bool = True
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     m = x.container
     new_domain, flattened = _get_new_domain(x, dims)
@@ -60,6 +70,10 @@ def _flatten_dims_var(
     out = m.addVariable(
         domain=new_domain
     )  # outputs domain nearly matches the input domain
+
+    if propagate_bounds and x.records is not None:
+        _propagate_bounds(x, out)
+
     # match the flattened set to correct dims
     forwarded_domain = utils._next_domains([flattened, *x.domain], [])
     doms_to_flatten = [forwarded_domain[d + 1] for d in dims]
@@ -85,7 +99,7 @@ def _flatten_dims_var(
 
 
 def flatten_dims(
-    x: gp.Variable | gp.Parameter, dims: list[int]
+    x: gp.Variable | gp.Parameter, dims: list[int], propagate_bounds: bool = True
 ) -> tuple[gp.Parameter | gp.Variable, list[gp.Equation]]:
     """
     Flatten domains indicated by `dims` into a single domain.
@@ -97,6 +111,8 @@ def flatten_dims(
     dims: list[int]
         List of integers indicating indices of the domains
         to be flattened. Must be consecutive indices.
+    propagate_bounds: bool, optional
+        Propagate bounds from the input to the output variable. Default is True.
 
     Examples
     --------
@@ -113,6 +129,9 @@ def flatten_dims(
     """
     if not isinstance(x, (gp.Parameter, gp.Variable)):
         raise ValidationError("Expected a parameter or a variable input")
+
+    if not isinstance(propagate_bounds, bool):
+        raise ValidationError("Expected a boolean for propagate_bounds")
 
     if len(dims) < 2:
         raise ValidationError("Expected at least 2 items in the dim array")
@@ -141,4 +160,4 @@ def flatten_dims(
     if isinstance(x, gp.Parameter):
         return _flatten_dims_par(x, dims)
 
-    return _flatten_dims_var(x, dims)
+    return _flatten_dims_var(x, dims, propagate_bounds)
