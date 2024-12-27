@@ -291,9 +291,7 @@ def piecewise_linear_function_convexity_formulation(
     >>> from gamspy.formulations import piecewise_linear_function_convexity_formulation
     >>> m = Container()
     >>> x = Variable(m, "x")
-    >>> y, eqs = piecewise_linear_function_convexity_formulation(
-    >>>     x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37]
-    >>> )
+    >>> y, eqs = piecewise_linear_function_convexity_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
 
     """
     if using not in {"binary", "sos2"}:
