@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
+import gamspy._algebra.number as number
 import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._extrinsic import ExtrinsicFunction
+from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 from gamspy._symbols.symbol import Symbol
 from gamspy.exceptions import ValidationError
@@ -17,7 +19,7 @@ from gamspy.math.misc import MathOp
 
 if TYPE_CHECKING:
     from gamspy import Alias, Set
-    from gamspy._symbols.implicits import ImplicitEquation, ImplicitSet
+    from gamspy._symbols.implicits import ImplicitEquation
     from gamspy._types import OperableType
 
 GMS_MAX_LINE_LENGTH = 80000
@@ -506,3 +508,55 @@ class Expression(operable.Operable):
                 node = getattr(node, "right", None)
             else:
                 break  # pragma: no cover
+
+
+class SetExpression(Expression):
+    def __init__(self, left, data, right):
+        super().__init__(left, data, right)
+        self._adjust_left_right()
+
+    def _adjust_left_right(self):
+        if isinstance(self.left, (ImplicitSet, SetExpression)):
+            if isinstance(self.right, (int, float)):
+                if self.right == 0:
+                    self.right = "no"
+                elif self.right == 1:
+                    self.right = "yes"
+                else:
+                    raise ValidationError(
+                        f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
+                    )
+            elif isinstance(self.right, condition.Condition) and isinstance(
+                self.right.conditioning_on, number.Number
+            ):
+                if self.right.conditioning_on._value == 0:
+                    self.right.conditioning_on._value = "no"
+                elif self.right.conditioning_on._value == 1:
+                    self.right.conditioning_on._value = "yes"
+                raise ValidationError(
+                    f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
+                )
+
+        if isinstance(self.right, (ImplicitSet, SetExpression)):
+            if isinstance(self.left, (int, float)):
+                if self.left == 0:
+                    self.left = "no"
+                elif self.left == 1:
+                    self.left = "yes"
+                else:
+                    raise ValidationError(
+                        f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
+                    )
+            elif isinstance(self.left, condition.Condition) and isinstance(
+                self.left.conditioning_on, number.Number
+            ):
+                if self.left.conditioning_on._value == 0:
+                    self.left.conditioning_on._value = "no"
+                elif self.left.conditioning_on._value == 1:
+                    self.left.conditioning_on._value = "yes"
+                else:
+                    raise ValidationError(
+                        f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
+                    )
+
+        self.representation = self._create_output_str()

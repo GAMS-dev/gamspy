@@ -3,7 +3,8 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from gamspy import Alias, Card, Container, Number, Ord, Parameter, Set
+import gamspy.math as gp_math
+from gamspy import Alias, Card, Container, Number, Ord, Parameter, Set, Sum
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -295,6 +296,53 @@ def test_set_attributes(data):
     )
 
 
+def test_set_assignment():
+    container = Container()
+
+    i = Set(container, "i")
+    m = Set(container, "m")
+    g = Set(container, "g")
+    k = Parameter(container, "k", domain=[m, i])
+    f = Parameter(container, "f", domain=[m, g, i])
+    mpos = Set(container, "mpos", domain=[m, i])
+    hpos = Set(container, "hpos", domain=[m, i])
+
+    mpos[m, i] = (
+        (Number(1).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))])
+        - hpos[m, i]
+    )
+
+    assert (
+        mpos.getAssignment()
+        == "mpos(m,i) = ((yes $ (k(m,i) + sum(g,( abs(f(m,g,i)) )))) - hpos(m,i));"
+    )
+
+    with pytest.raises(ValidationError):
+        mpos[m, i] = (
+            (Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))])
+            - hpos[m, i]
+        )
+
+    with pytest.raises(ValidationError):
+        mpos[m, i] = (
+            hpos[m, i]
+            + Number(2).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))]
+        )
+
+    reb = Set(container, "reb")
+    con = Set(container, "con")
+    col = Set(container, "col")
+    col[i] = 1 - (reb[i] - con[i])
+    assert col.getAssignment() == "col(i) = (yes - (reb(i) - con(i)));"
+
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2"])
+    j = Set(m, "j", domain=i, records=["i1"])
+    k = Set(m, "k", domain=i)
+    with pytest.raises(ValidationError):
+        k[i] = j[i] + 5
+
+
 def test_sameas(data):
     m, *_ = data
     i = Set(m, "i")
@@ -378,3 +426,8 @@ def test_singleton():
 
     b[T1] = 1
     result["b-T1"] = b[T1]
+
+    s5 = Set(m, "s5", is_singleton=True, records=["s1"])
+    assert s5.toList() == ["s1"]
+    s5[s5].where[False] = True
+    assert s5.records is None

@@ -26,9 +26,21 @@ class Operable:
         ):
             return self.lead(other)
 
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(self, "+", other)
+
         return expression.Expression(self, "+", other)
 
     def __radd__(self, other: OperableType):
+        from gamspy._symbols.implicits import ImplicitSet
+
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(other, "+", self)
+
         return expression.Expression(other, "+", self)
 
     def __sub__(self, other: OperableType):
@@ -40,9 +52,21 @@ class Operable:
         ):
             return self.lag(other)
 
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(self, "-", other)
+
         return expression.Expression(self, "-", other)
 
     def __rsub__(self, other: OperableType):
+        from gamspy._symbols.implicits import ImplicitSet
+
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(other, "-", self)
+
         return expression.Expression(other, "-", self)
 
     def __truediv__(self, other: OperableType):
@@ -52,9 +76,23 @@ class Operable:
         return expression.Expression(other, "/", self)
 
     def __mul__(self, other: OperableType):
+        from gamspy._symbols.implicits import ImplicitSet
+
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(self, "*", other)
+
         return expression.Expression(self, "*", other)
 
     def __rmul__(self, other: OperableType):
+        from gamspy._symbols.implicits import ImplicitSet
+
+        if isinstance(
+            self, (ImplicitSet, expression.SetExpression)
+        ) or isinstance(other, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(other, "*", self)
+
         return expression.Expression(other, "*", self)
 
     @typing.no_type_check
@@ -120,7 +158,7 @@ class Operable:
 
     # ~ -> not
     def __invert__(self):
-        return expression.Expression("", "not", self)
+        return expression.Expression(None, "not", self)
 
     # a @ b
     def __matmul__(self, other):
