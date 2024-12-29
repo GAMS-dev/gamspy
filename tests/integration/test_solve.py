@@ -790,7 +790,7 @@ def test_interrupt():
         m,
         name="dice",
         description="number of dice",
-        records=[f"dice{idx}" for idx in range(1, 10)],
+        records=[f"dice{idx}" for idx in range(1, 7)],
     )
 
     flo = Parameter(m, name="flo", description="lowest face value", records=1)
@@ -858,7 +858,7 @@ def test_interrupt():
     thread = threading.Thread(target=interrupt_gams, args=(xdice,))
     thread.start()
 
-    xdice.solve(output=sys.stdout)
+    xdice.solve(output=sys.stdout, options=Options(time_limit=60))
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
     thread.join()
@@ -1130,6 +1130,18 @@ def test_validation_2():
             )
         ),
     )
+
+
+def test_validation_3():
+    m = Container()
+
+    v = Set(m, "v")
+    k = Set(m, "k")
+    z = Variable(m, "z", domain=[v, k])
+    vk = Set(m, "vk", domain=[v, k])
+    n = Parameter(m, domain=k)
+
+    z.up[vk[v, k]] = n[k]
 
 
 def test_after_exception(data):
