@@ -92,53 +92,64 @@ def pwl_suite():
 
     # test bound cases
     # y is not bounded
-    x_points = [-4, -2, 1, 3]
-    y_points = [-2, 0, 0, 2]
-    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
-        x, x_points, y_points, using="sos2", bound_domain=False
-    )
-    x.fx[...] = -5
-    model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
-    model.solve()
+    for using in ["sos2", "binary"]:
+        x_points = [-4, -2, 1, 3]
+        y_points = [-2, 0, 0, 2]
+        y, eqs = (
+            gp.formulations.piecewise_linear_function_convexity_formulation(
+                x, x_points, y_points, using=using, bound_domain=False
+            )
+        )
+        x.fx[...] = -5
+        model = gp.Model(
+            m, equations=eqs, objective=y, sense="min", problem="mip"
+        )
+        model.solve()
+        assert math.isclose(y.toDense(), -3), "Case 5 failed !"
+        print("Case 5 passed !")
+        x.fx[...] = 100
+        model.solve()
+        assert math.isclose(y.toDense(), 99), "Case 6 failed !"
+        print("Case 6 passed !")
 
-    assert math.isclose(y.toDense(), -3), "Case 5 failed !"
-    print("Case 5 passed !")
-    x.fx[...] = 100
-    model.solve()
-    assert math.isclose(y.toDense(), 99), "Case 6 failed !"
-    print("Case 6 passed !")
-
-    # y is upper bounded
-    x_points = [-4, -2, 1, 3]
-    y_points = [-2, 0, 0, 0]
-    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
-        x, x_points, y_points, using="sos2", bound_domain=False
-    )
-    model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
-    model.solve()
-    assert math.isclose(y.toDense(), 0), "Case 7 failed !"
-    print("Case 7 passed !")
-    x.fx[...] = 100
-    model.solve()
-    assert math.isclose(y.toDense(), 0), "Case 8 failed !"
-    print("Case 8 passed !")
-
-    # y is lower bounded
-    x_points = [-4, -2, 1, 3]
-    y_points = [-5, -5, 0, 2]
-    y, eqs = gp.formulations.piecewise_linear_function_convexity_formulation(
-        x, x_points, y_points, using="sos2", bound_domain=False
-    )
-    x.lo[...] = "-inf"
-    x.up[...] = "inf"
-    model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
-    model.solve()
-    assert math.isclose(y.toDense(), -5), "Case 9 failed !"
-    print("Case 9 passed !")
-    x.fx[...] = -100
-    model.solve()
-    assert math.isclose(y.toDense(), -5), "Case 10 failed !"
-    print("Case 10 passed !")
+        # y is upper bounded
+        x_points = [-4, -2, 1, 3]
+        y_points = [-2, 0, 0, 0]
+        y, eqs = (
+            gp.formulations.piecewise_linear_function_convexity_formulation(
+                x, x_points, y_points, using=using, bound_domain=False
+            )
+        )
+        model = gp.Model(
+            m, equations=eqs, objective=y, sense="max", problem="mip"
+        )
+        model.solve()
+        assert math.isclose(y.toDense(), 0), "Case 7 failed !"
+        print("Case 7 passed !")
+        x.fx[...] = 100
+        model.solve()
+        assert math.isclose(y.toDense(), 0), "Case 8 failed !"
+        print("Case 8 passed !")
+        # y is lower bounded
+        x_points = [-4, -2, 1, 3]
+        y_points = [-5, -5, 0, 2]
+        y, eqs = (
+            gp.formulations.piecewise_linear_function_convexity_formulation(
+                x, x_points, y_points, using=using, bound_domain=False
+            )
+        )
+        x.lo[...] = "-inf"
+        x.up[...] = "inf"
+        model = gp.Model(
+            m, equations=eqs, objective=y, sense="min", problem="mip"
+        )
+        model.solve()
+        assert math.isclose(y.toDense(), -5), "Case 9 failed !"
+        print("Case 9 passed !")
+        x.fx[...] = -100
+        model.solve()
+        assert math.isclose(y.toDense(), -5), "Case 10 failed !"
+        print("Case 10 passed !")
 
     # test discontinuous function not allowing in between value
     x_points = [1, 4, 4, 10]

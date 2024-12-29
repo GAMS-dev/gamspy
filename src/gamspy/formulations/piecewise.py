@@ -298,6 +298,98 @@ def _generate_ray(
     return x_var, b_var, eqs
 
 
+def points_to_intervals(
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
+) -> dict[tuple[int | float, int | float], tuple[int | float, int | float]]:
+    result = {}
+    for i in range(len(x_points) - 1):
+        x1 = x_points[i]
+        x2 = x_points[i + 1]
+        y1 = y_points[i]
+        y2 = y_points[i + 1]
+
+        slope = (y2 - y1) / (x2 - x1)
+        offset = y1 - (slope * x1)
+        result[(x1, x2)] = (slope, offset)
+
+    return result
+
+
+# TODO Missing docs, tests and support for discontinuities
+def piecewise_linear_function_interval_formulation(
+    input_x: gp.Variable,
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
+    bound_domain: bool = True,
+) -> tuple[gp.Variable, list[gp.Equation]]:
+    if not isinstance(input_x, gp.Variable):
+        raise ValidationError("input_x is expected to be a Variable")
+
+    if not isinstance(bound_domain, bool):
+        raise ValidationError("bound_domain is expected to be a boolean")
+
+    x_points, y_points, discontinuous_indices, none_indices = _check_points(
+        x_points, y_points
+    )
+    combined_indices = list({*discontinuous_indices, *none_indices})
+
+    if len(combined_indices) > 0:
+        raise ValidationError(
+            "This formulation does not support discontinuities"
+        )
+
+    equations = []
+
+    intervals = points_to_intervals(x_points, y_points)
+    lowerbounds_input = [(str(i), k[0]) for i, k in enumerate(intervals)]
+    upperbounds_input = [(str(i), k[1]) for i, k in enumerate(intervals)]
+    slopes_input = [(str(i), intervals[k][0]) for i, k in enumerate(intervals)]
+    offsets_input = [
+        (str(i), intervals[k][1]) for i, k in enumerate(intervals)
+    ]
+
+    input_domain = input_x.domain
+    m = input_x.container
+
+    J = gp.math._generate_dims(m, [len(intervals)])[0]
+    J = gp.formulations.nn.utils._next_domains([J], input_domain)[0]
+
+    lowerbounds = m.addParameter(domain=[J], records=lowerbounds_input)
+    upperbounds = m.addParameter(domain=[J], records=upperbounds_input)
+    slopes = m.addParameter(domain=[J], records=slopes_input)
+    offsets = m.addParameter(domain=[J], records=offsets_input)
+    bin_var = m.addVariable(domain=[*input_domain, J], type="binary")
+
+    lambda_var = m.addVariable(domain=[*input_domain, J])
+
+    set_lambda_lowerbound = m.addEquation(domain=lambda_var.domain)
+    set_lambda_lowerbound[...] = lowerbounds * bin_var <= lambda_var
+    equations.append(set_lambda_lowerbound)
+
+    set_lambda_upperbound = m.addEquation(domain=lambda_var.domain)
+    set_lambda_upperbound[...] = upperbounds * bin_var >= lambda_var
+    equations.append(set_lambda_upperbound)
+
+    pick_one = m.addEquation(domain=input_domain)
+    pick_one[...] = gp.Sum(J, bin_var) == 1
+    equations.append(pick_one)
+
+    set_x = m.addEquation(domain=input_domain)
+    set_x[...] = input_x == gp.Sum(J, lambda_var)
+    equations.append(set_x)
+
+    out_y = m.addVariable(domain=input_domain)
+
+    set_y = m.addEquation(domain=input_domain)
+    set_y[...] = out_y == gp.Sum(J, lambda_var * slopes) + gp.Sum(
+        J, bin_var * offsets
+    )
+    equations.append(set_y)
+
+    return out_y, equations
+
+
 def piecewise_linear_function_convexity_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
@@ -392,6 +484,9 @@ def piecewise_linear_function_convexity_formulation(
 
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
+
+    if not isinstance(bound_domain, bool):
+        raise ValidationError("bound_domain is expected to be a boolean")
 
     x_points, y_points, discontinuous_indices, none_indices = _check_points(
         x_points, y_points
