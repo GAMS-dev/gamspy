@@ -298,16 +298,6 @@ def test_pwl_validation(data):
         ValidationError,
         piecewise_linear_function_convexity_formulation,
         x,
-        [1, 2, 3],
-        [10, 20, 40],
-        using="binary",
-        bound_domain=False,
-    )
-
-    pytest.raises(
-        ValidationError,
-        piecewise_linear_function_convexity_formulation,
-        x,
         [None, 2, 3],
         [None, 20, 40],
     )

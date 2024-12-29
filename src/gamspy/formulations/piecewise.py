@@ -285,6 +285,17 @@ def _indicator(
     return equations
 
 
+def _generate_ray(
+    container: gp.Container, domain: list[gp.Set]
+) -> tuple[gp.Variable, gp.Variable, list[gp.Equation]]:
+    # if b_var == 0 => x_var = 0 o.w x_var >= 0
+    # effectively x_var <= bigM * b_var without bigM
+    x_var = container.addVariable(domain=domain, type="positive")
+    b_var = container.addVariable(domain=domain, type="binary")
+    eqs = _indicator(b_var, 0, x_var <= 0)
+    return x_var, b_var, eqs
+
+
 def piecewise_linear_function_convexity_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
@@ -317,8 +328,7 @@ def piecewise_linear_function_convexity_formulation(
 
     Internally, the function employs binary variables as the default implementation.
     However, you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
-    parameter to `"sos2"`. Note that when using the binary variable implementation, the
-    `bound_domain` parameter must not be set to `False`.
+    parameter to `"sos2"`.
 
     The implementation handles discontinuities in the function. To represent a
     discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
@@ -339,9 +349,9 @@ def piecewise_linear_function_convexity_formulation(
     of the using argument.
 
     The input variable `input_x` is restricted to the range defined by
-    `x_points` unless `bound_domain` is set to False. `bound_domain` can be set
-    to False only if using is "sos2". When `input_x` is not bound, you can assume
-    as if the first and the last line segments are extended.
+    `x_points` unless `bound_domain` is set to False. Setting `bound_domain` to True,
+    creates SOS1 type of variables independent from the `using` parameter. When `input_x` is
+    not bound, you can assume as if the first and the last line segments are extended.
 
     Returns the dependent variable `y` and the equations required to model the
     piecewise linear relationship.
@@ -381,11 +391,6 @@ def piecewise_linear_function_convexity_formulation(
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
-    if bound_domain is False and using == "binary":
-        raise ValidationError(
-            "bound_domain can only be false when using is sos2"
-        )
-
     x_points, y_points, discontinuous_indices, none_indices = _check_points(
         x_points, y_points
     )
@@ -406,36 +411,51 @@ def piecewise_linear_function_convexity_formulation(
         domain=[*input_domain, J], type="free" if using == "binary" else "sos2"
     )
 
+    x_term = 0
+    y_term = 0
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
-    if not bound_domain:
-        # lower bounds
-        lambda_var.lo[[*input_domain, J]].where[gp.Ord(J) == 2] = float("-inf")
-        lambda_var.lo[[*input_domain, J]].where[
-            gp.Ord(J) == gp.Card(J) - 1
-        ] = float("-inf")
-
-        # upper bound
-        lambda_var.up[[*input_domain, J]].where[gp.Ord(J) == 1] = float("inf")
-        lambda_var.up[[*input_domain, J]].where[gp.Ord(J) == gp.Card(J)] = (
-            float("inf")
-        )
-    else:
+    if bound_domain:
         min_y = min(y_points)
         max_y = max(y_points)
         out_y.lo[...] = min_y
         out_y.up[...] = max_y
+    else:
+        x_neg_inf, b_neg_inf, eqs_neg_inf = _generate_ray(m, input_domain)
+        equations.extend(eqs_neg_inf)
+
+        x_pos_inf, b_pos_inf, eqs_pos_inf = _generate_ray(m, input_domain)
+        equations.extend(eqs_pos_inf)
+
+        pick_side = m.addEquation(domain=b_neg_inf.domain)
+        pick_side[...] = b_neg_inf + b_pos_inf <= 1
+        equations.append(pick_side)
+
+        limit_b_neg_inf = m.addEquation(domain=b_neg_inf.domain)
+        limit_b_neg_inf[...] = b_neg_inf <= lambda_var[[*input_domain, "0"]]
+        equations.append(limit_b_neg_inf)
+
+        limit_b_pos_inf = m.addEquation(domain=b_pos_inf.domain)
+        last = str(len(J) - 1)
+        limit_b_pos_inf[...] = b_pos_inf <= lambda_var[[*input_domain, last]]
+        equations.append(limit_b_pos_inf)
+
+        m_pos = (y_points[-1] - y_points[-2]) / (x_points[-1] - x_points[-2])
+        m_neg = (y_points[0] - y_points[1]) / (x_points[0] - x_points[1])
+
+        x_term = x_pos_inf - x_neg_inf
+        y_term = (m_pos * x_pos_inf) - (m_neg * x_neg_inf)
 
     lambda_sum = m.addEquation(domain=input_x.domain)
     lambda_sum[...] = gp.Sum(J, lambda_var) == 1
     equations.append(lambda_sum)
 
     set_x = m.addEquation(domain=input_x.domain)
-    set_x[...] = input_x == gp.Sum(J, x_par * lambda_var)
+    set_x[...] = input_x == gp.Sum(J, x_par * lambda_var) + x_term
     equations.append(set_x)
 
     set_y = m.addEquation(domain=input_x.domain)
-    set_y[...] = out_y == gp.Sum(J, y_par * lambda_var)
+    set_y[...] = out_y == gp.Sum(J, y_par * lambda_var) + y_term
     equations.append(set_y)
 
     if using == "binary":
