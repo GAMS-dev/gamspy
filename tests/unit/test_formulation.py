@@ -75,6 +75,7 @@ def test_pwl_indicator():
     b = gp.Variable(m, name="b", type="binary", domain=[i])
     b2 = gp.Variable(m, name="b2", type="free", domain=[j])
     x = gp.Variable(m, name="x", domain=[i])
+    x2 = gp.Variable(m, name="x2", domain=[j])
     x3 = gp.Variable(m, name="x3", domain=[k])
 
     pytest.raises(
@@ -86,6 +87,7 @@ def test_pwl_indicator():
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x)
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x + 10)
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x3 >= 10)
+    pytest.raises(ValidationError, piecewise._indicator, b, 0, x2 >= 10)
 
     eqs1 = piecewise._indicator(b, 0, x >= 10)
     eqs2 = piecewise._indicator(b, 0, x <= 10)

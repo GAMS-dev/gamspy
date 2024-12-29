@@ -17,10 +17,11 @@ import math
 import numpy as np
 
 import gamspy as gp
+import gamspy.formulations.piecewise as piecewise
 
 
-def main():
-    print("Piecewise linear function test model")
+def pwl_suite():
+    print("PWL Suite")
     m = gp.Container()
     x = gp.Variable(m, name="x")
 
@@ -218,7 +219,93 @@ def main():
     )
     model.solve()
     assert np.allclose(y.toDense(), np.array([1, 23, 27.5, 45, 21]))
+    m.close()
+
+
+def indicator_suite():
+    print("Indicator Suite")
+    m = gp.Container()
+    x = gp.Variable(m, name="x")
+    b = gp.Variable(m, name="b", type="binary")
+
+    eqs1 = piecewise._indicator(b, 1, x <= 50)
+    model = gp.Model(
+        m,
+        equations=eqs1,
+        objective=x,
+        sense="max",
+        problem="mip",
+    )
+    b.fx[...] = 1
+    model.solve()
+    assert x.toDense() == 50, "Case 1 failed !"
+    print("Case 1 passed !")
+
+    eqs2 = piecewise._indicator(b, 0, x <= 500)
+    b.lo[...] = 0
+    b.up[...] = 1
+
+    model = gp.Model(
+        m,
+        equations=[*eqs1, *eqs2],
+        objective=x,
+        sense="max",
+        problem="mip",
+    )
+    model.solve()
+
+    assert x.toDense() == 500, "Case 2 failed !"
+    assert b.toDense() == 0, "Case 2 failed !"
+    print("Case 2 passed !")
+
+    eqs3 = piecewise._indicator(b, 1, x <= 50)
+    model = gp.Model(
+        m,
+        equations=eqs3,
+        objective=x,
+        sense="max",
+        problem="mip",
+    )
+    # b = 0 does not mean x cannot be less than 50
+    b.fx[...] = 0
+    x.fx[...] = 20
+    model.solve()
+    assert x.toDense() == 20, "Case 3 failed !"
+    print("Case 3 passed !")
+
+    eqs4 = piecewise._indicator(b, 1, x == 120)
+    model = gp.Model(
+        m,
+        equations=eqs4,
+        objective=x,
+        sense="min",
+        problem="mip",
+    )
+    b.fx[...] = 1
+    x.lo[...] = "-inf"
+    x.up[...] = "inf"
+    model.solve()
+    assert x.toDense() == 120, "Case 4 failed !"
+    print("Case 4 passed !")
+
+    eqs5 = piecewise._indicator(b, 1, x >= 99)
+    model = gp.Model(
+        m,
+        equations=eqs5,
+        objective=x,
+        sense="min",
+        problem="mip",
+    )
+    b.fx[...] = 1
+    x.lo[...] = "-inf"
+    x.up[...] = "inf"
+    model.solve()
+    assert x.toDense() == 99, "Case 5 failed !"
+    print("Case 5 passed !")
+    m.close()
 
 
 if __name__ == "__main__":
-    main()
+    print("Piecewise linear function test model")
+    pwl_suite()
+    indicator_suite()
