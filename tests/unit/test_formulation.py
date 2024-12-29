@@ -55,6 +55,52 @@ def test_pwl_enforce_sos2_log_binary():
     assert var_count["binary"] == 1
 
 
+def test_pwl_enforce_sos2_log_binary_2():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["1", "2"])
+    lambda_var = gp.Variable(m, name="lambda", domain=[i])
+    # this will create binary variables
+    eqs = piecewise._enforce_sos2_with_binary(lambda_var)
+    assert len(eqs) == 0
+    var_count = get_var_count_by_type(m)
+    assert "binary" not in var_count
+
+
+def test_pwl_indicator():
+    m = gp.Container()
+    i = gp.Set(m, name="i", records=["1", "2"])
+    j = gp.Set(m, name="j", records=["1", "2", "3"])
+    k = gp.Set(m, name="k", records=["a", "b"])
+
+    b = gp.Variable(m, name="b", type="binary", domain=[i])
+    b2 = gp.Variable(m, name="b2", type="free", domain=[j])
+    x = gp.Variable(m, name="x", domain=[i])
+    x3 = gp.Variable(m, name="x3", domain=[k])
+
+    pytest.raises(
+        ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10
+    )
+
+    pytest.raises(ValidationError, piecewise._indicator, b2, 0, x <= 10)
+    pytest.raises(ValidationError, piecewise._indicator, b, -1, x <= 10)
+    pytest.raises(ValidationError, piecewise._indicator, b, 0, x)
+    pytest.raises(ValidationError, piecewise._indicator, b, 0, x + 10)
+    pytest.raises(ValidationError, piecewise._indicator, b, 0, x3 >= 10)
+
+    eqs1 = piecewise._indicator(b, 0, x >= 10)
+    eqs2 = piecewise._indicator(b, 0, x <= 10)
+    eqs3 = piecewise._indicator(b, 0, x == 10)
+    assert len(eqs1) == len(eqs2)
+    assert len(eqs3) == len(eqs1) * 2
+
+    var_count = get_var_count_by_type(m)
+    assert "sos1" in var_count
+
+    piecewise._indicator(b, 1, x >= 10)
+    piecewise._indicator(b, 1, x <= 10)
+    piecewise._indicator(b, 1, x == 10)
+
+
 def test_pwl_enforce_sos2_log_binary_with_domain():
     m = gp.Container()
     j = gp.Set(m, name="j", records=["1", "2"])

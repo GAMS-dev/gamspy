@@ -41,6 +41,8 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
     m = lambda_var.container
     count_x = len(lambda_var.domain[-1])
     # edge case
+    lambda_var.lo[...] = 0
+    lambda_var.up[...] = 1
     if count_x == 2:
         # if there are only 2 elements, it is already sos2
         return equations
@@ -234,7 +236,7 @@ def _indicator(
         )
 
     for i in range(len(expr.domain)):
-        if expr.domain[i] != indicator_var.domain[i]:
+        if expr.domain[i].name != indicator_var.domain[i].name:
             raise ValidationError(
                 "indicator_var and expr must have the same domain"
             )
