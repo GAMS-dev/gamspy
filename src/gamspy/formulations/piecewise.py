@@ -6,10 +6,10 @@ import typing
 import numpy as np
 
 import gamspy as gp
+from gamspy._symbols.implicits import (
+    ImplicitVariable,
+)
 from gamspy.exceptions import ValidationError
-
-number = typing.Union[int, float]
-linear_expression = typing.Union["gp.Expression", "gp.Variable", number]
 
 
 def _generate_gray_code(n: int, n_bits: int) -> np.ndarray:
@@ -205,6 +205,84 @@ def _check_points(
     return_x.append(x_points[-1])
     return_y.append(y_points[-1])
     return return_x, return_y, discontinuous_indices, none_indices
+
+
+def _indicator(
+    indicator_var: gp.Variable,
+    indicator_val: typing.Literal[0, 1],
+    expr: gp.Expression,
+) -> list[gp.Equation]:
+    # We will make this generic and public
+    if not isinstance(indicator_var, (gp.Variable, ImplicitVariable)):
+        raise ValidationError("indicator_var needs to be a variable")
+
+    if indicator_var.type != "binary":
+        raise ValidationError("indicator_var needs to be a binary variable")
+
+    if indicator_val != 0 and indicator_val != 1:
+        raise ValidationError("indicator_val needs to be 1 or 0")
+
+    if not isinstance(expr, gp.Expression):
+        raise ValidationError("expr needs to be an expression")
+
+    if expr.data not in {"=l=", "=e=", "=g="}:
+        raise ValidationError("expr needs to be inequality or equality")
+
+    if len(expr.domain) != len(indicator_var.domain):
+        raise ValidationError(
+            "indicator_var and expr must have the same domain"
+        )
+
+    for i in range(len(expr.domain)):
+        if expr.domain[i] != indicator_var.domain[i]:
+            raise ValidationError(
+                "indicator_var and expr must have the same domain"
+            )
+
+    if expr.data in "=e=":
+        # sos1(bin_var, lhs - rhs) might be better
+        eqs1 = _indicator(
+            indicator_var, indicator_val, expr.left <= expr.right
+        )
+        eqs2 = _indicator(
+            indicator_var, indicator_val, -expr.left <= -expr.right
+        )
+        return [*eqs1, *eqs2]
+
+    if expr.data == "=g=":
+        return _indicator(
+            indicator_var, indicator_val, -expr.left <= -expr.right
+        )
+
+    equations = []
+    m = indicator_var.container
+
+    slack_var = m.addVariable(domain=expr.domain, type="positive")
+    slack_eq = m.addEquation(
+        domain=expr.domain, definition=(expr.left - slack_var <= expr.right)
+    )
+    equations.append(slack_eq)
+
+    expr_domain = ... if len(expr.domain) == 0 else [*expr.domain]
+
+    sos_dim = gp.math._generate_dims(m, [2])[0]
+    sos1_var = m.addVariable(domain=[*expr.domain, sos_dim], type="sos1")
+    sos1_eq_1 = m.addEquation(domain=expr.domain)
+    if indicator_val == 1:
+        sos1_eq_1[...] = (
+            sos1_var[[*expr.domain, "0"]] == indicator_var[expr_domain]
+        )
+    else:
+        sos1_eq_1[...] = (
+            sos1_var[[*expr.domain, "0"]] == 1 - indicator_var[expr_domain]
+        )
+    equations.append(sos1_eq_1)
+
+    sos1_eq_2 = m.addEquation(domain=expr.domain)
+    sos1_eq_2[...] = sos1_var[[*expr.domain, "1"]] == slack_var[expr_domain]
+    equations.append(sos1_eq_2)
+
+    return equations
 
 
 def piecewise_linear_function_convexity_formulation(
