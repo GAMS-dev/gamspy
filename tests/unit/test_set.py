@@ -5,6 +5,7 @@ import pytest
 
 import gamspy.math as gp_math
 from gamspy import Alias, Card, Container, Number, Ord, Parameter, Set, Sum
+from gamspy._algebra.expression import SetExpression
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -307,10 +308,83 @@ def test_set_assignment():
     mpos = Set(container, "mpos", domain=[m, i])
     hpos = Set(container, "hpos", domain=[m, i])
 
+    # Set Union
+    assert isinstance(
+        mpos[m, i] + hpos[m, i], SetExpression
+    )  # ImplicitSet + ImplicitSet
+    assert isinstance(mpos[m, i] + 1, SetExpression)  # ImplicitSet + Number
+    assert isinstance(1 + hpos[m, i], SetExpression)  # Number + ImplicitSet
+    assert isinstance(
+        (mpos[m, i] + hpos[m, i]) + 1, SetExpression
+    )  # SetExpression + Number
+    assert isinstance(
+        1 + (mpos[m, i] + hpos[m, i]), SetExpression
+    )  # Number + SetExpression
+    assert isinstance(
+        (mpos[m, i] + hpos[m, i]) + (mpos[m, i] + hpos[m, i]), SetExpression
+    )  # SetExpression + SetExpression
+    assert isinstance(
+        (mpos[m, i] + hpos[m, i]) + mpos[m, i], SetExpression
+    )  # SetExpression + ImplicitSet
+    assert isinstance(
+        mpos[m, i] + (mpos[m, i] + hpos[m, i]), SetExpression
+    )  # ImplicitSet + SetExpression
+
+    # Set Difference
+    assert isinstance(
+        mpos[m, i] - hpos[m, i], SetExpression
+    )  # ImplicitSet - ImplicitSet
+    assert isinstance(mpos[m, i] - 1, SetExpression)  # ImplicitSet - Number
+    assert isinstance(1 - hpos[m, i], SetExpression)  # Number - ImplicitSet
+    assert isinstance(
+        (mpos[m, i] - hpos[m, i]) - 1, SetExpression
+    )  # SetExpression - Number
+    assert isinstance(
+        1 - (mpos[m, i] - hpos[m, i]), SetExpression
+    )  # Number - SetExpression
+    assert isinstance(
+        (mpos[m, i] - hpos[m, i]) - (mpos[m, i] - hpos[m, i]), SetExpression
+    )  # SetExpression - SetExpression
+    assert isinstance(
+        (mpos[m, i] - hpos[m, i]) - mpos[m, i], SetExpression
+    )  # SetExpression - ImplicitSet
+    assert isinstance(
+        mpos[m, i] - (mpos[m, i] - hpos[m, i]), SetExpression
+    )  # ImplicitSet - SetExpression
+
+    # Set Intersection
+    assert isinstance(
+        mpos[m, i] * hpos[m, i], SetExpression
+    )  # ImplicitSet * ImplicitSet
+    assert isinstance(mpos[m, i] * 1, SetExpression)  # ImplicitSet * Number
+    assert isinstance(1 * hpos[m, i], SetExpression)  # Number * ImplicitSet
+    assert isinstance(
+        (mpos[m, i] * hpos[m, i]) * 1, SetExpression
+    )  # SetExpression * Number
+    assert isinstance(
+        1 * (mpos[m, i] * hpos[m, i]), SetExpression
+    )  # Number * SetExpression
+    assert isinstance(
+        (mpos[m, i] * hpos[m, i]) * (mpos[m, i] * hpos[m, i]), SetExpression
+    )  # SetExpression * SetExpression
+    assert isinstance(
+        (mpos[m, i] * hpos[m, i]) * mpos[m, i], SetExpression
+    )  # SetExpression * ImplicitSet
+    assert isinstance(
+        mpos[m, i] * (mpos[m, i] * hpos[m, i]), SetExpression
+    )  # ImplicitSet * SetExpression
+
+    # Set Complement
+    assert isinstance(~mpos[m, i], SetExpression)  # not ImplicitSet
+    assert isinstance(
+        ~(mpos[m, i] + hpos[m, i]), SetExpression
+    )  # not SetExpression
+
     mpos[m, i] = (
         (Number(1).where[(k[m, i] + Sum(g, gp_math.abs(f[m, g, i])))])
         - hpos[m, i]
     )
+    assert isinstance(mpos._assignment.right, SetExpression)
 
     assert (
         mpos.getAssignment()
@@ -333,12 +407,14 @@ def test_set_assignment():
     con = Set(container, "con")
     col = Set(container, "col")
     col[i] = 1 - (reb[i] - con[i])
+    assert isinstance(col._assignment.right, SetExpression)
     assert col.getAssignment() == "col(i) = (yes - (reb(i) - con(i)));"
 
     m = Container()
     i = Set(m, "i", records=["i1", "i2"])
     j = Set(m, "j", domain=i, records=["i1"])
     k = Set(m, "k", domain=i)
+    k[i] = j[i] + 1
     with pytest.raises(ValidationError):
         k[i] = j[i] + 5
 

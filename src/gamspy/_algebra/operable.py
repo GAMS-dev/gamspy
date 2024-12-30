@@ -124,7 +124,7 @@ class Operable:
     def __mod__(self, other: OperableType):
         return gamspy_math.mod(self, other)
 
-    # not, and, or, xor
+    # and, or, xor
     def __and__(self, other: OperableType):
         return expression.Expression(self, "and", other)
 
@@ -158,6 +158,10 @@ class Operable:
 
     # ~ -> not
     def __invert__(self):
+        from gamspy._symbols.implicits import ImplicitSet
+
+        if isinstance(self, (ImplicitSet, expression.SetExpression)):
+            return expression.SetExpression(None, "not", self)
         return expression.Expression(None, "not", self)
 
     # a @ b

@@ -5,6 +5,7 @@ GAMSPy 1.4.1
 ------------
 - General
   - Fix implicit parameter validation bug.
+  - Fix the bugs in dynamic set assignments.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
 

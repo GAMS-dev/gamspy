@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import gamspy._algebra.condition as condition
 import gamspy._algebra.domain as domain
@@ -511,11 +511,16 @@ class Expression(operable.Operable):
 
 
 class SetExpression(Expression):
-    def __init__(self, left, data, right):
+    def __init__(
+        self,
+        left: OperableType,
+        data: Literal["+", "-", "*", "not"],
+        right: OperableType,
+    ):
         super().__init__(left, data, right)
         self._adjust_left_right()
 
-    def _adjust_left_right(self):
+    def _adjust_left_right(self) -> None:
         if isinstance(self.left, (ImplicitSet, SetExpression)):
             if isinstance(self.right, (int, float)):
                 if self.right == 0:
