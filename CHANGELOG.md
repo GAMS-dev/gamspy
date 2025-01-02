@@ -7,6 +7,8 @@ GAMSPy 1.4.1
   - Fix implicit parameter validation bug.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
+- Documentation
+  - Install dependencies in the first cell of the example transportation notebook.
 
 GAMSPy 1.4.0
 ------------
