@@ -26,6 +26,7 @@ GAMSPy 1.4.0
   - Remove non-negative variable type from the docs.
   - Add plausible.js for analytics.
   - Minor update in embedding nn documentation.
+  - Add descriptions and example code to formulations documentation.
 
 
 GAMSPy 1.3.1
