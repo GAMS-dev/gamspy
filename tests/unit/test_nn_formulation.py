@@ -1766,6 +1766,13 @@ def test_flatten_bad(data):
     pytest.raises(
         ValidationError, flatten_dims, par_input, [1, 3]
     )  # non consecutive
+    pytest.raises(
+        ValidationError,
+        flatten_dims,
+        par_input,
+        [0, 1],
+        propagate_bounds="True",
+    )  # propagate_bounds not bool
 
     i = gp.Set(m, "i")
     j = gp.Set(m, "j")
