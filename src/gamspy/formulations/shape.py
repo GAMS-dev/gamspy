@@ -6,7 +6,6 @@ import uuid
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
-from gamspy.math import dim
 
 
 def _get_new_domain(
@@ -54,16 +53,17 @@ def _generate_index_matching_statement(
 
 def _propagate_bounds(x, out):
     m = x.container
-    bounds = m.addParameter(domain=dim([2, *x.shape]))
-    bounds[("0",) + tuple(x.domain)] = x.lo[...]
-    bounds[("1",) + tuple(x.domain)] = x.up[...]
+    bounds_set = m.addSet(records=["lb", "ub"])
+    bounds = m.addParameter(domain=[bounds_set, *x.domain])
+    bounds[("lb",) + tuple(x.domain)] = x.lo[...]
+    bounds[("ub",) + tuple(x.domain)] = x.up[...]
 
-    nb_dom = dim([2, *out.shape])
+    nb_dom = [bounds_set, *out.domain]
     nb_data = bounds.toDense().reshape((2,) + out.shape)
 
     new_bounds = m.addParameter(domain=nb_dom, records=nb_data)
-    out.lo[...] = new_bounds[("0",) + tuple(out.domain)]
-    out.up[...] = new_bounds[("1",) + tuple(out.domain)]
+    out.lo[...] = new_bounds[("lb",) + tuple(out.domain)]
+    out.up[...] = new_bounds[("ub",) + tuple(out.domain)]
 
 
 def _flatten_dims_var(
