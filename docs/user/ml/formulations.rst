@@ -78,9 +78,19 @@ with a transformation and bias to the input data, expressed as :math:`y = x A^T 
 .. code-block:: python
    
    import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
 
    m = gp.Container()
    l1 = gp.formulations.Linear(m, 128, 64)
+   w = np.random.rand(64, 128)
+   b = np.random.rand(64)
+   l1.load_weights(w, b)
+   x = gp.Variable(m, "x", domain=dim([10, 128]))
+   y, set_y = l1(x)
+
+   [d.name for d in y.domain]
+   # ['DenseDim10_1', 'DenseDim64_1']
 
 :meth:`Conv2d <gamspy.formulations.Conv2d>`
 -------------------------------------------------------
@@ -91,14 +101,22 @@ Formulation generator for 2D Convolution symbol in GAMS. It applies a
 
    import gamspy as gp
    import numpy as np
+   from gamspy.math import dim
 
    w1 = np.random.rand(2, 1, 3, 3)
    b1 = np.random.rand(2)
    m = gp.Container()
-
    # in_channels=1, out_channels=2, kernel_size=3x3
    conv1 = gp.formulations.Conv2d(m, 1, 2, 3)
    conv1.load_weights(w1, b1)
+   # 10 images, 1 channel, 24 by 24
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = conv1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 2, 22, 22]
 
 :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
 -------------------------------------------------------
@@ -108,10 +126,18 @@ max pooling on an input signal consisting of multiple input planes.
 .. code-block:: python
 
    import gamspy as gp
+   from gamspy.math import dim
 
    m = gp.Container()
    # 2x2 max pooling
    mp1 = gp.formulations.MaxPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = mp1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
 
 :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
 -------------------------------------------------------
@@ -121,10 +147,18 @@ min pooling on an input signal consisting of multiple input planes.
 .. code-block:: python
 
    import gamspy as gp
+   from gamspy.math import dim
 
    m = gp.Container()
    # 2x2 min pooling
    mp1 = gp.formulations.MinPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = mp1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
 
 :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
 -------------------------------------------------------
@@ -134,10 +168,18 @@ average pooling on an input signal consisting of multiple input planes.
 .. code-block:: python
 
    import gamspy as gp
+   from gamspy.math import dim
 
    m = gp.Container()
    # 2x2 avg pooling
    ap1 = gp.formulations.AvgPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = ap1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
 
 :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
 -------------------------------------------------------
@@ -147,11 +189,14 @@ It combines the domains specified by dims into a single unified domain.
 
    import gamspy as gp
    from gamspy.math import dim
-
    m = gp.Container()
    inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
    out, eqs = gp.formulations.flatten_dims(inp, [2, 3])
 
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 576]
 
 .. _pooling-linearization:
 
