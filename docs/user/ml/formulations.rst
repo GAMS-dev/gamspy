@@ -71,16 +71,44 @@ embed your convolutional layer into your optimization model.
 
 Supported formulations:
 
-- :meth:`Linear <gamspy.formulations.Linear>`
-- :meth:`Conv2d <gamspy.formulations.Conv2d>`
-- :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
-- :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
-- :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
-- :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
+------------------------------
+:meth:`Linear <gamspy.formulations.Linear>`
+------------------------------
+Formulation generator for Linear layer in GAMS. It applies an affine 
+linear transformation to the incoming data: :math:`y = x A^T + b`.
+
+------------------------------
+:meth:`Conv2d <gamspy.formulations.Conv2d>`
+------------------------------
+Formulation generator for 2D Convolution symbol in GAMS. It applies a 
+2D convolution over an input signal composed of several input planes.
+
+------------------------------
+:meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
+------------------------------
+Formulation generator for 2D Max Pooling in GAMS. It pplies a 2D 
+max pooling over an input signal composed of several input planes.
+
+------------------------------
+:meth:`MinPool2d <gamspy.formulations.MinPool2d>`
+------------------------------
+Formulation generator for 2D Min Pooling in GAMS. It pplies a 2D 
+min pooling over an input signal composed of several input planes.
+
+------------------------------
+:meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
+------------------------------
+Formulation generator for 2D Avg Pooling in GAMS. It applies a 2D 
+average pooling over an input signal composed of several input planes.
+
+------------------------------
+:meth:`flatten_dims <gamspy.formulations.flatten_dims>`
+------------------------------
+Flatten domains indicated by dims into a single domain.
 
 
 .. _pooling-linearization:
-
+------------------------------
 Max/Min Pooling Implementation
 ------------------------------
 
@@ -151,12 +179,36 @@ integrating them into optimization models can be challenging. To assist you, we
 have started with a small list of commonly used activation functions. So far,
 we have implemented the following activation functions:
 
-- :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-- :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
-- :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
-- :meth:`softmax <gamspy.math.softmax>`
-- :meth:`log_softmax <gamspy.math.log_softmax>`
+------------------------------
+:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
+------------------------------
+Implements the ReLU activation function using binary variables.
 
+------------------------------
+:meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
+------------------------------
+Implements the ReLU activation function using complementarity conditions.
+
+------------------------------
+:meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
+------------------------------
+Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
+
+------------------------------
+:meth:`softmax <gamspy.math.softmax>`
+------------------------------
+Implements the softmax activation function. This function strictly 
+requires a GAMSPy Variable, y = softmax(x).
+
+------------------------------
+:meth:`log_softmax <gamspy.math.log_softmax>`
+------------------------------
+Implements the log_softmax activation function. This function strictly 
+requires a GAMSPy Variable, y = log_softmax(x). 
+
+------------------------------
+Activation Functions Explanation
+------------------------------
 Unlike other mathematical functions, these activation functions return a
 variable instead of an expression. This is because ReLU cannot be represented
 by a single expression. Directly writing ``y = max(x, 0)`` without reformulating
@@ -202,8 +254,15 @@ To read more about `classification of models
 Additionally, we offer our established functions that can also be used as
 activation functions:
 
-- :meth:`tanh <gamspy.math.tanh>`
-- :meth:`sigmoid <gamspy.math.sigmoid>`
+------------------------------
+:meth:`tanh <gamspy.math.tanh>`
+------------------------------
+It applies the Hyperbolic Tangent (Tanh) function element-wise.
+
+------------------------------
+:meth:`sigmoid <gamspy.math.sigmoid>`
+------------------------------
+It applies the Sigmoid function element-wise.
 
 These functions return expressions like the other math functions. So, you
 need to create equations and variables yourself.
