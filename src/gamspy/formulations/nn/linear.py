@@ -240,7 +240,6 @@ class Linear:
             propagate_bounds
             and self._state == 1
             and isinstance(input, gp.Variable)
-            and input.records is not None
         ):
             x_bounds_name = "x_bounds_" + str(uuid.uuid4()).split("-")[0]
             out_bounds_name = "out_bounds_" + str(uuid.uuid4()).split("-")[0]
