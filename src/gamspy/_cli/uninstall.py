@@ -32,7 +32,7 @@ def license():
 def solver(
     solver_names: Annotated[
         Union[List[str], None], 
-        typer.Argument(help="solver names to be uninstalled")
+        typer.Argument(default=None, help="solver names to be uninstalled")
     ] = None,
     uninstall_all_solvers: Annotated[
         Union[bool, None], 

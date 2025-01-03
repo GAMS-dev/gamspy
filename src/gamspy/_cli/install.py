@@ -143,7 +143,7 @@ def append_dist_info(files, gamspy_base_dir: str):
 def solver(
     solver_names: Annotated[
         Union[List[str], None], 
-        typer.Argument(help="solver names to be installed")
+        typer.Argument(default=None, help="solver names to be installed")
     ] = None,
     install_all_solvers: Annotated[
         Union[bool, None], 
