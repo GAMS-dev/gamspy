@@ -73,8 +73,14 @@ def _propagate_bounds(x, out):
     bounds[("ub",) + tuple(x_domain)] = x.up[x_domain]
 
     # reshape bounds based on the output variable's shape
+    # when bounds.records is None, it means the bounds are zeros
+    if bounds.records is not None:
+        nb_data = bounds.toDense().reshape((2,) + out.shape)
+    else:
+        nb_data = np.zeros(bounds.shape).reshape((2,) + out.shape)
+
+    # set new domain for bounds
     nb_dom = [bounds_set, *out.domain]
-    nb_data = bounds.toDense().reshape((2,) + out.shape)
 
     new_bounds = m.addParameter(domain=nb_dom, records=nb_data)
 
