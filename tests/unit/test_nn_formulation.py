@@ -2040,7 +2040,7 @@ def test_linear_propagate_bounds_non_boolean(data):
     lin1.load_weights(w1, b1)
 
     par_input = gp.Parameter(m, domain=dim([30, 20, 30, 20]))
-    pytest.raises(TypeError, lin1, par_input, "True")
+    pytest.raises(ValidationError, lin1, par_input, "True")
 
 
 def test_linear_propagate_bounded_input(data):
