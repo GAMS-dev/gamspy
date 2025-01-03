@@ -2,7 +2,7 @@ from __future__ import annotations
 import importlib
 import shutil
 
-from typing import Annotated, Iterable, Union
+from typing import Annotated, Iterable, Union, List
 
 import typer
 from gamspy.exceptions import GamspyException, ValidationError
@@ -142,7 +142,7 @@ def append_dist_info(files, gamspy_base_dir: str):
 )
 def solver(
     solver_names: Annotated[
-        Union[list[str], None], 
+        Union[List[str], None], 
         typer.Argument(help="solver names to be installed")
     ] = None,
     install_all_solvers: Annotated[

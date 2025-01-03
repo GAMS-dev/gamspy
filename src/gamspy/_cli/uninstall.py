@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 import subprocess
-from typing import Annotated, Iterable, Union
+from typing import Annotated, Iterable, Union, List
 from gamspy.exceptions import GamspyException, ValidationError
 import gamspy.utils as utils
 from .util import remove_solver_entry
@@ -31,7 +31,7 @@ def license():
 )
 def solver(
     solver_names: Annotated[
-        Union[list[str], None], 
+        Union[List[str], None], 
         typer.Argument(help="solver names to be uninstalled")
     ] = None,
     uninstall_all_solvers: Annotated[
