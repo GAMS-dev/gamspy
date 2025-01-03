@@ -58,7 +58,7 @@ Usage
      - Description
    * - -\-uses-port 
      - -u
-     - 33333
+     - 
      - Interprocess communication starting port. Only relevant for local licenses that restrict concurrent use of GAMSPy.
 
 

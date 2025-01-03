@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import os
+import subprocess
 from typing import Annotated, Union
 
 import typer
 
-from . import install, list, probe, retrieve, run, show, uninstall
+from gamspy.exceptions import ValidationError
+import gamspy.utils as utils
+
+from . import install, list, retrieve, run, show, uninstall
 
 app = typer.Typer(
     rich_markup_mode="rich",
@@ -12,7 +17,6 @@ app = typer.Typer(
 )
 app.add_typer(install.app, name="install")
 app.add_typer(list.app, name="list")
-app.add_typer(probe.app, name="probe")
 app.add_typer(retrieve.app, name="retrieve")
 app.add_typer(run.app, name="run")
 app.add_typer(show.app, name="show")
@@ -49,8 +53,40 @@ def callback(
             callback=version_callback,
         ),
     ] = None,
-) -> None: ...
+) -> None:
+    """
+    GAMSPy CLI - The [bold]gamspy[/bold] command line app. 😎
 
+    Install solvers and licenses, run MIRO apps, and more.
+
+    Read more in the docs: [link=https://gamspy.readthedocs.io/en/latest/cli/index.html]https://gamspy.readthedocs.io/en/latest/cli/index.html[/link].
+    """
+    ...
+
+@app.command(short_help="To probe node information.")
+def probe(
+    json_out: Annotated[
+        Union[str, None], 
+        typer.Option(
+            "--json-out", "-j", help="Output path for the JSON file."
+        )
+    ] = None,
+):
+    gamspy_base_dir = utils._get_gamspy_base_directory()
+    process = subprocess.run(
+        [os.path.join(gamspy_base_dir, "gamsprobe")],
+        text=True,
+        capture_output=True,
+    )
+
+    if process.returncode:
+        raise ValidationError(process.stderr)
+
+    print(process.stdout)
+
+    if json_out:
+        with open(json_out, "w") as file:
+            file.write(process.stdout)
 
 def main():
     """

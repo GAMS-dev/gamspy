@@ -37,7 +37,7 @@ Example: ::
            gamspy show license
            gamspy show base
            gamspy probe [-j <json_output_path>]
-           gamspy retrieve license <access_code> [-i <json_file_path>] [-o <output_path>]
+           gamspy retrieve license <access_code> [--input <json_file_path>] [--output <output_path>]
            gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
 
     GAMSPy CLI

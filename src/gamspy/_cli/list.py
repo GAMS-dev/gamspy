@@ -40,10 +40,10 @@ def solvers(
     capabilities = utils.getSolverCapabilities(gamspy_base.directory)
     if all:
         solvers = utils.getAvailableSolvers()
-        print("Available Solvers")
+        print("[bold]Available Solvers[/bold]")
         print("=" * 17)
         print(", ".join(solvers))
-        print("\nModel types that can be solved with the installed solvers:\n")
+        print("\n[bold]Model types that can be solved with the installed solvers[/bold]\n")
         table = Table("Solver", "Problem Types")
         for solver in solvers:
             try:
@@ -67,17 +67,20 @@ def solvers(
         console.print(table)
     else:
         solvers = utils.getInstalledSolvers(gamspy_base.directory)
-        print("Installed Solvers")
+        print("[bold]Installed Solvers[/bold]")
         print("=" * 17)
         print(", ".join(solvers))
 
-        print("\nModel types that can be solved with the installed solvers")
+        print("\n[bold]Model types that can be solved with the installed solvers[/bold]")
         print("=" * 57)
+        table = Table("Solver", "Problem Types")
         for solver in solvers:
             try:
-                print(f"{solver:<10}: {', '.join(capabilities[solver])}")
+                table.add_row(solver, ", ".join(capabilities[solver]))
             except KeyError:
                 ...
+
+        console.print(table)
 
 
 if __name__ == "__main__":

@@ -18,12 +18,13 @@ app = typer.Typer(
 
 
 @app.command(
+    short_help="Retrives the license with the given node information.",
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy retrieve license <access_code> [--input <input_path>.json] [--output <output_path>.json]"
 )
 def license(
     access_code: Annotated[
         str,
-        typer.Argument("--access-code", help="Access code of the license."),
+        typer.Argument(help="Access code of the license."),
     ],
     input: Annotated[
         Union[str, None],
