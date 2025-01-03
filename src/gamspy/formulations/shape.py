@@ -58,15 +58,21 @@ def _generate_index_matching_statement(
 
 def _propagate_bounds(x, out):
     m = x.container
+
+    x_domain = x.domain
+    x_domain = utils._next_domains(x_domain, [])
+
     bounds_set = m.addSet(records=["lb", "ub"])
-    bounds = m.addParameter(domain=[bounds_set, *x.domain])
-    bounds[("lb",) + tuple(x.domain)] = x.lo[...]
-    bounds[("ub",) + tuple(x.domain)] = x.up[...]
+    bounds = m.addParameter(domain=[bounds_set, *x_domain])
+
+    bounds[("lb",) + tuple(x_domain)] = x.lo[x_domain]
+    bounds[("ub",) + tuple(x_domain)] = x.up[x_domain]
 
     nb_dom = [bounds_set, *out.domain]
     nb_data = bounds.toDense().reshape((2,) + out.shape)
 
     new_bounds = m.addParameter(domain=nb_dom, records=nb_data)
+
     out.lo[...] = new_bounds[("lb",) + tuple(out.domain)]
     out.up[...] = new_bounds[("ub",) + tuple(out.domain)]
 
