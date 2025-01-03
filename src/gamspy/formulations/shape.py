@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 import uuid
 
+import numpy as np
+
 import gamspy as gp
 import gamspy.formulations.nn.utils as utils
 from gamspy.exceptions import ValidationError
@@ -32,6 +34,9 @@ def _flatten_dims_par(
     x: gp.Parameter, dims: list[int]
 ) -> tuple[gp.Parameter, list[gp.Equation]]:
     data = x.toDense()
+
+    if data is None:
+        data = np.zeros(x.shape)
 
     m = x.container
     new_domain, _ = _get_new_domain(x, dims)
