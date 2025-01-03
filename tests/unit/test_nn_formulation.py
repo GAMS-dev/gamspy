@@ -1827,9 +1827,9 @@ def test_flatten_var_copied_domain(data):
 
     fix_var = gp.Parameter(m, "var_ii_data", domain=var.domain, records=data)
     var.fx[ii, a1, a2, a3] = fix_var[ii, a1, a2, a3]
-    var_2, eqs = flatten_dims(var, [2, 3], propagate_bounds=False)
-    var_3, eqs_2 = flatten_dims(var_2, [0, 1], propagate_bounds=False)
-    var_4, eqs_3 = flatten_dims(var_3, [0, 1], propagate_bounds=False)
+    var_2, eqs = flatten_dims(var, [2, 3])
+    var_3, eqs_2 = flatten_dims(var_2, [0, 1])
+    var_4, eqs_3 = flatten_dims(var_3, [0, 1])
 
     model = gp.Model(
         m,
