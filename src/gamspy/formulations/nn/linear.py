@@ -251,7 +251,10 @@ class Linear:
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
             x_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
-            x_lb, x_ub = x_bounds.toDense()
+            if x_bounds.records is not None:
+                x_lb, x_ub = x_bounds.toDense()
+            else:
+                x_lb, x_ub = np.zeros(x_bounds.shape)
 
             # To deal with infinity values in the input bounds, we convert them into complex numbers
             # where if the value is -inf, we convert it to 0 - 1j
