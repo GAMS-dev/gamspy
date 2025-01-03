@@ -57,22 +57,28 @@ def _generate_index_matching_statement(
 
 
 def _propagate_bounds(x, out):
+    """Propagate bounds from the input to the output variable"""
+
     m = x.container
 
+    # set domain for variable
     x_domain = x.domain
     x_domain = utils._next_domains(x_domain, [])
 
     bounds_set = m.addSet(records=["lb", "ub"])
     bounds = m.addParameter(domain=[bounds_set, *x_domain])
 
+    # capture original bounds
     bounds[("lb",) + tuple(x_domain)] = x.lo[x_domain]
     bounds[("ub",) + tuple(x_domain)] = x.up[x_domain]
 
+    # reshape bounds based on the output variable's shape
     nb_dom = [bounds_set, *out.domain]
     nb_data = bounds.toDense().reshape((2,) + out.shape)
 
     new_bounds = m.addParameter(domain=nb_dom, records=nb_data)
 
+    # assign new bounds to the output variable
     out.lo[...] = new_bounds[("lb",) + tuple(out.domain)]
     out.up[...] = new_bounds[("ub",) + tuple(out.domain)]
 
@@ -121,6 +127,8 @@ def flatten_dims(
 ) -> tuple[gp.Parameter | gp.Variable, list[gp.Equation]]:
     """
     Flatten domains indicated by `dims` into a single domain.
+    If `propagate_bounds` is True, and `x` is of type variable,
+    then the bounds of the input variable are propagated to the output.
 
     Parameters
     ----------
