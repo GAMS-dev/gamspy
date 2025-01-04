@@ -1889,6 +1889,72 @@ def test_flatten_2d_propagate_bounds(data):
     )
 
 
+def test_flatten_3d_propagate_bounds():
+    m = gp.Container()
+
+    i = gp.Set(m, name="i", records=[f"i{i}" for i in range(1, 41)])
+    j = gp.Set(m, name="j", records=[f"j{j}" for j in range(1, 51)])
+    k = gp.Set(m, name="k", records=[f"k{k}" for k in range(1, 21)])
+
+    var = gp.Variable(m, name="var", domain=[i, j, k])
+    bounds_set = gp.Set(m, name="bounds_set", records=["lb", "ub"])
+
+    # If the variable is unbounded, the bounds are not propagated even if propagate_bounds is True
+    var_1, eqs_1 = flatten_dims(var, [0, 1], propagate_bounds=True)
+    var_2, eqs_2 = flatten_dims(var, [1, 2], propagate_bounds=True)
+    assert (var_1.records is None) and (var_2.records is None)
+    assert var_1.shape == (2000, 20) and var_2.shape == (40, 1000)
+
+    # If the variable is bounded, the bounds are propagated
+    bound_up = np.random.rand(40, 50, 20) * 5
+    bound_lo = np.random.rand(40, 50, 20) * -5
+    all_bounds = np.stack([bound_lo, bound_up], axis=0)
+
+    bounds = gp.Parameter(
+        m, name="bounds", domain=[bounds_set, i, j, k], records=all_bounds
+    )
+
+    var.up[...] = bounds[("ub", i, j, k)]
+    var.lo[...] = bounds[("lb", i, j, k)]
+
+    var_3, eqs_3 = flatten_dims(var, [0, 1])
+    var_4, eqs_4 = flatten_dims(var, [1, 2])
+    var_5, eqs_5 = flatten_dims(var, [0, 1, 2])
+
+    model = gp.Model(
+        m,
+        "flatten_everything",
+        equations=[*eqs_1, *eqs_2, *eqs_3, *eqs_4, *eqs_5],
+        problem="lp",
+        objective=var_3["140", "k4"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+
+    var_3_bounds = gp.Parameter(
+        m, name="var_3_bounds", domain=[bounds_set, *var_3.domain]
+    )
+    var_3_bounds[("lb",) + tuple(var_3.domain)] = var_3.lo[...]
+    var_3_bounds[("ub",) + tuple(var_3.domain)] = var_3.up[...]
+
+    var_4_bounds = gp.Parameter(
+        m, name="var_4_bounds", domain=[bounds_set, *var_4.domain]
+    )
+    var_4_bounds[("lb",) + tuple(var_4.domain)] = var_4.lo[...]
+    var_4_bounds[("ub",) + tuple(var_4.domain)] = var_4.up[...]
+
+    var_5_bounds = gp.Parameter(
+        m, name="var_5_bounds", domain=[bounds_set, *var_5.domain]
+    )
+    var_5_bounds[("lb",) + tuple(var_5.domain)] = var_5.lo[...]
+    var_5_bounds[("ub",) + tuple(var_5.domain)] = var_5.up[...]
+
+    assert np.allclose(var_3_bounds.toDense(), all_bounds.reshape(2, 2000, 20))
+    assert np.allclose(var_4_bounds.toDense(), all_bounds.reshape(2, 40, 1000))
+    assert np.allclose(var_5_bounds.toDense(), all_bounds.reshape(2, 40000))
+
+
 def test_linear_bad_init(data):
     m, *_ = data
     # in feature must be integer
