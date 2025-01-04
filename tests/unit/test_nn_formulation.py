@@ -1889,13 +1889,11 @@ def test_flatten_2d_propagate_bounds(data):
     )
 
 
-def test_flatten_3d_propagate_bounds():
-    m = gp.Container()
-
+def test_flatten_3d_propagate_bounds(data):
+    m, *_ = data
     i = gp.Set(m, name="i", records=[f"i{i}" for i in range(1, 41)])
     j = gp.Set(m, name="j", records=[f"j{j}" for j in range(1, 51)])
     k = gp.Set(m, name="k", records=[f"k{k}" for k in range(1, 21)])
-
     var = gp.Variable(m, name="var", domain=[i, j, k])
     bounds_set = gp.Set(m, name="bounds_set", records=["lb", "ub"])
 
