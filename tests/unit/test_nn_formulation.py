@@ -2357,3 +2357,26 @@ def test_linear_propagate_unbounded_input_with_zero_weight(data):
     # check if the bounds are zeros, since the weights are all zeros
     assert np.allclose(out1_ub, expected_bounds)
     assert np.allclose(out1_lb, expected_bounds)
+
+
+def test_linear_propagate_zero_bounds(data):
+    m, *_ = data
+    lin1 = Linear(m, 4, 3, bias=False)
+    w1 = np.random.rand(3, 4)
+    lin1.load_weights(w1)
+
+    x = gp.Variable(m, "x", domain=dim([2, 4]))
+
+    x.up[...] = 0
+    x.lo[...] = 0
+
+    out1, _ = lin1(x)
+
+    expected_bounds = np.zeros((2, 3))
+
+    assert np.allclose(
+        np.array(out1.records.upper).reshape(out1.shape), expected_bounds
+    )
+    assert np.allclose(
+        np.array(out1.records.lower).reshape(out1.shape), expected_bounds
+    )
