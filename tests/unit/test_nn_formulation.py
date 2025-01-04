@@ -1849,6 +1849,46 @@ def test_flatten_var_copied_domain(data):
     assert np.allclose(out_data_2, data.reshape(400 * 400))
 
 
+def test_flatten_2d_propagate_bounds(data):
+    m, *_ = data
+    i = gp.Set(m, name="i", records=[f"i{i}" for i in range(1, 41)])
+    j = gp.Set(m, name="j", records=[f"j{j}" for j in range(1, 51)])
+    var = gp.Variable(m, name="var", domain=[i, j])
+
+    # If the variable is unbounded, the bounds are not propagated even if propagate_bounds is True
+    var_1, eqs_1 = flatten_dims(var, [0, 1], propagate_bounds=True)
+    var_2, eqs_2 = flatten_dims(var, [0, 1], propagate_bounds=False)
+    assert var_1.records == var_2.records
+
+    # If the variable is bounded, the bounds are propagated
+    bound_up = np.random.rand(40, 50) * 5
+    bound_lo = np.random.rand(40, 50) * -5
+    upper = gp.Parameter(m, name="upper", domain=[i, j], records=bound_up)
+    lower = gp.Parameter(m, name="lower", domain=[i, j], records=bound_lo)
+    var.up[...] = upper[...]
+    var.lo[...] = lower[...]
+
+    var_3, eqs_3 = flatten_dims(var, [0, 1])
+
+    model = gp.Model(
+        m,
+        "flatten_everything",
+        equations=[*eqs_1, *eqs_2, *eqs_3],
+        problem="lp",
+        objective=var_3["240"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+
+    assert np.allclose(
+        np.array(var_3.records.lower.tolist()), bound_lo.reshape(2000)
+    )
+    assert np.allclose(
+        np.array(var_3.records.upper.tolist()), bound_up.reshape(2000)
+    )
+
+
 def test_linear_bad_init(data):
     m, *_ = data
     # in feature must be integer
