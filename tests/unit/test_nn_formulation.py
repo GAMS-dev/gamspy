@@ -1953,6 +1953,113 @@ def test_flatten_3d_propagate_bounds(data):
     assert np.allclose(var_5_bounds.toDense(), all_bounds.reshape(2, 40000))
 
 
+def test_flatten_propagate_zero_bounds(data):
+    m, *_ = data
+    var = gp.Variable(m, name="var1", domain=dim([30, 40, 10, 5]))
+
+    var.up[...] = 0
+    var.lo[...] = 0
+
+    var_1, eqs_1 = flatten_dims(var, [0, 1])
+    var_2, eqs_2 = flatten_dims(var, [0, 1, 2, 3])
+    var_3, eqs_3 = flatten_dims(var_1, [1, 2])
+
+    model = gp.Model(
+        m,
+        "flatten_everything",
+        equations=[*eqs_1, *eqs_2, *eqs_3],
+        problem="lp",
+        objective=5 * var_1["0", "0", "0"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+
+    expected_bounds = np.zeros([30, 40, 10, 5])
+
+    # Because the bounds are zero, there are no way, currently, to represent them as an array
+    assert np.allclose(
+        np.array(var_1.records.upper).reshape(var_1.shape),
+        expected_bounds.reshape(var_1.shape),
+    )
+    assert np.allclose(
+        np.array(var_1.records.lower).reshape(var_1.shape),
+        expected_bounds.reshape(var_1.shape),
+    )
+
+    assert np.allclose(
+        np.array(var_2.records.upper).reshape(var_2.shape),
+        expected_bounds.reshape(var_2.shape),
+    )
+    assert np.allclose(
+        np.array(var_2.records.lower).reshape(var_2.shape),
+        expected_bounds.reshape(var_2.shape),
+    )
+
+    assert np.allclose(
+        np.array(var_3.records.upper).reshape(var_3.shape),
+        expected_bounds.reshape(var_3.shape),
+    )
+    assert np.allclose(
+        np.array(var_3.records.lower).reshape(var_3.shape),
+        expected_bounds.reshape(var_3.shape),
+    )
+
+
+def test_flatten_more_complex_propagate_bounds(data):
+    m, *_ = data
+    var = gp.Variable(m, name="var", domain=dim([2, 4, 5]))
+    bounds_set = gp.Set(m, name="bounds_set", records=["lb", "ub"])
+
+    bound_up = np.array(
+        [
+            [
+                [1.6873254, np.inf, 4.64399079, np.inf, 0.85146007],
+                [4.31392932, 1.99165668, 4.19013802, 3.77449253, 0],
+                [np.inf, 4.13450595, 4.25880061, 1.529363, 2.54171194],
+                [1.79348688, 2.04002383, 0.19198094, 4.14445882, 4.72650868],
+            ],
+            [
+                [1.54070398, np.inf, 0, 3.55077501, 2.12700496],
+                [0.13939228, 1.10668786, 0.23710837, 3.61857607, 1.64761417],
+                [1.80097419, 0.89434166, 1.46039526, 1.31960681, np.inf],
+                [2.50636193, 1.3920737, np.inf, 3.35616509, 4.98534911],
+            ],
+        ]
+    )
+
+    bound_lo = -bound_up
+    all_bounds = np.stack([bound_lo, bound_up], axis=0)
+
+    bounds = gp.Parameter(
+        m, name="bounds", domain=[bounds_set, *var.domain], records=all_bounds
+    )
+
+    var.up[...] = bounds[("ub",) + tuple(var.domain)]
+    var.lo[...] = bounds[("lb",) + tuple(var.domain)]
+
+    var_1, eqs_1 = flatten_dims(var, [0, 1])
+
+    model = gp.Model(
+        m,
+        "flatten_everything",
+        equations=[*eqs_1],
+        problem="lp",
+        objective=5 * var_1["5", "3"] + 1,
+        sense="min",
+    )
+
+    model.solve()
+
+    var_1_bounds = gp.Parameter(
+        m, name="var_1_bounds", domain=[bounds_set, *var_1.domain]
+    )
+    var_1_bounds[("lb",) + tuple(var_1.domain)] = var_1.lo[...]
+    var_1_bounds[("ub",) + tuple(var_1.domain)] = var_1.up[...]
+
+    assert np.allclose(var_1_bounds.toDense(), all_bounds.reshape(2, 8, 5))
+
+
 def test_linear_bad_init(data):
     m, *_ = data
     # in feature must be integer
