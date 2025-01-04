@@ -134,7 +134,7 @@ def flatten_dims(
     """
     Flatten domains indicated by `dims` into a single domain.
     If `propagate_bounds` is True, and `x` is of type variable,
-    then the bounds of the input variable are propagated to the output.
+    the bounds of the input variable are propagated to the output.
 
     Parameters
     ----------
