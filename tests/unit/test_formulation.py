@@ -406,3 +406,12 @@ def test_pwl_validation(data, fct):
         [2, None, 2, 3],
         [10, None, 20, 40],
     )
+
+    pytest.raises(
+        ValidationError,
+        fct,
+        x,
+        [2, None, 4, 10],
+        [10, None, 20, 40],
+        bound_domain="yes",
+    )
