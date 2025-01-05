@@ -316,13 +316,83 @@ def points_to_intervals(
     return result
 
 
-# TODO Missing docs, tests and support for discontinuities
 def piecewise_linear_function_interval_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
     bound_domain: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
+    """
+    This function implements a piecewise linear function using the intervals formulation.
+    Given an input (independent) variable `input_x`, along with the defining `x_points`
+    and corresponding `y_points` of the piecewise function, it constructs the dependent
+    variable `y` and formulates the equations necessary to define the function.
+
+    Here is the interval formulation:
+
+    .. math::
+        \\lambda_i \\geq b_i * LB_i \\quad \\forall{i}
+
+        \\lambda_i \\leq b_i * UB_i \\quad \\forall{i}
+
+        \\sum_{i}{b_i} = 1
+
+        x = \\sum_{i}{\\lambda_i}
+
+        y = \\sum_{i}{(\\lambda_i * slope_i) + (b_i * start_i) }
+
+        b_i \\in {0, 1} \\quad \\forall{i}
+
+    The implementation handles discontinuities in the function. To represent a
+    discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
+    array with corresponding values in `y_points`. For example, if `x_points` =
+    [1, 3, 3, 5] and `y_points` = [10, 30, 50, 70], the function allows y to take
+    either 30 or 50 when x = 3. Note that discontinuities introduce additional
+    binary variables.
+
+    It is possible to disallow a specific range by including `None` in both
+    `x_points` and the corresponding `y_points`. For example, with
+    `x_points` = `[1, 3, None, 5, 7]` and `y_points` = `[10, 35, None, -20, 40]`,
+    the range between 3 and 5 is disallowed for `input_x`.
+
+    However, `x_points` cannot start or end with a `None` value, and a `None`
+    value cannot be followed by another `None`. Additionally, if `x_i` is `None`,
+    then `y_i` must also be `None`. Similar to the discontinuities, disallowed
+    ranges always introduce additional binary variables.
+
+    The input variable `input_x` is restricted to the range defined by
+    `x_points` unless `bound_domain` is set to False. Setting `bound_domain` to True,
+    creates SOS1 type of variables. When `input_x` is not bound, you can assume as
+    if the first and the last line segments are extended.
+
+    Returns the dependent variable `y` and the equations required to model the
+    piecewise linear relationship.
+
+    Parameters
+    ----------
+    x : gp.Variable
+        Independent variable of the piecewise linear function
+    x_points: typing.Sequence[int | float]
+        Break points of the piecewise linear function in the x-axis
+    y_points: typing.Sequence[int| float]
+        Break points of the piecewise linear function in the y-axis
+    bound_domain: bool = True
+        If input_x should be limited to interval defined by min(x_points), max(x_points)
+
+    Returns
+    -------
+    tuple[gp.Variable, list[Equation]]
+
+    Examples
+    --------
+    >>> from gamspy import Container, Variable, Set
+    >>> from gamspy.formulations import piecewise_linear_function_interval_formulation
+    >>> m = Container()
+    >>> x = Variable(m, "x")
+    >>> y, eqs = piecewise_linear_function_interval_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
+
+    """
+
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
