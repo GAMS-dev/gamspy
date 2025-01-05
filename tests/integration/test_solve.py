@@ -1144,7 +1144,7 @@ def test_validation_3():
     z.up[vk[v, k]] = n[k]
 
 
-def test_context_manager():
+def test_context_manager(data):
     m, canning_plants, markets, capacities, demands, distances = data
     with m:
         # Set
