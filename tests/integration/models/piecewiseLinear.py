@@ -256,7 +256,7 @@ def pwl_suite(fct, name):
     assert y.toDense() == 45, "Case 14 failed !"
     print("Case 14 passed !")
 
-    # test piecewise_linear_function with a non-scalar input
+    # test with a non-scalar input
     i = gp.Set(m, name="i", records=["1", "2", "3", "4", "5"])
     x2 = gp.Variable(m, name="x2", domain=[i])
     x_points = [1, 4, None, 6, 10, 10, 20]
@@ -275,7 +275,39 @@ def pwl_suite(fct, name):
         problem="mip",
     )
     model.solve()
-    assert np.allclose(y.toDense(), np.array([1, 23, 27.5, 45, 21]))
+    assert np.allclose(
+        y.toDense(), np.array([1, 23, 27.5, 45, 21])
+    ), "Case 14 failed !"
+    print("Case 14 passed !")
+
+    # test unbounded when edges are discontinuous
+    if name == "convexity":
+        for using in ["binary", "sos2"]:
+            x_points = [-4, -4, -2, 1, 3, 3]
+            y_points = [20, -2, 0, 0, 2, 9]
+            y, eqs = fct(
+                x, x_points, y_points, using=using, bound_domain=False
+            )
+            x.fx[...] = -5
+            model = gp.Model(
+                m, equations=eqs, objective=y, sense="min", problem="mip"
+            )
+            model.solve()
+            assert y.toDense() == 20, "Case 15 failed !"
+
+        print("Case 15 passed !")
+    else:
+        x_points = [-4, -4, -2, 1, 3, 3]
+        y_points = [20, -2, 0, 0, 2, 9]
+        y, eqs = fct(x, x_points, y_points, bound_domain=False)
+        x.fx[...] = -5
+        model = gp.Model(
+            m, equations=eqs, objective=y, sense="min", problem="mip"
+        )
+        model.solve()
+        assert y.toDense() == 20, "Case 15 failed !"
+        print("Case 15 passed !")
+
     m.close()
 
 

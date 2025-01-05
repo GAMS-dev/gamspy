@@ -328,6 +328,23 @@ def points_to_intervals(
     return result
 
 
+def _get_end_slopes(
+    x_points: typing.Sequence[int | float],
+    y_points: typing.Sequence[int | float],
+) -> tuple[float, float]:
+    if x_points[-1] != x_points[-2]:
+        m_pos = (y_points[-1] - y_points[-2]) / (x_points[-1] - x_points[-2])
+    else:
+        m_pos = 0
+
+    if x_points[0] != x_points[1]:
+        m_neg = (y_points[0] - y_points[1]) / (x_points[0] - x_points[1])
+    else:
+        m_neg = 0
+
+    return m_neg, m_pos
+
+
 def piecewise_linear_function_interval_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
@@ -462,8 +479,7 @@ def piecewise_linear_function_interval_formulation(
 
         pick_one_term = b_neg_inf + b_pos_inf
 
-        m_pos = (y_points[-1] - y_points[-2]) / (x_points[-1] - x_points[-2])
-        m_neg = (y_points[0] - y_points[1]) / (x_points[0] - x_points[1])
+        m_neg, m_pos = _get_end_slopes(x_points, y_points)
 
         x_term = (
             x_pos_inf
@@ -644,8 +660,7 @@ def piecewise_linear_function_convexity_formulation(
         limit_b_pos_inf[...] = b_pos_inf <= lambda_var[[*input_domain, last]]
         equations.append(limit_b_pos_inf)
 
-        m_pos = (y_points[-1] - y_points[-2]) / (x_points[-1] - x_points[-2])
-        m_neg = (y_points[0] - y_points[1]) / (x_points[0] - x_points[1])
+        m_neg, m_pos = _get_end_slopes(x_points, y_points)
 
         x_term = x_pos_inf - x_neg_inf
         y_term = (m_pos * x_pos_inf) - (m_neg * x_neg_inf)
