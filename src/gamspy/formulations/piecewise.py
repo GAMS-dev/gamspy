@@ -406,13 +406,14 @@ def piecewise_linear_function_convexity_formulation(
     Here is the convexity formulation:
 
     .. math::
-        x = \sum_{i}{x\_points_i * \lambda_i}
+        x = \\sum_{i}{x\\_points_i * \\lambda_i}
 
-        y = \sum_{i}{y\_points_i * \lambda_i}
+        y = \\sum_{i}{y\\_points_i * \\lambda_i}
 
-        \sum_{i}{\lambda_i} = 1
+        \\sum_{i}{\\lambda_i} = 1
 
-        \lambda_i \in SOS2
+        \\lambda_i \\in SOS2
+
 
     By default, SOS2 variables are implemented using binary variables.
     See
