@@ -445,19 +445,53 @@ def piecewise_linear_function_interval_formulation(
     set_lambda_upperbound[...] = upperbounds * bin_var >= lambda_var
     equations.append(set_lambda_upperbound)
 
+    out_y = m.addVariable(domain=input_domain)
+
+    x_term = 0
+    y_term = 0
+    pick_one_term = 0
+    if bound_domain:
+        out_y.lo[...] = min(y_points)
+        out_y.up[...] = max(y_points)
+    else:
+        x_neg_inf, b_neg_inf, eqs_neg_inf = _generate_ray(m, input_domain)
+        equations.extend(eqs_neg_inf)
+
+        x_pos_inf, b_pos_inf, eqs_pos_inf = _generate_ray(m, input_domain)
+        equations.extend(eqs_pos_inf)
+
+        pick_one_term = b_neg_inf + b_pos_inf
+
+        m_pos = (y_points[-1] - y_points[-2]) / (x_points[-1] - x_points[-2])
+        m_neg = (y_points[0] - y_points[1]) / (x_points[0] - x_points[1])
+
+        x_term = (
+            x_pos_inf
+            - x_neg_inf
+            + (b_neg_inf * x_points[0])
+            + (b_pos_inf * x_points[-1])
+        )
+        y_term = (
+            (m_pos * x_pos_inf)
+            - (m_neg * x_neg_inf)
+            + (b_neg_inf * y_points[0])
+            + (b_pos_inf * y_points[-1])
+        )
+
     pick_one = m.addEquation(domain=input_domain)
-    pick_one[...] = gp.Sum(J, bin_var) == 1
+    pick_one[...] = gp.Sum(J, bin_var) + pick_one_term == 1
     equations.append(pick_one)
 
     set_x = m.addEquation(domain=input_domain)
-    set_x[...] = input_x == gp.Sum(J, lambda_var)
+    set_x[...] = input_x == gp.Sum(J, lambda_var) + x_term
     equations.append(set_x)
 
-    out_y = m.addVariable(domain=input_domain)
-
     set_y = m.addEquation(domain=input_domain)
-    set_y[...] = out_y == gp.Sum(J, lambda_var * slopes) + gp.Sum(
-        J, bin_var * offsets
+    set_y[...] = (
+        out_y
+        == gp.Sum(J, lambda_var * slopes)
+        + gp.Sum(J, bin_var * offsets)
+        + y_term
     )
     equations.append(set_y)
 
@@ -588,10 +622,8 @@ def piecewise_linear_function_convexity_formulation(
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
     if bound_domain:
-        min_y = min(y_points)
-        max_y = max(y_points)
-        out_y.lo[...] = min_y
-        out_y.up[...] = max_y
+        out_y.lo[...] = min(y_points)
+        out_y.up[...] = max(y_points)
     else:
         x_neg_inf, b_neg_inf, eqs_neg_inf = _generate_ray(m, input_domain)
         equations.extend(eqs_neg_inf)
