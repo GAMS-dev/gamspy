@@ -345,7 +345,7 @@ def _get_end_slopes(
     return m_neg, m_pos
 
 
-def piecewise_linear_function_interval_formulation(
+def pwl_interval_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
@@ -368,7 +368,7 @@ def piecewise_linear_function_interval_formulation(
 
         x = \\sum_{i}{\\lambda_i}
 
-        y = \\sum_{i}{(\\lambda_i * slope_i) + (b_i * start_i) }
+        y = \\sum_{i}{(\\lambda_i * slope_i) + (b_i * offset_i) }
 
         b_i \\in {0, 1} \\quad \\forall{i}
 
@@ -403,7 +403,7 @@ def piecewise_linear_function_interval_formulation(
         Independent variable of the piecewise linear function
     x_points: typing.Sequence[int | float]
         Break points of the piecewise linear function in the x-axis
-    y_points: typing.Sequence[int| float]
+    y_points: typing.Sequence[int | float]
         Break points of the piecewise linear function in the y-axis
     bound_domain: bool = True
         If input_x should be limited to interval defined by min(x_points), max(x_points)
@@ -415,10 +415,10 @@ def piecewise_linear_function_interval_formulation(
     Examples
     --------
     >>> from gamspy import Container, Variable, Set
-    >>> from gamspy.formulations import piecewise_linear_function_interval_formulation
+    >>> from gamspy.formulations import pwl_interval_formulation
     >>> m = Container()
     >>> x = Variable(m, "x")
-    >>> y, eqs = piecewise_linear_function_interval_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
+    >>> y, eqs = pwl_interval_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
 
     """
 
@@ -514,7 +514,7 @@ def piecewise_linear_function_interval_formulation(
     return out_y, equations
 
 
-def piecewise_linear_function_convexity_formulation(
+def pwl_convexity_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
@@ -543,11 +543,8 @@ def piecewise_linear_function_convexity_formulation(
     See
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
     <https://www.researchgate.net/publication/225976267_Modeling_Disjunctive_Constraints_with_a_Logarithmic_Number_of_Binary_Variables_and_Constraints>`_
-    .
-
-    Internally, the function employs binary variables as the default implementation.
-    However, you can switch to SOS2 (Special Ordered Set Type 2) by setting the `using`
-    parameter to `"sos2"`.
+    . However, you can switch to SOS2 (Special Ordered Set Type 2) by setting the
+    `using` parameter to `"sos2"`.
 
     The implementation handles discontinuities in the function. To represent a
     discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
@@ -595,10 +592,10 @@ def piecewise_linear_function_convexity_formulation(
     Examples
     --------
     >>> from gamspy import Container, Variable, Set
-    >>> from gamspy.formulations import piecewise_linear_function_convexity_formulation
+    >>> from gamspy.formulations import pwl_convexity_formulation
     >>> m = Container()
     >>> x = Variable(m, "x")
-    >>> y, eqs = piecewise_linear_function_convexity_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
+    >>> y, eqs = pwl_convexity_formulation(x, [-1, 4, 10, 10, 20], [-2, 8, 15, 17, 37])
 
     """
     if using not in {"binary", "sos2"}:
