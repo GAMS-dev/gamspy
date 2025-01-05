@@ -306,18 +306,20 @@ def points_to_intervals(
     result: list[
         tuple[int | float, int | float, int | float, int | float]
     ] = []
-    finished_at_disc = False
+    finished_at_disc = True
     for i in range(len(x_points) - 1):
-        finished_at_disc = False
         x1 = x_points[i]
         x2 = x_points[i + 1]
         y1 = y_points[i]
         y2 = y_points[i + 1]
 
         if i in discontinuous_points:
-            result.append((x1, x1, 0, y1))
+            if finished_at_disc:
+                result.append((x1, x1, 0, y1))
+
             finished_at_disc = True
         else:
+            finished_at_disc = False
             slope = (y2 - y1) / (x2 - x1)
             offset = y1 - (slope * x1)
             result.append((x1, x2, slope, offset))
