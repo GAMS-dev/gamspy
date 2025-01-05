@@ -7,9 +7,15 @@ import gamspy.formulations.piecewise as piecewise
 from gamspy.exceptions import ValidationError
 from gamspy.formulations import (
     pwl_convexity_formulation,
+    pwl_interval_formulation,
 )
 
 pytestmark = pytest.mark.unit
+
+fcts_to_test = [
+    pwl_convexity_formulation,
+    pwl_interval_formulation,
+]
 
 
 @pytest.fixture
@@ -77,6 +83,7 @@ def test_pwl_indicator():
     x = gp.Variable(m, name="x", domain=[i])
     x2 = gp.Variable(m, name="x2", domain=[j])
     x3 = gp.Variable(m, name="x3", domain=[k])
+    x4 = gp.Variable(m, name="x4", domain=[i, k])
 
     pytest.raises(
         ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10
@@ -88,6 +95,7 @@ def test_pwl_indicator():
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x + 10)
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x3 >= 10)
     pytest.raises(ValidationError, piecewise._indicator, b, 0, x2 >= 10)
+    pytest.raises(ValidationError, piecewise._indicator, b, 0, x4 >= 10)
 
     eqs1 = piecewise._indicator(b, 0, x >= 10)
     eqs2 = piecewise._indicator(b, 0, x <= 10)
@@ -210,10 +218,11 @@ def test_pwl_with_domain(data):
     y_points = data["y_points"]
     y, eqs = pwl_convexity_formulation(x2, x_points, y_points, using="binary")
     y2, eqs2 = pwl_convexity_formulation(x2, x_points, y_points, using="sos2")
+    y3, eqs3 = pwl_interval_formulation(x2, x_points, y_points)
 
     assert len(y.domain) == len(x2.domain)
     assert len(y2.domain) == len(x2.domain)
-    print(eqs[2].domain)
+    assert len(y3.domain) == len(x2.domain)
 
 
 def test_pwl_with_none(data):
@@ -221,9 +230,23 @@ def test_pwl_with_none(data):
     x_points = [1, None, 2, 3]
     y_points = [10, None, 20, 45]
     y, eqs = pwl_convexity_formulation(x, x_points, y_points)
+    y2, eqs2 = pwl_interval_formulation(x, x_points, y_points)
 
 
-def test_pwl_validation(data):
+def test_pwl_finished_start_with_disc(data):
+    x = data["x"]
+    x_points = [1, 1, None, 2, 3, 3]
+    y_points = [0, 10, None, 20, 45, 0]
+    y, eqs = pwl_convexity_formulation(
+        x, x_points, y_points, bound_domain=False
+    )
+    y2, eqs2 = pwl_interval_formulation(
+        x, x_points, y_points, bound_domain=False
+    )
+
+
+@pytest.mark.parametrize("fct", fcts_to_test)
+def test_pwl_validation(data, fct):
     x = data["x"]
     x_points = data["x_points"]
     y_points = data["y_points"]
@@ -231,7 +254,7 @@ def test_pwl_validation(data):
     # incorrect using value
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         x_points,
         y_points,
@@ -241,7 +264,7 @@ def test_pwl_validation(data):
     # x not a variable
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         10,
         x_points,
         y_points,
@@ -250,7 +273,7 @@ def test_pwl_validation(data):
     # incorrect x_points, y_points
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         10,
         y_points,
@@ -258,7 +281,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         x_points,
         10,
@@ -266,7 +289,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [1],
         [10],
@@ -274,7 +297,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         x_points,
         [10],
@@ -282,7 +305,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [*x_points, "a"],
         [*y_points, 5],
@@ -290,7 +313,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [*x_points, 16],
         [*y_points, "a"],
@@ -298,7 +321,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [3, 2, 1],
         [10, 20, 30],
@@ -306,7 +329,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [3, 1, 2],
         [10, 20, 30],
@@ -314,7 +337,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [1, 3, 2],
         [10, 20, 30],
@@ -322,7 +345,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [1],
         [10],
@@ -330,7 +353,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [None, 2, 3],
         [None, 20, 40],
@@ -338,7 +361,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [2, 3, None],
         [20, 40, None],
@@ -346,7 +369,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [None, 2, 3, None],
         [None, 20, 40, None],
@@ -354,7 +377,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [0, None, 2, 3],
         [0, 10, 20, 40],
@@ -362,7 +385,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [0, 1, 2, 3],
         [0, None, 20, 40],
@@ -370,7 +393,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [1, None, None, 2, 3],
         [10, None, None, 20, 40],
@@ -378,7 +401,7 @@ def test_pwl_validation(data):
 
     pytest.raises(
         ValidationError,
-        pwl_convexity_formulation,
+        fct,
         x,
         [2, None, 2, 3],
         [10, None, 20, 40],
