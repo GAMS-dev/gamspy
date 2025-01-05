@@ -8,6 +8,7 @@ from gamspy.formulations.nn import (
 )
 from gamspy.formulations.piecewise import (
     piecewise_linear_function_convexity_formulation,
+    piecewise_linear_function_interval_formulation,
 )
 from gamspy.formulations.shape import flatten_dims
 
@@ -20,4 +21,5 @@ __all__ = [
     "Linear",
     "flatten_dims",
     "piecewise_linear_function_convexity_formulation",
+    "piecewise_linear_function_interval_formulation",
 ]
