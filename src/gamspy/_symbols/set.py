@@ -508,7 +508,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
@@ -519,21 +519,27 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        if not isinstance(container, gp.Container):
+        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+
+        if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
             )
 
         if name is None:
-            return object.__new__(cls)
+            obj = object.__new__(cls)
+
+            if container is None:
+                obj._ctx = ctx
+            return obj
         else:
             if not isinstance(name, str):
                 raise TypeError(
                     f"Name must of type `str` but found {type(name)}"
                 )
             try:
-                symbol = container[name]
+                symbol = ctx[name] if ctx is not None else container[name]  # type: ignore
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -542,11 +548,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                     " because it is not a Set object)"
                 )
             except KeyError:
-                return object.__new__(cls)
+                obj = object.__new__(cls)
+
+                if container is None:
+                    obj._ctx = ctx
+                return obj
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
@@ -619,6 +629,10 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._options.miro_protect = previous_state
 
         else:
+            if hasattr(self, "_ctx"):
+                container = self._ctx
+            assert container is not None
+
             self.where = condition.Condition(self)
 
             if name is not None:
@@ -629,7 +643,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 name = "s" + str(uuid.uuid4()).replace("-", "_")
 
             self._singleton_check(is_singleton, records, domain)
-
             previous_state = container._options.miro_protect
             container._options.miro_protect = False
 

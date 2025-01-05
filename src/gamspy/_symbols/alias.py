@@ -75,11 +75,13 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias | None = None,
     ):
-        if not isinstance(container, gp.Container):
+        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+
+        if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
@@ -91,27 +93,35 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             )
 
         if name is None:
-            return object.__new__(cls)
+            obj = object.__new__(cls)
+
+            if container is None:
+                obj._ctx = ctx
+            return obj
         else:
             if not isinstance(name, str):
                 raise TypeError(
                     f"Name must of type `str` but found {type(name)}"
                 )
             try:
-                symobj = container[name]
-                if isinstance(symobj, cls):
-                    return symobj
+                symbol = ctx[name] if ctx is not None else container[name]  # type: ignore
+                if isinstance(symbol, cls):
+                    return symbol
 
                 raise TypeError(
                     f"Cannot overwrite symbol `{name}` in container"
                     " because it is not an Alias object)"
                 )
             except KeyError:
-                return object.__new__(Alias)
+                obj = object.__new__(cls)
+
+                if container is None:
+                    obj._ctx = ctx
+                return obj
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias = None,  # type: ignore
     ):
@@ -127,6 +137,10 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.modified = True
             self.alias_with = alias_with
         else:
+            if hasattr(self, "_ctx"):
+                container = self._ctx
+            assert container is not None
+
             if name is not None:
                 name = validation.validate_name(name)
             else:

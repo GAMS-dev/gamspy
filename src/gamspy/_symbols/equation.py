@@ -157,7 +157,7 @@ class Equation(gt.Equation, Symbol):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
@@ -169,20 +169,26 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        if not isinstance(container, gp.Container):
+        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+
+        if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(
                 f"Container must of type `Container` but found {container}"
             )
 
         if name is None:
-            return object.__new__(cls)
+            obj = object.__new__(cls)
+
+            if container is None:
+                obj._ctx = ctx
+            return obj
         else:
             if not isinstance(name, str):
                 raise TypeError(
                     f"Name must of type `str` but found {builtins.type(name)}"
                 )
             try:
-                symbol = container[name]
+                symbol = ctx[name] if ctx is not None else container[name]  # type: ignore
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -191,11 +197,15 @@ class Equation(gt.Equation, Symbol):
                     " because it is not an Equation object)"
                 )
             except KeyError:
-                return object.__new__(cls)
+                obj = object.__new__(cls)
+
+                if container is None:
+                    obj._ctx = ctx
+                return obj
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
@@ -272,6 +282,10 @@ class Equation(gt.Equation, Symbol):
             self.container._options.miro_protect = previous_state
 
         else:
+            if hasattr(self, "_ctx"):
+                container = self._ctx
+            assert container is not None
+
             type = cast_type(type)
 
             if name is not None:

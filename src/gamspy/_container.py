@@ -271,6 +271,12 @@ class Container(gt.Container):
 
             self._synch_with_gams(gams_to_gamspy=False)
 
+    def __enter__(self):
+        gp._ctx_manager = self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        gp._ctx_manager = None
+
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
 

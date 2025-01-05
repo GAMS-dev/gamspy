@@ -145,7 +145,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str = "free",
         domain: list[Set | Alias | str]
@@ -160,21 +160,27 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
-        if not isinstance(container, gp.Container):
+        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+
+        if ctx is None and not isinstance(container, gp.Container):
             invalid_type = builtins.type(container)
             raise TypeError(
                 f"Container must of type `Container` but found {invalid_type}"
             )
 
         if name is None:
-            return object.__new__(cls)
+            obj = object.__new__(cls)
+
+            if container is None:
+                obj._ctx = ctx
+            return obj
         else:
             if not isinstance(name, str):
                 raise TypeError(
                     f"Name must of type `str` but found {builtins.type(name)}"
                 )
             try:
-                symbol = container[name]
+                symbol = ctx[name] if ctx is not None else container[name]  # type: ignore
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -183,11 +189,15 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     " because it is not a Variable object)"
                 )
             except KeyError:
-                return object.__new__(cls)
+                obj = object.__new__(cls)
+
+                if container is None:
+                    obj._ctx = ctx
+                return obj
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str = "free",
         domain: list[Set | Alias | str]
@@ -265,6 +275,10 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self.container._options.miro_protect = previous_state
 
         else:
+            if hasattr(self, "_ctx"):
+                container = self._ctx
+            assert container is not None
+
             type = cast_type(type)
 
             if name is not None:

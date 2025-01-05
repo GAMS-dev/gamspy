@@ -1144,6 +1144,82 @@ def test_validation_3():
     z.up[vk[v, k]] = n[k]
 
 
+def test_context_manager():
+    m, canning_plants, markets, capacities, demands, distances = data
+    with m:
+        # Set
+        i = Set(
+            name="i",
+            records=canning_plants,
+            description="canning plants",
+        )
+        j = Set(
+            name="j",
+            records=markets,
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            name="a",
+            domain=i,
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            name="b",
+            domain=j,
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            name="demand", domain=j, description="satisfy demand at market j"
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+    import math
+
+    assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
+
+
 def test_after_exception(data):
     m, *_ = data
     x = Variable(m, "x", type="positive")
