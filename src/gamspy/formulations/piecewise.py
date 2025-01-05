@@ -301,17 +301,29 @@ def _generate_ray(
 def points_to_intervals(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
-) -> dict[tuple[int | float, int | float], tuple[int | float, int | float]]:
-    result = {}
+    discontinuous_points: typing.Sequence[int],
+) -> list[tuple[int | float, int | float, int | float, int | float]]:
+    result: list[
+        tuple[int | float, int | float, int | float, int | float]
+    ] = []
+    finished_at_disc = False
     for i in range(len(x_points) - 1):
+        finished_at_disc = False
         x1 = x_points[i]
         x2 = x_points[i + 1]
         y1 = y_points[i]
         y2 = y_points[i + 1]
 
-        slope = (y2 - y1) / (x2 - x1)
-        offset = y1 - (slope * x1)
-        result[(x1, x2)] = (slope, offset)
+        if i in discontinuous_points:
+            result.append((x1, x1, 0, y1))
+            finished_at_disc = True
+        else:
+            slope = (y2 - y1) / (x2 - x1)
+            offset = y1 - (slope * x1)
+            result.append((x1, x2, slope, offset))
+
+    if finished_at_disc:
+        result.append((x2, x2, 0, y2))
 
     return result
 
@@ -403,21 +415,13 @@ def piecewise_linear_function_interval_formulation(
         x_points, y_points
     )
     combined_indices = list({*discontinuous_indices, *none_indices})
-
-    if len(combined_indices) > 0:
-        raise ValidationError(
-            "This formulation does not support discontinuities"
-        )
-
     equations = []
 
-    intervals = points_to_intervals(x_points, y_points)
+    intervals = points_to_intervals(x_points, y_points, combined_indices)
     lowerbounds_input = [(str(i), k[0]) for i, k in enumerate(intervals)]
     upperbounds_input = [(str(i), k[1]) for i, k in enumerate(intervals)]
-    slopes_input = [(str(i), intervals[k][0]) for i, k in enumerate(intervals)]
-    offsets_input = [
-        (str(i), intervals[k][1]) for i, k in enumerate(intervals)
-    ]
+    slopes_input = [(str(i), k[2]) for i, k in enumerate(intervals)]
+    offsets_input = [(str(i), k[3]) for i, k in enumerate(intervals)]
 
     input_domain = input_x.domain
     m = input_x.container
