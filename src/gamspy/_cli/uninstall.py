@@ -32,7 +32,8 @@ def license():
 def solver(
     solver_names: list[str] = typer.Argument(
         None,
-        help="solver names to be uninstalled"
+        help="solver names to be uninstalled",
+        autocompletion=lambda: [s.lower() for s in utils.getInstalledSolvers(utils._get_gamspy_base_directory())]
     ),
     uninstall_all_solvers: bool = typer.Option(
         False,

@@ -143,7 +143,8 @@ def append_dist_info(files, gamspy_base_dir: str):
 def solver(
     solver_names: list[str] = typer.Argument(
         None,
-        help="solver names to be installed"
+        help="solver names to be installed",
+        autocompletion=lambda: [s.lower() for s in utils.getAvailableSolvers()]
     ),
     install_all_solvers: bool = typer.Option(
         False,
