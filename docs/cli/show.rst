@@ -1,29 +1,42 @@
 gamspy show
-===========
+==========
 
-Shows the license file or gamspy_base directory.
+Shows information about your GAMSPy installation.
+
+Show License
+-----------
+
+Shows the content of the current license.
 
 Usage
------
+~~~~~
 
 ::
 
-  gamspy show <license|base>
+  gamspy show license
 
-Example: ::
+Example::
 
   $ gamspy show license
-  License found at: /home/joe/venvs/gamspy/lib/python3.12/site-packages/gamspy_base/gamslice.txt
-  
+  License found at: /home/user/.gamspy/gamspy_license.txt
+
   License Content
   ===============
-  GAMS_Demo,_for_EULA_and_demo_limitations_see___G240530/0001CB-GEN
-  https://www.gams.com/latest/docs/UG%5FLicense.html_______________
-  1496631900_______________________________________________________
-  0801332905_______________________________________________________
-  DC0000_______g_1_______________________________C_Eval____________  
+  [License content will be displayed here]
+
+Show Base Directory
+-----------------
+
+Shows the path of the gamspy_base installation directory.
+
+Usage
+~~~~~
 
 ::
 
+  gamspy show base
+
+Example::
+
   $ gamspy show base
-  /home/joe/venvs/gamspy/lib/python3.12/site-packages/gamspy_base
+  /home/user/miniconda3/envs/gamspy/lib/python3.9/site-packages/gamspy_base

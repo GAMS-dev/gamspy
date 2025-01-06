@@ -5,6 +5,7 @@ GAMSPy 1.4.1
 ------------
 - General
   - Fix implicit parameter validation bug.
+  - Migrate GAMSPy CLI to Typer.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
 - Documentation
