@@ -3,7 +3,6 @@ import os
 import platform
 import subprocess
 import sys
-from typing import Annotated, Union
 from enum import Enum
 
 import typer

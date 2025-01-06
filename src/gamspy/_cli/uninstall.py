@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 import subprocess
-from typing import Annotated, Iterable, Union, List
+from typing import Iterable
 from gamspy.exceptions import GamspyException, ValidationError
 import gamspy.utils as utils
 from .util import remove_solver_entry

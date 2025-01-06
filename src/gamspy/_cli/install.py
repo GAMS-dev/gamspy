@@ -2,7 +2,7 @@ from __future__ import annotations
 import importlib
 import shutil
 
-from typing import Annotated, Iterable, Union, List
+from typing import Annotated, Iterable, Union
 
 import typer
 from gamspy.exceptions import GamspyException, ValidationError

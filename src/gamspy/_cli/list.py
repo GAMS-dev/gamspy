@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Annotated, Union
-
 import typer
 from rich import print
 from rich.console import Console
