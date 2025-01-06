@@ -336,6 +336,51 @@ def pwl_suite(fct, name):
         assert y.toDense() == 20, "Case 15 failed !"
         print("Case 15 passed !")
 
+    # test single bound cases
+    x_points = [-4, -2, 1, 3]
+    y_points = [-2, 0, 0, 2]
+    y, eqs = fct(
+        x,
+        x_points,
+        y_points,
+        bound_left=False,
+        bound_right=True,
+    )
+    x.fx[...] = -5
+    model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
+    model.solve()
+
+    assert y.toDense() == -3, "Case 16 failed !"
+    print("Case 16 passed !")
+
+    x.fx[...] = 5  # bounded from right
+    res = model.solve()
+    assert (
+        res["Model Status"].item() == "IntegerInfeasible"
+    ), "Case 17 failed !"
+    print("Case 17 passed !")
+
+    y, eqs = fct(
+        x,
+        x_points,
+        y_points,
+        bound_left=True,
+        bound_right=False,
+    )
+    x.fx[...] = -5
+    model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
+    res = model.solve()
+    assert (
+        res["Model Status"].item() == "IntegerInfeasible"
+    ), "Case 18 failed !"
+    print("Case 18 passed !")
+
+    x.fx[...] = 5
+    model.solve()
+
+    assert y.toDense() == 4, "Case 19 failed !"
+    print("Case 19 passed !")
+
     m.close()
 
 

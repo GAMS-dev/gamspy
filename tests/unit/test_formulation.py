@@ -255,6 +255,18 @@ def test_pwl_finished_start_with_disc(data):
 
 
 @pytest.mark.parametrize("fct", fcts_to_test)
+def test_pwl_bound_cases(data, fct):
+    x = data["x"]
+    x_points = data["x_points"]
+    y_points = data["y_points"]
+
+    fct(x, x_points, y_points, bound_left=False, bound_right=False)
+    fct(x, x_points, y_points, bound_left=False, bound_right=True)
+    fct(x, x_points, y_points, bound_left=True, bound_right=True)
+    fct(x, x_points, y_points, bound_left=True, bound_right=False)
+
+
+@pytest.mark.parametrize("fct", fcts_to_test)
 def test_pwl_validation(data, fct):
     x = data["x"]
     x_points = data["x_points"]
