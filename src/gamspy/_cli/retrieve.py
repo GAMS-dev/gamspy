@@ -22,24 +22,22 @@ app = typer.Typer(
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy retrieve license <access_code> [--input <input_path>.json] [--output <output_path>.json]"
 )
 def license(
-    access_code: Annotated[
-        str,
-        typer.Argument(help="Access code of the license."),
-    ],
-    input: Annotated[
-        Union[str, None],
-        typer.Option(
-            "--input",
-            "-i",
-            help="Input json file path to retrieve the license based on the node information.",
-        ),
-    ] = None,
-    output: Annotated[
-        Union[str, None],
-        typer.Option(
-            "--output", "-o", help="Output path for the license file."
-        ),
-    ] = None,
+    access_code: str = typer.Argument(
+        ...,
+        help="Access code of the license."
+    ),
+    input: str = typer.Option(
+        None,
+        "--input",
+        "-i",
+        help="Input json file path to retrieve the license based on the node information."
+    ),
+    output: str = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output path for the license file."
+    ),
 ) -> None:
     if input is None or not os.path.isfile(input):
         raise ValidationError(

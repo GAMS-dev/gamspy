@@ -21,14 +21,18 @@ app = typer.Typer(
 
 @app.command()
 def solvers(
-    all: Annotated[
-        Union[bool, None],
-        typer.Option("--all", "-a", help="Shows all available solvers."),
-    ] = None,
-    defaults: Annotated[
-        Union[bool, None],
-        typer.Option("--defaults", "-d", help="Shows default solvers."),
-    ] = None,
+    all: bool = typer.Option(
+        False,
+        "--all",
+        "-a",
+        help="Shows all available solvers."
+    ),
+    defaults: bool = typer.Option(
+        False,
+        "--defaults",
+        "-d",
+        help="Shows default solvers."
+    ),
 ) -> None:
     try:
         import gamspy_base

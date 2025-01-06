@@ -27,28 +27,29 @@ class ModeEnum(Enum):
     short_help="Runs a GAMSPY model with GAMS MIRO app."
 )
 def miro(
-    model: Annotated[
-        Union[str, None], 
-        typer.Option("--model", "-g", 
-            help="Path to the GAMSPy model."
-        )
-    ] = None,
-    mode: Annotated[
-        ModeEnum, 
-        typer.Option("--mode", "-m", 
-            help="Execution mode of MIRO"
-        )
-    ] = "base",  # type: ignore
-    path: Annotated[
-        Union[str, None], 
-        typer.Option("--path", "-p", 
-            help="Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux"
-        )
-    ] = None,
-    skip_execution: Annotated[
-        Union[bool, None], 
-        typer.Option("--skip-execution", help="Whether to skip model execution.")
-    ] = None
+    model: str = typer.Option(
+        None,
+        "--model",
+        "-g",
+        help="Path to the GAMSPy model."
+    ),
+    mode: ModeEnum = typer.Option(
+        "base",
+        "--mode",
+        "-m",
+        help="Execution mode of MIRO"
+    ),
+    path: str = typer.Option(
+        None,
+        "--path",
+        "-p",
+        help="Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux"
+    ),
+    skip_execution: bool = typer.Option(
+        False,
+        "--skip-execution",
+        help="Whether to skip model execution."
+    )
 ) -> None:
     if model is None:
         raise ValidationError("--model must be provided to run MIRO")
