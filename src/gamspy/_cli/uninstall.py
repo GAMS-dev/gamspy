@@ -30,7 +30,7 @@ def license():
     short_help="To uninstall solvers"
 )
 def solver(
-    solver_names: list[str] = typer.Argument(
+    solver: list[str] = typer.Argument(
         None,
         help="solver names to be uninstalled",
         autocompletion=lambda: [s.lower() for s in utils.getInstalledSolvers(utils._get_gamspy_base_directory())]
@@ -111,12 +111,12 @@ def solver(
         # All add-on solvers are gone.
         return
 
-    if solver_names is None:
+    if solver is None:
         raise ValidationError(
             "Solver name is missing: `gamspy uninstall solver <solver_name>`"
         )
 
-    remove_addons(solver_names)
+    remove_addons(solver)
 
 if __name__ == "__main__":
     app()

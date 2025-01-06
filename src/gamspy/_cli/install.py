@@ -141,7 +141,7 @@ def append_dist_info(files, gamspy_base_dir: str):
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>"
 )
 def solver(
-    solver_names: list[str] = typer.Argument(
+    solver: list[str] = typer.Argument(
         None,
         help="solver names to be installed",
         autocompletion=lambda: [s.lower() for s in utils.getAvailableSolvers()]
@@ -252,9 +252,9 @@ def solver(
         available_solvers = utils.getAvailableSolvers()
         installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
         diff = []
-        for solver in available_solvers:
-            if solver not in installed_solvers:
-                diff.append(solver)
+        for available_solver in available_solvers:
+            if available_solver not in installed_solvers:
+                diff.append(available_solver)
 
         install_addons(diff)
         return
@@ -268,12 +268,12 @@ def solver(
         except FileNotFoundError as e:
             raise ValidationError("No existing add-on solvers found!") from e
 
-    if solver_names is None:
+    if solver is None:
         raise ValidationError(
             "Solver name is missing: `gamspy install solver <solver_name>`"
         )
 
-    install_addons(solver_names)
+    install_addons(solver)
 
 if __name__ == "__main__":
     app()
