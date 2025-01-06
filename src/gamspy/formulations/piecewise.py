@@ -351,7 +351,8 @@ def pwl_interval_formulation(
     input_x: gp.Variable,
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
-    bound_domain: bool = True,
+    bound_left: bool = True,
+    bound_right: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     This function implements a piecewise linear function using the intervals formulation.
@@ -392,9 +393,9 @@ def pwl_interval_formulation(
     ranges always introduce additional binary variables.
 
     The input variable `input_x` is restricted to the range defined by
-    `x_points` unless `bound_domain` is set to False. Setting `bound_domain` to True,
-    creates SOS1 type of variables. When `input_x` is not bound, you can assume as
-    if the first and the last line segments are extended.
+    `x_points` unless `bound_left` or `bound_right` is set to False. Setting
+    either to True, creates SOS1 type of variables. When `input_x` is not bound,
+    you can assume as if the first and/or the last line segments are extended.
 
     Returns the dependent variable `y` and the equations required to model the
     piecewise linear relationship.
@@ -407,8 +408,10 @@ def pwl_interval_formulation(
         Break points of the piecewise linear function in the x-axis
     y_points: typing.Sequence[int | float]
         Break points of the piecewise linear function in the y-axis
-    bound_domain: bool = True
-        If input_x should be limited to interval defined by min(x_points), max(x_points)
+    bound_left: bool = True
+        If input_x should be limited to start from x_points[0]
+    bound_right: bool = True
+        If input_x should be limited to end at x_points[-1]
 
     Returns
     -------
@@ -427,8 +430,11 @@ def pwl_interval_formulation(
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
-    if not isinstance(bound_domain, bool):
-        raise ValidationError("bound_domain is expected to be a boolean")
+    if not isinstance(bound_left, bool):
+        raise ValidationError("bound_left is expected to be a boolean")
+
+    if not isinstance(bound_right, bool):
+        raise ValidationError("bound_right is expected to be a boolean")
 
     x_points, y_points, discontinuous_indices, none_indices = _check_points(
         x_points, y_points
@@ -469,32 +475,29 @@ def pwl_interval_formulation(
     x_term = 0
     y_term = 0
     pick_one_term = 0
-    if bound_domain:
+
+    if bound_left is False or bound_right is False:
+        m_neg, m_pos = _get_end_slopes(x_points, y_points)
+
+    if bound_left:
         out_y.lo[...] = min(y_points)
-        out_y.up[...] = max(y_points)
     else:
         x_neg_inf, b_neg_inf, eqs_neg_inf = _generate_ray(m, input_domain)
         equations.extend(eqs_neg_inf)
 
+        x_term += -x_neg_inf + (b_neg_inf * x_points[0])
+        y_term += -(m_neg * x_neg_inf) + (b_neg_inf * y_points[0])
+        pick_one_term += b_neg_inf
+
+    if bound_right:
+        out_y.up[...] = max(y_points)
+    else:
         x_pos_inf, b_pos_inf, eqs_pos_inf = _generate_ray(m, input_domain)
         equations.extend(eqs_pos_inf)
 
-        pick_one_term = b_neg_inf + b_pos_inf
-
-        m_neg, m_pos = _get_end_slopes(x_points, y_points)
-
-        x_term = (
-            x_pos_inf
-            - x_neg_inf
-            + (b_neg_inf * x_points[0])
-            + (b_pos_inf * x_points[-1])
-        )
-        y_term = (
-            (m_pos * x_pos_inf)
-            - (m_neg * x_neg_inf)
-            + (b_neg_inf * y_points[0])
-            + (b_pos_inf * y_points[-1])
-        )
+        x_term += x_pos_inf + (b_pos_inf * x_points[-1])
+        y_term += (m_pos * x_pos_inf) + (b_pos_inf * y_points[-1])
+        pick_one_term += b_pos_inf
 
     pick_one = m.addEquation(domain=input_domain)
     pick_one[...] = gp.Sum(J, bin_var) + pick_one_term == 1
@@ -521,7 +524,8 @@ def pwl_convexity_formulation(
     x_points: typing.Sequence[int | float],
     y_points: typing.Sequence[int | float],
     using: typing.Literal["binary", "sos2"] = "binary",
-    bound_domain: bool = True,
+    bound_left: bool = True,
+    bound_right: bool = True,
 ) -> tuple[gp.Variable, list[gp.Equation]]:
     """
     This function implements a piecewise linear function using the convexity formulation.
@@ -567,9 +571,9 @@ def pwl_convexity_formulation(
     of the using argument.
 
     The input variable `input_x` is restricted to the range defined by
-    `x_points` unless `bound_domain` is set to False. Setting `bound_domain` to True,
-    creates SOS1 type of variables independent from the `using` parameter. When `input_x` is
-    not bound, you can assume as if the first and the last line segments are extended.
+    `x_points` unless `bound_left` or `bound_right` is set to False. Setting
+    either to True, creates SOS1 type of variables. When `input_x` is not bound,
+    you can assume as if the first and/or the last line segments are extended.
 
     Returns the dependent variable `y` and the equations required to model the
     piecewise linear relationship.
@@ -584,8 +588,10 @@ def pwl_convexity_formulation(
         Break points of the piecewise linear function in the y-axis
     using: str = "binary"
         What type of variable is used during implementing piecewise function
-    bound_domain: bool = True
-        If input_x should be limited to interval defined by min(x_points), max(x_points)
+    bound_left: bool = True
+        If input_x should be limited to start from x_points[0]
+    bound_right: bool = True
+        If input_x should be limited to end at x_points[-1]
 
     Returns
     -------
@@ -609,8 +615,11 @@ def pwl_convexity_formulation(
     if not isinstance(input_x, gp.Variable):
         raise ValidationError("input_x is expected to be a Variable")
 
-    if not isinstance(bound_domain, bool):
-        raise ValidationError("bound_domain is expected to be a boolean")
+    if not isinstance(bound_left, bool):
+        raise ValidationError("bound_left is expected to be a boolean")
+
+    if not isinstance(bound_right, bool):
+        raise ValidationError("bound_right is expected to be a boolean")
 
     x_points, y_points, discontinuous_indices, none_indices = _check_points(
         x_points, y_points
@@ -632,37 +641,41 @@ def pwl_convexity_formulation(
         domain=[*input_domain, J], type="free" if using == "binary" else "sos2"
     )
 
-    x_term = 0
-    y_term = 0
     lambda_var.lo[...] = 0
     lambda_var.up[...] = 1
-    if bound_domain:
+
+    x_term = 0
+    y_term = 0
+
+    if bound_left is False or bound_right is False:
+        m_neg, m_pos = _get_end_slopes(x_points, y_points)
+
+    if bound_left:
         out_y.lo[...] = min(y_points)
-        out_y.up[...] = max(y_points)
     else:
         x_neg_inf, b_neg_inf, eqs_neg_inf = _generate_ray(m, input_domain)
         equations.extend(eqs_neg_inf)
 
-        x_pos_inf, b_pos_inf, eqs_pos_inf = _generate_ray(m, input_domain)
-        equations.extend(eqs_pos_inf)
-
-        pick_side = m.addEquation(domain=b_neg_inf.domain)
-        pick_side[...] = b_neg_inf + b_pos_inf <= 1
-        equations.append(pick_side)
-
         limit_b_neg_inf = m.addEquation(domain=b_neg_inf.domain)
         limit_b_neg_inf[...] = b_neg_inf <= lambda_var[[*input_domain, "0"]]
         equations.append(limit_b_neg_inf)
+
+        x_term += -x_neg_inf
+        y_term += -(m_neg * x_neg_inf)
+
+    if bound_right:
+        out_y.up[...] = max(y_points)
+    else:
+        x_pos_inf, b_pos_inf, eqs_pos_inf = _generate_ray(m, input_domain)
+        equations.extend(eqs_pos_inf)
 
         limit_b_pos_inf = m.addEquation(domain=b_pos_inf.domain)
         last = str(len(J) - 1)
         limit_b_pos_inf[...] = b_pos_inf <= lambda_var[[*input_domain, last]]
         equations.append(limit_b_pos_inf)
 
-        m_neg, m_pos = _get_end_slopes(x_points, y_points)
-
-        x_term = x_pos_inf - x_neg_inf
-        y_term = (m_pos * x_pos_inf) - (m_neg * x_neg_inf)
+        x_term += x_pos_inf
+        y_term += m_pos * x_pos_inf
 
     lambda_sum = m.addEquation(domain=input_x.domain)
     lambda_sum[...] = gp.Sum(J, lambda_var) == 1

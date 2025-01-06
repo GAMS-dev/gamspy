@@ -99,8 +99,8 @@ represent them by repeating the x coordinate with a new y value.
 
 By default, x is limited to be in the range you defined, in this case betwen 0
 and 4. If you want x to be not limited in the range you defined, you can set
-`bound_domain` to `False`. When `bound_domain` is set to `False`, it is assumed
-that the first and the last line segments are extended. However, to accomplish
+`bound_left` and/or `bound_right` to `False`. When either is set to `False`, it is assumed
+that the corresponding line segments are extended. However, to accomplish
 that new `SOS1` and `binary` type variables are introduced.
 
 .. image:: ../images/pwl_unbounded.png
@@ -118,7 +118,8 @@ that new `SOS1` and `binary` type variables are introduced.
        x,
        [0, 1, 3, 3, 4],
        [2, 1, 1, 2, 3],
-       bound_domain=False,
+       bound_left=False,
+       bound_right=False,
    )
 
 
@@ -145,7 +146,6 @@ between x values that you like to exclude.
        x,
        [0, 1, 1.5, None, 2, 3, 3, 4],
        [2, 1, 1,   None, 1, 1, 2, 3],
-       bound_domain=False,
    )
 
 

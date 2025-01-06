@@ -112,7 +112,12 @@ def pwl_suite(fct, name):
             x_points = [-4, -2, 1, 3]
             y_points = [-2, 0, 0, 2]
             y, eqs = fct(
-                x, x_points, y_points, using=using, bound_domain=False
+                x,
+                x_points,
+                y_points,
+                using=using,
+                bound_left=False,
+                bound_right=False,
             )
             x.fx[...] = -5
             model = gp.Model(
@@ -130,7 +135,12 @@ def pwl_suite(fct, name):
             x_points = [-4, -2, 1, 3]
             y_points = [-2, 0, 0, 0]
             y, eqs = fct(
-                x, x_points, y_points, using=using, bound_domain=False
+                x,
+                x_points,
+                y_points,
+                using=using,
+                bound_left=False,
+                bound_right=False,
             )
             model = gp.Model(
                 m, equations=eqs, objective=y, sense="max", problem="mip"
@@ -146,7 +156,12 @@ def pwl_suite(fct, name):
             x_points = [-4, -2, 1, 3]
             y_points = [-5, -5, 0, 2]
             y, eqs = fct(
-                x, x_points, y_points, using=using, bound_domain=False
+                x,
+                x_points,
+                y_points,
+                using=using,
+                bound_left=False,
+                bound_right=False,
             )
             x.lo[...] = "-inf"
             x.up[...] = "inf"
@@ -163,7 +178,9 @@ def pwl_suite(fct, name):
     else:
         x_points = [-4, -2, 1, 3]
         y_points = [-2, 0, 0, 2]
-        y, eqs = fct(x, x_points, y_points, bound_domain=False)
+        y, eqs = fct(
+            x, x_points, y_points, bound_left=False, bound_right=False
+        )
         x.fx[...] = -5
         model = gp.Model(
             m, equations=eqs, objective=y, sense="min", problem="mip"
@@ -179,7 +196,9 @@ def pwl_suite(fct, name):
         # y is upper bounded
         x_points = [-4, -2, 1, 3]
         y_points = [-2, 0, 0, 0]
-        y, eqs = fct(x, x_points, y_points, bound_domain=False)
+        y, eqs = fct(
+            x, x_points, y_points, bound_left=False, bound_right=False
+        )
         model = gp.Model(
             m, equations=eqs, objective=y, sense="max", problem="mip"
         )
@@ -193,7 +212,9 @@ def pwl_suite(fct, name):
         # y is lower bounded
         x_points = [-4, -2, 1, 3]
         y_points = [-5, -5, 0, 2]
-        y, eqs = fct(x, x_points, y_points, bound_domain=False)
+        y, eqs = fct(
+            x, x_points, y_points, bound_left=False, bound_right=False
+        )
         x.lo[...] = "-inf"
         x.up[...] = "inf"
         model = gp.Model(
@@ -286,7 +307,12 @@ def pwl_suite(fct, name):
             x_points = [-4, -4, -2, 1, 3, 3]
             y_points = [20, -2, 0, 0, 2, 9]
             y, eqs = fct(
-                x, x_points, y_points, using=using, bound_domain=False
+                x,
+                x_points,
+                y_points,
+                using=using,
+                bound_left=False,
+                bound_right=False,
             )
             x.fx[...] = -5
             model = gp.Model(
@@ -299,7 +325,9 @@ def pwl_suite(fct, name):
     else:
         x_points = [-4, -4, -2, 1, 3, 3]
         y_points = [20, -2, 0, 0, 2, 9]
-        y, eqs = fct(x, x_points, y_points, bound_domain=False)
+        y, eqs = fct(
+            x, x_points, y_points, bound_left=False, bound_right=False
+        )
         x.fx[...] = -5
         model = gp.Model(
             m, equations=eqs, objective=y, sense="min", problem="mip"

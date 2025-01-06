@@ -184,7 +184,8 @@ def test_pwl_with_sos2(data):
         x,
         x_points,
         y_points,
-        bound_domain=False,
+        bound_left=False,
+        bound_right=False,
         using="sos2",
     )
 
@@ -238,10 +239,18 @@ def test_pwl_finished_start_with_disc(data):
     x_points = [1, 1, None, 2, 3, 3]
     y_points = [0, 10, None, 20, 45, 0]
     y, eqs = pwl_convexity_formulation(
-        x, x_points, y_points, bound_domain=False
+        x,
+        x_points,
+        y_points,
+        bound_left=False,
+        bound_right=False,
     )
     y2, eqs2 = pwl_interval_formulation(
-        x, x_points, y_points, bound_domain=False
+        x,
+        x_points,
+        y_points,
+        bound_left=False,
+        bound_right=False,
     )
 
 
@@ -413,5 +422,14 @@ def test_pwl_validation(data, fct):
         x,
         [2, None, 4, 10],
         [10, None, 20, 40],
-        bound_domain="yes",
+        bound_left="yes",
+    )
+
+    pytest.raises(
+        ValidationError,
+        fct,
+        x,
+        [2, None, 4, 10],
+        [10, None, 20, 40],
+        bound_right="yes",
     )
