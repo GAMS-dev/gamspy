@@ -6,7 +6,8 @@ gamspy
 ======
 
 GAMSPy comes with a command-line interface (CLI) to allow users to 
-easily install solvers, licenses and much more.
+easily install solvers, licenses and much more. Autocompletion can be 
+installed for the current shell with `--install-completion`.
 
 .. list-table::
    :widths: 20 20 20 40
@@ -24,84 +25,44 @@ easily install solvers, licenses and much more.
      - -v
      - 
      - Shows the version of GAMSPy, GAMS and gamspy_base
+   * - -\-install-completion 
+     - 
+     - 
+     - Install completion for the current shell.
+   * - -\-show-completion 
+     - 
+     - 
+     - Show completion for the current shell, to copy it or customize the installation.
 
-Example: ::
+Example
+-------
+
+Show help message::
 
     $ gamspy --help
-    usage: gamspy [-h] [-v]
-           gamspy install license <access_code> or <path/to/license/file> [--uses-port <port>]
-           gamspy uninstall license
-           gamspy install solver <solver_name> [--skip-pip-install] [--existing-solvers] [--install-all-solvers]
-           gamspy uninstall solver <solver_name> [--skip-pip-uninstall] [--uninstall-all-solvers]
-           gamspy list solvers [--all]
-           gamspy show license
-           gamspy show base
-           gamspy probe [-j <json_output_path>]
-           gamspy retrieve license <access_code> [-i <json_file_path>] [-o <output_path>]
-           gamspy run miro [--path <path_to_miro>] [--model <path_to_model>]
+    Usage: gamspy [OPTIONS] COMMAND [ARGS]...
 
     GAMSPy CLI
 
-    options:
-      -h, --help            show this help message and exit
-      -v, --version         Shows the version of GAMSPy, GAMS and gamspy_base
+    Options:
+      -h, --help     Show this message and exit.
+      -v, --version  Shows the version of GAMSPy, GAMS and gamspy_base
 
-    gamspy install license <access_code> or <path/to/license/file>:
-      Options for installing a license.
+    Commands:
+      install   To install licenses and solvers.
+      list      To list solvers.
+      probe     To probe node information for license retrieval.
+      retrieve  To retrieve a license with another node's information.
+      run       To run your model with GAMS MIRO.
+      show      To show your license and gamspy_base directory.
+      uninstall To uninstall licenses and solvers.
 
-      --uses-port USES_PORT
-                            Interprocess communication starting port.
-
-    gamspy uninstall license:
-      Command to uninstall user license.
-
-    gamspy install solver <solver_name>:
-      Options for installing solvers
-
-      --skip-pip-install, -s
-                            If you already have the solver installed, skip pip install and update gamspy installed solver list.
-
-    gamspy uninstall solver <solver_name>:
-      Options for uninstalling solvers
-
-      --skip-pip-uninstall, -u
-                            If you don't want to uninstall the package of the solver, skip uninstall and update gamspy installed solver list.
-
-    gamspy list solvers:
-      `gamspy list solvers` options
-
-      -a, --all             Shows all available solvers.
-
-    gamspy probe:
-      `gamspy probe` options
-
-      --json-out JSON_OUT, -j JSON_OUT
-                            Output path for the json file.
-
-    gamspy retrieve license <access_code>:
-      `gamspy retrieve license` options
-
-      --output OUTPUT, -o OUTPUT
-                            Output path for the license file.
-      --input INPUT, -i INPUT
-                            json file path to retrieve a license based on node information.
-
-    gamspy run miro:
-      `gamspy run miro` options
-
-      -g MODEL, --model MODEL
-                            Path to the gamspy model
-      -m {config,base,deploy}, --mode {config,base,deploy}
-                            Execution mode of MIRO
-      -p PATH, --path PATH  Path to the MIRO executable (.exe on Windows, .app on macOS or .AppImage on Linux)
-      --skip-execution      Whether to skip model execution
-
-::
+Show version information::
 
     $ gamspy --version
-    GAMSPy version: 0.14.6
-    GAMS version: 47.4.1
-    gamspy_base version: 47.4.1                              
+    GAMSPy version: 1.4.0
+    GAMS version: 48.5.0
+    gamspy_base version: 48.5.0                              
 
 List of Commands
 ----------------
