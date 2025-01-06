@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import itertools
+import os
+import threading
 import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -519,7 +521,11 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+        ctx = None
+        try:
+            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+        except KeyError:
+            ...
 
         if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(

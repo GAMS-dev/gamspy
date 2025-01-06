@@ -4,6 +4,7 @@ import inspect
 import io
 import logging
 import os
+import threading
 import uuid
 from collections.abc import Iterable
 from enum import Enum
@@ -249,9 +250,13 @@ class Model:
         else:
             self.name = self._auto_id
 
-        self.container: Container = (
-            container if container is not None else gp._ctx_manager  # type: ignore
-        )
+        if container is not None:
+            self.container = container
+        else:
+            self.container = gp._ctx_managers[
+                (os.getpid(), threading.get_native_id())
+            ]
+
         assert self.container is not None
         self._matches = matches
         self.problem, self.sense = validation.validate_model(

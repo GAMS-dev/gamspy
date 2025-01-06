@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import threading
 import uuid
 from typing import TYPE_CHECKING
 
@@ -79,7 +81,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         alias_with: Set | Alias | None = None,
     ):
-        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+        ctx = None
+        try:
+            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+        except KeyError:
+            ...
 
         if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import builtins
 import itertools
+import os
+import threading
 import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -169,7 +171,11 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+        ctx = None
+        try:
+            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+        except KeyError:
+            ...
 
         if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(

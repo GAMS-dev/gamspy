@@ -7,6 +7,7 @@ import signal
 import socket
 import subprocess
 import tempfile
+import threading
 import time
 import traceback
 import uuid
@@ -92,7 +93,8 @@ def open_connection(
         if platform.system() != "Windows":
             os.kill(process.pid, signal.SIGINT)
 
-    signal.signal(signal.SIGINT, handler)
+    if threading.current_thread() is threading.main_thread():
+        signal.signal(signal.SIGINT, handler)
 
     start = time.time()
     while True:
@@ -272,10 +274,18 @@ class Container(gt.Container):
             self._synch_with_gams(gams_to_gamspy=False)
 
     def __enter__(self):
-        gp._ctx_manager = self
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        gp._ctx_managers[(pid, tid)] = self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        gp._ctx_manager = None
+        pid = os.getpid()
+        tid = threading.get_native_id()
+
+        try:
+            del gp._ctx_managers[(pid, tid)]
+        except KeyError:
+            ...
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"

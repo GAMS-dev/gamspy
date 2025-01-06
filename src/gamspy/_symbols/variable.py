@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import builtins
 import itertools
+import os
+import threading
 import uuid
 from collections.abc import Sequence
 from enum import Enum
@@ -160,7 +162,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
-        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+        ctx = None
+        try:
+            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+        except KeyError:
+            ...
 
         if ctx is None and not isinstance(container, gp.Container):
             invalid_type = builtins.type(container)

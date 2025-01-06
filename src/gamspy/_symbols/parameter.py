@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import itertools
+import os
+import threading
 import uuid
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
@@ -127,7 +129,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        ctx = gp._ctx_manager if gp._ctx_manager is not None else None
+        ctx = None
+        try:
+            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
+        except KeyError:
+            ...
 
         if ctx is None and not isinstance(container, gp.Container):
             raise TypeError(
