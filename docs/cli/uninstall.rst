@@ -1,14 +1,35 @@
 gamspy uninstall
-================
+===============
 
-Uninstalls an existing solver or a license from the GAMSPy installation.
+Uninstalls solvers or the current license from the GAMSPy installation.
+
+Uninstall License
+---------------
+
+Uninstalls the current license.
 
 Usage
------
+~~~~~
 
 ::
 
-  gamspy uninstall solver <solver_name> [OPTIONS]  
+  gamspy uninstall license
+
+Example::
+
+  $ gamspy uninstall license
+
+Uninstall Solver
+--------------
+
+Uninstalls one or more solvers from the GAMSPy installation.
+
+Usage
+~~~~~
+
+::
+
+  gamspy uninstall solver [solver_name(s)] [OPTIONS]
 
 .. list-table::
    :widths: 20 20 20 40
@@ -18,28 +39,27 @@ Usage
      - Short
      - Default
      - Description
-   * - -\-skip-pip-uninstall 
-     - -u
-     - 
-     - Skips the pip uninstall command in case the package was manually deleted.
+   * - -\-skip-pip-install
+     - -s
+     - False
+     - If you already have the solver uninstalled, skip pip uninstall and update gamspy installed solver list.
    * - -\-uninstall-all-solvers
-     - -u
      - 
+     - False
      - Uninstalls all add-on solvers.
 
-Example: ::
+Examples
+~~~~~~~~
 
-  gamspy uninstall solver mosek
+Uninstall specific solvers::
 
-.. note::
-    Default solvers cannot be uninstalled.
+  $ gamspy uninstall solver mosek conopt
 
-Usage
------
+Uninstall all add-on solvers::
 
-::
+  $ gamspy uninstall solver --uninstall-all-solvers
 
-  gamspy uninstall license
+Skip pip uninstallation::
 
-This uninstalls a previously installed license and reinstates the GAMSPy demo license that comes with the GAMSPy installation.
+  $ gamspy uninstall solver mosek -s
 
