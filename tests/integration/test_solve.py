@@ -1233,6 +1233,13 @@ def test_validation_3():
 
 
 def test_context_manager(data):
+    with Container():
+        i = Set()
+        a = Alias(alias_with=i)
+        _ = Parameter()
+        _ = Variable()
+        _ = Equation()
+
     m, canning_plants, markets, capacities, demands, distances = data
     with m:
         i = Set(records=canning_plants)
