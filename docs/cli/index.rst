@@ -49,7 +49,7 @@ Show help message::
       -v, --version  Shows the version of GAMSPy, GAMS and gamspy_base
 
     Commands:
-      install    To install licenses and solvers.
+      install   To install licenses and solvers.
       list      To list solvers.
       probe     To probe node information for license retrieval.
       retrieve  To retrieve a license with another node's information.
