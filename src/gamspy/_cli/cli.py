@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from typing import Annotated, Union
+from typing import Optional
 
 import typer
 
@@ -39,20 +39,18 @@ def version_callback(value: bool):
         except ModuleNotFoundError:
             ...
 
-        typer.Exit()
+        raise typer.Exit()
 
 
 @app.callback()
 def callback(
-    version: Annotated[
-        Union[bool, None],
-        typer.Option(
-            "--version",
-            "-v",
-            help="Shows the version of gamspy, gamsapi, and gamspy_base.",
-            callback=version_callback,
-        ),
-    ] = None,
+    version: Optional[bool] = typer.Option(
+        None,
+        "-v",
+        "--version",
+        help="Shows the version of gamspy, gamsapi, and gamspy_base.",
+        callback=version_callback,
+    ),
 ) -> None:
     """
     GAMSPy CLI - The [bold]gamspy[/bold] command line app. 😎
@@ -65,12 +63,11 @@ def callback(
 
 @app.command(short_help="To probe node information.")
 def probe(
-    json_out: Annotated[
-        Union[str, None], 
-        typer.Option(
-            "--json-out", "-j", help="Output path for the JSON file."
-        )
-    ] = None,
+    json_out: Optional[str] = typer.Option(
+        None,
+        "--json-out", "-j",
+        help="Output path for the JSON file."
+    ),
 ):
     gamspy_base_dir = utils._get_gamspy_base_directory()
     process = subprocess.run(
