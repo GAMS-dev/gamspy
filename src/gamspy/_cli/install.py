@@ -52,7 +52,7 @@ def license(
         )
         if request.status != 200:
             raise ValidationError(
-                f"License server did not respond in an expected way. Request status: {request.status}. Please try again."
+                f"License server did not respond in an expected way. Request status: {request.status}. Reason: {request.data.decode('utf-8', errors='replace')}"
             )
 
         data = request.data.decode("utf-8", errors="replace")

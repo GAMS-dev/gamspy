@@ -6,7 +6,8 @@ gamspy
 ======
 
 GAMSPy comes with a command-line interface (CLI) to allow users to 
-easily install solvers, licenses and much more.
+easily install solvers, licenses and much more. Autocompletion can be 
+installed for the current shell with `--install-completion`.
 
 .. list-table::
    :widths: 20 20 20 40
@@ -24,6 +25,14 @@ easily install solvers, licenses and much more.
      - -v
      - 
      - Shows the version of GAMSPy, GAMS and gamspy_base
+   * - -\-install-completion 
+     - 
+     - 
+     - Install completion for the current shell.
+   * - -\-show-completion 
+     - 
+     - 
+     - Show completion for the current shell, to copy it or customize the installation.
 
 Example
 -------
@@ -51,9 +60,9 @@ Show help message::
 Show version information::
 
     $ gamspy --version
-    GAMSPy version: 0.14.6
-    GAMS version: 47.4.1
-    gamspy_base version: 47.4.1                              
+    GAMSPy version: 1.4.0
+    GAMS version: 48.5.0
+    gamspy_base version: 48.5.0                              
 
 List of Commands
 ----------------
