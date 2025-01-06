@@ -372,7 +372,7 @@ def pwl_interval_formulation(
 
         y = \\sum_{i}{(\\lambda_i * slope_i) + (b_i * offset_i) }
 
-        b_i \\in {0, 1} \\quad \\forall{i}
+        b_i \\in \\{0, 1\\} \\quad \\forall{i}
 
     The implementation handles discontinuities in the function. To represent a
     discontinuity at a specific point `x_i`, include `x_i` twice in the `x_points`
