@@ -141,22 +141,26 @@ def append_dist_info(files, gamspy_base_dir: str):
     help="[bold][yellow]Examples[/yellow][/bold]: gamspy install solver <solver_name>"
 )
 def solver(
-    solver_names: Annotated[
-        Union[List[str], None], 
-        typer.Argument(help="solver names to be installed")
-    ] = None,
-    install_all_solvers: Annotated[
-        Union[bool, None], 
-        typer.Option("--install-all-solvers", help="Installs all available add-on solvers.")
-    ] = None,
-    existing_solvers: Annotated[
-        Union[bool, None], 
-        typer.Option("--existing-solvers", help="Reinstalls previously installed add-on solvers.")
-    ] = None,
-    skip_pip_install: Annotated[
-        Union[bool, None], 
-        typer.Option("--skip-pip-install", "-s", help="If you already have the solver installed, skip pip install and update gamspy installed solver list.")
-    ] = None
+    solver_names: list[str] = typer.Argument(
+        None,
+        help="solver names to be installed"
+    ),
+    install_all_solvers: bool = typer.Option(
+        False,
+        "--install-all-solvers",
+        help="Installs all available add-on solvers."
+    ),
+    existing_solvers: bool = typer.Option(
+        False,
+        "--existing-solvers",
+        help="Reinstalls previously installed add-on solvers."
+    ),
+    skip_pip_install: bool = typer.Option(
+        False,
+        "--skip-pip-install",
+        "-s",
+        help="If you already have the solver installed, skip pip install and update gamspy installed solver list."
+    )
 ):
     try:
         import gamspy_base

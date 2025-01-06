@@ -30,18 +30,21 @@ def license():
     short_help="To uninstall solvers"
 )
 def solver(
-    solver_names: Annotated[
-        Union[List[str], None], 
-        typer.Argument(help="solver names to be uninstalled")
-    ] = None,
-    uninstall_all_solvers: Annotated[
-        Union[bool, None], 
-        typer.Option("--uninstall-all-solvers", help="Uninstalls all add-on solvers.")
-    ] = None,
-    skip_pip_uninstall: Annotated[
-        Union[bool, None], 
-        typer.Option("--skip-pip-install", "-s", help="If you already have the solver uninstalled, skip pip uninstall and update gamspy installed solver list.")
-    ] = None
+    solver_names: list[str] = typer.Argument(
+        None,
+        help="solver names to be uninstalled"
+    ),
+    uninstall_all_solvers: bool = typer.Option(
+        False,
+        "--uninstall-all-solvers",
+        help="Uninstalls all add-on solvers."
+    ),
+    skip_pip_uninstall: bool = typer.Option(
+        False,
+        "--skip-pip-install",
+        "-s",
+        help="If you already have the solver uninstalled, skip pip uninstall and update gamspy installed solver list."
+    )
 ):
     try:
         import gamspy_base
