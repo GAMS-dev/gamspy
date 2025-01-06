@@ -12,7 +12,6 @@ import time
 import numpy as np
 import pytest
 
-import gamspy as gp
 import gamspy._validation as validation
 import gamspy.math as gamspy_math
 from gamspy import (
@@ -176,7 +175,6 @@ def transport_with_ctx(f_value):
 
     m = Container()
     with m:
-        print(gp._ctx_managers)
         i = Set(
             name="i",
             records=["seattle", "san-diego"],
