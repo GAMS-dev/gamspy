@@ -8,7 +8,7 @@ Neural Network Example
    :keywords: Machine Learning, User, Guide, GAMSPy, gamspy, GAMS, gams, mathematical modeling, sparsity, performance
 
 Our goal in implementing ML-related features was to provide maximum flexibility.
-Although GAMSPy’s primary purpose is not neural network training, we wanted to 
+Although GAMSPy’s primary purpose is not neural network training, we wanted to
 demonstrate the process for those who are curious or need it for research.
 Implementing a "Mini-Batch Gradient Descent" training process would be very
 time-consuming and result in a non-introductory example. Therefore, we
@@ -18,8 +18,8 @@ stopping after one mini-batch.
 We will train a neural network to classify handwritten digits from MNIST
 dataset. For this example we will use a simple feed-forward network since it is
 easier to implement and demonstrate. Our neural network has flattened images
-in the input layer, resulting in a 28x28 = 784 dimension. We will use a single 
-hidden layer with 20 neurons, and the output layer will have 10 neurons 
+in the input layer, resulting in a 28x28 = 784 dimension. We will use a single
+hidden layer with 20 neurons, and the output layer will have 10 neurons
 corresponding to 10 digits.
 
 We start with the imports:
@@ -442,11 +442,8 @@ However, guessing a bound is not trivial.
 
 
 We demonstrated the flexibility of GAMSPy by training a simple neural
-network. If your primary goal is to train a neural network, using frameworks
-like `PyTorch <https://pytorch.org/>`_ or `TensorFlow <https://www.tensorflow.org/>`_
-would be easier and faster. However, for research purposes and curious users,
-it is interesting to show how black-box solvers can handle neural network
-training.
+network. For research purposes and curious users, it is interesting to
+see how black-box solvers can handle neural network training.
 
 Here are some points that can help with your research:
 
