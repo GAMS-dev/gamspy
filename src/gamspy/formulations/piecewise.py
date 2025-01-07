@@ -241,7 +241,7 @@ def _indicator(
                 "indicator_var and expr must have the same domain"
             )
 
-    if expr.data in "=e=":
+    if expr.data == "=e=":
         # sos1(bin_var, lhs - rhs) might be better
         eqs1 = _indicator(
             indicator_var, indicator_val, expr.left <= expr.right
