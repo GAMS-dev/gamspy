@@ -71,8 +71,8 @@ With using either formulation, we can do as following:
          x = gp.Variable(m)
          y, eqs = gp.formulations.pwl_interval_formulation(
              x,
-             [0, 1, 3, 3, 4],
-             [2, 1, 1, 2, 3],
+             x_points=[0, 1, 3, 3, 4],
+             y_points=[2, 1, 1, 2, 3],
          )
 
    .. tab:: Convexity formulation
@@ -84,13 +84,13 @@ With using either formulation, we can do as following:
          x = gp.Variable(m)
          y, eqs = gp.formulations.pwl_convexity_formulation(
              x,
-             [0, 1, 3, 3, 4],
-             [2, 1, 1, 2, 3],
+             x_points=[0, 1, 3, 3, 4],
+             x_points=[2, 1, 1, 2, 3],
          )
 
 **Discontinuities**
 
-In the x points (the first array), point 3 is repeated twice. It is because
+In the `x_points`, point 3 is repeated twice. It is because
 when you have discontinuities in your piecewise linear function you can
 represent them by repeating the x coordinate with a new y value.
 

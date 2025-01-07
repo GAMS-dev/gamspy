@@ -119,14 +119,14 @@ def pwl_suite(fct, name):
                 bound_left=False,
                 bound_right=False,
             )
-            x.fx[...] = -5
+            x.fx = -5
             model = gp.Model(
                 m, equations=eqs, objective=y, sense="min", problem="mip"
             )
             model.solve()
             assert math.isclose(y.toDense(), -3), "Case 5 failed !"
             print("Case 5 passed !")
-            x.fx[...] = 100
+            x.fx = 100
             model.solve()
             assert math.isclose(y.toDense(), 99), "Case 6 failed !"
             print("Case 6 passed !")
@@ -148,7 +148,7 @@ def pwl_suite(fct, name):
             model.solve()
             assert math.isclose(y.toDense(), 0), "Case 7 failed !"
             print("Case 7 passed !")
-            x.fx[...] = 100
+            x.fx = 100
             model.solve()
             assert math.isclose(y.toDense(), 0), "Case 8 failed !"
             print("Case 8 passed !")
@@ -163,15 +163,15 @@ def pwl_suite(fct, name):
                 bound_left=False,
                 bound_right=False,
             )
-            x.lo[...] = "-inf"
-            x.up[...] = "inf"
+            x.lo = gp.SpecialValues.NEGINF
+            x.up = gp.SpecialValues.POSINF
             model = gp.Model(
                 m, equations=eqs, objective=y, sense="min", problem="mip"
             )
             model.solve()
             assert math.isclose(y.toDense(), -5), "Case 9 failed !"
             print("Case 9 passed !")
-            x.fx[...] = -100
+            x.fx = -100
             model.solve()
             assert math.isclose(y.toDense(), -5), "Case 10 failed !"
             print("Case 10 passed !")
@@ -181,14 +181,14 @@ def pwl_suite(fct, name):
         y, eqs = fct(
             x, x_points, y_points, bound_left=False, bound_right=False
         )
-        x.fx[...] = -5
+        x.fx = -5
         model = gp.Model(
             m, equations=eqs, objective=y, sense="min", problem="mip"
         )
         model.solve()
         assert math.isclose(y.toDense(), -3), "Case 5 failed !"
         print("Case 5 passed !")
-        x.fx[...] = 100
+        x.fx = 100
         model.solve()
         assert math.isclose(y.toDense(), 99), "Case 6 failed !"
         print("Case 6 passed !")
@@ -205,7 +205,7 @@ def pwl_suite(fct, name):
         model.solve()
         assert math.isclose(y.toDense(), 0), "Case 7 failed !"
         print("Case 7 passed !")
-        x.fx[...] = 100
+        x.fx = 100
         model.solve()
         assert math.isclose(y.toDense(), 0), "Case 8 failed !"
         print("Case 8 passed !")
@@ -215,15 +215,15 @@ def pwl_suite(fct, name):
         y, eqs = fct(
             x, x_points, y_points, bound_left=False, bound_right=False
         )
-        x.lo[...] = "-inf"
-        x.up[...] = "inf"
+        x.lo = gp.SpecialValues.NEGINF
+        x.up = gp.SpecialValues.POSINF
         model = gp.Model(
             m, equations=eqs, objective=y, sense="min", problem="mip"
         )
         model.solve()
         assert math.isclose(y.toDense(), -5), "Case 9 failed !"
         print("Case 9 passed !")
-        x.fx[...] = -100
+        x.fx = -100
         model.solve()
         assert math.isclose(y.toDense(), -5), "Case 10 failed !"
         print("Case 10 passed !")
@@ -232,8 +232,8 @@ def pwl_suite(fct, name):
     x_points = [1, 4, 4, 10]
     y_points = [1, 4, 8, 25]
     y, eqs = fct(x, x_points, y_points)
-    x.fx[...] = 4
-    y.fx[...] = 6  # y can be either 4 or 8 but not their convex combination
+    x.fx = 4
+    y.fx = 6  # y can be either 4 or 8 but not their convex combination
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
     assert (
@@ -245,7 +245,7 @@ def pwl_suite(fct, name):
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 4, None, 8, 25]
     y, eqs = fct(x, x_points, y_points)
-    x.fx[...] = 5  # should be IntegerInfeasible since 5 \in [4, 6]
+    x.fx = 5  # should be IntegerInfeasible since 5 \in [4, 6]
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
     assert (
@@ -257,8 +257,8 @@ def pwl_suite(fct, name):
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 4, None, 30, 25]
     y, eqs = fct(x, x_points, y_points)
-    x.lo[...] = "-inf"
-    x.up[...] = "inf"
+    x.lo = gp.SpecialValues.NEGINF
+    x.up = gp.SpecialValues.POSINF
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
     assert x.toDense() == 6, "Case 13 failed !"
@@ -269,8 +269,8 @@ def pwl_suite(fct, name):
     x_points = [1, 4, None, 6, 10]
     y_points = [1, 45, None, 30, 25]
     y, eqs = fct(x, x_points, y_points)
-    x.lo[...] = "-inf"
-    x.up[...] = "inf"
+    x.lo = gp.SpecialValues.NEGINF
+    x.up = gp.SpecialValues.POSINF
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
     assert x.toDense() == 4, "Case 14 failed !"
@@ -314,7 +314,7 @@ def pwl_suite(fct, name):
                 bound_left=False,
                 bound_right=False,
             )
-            x.fx[...] = -5
+            x.fx = -5
             model = gp.Model(
                 m, equations=eqs, objective=y, sense="min", problem="mip"
             )
@@ -328,7 +328,7 @@ def pwl_suite(fct, name):
         y, eqs = fct(
             x, x_points, y_points, bound_left=False, bound_right=False
         )
-        x.fx[...] = -5
+        x.fx = -5
         model = gp.Model(
             m, equations=eqs, objective=y, sense="min", problem="mip"
         )
@@ -346,14 +346,14 @@ def pwl_suite(fct, name):
         bound_left=False,
         bound_right=True,
     )
-    x.fx[...] = -5
+    x.fx = -5
     model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
     model.solve()
 
     assert y.toDense() == -3, "Case 16 failed !"
     print("Case 16 passed !")
 
-    x.fx[...] = 5  # bounded from right
+    x.fx = 5  # bounded from right
     res = model.solve()
     assert (
         res["Model Status"].item() == "IntegerInfeasible"
@@ -367,7 +367,7 @@ def pwl_suite(fct, name):
         bound_left=True,
         bound_right=False,
     )
-    x.fx[...] = -5
+    x.fx = -5
     model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
     res = model.solve()
     assert (
@@ -375,7 +375,7 @@ def pwl_suite(fct, name):
     ), "Case 18 failed !"
     print("Case 18 passed !")
 
-    x.fx[...] = 5
+    x.fx = 5
     model.solve()
 
     assert y.toDense() == 4, "Case 19 failed !"
@@ -398,14 +398,14 @@ def indicator_suite():
         sense="max",
         problem="mip",
     )
-    b.fx[...] = 1
+    b.fx = 1
     model.solve()
     assert x.toDense() == 50, "Case 1 failed !"
     print("Case 1 passed !")
 
     eqs2 = piecewise._indicator(b, 0, x <= 500)
-    b.lo[...] = 0
-    b.up[...] = 1
+    b.lo = 0
+    b.up = 1
 
     model = gp.Model(
         m,
@@ -429,8 +429,8 @@ def indicator_suite():
         problem="mip",
     )
     # b = 0 does not mean x cannot be less than 50
-    b.fx[...] = 0
-    x.fx[...] = 20
+    b.fx = 0
+    x.fx = 20
     model.solve()
     assert x.toDense() == 20, "Case 3 failed !"
     print("Case 3 passed !")
@@ -443,9 +443,9 @@ def indicator_suite():
         sense="min",
         problem="mip",
     )
-    b.fx[...] = 1
-    x.lo[...] = "-inf"
-    x.up[...] = "inf"
+    b.fx = 1
+    x.lo = gp.SpecialValues.NEGINF
+    x.up = gp.SpecialValues.POSINF
     model.solve()
     assert x.toDense() == 120, "Case 4 failed !"
     print("Case 4 passed !")
@@ -458,9 +458,9 @@ def indicator_suite():
         sense="min",
         problem="mip",
     )
-    b.fx[...] = 1
-    x.lo[...] = "-inf"
-    x.up[...] = "inf"
+    b.fx = 1
+    x.lo = gp.SpecialValues.NEGINF
+    x.up = gp.SpecialValues.POSINF
     model.solve()
     assert x.toDense() == 99, "Case 5 failed !"
     print("Case 5 passed !")
