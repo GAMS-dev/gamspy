@@ -5,6 +5,7 @@ GAMSPy 1.4.1
 ------------
 - General
   - Fix implicit parameter validation bug.
+  - Allow propagating bounds to the output variable in `flatten_dims` method.
   - Add piecewise linear function formulations.
   - Migrate GAMSPy CLI to Typer.
 - Testing
