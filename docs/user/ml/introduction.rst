@@ -30,7 +30,7 @@ is much easier than:
 
 .. code-block:: python
 
-   calc_mm_3[m, j] = z3[m, j] == Sum(k,  a2[m, i] @ w2[i, j])
+   calc_mm_3[m, j] = z3[m, j] == Sum(i,  a2[m, i] @ w2[i, j])
 
 In this context, ``m`` represents the batch dimension, ``i`` denotes the feature dimension of layer 2,
 and ``j`` represents the feature dimension of layer 3.
