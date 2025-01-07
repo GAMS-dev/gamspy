@@ -250,10 +250,23 @@ class Linear:
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
             x_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
-            if x_bounds.records is not None:
-                x_lb, x_ub = x_bounds.toDense()
-            else:
-                x_lb, x_ub = np.zeros(x_bounds.shape)
+            # If the bounds are all zeros (None in GAMSPy parameters);
+            # we skip matrix multiplication as it will result in zero values
+            if x_bounds.records is None:
+                if self.use_bias:
+                    out_bounds_array = np.zeros(out.shape) + self.bias_array
+                    out_bounds = gp.Parameter(
+                        self.container,
+                        out_bounds_name,
+                        domain=dim(out.shape),
+                        records=out_bounds_array,
+                    )
+                    out.lo[...] = out_bounds
+                    out.up[...] = out_bounds
+
+                return out, [set_out]
+
+            x_lb, x_ub = x_bounds.toDense()
 
             # To deal with infinity values in the input bounds, we convert them into complex numbers
             # where if the value is -inf, we convert it to 0 - 1j
