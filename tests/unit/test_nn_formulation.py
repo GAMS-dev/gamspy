@@ -1811,6 +1811,19 @@ def test_flatten_par(data):
     assert eqs == []  # for parameters no equation needed
 
 
+def test_flatten_par_with_no_records(data):
+    m, *_ = data
+
+    par = gp.Parameter(m, "par", domain=dim([10, 5]))
+
+    # 10x5 -> 50
+    par_flattened, eqs = flatten_dims(par, [0, 1])
+
+    assert par_flattened.toDense() is None
+    assert par_flattened.shape == (50,)
+    assert eqs == []  # for parameters no equation needed
+
+
 def test_flatten_var_copied_domain(data):
     m, w1, b1, inp, par_input, ii = data
 
