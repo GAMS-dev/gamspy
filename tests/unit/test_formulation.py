@@ -85,6 +85,9 @@ def test_pwl_indicator():
     x3 = gp.Variable(m, name="x3", domain=[k])
     x4 = gp.Variable(m, name="x4", domain=[i, k])
 
+    b3 = gp.Variable(m, name="b3", type="binary")
+    x5 = gp.Variable(m, name="x5")
+
     pytest.raises(
         ValidationError, piecewise._indicator, "indicator_var", 0, x <= 10
     )
@@ -102,6 +105,9 @@ def test_pwl_indicator():
     eqs3 = piecewise._indicator(b, 0, x == 10)
     assert len(eqs1) == len(eqs2)
     assert len(eqs3) == len(eqs1) * 2
+
+    eqs4 = piecewise._indicator(b3, 1, x5 >= 10)
+    assert len(eqs4) == len(eqs1)
 
     var_count = get_var_count_by_type(m)
     assert "sos1" in var_count

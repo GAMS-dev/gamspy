@@ -443,10 +443,15 @@ def pwl_interval_formulation(
     equations = []
 
     intervals = points_to_intervals(x_points, y_points, combined_indices)
-    lowerbounds_input = [(str(i), k[0]) for i, k in enumerate(intervals)]
-    upperbounds_input = [(str(i), k[1]) for i, k in enumerate(intervals)]
-    slopes_input = [(str(i), k[2]) for i, k in enumerate(intervals)]
-    offsets_input = [(str(i), k[3]) for i, k in enumerate(intervals)]
+    lowerbounds_input = []
+    upperbounds_input = []
+    slopes_input = []
+    offsets_input = []
+    for i, (lb, ub, slope, offset) in enumerate(intervals):
+        lowerbounds_input.append((str(i), lb))
+        upperbounds_input.append((str(i), ub))
+        slopes_input.append((str(i), slope))
+        offsets_input.append((str(i), offset))
 
     input_domain = input_x.domain
     m = input_x.container
