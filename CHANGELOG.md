@@ -6,8 +6,11 @@ GAMSPy 1.4.1
 - General
   - Fix implicit parameter validation bug.
   - Fix the bugs in dynamic set assignments.
+  - Migrate GAMSPy CLI to Typer.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
+- Documentation
+  - Install dependencies in the first cell of the example transportation notebook.
 
 GAMSPy 1.4.0
 ------------
@@ -25,6 +28,7 @@ GAMSPy 1.4.0
   - Remove non-negative variable type from the docs.
   - Add plausible.js for analytics.
   - Minor update in embedding nn documentation.
+  - Add descriptions and example code to formulations documentation.
 
 
 GAMSPy 1.3.1
