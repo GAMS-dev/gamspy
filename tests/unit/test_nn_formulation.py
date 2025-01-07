@@ -2393,3 +2393,18 @@ def test_linear_propagate_zero_bounds(data):
     assert np.allclose(
         np.array(out1.records.lower).reshape(out1.shape), expected_bounds
     )
+
+    lin2 = Linear(m, 4, 3, bias=True)
+    b1 = np.random.rand(3)
+    lin2.load_weights(w1, b1)
+
+    out2, _ = lin2(x)
+
+    expected_bounds = np.stack((b1, b1))
+
+    assert np.allclose(
+        np.array(out2.records.upper).reshape(out1.shape), expected_bounds
+    )
+    assert np.allclose(
+        np.array(out2.records.lower).reshape(out1.shape), expected_bounds
+    )
