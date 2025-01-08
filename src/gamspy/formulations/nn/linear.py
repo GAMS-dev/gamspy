@@ -205,7 +205,7 @@ class Linear:
                 Otherwise, the output variable is unbounded.
         """
         if not isinstance(propagate_bounds, bool):
-            raise TypeError("propagate_bounds should be a boolean.")
+            raise ValidationError("propagate_bounds should be a boolean.")
 
         if self.weight is None:
             raise ValidationError(
@@ -249,6 +249,25 @@ class Linear:
             )
             x_bounds[("0",) + tuple(input.domain)] = input.lo[...]
             x_bounds[("1",) + tuple(input.domain)] = input.up[...]
+
+            # If the bounds are all zeros (None in GAMSPy parameters);
+            # we skip matrix multiplication as it will result in zero values
+            if x_bounds.records is None:
+                out_bounds_array = np.zeros(out.shape)
+
+                if self.use_bias:
+                    out_bounds_array = out_bounds_array + self.bias_array
+
+                out_bounds = gp.Parameter(
+                    self.container,
+                    out_bounds_name,
+                    domain=dim(out.shape),
+                    records=out_bounds_array,
+                )
+                out.lo[...] = out_bounds
+                out.up[...] = out_bounds
+
+                return out, [set_out]
 
             x_lb, x_ub = x_bounds.toDense()
 

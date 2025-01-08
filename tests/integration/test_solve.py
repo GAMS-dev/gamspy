@@ -12,6 +12,7 @@ import time
 import numpy as np
 import pytest
 
+import gamspy as gp
 import gamspy._validation as validation
 import gamspy.math as gamspy_math
 from gamspy import (
@@ -156,7 +157,6 @@ def transport(f_value):
     transport.solve()
 
     m.close()
-
     return transport.objective_value
 
 
@@ -243,9 +243,8 @@ def transport_with_ctx(f_value):
         )
         transport.solve()
 
-        m.close()
-
-        return transport.objective_value
+    m.close()
+    return transport.objective_value
 
 
 def transport2(f_value):
@@ -1539,6 +1538,8 @@ def test_multiprocessing_with_ctx():
         ):
             assert math.isclose(expected, objective)
 
+    assert gp._ctx_managers == {}
+
 
 def test_threading_with_ctx():
     f_values = [90, 120, 150, 180]
@@ -1548,6 +1549,8 @@ def test_threading_with_ctx():
             expected_values, executor.map(transport_with_ctx, f_values)
         ):
             assert math.isclose(expected, objective)
+
+    assert gp._ctx_managers == {}
 
 
 def test_selective_loading(data):
