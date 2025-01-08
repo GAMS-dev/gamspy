@@ -4,6 +4,7 @@ import inspect
 import io
 import logging
 import os
+import threading
 import uuid
 from collections.abc import Iterable
 from enum import Enum
@@ -231,7 +232,7 @@ class Model:
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
@@ -249,7 +250,14 @@ class Model:
         else:
             self.name = self._auto_id
 
-        self.container = container
+        if container is not None:
+            self.container = container
+        else:
+            self.container = gp._ctx_managers[
+                (os.getpid(), threading.get_native_id())
+            ]
+
+        assert self.container is not None
         self._matches = matches
         self.problem, self.sense = validation.validate_model(
             equations, problem, sense
@@ -275,8 +283,8 @@ class Model:
         if not self.equations and not self._matches:
             raise ValidationError("Model requires at least one equation.")
 
-        self._external_module_file = None
-        self._external_module = None
+        self._external_module_file: str | None = None
+        self._external_module: str | None = None
 
         if external_module is not None:
             self.external_module = external_module

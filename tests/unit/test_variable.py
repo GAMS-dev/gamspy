@@ -51,7 +51,7 @@ def test_variable_creation(data):
     pytest.raises(TypeError, Variable, m, 5)
 
     # no container
-    pytest.raises(TypeError, Variable)
+    pytest.raises(ValidationError, Variable)
 
     # non-container type container
     pytest.raises(TypeError, Variable, 5, "j")

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import builtins
 import itertools
+import os
+import threading
 import uuid
 from collections.abc import Sequence
 from enum import Enum
@@ -145,7 +147,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str = "free",
         domain: list[Set | Alias | str]
@@ -160,7 +162,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
-        if not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             invalid_type = builtins.type(container)
             raise TypeError(
                 f"Container must of type `Container` but found {invalid_type}"
@@ -174,6 +176,11 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                     f"Name must of type `str` but found {builtins.type(name)}"
                 )
             try:
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
                 symbol = container[name]
                 if isinstance(symbol, cls):
                     return symbol
@@ -187,7 +194,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str = "free",
         domain: list[Set | Alias | str]
@@ -265,6 +272,17 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             self.container._options.miro_protect = previous_state
 
         else:
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError(
+                        "Variable requires a container."
+                    ) from e
+            assert container is not None
+
             type = cast_type(type)
 
             if name is not None:
