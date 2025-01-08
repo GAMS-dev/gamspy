@@ -81,7 +81,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         alias_with: Set | Alias | None = None,
     ):
-        if container and not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"

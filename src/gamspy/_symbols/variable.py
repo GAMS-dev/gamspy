@@ -162,7 +162,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
-        if container and not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             invalid_type = builtins.type(container)
             raise TypeError(
                 f"Container must of type `Container` but found {invalid_type}"

@@ -72,7 +72,7 @@ class UniverseAlias(gt.UniverseAlias):
     def __new__(
         cls, container: Container | None = None, name: str = "universe"
     ):
-        if container and not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
