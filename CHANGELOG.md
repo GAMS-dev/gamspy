@@ -10,6 +10,7 @@ GAMSPy 1.4.1
   - Add piecewise linear function formulations.
   - Migrate GAMSPy CLI to Typer.
   - Threads can now create a container since we register the signal only to the main thread.
+  - Fix solver options bug in frozen solve.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
   - Add tests for piecewise linear functions.

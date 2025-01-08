@@ -282,8 +282,17 @@ def test_validations(data):
     assert os.path.exists("gams.gms")
 
     # Test solver options
-    transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
-    assert os.path.exists(os.path.join(m.working_directory, "conopt.opt"))
+    with open("_out.txt", "w") as file:
+        transport.solve(
+            solver="conopt", output=file, solver_options={"rtmaxv": "1.e12"}
+        )
+
+    with open("_out.txt") as file:
+        assert ">>  rtmaxv 1.e12" in file.read()
+
+    options_path = os.path.join(m.working_directory, "conopt.opt")
+    assert os.path.exists(options_path)
+    os.remove(options_path)
 
 
 def test_modifiable_in_condition(data):
