@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import threading
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -66,8 +68,10 @@ class UniverseAlias(gt.UniverseAlias):
 
         return obj
 
-    def __new__(cls, container: Container, name: str = "universe"):
-        if not isinstance(container, gp.Container):
+    def __new__(
+        cls, container: Container | None = None, name: str = "universe"
+    ):
+        if container and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
@@ -77,7 +81,12 @@ class UniverseAlias(gt.UniverseAlias):
             raise TypeError(f"Name must of type `str` but found {type(name)}")
 
         try:
-            symbol = container[name]
+            if not container:
+                container = gp._ctx_managers[
+                    (os.getpid(), threading.get_native_id())
+                ]
+
+                symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
 
@@ -88,9 +97,15 @@ class UniverseAlias(gt.UniverseAlias):
         except KeyError:
             return object.__new__(cls)
 
-    def __init__(self, container: Container, name: str = "universe"):
+    def __init__(
+        self, container: Container | None = None, name: str = "universe"
+    ):
         # check if the name is a reserved word
         name = validation.validate_name(name)
+        if not container:
+            container = gp._ctx_managers[
+                (os.getpid(), threading.get_native_id())
+            ]
 
         super().__init__(container, name)
 

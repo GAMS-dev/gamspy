@@ -521,31 +521,27 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        ctx = None
-        try:
-            ctx = gp._ctx_managers[(os.getpid(), threading.get_native_id())]
-        except KeyError:
-            ...
-
-        if ctx is None and not isinstance(container, gp.Container):
+        if container and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
             )
 
         if name is None:
-            obj = object.__new__(cls)
-
-            if container is None:
-                obj._ctx = ctx
-            return obj
+            return object.__new__(cls)
         else:
             if not isinstance(name, str):
                 raise TypeError(
                     f"Name must of type `str` but found {type(name)}"
                 )
             try:
-                symbol = ctx[name] if ctx is not None else container[name]  # type: ignore
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
+                symbol = container[name]
+
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -554,11 +550,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                     " because it is not a Set object)"
                 )
             except KeyError:
-                obj = object.__new__(cls)
-
-                if container is None:
-                    obj._ctx = ctx
-                return obj
+                return object.__new__(cls)
 
     def __init__(
         self,
@@ -635,8 +627,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._options.miro_protect = previous_state
 
         else:
-            if hasattr(self, "_ctx"):
-                container = self._ctx
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError("Set requires a container.") from e
             assert container is not None
 
             self.where = condition.Condition(self)
