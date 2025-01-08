@@ -59,7 +59,7 @@ def test_equation_creation(data):
     pytest.raises(TypeError, Equation, m, 5)
 
     # no container
-    pytest.raises(TypeError, Equation)
+    pytest.raises(ValidationError, Equation)
 
     # non-container type container
     pytest.raises(TypeError, Equation, 5, "j")
