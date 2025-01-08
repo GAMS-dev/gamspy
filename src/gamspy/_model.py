@@ -1039,6 +1039,9 @@ class Model:
 
         """
         self._is_frozen = True
+        if options is None:
+            options = Options()
+
         self.instance = ModelInstance(
             self.container, self, modifiables, options
         )
@@ -1129,13 +1132,9 @@ class Model:
             options._frame = frame
 
         if self._is_frozen:
-            options._set_solver_options(
-                working_directory=self.container.working_directory,
-                solver=solver,
-                problem=self.problem,
-                solver_options=solver_options,
+            self.instance.solve(
+                solver, model_instance_options, solver_options, output
             )
-            self.instance.solve(solver, model_instance_options, output)
             return None
 
         self.container._add_statement(self.getDeclaration())

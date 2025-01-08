@@ -81,7 +81,7 @@ class ModelInstance:
         container: Container,
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
-        freeze_options: Options | None = None,
+        freeze_options: Options,
     ):
         self.container = container
         self.job_name = container._job
@@ -106,10 +106,7 @@ class ModelInstance:
             container.system_directory,
             debug=self._debugging_level,
         )
-        self.checkpoint = GamsCheckpoint(
-            self.workspace,
-            self.save_file,
-        )
+        self.checkpoint = GamsCheckpoint(self.workspace, self.save_file)
         self.instance = self.checkpoint.add_modelinstance()
         self.instantiate(model, freeze_options)
 
@@ -143,7 +140,7 @@ class ModelInstance:
 
         self.container._send_job(self.job_name, self.pf_file)
 
-    def instantiate(self, model: Model, options: Options | None = None):
+    def instantiate(self, model: Model, options: Options):
         modifiers = self._create_modifiers()
 
         solve_string = f"{model.name} using {model.problem}"
@@ -161,10 +158,13 @@ class ModelInstance:
         self,
         solver: str | None,
         given_options: ModelInstanceOptions | None = None,
+        solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         # get options from dict
-        options, update_type = self._prepare_options(solver, given_options)
+        options, update_type = self._prepare_options(
+            solver, given_options, solver_options
+        )
 
         # update sync_db
         self.container.write(self.instance.sync_db._gmd, eps_to_zero=False)
@@ -253,13 +253,8 @@ class ModelInstance:
 
         return will_be_modified
 
-    def _prepare_gams_options(
-        self, given_options: Options | None
-    ) -> GamsOptions:
+    def _prepare_gams_options(self, given_options: Options) -> GamsOptions:
         options = GamsOptions(self.workspace)
-        if given_options is None:
-            return options
-
         options_dict = given_options._get_gams_compatible_options()
 
         for key, value in options_dict.items():
@@ -271,12 +266,25 @@ class ModelInstance:
         self,
         solver: str | None,
         given_options: ModelInstanceOptions | None,
+        solver_options: dict | None,
     ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
-        options = GamsModelInstanceOpt()
+        opt_file = 1 if solver_options else -1
+        options = GamsModelInstanceOpt(opt_file=opt_file)
 
         if solver is not None:
             options.solver = solver
+
+            if solver_options is not None:
+                solver_options_file_name = os.path.join(
+                    self.container.working_directory, f"{solver.lower()}.opt"
+                )
+
+                with open(
+                    solver_options_file_name, "w", encoding="utf-8"
+                ) as solver_file:
+                    for key, value in solver_options.items():
+                        solver_file.write(f"{key} {value}\n")
 
         if given_options is not None:
             for key, value in given_options.items():
