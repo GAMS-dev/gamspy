@@ -10,6 +10,7 @@ from gams.core.gdx import GMS_DT_ALIAS
 import gamspy as gp
 import gamspy._algebra.condition as condition
 import gamspy._validation as validation
+from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container
@@ -86,7 +87,7 @@ class UniverseAlias(gt.UniverseAlias):
                     (os.getpid(), threading.get_native_id())
                 ]
 
-                symbol = container[name]
+            symbol = container[name]
             if isinstance(symbol, cls):
                 return symbol
 
@@ -102,10 +103,15 @@ class UniverseAlias(gt.UniverseAlias):
     ):
         # check if the name is a reserved word
         name = validation.validate_name(name)
-        if not container:
-            container = gp._ctx_managers[
-                (os.getpid(), threading.get_native_id())
-            ]
+        if container is None:
+            try:
+                container = gp._ctx_managers[
+                    (os.getpid(), threading.get_native_id())
+                ]
+            except KeyError as e:
+                raise ValidationError(
+                    "UniverseAlias requires a container."
+                ) from e
 
         super().__init__(container, name)
 
