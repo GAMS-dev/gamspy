@@ -140,7 +140,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError("Set requires a container.") from e
+                    raise ValidationError("Alias requires a container.") from e
             assert container is not None
 
             if name is not None:

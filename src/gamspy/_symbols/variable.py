@@ -278,7 +278,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError("Set requires a container.") from e
+                    raise ValidationError(
+                        "Variable requires a container."
+                    ) from e
             assert container is not None
 
             type = cast_type(type)

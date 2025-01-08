@@ -241,7 +241,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                         (os.getpid(), threading.get_native_id())
                     ]
                 except KeyError as e:
-                    raise ValidationError("Set requires a container.") from e
+                    raise ValidationError(
+                        "Parameter requires a container."
+                    ) from e
             assert container is not None
 
             if name is not None:
