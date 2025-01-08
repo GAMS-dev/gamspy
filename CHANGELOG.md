@@ -8,6 +8,7 @@ GAMSPy 1.4.1
   - Allow propagating bounds to the output variable in `flatten_dims` method.
   - Add piecewise linear function formulations.
   - Migrate GAMSPy CLI to Typer.
+  - Fix solver options bug in frozen solve.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
   - Add tests for piecewise linear functions.
