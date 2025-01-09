@@ -467,8 +467,12 @@ def indicator_suite():
     m.close()
 
 
-if __name__ == "__main__":
+def main():
     print("Piecewise linear function test model")
     pwl_suite(piecewise.pwl_convexity_formulation, "convexity")
     pwl_suite(piecewise.pwl_interval_formulation, "interval")
     indicator_suite()
+
+
+if __name__ == "__main__":
+    main()
