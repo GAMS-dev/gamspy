@@ -1,7 +1,7 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 1.4.1
+GAMSPy 1.5.0
 ------------
 - General
   - Fix implicit parameter validation bug.
@@ -12,6 +12,7 @@ GAMSPy 1.4.1
   - Threads can now create a container since we register the signal only to the main thread.
   - Fix solver options bug in frozen solve.
   - Synchronize after read.
+  - Upgrade gamspy_base and gamsapi dependencies.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
   - Add tests for piecewise linear functions.
