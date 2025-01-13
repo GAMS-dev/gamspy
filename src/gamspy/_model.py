@@ -1020,32 +1020,6 @@ class Model:
         modifiables: list[Parameter | ImplicitParameter],
         options: Options | None = None,
     ) -> None:
-        """
-        Freezes all symbols except modifiable symbols.
-
-        Parameters
-        ----------
-        modifiables : List[Parameter | ImplicitParameter]
-        freeze_options : dict, optional
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> a = gp.Parameter(m, name="a", records=10)
-        >>> x = gp.Variable(m, name="x")
-        >>> e = gp.Equation(m, name="e", definition= x <= a)
-        >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="max", objective=x)
-        >>> solved = my_model.solve()
-        >>> float(x.toValue())
-        10.0
-        >>> my_model.freeze(modifiables=[a])
-        >>> a.setRecords(35)
-        >>> solved = my_model.solve()
-        >>> float(x.toValue())
-        35.0
-
-        """
         self._is_frozen = True
         if options is None:
             options = Options()
