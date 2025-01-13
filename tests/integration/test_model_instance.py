@@ -7,6 +7,7 @@ import platform
 import subprocess
 import sys
 
+import gamspy_base
 import pandas as pd
 import pytest
 from gams import GamsExceptionExecution
@@ -40,6 +41,8 @@ except Exception:
 
 @pytest.fixture
 def data():
+    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
+
     # Arrange
     m = Container(debugging_level="keep")
     canning_plants = ["seattle", "san-diego"]
@@ -63,6 +66,8 @@ def data():
             "install",
             "license",
             os.environ["MODEL_INSTANCE_LICENSE"],
+            "-o",
+            ci_license_path,
         ],
         check=True,
         capture_output=True,
@@ -84,6 +89,8 @@ def data():
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
+            "-o",
+            ci_license_path,
         ],
         check=True,
         capture_output=True,
@@ -157,13 +164,7 @@ def test_parameter_change(data):
         201.21750000000003,
     ]
 
-    with pytest.raises(GamsExceptionExecution):
-        transport.freeze(modifiables=[bmult])
-
-    with open(os.path.join(m.working_directory, "_gams_py_gjo0.lst")) as file:
-        print(file.read())
-
-    pytest.fail()
+    transport.freeze(modifiables=[bmult])
 
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
@@ -637,6 +638,7 @@ def test_modifiable_with_domain(data):
     reason="Darwin runners are not dockerized yet.",
 )
 def test_license():
+    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
     subprocess.run(
         [
             sys.executable,
@@ -644,7 +646,10 @@ def test_license():
             "gamspy",
             "uninstall",
             "license",
-        ]
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
     m = Container()
     i = Set(m, "i", records=range(5000))
@@ -670,7 +675,12 @@ def test_license():
             "install",
             "license",
             os.environ["MODEL_INSTANCE_LICENSE"],
-        ]
+            "-o",
+            ci_license_path,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
 
     model.freeze(modifiables=[p2])
@@ -685,5 +695,10 @@ def test_license():
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
-        ]
+            "-o",
+            ci_license_path,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
