@@ -3,9 +3,13 @@ from __future__ import annotations
 import glob
 import math
 import os
+import platform
+import subprocess
+import sys
 
 import pandas as pd
 import pytest
+from gams import GamsExceptionExecution
 
 from gamspy import (
     Container,
@@ -18,12 +22,20 @@ from gamspy import (
     Product,
     Sense,
     Set,
+    SolveStatus,
     Sum,
     Variable,
 )
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.integration
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(os.getcwd() + os.sep + ".env")
+except Exception:
+    pass
 
 
 @pytest.fixture
@@ -556,4 +568,61 @@ def test_modifiable_with_domain(data):
     mymodel.solve()
     assert math.isclose(
         mymodel.objective_value, 32.36124699832342, rel_tol=1e-6
+    )
+
+
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
+def test_license():
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "uninstall",
+            "license",
+        ]
+    )
+    m = Container()
+    i = Set(m, "i", records=range(5000))
+    p = Parameter(m, "p", domain=i)
+    p2 = Parameter(m, "p2", records=5)
+    p.generateRecords()
+    v1 = Variable(m, "v1", domain=i)
+    z = Variable(m, "z")
+    e1 = Equation(m, "e1", domain=i)
+
+    e1[i] = p2 * v1[i] * p[i] >= z
+    model = Model(
+        m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
+    )
+    with pytest.raises(GamsExceptionExecution):
+        model.freeze(modifiables=[p2])
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["MODEL_INSTANCE_LICENSE"],
+        ]
+    )
+
+    model.freeze(modifiables=[p2])
+    model.solve()
+    assert model.solve_status == SolveStatus.NormalCompletion
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+        ]
     )

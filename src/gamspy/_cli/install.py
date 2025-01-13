@@ -57,7 +57,7 @@ def license(
 
         data = request.data.decode("utf-8", errors="replace")
         cmex_type = json.loads(data)["cmex_type"]
-        if not cmex_type.startswith("gamspy"):
+        if cmex_type not in ["gamspy", "gamspy++", "gamsall"]:
             raise ValidationError(
                 f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                 "Make sure that you use a GAMSPy license, not a GAMS license."

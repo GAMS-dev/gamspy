@@ -152,6 +152,13 @@ class ModelInstance:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
         gams_options = self._prepare_gams_options(options)
+        gams_options.license = utils._get_license_path(
+            self.container.system_directory
+        )
+        if self.container._network_license:
+            gams_options._netlicense = os.path.join(
+                self.container._process_directory, "gamslice.dat"
+            )
         self.instance.instantiate(solve_string, modifiers, gams_options)
 
     def solve(
@@ -195,7 +202,7 @@ class ModelInstance:
 
         # update model status
         self.model._status = gp.ModelStatus(self.instance.model_status)
-        self.model._solve_status = self.instance.solver_status
+        self.model._solve_status = gp.SolveStatus(self.instance.solver_status)
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
