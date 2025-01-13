@@ -69,7 +69,6 @@ def data():
     # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
 
-    # Cleanup
     m.close()
 
     subprocess.run(
