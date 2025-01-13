@@ -41,7 +41,7 @@ except Exception:
 @pytest.fixture
 def data():
     # Arrange
-    m = Container()
+    m = Container(debugging_level="keep")
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
     distances = [
