@@ -35,7 +35,7 @@ def _enforce_sos2_with_binary(lambda_var: gp.Variable) -> list[gp.Equation]:
 
     Based on paper:
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
-    <https://www.researchgate.net/publication/225976267_Modeling_Disjunctive_Constraints_with_a_Logarithmic_Number_of_Binary_Variables_and_Constraints>`_
+    <https://link.springer.com/article/10.1007/s10107-009-0295-4>`_
     """
     equations: list[gp.Equation] = []
     m = lambda_var.container
