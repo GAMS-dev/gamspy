@@ -13,6 +13,7 @@ GAMSPy 1.5.0
   - Fix solver options bug in frozen solve.
   - Synchronize after read.
   - Upgrade gamspy_base and gamsapi dependencies.
+  - Add `--checkout-duration` and `--renew` options to `gamspy install license`.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
   - Add tests for piecewise linear functions.
