@@ -553,7 +553,7 @@ def pwl_convexity_formulation(
     By default, SOS2 variables are implemented using binary variables.
     See
     `Modeling disjunctive constraints with a logarithmic number of binary variables and constraints
-    <https://www.researchgate.net/publication/225976267_Modeling_Disjunctive_Constraints_with_a_Logarithmic_Number_of_Binary_Variables_and_Constraints>`_
+    <https://link.springer.com/article/10.1007/s10107-009-0295-4>`_
     . However, you can switch to SOS2 (Special Ordered Set Type 2) by setting the
     `using` parameter to `"sos2"`.
 
