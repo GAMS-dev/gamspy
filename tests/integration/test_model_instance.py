@@ -55,11 +55,33 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["MODEL_INSTANCE_LICENSE"],
+        ]
+    )
+
     # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
 
     # Cleanup
     m.close()
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+        ]
+    )
 
     files = glob.glob("_*")
     for file in files:
@@ -72,6 +94,10 @@ def data():
         os.remove("gams.gms")
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_parameter_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -154,6 +180,10 @@ def test_parameter_change(data):
     assert not transport._is_frozen
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_variable_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -197,6 +227,10 @@ def test_variable_change(data):
     transport.unfreeze()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_fx(data):
     m, *_ = data
     INCOME0 = Parameter(
@@ -242,6 +276,10 @@ def test_fx(data):
     mm.unfreeze()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_validations(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -307,6 +345,10 @@ def test_validations(data):
     os.remove(options_path)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_modifiable_in_condition(data):
     m, *_ = data
     td_data = pd.DataFrame(
@@ -532,6 +574,10 @@ def test_modifiable_in_condition(data):
         war.freeze(modifiables=[x.l])
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_modifiable_with_domain(data):
     m, *_ = data
     import gamspy as gp
