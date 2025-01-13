@@ -149,6 +149,9 @@ def test_parameter_change(data):
 
     transport.freeze(modifiables=[bmult])
 
+    with open(os.path.join(m.working_directory, "_gams_py_gjo0.lst")) as file:
+        print(file.read())
+
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         transport.solve(solver="conopt")
