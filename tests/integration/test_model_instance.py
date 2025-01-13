@@ -55,7 +55,7 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-    subprocess.run(
+    process = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -63,15 +63,20 @@ def data():
             "install",
             "license",
             os.environ["MODEL_INSTANCE_LICENSE"],
-        ]
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
+
+    assert process.returncode == 0, process.stderr
 
     # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
 
     m.close()
 
-    subprocess.run(
+    process = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -79,8 +84,13 @@ def data():
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
-        ]
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
+
+    assert process.returncode == 0, process.stderr
 
     files = glob.glob("_*")
     for file in files:
@@ -147,10 +157,13 @@ def test_parameter_change(data):
         201.21750000000003,
     ]
 
-    transport.freeze(modifiables=[bmult])
+    with pytest.raises(GamsExceptionExecution):
+        transport.freeze(modifiables=[bmult])
 
     with open(os.path.join(m.working_directory, "_gams_py_gjo0.lst")) as file:
         print(file.read())
+
+    pytest.fail()
 
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
