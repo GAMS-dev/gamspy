@@ -125,7 +125,7 @@ def test_universe_alias_creation(m):
         _ = UniverseAlias(m, 5)
 
     # no container
-    pytest.raises(TypeError, UniverseAlias)
+    pytest.raises(ValidationError, UniverseAlias)
 
     # non-container type container
     pytest.raises(TypeError, UniverseAlias, 5, "j")

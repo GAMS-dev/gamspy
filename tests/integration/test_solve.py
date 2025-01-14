@@ -12,6 +12,7 @@ import time
 import numpy as np
 import pytest
 
+import gamspy as gp
 import gamspy._validation as validation
 import gamspy.math as gamspy_math
 from gamspy import (
@@ -156,7 +157,93 @@ def transport(f_value):
     transport.solve()
 
     m.close()
+    return transport.objective_value
 
+
+def transport_with_ctx(f_value):
+    distances = [
+        ["seattle", "new-york", 2.5],
+        ["seattle", "chicago", 1.7],
+        ["seattle", "topeka", 1.8],
+        ["san-diego", "new-york", 2.5],
+        ["san-diego", "chicago", 1.8],
+        ["san-diego", "topeka", 1.4],
+    ]
+
+    capacities = [["seattle", 350], ["san-diego", 600]]
+    demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
+
+    m = Container()
+    with m:
+        i = Set(
+            name="i",
+            records=["seattle", "san-diego"],
+            description="canning plants",
+        )
+        j = Set(
+            name="j",
+            records=["new-york", "chicago", "topeka"],
+            description="markets",
+        )
+
+        # Data
+        a = Parameter(
+            name="a",
+            domain=i,
+            records=capacities,
+            description="capacity of plant i in cases",
+        )
+        b = Parameter(
+            name="b",
+            domain=j,
+            records=demands,
+            description="demand at market j in cases",
+        )
+        d = Parameter(
+            name="d",
+            domain=[i, j],
+            records=distances,
+            description="distance in thousands of miles",
+        )
+        c = Parameter(
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        f = Parameter(name="f", records=f_value)
+        c[i, j] = f * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            name="demand", domain=j, description="satisfy demand at market j"
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+    m.close()
     return transport.objective_value
 
 
@@ -790,7 +877,7 @@ def test_interrupt():
         m,
         name="dice",
         description="number of dice",
-        records=[f"dice{idx}" for idx in range(1, 10)],
+        records=[f"dice{idx}" for idx in range(1, 7)],
     )
 
     flo = Parameter(m, name="flo", description="lowest face value", records=1)
@@ -858,7 +945,7 @@ def test_interrupt():
     thread = threading.Thread(target=interrupt_gams, args=(xdice,))
     thread.start()
 
-    xdice.solve(output=sys.stdout)
+    xdice.solve(output=sys.stdout, options=Options(time_limit=60))
     assert xdice.objective_value is not None
     assert xdice.solve_status == SolveStatus.UserInterrupt
     thread.join()
@@ -1132,6 +1219,96 @@ def test_validation_2():
     )
 
 
+def test_validation_3():
+    m = Container()
+
+    v = Set(m, "v")
+    k = Set(m, "k")
+    z = Variable(m, "z", domain=[v, k])
+    vk = Set(m, "vk", domain=[v, k])
+    n = Parameter(m, domain=k)
+
+    z.up[vk[v, k]] = n[k]
+
+
+def test_context_manager(data):
+    with Container():
+        i = Set()
+        a = Alias(alias_with=i)
+        _ = Parameter()
+        _ = Variable()
+        _ = Equation()
+
+    m, canning_plants, markets, capacities, demands, distances = data
+    with m:
+        i = Set(records=canning_plants)
+        j = Set(name="j", records=markets)
+
+        a = Parameter(name="a", domain=i, records=capacities)
+        b = Parameter(name="b", domain=j, records=demands)
+        d = Parameter(name="d", domain=[i, j], records=distances)
+        c = Parameter(
+            name="c",
+            domain=[i, j],
+            description="transport cost in thousands of dollars per case",
+        )
+        c[i, j] = 90 * d[i, j] / 1000
+
+        # Variable
+        x = Variable(
+            name="x",
+            domain=[i, j],
+            type="Positive",
+            description="shipment quantities in cases",
+        )
+
+        # Equation
+        supply = Equation(
+            name="supply",
+            domain=i,
+            description="observe supply limit at plant i",
+        )
+        demand = Equation(
+            name="demand", domain=j, description="satisfy demand at market j"
+        )
+
+        supply[i] = Sum(j, x[i, j]) <= a[i]
+        demand[j] = Sum(i, x[i, j]) >= b[j]
+
+        transport = Model(
+            name="transport",
+            equations=m.getEquations(),
+            problem="LP",
+            sense=Sense.MIN,
+            objective=Sum((i, j), c[i, j] * x[i, j]),
+        )
+        transport.solve()
+
+    import math
+
+    assert math.isclose(transport.objective_value, 153.675000, rel_tol=0.001)
+
+    assert i.container.working_directory is m.working_directory
+
+    # We should still be able to access the symbols of m
+    c[i, j] = 90 * d[i, j] / 100
+    transport.solve()
+    assert math.isclose(transport.objective_value, 1536.75000, rel_tol=0.001)
+
+    m2 = Container()
+    i2 = Set(m2, "i2")
+    a2 = Parameter(m2, "a2", domain=i2)
+    assert i2.container.working_directory is m2.working_directory
+    assert a2.container.working_directory is m2.working_directory
+
+    with m2:
+        i3 = Set(m2, "i3")
+    assert i3.container.working_directory is m2.working_directory
+
+    # Make sure that the symbols of m is not affected by the new context manager
+    assert i.container.working_directory is m.working_directory
+
+
 def test_after_exception(data):
     m, *_ = data
     x = Variable(m, "x", type="positive")
@@ -1350,6 +1527,30 @@ def test_multiprocessing():
             expected_values, executor.map(transport, f_values)
         ):
             assert math.isclose(expected, objective)
+
+
+def test_multiprocessing_with_ctx():
+    f_values = [90, 120, 150, 180]
+    expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        for expected, objective in zip(
+            expected_values, executor.map(transport_with_ctx, f_values)
+        ):
+            assert math.isclose(expected, objective)
+
+    assert gp._ctx_managers == {}
+
+
+def test_threading_with_ctx():
+    f_values = [90, 120, 150, 180]
+    expected_values = [153.675, 204.89999999999998, 256.125, 307.35]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for expected, objective in zip(
+            expected_values, executor.map(transport_with_ctx, f_values)
+        ):
+            assert math.isclose(expected, objective)
+
+    assert gp._ctx_managers == {}
 
 
 def test_selective_loading(data):

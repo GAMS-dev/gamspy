@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import itertools
+import os
+import threading
 import uuid
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
@@ -111,7 +113,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str]
         | Set
@@ -127,7 +129,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
-        if not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
@@ -142,6 +144,11 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 )
 
             try:
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
                 symbol = container[name]
                 if isinstance(symbol, cls):
                     return symbol
@@ -155,7 +162,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str]
         | Set
@@ -228,6 +235,17 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             self.container._options.miro_protect = previous_state
         else:
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError(
+                        "Parameter requires a container."
+                    ) from e
+            assert container is not None
+
             if name is not None:
                 name = validation.validate_name(name)
 

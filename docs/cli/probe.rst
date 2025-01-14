@@ -4,11 +4,11 @@ gamspy probe
 Probes the node (computer) to get information about the node for fingerprinting the license.
 
 Usage
------
+~~~~~
 
 ::
 
-  gamspy probe -j info.json  
+  gamspy probe [OPTIONS]
 
 .. list-table::
    :widths: 20 20 20 40
@@ -20,12 +20,15 @@ Usage
      - Description
    * - -\-json-out 
      - -j
-     - 
+     - None
      - Output path to dump probed information.
 
-Example: ::
+Example
+~~~~~~~
 
-  $ gamspy probe -o info.json
+::
+
+  $ gamspy probe -j info.json
   {
     "cpu_id": "27197016915918185882701231384169",
     "device_id": "18113801",
@@ -45,4 +48,4 @@ Example: ::
   }
 
 .. note::
-    The probed information is always written to standard output. The ``-o`` option will write a file in addition.
+    The probed information is always written to standard output. The ``-j`` option will write the information to a JSON file.

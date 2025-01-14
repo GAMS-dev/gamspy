@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import threading
 import uuid
 from typing import TYPE_CHECKING
 
@@ -75,11 +77,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias | None = None,
     ):
-        if not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
@@ -98,20 +100,25 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
                     f"Name must of type `str` but found {type(name)}"
                 )
             try:
-                symobj = container[name]
-                if isinstance(symobj, cls):
-                    return symobj
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
+                symbol = container[name]
+                if isinstance(symbol, cls):
+                    return symbol
 
                 raise TypeError(
                     f"Cannot overwrite symbol `{name}` in container"
                     " because it is not an Alias object)"
                 )
             except KeyError:
-                return object.__new__(Alias)
+                return object.__new__(cls)
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         alias_with: Set | Alias = None,  # type: ignore
     ):
@@ -127,6 +134,15 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.modified = True
             self.alias_with = alias_with
         else:
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError("Alias requires a container.") from e
+            assert container is not None
+
             if name is not None:
                 name = validation.validate_name(name)
             else:

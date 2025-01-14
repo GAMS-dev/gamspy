@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import itertools
+import os
+import threading
 import uuid
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -508,7 +510,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
@@ -519,7 +521,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
-        if not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 "Container must of type `Container` but found"
                 f" {type(container)}"
@@ -533,7 +535,13 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                     f"Name must of type `str` but found {type(name)}"
                 )
             try:
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
                 symbol = container[name]
+
                 if isinstance(symbol, cls):
                     return symbol
 
@@ -546,7 +554,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
         is_singleton: bool = False,
@@ -619,6 +627,15 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             self.container._options.miro_protect = previous_state
 
         else:
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError("Set requires a container.") from e
+            assert container is not None
+
             self.where = condition.Condition(self)
 
             if name is not None:
@@ -629,7 +646,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 name = "s" + str(uuid.uuid4()).replace("-", "_")
 
             self._singleton_check(is_singleton, records, domain)
-
             previous_state = container._options.miro_protect
             container._options.miro_protect = False
 

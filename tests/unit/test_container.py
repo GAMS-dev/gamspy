@@ -188,6 +188,35 @@ def test_read_write(data):
     assert list(m.data.keys()) == ["k", "i"]
 
 
+def test_read_synch():
+    m = Container()
+
+    j = Set(
+        m,
+        name="j",
+        records=["new-york", "chicago", "topeka"],
+        description="markets",
+    )
+    _ = Set(
+        m,
+        name="j_sub",
+        records=["new-york", "chicago"],
+        domain=j,
+        description="markets",
+    )
+
+    gdx_file = "test.gdx"
+    m.write(gdx_file)
+    m = Container()
+    m.read(gdx_file)
+
+    assert m["j"].toList() == ["new-york", "chicago", "topeka"]
+    assert m["j_sub"].toList() == ["new-york", "chicago"]
+    m["j_sub"][m["j"]] = False
+
+    os.remove("test.gdx")
+
+
 def test_loadRecordsFromGdx(data):
     m, *_ = data
     gdx_path = os.path.join("tmp", "test.gdx")

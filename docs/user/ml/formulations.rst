@@ -18,13 +18,12 @@ Layer Formulations
 ==================
 
 GAMSPy provides several formulations to help you embed your neural network
-structures into your into your optimization model. We started with formulations
+structures into your optimization model. We started with formulations
 for computer vision-related structures such as convolution and pooling
 operations.
 
-Convolution by definition requires no linearization, but it is tedious to write
-down. Now you can use :meth:`Conv2d <gamspy.formulations.Conv2d>` to easily
-embed your convolutional layer into your optimization model.
+Here is an example utilizing several different layers to easily
+embed into your optimization model.
 
 .. code-block:: python
 
@@ -71,13 +70,133 @@ embed your convolutional layer into your optimization model.
 
 Supported formulations:
 
-- :meth:`Linear <gamspy.formulations.Linear>`
-- :meth:`Conv2d <gamspy.formulations.Conv2d>`
-- :meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
-- :meth:`MinPool2d <gamspy.formulations.MinPool2d>`
-- :meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
-- :meth:`flatten_dims <gamspy.formulations.flatten_dims>`
+:meth:`Linear <gamspy.formulations.Linear>`
+-------------------------------------------------------
+Formulation generator for Linear layer in GAMS. It applies a linear mapping 
+with a transformation and bias to the input data, expressed as :math:`y = x A^T + b`.
 
+.. code-block:: python
+   
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+
+   m = gp.Container()
+   l1 = gp.formulations.Linear(m, 128, 64)
+   w = np.random.rand(64, 128)
+   b = np.random.rand(64)
+   l1.load_weights(w, b)
+   x = gp.Variable(m, "x", domain=dim([10, 128]))
+   y, set_y = l1(x)
+
+   [d.name for d in y.domain]
+   # ['DenseDim10_1', 'DenseDim64_1']
+
+:meth:`Conv2d <gamspy.formulations.Conv2d>`
+-------------------------------------------------------
+Formulation generator for 2D Convolution symbol in GAMS. It applies a 
+2D convolution operation on an input signal consisting of multiple input planes.
+
+.. code-block:: python
+
+   import gamspy as gp
+   import numpy as np
+   from gamspy.math import dim
+
+   w1 = np.random.rand(2, 1, 3, 3)
+   b1 = np.random.rand(2)
+   m = gp.Container()
+   # in_channels=1, out_channels=2, kernel_size=3x3
+   conv1 = gp.formulations.Conv2d(m, 1, 2, 3)
+   conv1.load_weights(w1, b1)
+   # 10 images, 1 channel, 24 by 24
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = conv1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 2, 22, 22]
+
+:meth:`MaxPool2d <gamspy.formulations.MaxPool2d>`
+-------------------------------------------------------
+Formulation generator for 2D Max Pooling in GAMS. It applies a 2D 
+max pooling on an input signal consisting of multiple input planes.
+
+.. code-block:: python
+
+   import gamspy as gp
+   from gamspy.math import dim
+
+   m = gp.Container()
+   # 2x2 max pooling
+   mp1 = gp.formulations.MaxPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = mp1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
+
+:meth:`MinPool2d <gamspy.formulations.MinPool2d>`
+-------------------------------------------------------
+Formulation generator for 2D Min Pooling in GAMS. It applies a 2D 
+min pooling on an input signal consisting of multiple input planes.
+
+.. code-block:: python
+
+   import gamspy as gp
+   from gamspy.math import dim
+
+   m = gp.Container()
+   # 2x2 min pooling
+   mp1 = gp.formulations.MinPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = mp1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
+
+:meth:`AvgPool2d <gamspy.formulations.AvgPool2d>`
+-------------------------------------------------------
+Formulation generator for 2D Avg Pooling in GAMS. It applies a 2D 
+average pooling on an input signal consisting of multiple input planes.
+
+.. code-block:: python
+
+   import gamspy as gp
+   from gamspy.math import dim
+
+   m = gp.Container()
+   # 2x2 avg pooling
+   ap1 = gp.formulations.AvgPool2d(m, (2, 2))
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = ap1(inp)
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 12, 12]
+
+:meth:`flatten_dims <gamspy.formulations.flatten_dims>`
+-------------------------------------------------------
+It combines the domains specified by dims into a single unified domain.
+
+.. code-block:: python
+
+   import gamspy as gp
+   from gamspy.math import dim
+   m = gp.Container()
+   inp = gp.Variable(m, domain=dim((10, 1, 24, 24)))
+   out, eqs = gp.formulations.flatten_dims(inp, [2, 3])
+
+   type(out)
+   # <class 'gamspy._symbols.variable.Variable'>
+   [len(x) for x in out.domain]
+   # [10, 1, 576]
 
 .. _pooling-linearization:
 
@@ -97,11 +216,11 @@ likely continuous, but there is no restriction. :math:`p` is the variable that i
 the output of the pooling operation on the blue region. Depending on the operation,
 it is either min or max of the corresponding input points.
 
-|
+|  
 .. image:: ../images/pooling.png
-  :align: center
-
+   :align: center
 |
+
 The linearization of the :math:`p = \max(a,b,c,d)` is as follows:
 
 .. math::
@@ -151,17 +270,36 @@ integrating them into optimization models can be challenging. To assist you, we
 have started with a small list of commonly used activation functions. So far,
 we have implemented the following activation functions:
 
-- :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-- :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
-- :meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
-- :meth:`softmax <gamspy.math.softmax>`
-- :meth:`log_softmax <gamspy.math.log_softmax>`
+:meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
+---------------------------------------------------------------
+Implements the ReLU activation function using binary variables.
 
+:meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
+---------------------------------------------------------------------------------
+Implements the ReLU activation function using complementarity conditions.
+
+:meth:`relu_with_sos1_var <gamspy.math.relu_with_sos1_var>`
+-----------------------------------------------------------
+Implements the ReLU activation function using `SOS1 <https://www.gams.com/47/docs/UG_LanguageFeatures.html?search=sos#UG_LanguageFeatures_SpecialOrderSetsOfType1-SOS1>`_ variables.
+
+:meth:`softmax <gamspy.math.softmax>`
+-------------------------------------
+Implements the softmax activation function. This function strictly 
+requires a GAMSPy Variable, y = softmax(x).
+
+:meth:`log_softmax <gamspy.math.log_softmax>`
+---------------------------------------------
+Implements the log_softmax activation function. This function strictly 
+requires a GAMSPy Variable, y = log_softmax(x). 
+
+
+Activation Functions Explanation
+--------------------------------
 Unlike other mathematical functions, these activation functions return a
-variable instead of an expression. This is because ReLU cannot be represented
-by a single expression. Directly writing ``y = max(x, 0)`` without reformulating
-it would result in a Discontinuous Nonlinear Program (``DNLP``) model, which is
-highly undesirable. Currently, you can either use
+variable and a list of equations instead of an expression. This is because ReLU 
+cannot be representedby a single expression. Directly writing ``y = max(x, 0)`` 
+without reformulating it would result in a Discontinuous Nonlinear Program (``DNLP``) model, 
+which is highly undesirable. Currently, you can either use
 :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>` to
 introduce binary variables into your problem, or
 :meth:`relu_with_complementarity_var <gamspy.math.relu_with_complementarity_var>`
@@ -202,8 +340,13 @@ To read more about `classification of models
 Additionally, we offer our established functions that can also be used as
 activation functions:
 
-- :meth:`tanh <gamspy.math.tanh>`
-- :meth:`sigmoid <gamspy.math.sigmoid>`
+:meth:`tanh <gamspy.math.tanh>`
+-------------------------------
+It applies the Hyperbolic Tangent (Tanh) function element-wise.
+
+:meth:`sigmoid <gamspy.math.sigmoid>`
+-------------------------------------
+It applies the Sigmoid function element-wise.
 
 These functions return expressions like the other math functions. So, you
 need to create equations and variables yourself.

@@ -4,6 +4,7 @@ import inspect
 import io
 import logging
 import os
+import threading
 import uuid
 from collections.abc import Iterable
 from enum import Enum
@@ -231,7 +232,7 @@ class Model:
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         problem: Problem | str = Problem.MIP,
         equations: Iterable[Equation] = [],
@@ -249,7 +250,14 @@ class Model:
         else:
             self.name = self._auto_id
 
-        self.container = container
+        if container is not None:
+            self.container = container
+        else:
+            self.container = gp._ctx_managers[
+                (os.getpid(), threading.get_native_id())
+            ]
+
+        assert self.container is not None
         self._matches = matches
         self.problem, self.sense = validation.validate_model(
             equations, problem, sense
@@ -275,8 +283,8 @@ class Model:
         if not self.equations and not self._matches:
             raise ValidationError("Model requires at least one equation.")
 
-        self._external_module_file = None
-        self._external_module = None
+        self._external_module_file: str | None = None
+        self._external_module: str | None = None
 
         if external_module is not None:
             self.external_module = external_module
@@ -1012,33 +1020,10 @@ class Model:
         modifiables: list[Parameter | ImplicitParameter],
         options: Options | None = None,
     ) -> None:
-        """
-        Freezes all symbols except modifiable symbols.
-
-        Parameters
-        ----------
-        modifiables : List[Parameter | ImplicitParameter]
-        freeze_options : dict, optional
-
-        Examples
-        --------
-        >>> import gamspy as gp
-        >>> m = gp.Container()
-        >>> a = gp.Parameter(m, name="a", records=10)
-        >>> x = gp.Variable(m, name="x")
-        >>> e = gp.Equation(m, name="e", definition= x <= a)
-        >>> my_model = gp.Model(m, name="my_model", equations=m.getEquations(), problem="LP", sense="max", objective=x)
-        >>> solved = my_model.solve()
-        >>> float(x.toValue())
-        10.0
-        >>> my_model.freeze(modifiables=[a])
-        >>> a.setRecords(35)
-        >>> solved = my_model.solve()
-        >>> float(x.toValue())
-        35.0
-
-        """
         self._is_frozen = True
+        if options is None:
+            options = Options()
+
         self.instance = ModelInstance(
             self.container, self, modifiables, options
         )
@@ -1129,13 +1114,9 @@ class Model:
             options._frame = frame
 
         if self._is_frozen:
-            options._set_solver_options(
-                working_directory=self.container.working_directory,
-                solver=solver,
-                problem=self.problem,
-                solver_options=solver_options,
+            self.instance.solve(
+                solver, model_instance_options, solver_options, output
             )
-            self.instance.solve(solver, model_instance_options, output)
             return None
 
         self.container._add_statement(self.getDeclaration())
