@@ -14,6 +14,7 @@ from gams import (
     GamsModelInstanceOpt,
     GamsModifier,
     GamsOptions,
+    GamsParameter,
     GamsWorkspace,
     SymbolUpdateType,
     UpdateAction,
@@ -24,12 +25,20 @@ from gams.core.gev import (
     gevCreateD,
     gevFree,
     gevHandleToPtr,
+    gevInitEnvironmentLegacy,
     new_gevHandle_tp,
 )
+from gams.core.gmd import GMD_NRUELS, gmdInfo, gmdInitFromDict
 from gams.core.gmo import (
     gmoCreateD,
     gmoFree,
+    gmoHandleToPtr,
+    gmoLoadDataLegacy,
     gmoModelStat,
+    gmoModelType,
+    gmoNameOptFile,
+    gmoNameOptFileSet,
+    gmoRegisterEnvironment,
     gmoSolveStat,
     new_gmoHandle_tp,
 )
@@ -100,7 +109,12 @@ class ModelInstance:
         self.container = container
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
+        self.lst_file = self.job_name + ".lst"
         self.pf_file = self.job_name + ".pf"
+        self.trace_file = self.job_name + ".txt"
+        self.solver_control_file = os.path.join(
+            self.container._process_directory, "gamscntr.dat"
+        )
 
         self.model = model
         assert self.model._is_frozen
@@ -149,23 +163,52 @@ class ModelInstance:
         return DEBUGGING_MAP[debugging_level]
 
     def instantiate(self, model: Model, options: Options):
-        solve_string = f"{model.name}.justScrDir = 1;\n"
-        solve_string += f"solve {model.name} using {model.problem}"
+        # Check the gmd state.
+        rc, _, _, _ = gmdInfo(self.sync_db._gmd, GMD_NRUELS)
+        self.sync_db._check_for_gmd_error(rc)
 
-        if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
-            solve_string += f" {model.sense}"
+        # Prepare the required lines to solve with model instance
+        scenario_str = self._get_scenario(model)
+        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
+            gams_file.write(scenario_str)
 
-        if model._objective_variable is not None:
-            solve_string += f" {model._objective_variable.gamsRepr()}"
-
+        # Write pf file
         gams_options = self._prepare_gams_options(options)
-        gams_options.license = utils._get_license_path(
-            self.container.system_directory
+        gams_options.export(self.pf_file)
+
+        # Run
+        try:
+            self.container._job = self.job_name
+            self.container._send_job(self.job_name, self.pf_file)
+        except GamspyException as exception:
+            self.container._workspace._has_error = True
+            raise exception
+        finally:
+            self.container._unsaved_statements = []
+
+        # Init environments
+        if gevInitEnvironmentLegacy(self._gev, self.solver_control_file) != 0:
+            raise GamspyException("Could not initialize model instance")
+
+        gmoRegisterEnvironment(self._gmo, gevHandleToPtr(self._gev))
+        ret = gmoLoadDataLegacy(self._gmo)
+        if ret[0] != 0:
+            raise GamspyException("Could not load model instance: " + ret[1])
+
+        self._selected_solver = gams_options._selected_solvers[
+            gmoModelType(self._gmo)
+        ]
+        opt_file_name = gmoNameOptFile(self._gmo)
+        gmoNameOptFileSet(
+            self._gmo,
+            os.path.join(
+                os.path.dirname(opt_file_name),
+                self._selected_solver + os.path.splitext(opt_file_name)[1],
+            ),
         )
-        if self.container._network_license:
-            gams_options._netlicense = os.path.join(
-                self.container._process_directory, "gamslice.dat"
-            )
+
+        rc = gmdInitFromDict(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
+        self.sync_db._check_for_gmd_error(rc)
         # self.instance.instantiate(solve_string, self.modifiers, gams_options)
 
     def solve(
@@ -210,6 +253,48 @@ class ModelInstance:
         # update model status
         self.model._status = gp.ModelStatus(gmoModelStat(self._gmo))
         self.model._solve_status = gp.SolveStatus(gmoSolveStat(self._gmo))
+
+    def _get_scenario(self, model: Model) -> str:
+        params = [
+            modifier.gams_symbol
+            for modifier in self.modifiers
+            if isinstance(modifier.gams_symbol, GamsParameter)
+        ]
+        if params:
+            lines = ["Set s__(*) /'s0'/;"]
+            for symbol in params:
+                param_str = f"Parameter s__{symbol.name}"
+                domain = ""
+                if symbol.dimension:
+                    domain = "(" + ",".join("*" * symbol.dimension) + ")"
+
+                param_str = f"{param_str}{domain};"
+                lines.append(param_str)
+
+                assign_str = f"s__{symbol.name}{domain} = Eps;"
+                lines.append(assign_str)
+
+        scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
+        for symbol in params:
+            scenario += f",\n{symbol.name}'.'param'.'s__{symbol.name}'"
+        scenario += "/;"
+        lines.append(scenario)
+
+        lines.append(f"{model.name}.justScrDir = 1;")
+        solve_string = f"solve {model.name} using {model.problem}"
+
+        if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
+            solve_string += f" {model.sense}"
+
+        if model._objective_variable is not None:
+            solve_string += f" {model._objective_variable.gamsRepr()}"
+
+        if params:
+            solve_string += " scenario dict"
+        solve_string += ","
+        lines.append(solve_string)
+
+        return "\n".join(lines)
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
@@ -273,6 +358,24 @@ class ModelInstance:
 
         for key, value in options_dict.items():
             setattr(options, key, value)
+
+        scrdir = self.container._process_directory
+        options.trace = self.trace_file
+        options._input = self.gms_file
+        options.output = self.lst_file
+        options.optdir = self.container.working_directory
+        options._sysdir = self.container.system_directory
+        options._scrdir = scrdir
+        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
+        options._solvercntr = self.solver_control_file
+
+        options.license = utils._get_license_path(
+            self.container.system_directory
+        )
+        if self.container._network_license:
+            options._netlicense = os.path.join(
+                self.container._process_directory, "gamslice.dat"
+            )
 
         return options
 
