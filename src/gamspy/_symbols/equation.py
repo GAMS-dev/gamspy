@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import builtins
 import itertools
+import os
+import threading
 import uuid
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -157,7 +159,7 @@ class Equation(gt.Equation, Symbol):
 
     def __new__(
         cls,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
@@ -169,7 +171,7 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
-        if not isinstance(container, gp.Container):
+        if container is not None and not isinstance(container, gp.Container):
             raise TypeError(
                 f"Container must of type `Container` but found {container}"
             )
@@ -182,6 +184,11 @@ class Equation(gt.Equation, Symbol):
                     f"Name must of type `str` but found {builtins.type(name)}"
                 )
             try:
+                if not container:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+
                 symbol = container[name]
                 if isinstance(symbol, cls):
                     return symbol
@@ -195,7 +202,7 @@ class Equation(gt.Equation, Symbol):
 
     def __init__(
         self,
-        container: Container,
+        container: Container | None = None,
         name: str | None = None,
         type: str | EquationType = "regular",
         domain: list[Set | Alias | str] | Set | Alias | str | None = None,
@@ -272,6 +279,17 @@ class Equation(gt.Equation, Symbol):
             self.container._options.miro_protect = previous_state
 
         else:
+            if container is None:
+                try:
+                    container = gp._ctx_managers[
+                        (os.getpid(), threading.get_native_id())
+                    ]
+                except KeyError as e:
+                    raise ValidationError(
+                        "Equation requires a container."
+                    ) from e
+            assert container is not None
+
             type = cast_type(type)
 
             if name is not None:

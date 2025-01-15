@@ -1,16 +1,28 @@
 GAMSPy CHANGELOG
 ================
 
-GAMSPy 1.4.1
+GAMSPy 1.5.1
+------------
+- General
+  - Fix the bugs in dynamic set assignments.
+
+GAMSPy 1.5.0
 ------------
 - General
   - Fix implicit parameter validation bug.
   - Fix the bugs in dynamic set assignments.
   - Migrate GAMSPy CLI to Typer.
+  - Threads can now create a container since we register the signal only to the main thread.
+  - Fix solver options bug in frozen solve.
+  - Synchronize after read.
+  - Upgrade gamspy_base and gamsapi dependencies.
+  - Add `--checkout-duration` and `--renew` options to `gamspy install license`.
 - Testing
   - Lower the number of dices in the interrupt test and put a time limit to the solve.
+  - Add tests for piecewise linear functions.
 - Documentation
   - Install dependencies in the first cell of the example transportation notebook.
+  - Add Formulations page to list piecewise linear functions and nn formulations.
 
 GAMSPy 1.4.0
 ------------

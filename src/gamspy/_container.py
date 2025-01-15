@@ -7,6 +7,7 @@ import signal
 import socket
 import subprocess
 import tempfile
+import threading
 import time
 import traceback
 import uuid
@@ -92,7 +93,8 @@ def open_connection(
         if platform.system() != "Windows":
             os.kill(process.pid, signal.SIGINT)
 
-    signal.signal(signal.SIGINT, handler)
+    if threading.current_thread() is threading.main_thread():
+        signal.signal(signal.SIGINT, handler)
 
     start = time.time()
     while True:
@@ -263,13 +265,27 @@ class Container(gt.Container):
         )
 
         if load_from is not None:
-            self.read(load_from)
+            self._read(load_from)
             if not isinstance(load_from, gt.Container):
                 self._unsaved_statements = []
                 self._clean_modified_symbols()
                 self._add_statement(f"$declareAndLoad {load_from}")
 
             self._synch_with_gams(gams_to_gamspy=False)
+
+    def __enter__(self):
+        pid = os.getpid()
+        tid = threading.get_native_id()
+        gp._ctx_managers[(pid, tid)] = self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pid = os.getpid()
+        tid = threading.get_native_id()
+
+        try:
+            del gp._ctx_managers[(pid, tid)]
+        except KeyError:
+            ...
 
     def __repr__(self) -> str:
         return f"Container(system_directory='{self.system_directory}', working_directory='{self.working_directory}', debugging_level='{self._debugging_level}')"
@@ -597,7 +613,7 @@ class Container(gt.Container):
                 if updated_records is not None:
                     self[name].domain_labels = self[name].domain_names
             else:
-                self.read(load_from, [name])
+                self._read(load_from, [name])
 
             if user_invoked:
                 self[name].modified = True
@@ -606,6 +622,17 @@ class Container(gt.Container):
 
         if user_invoked:
             self._synch_with_gams()
+
+    def _read(
+        self,
+        load_from: str | Container | gt.Container,
+        symbol_names: list[str] | None = None,
+        load_records: bool = True,
+        mode: str | None = None,
+        encoding: str | None = None,
+    ) -> None:
+        super().read(load_from, symbol_names, load_records, mode, encoding)
+        self._cast_symbols(symbol_names)
 
     def read(
         self,
@@ -639,8 +666,8 @@ class Container(gt.Container):
         True
 
         """
-        super().read(load_from, symbol_names, load_records, mode, encoding)
-        self._cast_symbols(symbol_names)
+        self._read(load_from, symbol_names, load_records, mode, encoding)
+        self._synch_with_gams()
 
     def write(
         self,
@@ -1176,7 +1203,7 @@ class Container(gt.Container):
             )
 
         self.write(m._job + "in.gdx")
-        m.read(m._job + "in.gdx")
+        m._read(m._job + "in.gdx")
 
         # if already defined equations exist, add them to .gms file
         for equation in self.getEquations():

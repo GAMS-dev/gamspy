@@ -29,6 +29,14 @@ Usage
      - 
      - None
      - Interprocess communication starting port. Only relevant for local licenses that restrict concurrent use of GAMSPy.
+   * - -\-renew 
+     - -r
+     - None
+     - Specify a file path to a license file to extend a session.
+   * - -\-checkout-duration 
+     - -c
+     - None
+     - Specify a duration in hours to checkout a session.
 
 Examples
 ~~~~~~~~

@@ -77,6 +77,36 @@ Explicit symbols names are useful when interacting with parts of the module wher
     ``setRecords`` function. ``setRecords`` ensures that the GAMSPy state is synchronized with GAMS 
     execution system.
 
+A container can also be used as a context manager. When a container is used as a context manager, there 
+is no need to specify the container when creating symbols since the context manager container will automatically 
+be used as the container for the symbols.
+
+.. tabs:: 
+    .. group-tab:: With context manager
+        .. code-block:: python
+
+            import gamspy as gp
+
+            with gp.Container() as m:
+                i = gp.Set()
+                a = gp.Alias(alias_with=i)
+                p = gp.Parameter()
+                v = gp.Variable()
+                e = gp.Equation()
+
+    .. group-tab:: Without context manager
+        .. code-block:: python
+
+            import gamspy as gp
+
+            m = gp.Container()
+
+            i = gp.Set(m)
+            a = gp.Alias(m, alias_with=i)
+            p = gp.Parameter(m)
+            v = gp.Variable(m)
+            e = gp.Equation(m)
+
 ===========================
 Reading and Writing Symbols
 ===========================

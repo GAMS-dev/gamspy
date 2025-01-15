@@ -134,6 +134,44 @@ def test_install_license(teardown):
 
     assert process.returncode == 0, process.stderr
 
+    # Test checkout
+    process = subprocess.run(
+        [
+            "gamspy",
+            "install",
+            "license",
+            os.environ["CHECKOUT_LICENSE"],
+            "-c",
+            "1",
+            "-o",
+            tmp_license_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert process.returncode == 0, process.stderr
+
+    # Test renew
+    process = subprocess.run(
+        [
+            "gamspy",
+            "install",
+            "license",
+            os.environ["CHECKOUT_LICENSE"],
+            "-c",
+            "1",
+            "-r",
+            tmp_license_path,
+            "-o",
+            tmp_license_path,
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert process.returncode == 0, process.stderr
+
     # Recover local license
     process = subprocess.run(
         ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],

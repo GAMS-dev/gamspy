@@ -19,3 +19,4 @@ fundamental GAMSPy ideas and philosophy.
    ./model_instance
    ./external_equations
    ./extrinsic_functions
+   ./formulations

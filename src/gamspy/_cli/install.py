@@ -2,7 +2,7 @@ from __future__ import annotations
 import importlib
 import shutil
 
-from typing import Annotated, Iterable, Union
+from typing import Annotated, Iterable, Optional, Union
 
 import typer
 from gamspy.exceptions import GamspyException, ValidationError
@@ -24,7 +24,10 @@ app = typer.Typer(
 )
 def license(
     license: Annotated[str, typer.Argument(help="access code or path to the license file.")],
-    uses_port: Annotated[Union[int, None], typer.Option("--uses-port", help="Interprocess communication starting port.")] = None
+    checkout_duration: Optional[int] = typer.Option(None, "--checkout-duration", "-c", help="Specify a duration in hours to checkout a session."),
+    renew: Optional[str] = typer.Option(None, "--renew", "-r", help="Specify a file path to a license file to extend a session."),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Specify a file path to write the license file."),
+    uses_port: Annotated[Union[int, None], typer.Option("--uses-port", help="Interprocess communication starting port.")] = None,
 ):
     import json
     from urllib.parse import urlencode
@@ -57,7 +60,7 @@ def license(
 
         data = request.data.decode("utf-8", errors="replace")
         cmex_type = json.loads(data)["cmex_type"]
-        if not cmex_type.startswith("gamspy"):
+        if cmex_type not in ["gamspy", "gamspy++", "gamsall"]:
             raise ValidationError(
                 f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                 "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -69,6 +72,18 @@ def license(
             command.append("-u")
             command.append(str(uses_port))
 
+        if checkout_duration:
+            command.append("-c")
+            command.append(str(checkout_duration))
+
+        if checkout_duration:
+            command.append("-r")
+            command.append(str(renew))
+        
+        if output:
+            command.append("-o")
+            command.append(output)
+
         process = subprocess.run(
             command,
             text=True,
@@ -77,7 +92,12 @@ def license(
         if process.returncode:
             raise ValidationError(process.stderr)
 
-        license_text = process.stdout
+        if output:
+            with open(output) as file:
+                license_text = file.read()
+        else:
+            license_text = process.stdout
+            
         lines = license_text.splitlines()
         license_type = lines[0][54]
         if license_type == "+":
