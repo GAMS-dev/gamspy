@@ -23,6 +23,11 @@ class Number(operable.Operable):
     """
 
     def __init__(self, value: int | float):
+        if not isinstance(value, (int, float)):
+            raise TypeError(
+                f"Number should be of type int or float but given value has type `{type(value)}`"
+            )
+
         self._value = value
         self.where = condition.Condition(self)
         self.domain: list = []
