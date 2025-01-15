@@ -9,7 +9,7 @@ import gams.transfer as gt
 from gams import (
     DebugLevel,
     EquType,
-    GamsCheckpoint,
+    GamsDatabase,
     GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
@@ -18,6 +18,20 @@ from gams import (
     SymbolUpdateType,
     UpdateAction,
     VarType,
+)
+from gams.core.cfg import GMS_SSSIZE
+from gams.core.gev import (
+    gevCreateD,
+    gevFree,
+    gevHandleToPtr,
+    new_gevHandle_tp,
+)
+from gams.core.gmo import (
+    gmoCreateD,
+    gmoFree,
+    gmoModelStat,
+    gmoSolveStat,
+    new_gmoHandle_tp,
 )
 
 import gamspy as gp
@@ -87,8 +101,6 @@ class ModelInstance:
         self.job_name = container._job
         self.gms_file = self.job_name + ".gms"
         self.pf_file = self.job_name + ".pf"
-        self.save_file = self.job_name + ".g00"
-        self._create_restart_file()
 
         self.model = model
         assert self.model._is_frozen
@@ -106,9 +118,27 @@ class ModelInstance:
             container.system_directory,
             debug=self._debugging_level,
         )
-        self.checkpoint = GamsCheckpoint(self.workspace, self.save_file)
-        self.instance = self.checkpoint.add_modelinstance()
+        self.sync_db = GamsDatabase(self.workspace)
+
+        self._gev = new_gevHandle_tp()
+        ret = gevCreateD(self._gev, container.system_directory, GMS_SSSIZE)
+        if not ret[0]:
+            raise GamspyException(ret[1])
+
+        self._gmo = new_gmoHandle_tp()
+        ret = gmoCreateD(self._gmo, container.system_directory, GMS_SSSIZE)
+        if not ret[0]:
+            raise GamspyException(ret[1])
+
+        self.modifiers = self._create_modifiers()
         self.instantiate(model, freeze_options)
+
+    def __del__(self):
+        if self._gmo:
+            gmoFree(self._gmo)
+
+        if self._gev and gevHandleToPtr(self._gev) is not None:
+            gevFree(self._gev)
 
     def _get_debugging_level(self, debugging_level: str) -> int:
         DEBUGGING_MAP = {
@@ -118,32 +148,9 @@ class ModelInstance:
         }
         return DEBUGGING_MAP[debugging_level]
 
-    def _create_restart_file(self):
-        with open(self.gms_file, "w", encoding="utf-8") as gams_file:
-            gams_file.write("")
-
-        options = Options()
-        scrdir = self.container._process_directory
-        extra_options = {
-            "input": self.gms_file,
-            "sysdir": self.container.system_directory,
-            "scrdir": scrdir,
-            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
-            "previouswork": 1,
-            "license": utils._get_license_path(
-                self.container.system_directory
-            ),
-            "save": self.save_file,
-        }
-        options._set_extra_options(extra_options)
-        options._export(self.pf_file)
-
-        self.container._send_job(self.job_name, self.pf_file)
-
     def instantiate(self, model: Model, options: Options):
-        modifiers = self._create_modifiers()
-
-        solve_string = f"{model.name} using {model.problem}"
+        solve_string = f"{model.name}.justScrDir = 1;\n"
+        solve_string += f"solve {model.name} using {model.problem}"
 
         if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
             solve_string += f" {model.sense}"
@@ -159,7 +166,7 @@ class ModelInstance:
             gams_options._netlicense = os.path.join(
                 self.container._process_directory, "gamslice.dat"
             )
-        self.instance.instantiate(solve_string, modifiers, gams_options)
+        # self.instance.instantiate(solve_string, self.modifiers, gams_options)
 
     def solve(
         self,
@@ -174,7 +181,7 @@ class ModelInstance:
         )
 
         # update sync_db
-        self.container.write(self.instance.sync_db._gmd, eps_to_zero=False)
+        self.container.write(self.sync_db._gmd, eps_to_zero=False)
 
         for symbol in self.modifiables:
             if (
@@ -191,18 +198,18 @@ class ModelInstance:
                 )
 
                 self.instance_container.write(
-                    self.instance.sync_db._gmd, eps_to_zero=False
+                    self.sync_db._gmd, eps_to_zero=False
                 )
 
-        try:
-            self.instance.solve(update_type, output, mi_opt=options)
-        except GamsException as e:
-            raise GamspyException(e.value) from e
+        # try:
+        #     self.instance.solve(update_type, output, mi_opt=options)
+        # except GamsException as e:
+        #     raise GamspyException(e.value) from e
         self._update_main_container()
 
         # update model status
-        self.model._status = gp.ModelStatus(self.instance.model_status)
-        self.model._solve_status = gp.SolveStatus(self.instance.solver_status)
+        self.model._status = gp.ModelStatus(gmoModelStat(self._gmo))
+        self.model._solve_status = gp.SolveStatus(gmoSolveStat(self._gmo))
 
     def _init_modifiables(
         self, modifiables: list[Parameter | ImplicitParameter]
@@ -318,14 +325,14 @@ class ModelInstance:
 
         return columns
 
-    def _create_modifiers(self):
+    def _create_modifiers(self) -> list[GamsModifier]:
         modifiers = []
 
         for symbol in self.modifiables:
             if isinstance(symbol, gp.Parameter):
                 modifiers.append(
                     GamsModifier(
-                        self.instance.sync_db.add_parameter(
+                        self.sync_db.add_parameter(
                             symbol.name,
                             symbol.dimension,
                             symbol.description,
@@ -338,17 +345,17 @@ class ModelInstance:
                 update_action = UPDATE_ACTION_MAP[attribute]
 
                 try:
-                    sync_db_symbol = self.instance.sync_db[symbol.parent.name]
+                    sync_db_symbol = self.sync_db[symbol.parent.name]
                 except GamsException:
                     if isinstance(symbol.parent, gp.Variable):
-                        sync_db_symbol = self.instance.sync_db.add_variable(
+                        sync_db_symbol = self.sync_db.add_variable(
                             symbol.parent.name,
                             symbol.parent.dimension,
                             VARIABLE_MAP[symbol.parent.type],
                         )
 
                     elif isinstance(symbol.parent, gp.Equation):
-                        sync_db_symbol = self.instance.sync_db.add_equation(
+                        sync_db_symbol = self.sync_db.add_equation(
                             symbol.parent.name,
                             symbol.parent.dimension,
                             EQUATION_MAP[symbol.parent.type],
@@ -367,7 +374,7 @@ class ModelInstance:
                     domain=domain,
                 )
 
-                data_symbol = self.instance.sync_db.add_parameter(
+                data_symbol = self.sync_db.add_parameter(
                     attr_name,
                     symbol.parent.dimension,
                 )
@@ -387,7 +394,7 @@ class ModelInstance:
         temp = gt.Container(
             system_directory=self.container.system_directory,
         )
-        temp.read(self.instance.sync_db._gmd)
+        temp.read(self.sync_db._gmd)
 
         prev_state = self.container._options.miro_protect
         for name in temp.data:
