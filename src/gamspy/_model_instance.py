@@ -389,17 +389,14 @@ class ModelInstance:
             gevRestoreLogStat(self._gev, ls_handle)
 
         if output is not None and output != sys.stdout:
-            # if self._log_available:
-            #     gevSwitchLogStat(
-            #         self._gev, 0, "", False, "", False, None, None, ls_handle
-            #     )
-            #     ls_handle = gevGetLShandle(self._gev)
-            #     with open(gevGetStrOpt(self._gev, gevNameLogFile)) as file:
-            #         for line in file.readlines():
-            #             output.write(line)
-            #         gevRestoreLogStat(self._gev, ls_handle)
-            # else:
-            output.write("No solver log available")
+            gevSwitchLogStat(
+                self._gev, 0, "", False, "", False, None, None, ls_handle
+            )
+            ls_handle = gevGetLShandle(self._gev)
+            with open(gevGetStrOpt(self._gev, gevNameLogFile)) as file:
+                for line in file.readlines():
+                    output.write(line)
+                gevRestoreLogStat(self._gev, ls_handle)
         ### end of the legacy code
 
         self._update_main_container()
@@ -522,6 +519,10 @@ class ModelInstance:
         options._scrdir = scrdir
         options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
         options._solvercntr = self.solver_control_file
+        options._logfile = os.path.join(
+            self.container.working_directory, "gamslog.dat"
+        )
+        options._logoption = 2
 
         options.license = utils._get_license_path(
             self.container.system_directory
