@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import os
+import sys
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -24,11 +25,25 @@ from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
     gevCreateD,
     gevFree,
+    gevGetLShandle,
+    gevGetStrOpt,
     gevHandleToPtr,
     gevInitEnvironmentLegacy,
+    gevNameLogFile,
+    gevNameStaFile,
+    gevRestoreLogStat,
+    gevRestoreLogStatRewrite,
+    gevSwitchLogStat,
     new_gevHandle_tp,
 )
-from gams.core.gmd import GMD_NRUELS, gmdInfo, gmdInitFromDict
+from gams.core.gmd import (
+    GMD_NRUELS,
+    gmdCallSolver,
+    gmdInfo,
+    gmdInitFromDict,
+    gmdInitUpdate,
+    gmdUpdateModelSymbol,
+)
 from gams.core.gmo import (
     gmoCreateD,
     gmoFree,
@@ -38,6 +53,8 @@ from gams.core.gmo import (
     gmoModelType,
     gmoNameOptFile,
     gmoNameOptFileSet,
+    gmoOptFile,
+    gmoOptFileSet,
     gmoRegisterEnvironment,
     gmoSolveStat,
     new_gmoHandle_tp,
@@ -209,7 +226,11 @@ class ModelInstance:
 
         rc = gmdInitFromDict(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc)
-        # self.instance.instantiate(solve_string, self.modifiers, gams_options)
+
+        # Lock sync_db symbols so user can't add new symbols which would result in other exceptions
+        self.sync_db._symbol_lock = True
+        # Unlock sync_db record so user can add data for modifiers
+        self.sync_db._record_lock = False
 
     def solve(
         self,
@@ -244,10 +265,143 @@ class ModelInstance:
                     self.sync_db._gmd, eps_to_zero=False
                 )
 
-        # try:
-        #     self.instance.solve(update_type, output, mi_opt=options)
-        # except GamsException as e:
-        #     raise GamspyException(e.value) from e
+        ### shitty legacy code from GAMS Control
+        rc = gmdInitUpdate(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
+        self.sync_db._check_for_gmd_error(rc, self.workspace)
+
+        # Update gmd
+        accumulate_no_match_cnt = 0
+        no_match_cnt = 0
+
+        for mod in self.modifiers:
+            loc_sut = update_type
+            if mod.update_type != SymbolUpdateType._Inherit:
+                loc_sut = mod.update_type
+            if isinstance(mod._gams_symbol, GamsParameter):
+                rc, no_match_cnt = gmdUpdateModelSymbol(
+                    self.sync_db._gmd,
+                    mod._gams_symbol._sym_ptr,
+                    0,
+                    mod._gams_symbol._sym_ptr,
+                    loc_sut,
+                    no_match_cnt,
+                )
+                self.sync_db._check_for_gmd_error(rc, self.workspace)
+            else:
+                rc, no_match_cnt = gmdUpdateModelSymbol(
+                    self.sync_db._gmd,
+                    mod._gams_symbol._sym_ptr,
+                    mod._update_action,
+                    mod._data_symbol._sym_ptr,
+                    loc_sut,
+                    no_match_cnt,
+                )
+                self.sync_db._check_for_gmd_error(rc, self.workspace)
+
+            accumulate_no_match_cnt += no_match_cnt
+            if accumulate_no_match_cnt > options.no_match_limit:
+                raise GamspyException(
+                    f"Unmatched record limit exceeded while processing modifier {mod._gams_symbol.name}, for more info check GamsModelInstanceOpt parameter no_match_limit {self.workspace}"
+                )
+
+        # Close Log and status file and remove
+        if output:
+            gevSwitchLogStat(
+                self._gev, 0, "", False, "", False, None, None, None
+            )
+            ls_handle = gevGetLShandle(self._gev)
+            gevRestoreLogStatRewrite(self._gev, ls_handle)
+
+        if output == sys.stdout:
+            gevSwitchLogStat(
+                self._gev,
+                3,
+                gevGetStrOpt(self._gev, gevNameLogFile),
+                False,
+                gevGetStrOpt(self._gev, gevNameStaFile),
+                False,
+                None,
+                None,
+                ls_handle,
+            )
+            ls_handle = gevGetLShandle(self._gev)
+
+        tmp_solver = self._selected_solver
+        if options.solver:
+            tmp_solver = options.solver
+
+        tmp_opt_file = gmoOptFile(self._gmo)
+        save_opt_file = tmp_opt_file
+        save_name_opt_file = gmoNameOptFile(self._gmo)
+        if options is not None and options.opt_file != -1:
+            tmp_opt_file = options.opt_file
+
+        if options is not None and options.debug:
+            with open(
+                os.path.join(self.workspace._working_directory, "convert.opt"),
+                "w",
+            ) as opt_file:
+                opt_file.writelines(
+                    [
+                        "gams "
+                        + os.path.join(
+                            self.workspace._working_directory, "gams.gms"
+                        ),
+                        "dumpgdx "
+                        + os.path.join(
+                            self.workspace._working_directory, "dump.gdx\n"
+                        ),
+                        "dictmap "
+                        + os.path.join(
+                            self.workspace._working_directory, "dictmap.gdx"
+                        ),
+                    ]
+                )
+
+                gmoOptFileSet(self._gmo, 1)
+                gmoNameOptFileSet(
+                    self._gmo,
+                    os.path.join(
+                        self.workspace._working_directory, "convert.opt"
+                    ),
+                )
+                rc = gmdCallSolver(self.sync_db._gmd, "convert")
+                self.sync_db._check_for_gmd_error(rc, self.workspace)
+
+        gmoOptFileSet(self._gmo, tmp_opt_file)
+        gmoNameOptFileSet(
+            self._gmo,
+            os.path.join(
+                os.path.dirname(save_name_opt_file),
+                tmp_solver
+                + "."
+                + self.workspace._opt_file_extension(tmp_opt_file),
+            ),
+        )
+
+        rc = gmdCallSolver(self.sync_db._gmd, tmp_solver)
+        self.sync_db._check_for_gmd_error(rc, self.workspace)
+
+        gmoOptFileSet(self._gmo, save_opt_file)
+        gmoNameOptFileSet(self._gmo, save_name_opt_file)
+
+        if output == sys.stdout:
+            gevRestoreLogStat(self._gev, ls_handle)
+
+        if output is not None and output != sys.stdout:
+            # if self._log_available:
+            #     gevSwitchLogStat(
+            #         self._gev, 0, "", False, "", False, None, None, ls_handle
+            #     )
+            #     ls_handle = gevGetLShandle(self._gev)
+            #     with open(gevGetStrOpt(self._gev, gevNameLogFile)) as file:
+            #         for line in file.readlines():
+            #             output.write(line)
+            #         gevRestoreLogStat(self._gev, ls_handle)
+            # else:
+            output.write("No solver log available")
+        ### end of the legacy code
+
         self._update_main_container()
 
         # update model status
@@ -263,20 +417,20 @@ class ModelInstance:
         if params:
             lines = ["Set s__(*) /'s0'/;"]
             for symbol in params:
-                param_str = f"Parameter s__{symbol.name}"
+                param_str = f"Parameter s__{symbol.name}(s__"
                 domain = ""
                 if symbol.dimension:
                     domain = "(" + ",".join("*" * symbol.dimension) + ")"
 
-                param_str = f"{param_str}{domain};"
+                param_str = f"{param_str}{domain});"
                 lines.append(param_str)
 
-                assign_str = f"s__{symbol.name}{domain} = Eps;"
+                assign_str = f"s__{symbol.name}(s__{domain}) = Eps;"
                 lines.append(assign_str)
 
         scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
         for symbol in params:
-            scenario += f",\n{symbol.name}'.'param'.'s__{symbol.name}'"
+            scenario += f",\n'{symbol.name}'.'param'.'s__{symbol.name}'"
         scenario += "/;"
         lines.append(scenario)
 
@@ -291,7 +445,7 @@ class ModelInstance:
 
         if params:
             solve_string += " scenario dict"
-        solve_string += ","
+        solve_string += ";"
         lines.append(solve_string)
 
         return "\n".join(lines)
@@ -384,7 +538,7 @@ class ModelInstance:
         solver: str | None,
         given_options: ModelInstanceOptions | None,
         solver_options: dict | None,
-    ) -> tuple[GamsModelInstanceOpt | None, SymbolUpdateType]:
+    ) -> tuple[GamsModelInstanceOpt, SymbolUpdateType]:
         update_type = SymbolUpdateType.BaseCase
         opt_file = 1 if solver_options else -1
         options = GamsModelInstanceOpt(opt_file=opt_file)
