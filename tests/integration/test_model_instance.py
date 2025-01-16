@@ -10,8 +10,8 @@ import sys
 import gamspy_base
 import pandas as pd
 import pytest
-from gams import GamsExceptionExecution
 
+import gamspy.utils as utils
 from gamspy import (
     Container,
     Equation,
@@ -27,7 +27,7 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.integration
 
@@ -41,8 +41,6 @@ except Exception:
 
 @pytest.fixture
 def data():
-    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
-
     # Arrange
     m = Container(debugging_level="keep")
     canning_plants = ["seattle", "san-diego"]
@@ -58,46 +56,10 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["MODEL_INSTANCE_LICENSE"],
-            "-o",
-            ci_license_path,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    assert process.returncode == 0, process.stderr
-
     # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
 
     m.close()
-
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-            "-o",
-            ci_license_path,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    assert process.returncode == 0, process.stderr
 
     files = glob.glob("_*")
     for file in files:
@@ -638,19 +600,10 @@ def test_modifiable_with_domain(data):
     reason="Darwin runners are not dockerized yet.",
 )
 def test_license():
-    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "uninstall",
-            "license",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    license_path = utils._get_license_path(gamspy_base.directory)
+    if "gamslice.txt" not in license_path:
+        os.remove(license_path)
+
     m = Container()
     i = Set(m, "i", records=range(5000))
     p = Parameter(m, "p", domain=i)
@@ -664,7 +617,7 @@ def test_license():
     model = Model(
         m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
     )
-    with pytest.raises(GamsExceptionExecution):
+    with pytest.raises(GamspyException):
         model.freeze(modifiables=[p2])
 
     subprocess.run(
@@ -675,12 +628,24 @@ def test_license():
             "install",
             "license",
             os.environ["MODEL_INSTANCE_LICENSE"],
-            "-o",
-            ci_license_path,
         ],
         check=True,
         capture_output=True,
         text=True,
+    )
+
+    m = Container()
+    i = Set(m, "i", records=range(5000))
+    p = Parameter(m, "p", domain=i)
+    p2 = Parameter(m, "p2", records=5)
+    p.generateRecords()
+    v1 = Variable(m, "v1", domain=i)
+    z = Variable(m, "z")
+    e1 = Equation(m, "e1", domain=i)
+
+    e1[i] = p2 * v1[i] * p[i] >= z
+    model = Model(
+        m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
     )
 
     model.freeze(modifiables=[p2])
@@ -695,8 +660,6 @@ def test_license():
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
-            "-o",
-            ci_license_path,
         ],
         check=True,
         capture_output=True,
