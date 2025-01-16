@@ -50,7 +50,6 @@ from gams.core.gmo import (
     gmoHandleToPtr,
     gmoLoadDataLegacy,
     gmoModelStat,
-    gmoModelType,
     gmoNameOptFile,
     gmoNameOptFileSet,
     gmoOptFile,
@@ -216,15 +215,14 @@ class ModelInstance:
         if ret[0] != 0:
             raise GamspyException("Could not load model instance: " + ret[1])
 
-        self._selected_solver = gams_options._selected_solvers[
-            gmoModelType(self._gmo)
-        ]
         opt_file_name = gmoNameOptFile(self._gmo)
+        solvers = utils.getDefaultSolvers()
+        default_solver = solvers[self.model.problem.value]
         gmoNameOptFileSet(
             self._gmo,
             os.path.join(
                 os.path.dirname(opt_file_name),
-                self._selected_solver + os.path.splitext(opt_file_name)[1],
+                default_solver + os.path.splitext(opt_file_name)[1],
             ),
         )
 
@@ -238,7 +236,7 @@ class ModelInstance:
 
     def solve(
         self,
-        solver: str | None,
+        solver: str,
         given_options: ModelInstanceOptions | None = None,
         solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
@@ -330,10 +328,6 @@ class ModelInstance:
             )
             ls_handle = gevGetLShandle(self._gev)
 
-        tmp_solver = self._selected_solver
-        if options.solver:
-            tmp_solver = options.solver
-
         tmp_opt_file = gmoOptFile(self._gmo)
         save_opt_file = tmp_opt_file
         save_name_opt_file = gmoNameOptFile(self._gmo)
@@ -377,13 +371,13 @@ class ModelInstance:
             self._gmo,
             os.path.join(
                 os.path.dirname(save_name_opt_file),
-                tmp_solver
+                solver
                 + "."
                 + self.workspace._opt_file_extension(tmp_opt_file),
             ),
         )
 
-        rc = gmdCallSolver(self.sync_db._gmd, tmp_solver)
+        rc = gmdCallSolver(self.sync_db._gmd, solver)
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         gmoOptFileSet(self._gmo, save_opt_file)
