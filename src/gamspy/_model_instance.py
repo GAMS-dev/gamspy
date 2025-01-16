@@ -14,12 +14,10 @@ from gams import (
     GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
-    GamsOptions,
     GamsParameter,
     GamsWorkspace,
     SymbolUpdateType,
     UpdateAction,
-    VarType,
 )
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
@@ -71,15 +69,15 @@ if TYPE_CHECKING:
 
 
 VARIABLE_MAP = {
-    "binary": VarType.Binary,
-    "integer": VarType.Integer,
-    "positive": VarType.Positive,
-    "negative": VarType.Negative,
-    "free": VarType.Free,
-    "sos1": VarType.SOS1,
-    "sos2": VarType.SOS2,
-    "semicont": VarType.SemiCont,
-    "semiint": VarType.SemiInt,
+    "binary": 1,
+    "integer": 2,
+    "positive": 3,
+    "negative": 4,
+    "free": 5,
+    "sos1": 6,
+    "sos2": 7,
+    "semicont": 8,
+    "semiint": 9,
 }
 
 
@@ -193,8 +191,12 @@ class ModelInstance:
             gams_file.write(scenario_str)
 
         # Write pf file
-        gams_options = self._prepare_gams_options(options)
-        gams_options.export(self.pf_file)
+        extra_options = self._prepare_gams_options()
+        options._set_extra_options(extra_options)
+        options.log_file = os.path.join(
+            self.container.working_directory, "gamslog.dat"
+        )
+        options.export(self.pf_file)
 
         # Run
         try:
@@ -215,9 +217,9 @@ class ModelInstance:
         if ret[0] != 0:
             raise GamspyException("Could not load model instance: " + ret[1])
 
-        opt_file_name = gmoNameOptFile(self._gmo)
         solvers = utils.getDefaultSolvers()
         default_solver = solvers[self.model.problem.value]
+        opt_file_name = gmoNameOptFile(self._gmo)
         gmoNameOptFileSet(
             self._gmo,
             os.path.join(
@@ -303,7 +305,7 @@ class ModelInstance:
             accumulate_no_match_cnt += no_match_cnt
             if accumulate_no_match_cnt > options.no_match_limit:
                 raise GamspyException(
-                    f"Unmatched record limit exceeded while processing modifier {mod._gams_symbol.name}, for more info check GamsModelInstanceOpt parameter no_match_limit {self.workspace}"
+                    f"Unmatched record limit exceeded while processing modifier {mod._gams_symbol.name}, for more info check no_match_limit option."
                 )
 
         # Close Log and status file and remove
@@ -445,7 +447,7 @@ class ModelInstance:
         lines.append(f"{model.name}.justScrDir = 1;")
         solve_string = f"solve {model.name} using {model.problem}"
 
-        if model.problem not in [gp.Problem.MCP, gp.Problem.CNS]:
+        if model.problem not in (gp.Problem.MCP, gp.Problem.CNS):
             solve_string += f" {model.sense}"
 
         if model._objective_variable is not None:
@@ -514,36 +516,27 @@ class ModelInstance:
 
         return will_be_modified
 
-    def _prepare_gams_options(self, given_options: Options) -> GamsOptions:
-        options = GamsOptions(self.workspace)
-        options_dict = given_options._get_gams_compatible_options()
-
-        for key, value in options_dict.items():
-            setattr(options, key, value)
-
+    def _prepare_gams_options(self) -> dict:
         scrdir = self.container._process_directory
-        options.trace = self.trace_file
-        options._input = self.gms_file
-        options.output = self.lst_file
-        options.optdir = self.container.working_directory
-        options._sysdir = self.container.system_directory
-        options._scrdir = scrdir
-        options._scriptnext = os.path.join(scrdir, "gamsnext.sh")
-        options._solvercntr = self.solver_control_file
-        options._logfile = os.path.join(
-            self.container.working_directory, "gamslog.dat"
-        )
-        options._logoption = 2
-
-        options.license = utils._get_license_path(
-            self.container.system_directory
-        )
+        extra_options = {
+            "trace": self.trace_file,
+            "input": self.gms_file,
+            "output": self.lst_file,
+            "optdir": self.container.working_directory,
+            "sysdir": self.container.system_directory,
+            "scrdir": scrdir,
+            "scriptnext": os.path.join(scrdir, "gamsnext.sh"),
+            "license": utils._get_license_path(
+                self.container.system_directory
+            ),
+            "solvercntr": self.solver_control_file,
+        }
         if self.container._network_license:
-            options._netlicense = os.path.join(
+            extra_options["netlicense"] = os.path.join(
                 self.container._process_directory, "gamslice.dat"
             )
 
-        return options
+        return extra_options
 
     def _prepare_options(
         self,
