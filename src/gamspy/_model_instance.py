@@ -165,10 +165,14 @@ class ModelInstance:
         self.instantiate(model, freeze_options)
 
     def __del__(self):
-        if self._gmo:
+        if hasattr(self, "_gmo") and self._gmo:
             gmoFree(self._gmo)
 
-        if self._gev and gevHandleToPtr(self._gev) is not None:
+        if (
+            hasattr(self, "_gev")
+            and self._gev
+            and gevHandleToPtr(self._gev) is not None
+        ):
             gevFree(self._gev)
 
     def _get_debugging_level(self, debugging_level: str) -> int:
@@ -411,25 +415,38 @@ class ModelInstance:
             for modifier in self.modifiers
             if isinstance(modifier.gams_symbol, GamsParameter)
         ]
+        lines = []
         if params:
-            lines = ["Set s__(*) /'s0'/;"]
+            lines.append("Set s__(*) /'s0'/;")
             for symbol in params:
-                param_str = f"Parameter s__{symbol.name}(s__"
+                declaration = f"Parameter s__{symbol.name}(s__"
                 domain = ""
                 if symbol.dimension:
-                    domain = "(" + ",".join("*" * symbol.dimension) + ")"
+                    domain = "," + ",".join("*" * symbol.dimension)
+                domain += ")"
 
-                param_str = f"{param_str}{domain});"
-                lines.append(param_str)
+                declaration = f"{declaration}{domain};"
+                lines.append(declaration)
 
-                assign_str = f"s__{symbol.name}(s__{domain}) = Eps;"
+                domain = "(s__"
+
+                if symbol.dimension:
+                    domain += ","
+
+                assign_str = f"s__{symbol.name}(s__"
+                if symbol.dimension:
+                    assign_str += "," + ",".join(
+                        ["s__" for _ in range(symbol.dimension)]
+                    )
+
+                assign_str += ")" + " = Eps;"
                 lines.append(assign_str)
 
-        scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
-        for symbol in params:
-            scenario += f",\n'{symbol.name}'.'param'.'s__{symbol.name}'"
-        scenario += "/;"
-        lines.append(scenario)
+            scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
+            for symbol in params:
+                scenario += f",\n'{symbol.name}'.'param'.'s__{symbol.name}'"
+            scenario += "/;"
+            lines.append(scenario)
 
         lines.append(f"{model.name}.justScrDir = 1;")
         solve_string = f"solve {model.name} using {model.problem}"
