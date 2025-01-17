@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING
 
 import gams.transfer as gt
 from gams import (
-    DebugLevel,
     GamsDatabase,
-    GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
     GamsParameter,
@@ -95,6 +93,12 @@ UPDATE_ACTION_MAP = {
     "m": 5,
 }
 
+DEBUGGING_LEVEL_MAP = {
+    "delete": 0,
+    "keep_on_error": 1,
+    "keep": 2,
+}
+
 
 class ModelInstance:
     """
@@ -136,9 +140,7 @@ class ModelInstance:
             system_directory=container.system_directory,
         )
 
-        self._debugging_level = self._get_debugging_level(
-            container._debugging_level
-        )
+        self._debugging_level = DEBUGGING_LEVEL_MAP[container._debugging_level]
         self.workspace = GamsWorkspace(
             container.working_directory,
             container.system_directory,
@@ -169,14 +171,6 @@ class ModelInstance:
             and gevHandleToPtr(self._gev) is not None
         ):
             gevFree(self._gev)
-
-    def _get_debugging_level(self, debugging_level: str) -> int:
-        DEBUGGING_MAP = {
-            "delete": DebugLevel.Off,
-            "keep_on_error": DebugLevel.KeepFilesOnError,
-            "keep": DebugLevel.KeepFiles,
-        }
-        return DEBUGGING_MAP[debugging_level]
 
     def instantiate(self, model: Model, options: Options):
         # Check the gmd state.
@@ -606,7 +600,7 @@ class ModelInstance:
 
                 try:
                     sync_db_symbol = self.sync_db[symbol.parent.name]
-                except GamsException:
+                except GamspyException:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
                             symbol.parent.name,
