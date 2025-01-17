@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import gams.transfer as gt
 from gams import (
     GamsDatabase,
+    GamsException,
     GamsModelInstanceOpt,
     GamsModifier,
     GamsParameter,
@@ -600,7 +601,7 @@ class ModelInstance:
 
                 try:
                     sync_db_symbol = self.sync_db[symbol.parent.name]
-                except GamspyException:
+                except GamsException:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
                             symbol.parent.name,
