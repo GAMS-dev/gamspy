@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 import gams.transfer as gt
 from gams import (
     DebugLevel,
-    EquType,
     GamsDatabase,
     GamsException,
     GamsModelInstanceOpt,
@@ -17,7 +16,6 @@ from gams import (
     GamsParameter,
     GamsWorkspace,
     SymbolUpdateType,
-    UpdateAction,
 )
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
@@ -82,19 +80,19 @@ VARIABLE_MAP = {
 
 
 EQUATION_MAP = {
-    "eq": EquType.E,
-    "leq": EquType.L,
-    "geq": EquType.G,
-    "nonbinding": EquType.N,
-    "external": EquType.X,
+    "eq": 0,
+    "geq": 1,
+    "leq": 2,
+    "nonbinding": 3,
+    "external": 4,
 }
 
 UPDATE_ACTION_MAP = {
-    "l": UpdateAction.Primal,
-    "m": UpdateAction.Dual,
-    "up": UpdateAction.Upper,
-    "lo": UpdateAction.Lower,
-    "fx": UpdateAction.Fixed,
+    "up": 1,
+    "lo": 2,
+    "fx": 3,
+    "l": 4,
+    "m": 5,
 }
 
 
