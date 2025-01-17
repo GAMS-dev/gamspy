@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Optional
 
-from gams import SymbolUpdateType
 from pydantic import BaseModel, ConfigDict
 
 from gamspy.exceptions import ValidationError
@@ -526,22 +525,23 @@ class Options(BaseModel):
             )
 
 
-update_type_map = {
-    "0": SymbolUpdateType.Zero,
-    "base_case": SymbolUpdateType.BaseCase,
-    "accumulate": SymbolUpdateType.Accumulate,
+UPDATE_TYPE_MAP = {
+    "0": 0,
+    "base_case": 1,
+    "accumulate": 2,
+    "inherit": 3,
 }
 
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
-    update_type: Literal["0", "base_case", "accumulate"] = (
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
         "base_case"
     )
 
     def items(self):
         dictionary = self.model_dump()
-        dictionary["update_type"] = update_type_map[dictionary["update_type"]]
+        dictionary["update_type"] = UPDATE_TYPE_MAP[dictionary["update_type"]]
 
         return dictionary.items()

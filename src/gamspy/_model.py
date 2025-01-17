@@ -22,7 +22,12 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._convert import GamsConverter, LatexConverter
 from gamspy._model_instance import ModelInstance
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import (
+    EXECUTION_OPTIONS,
+    MODEL_ATTR_OPTION_MAP,
+    ModelInstanceOptions,
+    Options,
+)
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -35,7 +40,6 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
-    from gamspy._options import ModelInstanceOptions
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._symbols.symbol import Symbol
 
@@ -1114,6 +1118,9 @@ class Model:
             options._frame = frame
 
         if self._is_frozen:
+            if model_instance_options is None:
+                model_instance_options = ModelInstanceOptions()
+
             self.instance.solve(
                 solver, model_instance_options, solver_options, output
             )

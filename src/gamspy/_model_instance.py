@@ -10,11 +10,9 @@ import gams.transfer as gt
 from gams import (
     GamsDatabase,
     GamsException,
-    GamsModelInstanceOpt,
     GamsModifier,
     GamsParameter,
     GamsWorkspace,
-    SymbolUpdateType,
 )
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
@@ -232,14 +230,23 @@ class ModelInstance:
     def solve(
         self,
         solver: str,
-        given_options: ModelInstanceOptions | None = None,
+        instance_options: ModelInstanceOptions,
         solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
-        # get options from dict
-        options, update_type = self._prepare_options(
-            solver, given_options, solver_options
+        # write solver options file
+        solver_options_file_name = os.path.join(
+            self.container.working_directory, f"{solver.lower()}.opt"
         )
+        option_file = 0
+        if solver_options:
+            with open(
+                solver_options_file_name, "w", encoding="utf-8"
+            ) as solver_file:
+                for key, value in solver_options.items():
+                    solver_file.write(f"{key} {value}\n")
+
+            option_file = 1
 
         # update sync_db
         self.container.write(self.sync_db._gmd, eps_to_zero=False)
@@ -271,9 +278,10 @@ class ModelInstance:
         no_match_cnt = 0
 
         for mod in self.modifiers:
-            loc_sut = update_type
-            if mod.update_type != SymbolUpdateType._Inherit:
+            loc_sut = instance_options.update_type
+            if mod.update_type != 3:
                 loc_sut = mod.update_type
+
             if isinstance(mod._gams_symbol, GamsParameter):
                 rc, no_match_cnt = gmdUpdateModelSymbol(
                     self.sync_db._gmd,
@@ -296,7 +304,7 @@ class ModelInstance:
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
 
             accumulate_no_match_cnt += no_match_cnt
-            if accumulate_no_match_cnt > options.no_match_limit:
+            if accumulate_no_match_cnt > instance_options.no_match_limit:
                 raise GamspyException(
                     f"Unmatched record limit exceeded while processing modifier {mod._gams_symbol.name}, for more info check no_match_limit option."
                 )
@@ -326,10 +334,10 @@ class ModelInstance:
         tmp_opt_file = gmoOptFile(self._gmo)
         save_opt_file = tmp_opt_file
         save_name_opt_file = gmoNameOptFile(self._gmo)
-        if options is not None and options.opt_file != -1:
-            tmp_opt_file = options.opt_file
+        if instance_options is not None and option_file != 0:
+            tmp_opt_file = option_file
 
-        if options is not None and options.debug:
+        if instance_options is not None and instance_options.debug:
             with open(
                 os.path.join(self.workspace._working_directory, "convert.opt"),
                 "w",
@@ -531,40 +539,7 @@ class ModelInstance:
 
         return extra_options
 
-    def _prepare_options(
-        self,
-        solver: str | None,
-        given_options: ModelInstanceOptions | None,
-        solver_options: dict | None,
-    ) -> tuple[GamsModelInstanceOpt, SymbolUpdateType]:
-        update_type = SymbolUpdateType.BaseCase
-        opt_file = 1 if solver_options else -1
-        options = GamsModelInstanceOpt(opt_file=opt_file)
-
-        if solver is not None:
-            options.solver = solver
-
-            if solver_options is not None:
-                solver_options_file_name = os.path.join(
-                    self.container.working_directory, f"{solver.lower()}.opt"
-                )
-
-                with open(
-                    solver_options_file_name, "w", encoding="utf-8"
-                ) as solver_file:
-                    for key, value in solver_options.items():
-                        solver_file.write(f"{key} {value}\n")
-
-        if given_options is not None:
-            for key, value in given_options.items():
-                setattr(options, key, value)
-
-                if key == "update_type":
-                    update_type = value
-
-        return options, update_type
-
-    def _get_columns_to_drop(self, attr):
+    def _get_columns_to_drop(self, attr: str) -> list[str]:
         attr_map = {
             "l": "level",
             "m": "marginal",
