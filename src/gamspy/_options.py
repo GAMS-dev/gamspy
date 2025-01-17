@@ -525,23 +525,9 @@ class Options(BaseModel):
             )
 
 
-UPDATE_TYPE_MAP = {
-    "0": 0,
-    "base_case": 1,
-    "accumulate": 2,
-    "inherit": 3,
-}
-
-
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
     debug: bool = False
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
         "base_case"
     )
-
-    def items(self):
-        dictionary = self.model_dump()
-        dictionary["update_type"] = UPDATE_TYPE_MAP[dictionary["update_type"]]
-
-        return dictionary.items()

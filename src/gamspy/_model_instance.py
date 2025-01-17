@@ -98,6 +98,13 @@ DEBUGGING_LEVEL_MAP = {
     "keep": 2,
 }
 
+UPDATE_TYPE_MAP = {
+    "0": 0,
+    "base_case": 1,
+    "accumulate": 2,
+    "inherit": 3,
+}
+
 
 class ModelInstance:
     """
@@ -278,7 +285,7 @@ class ModelInstance:
         no_match_cnt = 0
 
         for mod in self.modifiers:
-            loc_sut = instance_options.update_type
+            loc_sut = UPDATE_TYPE_MAP[instance_options.update_type]
             if mod.update_type != 3:
                 loc_sut = mod.update_type
 
