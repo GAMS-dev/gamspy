@@ -9,9 +9,10 @@ from typing import TYPE_CHECKING
 import gams.transfer as gt
 from gams import (
     GamsDatabase,
+    GamsEquation,
     GamsException,
-    GamsModifier,
     GamsParameter,
+    GamsVariable,
     GamsWorkspace,
 )
 from gams.core.cfg import GMS_SSSIZE
@@ -104,6 +105,49 @@ UPDATE_TYPE_MAP = {
     "accumulate": 2,
     "inherit": 3,
 }
+
+
+class GamsModifier:
+    def __init__(
+        self,
+        gams_symbol: GamsParameter | GamsVariable | GamsEquation,
+        update_action: int | None = None,
+        data_symbol: GamsParameter | None = None,
+        update_type: int = 3,
+    ):
+        self.update_action = None
+        self.gams_symbol = gams_symbol
+        self.update_type = update_type
+
+        # update_action and data_symbol specified
+        if update_action is not None and data_symbol is not None:
+            self._validate_update_action(update_action)
+
+            self.update_action = update_action
+            self.data_symbol = data_symbol
+        # only the gams_symbol is specified
+        elif update_action is None and data_symbol is None:
+            self.data_symbol = None
+        else:
+            raise GamspyException(
+                "Wrong combination of parameters. Specifying only update_action or data_symbol is not allowed."
+            )
+
+    def _validate_update_action(self, update_action: int):
+        if update_action in (1, 2, 3):
+            if not isinstance(self.gams_symbol, GamsVariable):
+                raise GamspyException(
+                    f"GAMS Symbol must be GAMSVariable for {update_action}"
+                )
+        elif update_action in (4, 5):
+            if not (
+                isinstance(self.gams_symbol, (GamsVariable, GamsEquation))
+            ):
+                raise GamspyException(
+                    f"GAMS Symbol must be GAMSVariable or GAMSEquation for {update_action}"
+                )
+        else:
+            raise GamspyException(f"Unknown update action {update_action}")
 
 
 class ModelInstance:
@@ -289,12 +333,12 @@ class ModelInstance:
             if mod.update_type != 3:
                 loc_sut = mod.update_type
 
-            if isinstance(mod._gams_symbol, GamsParameter):
+            if isinstance(mod.gams_symbol, GamsParameter):
                 rc, no_match_cnt = gmdUpdateModelSymbol(
                     self.sync_db._gmd,
-                    mod._gams_symbol._sym_ptr,
+                    mod.gams_symbol._sym_ptr,
                     0,
-                    mod._gams_symbol._sym_ptr,
+                    mod.gams_symbol._sym_ptr,
                     loc_sut,
                     no_match_cnt,
                 )
@@ -302,9 +346,9 @@ class ModelInstance:
             else:
                 rc, no_match_cnt = gmdUpdateModelSymbol(
                     self.sync_db._gmd,
-                    mod._gams_symbol._sym_ptr,
-                    mod._update_action,
-                    mod._data_symbol._sym_ptr,
+                    mod.gams_symbol._sym_ptr,
+                    mod.update_action,
+                    mod.data_symbol._sym_ptr,
                     loc_sut,
                     no_match_cnt,
                 )
@@ -313,7 +357,7 @@ class ModelInstance:
             accumulate_no_match_cnt += no_match_cnt
             if accumulate_no_match_cnt > instance_options.no_match_limit:
                 raise GamspyException(
-                    f"Unmatched record limit exceeded while processing modifier {mod._gams_symbol.name}, for more info check no_match_limit option."
+                    f"Unmatched record limit exceeded while processing modifier {mod.gams_symbol.name}, for more info check no_match_limit option."
                 )
 
         # Close Log and status file and remove
@@ -379,12 +423,7 @@ class ModelInstance:
         gmoOptFileSet(self._gmo, tmp_opt_file)
         gmoNameOptFileSet(
             self._gmo,
-            os.path.join(
-                os.path.dirname(save_name_opt_file),
-                solver
-                + "."
-                + self.workspace._opt_file_extension(tmp_opt_file),
-            ),
+            os.path.join(os.path.dirname(save_name_opt_file), solver + ".opt"),
         )
 
         rc = gmdCallSolver(self.sync_db._gmd, solver)
