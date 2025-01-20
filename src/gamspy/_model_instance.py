@@ -7,14 +7,6 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
-from gams import (
-    GamsDatabase,
-    GamsEquation,
-    GamsException,
-    GamsParameter,
-    GamsVariable,
-    GamsWorkspace,
-)
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
     gevCreateD,
@@ -56,6 +48,12 @@ from gams.core.gmo import (
 import gamspy as gp
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._database import (
+    Database,
+    GamsEquation,
+    GamsParameter,
+    GamsVariable,
+)
 from gamspy._options import ModelInstanceOptions, Options
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -93,12 +91,6 @@ UPDATE_ACTION_MAP = {
     "m": 5,
 }
 
-DEBUGGING_LEVEL_MAP = {
-    "delete": 0,
-    "keep_on_error": 1,
-    "keep": 2,
-}
-
 UPDATE_TYPE_MAP = {
     "0": 0,
     "base_case": 1,
@@ -118,6 +110,7 @@ class GamsModifier:
         self.update_action = None
         self.gams_symbol = gams_symbol
         self.update_type = update_type
+        self.data_symbol = None
 
         # update_action and data_symbol specified
         if update_action is not None and data_symbol is not None:
@@ -127,7 +120,7 @@ class GamsModifier:
             self.data_symbol = data_symbol
         # only the gams_symbol is specified
         elif update_action is None and data_symbol is None:
-            self.data_symbol = None
+            ...
         else:
             raise GamspyException(
                 "Wrong combination of parameters. Specifying only update_action or data_symbol is not allowed."
@@ -190,13 +183,8 @@ class ModelInstance:
             system_directory=container.system_directory,
         )
 
-        self._debugging_level = DEBUGGING_LEVEL_MAP[container._debugging_level]
-        self.workspace = GamsWorkspace(
-            container.working_directory,
-            container.system_directory,
-            debug=self._debugging_level,
-        )
-        self.sync_db = GamsDatabase(self.workspace)
+        self.workspace = container._workspace
+        self.sync_db = Database(self.workspace)
 
         self._gev = new_gevHandle_tp()
         ret = gevCreateD(self._gev, container.system_directory, GMS_SSSIZE)
@@ -348,7 +336,7 @@ class ModelInstance:
                     self.sync_db._gmd,
                     mod.gams_symbol._sym_ptr,
                     mod.update_action,
-                    mod.data_symbol._sym_ptr,
+                    mod.data_symbol._sym_ptr,  # type: ignore
                     loc_sut,
                     no_match_cnt,
                 )
@@ -390,22 +378,22 @@ class ModelInstance:
 
         if instance_options is not None and instance_options.debug:
             with open(
-                os.path.join(self.workspace._working_directory, "convert.opt"),
+                os.path.join(self.workspace.working_directory, "convert.opt"),
                 "w",
             ) as opt_file:
                 opt_file.writelines(
                     [
                         "gams "
                         + os.path.join(
-                            self.workspace._working_directory, "gams.gms"
+                            self.workspace.working_directory, "gams.gms"
                         ),
                         "dumpgdx "
                         + os.path.join(
-                            self.workspace._working_directory, "dump.gdx\n"
+                            self.workspace.working_directory, "dump.gdx\n"
                         ),
                         "dictmap "
                         + os.path.join(
-                            self.workspace._working_directory, "dictmap.gdx"
+                            self.workspace.working_directory, "dictmap.gdx"
                         ),
                     ]
                 )
@@ -414,7 +402,7 @@ class ModelInstance:
                 gmoNameOptFileSet(
                     self._gmo,
                     os.path.join(
-                        self.workspace._working_directory, "convert.opt"
+                        self.workspace.working_directory, "convert.opt"
                     ),
                 )
                 rc = gmdCallSolver(self.sync_db._gmd, "convert")
@@ -622,7 +610,7 @@ class ModelInstance:
 
                 try:
                     sync_db_symbol = self.sync_db[symbol.parent.name]
-                except GamsException:
+                except GamspyException:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
                             symbol.parent.name,
@@ -654,7 +642,6 @@ class ModelInstance:
                     attr_name,
                     symbol.parent.dimension,
                 )
-
                 modifiers.append(
                     GamsModifier(sync_db_symbol, update_action, data_symbol)
                 )

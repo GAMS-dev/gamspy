@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import copy
 import io
 import json
@@ -14,8 +15,6 @@ from typing import TYPE_CHECKING
 
 import certifi
 import urllib3
-from gams import GamsEngineConfiguration
-from gams.control.workspace import GamsException
 
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
@@ -87,13 +86,49 @@ SCOPES = [
 ]
 
 
-class Endpoint:
-    def get_request_headers(self):
-        return {
-            "Authorization": self.client._engine_config._get_auth_header(),
-            "User-Agent": "GAMSPy EngineClient",
-            "Accept": "application/json",
-        }
+class EngineConfiguration:
+    """Configuration that allows the execution of jobs on a specific GAMS Engine instance"""
+
+    def __init__(
+        self, host: str, username: str, password: str, jwt: str, namespace: str
+    ):
+        self.jwt = jwt
+        self.username = username
+        self.password = password
+        self.namespace = namespace
+        self.host = self._verify_host(host)
+
+    def _verify_host(self, host: str):
+        validated_url = urllib.parse.urlparse(host)
+        if validated_url.scheme not in ["http", "https"]:
+            raise ValidationError(
+                "Invalid GAMS Engine host. Only HTTP and HTTPS protocols supported"
+            )
+        if validated_url.netloc == "":
+            raise ValidationError(
+                "Invalid GAMS Engine host. Make sure you provide a valid URL."
+            )
+        host = host.rstrip("/")
+        if not host.endswith("/api"):
+            host += "/api"
+
+        return host
+
+    def _get_auth_header(self):
+        """Returns authentication header"""
+        if not self.username:
+            if not self.jwt:
+                raise ValidationError(
+                    "Neither username/password nor JWT token provided for authentication with the GAMS Engine instance."
+                )
+            return "Bearer " + self.jwt
+
+        return "Basic " + base64.b64encode(
+            (self.username + ":" + self.password).encode("utf-8")
+        ).decode("utf-8")
+
+
+class Endpoint: ...
 
 
 class Auth(Endpoint):
@@ -149,7 +184,7 @@ class Auth(Endpoint):
                 self.client._engine_config.host
                 + "/auth/?"
                 + urllib.parse.urlencode(info, doseq=True),
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
 
             response_data = r.data.decode("utf-8", errors="replace")
@@ -216,7 +251,7 @@ class Auth(Endpoint):
                 info = json.loads(response_data)
 
             if r.status == 200:
-                return info["token"]
+                return info["token"]  # type: ignore
             elif r.status == 400:
                 raise EngineClientException(f"Bad request: {info['message']}")
             elif r.status == 401:
@@ -243,7 +278,7 @@ class Auth(Endpoint):
             r = self._http.request(
                 "POST",
                 self.client._engine_config.host + "/auth/logout",
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
 
             if r.status == 200:
@@ -293,7 +328,7 @@ class Job(Endpoint):
             r = self._http.request(
                 "GET",
                 self.client._engine_config.host + f"/jobs/{token}",
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
 
@@ -371,7 +406,7 @@ class Job(Endpoint):
                 + "/jobs/?"
                 + urllib.parse.urlencode(query_params, doseq=True),
                 fields=file_params,
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
             if r.status == 201:
@@ -424,7 +459,7 @@ class Job(Endpoint):
             r = self._http.request(
                 "GET",
                 self.client._engine_config.host + f"/jobs/{token}/result",
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
                 preload_content=False,
             )
 
@@ -491,7 +526,7 @@ class Job(Endpoint):
             r = self._http.request(
                 "DELETE",
                 self.client._engine_config.host + "/jobs/" + token + "/result",
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
 
@@ -541,7 +576,7 @@ class Job(Endpoint):
             r = self._http.request(
                 "DELETE",
                 self.client._engine_config.host + f"/jobs/{token}/unread-logs",
-                headers=self.get_request_headers(),
+                headers=self.client.get_request_headers(),
             )
             response_data = r.data.decode("utf-8", errors="replace")
 
@@ -692,9 +727,9 @@ class EngineClient:
     def __init__(
         self,
         host: str,
-        username: str | None = None,
-        password: str | None = None,
-        jwt: str | None = None,
+        username: str = "",
+        password: str = "",
+        jwt: str = "",
         namespace: str = "global",
         extra_model_files: list[str] = [],
         engine_options: dict | None = None,
@@ -716,24 +751,24 @@ class EngineClient:
             cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
         )
 
-        self._engine_config = self._get_engine_config()
+        self._engine_config = EngineConfiguration(
+            self.host,
+            self.username,
+            self.password,
+            self.jwt,
+            self.namespace,
+        )
 
         # Endpoints
         self.job = Job(self)
         self.auth = Auth(self)
 
-    def _get_engine_config(self):
-        try:
-            return GamsEngineConfiguration(
-                self.host,
-                self.username,
-                self.password,
-                self.jwt,
-                self.namespace,
-            )
-
-        except GamsException as e:
-            raise ValidationError(e) from e
+    def get_request_headers(self):
+        return {
+            "Authorization": self._engine_config._get_auth_header(),
+            "User-Agent": "GAMSPy EngineClient",
+            "Accept": "application/json",
+        }
 
 
 class GAMSEngine(backend.Backend):
