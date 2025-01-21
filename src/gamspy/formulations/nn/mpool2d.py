@@ -35,21 +35,42 @@ class _MPool2d:
         self.sense = sense
 
     def _get_big_M_for_N_C(
-        self, input: gp.Parameter | gp.Variable, default_big_m: int
+        self,
+        input: gp.Parameter | gp.Variable,
+        default_big_m: int,
+        subset: gp.Set,
     ) -> tuple[gp.Parameter, gp.Parameter, gp.Parameter]:
-        N, C, H, W = input.domain
-        big_m_par = gp.Parameter(self.container, domain=[N, C])
-        lb = gp.Parameter(self.container, domain=[N, C])
-        ub = gp.Parameter(self.container, domain=[N, C])
+        N, C = input.domain[:2]
+        H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
+        subset2 = gp.Set(self.container, domain=[H_out, W_out, H_in, W_in])
+        subset2[H_out, W_out, H_in, W_in] = gp.Sum(
+            [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
+        )
+
+        big_m_par = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        lb = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        ub = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
 
         if isinstance(input, gp.Variable):
-            ub[...] = gp.Smax([H, W], input.up[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input.lo[N, C, H, W])
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.up[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.lo[N, C, H_in, W_in],
+            )
         else:
-            ub[...] = gp.Smax([H, W], input[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input[N, C, H, W])
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
 
-        big_m_par[N, C] = ub - lb
+        big_m_par[N, C, H_out, W_out] = ub - lb
         big_m_par[...].where[big_m_par[...] == "inf"] = default_big_m
         return big_m_par, lb, ub
 
@@ -123,7 +144,7 @@ class _MPool2d:
         )
 
         # can be done better
-        _big_m, lb, ub = self._get_big_M_for_N_C(input, big_m)
+        _big_m, lb, ub = self._get_big_M_for_N_C(input, big_m, subset)
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
         if self.sense == "max":
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
