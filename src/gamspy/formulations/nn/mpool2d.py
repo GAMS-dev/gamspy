@@ -34,11 +34,12 @@ class _MPool2d:
         self.padding = _padding
         self.sense = sense
 
-    def _get_big_M_for_N_C(
+    def _set_bounds_and_big_M(
         self,
         input: gp.Parameter | gp.Variable,
         default_big_m: int,
         subset: gp.Set,
+        out_var: gp.Variable,
     ) -> tuple[gp.Parameter, gp.Parameter, gp.Parameter]:
         N, C = input.domain[:2]
         H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
@@ -70,15 +71,24 @@ class _MPool2d:
                 input[N, C, H_in, W_in],
             )
 
+        out_var.lo[...] = lb
+        out_var.up[...] = ub
+
         big_m_par[N, C, H_out, W_out] = ub - lb
         big_m_par[...].where[big_m_par[...] == "inf"] = default_big_m
-        return big_m_par, lb, ub
+
+        return big_m_par
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, big_m: int = 1000
+        self,
+        input: gp.Parameter | gp.Variable,
+        big_m: int = 1000,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
+        if not isinstance(propagate_bounds, bool):
+            raise ValidationError("Expected a boolean for propagate_bounds")
 
         if len(input.domain) != 4:
             raise ValidationError(
@@ -143,8 +153,11 @@ class _MPool2d:
             self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
         )
 
-        # can be done better
-        _big_m, lb, ub = self._get_big_M_for_N_C(input, big_m, subset)
+        if propagate_bounds:
+            _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var)
+        else:
+            _big_m = gp.Parameter(self.container, records=big_m)
+
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
         if self.sense == "max":
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
@@ -174,8 +187,5 @@ class _MPool2d:
             )
             == 1
         )
-
-        out_var.lo[...] = lb
-        out_var.up[...] = ub
 
         return out_var, [less_than, greater_than, pick_one]
