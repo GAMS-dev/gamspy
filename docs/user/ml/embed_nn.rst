@@ -122,21 +122,44 @@ could apply the softmax function to obtain probabilities. However, we can also
 choose to work directly with the logits, as softmax is a monotonically
 increasing function.
 
-.. code-block:: python
 
-   noise = gp.Variable(m, name="xn", domain=dim([784]))
+.. tabs::
+   .. group-tab:: Linear Operation
+      `z2` and `z3` will be created by linear formulations.
 
-   a1 = gp.Variable(m, name="x1", domain=dim([784]))
-   z2 = gp.Variable(m, name="a2", domain=dim([hidden_layer_neurons]))
-   z3 = gp.Variable(m, name="a3", domain=dim([10]))
+      .. code-block:: python
 
+         noise = gp.Variable(m, name="xn", domain=dim([784]))
+      
+         a1 = gp.Variable(m, name="x1", domain=dim([784]))
+         # z2 = gp.Variable(m, name="a2", domain=dim([hidden_layer_neurons]))
+         # z3 = gp.Variable(m, name="a3", domain=dim([10]))
+      
+         add_noise_and_normalize = gp.Equation(m, "eq1", domain=dim([784]))
+         add_noise_and_normalize[...] = a1 == (image + noise - mean[0]) / std[0]
+      
+         #ensure bounds
+         a1.lo[...] =   - mean[0] / std[0]
+         a1.up[...] = (1 - mean[0]) / std[0]
 
-   add_noise_and_normalize = gp.Equation(m, "eq1", domain=dim([784]))
-   add_noise_and_normalize[...] = a1 == (image + noise - mean[0]) / std[0]
+   .. group-tab:: Matrix Multiplication
+      We create `z2` and `z3`.
 
-   #ensure bounds
-   a1.lo[...] =   - mean[0] / std[0]
-   a1.up[...] = (1 - mean[0]) / std[0]
+      .. code-block:: python
+
+         noise = gp.Variable(m, name="xn", domain=dim([784]))
+      
+         a1 = gp.Variable(m, name="x1", domain=dim([784]))
+         z2 = gp.Variable(m, name="a2", domain=dim([hidden_layer_neurons]))
+         z3 = gp.Variable(m, name="a3", domain=dim([10]))
+      
+      
+         add_noise_and_normalize = gp.Equation(m, "eq1", domain=dim([784]))
+         add_noise_and_normalize[...] = a1 == (image + noise - mean[0]) / std[0]
+      
+         #ensure bounds
+         a1.lo[...] =   - mean[0] / std[0]
+         a1.up[...] = (1 - mean[0]) / std[0]
 
 
 We create a new variable called `noise`, which will be used to perturb the
@@ -150,20 +173,6 @@ inputs. We then ensure that `a1` stays within the valid range, so that the
 We are ready to implement our first linear layer:
 
 .. tabs::
-   .. group-tab:: Matrix Multiplication
-      .. code-block:: python
-
-         forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
-         forward_1[...] = z2 == w1 @ a1 + b1
-
-         a2, _ = gp.math.relu_with_binary_var(z2)
-      
-      We define `z2` as the matrix multiplication of the weights and the previous
-      layer, plus the bias term. Note that we use
-      :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
-      to declare the `a2` variable, which automatically creates the necessary
-      constraints and the activated variable for us.
-
    .. group-tab:: Linear Operation
       .. code-block:: python
 
@@ -180,16 +189,22 @@ We are ready to implement our first linear layer:
       as output of the linear operation. Finally, we apply the 
       :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>` to obtain `a2`.
       
-
-.. tabs::
    .. group-tab:: Matrix Multiplication
-      Similarly, we can define `z3`:
-
       .. code-block:: python
 
-         forward_2 = gp.Equation(m, "eq3", domain=dim([10]))
-         forward_2[...] = z3 == w2 @ a2 + b2
+         forward_1 = gp.Equation(m, "eq2", domain=dim([hidden_layer_neurons]))
+         forward_1[...] = z2 == w1 @ a1 + b1
 
+         a2, _ = gp.math.relu_with_binary_var(z2)
+      
+      We define `z2` as the matrix multiplication of the weights and the previous
+      layer, plus the bias term. Note that we use
+      :meth:`relu_with_binary_var <gamspy.math.relu_with_binary_var>`
+      to declare the `a2` variable, which automatically creates the necessary
+      constraints and the activated variable for us.
+
+
+.. tabs::
    .. group-tab:: Linear Operation
       Similarly, `z3` is created by the second linear operation `l2`:
 
@@ -199,6 +214,15 @@ We are ready to implement our first linear layer:
          l2.load_weights(l2_weight, b2_weight)
          z3, _ = l2(a2)
 
+   .. group-tab:: Matrix Multiplication
+      Similarly, we can define `z3`:
+
+      .. code-block:: python
+
+         forward_2 = gp.Equation(m, "eq3", domain=dim([10]))
+         forward_2[...] = z3 == w2 @ a2 + b2
+
+
 
 This essentially completes the embedding of the neural network into our
 optimization problem. If we were particularly interested in obtaining real
@@ -207,8 +231,8 @@ probabilities, we could have also added:
 .. code-block:: python
 
    # if you need the probabilities, however it comes at a cost
-   # WE DO NOT ADD THIS, or you cannot use MIQCP but have to use MINLP
-   a3, _ = gp.math.softmax(z3)
+   # WE DO NOT ADD THIS, or you cannot use MIP but have to use MINLP
+   # a3, _ = gp.math.softmax(z3)
 
 Next, we define the component that specifies the adversarial attack. Our goal
 is to make the model confuse our digit with another digit while making the
@@ -238,15 +262,22 @@ another digit to be more likely than the correct one.
 
 
 Confusing the neural network by completely changing the image would be trivial. We aim for the minimum 
-possible change to the original image. Therefore, we define our objective as the squared sum of 
-perturbations.
+possible change to the original image. Therefore, we define our objective as the L1 norm of the perturbations.
 
 .. code-block:: python
 
    obj = gp.Variable(m, name="z")
 
+   noise_upper = gp.Variable(m, name="noise_upper", domain=noise.domain)
+   
+   set_noise_upper_1 = gp.Equation(m, "set_noise_upper_1", domain=noise.domain)
+   set_noise_upper_1[...] = noise_upper[...] >= noise
+   
+   set_noise_upper_2 = gp.Equation(m, "set_noise_upper_2", domain=noise.domain)
+   set_noise_upper_2[...] = noise_upper[...] >= -noise
+   
    set_obj = gp.Equation(m, "eq6")
-   set_obj[...] = obj == gp.math.vector_norm(noise) ** 2
+   set_obj[...] = obj == gp.Sum(noise_upper.domain, noise_upper)
 
 
 Finally, bringing it all together:
@@ -259,7 +290,7 @@ Finally, bringing it all together:
        equations=m.getEquations(),
        objective=obj,
        sense="min",
-       problem="MIQCP"
+       problem="MIP"
    )
 
    model.solve(output=sys.stdout, solver="cplex")
