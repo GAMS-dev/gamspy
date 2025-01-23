@@ -11,72 +11,28 @@ from gams.core.gmd import (
     GMD_NRRECORDS,
     GMD_NRSYMBOLS,
     GMD_USERINFO,
-    GMS_EQUTYPE_C,
-    GMS_EQUTYPE_E,
-    GMS_EQUTYPE_G,
-    GMS_EQUTYPE_L,
-    GMS_EQUTYPE_N,
-    GMS_EQUTYPE_X,
     GMS_MAX_INDEX_DIM,
     GMS_SSSIZE,
     GMS_SV_UNDEF,
-    GMS_SVIDX_MINF,
-    GMS_SVIDX_PINF,
-    GMS_VARTYPE_BINARY,
-    GMS_VARTYPE_FREE,
-    GMS_VARTYPE_INTEGER,
-    GMS_VARTYPE_NEGATIVE,
-    GMS_VARTYPE_POSITIVE,
-    GMS_VARTYPE_SEMICONT,
-    GMS_VARTYPE_SEMIINT,
-    GMS_VARTYPE_SOS1,
-    GMS_VARTYPE_SOS2,
-    GMS_VARTYPE_UNKNOWN,
     dt_alias,
     dt_equ,
     dt_par,
     dt_set,
     dt_var,
-    gmdAddRecordPy,
     gmdAddSymbolPy,
     gmdAddSymbolXPy,
     gmdCheckDBDV,
     gmdCheckSymbolDV,
-    gmdClearSymbol,
-    gmdCopySymbolIteratorPy,
     gmdCreateD,
-    gmdDeleteRecord,
-    gmdFindFirstRecordPy,
-    gmdFindFirstRecordSlicePy,
-    gmdFindLastRecordPy,
-    gmdFindLastRecordSlicePy,
-    gmdFindRecordPy,
     gmdFindSymbolPy,
     gmdFree,
     gmdFreeSymbolIterator,
     gmdGetDomain,
-    gmdGetElemText,
-    gmdGetKey,
-    gmdGetKeys,
     gmdGetLastError,
-    gmdGetLevel,
-    gmdGetLower,
-    gmdGetMarginal,
-    gmdGetScale,
     gmdGetSymbolByIndexPy,
-    gmdGetUpper,
     gmdHandleToPtr,
     gmdInfo,
-    gmdRecordMoveNext,
-    gmdRecordMovePrev,
-    gmdSameRecord,
-    gmdSetElemText,
-    gmdSetLevel,
-    gmdSetLower,
-    gmdSetMarginal,
-    gmdSetScale,
     gmdSetSpecialValues,
-    gmdSetUpper,
     gmdSymbolInfo,
     gmdSymbolType,
     gmdWriteGDX,
@@ -100,53 +56,6 @@ _spec_values[2] = float("inf")
 _spec_values[3] = float("-inf")
 _spec_values[4] = SV_EPS
 
-_default_scale = 1.0
-_default_level = 0.0
-_default_marginal = 0.0
-_par_level_default = 0.0
-
-_var_lower_default = {
-    GMS_VARTYPE_UNKNOWN: 0.0,
-    GMS_VARTYPE_BINARY: 0.0,
-    GMS_VARTYPE_INTEGER: 0.0,
-    GMS_VARTYPE_POSITIVE: 0.0,
-    GMS_VARTYPE_NEGATIVE: _spec_values[GMS_SVIDX_MINF],
-    GMS_VARTYPE_FREE: _spec_values[GMS_SVIDX_MINF],
-    GMS_VARTYPE_SOS1: 0.0,
-    GMS_VARTYPE_SOS2: 0.0,
-    GMS_VARTYPE_SEMICONT: 1.0,
-    GMS_VARTYPE_SEMIINT: 1.0,
-}
-_var_upper_default = {
-    GMS_VARTYPE_UNKNOWN: 0.0,
-    GMS_VARTYPE_BINARY: 1.0,
-    GMS_VARTYPE_INTEGER: 100.0,
-    GMS_VARTYPE_POSITIVE: _spec_values[GMS_SVIDX_PINF],
-    GMS_VARTYPE_NEGATIVE: 0.0,
-    GMS_VARTYPE_FREE: _spec_values[GMS_SVIDX_PINF],
-    GMS_VARTYPE_SOS1: _spec_values[GMS_SVIDX_PINF],
-    GMS_VARTYPE_SOS2: _spec_values[GMS_SVIDX_PINF],
-    GMS_VARTYPE_SEMICONT: _spec_values[GMS_SVIDX_PINF],
-    GMS_VARTYPE_SEMIINT: 100.0,
-}
-
-_equ_lower_default = {
-    GMS_EQUTYPE_E: 0.0,
-    GMS_EQUTYPE_G: 0.0,
-    GMS_EQUTYPE_L: _spec_values[GMS_SVIDX_MINF],
-    GMS_EQUTYPE_N: _spec_values[GMS_SVIDX_MINF],
-    GMS_EQUTYPE_X: 0.0,
-    GMS_EQUTYPE_C: 0.0,
-}
-_equ_upper_default = {
-    GMS_EQUTYPE_E: 0.0,
-    GMS_EQUTYPE_G: _spec_values[GMS_SVIDX_PINF],
-    GMS_EQUTYPE_L: 0.0,
-    GMS_EQUTYPE_N: _spec_values[GMS_SVIDX_PINF],
-    GMS_EQUTYPE_X: 0.0,
-    GMS_EQUTYPE_C: _spec_values[GMS_SVIDX_PINF],
-}
-
 
 def _int_value_and_free(intP):
     intp_val = intp_value(intP)
@@ -154,365 +63,7 @@ def _int_value_and_free(intP):
     return intp_val
 
 
-class GamsSymbolRecord:
-    """Representation of a single record of a GamsSymbol"""
-
-    def get_keys(self):
-        rc, keys = gmdGetKeys(
-            self._symbol._database._gmd, self._sym_iter_ptr, self._symbol._dim
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-        return keys
-
-    keys = property(get_keys)
-
-    def key(self, index):
-        """Retrieve key of GamsSymbolRecord on position index"""
-        rc, key = gmdGetKey(
-            self._symbol._database._gmd, self._sym_iter_ptr, index
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-        return key
-
-    def get_symbol(self):
-        return self._symbol
-
-    symbol = property(get_symbol)
-
-    def __init__(self, symbol, sym_iter_ptr):
-        # get already existing record from GMD
-        self._symbol = symbol
-        self._sym_iter_ptr = sym_iter_ptr
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return bool(
-                gmdSameRecord(
-                    self._symbol._database._gmd,
-                    self._sym_iter_ptr,
-                    other._sym_iter_ptr,
-                )
-            )
-
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def move_next(self):
-        """Iterate to next GamsSymbolRecord of GamsSymbol"""
-        rc = gmdRecordMoveNext(self._symbol._database._gmd, self._sym_iter_ptr)
-        return bool(rc)
-
-    def move_previous(self):
-        """Iterate to previous GamsSymbolRecord of GamsSymbol"""
-        rc = gmdRecordMovePrev(self._symbol._database._gmd, self._sym_iter_ptr)
-        return bool(rc)
-
-    def _keys_representation(self):
-        s = self._symbol.name
-
-        if self._symbol._dim > 0:
-            s += "("
-
-        sep = False
-        for k in self.keys:
-            if sep:
-                s += ", "
-            s += k
-            sep = True
-
-        if self._symbol._dim > 0:
-            s += ")"
-        s += ":"
-        return s
-
-    def __del__(self):
-        if self._sym_iter_ptr:
-            rc = gmdFreeSymbolIterator(
-                self._symbol._database._gmd, self._sym_iter_ptr
-            )
-            self._symbol._database._check_for_gmd_error(rc)
-            self._sym_iter_ptr = None
-
-
-class GamsEquationRecord(GamsSymbolRecord):
-    """Representation of a single record of a GamsEquation"""
-
-    def get_level(self):
-        rc, v = gmdGetLevel(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_level(self, value):
-        rc = gmdSetLevel(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    level = property(get_level, set_level)
-
-    def get_marginal(self):
-        rc, v = gmdGetMarginal(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_marginal(self, value):
-        rc = gmdSetMarginal(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    marginal = property(get_marginal, set_marginal)
-
-    def get_upper(self):
-        rc, v = gmdGetUpper(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_upper(self, value):
-        rc = gmdSetUpper(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    upper = property(get_upper, set_upper)
-
-    def get_lower(self):
-        rc, v = gmdGetLower(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_lower(self, value):
-        rc = gmdSetLower(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    lower = property(get_lower, set_lower)
-
-    def get_scale(self):
-        rc, v = gmdGetScale(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_scale(self, value):
-        rc = gmdSetScale(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    scale = property(get_scale, set_scale)
-
-    def __init__(self, equation, sym_iter_ptr):
-        super().__init__(equation, sym_iter_ptr)
-
-    def __str__(self):
-        s = self._keys_representation()
-
-        level = self.level
-        marginal = self.marginal
-        lower = self.lower
-        upper = self.upper
-        scale = self.scale
-
-        if level != _default_level:
-            s += "  level=" + str(level)
-        if marginal != _default_marginal:
-            s += "  marginal=" + str(marginal)
-        if lower != _equ_lower_default[self._symbol._equtype]:
-            s += "  lower=" + str(lower)
-        if upper != _equ_upper_default[self._symbol._equtype]:
-            s += "  upper=" + str(upper)
-        if scale != _default_scale:
-            s += "  scale=" + str(scale)
-
-        return s
-
-
-class GamsParameterRecord(GamsSymbolRecord):
-    """Representation of a single record of a GamsParameter"""
-
-    def get_value(self):
-        rc, v = gmdGetLevel(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-        else:
-            return float("nan")
-
-    def set_value(self, value):
-        rc = gmdSetLevel(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    ## @brief Get or set the value of this record
-    value = property(get_value, set_value)
-
-    def __init__(self, set, sym_iter_ptr):
-        super().__init__(set, sym_iter_ptr)
-
-    ## @brief Retrieve a string representation of this record
-    def __str__(self):
-        s = self._keys_representation()
-
-        value = self.value
-
-        if value != _par_level_default:
-            s += "  value=" + str(value)
-
-        return s
-
-
-class GamsSetRecord(GamsSymbolRecord):
-    """Representation of a single record of a GamsSet"""
-
-    def get_text(self):
-        text = ""
-        rc, text = gmdGetElemText(
-            self._symbol._database._gmd, self._sym_iter_ptr
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-        return text
-
-    def set_text(self, value):
-        rc = gmdSetElemText(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    text = property(get_text, set_text)
-
-    def __init__(self, set, sym_iter_ptr):
-        super().__init__(set, sym_iter_ptr)
-
-    def __str__(self):
-        s = self._keys_representation()
-
-        text = self.text
-        if text != "" and text != " ":
-            s += "  " + text
-        else:
-            s += "  yes"
-
-        return s
-
-
-class GamsVariableRecord(GamsSymbolRecord):
-    """Representation of a single record of a GamsVariable."""
-
-    def get_level(self):
-        rc, v = gmdGetLevel(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_level(self, value):
-        rc = gmdSetLevel(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    level = property(get_level, set_level)
-
-    def get_marginal(self):
-        rc, v = gmdGetMarginal(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_marginal(self, value):
-        rc = gmdSetMarginal(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    marginal = property(get_marginal, set_marginal)
-
-    def get_upper(self):
-        rc, v = gmdGetUpper(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_upper(self, value):
-        rc = gmdSetUpper(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    upper = property(get_upper, set_upper)
-
-    def get_lower(self):
-        rc, v = gmdGetLower(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_lower(self, value):
-        rc = gmdSetLower(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    lower = property(get_lower, set_lower)
-
-    def get_scale(self):
-        rc, v = gmdGetScale(self._symbol._database._gmd, self._sym_iter_ptr)
-        if rc:
-            return v
-
-        return float("nan")
-
-    def set_scale(self, value):
-        rc = gmdSetScale(
-            self._symbol._database._gmd, self._sym_iter_ptr, value
-        )
-        self._symbol._database._check_for_gmd_error(rc)
-
-    scale = property(get_scale, set_scale)
-
-    def __init__(self, variable, sym_iter_ptr):
-        super().__init__(variable, sym_iter_ptr)
-
-    def __str__(self):
-        s = self._keys_representation()
-
-        level = self.level
-        marginal = self.marginal
-        lower = self.lower
-        upper = self.upper
-        scale = self.scale
-
-        if level != _default_level:
-            s += "  level=" + str(level)
-        if marginal != _default_marginal:
-            s += "  marginal=" + str(marginal)
-        if lower != _var_lower_default[self._symbol._vartype]:
-            s += "  lower=" + str(lower)
-        if upper != _var_upper_default[self._symbol._vartype]:
-            s += "  upper=" + str(upper)
-        if scale != _default_scale:
-            s += "  scale=" + str(scale)
-
-        return s
-
-
-class _GamsSymbol:
+class GamsSymbol:
     """
     Representation of a symbol in GAMS. It exists in a Database and contains
     GamsSymbolRecords which one can iterate through.
@@ -667,55 +218,6 @@ class _GamsSymbol:
             self._database._check_for_gmd_error(rc)
             self._sym_iter_ptr = None
 
-    def _check_keys(self, keys):
-        if len(keys) != self._dim:
-            raise GamspyException(
-                f"Different dimensions: {len(keys)} vs. {self._dim}"
-            )
-        for i in range(self._dim):
-            if keys[i] is None:
-                raise GamspyException(
-                    f"Key not allowed to be None (found at dimension {i + 1})"
-                )
-
-    def delete_record(self, keys=None):
-        """Delete GamsSymbol record"""
-        if self._database._record_lock:
-            raise GamspyException(
-                "Cannot remove data records to record-locked database"
-            )
-        if not (isinstance(keys, (str, list, tuple)) or keys is None):
-            raise GamspyException(
-                "Wrong type of keys argument in delete_record. Valid types are 'str', 'list', 'tuple' and their subclasses"
-            )
-        if isinstance(keys, str):
-            keys = [keys]
-        elif isinstance(keys, tuple):
-            keys = list(keys)
-        elif not keys:
-            keys = []
-        self._check_keys(keys)
-        rc = new_intp()
-        sym_iter_ptr = gmdFindRecordPy(
-            self._database._gmd, self._sym_ptr, keys, rc
-        )
-        if not _int_value_and_free(rc):
-            return False
-        rc = gmdDeleteRecord(self._database._gmd, sym_iter_ptr)
-        self._database._check_for_gmd_error(rc)
-        rc = gmdFreeSymbolIterator(self._database._gmd, sym_iter_ptr)
-        self._database._check_for_gmd_error(rc)
-        sym_iter_ptr = None
-        return True
-
-    def clear(self):
-        """Clear symbol records"""
-        if self._database._record_lock:
-            raise GamspyException(
-                "Cannot remove data records to record-locked database"
-            )
-        return bool(gmdClearSymbol(self._database._gmd, self._sym_ptr))
-
     def __iter__(self):
         self._sym_iter_ptr = None
         return self
@@ -730,175 +232,6 @@ class _GamsSymbol:
             ret += keys[len(keys) - 1]
             return ret
 
-    def _check_and_return_record(self, sym_iter_ptr, error_message: str):
-        if sym_iter_ptr is None:
-            raise GamspyException(error_message)
-        if self._sym_ptr is None:
-            raise GamspyException("Invalid Pointer")
-        if isinstance(self, GamsVariable):
-            return GamsVariableRecord(self, sym_iter_ptr)
-        if isinstance(self, GamsEquation):
-            return GamsEquationRecord(self, sym_iter_ptr)
-        if isinstance(self, GamsParameter):
-            return GamsParameterRecord(self, sym_iter_ptr)
-        if isinstance(self, GamsSet):
-            return GamsSetRecord(self, sym_iter_ptr)
-
-        raise GamspyException("Invalid symbol type")
-
-    def next(self):
-        if self._sym_iter_ptr is None:
-            rc = new_intp()
-            self._sym_iter_ptr = gmdFindFirstRecordPy(
-                self._database._gmd, self._sym_ptr, rc
-            )
-            delete_intp(rc)
-            if self._sym_iter_ptr is None:
-                raise StopIteration
-        else:
-            if not gmdRecordMoveNext(self._database._gmd, self._sym_iter_ptr):
-                raise StopIteration
-        if self._sym_iter_ptr is None:
-            raise StopIteration
-        else:
-            error_message = (
-                f"No next record available in symbol `{self._name}`"
-            )
-
-            rc = new_intp()
-            rec = gmdCopySymbolIteratorPy(
-                self._database._gmd, self._sym_iter_ptr, rc
-            )
-            self._database._check_for_gmd_error(_int_value_and_free(rc))
-            return self._check_and_return_record(rec, error_message)
-
-    def __next__(self):
-        return self.next()
-
-    def find_record(self, keys=None):
-        """Find a record in GamsSymbol"""
-        if not (isinstance(keys, (str, list, tuple)) or keys is None):
-            raise GamspyException(
-                "Wrong type of keys argument in find_record. Valid types are 'str', 'list', 'tuple' and their subclasses"
-            )
-        if not keys:
-            keys = []
-        if isinstance(keys, str):
-            keys = [keys]
-        elif isinstance(keys, tuple):
-            keys = list(keys)
-        self._check_keys(keys)
-        rc = new_intp()
-        sym_iter_ptr = gmdFindRecordPy(
-            self._database._gmd, self._sym_ptr, keys, rc
-        )
-        self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-        error_message = f"Cannot find record {self._concat_keys(keys)} in symbol `{self._name}`"
-
-        return self._check_and_return_record(sym_iter_ptr, error_message)
-
-    def __getitem__(self, keys=None):
-        return self.find_record(keys)
-
-    def add_record(self, keys=None):
-        """Add a record to the GamsSymbol"""
-        if self._database._record_lock:
-            raise GamspyException(
-                "Cannot add data records to record-locked database"
-            )
-        if not (isinstance(keys, (str, list, tuple)) or keys is None):
-            raise GamspyException(
-                "Wrong type of keys argument in add_record. Valid types are 'str', 'list', 'tuple' and their subclasses"
-            )
-        if isinstance(keys, str):
-            keys = [keys]
-        elif isinstance(keys, tuple):
-            keys = list(keys)
-        elif not keys:
-            keys = []
-        self._check_keys(keys)
-        rc = new_intp()
-        sym_iter_ptr = gmdAddRecordPy(
-            self._database._gmd, self._sym_ptr, keys, rc
-        )
-        self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-        error_message = f"Record {self._concat_keys(keys)} aleady exists in symbol {self._name}"
-
-        return self._check_and_return_record(sym_iter_ptr, error_message)
-
-    def first_record(self, slice=None):
-        """Retrieve the first record in the GamsSymbol"""
-        if not slice:
-            rc = new_intp()
-            sym_iter_ptr = gmdFindFirstRecordPy(
-                self._database._gmd, self._sym_ptr, rc
-            )
-            self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-            error_message = f"Symbol {self._name} is empty"
-        else:
-            if not isinstance(slice, (str, list, tuple)):
-                raise GamspyException(
-                    "Wrong type of slice argument in first_record. Valid types are 'str', 'list', 'tuple' and their subclasses"
-                )
-            if isinstance(slice, str):
-                slice = [slice]
-            elif isinstance(slice, tuple):
-                slice = list(slice)
-            if len(slice) != self._dim:
-                raise GamspyException(
-                    "Different dimensions: "
-                    + str(len(slice))
-                    + " vs. "
-                    + str(self._dim)
-                )
-            rc = new_intp()
-            sym_iter_ptr = gmdFindFirstRecordSlicePy(
-                self._database._gmd, self._sym_ptr, slice, rc
-            )
-            self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-            error_message = f"No record with slice {self._concat_keys(slice)} found in symbol {self._name}"
-
-        return self._check_and_return_record(sym_iter_ptr, error_message)
-
-    def last_record(self, slice=None):
-        if not slice:
-            rc = new_intp()
-            sym_iter_ptr = gmdFindLastRecordPy(
-                self._database._gmd, self._sym_ptr, rc
-            )
-            self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-            error_message = f"Symbol {self._name} is empty"
-        else:
-            if not (isinstance(slice, (str, list, tuple))):
-                raise GamspyException(
-                    "Wrong type of slice argument in last_record. Valid types are 'str', 'list', 'tuple' and their subclasses"
-                )
-            if isinstance(slice, str):
-                slice = [slice]
-            elif isinstance(slice, tuple):
-                slice = list(slice)
-            if len(slice) != self._dim:
-                raise GamspyException(
-                    "Different dimensions: "
-                    + str(len(slice))
-                    + " vs. "
-                    + str(self._dim)
-                )
-            rc = new_intp()
-            sym_iter_ptr = gmdFindLastRecordSlicePy(
-                self._database._gmd, self._sym_ptr, slice, rc
-            )
-            self._database._check_for_gmd_error(_int_value_and_free(rc))
-
-            error_message = f"No record with slice {self._concat_keys(slice)} found in symbol {self._name}"
-
-        return self._check_and_return_record(sym_iter_ptr, error_message)
-
     def check_domains(self):
         """Check if all records are within the specified domain of the symbol"""
         has_violation = new_intp()
@@ -909,7 +242,7 @@ class _GamsSymbol:
         return _int_value_and_free(has_violation) != 1
 
 
-class GamsVariable(_GamsSymbol):
+class GamsVariable(GamsSymbol):
     """Representation of a variable symbol in GAMS"""
 
     def get_vartype(self):
@@ -1030,7 +363,7 @@ class GamsVariable(_GamsSymbol):
             raise GamspyException("Invalid combination of parameters")
 
 
-class GamsParameter(_GamsSymbol):
+class GamsParameter(GamsSymbol):
     """Representation of a parameter symbol in GAMS"""
 
     def __init__(
@@ -1124,7 +457,7 @@ class GamsParameter(_GamsSymbol):
             raise GamspyException("Invalid combination of parameters")
 
 
-class GamsSet(_GamsSymbol):
+class GamsSet(GamsSymbol):
     """Representation of a set symbol in GAMS"""
 
     def get_settype(self):
@@ -1229,11 +562,8 @@ class GamsSet(_GamsSymbol):
             raise GamspyException("Invalid combination of parameters")
 
 
-class GamsEquation(_GamsSymbol):
-    """
-    @brief This is the representation of an equation symbol in GAMS.
-    @details It exists in a Database and contains GamsEquationRecords which one can iterate through.
-    """
+class GamsEquation(GamsSymbol):
+    """Representation of an equation symbol in GAMS"""
 
     def get_equtype(self):
         return self._equtype
@@ -1508,19 +838,6 @@ class Database:
             self, identifier, dimension, equtype, explanatory_text
         )
 
-    def add_equation_dc(
-        self, identifier, equtype, domains, explanatory_text=""
-    ):
-        if self._symbol_lock:
-            raise GamspyException(
-                "Cannot add symbols to symbol-locked database"
-            )
-        if domains is None:
-            domains = []
-        return GamsEquation(
-            self, identifier, None, equtype, explanatory_text, domains=domains
-        )
-
     def add_variable(
         self, identifier, dimension, vartype, explanatory_text=""
     ):
@@ -1532,19 +849,6 @@ class Database:
             self, identifier, dimension, vartype, explanatory_text
         )
 
-    def add_variable_dc(
-        self, identifier, vartype, domains, explanatory_text=""
-    ):
-        if self._symbol_lock:
-            raise GamspyException(
-                "Cannot add symbols to symbol-locked database"
-            )
-        if domains is None:
-            domains = []
-        return GamsVariable(
-            self, identifier, None, vartype, explanatory_text, domains=domains
-        )
-
     def add_set(self, identifier, dimension, explanatory_text="", settype=0):
         if self._symbol_lock:
             raise GamspyException(
@@ -1554,39 +858,12 @@ class Database:
             self, identifier, dimension, explanatory_text, settype=settype
         )
 
-    def add_set_dc(self, identifier, domains, explanatory_text="", settype=0):
-        if self._symbol_lock:
-            raise GamspyException(
-                "Cannot add symbols to symbol-locked database"
-            )
-        if domains is None or len(domains) == 0:
-            domains = ["*"]
-        return GamsSet(
-            self,
-            identifier,
-            None,
-            explanatory_text,
-            domains=domains,
-            settype=settype,
-        )
-
     def add_parameter(self, identifier, dimension, explanatory_text=""):
         if self._symbol_lock:
             raise GamspyException(
                 "Cannot add symbols to symbol-locked database"
             )
         return GamsParameter(self, identifier, dimension, explanatory_text)
-
-    def add_parameter_dc(self, identifier, domains, explanatory_text=""):
-        if self._symbol_lock:
-            raise GamspyException(
-                "Cannot add symbols to symbol-locked database"
-            )
-        if domains is None:
-            domains = []
-        return GamsParameter(
-            self, identifier, None, explanatory_text, domains=domains
-        )
 
     def export(self, file_path: str):
         """Writes database into a GDX file"""

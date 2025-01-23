@@ -316,17 +316,17 @@ class ModelInstance:
         accumulate_no_match_cnt = 0
         no_match_cnt = 0
 
-        for mod in self.modifiers:
+        for modifier in self.modifiers:
             loc_sut = UPDATE_TYPE_MAP[instance_options.update_type]
-            if mod.update_type != 3:
-                loc_sut = mod.update_type
+            if modifier.update_type != 3:
+                loc_sut = modifier.update_type
 
-            if isinstance(mod.gams_symbol, GamsParameter):
+            if isinstance(modifier.gams_symbol, GamsParameter):
                 rc, no_match_cnt = gmdUpdateModelSymbol(
                     self.sync_db._gmd,
-                    mod.gams_symbol._sym_ptr,
+                    modifier.gams_symbol._sym_ptr,
                     0,
-                    mod.gams_symbol._sym_ptr,
+                    modifier.gams_symbol._sym_ptr,
                     loc_sut,
                     no_match_cnt,
                 )
@@ -334,9 +334,9 @@ class ModelInstance:
             else:
                 rc, no_match_cnt = gmdUpdateModelSymbol(
                     self.sync_db._gmd,
-                    mod.gams_symbol._sym_ptr,
-                    mod.update_action,
-                    mod.data_symbol._sym_ptr,  # type: ignore
+                    modifier.gams_symbol._sym_ptr,
+                    modifier.update_action,
+                    modifier.data_symbol._sym_ptr,  # type: ignore
                     loc_sut,
                     no_match_cnt,
                 )
@@ -345,7 +345,7 @@ class ModelInstance:
             accumulate_no_match_cnt += no_match_cnt
             if accumulate_no_match_cnt > instance_options.no_match_limit:
                 raise GamspyException(
-                    f"Unmatched record limit exceeded while processing modifier {mod.gams_symbol.name}, for more info check no_match_limit option."
+                    f"Unmatched record limit exceeded while processing modifier {modifier.gams_symbol.name}, for more info check no_match_limit option."
                 )
 
         # Close Log and status file and remove
@@ -668,7 +668,7 @@ class ModelInstance:
                     name
                 ].domain_names
 
-            if name in [symbol.name for symbol in self.modifiables]:
+            if name in (symbol.name for symbol in self.modifiables):
                 _ = gp.Variable(
                     self.container,
                     name + "_var",
