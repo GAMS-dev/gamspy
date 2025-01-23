@@ -210,6 +210,68 @@ class ModelInstance:
         ):
             gevFree(self._gev)
 
+    def _create_modifiers(self) -> list[GamsModifier]:
+        modifiers = []
+
+        for symbol in self.modifiables:
+            if isinstance(symbol, gp.Parameter):
+                domain = ["*"] * symbol.dimension
+                _ = gt.Parameter(self.instance_container, symbol.name, domain)
+                modifiers.append(
+                    GamsModifier(
+                        self.sync_db.add_parameter(
+                            symbol.name,
+                            symbol.dimension,
+                            symbol.description,
+                        )
+                    )
+                )
+
+            elif isinstance(symbol, implicits.ImplicitParameter):
+                attribute = symbol.name.split(".")[-1]
+                update_action = UPDATE_ACTION_MAP[attribute]
+
+                try:
+                    sync_db_symbol = self.sync_db[symbol.parent.name]
+                except GamspyException:
+                    if isinstance(symbol.parent, gp.Variable):
+                        sync_db_symbol = self.sync_db.add_variable(
+                            symbol.parent.name,
+                            symbol.parent.dimension,
+                            VARIABLE_MAP[symbol.parent.type],
+                        )
+
+                    elif isinstance(symbol.parent, gp.Equation):
+                        sync_db_symbol = self.sync_db.add_equation(
+                            symbol.parent.name,
+                            symbol.parent.dimension,
+                            EQUATION_MAP[symbol.parent.type],
+                        )
+
+                attr_name = "_".join(symbol.name.split("."))
+
+                domain = ["*"] * symbol.parent.dimension
+                _ = gt.Parameter(
+                    self.instance_container,
+                    attr_name,
+                    domain=domain,
+                )
+
+                data_symbol = self.sync_db.add_parameter(
+                    attr_name,
+                    symbol.parent.dimension,
+                )
+                modifiers.append(
+                    GamsModifier(sync_db_symbol, update_action, data_symbol)
+                )
+            else:
+                raise ValidationError(
+                    f"Symbol type {type(symbol)} cannot be modified in a"
+                    " frozen solve"
+                )
+
+        return modifiers
+
     def instantiate(self, model: Model, options: Options):
         # Check the gmd state.
         rc, _, _, _ = gmdInfo(self.sync_db._gmd, GMD_NRUELS)
@@ -261,6 +323,9 @@ class ModelInstance:
         rc = gmdInitFromDict(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc)
 
+        # Populate gmd
+        self.container.write(self.sync_db._gmd, eps_to_zero=False)
+
         # Lock sync_db symbols so user can't add new symbols which would result in other exceptions
         self.sync_db._symbol_lock = True
         # Unlock sync_db record so user can add data for modifiers
@@ -287,10 +352,15 @@ class ModelInstance:
 
             option_file = 1
 
-        # update sync_db
-        self.container.write(self.sync_db._gmd, eps_to_zero=False)
-
         for symbol in self.modifiables:
+            if isinstance(symbol, gp.Parameter):
+                self.instance_container[symbol.name].setRecords(
+                    self.container[symbol.name].records
+                )
+                self.instance_container.write(
+                    self.sync_db._gmd, symbols=[symbol.name], eps_to_zero=False
+                )
+
             if (
                 isinstance(symbol, implicits.ImplicitParameter)
                 and symbol.parent.records is not None
@@ -305,7 +375,7 @@ class ModelInstance:
                 )
 
                 self.instance_container.write(
-                    self.sync_db._gmd, eps_to_zero=False
+                    self.sync_db._gmd, symbols=[attr_name], eps_to_zero=False
                 )
 
         ### shitty legacy code from GAMS Control
@@ -588,70 +658,6 @@ class ModelInstance:
                 columns.append(value)
 
         return columns
-
-    def _create_modifiers(self) -> list[GamsModifier]:
-        modifiers = []
-
-        for symbol in self.modifiables:
-            if isinstance(symbol, gp.Parameter):
-                modifiers.append(
-                    GamsModifier(
-                        self.sync_db.add_parameter(
-                            symbol.name,
-                            symbol.dimension,
-                            symbol.description,
-                        )
-                    )
-                )
-
-            elif isinstance(symbol, implicits.ImplicitParameter):
-                attribute = symbol.name.split(".")[-1]
-                update_action = UPDATE_ACTION_MAP[attribute]
-
-                try:
-                    sync_db_symbol = self.sync_db[symbol.parent.name]
-                except GamspyException:
-                    if isinstance(symbol.parent, gp.Variable):
-                        sync_db_symbol = self.sync_db.add_variable(
-                            symbol.parent.name,
-                            symbol.parent.dimension,
-                            VARIABLE_MAP[symbol.parent.type],
-                        )
-
-                    elif isinstance(symbol.parent, gp.Equation):
-                        sync_db_symbol = self.sync_db.add_equation(
-                            symbol.parent.name,
-                            symbol.parent.dimension,
-                            EQUATION_MAP[symbol.parent.type],
-                        )
-
-                attr_name = "_".join(symbol.name.split("."))
-
-                domain = (
-                    ["*"] * symbol.parent.dimension
-                    if symbol.parent.dimension
-                    else None
-                )
-                _ = gt.Parameter(
-                    self.instance_container,
-                    attr_name,
-                    domain=domain,
-                )
-
-                data_symbol = self.sync_db.add_parameter(
-                    attr_name,
-                    symbol.parent.dimension,
-                )
-                modifiers.append(
-                    GamsModifier(sync_db_symbol, update_action, data_symbol)
-                )
-            else:
-                raise ValidationError(
-                    f"Symbol type {type(symbol)} cannot be modified in a"
-                    " frozen solve"
-                )
-
-        return modifiers
 
     def _update_main_container(self):
         temp = gt.Container(
