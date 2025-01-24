@@ -387,9 +387,9 @@ class ModelInstance:
         no_match_cnt = 0
 
         for modifier in self.modifiers:
-            loc_sut = UPDATE_TYPE_MAP[instance_options.update_type]
+            update_type = UPDATE_TYPE_MAP[instance_options.update_type]
             if modifier.update_type != 3:
-                loc_sut = modifier.update_type
+                update_type = modifier.update_type
 
             if isinstance(modifier.gams_symbol, GamsParameter):
                 rc, no_match_cnt = gmdUpdateModelSymbol(
@@ -397,7 +397,7 @@ class ModelInstance:
                     modifier.gams_symbol._sym_ptr,
                     0,
                     modifier.gams_symbol._sym_ptr,
-                    loc_sut,
+                    update_type,
                     no_match_cnt,
                 )
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
@@ -407,7 +407,7 @@ class ModelInstance:
                     modifier.gams_symbol._sym_ptr,
                     modifier.update_action,
                     modifier.data_symbol._sym_ptr,  # type: ignore
-                    loc_sut,
+                    update_type,
                     no_match_cnt,
                 )
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
