@@ -69,98 +69,9 @@ class GamsSymbol:
     GamsSymbolRecords which one can iterate through.
     """
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self._sym_ptr == other._sym_ptr
-
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def get_domains(self):
-        if self._domains is None:
-            self._domains = []
-            if self._dim == 0:
-                return self._domains
-            retDom = gmdGetDomain(
-                self._database._gmd, self._sym_ptr, self._dim
-            )
-            self._database._check_for_gmd_error(retDom[0])
-            domains = retDom[1]
-            for i in range(self._dim):
-                if domains[i] is not None:
-                    retSym = gmdSymbolInfo(
-                        self._database._gmd, domains[i], GMD_NAME
-                    )
-                    self._database._check_for_gmd_error(retSym[0])
-                    name = retSym[3]
-                    if name == "*":
-                        self._domains.append("*")
-                    else:
-                        self._domains.append(
-                            GamsSet(self._database, sym_ptr=domains[i])
-                        )
-                else:
-                    self._domains.append(retDom[2][i])
-        return self._domains
-
-    ## @brief Domains of Symbol, each element is either a GamsSet (real domain) or a string (relaxed domain)
-    domains = property(get_domains)
-
-    def get_domains_as_strings(self):
-        if self._domains_as_strings is None:
-            self._domains_as_strings = []
-            if self._dim == 0:
-                return self._domains_as_strings
-            ret = gmdGetDomain(self._database._gmd, self._sym_ptr, self._dim)
-            self._database._check_for_gmd_error(ret[0])
-
-            for i in range(self._dim):
-                self._domains_as_strings.append(ret[2][i])
-        return self._domains_as_strings
-
-    ## @brief Domains of Symbol, each element is a string. Note: If the domains is as alias in GAMS, this call will return the name of the alias, not the name of the aliased set
-    domains_as_strings = property(get_domains_as_strings)
-
-    def get_dimension(self):
-        return self._dim
-
-    dimension = property(get_dimension)
-
-    def get_text(self):
-        return self._text
-
-    text = property(get_text)
-
-    def get_name(self):
-        return self._name
-
-    ## Get GamsSymbol name
-    name = property(get_name)
-
-    def get_database(self):
-        return self._database
-
-    ## @brief Get Database containing GamsSymbol
-    database = property(get_database)
-
-    def get_number_records(self):
-        ret = gmdSymbolInfo(self._database._gmd, self._sym_ptr, GMD_NRRECORDS)
-        self._database._check_for_gmd_error(ret[0])
-        return ret[1]
-
-    ## @brief Retrieve the number of records of the GamsSymbol
-    #  @note This is the same as calling len(symbol)
-    number_records = property(get_number_records)
-
-    ## @brief Retrieve the number of records of the GamsSymbol
-    def __len__(self):
-        return self.get_number_records()
-
     def __init__(
         self,
-        database,
+        database: Database,
         identifier=None,
         dimension=None,
         explanatory_text="",
@@ -222,6 +133,78 @@ class GamsSymbol:
         self._sym_iter_ptr = None
         return self
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self._sym_ptr == other._sym_ptr
+
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __len__(self):
+        return self.get_number_records()
+
+    @property
+    def dimension(self):
+        return self._dim
+
+    @property
+    def text(self):
+        return self._text
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def database(self):
+        return self._database
+
+    def get_number_records(self):
+        ret = gmdSymbolInfo(self._database._gmd, self._sym_ptr, GMD_NRRECORDS)
+        self._database._check_for_gmd_error(ret[0])
+        return ret[1]
+
+    def get_domains_as_strings(self):
+        if self._domains_as_strings is None:
+            self._domains_as_strings = []
+            if self._dim == 0:
+                return self._domains_as_strings
+            ret = gmdGetDomain(self._database._gmd, self._sym_ptr, self._dim)
+            self._database._check_for_gmd_error(ret[0])
+
+            for i in range(self._dim):
+                self._domains_as_strings.append(ret[2][i])
+        return self._domains_as_strings
+
+    def get_domains(self):
+        if self._domains is None:
+            self._domains = []
+            if self._dim == 0:
+                return self._domains
+            retDom = gmdGetDomain(
+                self._database._gmd, self._sym_ptr, self._dim
+            )
+            self._database._check_for_gmd_error(retDom[0])
+            domains = retDom[1]
+            for i in range(self._dim):
+                if domains[i] is not None:
+                    retSym = gmdSymbolInfo(
+                        self._database._gmd, domains[i], GMD_NAME
+                    )
+                    self._database._check_for_gmd_error(retSym[0])
+                    name = retSym[3]
+                    if name == "*":
+                        self._domains.append("*")
+                    else:
+                        self._domains.append(
+                            GamsSet(self._database, sym_ptr=domains[i])
+                        )
+                else:
+                    self._domains.append(retDom[2][i])
+        return self._domains
+
     def _concat_keys(self, keys):
         if not keys or len(keys) == 0:
             return ""
@@ -244,11 +227,6 @@ class GamsSymbol:
 
 class GamsVariable(GamsSymbol):
     """Representation of a variable symbol in GAMS"""
-
-    def get_vartype(self):
-        return self._vartype
-
-    vartype = property(get_vartype)
 
     def __init__(
         self,
@@ -362,6 +340,9 @@ class GamsVariable(GamsSymbol):
         else:
             raise GamspyException("Invalid combination of parameters")
 
+    def get_vartype(self):
+        return self._vartype
+
 
 class GamsParameter(GamsSymbol):
     """Representation of a parameter symbol in GAMS"""
@@ -460,12 +441,6 @@ class GamsParameter(GamsSymbol):
 class GamsSet(GamsSymbol):
     """Representation of a set symbol in GAMS"""
 
-    def get_settype(self):
-        return self._settype
-
-    ## @brief Retrieve subtype of set (SetType.Multi, SetType.Singleton)
-    settype = property(get_settype)
-
     def __init__(
         self,
         database,
@@ -561,15 +536,12 @@ class GamsSet(GamsSymbol):
         else:
             raise GamspyException("Invalid combination of parameters")
 
+    def get_settype(self):
+        return self._settype
+
 
 class GamsEquation(GamsSymbol):
     """Representation of an equation symbol in GAMS"""
-
-    def get_equtype(self):
-        return self._equtype
-
-    ## @brief Retrieve subtype of Equation (EquType.E: Equal, EquType.G: Greater, EquType.L: Less, EquType.N: No specification, EquType.X: External defined, EquType.C: Conic)
-    equtype = property(get_equtype)
 
     def __init__(
         self,
@@ -683,6 +655,9 @@ class GamsEquation(GamsSymbol):
 
         else:
             raise GamspyException("Invalid combination of parameters")
+
+    def get_equtype(self):
+        return self._equtype
 
 
 class Database:

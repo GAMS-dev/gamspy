@@ -378,7 +378,7 @@ class ModelInstance:
                     self.sync_db._gmd, symbols=[attr_name], eps_to_zero=False
                 )
 
-        ### shitty legacy code from GAMS Control
+        ### Legacy code from GAMS Control ###
         rc = gmdInitUpdate(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
@@ -502,7 +502,7 @@ class ModelInstance:
                 for line in file.readlines():
                     output.write(line)
                 gevRestoreLogStat(self._gev, ls_handle)
-        ### end of the legacy code
+        ### end of the legacy code ###
 
         self._update_main_container()
 
