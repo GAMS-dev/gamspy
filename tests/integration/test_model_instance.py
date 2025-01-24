@@ -13,6 +13,7 @@ import pytest
 
 import gamspy.utils as utils
 from gamspy import (
+    Alias,
     Container,
     Equation,
     Model,
@@ -26,6 +27,7 @@ from gamspy import (
     SolveStatus,
     Sum,
     Variable,
+    VariableType,
 )
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -665,3 +667,169 @@ def test_license():
         capture_output=True,
         text=True,
     )
+
+
+def normal_dice():
+    m = Container()
+
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 7)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 6)],
+    )
+
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
+    )
+    xdice.solve()
+    first_solve_time = xdice.solve_model_time
+    flo.setRecords(2)
+    xdice.solve()
+    second_solve_time = xdice.solve_model_time
+
+    return first_solve_time / second_solve_time
+
+
+def test_timing():
+    normal_ratio = normal_dice()
+
+    m = Container()
+
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 7)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 6)],
+    )
+
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
+    )
+    xdice.freeze(modifiables=[flo])
+    xdice.solve()
+    first_solve_time = xdice.solve_model_time
+    flo.setRecords(2)
+    xdice.solve()
+    second_solve_time = xdice.solve_model_time
+
+    frozen_ratio = first_solve_time / second_solve_time
+
+    # Normal execution should take more time than frozen solve
+    assert frozen_ratio > normal_ratio

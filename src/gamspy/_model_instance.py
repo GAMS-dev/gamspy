@@ -33,7 +33,14 @@ from gams.core.gmd import (
 from gams.core.gmo import (
     gmoCreateD,
     gmoFree,
+    gmoGetHeadnTail,
     gmoHandleToPtr,
+    gmoHdomused,
+    gmoHetalg,
+    gmoHiterused,
+    gmoHmarginals,
+    gmoHobjval,
+    gmoHresused,
     gmoLoadDataLegacy,
     gmoModelStat,
     gmoNameOptFile,
@@ -506,9 +513,17 @@ class ModelInstance:
 
         self._update_main_container()
 
-        # update model status
+        # update model attributes
         self.model._status = gp.ModelStatus(gmoModelStat(self._gmo))
         self.model._solve_status = gp.SolveStatus(gmoSolveStat(self._gmo))
+        self.model._solve_model_time = gmoGetHeadnTail(self._gmo, gmoHresused)
+        self.model._num_iterations = gmoGetHeadnTail(self._gmo, gmoHiterused)
+        self.model._marginals = gmoGetHeadnTail(self._gmo, gmoHmarginals)
+        self.model._algorithm_time = gmoGetHeadnTail(self._gmo, gmoHetalg)
+        self.model._num_domain_violations = gmoGetHeadnTail(
+            self._gmo, gmoHdomused
+        )
+        self.model._objective_value = gmoGetHeadnTail(self._gmo, gmoHobjval)
 
     def _get_scenario(self, model: Model) -> str:
         params = [
