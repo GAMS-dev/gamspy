@@ -272,7 +272,7 @@ class ModelInstance:
 
         return modifiers
 
-    def instantiate(self, model: Model, options: Options):
+    def instantiate(self, model: Model, options: Options) -> None:
         # Check the gmd state.
         rc, _, _, _ = gmdInfo(self.sync_db._gmd, GMD_NRUELS)
         self.sync_db._check_for_gmd_error(rc)
@@ -337,7 +337,7 @@ class ModelInstance:
         instance_options: ModelInstanceOptions,
         solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
-    ):
+    ) -> None:
         # write solver options file
         solver_options_file_name = os.path.join(
             self.container.working_directory, f"{solver.lower()}.opt"
@@ -659,7 +659,7 @@ class ModelInstance:
 
         return columns
 
-    def _update_main_container(self):
+    def _update_main_container(self) -> None:
         temp = gt.Container(
             system_directory=self.container.system_directory,
         )
