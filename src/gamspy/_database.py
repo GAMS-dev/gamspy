@@ -26,7 +26,6 @@ from gams.core.gmd import (
     gmdCreateD,
     gmdFindSymbolPy,
     gmdFree,
-    gmdFreeSymbolIterator,
     gmdGetDomain,
     gmdGetLastError,
     gmdGetSymbolByIndexPy,
@@ -77,7 +76,6 @@ class GamsSymbol:
         explanatory_text="",
         sym_ptr=None,
     ):
-        self._sym_iter_ptr = None
         self._database = database
         self._domains = None
         self._domains_as_strings = None
@@ -122,16 +120,6 @@ class GamsSymbol:
 
         else:
             raise GamspyException("Invalid combination of parameters")
-
-    def __del__(self):
-        if self._sym_iter_ptr:
-            rc = gmdFreeSymbolIterator(self._database._gmd, self._sym_iter_ptr)
-            self._database._check_for_gmd_error(rc)
-            self._sym_iter_ptr = None
-
-    def __iter__(self):
-        self._sym_iter_ptr = None
-        return self
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
