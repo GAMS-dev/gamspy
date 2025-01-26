@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import os
 import sys
+import time
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -390,6 +391,7 @@ class ModelInstance:
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         # Update gmd
+        start = time.perf_counter()
         accumulate_no_match_cnt = 0
         no_match_cnt = 0
 
@@ -424,6 +426,8 @@ class ModelInstance:
                 raise GamspyException(
                     f"Unmatched record limit exceeded while processing modifier {modifier.gams_symbol.name}, for more info check no_match_limit option."
                 )
+
+        model_generation_time = time.perf_counter() - start
 
         # Close Log and status file and remove
         if output:
@@ -516,6 +520,7 @@ class ModelInstance:
         # update model attributes
         self.model._status = gp.ModelStatus(gmoModelStat(self._gmo))
         self.model._solve_status = gp.SolveStatus(gmoSolveStat(self._gmo))
+        self.model._model_generation_time = model_generation_time
         self.model._solve_model_time = gmoGetHeadnTail(self._gmo, gmoHresused)
         self.model._num_iterations = gmoGetHeadnTail(self._gmo, gmoHiterused)
         self.model._marginals = gmoGetHeadnTail(self._gmo, gmoHmarginals)

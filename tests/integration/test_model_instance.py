@@ -676,13 +676,13 @@ def normal_dice():
         m,
         name="f",
         description="faces on a dice",
-        records=[f"face{idx}" for idx in range(1, 7)],
+        records=[f"face{idx}" for idx in range(1, 100)],
     )
     dice = Set(
         m,
         name="dice",
         description="number of dice",
-        records=[f"dice{idx}" for idx in range(1, 6)],
+        records=[f"dice{idx}" for idx in range(1, 100)],
     )
 
     flo = Parameter(m, name="flo", description="lowest face value", records=1)
@@ -740,17 +740,15 @@ def normal_dice():
         sense=Sense.MAX,
         objective=wnx,
     )
-    xdice.solve()
-    first_solve_time = xdice.solve_model_time
+    xdice.solve(options=Options(time_limit=0))
     flo.setRecords(2)
-    xdice.solve()
-    second_solve_time = xdice.solve_model_time
+    xdice.solve(options=Options(time_limit=0))
 
-    return first_solve_time / second_solve_time
+    return xdice.model_generation_time
 
 
 def test_timing():
-    normal_ratio = normal_dice()
+    normal_generation_time = normal_dice()
 
     m = Container()
 
@@ -758,13 +756,13 @@ def test_timing():
         m,
         name="f",
         description="faces on a dice",
-        records=[f"face{idx}" for idx in range(1, 7)],
+        records=[f"face{idx}" for idx in range(1, 100)],
     )
     dice = Set(
         m,
         name="dice",
         description="number of dice",
-        records=[f"dice{idx}" for idx in range(1, 6)],
+        records=[f"dice{idx}" for idx in range(1, 100)],
     )
 
     flo = Parameter(m, name="flo", description="lowest face value", records=1)
@@ -822,14 +820,10 @@ def test_timing():
         sense=Sense.MAX,
         objective=wnx,
     )
-    xdice.freeze(modifiables=[flo])
-    xdice.solve()
-    first_solve_time = xdice.solve_model_time
+    xdice.freeze(modifiables=[flo], options=Options(time_limit=0))
+    xdice.solve(options=Options(time_limit=0))
     flo.setRecords(2)
-    xdice.solve()
-    second_solve_time = xdice.solve_model_time
-
-    frozen_ratio = first_solve_time / second_solve_time
-
+    xdice.solve(options=Options(time_limit=0))
+    frozen_model_generation = xdice.model_generation_time
     # Normal execution should take more time than frozen solve
-    assert frozen_ratio > normal_ratio
+    assert frozen_model_generation < normal_generation_time
