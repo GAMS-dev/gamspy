@@ -241,7 +241,7 @@ class ModelInstance:
 
                 try:
                     sync_db_symbol = self.sync_db[symbol.parent.name]
-                except GamspyException:
+                except KeyError:
                     if isinstance(symbol.parent, gp.Variable):
                         sync_db_symbol = self.sync_db.add_variable(
                             symbol.parent.name,
@@ -282,7 +282,7 @@ class ModelInstance:
 
     def instantiate(self, model: Model, options: Options) -> None:
         # Check the gmd state.
-        rc, _, _, _ = gmdInfo(self.sync_db._gmd, GMD_NRUELS)
+        rc, _, _, _ = gmdInfo(self.sync_db.gmd, GMD_NRUELS)
         self.sync_db._check_for_gmd_error(rc)
 
         # Prepare the required lines to solve with model instance
@@ -328,16 +328,8 @@ class ModelInstance:
             ),
         )
 
-        rc = gmdInitFromDict(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
+        rc = gmdInitFromDict(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc)
-
-        # Populate gmd
-        self.container.write(self.sync_db._gmd, eps_to_zero=False)
-
-        # Lock sync_db symbols so user can't add new symbols which would result in other exceptions
-        self.sync_db._symbol_lock = True
-        # Unlock sync_db record so user can add data for modifiers
-        self.sync_db._record_lock = False
 
     def solve(
         self,
@@ -366,7 +358,7 @@ class ModelInstance:
                     self.container[symbol.name].records
                 )
                 self.instance_container.write(
-                    self.sync_db._gmd, symbols=[symbol.name], eps_to_zero=False
+                    self.sync_db.gmd, symbols=[symbol.name], eps_to_zero=False
                 )
 
             if (
@@ -383,11 +375,11 @@ class ModelInstance:
                 )
 
                 self.instance_container.write(
-                    self.sync_db._gmd, symbols=[attr_name], eps_to_zero=False
+                    self.sync_db.gmd, symbols=[attr_name], eps_to_zero=False
                 )
 
-        ### Legacy code from GAMS Control ###
-        rc = gmdInitUpdate(self.sync_db._gmd, gmoHandleToPtr(self._gmo))
+        ### Legacy code from GAMS Control. TODO: Pay the technical debt of the following legacy code. ###
+        rc = gmdInitUpdate(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         # Update gmd
@@ -402,20 +394,20 @@ class ModelInstance:
 
             if isinstance(modifier.gams_symbol, GamsParameter):
                 rc, no_match_cnt = gmdUpdateModelSymbol(
-                    self.sync_db._gmd,
-                    modifier.gams_symbol._sym_ptr,
+                    self.sync_db.gmd,
+                    modifier.gams_symbol.sym_ptr,
                     0,
-                    modifier.gams_symbol._sym_ptr,
+                    modifier.gams_symbol.sym_ptr,
                     update_type,
                     no_match_cnt,
                 )
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
             else:
                 rc, no_match_cnt = gmdUpdateModelSymbol(
-                    self.sync_db._gmd,
-                    modifier.gams_symbol._sym_ptr,
+                    self.sync_db.gmd,
+                    modifier.gams_symbol.sym_ptr,
                     modifier.update_action,
-                    modifier.data_symbol._sym_ptr,  # type: ignore
+                    modifier.data_symbol.sym_ptr,  # type: ignore
                     update_type,
                     no_match_cnt,
                 )
@@ -486,7 +478,7 @@ class ModelInstance:
                         self.workspace.working_directory, "convert.opt"
                     ),
                 )
-                rc = gmdCallSolver(self.sync_db._gmd, "convert")
+                rc = gmdCallSolver(self.sync_db.gmd, "convert")
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         gmoOptFileSet(self._gmo, tmp_opt_file)
@@ -495,7 +487,7 @@ class ModelInstance:
             os.path.join(os.path.dirname(save_name_opt_file), solver + ".opt"),
         )
 
-        rc = gmdCallSolver(self.sync_db._gmd, solver)
+        rc = gmdCallSolver(self.sync_db.gmd, solver)
         self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         gmoOptFileSet(self._gmo, save_opt_file)
@@ -683,7 +675,7 @@ class ModelInstance:
         temp = gt.Container(
             system_directory=self.container.system_directory,
         )
-        temp.read(self.sync_db._gmd)
+        temp.read(self.sync_db.gmd)
 
         prev_state = self.container._options.miro_protect
         for name in temp.data:
