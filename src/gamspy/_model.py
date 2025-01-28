@@ -1035,7 +1035,7 @@ class Model:
     def unfreeze(self) -> None:
         """Unfreezes the model"""
         self._is_frozen = False
-        gmdCloseLicenseSession(self.instance.sync_db._gmd)
+        gmdCloseLicenseSession(self.instance.sync_db.gmd)
 
     def solve(
         self,
