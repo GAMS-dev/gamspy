@@ -31,6 +31,24 @@ _set_default_options()
 
 
 def set_options(options: dict) -> None:
+    """
+    Sets the given configuration options.
+
+    Parameters
+    ----------
+    options : dict
+
+    Raises
+    ------
+    ValidationError
+        In case the given options are not in dict type.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> gp.set_options({"DOMAIN_VALIDATION": 1})
+
+    """
     if not isinstance(options, dict):
         raise ValidationError(
             f"`options` must be a dictionary but found: `{type(options)}`"
@@ -41,4 +59,31 @@ def set_options(options: dict) -> None:
 
 
 def get_option(name: str) -> Any:
+    """
+    Returns the requested option.
+
+    Parameters
+    ----------
+    name : str
+        Option name.
+
+    Returns
+    -------
+    Any
+        The value of the option.
+
+    Raises
+    ------
+    KeyError
+        In case the option is not set.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> gp.set_options({"DOMAIN_VALIDATION": 0})
+    >>> gp.get_option("DOMAIN_VALIDATION")
+    0
+    >>> gp.set_options({"DOMAIN_VALIDATION": 1})
+
+    """
     return configuration[name]

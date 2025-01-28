@@ -341,3 +341,16 @@ tree memory usage.
 
     from gamspy import Container, Options
     m = Container(options=Options(profile_file="<file_path>", monitor_process_tree_memory=True))
+
+Setting GAMSPy Configurations
+-----------------------------
+GAMSPy allows setting options via :meth:`gp.set_options <gamspy.set_options>`. For example, one can skip 
+the domain validation by setting `DOMAIN_VALIDATION` to 0. By default, GAMSPy performs domain validation.
+
+.. code-block:: python
+
+    import gamspy as gp
+    gp.set_options({"DOMAIN_VALIDATION": 0})
+
+One can also set the system directory via `GAMSPY_GAMS_SYSDIR` option. Beaware that if a system directory 
+is given in the constructor of the `Container`, it overrides this option.
