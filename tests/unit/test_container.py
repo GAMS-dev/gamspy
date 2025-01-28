@@ -246,6 +246,18 @@ def test_loadRecordsFromGdx(data):
     assert i.records.values.tolist() == [["i1", ""], ["i2", ""]]
     assert a.records is None
 
+    m = Container()
+    i = Set(m, "i", records=["i1", "i2", "i3"])
+    j = Set(m, "j", i, records=["i1", "i2"])
+    m.write(gdx_path)
+
+    m = Container()
+    i = Set(m, "i")
+    j = Set(m, "j", i, domain_forwarding=True)
+    m.loadRecordsFromGdx(gdx_path, ["j"])
+    assert i.toList() == ["i1", "i2"]
+    assert j.toList() == ["i1", "i2"]
+
 
 def test_enums(data):
     m, *_ = data
