@@ -1365,6 +1365,9 @@ def test_pooling_with_bounds(data):
     out2, _ = mp2(var_input)
     out3, _ = ap1(var_input)
 
+    out4, _ = mp1(par_input)
+    out5, _ = mp2(par_input)
+
     for recs in [out.records, out2.records, out3.records]:
         assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == 10).all()
         assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 20).all()
@@ -1374,6 +1377,66 @@ def test_pooling_with_bounds(data):
 
         assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -50).all()
         assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == 50).all()
+
+    exp_lb = np.array(
+        [
+            [
+                [
+                    [0.27341 , 0.29883 ],
+                    [0.40205 , 0.23754 ]
+                ]
+            ],
+
+
+        [
+                [
+                    [0.48203 , 0.364   ],
+                    [0.37691 , 0.19674 ]
+                ]
+            ],
+
+
+        [
+                [
+                    [0.54127 , 0.03598 ],
+                    [0.19366 , 0.043283]
+                ]
+            ]
+        ]
+    )
+
+    exp_ub = np.array(
+        [
+            [
+                [
+                    [0.64615, 0.90273],
+                    [0.66672, 0.8369 ]
+                ]
+            ],
+
+
+        [
+                [
+                    [0.9401 , 0.80008],
+                    [0.9395 , 0.97884]
+                ]
+            ],
+
+
+        [
+                [
+                    [0.92599, 0.86881],
+                    [0.90938, 0.51248]
+                ]
+            ]
+        ]
+    )
+
+    assert np.allclose(np.array(out4.records.upper).reshape(out4.shape), exp_ub)
+    assert np.allclose(np.array(out4.records.lower).reshape(out4.shape), exp_lb)
+
+    assert np.allclose(np.array(out5.records.upper).reshape(out5.shape), exp_ub)
+    assert np.allclose(np.array(out5.records.lower).reshape(out5.shape), exp_lb)
 
 
 def test_min_pooling(data):
@@ -1743,7 +1806,7 @@ def test_pool_call_bad(data):
     maxpool1 = MaxPool2d(m, (2, 2))
 
     new_par = gp.Parameter(m, "new_par", domain=dim([10]))
-    new_var = gp.Parameter(m, "new_var", domain=dim([10]))
+    new_var = gp.Parameter(m, "new_var", domain=dim([10]))   # should be variable?!
 
     for pool in [avgpool1, minpool1, maxpool1]:
         pytest.raises(ValidationError, pool, "asd")
@@ -1752,6 +1815,9 @@ def test_pool_call_bad(data):
         pytest.raises(ValidationError, pool, new_var)
 
     pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
+
+    pytest.raises(ValidationError, minpool1, new_var, "true")
+    pytest.raises(ValidationError, maxpool1, new_var, "true")
 
 
 def test_flatten_bad(data):
