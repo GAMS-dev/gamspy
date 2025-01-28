@@ -20,6 +20,7 @@ import gamspy._miro as miro
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
@@ -118,12 +119,10 @@ def open_connection(
 
 
 def get_system_directory(system_directory: str | None) -> str:
-    system_directory = os.getenv("GAMSPY_GAMS_SYSDIR", system_directory)
+    if system_directory is not None:
+        return system_directory
 
-    if system_directory is None:
-        system_directory = utils._get_gamspy_base_directory()
-
-    return system_directory
+    return get_option("GAMSPY_GAMS_SYSDIR")
 
 
 def check_response(response: bytes, job_name: str) -> None:

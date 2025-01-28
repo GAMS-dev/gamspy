@@ -6,6 +6,7 @@ GAMSPy 1.5.1
 - General
   - Fix the bugs in dynamic set assignments.
   - Allow loadRecordsFromGdx to domain forward.
+  - Add configurable options via set_options and get_option.
 - Documentation
   - Update embedding Neural Network documentation.
 

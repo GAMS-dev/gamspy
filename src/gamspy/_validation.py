@@ -9,6 +9,7 @@ from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._config import get_option
 from gamspy._model import Problem, Sense
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._symbols.symbol import Symbol
@@ -204,6 +205,9 @@ def validate_domain(
     indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
     domain = _transform_given_indices(symbol.domain, indices)  # type: ignore
+    if not get_option("DOMAIN_VALIDATION"):
+        return domain
+
     validate_container(symbol, domain)
     validate_dimension(symbol, domain)
 
