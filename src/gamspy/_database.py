@@ -58,12 +58,12 @@ class GamsSymbol:
     def __init__(
         self,
         database: Database,
-        identifier: str,
+        name: str,
         dimension: int,
         explanatory_text: str,
     ):
         self.database = database
-        self.name = identifier
+        self.name = name
         self.dimension = dimension
         self.text = explanatory_text
         self.database.symbols[self.name] = self
@@ -99,12 +99,12 @@ class GamsSet(GamsSymbol):
     def __init__(
         self,
         database: Database,
-        identifier: str,
+        name: str,
         dimension: int,
         explanatory_text: str = "",
         settype: int = 0,
     ):
-        super().__init__(database, identifier, dimension, explanatory_text)
+        super().__init__(database, name, dimension, explanatory_text)
 
         self.settype = settype
         rc = new_intp()
@@ -126,11 +126,11 @@ class GamsParameter(GamsSymbol):
     def __init__(
         self,
         database: Database,
-        identifier: str,
+        name: str,
         dimension: int,
         explanatory_text: str = "",
     ):
-        super().__init__(database, identifier, dimension, explanatory_text)
+        super().__init__(database, name, dimension, explanatory_text)
 
         rc = new_intp()
         self.sym_ptr = gmdAddSymbolPy(
@@ -151,12 +151,12 @@ class GamsVariable(GamsSymbol):
     def __init__(
         self,
         database: Database,
-        identifier: str,
+        name: str,
         dimension: int,
         vartype: int | None = None,
         explanatory_text: str = "",
     ):
-        super().__init__(database, identifier, dimension, explanatory_text)
+        super().__init__(database, name, dimension, explanatory_text)
 
         self.vartype = vartype
         rc = new_intp()
@@ -178,12 +178,12 @@ class GamsEquation(GamsSymbol):
     def __init__(
         self,
         database: Database,
-        identifier: str,
+        name: str,
         dimension: int,
         equtype: int | None = None,
         explanatory_text: str = "",
     ):
-        super().__init__(database, identifier, dimension, explanatory_text)
+        super().__init__(database, name, dimension, explanatory_text)
 
         self.equtype = equtype
         rc = new_intp()
@@ -226,8 +226,8 @@ class Database:
     def __len__(self):
         return len(self.symbols)
 
-    def __getitem__(self, symbol_identifier: str):
-        return self.symbols[symbol_identifier]
+    def __getitem__(self, symbol_name: str):
+        return self.symbols[symbol_name]
 
     def _check_for_gmd_error(self, rc, workspace=None):
         if not rc:
@@ -235,30 +235,38 @@ class Database:
             raise GamspyException(msg, workspace)
 
     def add_equation(
-        self, identifier, dimension, equtype, explanatory_text=""
+        self,
+        name: str,
+        dimension: int,
+        equtype: int,
+        explanatory_text: str = "",
     ) -> GamsEquation:
-        return GamsEquation(
-            self, identifier, dimension, equtype, explanatory_text
-        )
+        return GamsEquation(self, name, dimension, equtype, explanatory_text)
 
     def add_variable(
-        self, identifier, dimension, vartype, explanatory_text=""
+        self,
+        name: str,
+        dimension: int,
+        vartype: int,
+        explanatory_text: str = "",
     ) -> GamsVariable:
-        return GamsVariable(
-            self, identifier, dimension, vartype, explanatory_text
-        )
+        return GamsVariable(self, name, dimension, vartype, explanatory_text)
 
     def add_set(
-        self, identifier, dimension, explanatory_text="", settype=0
+        self,
+        name: str,
+        dimension: int,
+        explanatory_text: str = "",
+        settype: int = 0,
     ) -> GamsSet:
         return GamsSet(
-            self, identifier, dimension, explanatory_text, settype=settype
+            self, name, dimension, explanatory_text, settype=settype
         )
 
     def add_parameter(
-        self, identifier, dimension, explanatory_text=""
+        self, name: str, dimension: int, explanatory_text: str = ""
     ) -> GamsParameter:
-        return GamsParameter(self, identifier, dimension, explanatory_text)
+        return GamsParameter(self, name, dimension, explanatory_text)
 
     def export(self, file_path: str) -> None:
         """Writes database into a GDX file"""

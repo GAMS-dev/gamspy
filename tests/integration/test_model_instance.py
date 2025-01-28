@@ -29,6 +29,14 @@ from gamspy import (
     Variable,
     VariableType,
 )
+from gamspy._database import (
+    Database,
+    GamsEquation,
+    GamsParameter,
+    GamsSet,
+    GamsVariable,
+)
+from gamspy._workspace import Workspace
 from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.integration
@@ -245,12 +253,17 @@ def test_fx(data):
     mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
     mm.freeze(modifiables=[INCOME0, IADJ.fx, MPSADJ.fx])
     IADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
-    mm.solve()
+
+    output_path = os.path.join(m.working_directory, "out.log")
+    with open(output_path, "w") as file:
+        mm.solve(output=file)
+
+    assert os.path.exists(output_path)
 
     assert MPSADJ.records["level"].tolist()[0] == 1.5
 
     MPSADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
-    mm.solve()
+    mm.solve(output=sys.stdout)
 
     assert MPSADJ.records["level"].tolist()[0] == 0
     mm.unfreeze()
@@ -622,6 +635,8 @@ def test_license():
     with pytest.raises(GamspyException):
         model.freeze(modifiables=[p2])
 
+    m.close()
+
     subprocess.run(
         [
             sys.executable,
@@ -653,6 +668,7 @@ def test_license():
     model.freeze(modifiables=[p2])
     model.solve()
     assert model.solve_status == SolveStatus.NormalCompletion
+    m.close()
 
     subprocess.run(
         [
@@ -747,6 +763,10 @@ def normal_dice():
     return xdice.model_generation_time
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_timing():
     normal_generation_time = normal_dice()
 
@@ -827,3 +847,45 @@ def test_timing():
     frozen_model_generation = xdice.model_generation_time
     # Normal execution should take more time than frozen solve
     assert frozen_model_generation < normal_generation_time
+
+    m.close()
+
+
+@pytest.mark.skipif(
+    platform.system() == "Darwin",
+    reason="Darwin runners are not dockerized yet.",
+)
+def test_database():
+    ws = Workspace(debugging_level="delete")
+    database = Database(ws)
+    set = database.add_set("i", 1)
+    assert isinstance(set, GamsSet)
+    parameter = database.add_parameter("a", 0)
+    assert isinstance(parameter, GamsParameter)
+    parameter2 = database.add_parameter("a2", 1)
+    assert isinstance(parameter2, GamsParameter)
+    parameter3 = database.add_parameter("a3", 2)
+    assert isinstance(parameter3, GamsParameter)
+    variable = database.add_variable("v", 0, 1)
+    assert isinstance(variable, GamsVariable)
+    equation = database.add_equation("e", 0, 1)
+    assert isinstance(equation, GamsEquation)
+    assert equation.check_domains() is True
+
+    assert len(database) == 6
+
+    with pytest.raises(GamspyException):
+        database.add_variable("v", 0, 1)
+
+    existing_symbol = database["a"]
+    assert existing_symbol == parameter
+    assert existing_symbol != variable
+    assert len(parameter) == 0
+
+    gdx_path = os.path.join(ws.working_directory, "dump.gdx")
+    database.export(gdx_path)
+    assert os.path.exists(gdx_path)
+
+    m = Container(gdx_path)
+    assert len(m) == 6
+    m.close()

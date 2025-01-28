@@ -277,7 +277,9 @@ class Model:
                 f"Objective variable `{self._objective_variable}` must be a free variable"
             )
 
-        if limited_variables and not isinstance(limited_variables, Iterable):
+        if limited_variables is not None and not isinstance(
+            limited_variables, Iterable
+        ):
             raise ValidationError(
                 f"`limited_variables must an Iterable of ImplicitVariable objects but found {limited_variables}`"
             )
