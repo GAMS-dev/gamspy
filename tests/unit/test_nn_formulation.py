@@ -1409,6 +1409,118 @@ def test_pooling_with_bounds(data):
     )
 
 
+def test_mpooling_with_complex_bounds(data):
+    m, *_ = data
+
+    max_pool = MaxPool2d(m, (2, 3))
+    min_pool = MinPool2d(m, (2, 3))
+
+    data = np.array(
+        [
+            [
+                [
+                    [2, -5, -40, -3, -np.inf, 3],
+                    [100, 0, 2, 2, 10, -5],
+                    [np.inf, -5, 0, 0, 0, 0],
+                    [-2, 4, -2, 0, 0, 0],
+                ],
+                [
+                    [4, 1, 1, -2, 3, 4],
+                    [4, 1, 3, 3, -1, -5],
+                    [3, -3, -2, -5, -3, -6],
+                    [-2, 4, 4, -5, 0, -5],
+                ],
+            ],
+            [
+                [
+                    [-4, 1, -1, -3, 3, 0],
+                    [-12, -3, -5, -4, -3, 4],
+                    [0, -4, 1, 3, -3, 2],
+                    [-1, -5, -2, -3, 3, 2],
+                ],
+                [
+                    [-4, -5, 4, 2, -2, 2],
+                    [4, -5, -3, -1, 3, 0],
+                    [4, 2, -3, -1, -1, 0],
+                    [40, 2, 1, 5, 2, 0],
+                ],
+            ],
+        ]
+    )
+
+    ub_data = np.where(data < 0, 0, data)
+    lb_data = np.where(data > 0, 0, data)
+
+    lb = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=lb_data)
+    ub = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=ub_data)
+
+    par = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=data)
+    var = gp.Variable(m, domain=dim((2, 2, 4, 6)))
+
+    var.lo[...] = lb[...]
+    var.up[...] = ub[...]
+
+    out1, _ = max_pool(par, propagate_bounds=False)
+    out2, _ = min_pool(par, False)
+    out3, _ = max_pool(par)
+    out4, _ = min_pool(par)
+
+    out5, _ = max_pool(var, False)
+    out6, _ = min_pool(var, propagate_bounds=False)
+    out7, _ = max_pool(var)
+    out8, _ = min_pool(var)
+
+    exp_ub_par = np.array(
+        [
+            [[[100, 10], [np.inf, 0]], [[4.0, 4.0], [4.0, 0.0]]],
+            [[[1.0, 4.0], [1.0, 3.0]], [[4.0, 3.0], [40.0, 5.0]]],
+        ]
+    )
+
+    exp_lb_par = np.array(
+        [
+            [[[-40.0, -np.inf], [-5.0, 0.0]], [[1.0, -5.0], [-3.0, -6.0]]],
+            [[[-12.0, -4.0], [-5.0, -3.0]], [[-5.0, -2.0], [-3.0, -1.0]]],
+        ]
+    )
+
+    exp_ub_var = np.where(exp_ub_par < 0, 0, exp_ub_par)
+    exp_lb_var = np.where(exp_lb_par > 0, 0, exp_lb_par)
+
+    assert out1.records is None
+    assert out2.records is None
+    assert out5.records is None
+    assert out6.records is None
+
+    assert np.allclose(
+        np.array(out3.records.lower).reshape(out3.shape), exp_lb_par
+    )
+    assert np.allclose(
+        np.array(out3.records.upper).reshape(out3.shape), exp_ub_par
+    )
+
+    assert np.allclose(
+        np.array(out4.records.lower).reshape(out4.shape), exp_lb_par
+    )
+    assert np.allclose(
+        np.array(out4.records.upper).reshape(out4.shape), exp_ub_par
+    )
+
+    assert np.allclose(
+        np.array(out7.records.lower).reshape(out7.shape), exp_lb_var
+    )
+    assert np.allclose(
+        np.array(out7.records.upper).reshape(out7.shape), exp_ub_var
+    )
+
+    assert np.allclose(
+        np.array(out8.records.lower).reshape(out8.shape), exp_lb_var
+    )
+    assert np.allclose(
+        np.array(out8.records.upper).reshape(out8.shape), exp_ub_var
+    )
+
+
 def test_min_pooling(data):
     m, w1, b1, inp, par_input, ii = data
     mp1 = MinPool2d(m, 2)
