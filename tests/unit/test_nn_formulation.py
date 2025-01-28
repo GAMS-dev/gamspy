@@ -1461,11 +1461,11 @@ def test_mpooling_with_complex_bounds(data):
     var.up[...] = ub[...]
 
     out1, _ = max_pool(par, propagate_bounds=False)
-    out2, _ = min_pool(par, False)
+    out2, _ = min_pool(par, propagate_bounds=False)
     out3, _ = max_pool(par)
     out4, _ = min_pool(par)
 
-    out5, _ = max_pool(var, False)
+    out5, _ = max_pool(var, propagate_bounds=False)
     out6, _ = min_pool(var, propagate_bounds=False)
     out7, _ = max_pool(var)
     out8, _ = min_pool(var)
