@@ -36,7 +36,7 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer,control] == 48.6.0",
+  "gamsapi[transfer] == 48.6.0",
   "gamspy_base == 48.6.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
