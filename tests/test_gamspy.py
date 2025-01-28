@@ -33,6 +33,8 @@ def test_config():
     with pytest.raises(GamspyException):  # GAMS returns domain violation error
         a["i3"] = 5
 
+    gp.set_options({"DOMAIN_VALIDATION": 1})
+
 
 @pytest.mark.doc
 def test_switcher():

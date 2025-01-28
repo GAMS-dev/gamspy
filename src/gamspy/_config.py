@@ -42,6 +42,12 @@ def set_options(options: dict) -> None:
     ------
     ValidationError
         In case the given options are not in dict type.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> gp.set_options({"DOMAIN_VALIDATION": 1})
+
     """
     if not isinstance(options, dict):
         raise ValidationError(
@@ -70,5 +76,14 @@ def get_option(name: str) -> Any:
     ------
     KeyError
         In case the option is not set.
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> gp.set_options({"DOMAIN_VALIDATION": 0})
+    >>> gp.get_option("DOMAIN_VALIDATION")
+    0
+    >>> gp.set_options({"DOMAIN_VALIDATION": 1})
+
     """
     return configuration[name]
