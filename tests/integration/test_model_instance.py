@@ -876,11 +876,6 @@ def test_database():
     with pytest.raises(GamspyException):
         database.add_variable("v", 0, 1)
 
-    existing_symbol = database["a"]
-    assert existing_symbol == parameter
-    assert existing_symbol != variable
-    assert len(parameter) == 0
-
     gdx_path = os.path.join(ws.working_directory, "dump.gdx")
     database.export(gdx_path)
     assert os.path.exists(gdx_path)

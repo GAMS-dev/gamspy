@@ -66,15 +66,6 @@ class GamsSymbol:
         self.text = explanatory_text
         self.database.symbols[self.name] = self
 
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.sym_ptr == other.sym_ptr
-
-        return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     def __len__(self):
         return self.get_number_records()
 
