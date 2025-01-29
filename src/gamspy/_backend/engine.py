@@ -700,11 +700,11 @@ class EngineClient:
     ----------
     host : str
         Host address.
-    username : str | None, optional
+    username : str, optional
         Username
-    password : str | None, optional
+    password : str, optional
         Password
-    jwt : str | None, optional
+    jwt : str, optional
         JWT Token
     namespace : str, optional
         Namespace, by default "global"

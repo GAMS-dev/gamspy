@@ -13,8 +13,6 @@ from gams.core.gmd import (
     dt_set,
     dt_var,
     gmdAddSymbolPy,
-    gmdCheckDBDV,
-    gmdCheckSymbolDV,
     gmdCreateD,
     gmdFree,
     gmdGetLastError,
@@ -85,13 +83,6 @@ class GamsSymbol:
         self.database._check_for_gmd_error(ret[0])
         return ret[1]
 
-    def check_domains(self):
-        """Check if all records are within the specified domain of the symbol"""
-        has_violation = new_intp()
-        rc = gmdCheckSymbolDV(self.database.gmd, self.sym_ptr, has_violation)
-        self.database._check_for_gmd_error(rc)
-        return _int_value_and_free(has_violation) != 1
-
 
 class GamsSet(GamsSymbol):
     """Representation of a set symbol in GAMS"""
@@ -153,7 +144,7 @@ class GamsVariable(GamsSymbol):
         database: Database,
         name: str,
         dimension: int,
-        vartype: int | None = None,
+        vartype: int,
         explanatory_text: str = "",
     ):
         super().__init__(database, name, dimension, explanatory_text)
@@ -180,7 +171,7 @@ class GamsEquation(GamsSymbol):
         database: Database,
         name: str,
         dimension: int,
-        equtype: int | None = None,
+        equtype: int,
         explanatory_text: str = "",
     ):
         super().__init__(database, name, dimension, explanatory_text)
@@ -200,7 +191,7 @@ class GamsEquation(GamsSymbol):
 
 
 class Database:
-    """Communicates data between the Python and the GAMS"""
+    """Communicates data between Python and GAMS"""
 
     def __init__(self, ws: Workspace):
         self.symbols: dict = dict()
@@ -270,8 +261,9 @@ class Database:
 
     def export(self, file_path: str) -> None:
         """Writes database into a GDX file"""
-        if not self.check_domains():
-            raise GamspyException("Domain violations in the Database")
+        assert file_path.endswith(
+            ".gdx"
+        ), f"File path should point to a gdx file but got `{file_path}`"
 
         if os.path.isabs(file_path):
             rc = gmdWriteGDX(self.gmd, file_path, False)
@@ -282,10 +274,3 @@ class Database:
                 False,
             )
         self._check_for_gmd_error(rc)
-
-    def check_domains(self) -> bool:
-        """Check for all symbols if all records are within the specified domain of the symbol"""
-        has_violation = new_intp()
-        rc = gmdCheckDBDV(self.gmd, has_violation)
-        self._check_for_gmd_error(rc)
-        return _int_value_and_free(has_violation) != 1
