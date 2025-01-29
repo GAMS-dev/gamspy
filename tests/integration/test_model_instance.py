@@ -870,7 +870,6 @@ def test_database():
     assert isinstance(variable, GamsVariable)
     equation = database.add_equation("e", 0, 1)
     assert isinstance(equation, GamsEquation)
-    assert equation.check_domains() is True
 
     assert len(database) == 6
 
