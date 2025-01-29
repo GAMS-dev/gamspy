@@ -124,7 +124,7 @@ class _MPool2d:
         )
         N, C, H_out, W_out = out_var.domain
 
-        # Calculate input window positions (top - left) -----------------------------------
+        # Calculate input window positions (top - left)
         # These indices determine where pooling windows start in the input tensor
         # Formula accounts for padding and stride
         top_index = (
@@ -134,13 +134,13 @@ class _MPool2d:
             (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
         )
 
-        # Create filter dimensions and domain relationships -------------------------------
+        # Create filter dimensions and domain relationships
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
         Hf, Wf, H_in, W_in = utils._next_domains(
             [Hf, Wf, H_in, W_in], out_var.domain
         )
 
-        # Create mapping between input/output positions -----------------------------------
+        # Create mapping between input/output positions
         name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
             self.container, name, domain=[H_out, W_out, Hf, Wf, H_in, W_in]
@@ -158,14 +158,14 @@ class _MPool2d:
             & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))  # Horizontal
         ] = True
 
-        # Create a binary variable ---------------------------------------------------------
+        # Create a binary variable
         bin_var = gp.Variable(
             self.container,
             type="binary",
             domain=[N, C, H_out, W_out, H_in, W_in],
         )
 
-        # Create constraint equations ------------------------------------------------------
+        # Create constraint equations
         greater_than = gp.Equation(
             self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
         )
@@ -173,7 +173,7 @@ class _MPool2d:
             self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
         )
 
-        # Set up Big-M parameter -----------------------------------------------------------
+        # Set up Big-M parameter
         if propagate_bounds:
             _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var)
         else:
@@ -181,7 +181,7 @@ class _MPool2d:
 
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
 
-        # Build constraints based on pooling type ------------------------------------------
+        # Build constraints based on pooling type
         if self.sense == "max":
             # For max pooling:
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
@@ -201,7 +201,7 @@ class _MPool2d:
                 out_var[N, C, H_out, W_out] <= input[N, C, H_in, W_in]
             )
 
-        # Ensure exactly one element is selected per window -------------------------------
+        # Ensure exactly one element is selected per window
         pick_one = gp.Equation(self.container, domain=[N, C, H_out, W_out])
         pick_one[N, C, H_out, W_out] = (
             gp.Sum(
