@@ -315,7 +315,7 @@ class ModelInstance:
         gmoRegisterEnvironment(self._gmo, gevHandleToPtr(self._gev))
         ret = gmoLoadDataLegacy(self._gmo)
         if ret[0] != 0:
-            raise GamspyException("Could not load model instance: " + ret[1])
+            raise GamspyException(f"Could not load model instance: {ret[1]}")
 
         solvers = utils.getDefaultSolvers()
         default_solver = solvers[self.model.problem.value]
@@ -548,11 +548,9 @@ class ModelInstance:
 
                 assign_str = f"s__{symbol.name}(s__"
                 if symbol.dimension:
-                    assign_str += "," + ",".join(
-                        ["s__" for _ in range(symbol.dimension)]
-                    )
+                    assign_str += "," + ",".join(["s__"] * symbol.dimension])
 
-                assign_str += ")" + " = Eps;"
+                assign_str += ") = Eps;"
                 lines.append(assign_str)
 
             scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
