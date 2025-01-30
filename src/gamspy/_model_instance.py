@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
+import pandas as pd
 from gams.core.cfg import GMS_SSSIZE
 from gams.core.gev import (
     gevCreateD,
@@ -337,7 +338,7 @@ class ModelInstance:
         instance_options: ModelInstanceOptions,
         solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
-    ) -> None:
+    ) -> pd.DataFrame:
         # write solver options file
         solver_options_file_name = os.path.join(
             self.container.working_directory, f"{solver.lower()}.opt"
@@ -521,6 +522,27 @@ class ModelInstance:
             self._gmo, gmoHdomused
         )
         self.model._objective_value = gmoGetHeadnTail(self._gmo, gmoHobjval)
+        HEADER = [
+            "Solver Status",
+            "Model Status",
+            "Objective",
+            "Solver",
+            "Solver Time",
+        ]
+        summary = pd.DataFrame(
+            [
+                [
+                    str(self.model._solve_status),
+                    str(self.model._status),
+                    self.model._objective_value,
+                    solver,
+                    self.model._solve_model_time,
+                ]
+            ],
+            columns=HEADER,
+        )
+
+        return summary
 
     def _get_scenario(self, model: Model) -> str:
         params = [

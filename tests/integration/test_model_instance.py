@@ -140,7 +140,8 @@ def test_parameter_change(data):
 
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
-        transport.solve(solver="conopt")
+        summary = transport.solve(solver="conopt")
+        assert summary["Solver"].item() == "conopt"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
@@ -155,7 +156,8 @@ def test_parameter_change(data):
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
 
     # different solver
-    transport.solve(solver="cplex")
+    summary = transport.solve(solver="cplex")
+    assert summary["Solver"].item() == "cplex"
     assert math.isclose(
         transport.objective_value, 199.77750000000003, rel_tol=1e-6
     )

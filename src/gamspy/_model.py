@@ -1123,10 +1123,10 @@ class Model:
             if model_instance_options is None:
                 model_instance_options = ModelInstanceOptions()
 
-            self.instance.solve(
+            summary = self.instance.solve(
                 solver, model_instance_options, solver_options, output
             )
-            return None
+            return summary
 
         self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)
