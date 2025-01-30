@@ -1204,6 +1204,9 @@ def test_max_pooling(data):
     mp2 = MaxPool2d(m, (2, 1))
     mp3 = MaxPool2d(m, 3, stride=(1, 1))
     mp4 = MaxPool2d(m, 4, stride=(3, 2), padding=2)
+
+    pytest.raises(ValidationError, mp1, par_input, propagate_bounds="no")
+
     out, eqs = mp1(par_input)
     out2, eqs2 = mp2(par_input)
     out3, eqs3 = mp3(par_input)

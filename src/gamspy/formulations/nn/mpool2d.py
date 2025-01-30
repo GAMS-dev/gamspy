@@ -100,6 +100,7 @@ class _MPool2d:
         # User input validation
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
+
         if not isinstance(propagate_bounds, bool):
             raise ValidationError("Expected a boolean for propagate_bounds")
 
