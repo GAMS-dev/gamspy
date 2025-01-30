@@ -1888,9 +1888,7 @@ def test_pool_call_bad(data):
     maxpool1 = MaxPool2d(m, (2, 2))
 
     new_par = gp.Parameter(m, "new_par", domain=dim([10]))
-    new_var = gp.Parameter(
-        m, "new_var", domain=dim([10])
-    )  # should be variable?!
+    new_var = gp.Variable(m, "new_var", domain=dim([10]))
 
     for pool in [avgpool1, minpool1, maxpool1]:
         pytest.raises(ValidationError, pool, "asd")
