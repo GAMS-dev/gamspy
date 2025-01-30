@@ -252,7 +252,7 @@ def test_fx(data):
 
     mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
     mm.freeze(modifiables=[INCOME0, IADJ.fx, MPSADJ.fx])
-    IADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
+    IADJ.fx[...] = 2
 
     output_path = os.path.join(m.working_directory, "out.log")
     with open(output_path, "w") as file:
@@ -260,12 +260,12 @@ def test_fx(data):
 
     assert os.path.exists(output_path)
 
-    assert MPSADJ.records["level"].tolist()[0] == 1.5
+    assert MPSADJ.toValue() == -0.5
 
-    MPSADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
+    IADJ.fx[...] = 1
     mm.solve(output=sys.stdout)
 
-    assert MPSADJ.records["level"].tolist()[0] == 0
+    assert MPSADJ.toValue() == 0.5
     mm.unfreeze()
 
 
