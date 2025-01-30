@@ -570,7 +570,7 @@ class ModelInstance:
 
                 assign_str = f"s__{symbol.name}(s__"
                 if symbol.dimension:
-                    assign_str += "," + ",".join(["s__"] * symbol.dimension])
+                    assign_str += "," + ",".join(["s__"] * symbol.dimension)
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
