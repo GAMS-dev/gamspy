@@ -372,7 +372,7 @@ class Equation(gt.Equation, Symbol):
         self._winner = "gams"
 
     def __repr__(self) -> str:
-        return f"Equation(name='{self.name}', type={self.type}, domain={self.domain})"
+        return f"Equation(name='{self.name}', type='{self.type}', domain={self.domain})"
 
     def _init_attributes(self) -> tuple:
         level = self._create_attr("l")

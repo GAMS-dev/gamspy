@@ -755,6 +755,18 @@ def test_solve(data):
     freeLinks = Set(
         m, "freeLinks", domain=[i, j], records=[("seattle", "chicago")]
     )
+
+    with pytest.raises(ValidationError):
+        transport2 = Model(
+            m,
+            name="transport2",
+            equations=[cost, supply, demand],
+            problem="LP",
+            sense="min",
+            objective=z,
+            limited_variables=x[freeLinks],
+        )
+
     # Test limited variables
     transport2 = Model(
         m,

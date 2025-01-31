@@ -10,9 +10,10 @@ import sys
 import gamspy_base
 import pandas as pd
 import pytest
-from gams import GamsExceptionExecution
 
+import gamspy.utils as utils
 from gamspy import (
+    Alias,
     Container,
     Equation,
     Model,
@@ -26,8 +27,17 @@ from gamspy import (
     SolveStatus,
     Sum,
     Variable,
+    VariableType,
 )
-from gamspy.exceptions import ValidationError
+from gamspy._database import (
+    Database,
+    GamsEquation,
+    GamsParameter,
+    GamsSet,
+    GamsVariable,
+)
+from gamspy._workspace import Workspace
+from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.integration
 
@@ -41,10 +51,8 @@ except Exception:
 
 @pytest.fixture
 def data():
-    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
-
     # Arrange
-    m = Container(debugging_level="keep")
+    m = Container()
     canning_plants = ["seattle", "san-diego"]
     markets = ["new-york", "chicago", "topeka"]
     distances = [
@@ -58,46 +66,10 @@ def data():
     capacities = [["seattle", 350], ["san-diego", 600]]
     demands = [["new-york", 325], ["chicago", 300], ["topeka", 275]]
 
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["MODEL_INSTANCE_LICENSE"],
-            "-o",
-            ci_license_path,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    assert process.returncode == 0, process.stderr
-
     # Act and assert
     yield m, canning_plants, markets, capacities, demands, distances
 
     m.close()
-
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "license",
-            os.environ["LOCAL_LICENSE"],
-            "-o",
-            ci_license_path,
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-
-    assert process.returncode == 0, process.stderr
 
     files = glob.glob("_*")
     for file in files:
@@ -110,10 +82,6 @@ def data():
         os.remove("gams.gms")
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_parameter_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -168,7 +136,8 @@ def test_parameter_change(data):
 
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
-        transport.solve(solver="conopt")
+        summary = transport.solve(solver="conopt")
+        assert summary["Solver"].item() == "conopt"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
@@ -183,9 +152,10 @@ def test_parameter_change(data):
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
 
     # different solver
-    transport.solve(solver="cplex")
+    summary = transport.solve(solver="ipopt")
+    assert summary["Solver"].item() == "ipopt"
     assert math.isclose(
-        transport.objective_value, 199.77750000000003, rel_tol=1e-6
+        transport.objective_value, 199.88517934823204, rel_tol=1e-6
     )
 
     # invalid solver
@@ -196,10 +166,6 @@ def test_parameter_change(data):
     assert not transport._is_frozen
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_variable_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -243,10 +209,6 @@ def test_variable_change(data):
     transport.unfreeze()
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_fx(data):
     m, *_ = data
     INCOME0 = Parameter(
@@ -280,22 +242,23 @@ def test_fx(data):
 
     mm = Model(m, name="mm", equations=[BALANCE], problem="MCP")
     mm.freeze(modifiables=[INCOME0, IADJ.fx, MPSADJ.fx])
-    IADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
-    mm.solve()
+    IADJ.fx[...] = 2
 
-    assert MPSADJ.records["level"].tolist()[0] == 1.5
+    output_path = os.path.join(m.working_directory, "out.log")
+    with open(output_path, "w") as file:
+        mm.solve(output=file)
 
-    MPSADJ.setRecords({"lower": 0, "upper": 0, "scale": 1})
-    mm.solve()
+    assert os.path.exists(output_path)
 
-    assert MPSADJ.records["level"].tolist()[0] == 0
+    assert MPSADJ.toValue() == -0.5
+
+    IADJ.fx[...] = 1
+    mm.solve(output=sys.stdout)
+
+    assert MPSADJ.toValue() == 0.5
     mm.unfreeze()
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_validations(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -361,10 +324,6 @@ def test_validations(data):
     os.remove(options_path)
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_modifiable_in_condition(data):
     m, *_ = data
     td_data = pd.DataFrame(
@@ -590,10 +549,6 @@ def test_modifiable_in_condition(data):
         war.freeze(modifiables=[x.l])
 
 
-@pytest.mark.skipif(
-    platform.system() == "Darwin",
-    reason="Darwin runners are not dockerized yet.",
-)
 def test_modifiable_with_domain(data):
     m, *_ = data
     import gamspy as gp
@@ -638,19 +593,10 @@ def test_modifiable_with_domain(data):
     reason="Darwin runners are not dockerized yet.",
 )
 def test_license():
-    ci_license_path = os.path.join(gamspy_base.directory, "ci_license.txt")
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "uninstall",
-            "license",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    license_path = utils._get_license_path(gamspy_base.directory)
+    if "gamslice.txt" not in license_path:
+        os.remove(license_path)
+
     m = Container()
     i = Set(m, "i", records=range(5000))
     p = Parameter(m, "p", domain=i)
@@ -664,8 +610,10 @@ def test_license():
     model = Model(
         m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
     )
-    with pytest.raises(GamsExceptionExecution):
+    with pytest.raises(GamspyException):
         model.freeze(modifiables=[p2])
+
+    m.close()
 
     subprocess.run(
         [
@@ -675,17 +623,30 @@ def test_license():
             "install",
             "license",
             os.environ["MODEL_INSTANCE_LICENSE"],
-            "-o",
-            ci_license_path,
         ],
         check=True,
         capture_output=True,
         text=True,
     )
 
+    m = Container()
+    i = Set(m, "i", records=range(5000))
+    p = Parameter(m, "p", domain=i)
+    p2 = Parameter(m, "p2", records=5)
+    p.generateRecords()
+    v1 = Variable(m, "v1", domain=i)
+    z = Variable(m, "z")
+    e1 = Equation(m, "e1", domain=i)
+
+    e1[i] = p2 * v1[i] * p[i] >= z
+    model = Model(
+        m, name="my_model", equations=[e1], sense=Sense.MIN, objective=z
+    )
+
     model.freeze(modifiables=[p2])
     model.solve()
     assert model.solve_status == SolveStatus.NormalCompletion
+    m.close()
 
     subprocess.run(
         [
@@ -695,10 +656,200 @@ def test_license():
             "install",
             "license",
             os.environ["LOCAL_LICENSE"],
-            "-o",
-            ci_license_path,
         ],
         check=True,
         capture_output=True,
         text=True,
     )
+
+
+def normal_dice():
+    m = Container()
+
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 100)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 100)],
+    )
+
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
+    )
+    xdice.solve(options=Options(time_limit=0))
+    flo.setRecords(2)
+    xdice.solve(options=Options(time_limit=0))
+
+    return xdice.model_generation_time
+
+
+def test_timing():
+    normal_generation_time = normal_dice()
+
+    m = Container()
+
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 100)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 100)],
+    )
+
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
+    )
+    xdice.freeze(modifiables=[flo], options=Options(time_limit=0))
+    xdice.solve(options=Options(time_limit=0))
+    flo.setRecords(2)
+    xdice.solve(options=Options(time_limit=0))
+    frozen_model_generation = xdice.model_generation_time
+    # Normal execution should take more time than frozen solve
+    assert frozen_model_generation < normal_generation_time
+
+    m.close()
+
+
+def test_database():
+    ws = Workspace(debugging_level="delete")
+    database = Database(ws)
+    set = database.add_set("i", 1)
+    assert isinstance(set, GamsSet)
+    parameter = database.add_parameter("a", 0)
+    assert isinstance(parameter, GamsParameter)
+    parameter2 = database.add_parameter("a2", 1)
+    assert isinstance(parameter2, GamsParameter)
+    parameter3 = database.add_parameter("a3", 2)
+    assert isinstance(parameter3, GamsParameter)
+    variable = database.add_variable("v", 0, 1)
+    assert isinstance(variable, GamsVariable)
+    equation = database.add_equation("e", 0, 1)
+    assert isinstance(equation, GamsEquation)
+
+    assert len(database) == 6
+
+    with pytest.raises(GamspyException):
+        database.add_variable("v", 0, 1)
+
+    gdx_path = os.path.join(ws.working_directory, "dump.gdx")
+    database.export(gdx_path)
+    assert os.path.exists(gdx_path)
+
+    m = Container(gdx_path)
+    assert len(m) == 6
+    m.close()

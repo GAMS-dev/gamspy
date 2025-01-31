@@ -5,6 +5,9 @@ GAMSPy 1.5.1
 ------------
 - General
   - Fix the bugs in dynamic set assignments.
+  - Rewrite parts of GAMS Control API.
+  - Fix debugging level bug of NEOS backend.
+  - Fix license issue of big models that are solved with frozen solve.
   - Allow loadRecordsFromGdx to domain forward.
   - Enhance bound propagation for `MaxPool2d` and `MinPool2d` classes.
 - Testing
