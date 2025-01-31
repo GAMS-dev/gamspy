@@ -507,6 +507,8 @@ def test_write(data):
     )
     assert int(m["a"].toValue()) == 0
 
+    m.close()
+
 
 def test_read(data):
     m, *_ = data
@@ -518,6 +520,8 @@ def test_read(data):
     m = Container()
     m.read(gdx_path, load_records=False)
     assert m["a"].records is None
+
+    m.close()
 
 
 def test_debugging_level(data):
