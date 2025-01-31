@@ -318,17 +318,6 @@ class ModelInstance:
         if ret[0] != 0:
             raise GamspyException(f"Could not load model instance: {ret[1]}")
 
-        solvers = utils.getDefaultSolvers()
-        default_solver = solvers[self.model.problem.value]
-        opt_file_name = gmoNameOptFile(self._gmo)
-        gmoNameOptFileSet(
-            self._gmo,
-            os.path.join(
-                os.path.dirname(opt_file_name),
-                default_solver + os.path.splitext(opt_file_name)[1],
-            ),
-        )
-
         rc = gmdInitFromDict(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
         self.sync_db._check_for_gmd_error(rc)
 
@@ -445,7 +434,6 @@ class ModelInstance:
             ls_handle = gevGetLShandle(self._gev)
 
         tmp_opt_file = gmoOptFile(self._gmo)
-        save_opt_file = tmp_opt_file
         save_name_opt_file = gmoNameOptFile(self._gmo)
         if instance_options is not None and option_file != 0:
             tmp_opt_file = option_file
@@ -490,9 +478,6 @@ class ModelInstance:
 
         rc = gmdCallSolver(self.sync_db.gmd, solver)
         self.sync_db._check_for_gmd_error(rc, self.workspace)
-
-        gmoOptFileSet(self._gmo, save_opt_file)
-        gmoNameOptFileSet(self._gmo, save_name_opt_file)
 
         if output == sys.stdout:
             gevRestoreLogStat(self._gev, ls_handle)
