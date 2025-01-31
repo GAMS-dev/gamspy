@@ -156,10 +156,10 @@ def test_parameter_change(data):
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
 
     # different solver
-    summary = transport.solve(solver="cplex")
-    assert summary["Solver"].item() == "cplex"
+    summary = transport.solve(solver="ipopt")
+    assert summary["Solver"].item() == "ipopt"
     assert math.isclose(
-        transport.objective_value, 199.77750000000003, rel_tol=1e-6
+        transport.objective_value, 199.88517934823204, rel_tol=1e-6
     )
 
     # invalid solver
