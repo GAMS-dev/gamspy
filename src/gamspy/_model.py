@@ -281,7 +281,7 @@ class Model:
             limited_variables, Iterable
         ):
             raise ValidationError(
-                f"`limited_variables must an Iterable of ImplicitVariable objects but found {limited_variables}`"
+                f"`limited_variables must be an Iterable of ImplicitVariable objects but found {limited_variables}`"
             )
 
         self._limited_variables = limited_variables
