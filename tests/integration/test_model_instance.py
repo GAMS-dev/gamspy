@@ -82,6 +82,10 @@ def data():
         os.remove("gams.gms")
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_parameter_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -166,6 +170,10 @@ def test_parameter_change(data):
     assert not transport._is_frozen
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_variable_change(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -209,6 +217,10 @@ def test_variable_change(data):
     transport.unfreeze()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_fx(data):
     m, *_ = data
     INCOME0 = Parameter(
@@ -259,6 +271,10 @@ def test_fx(data):
     mm.unfreeze()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_validations(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
@@ -324,6 +340,10 @@ def test_validations(data):
     os.remove(options_path)
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_modifiable_in_condition(data):
     m, *_ = data
     td_data = pd.DataFrame(
@@ -549,6 +569,10 @@ def test_modifiable_in_condition(data):
         war.freeze(modifiables=[x.l])
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_modifiable_with_domain(data):
     m, *_ = data
     import gamspy as gp
@@ -741,6 +765,10 @@ def normal_dice():
     return xdice.model_generation_time
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_timing():
     normal_generation_time = normal_dice()
 
@@ -825,6 +853,10 @@ def test_timing():
     m.close()
 
 
+@pytest.mark.skipif(
+    platform.system() == "Darwin" and platform.machine() == "x86_64",
+    reason="Darwin runners are not dockerized yet.",
+)
 def test_database():
     ws = Workspace(debugging_level="delete")
     database = Database(ws)
