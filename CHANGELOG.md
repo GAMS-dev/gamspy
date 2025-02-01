@@ -20,7 +20,6 @@ GAMSPy 1.5.0
 ------------
 - General
   - Fix implicit parameter validation bug.
-  - Fix the bugs in dynamic set assignments.
   - Migrate GAMSPy CLI to Typer.
   - Threads can now create a container since we register the signal only to the main thread.
   - Fix solver options bug in frozen solve.
