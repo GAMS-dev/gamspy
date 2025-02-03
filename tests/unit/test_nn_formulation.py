@@ -1847,42 +1847,20 @@ def test_avg_pool_bounds_neg(data):
 
     recs = out.records
 
+    # Maximum (-1) is scaled by scaling factor (1/4)
     exp_ub = np.array(
         [
             [[[0.54191, 0.90273], [0.66672, 0.8369]]],
             [[[0.64615, 0.91273], [0.66672, 0.8369]]],
-            [
-                [
-                    [
-                        -1 / 4,
-                        -1 / 4,
-                    ],  # Maximum (-1) is scaled by scaling factor (1/4)
-                    [-1 / 4, -1 / 4],
-                ]
-            ],
+            [[[-1 / 4, -1 / 4], [-1 / 4, -1 / 4]]],
         ]
     )
 
+    # Positive Minimum values are scaled by scaling factor (1/4)
     exp_lb = np.array(
         [
-            [
-                [
-                    [
-                        -0.64615,
-                        0.17423 / 4,
-                    ],  # Minimum (0.17423) is scaled by scaling factor (1/4)
-                    [-0.33891, -0.49197],
-                ]
-            ],
-            [
-                [
-                    [
-                        0.27341 / 4,
-                        0.17423 / 4,
-                    ],  # Positive Minimum values are scaled by (1/4)
-                    [0.33891 / 4, 0.23754 / 4],
-                ]
-            ],
+            [[[-0.64615, 0.17423 / 4], [-0.33891, -0.49197]]],
+            [[[0.27341 / 4, 0.17423 / 4], [0.33891 / 4, 0.23754 / 4]]],
             [[[-1.0, -1.0], [-1.0, -1.0]]],
         ]
     )
