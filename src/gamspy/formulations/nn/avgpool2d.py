@@ -100,10 +100,9 @@ class AvgPool2d:
             )
 
         # 0 padding on the edges can shift the minimum and max value
-        scale = (
-            (self.kernel_size[0] - self.padding[0])
-            * (self.kernel_size[1] - self.padding[1])
-        ) / (self.kernel_size[0] * self.kernel_size[1])
+        kh, kw = self.kernel_size
+        ph, pw = self.padding
+        scale = ((kh - ph) * (kw - pw)) / (kh * kw)
 
         lb.where[lb > 0] = lb * scale
         ub.where[ub < 0] = ub * scale
