@@ -1205,8 +1205,6 @@ def test_max_pooling(data):
     mp3 = MaxPool2d(m, 3, stride=(1, 1))
     mp4 = MaxPool2d(m, 4, stride=(3, 2), padding=2)
 
-    pytest.raises(ValidationError, mp1, par_input, propagate_bounds="no")
-
     out, eqs = mp1(par_input)
     out2, eqs2 = mp2(par_input)
     out3, eqs3 = mp3(par_input)
@@ -1893,16 +1891,18 @@ def test_pool_call_bad(data):
     new_par = gp.Parameter(m, "new_par", domain=dim([10]))
     new_var = gp.Variable(m, "new_var", domain=dim([10]))
 
+    par2 = gp.Parameter(m, "par2", domain=dim([2, 2, 4, 10]))
+    var2 = gp.Variable(m, "var2", domain=dim([2, 2, 4, 10]))
+
     for pool in [avgpool1, minpool1, maxpool1]:
         pytest.raises(ValidationError, pool, "asd")
         pytest.raises(ValidationError, pool, 5)
         pytest.raises(ValidationError, pool, new_par)
         pytest.raises(ValidationError, pool, new_var)
+        pytest.raises(ValidationError, pool, par2, propagate_bounds="True")
+        pytest.raises(ValidationError, pool, var2, propagate_bounds="True")
 
     pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
-
-    pytest.raises(ValidationError, minpool1, new_var, "true")
-    pytest.raises(ValidationError, maxpool1, new_var, "true")
 
 
 def test_flatten_bad(data):
