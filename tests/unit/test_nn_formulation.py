@@ -1368,6 +1368,7 @@ def test_pooling_with_bounds(data):
 
     out4, _ = mp1(par_input)
     out5, _ = mp2(par_input)
+    out6, _ = ap1(par_input)
 
     for recs in [out.records, out2.records, out3.records]:
         assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == 10).all()
@@ -1395,19 +1396,9 @@ def test_pooling_with_bounds(data):
         ]
     )
 
-    assert np.allclose(
-        np.array(out4.records.upper).reshape(out4.shape), exp_ub
-    )
-    assert np.allclose(
-        np.array(out4.records.lower).reshape(out4.shape), exp_lb
-    )
-
-    assert np.allclose(
-        np.array(out5.records.upper).reshape(out5.shape), exp_ub
-    )
-    assert np.allclose(
-        np.array(out5.records.lower).reshape(out5.shape), exp_lb
-    )
+    for recs in [out4.records, out5.records, out6.records]:
+        assert np.allclose(np.array(recs.upper).reshape(out4.shape), exp_ub)
+        assert np.allclose(np.array(recs.lower).reshape(out4.shape), exp_lb)
 
 
 def test_mpooling_with_complex_bounds(data):
