@@ -90,7 +90,7 @@ def main():
     assert math.isclose(knapsack.objective_value, 295.0, rel_tol=0.001)
     levels = list(x.records["level"])
     print(
-        f'Chosen items = {", ".join([j for ix, j in enumerate(items) if levels[ix] == 1.0])}'
+        f"Chosen items = {', '.join([j for ix, j in enumerate(items) if levels[ix] == 1.0])}"
     )
 
 

@@ -381,8 +381,7 @@ def validate_model(
     if isinstance(sense, str):
         if sense.upper() not in Sense.values():
             raise ValueError(
-                f"Allowed sense values: {Sense.values()} but found"
-                f" {sense}."
+                f"Allowed sense values: {Sense.values()} but found {sense}."
             )
 
         sense = Sense(sense.upper())

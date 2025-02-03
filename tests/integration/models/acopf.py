@@ -845,12 +845,12 @@ def main():
 
             # Define the queries
             query1 = costpts_x.records.query(
-                f'gen == "{idx+1}" & costptset == "{idx2+2}"'
+                f'gen == "{idx + 1}" & costptset == "{idx2 + 2}"'
             ).value.values
             query1 = query1[0] if len(query1) > 0 else None
 
             query2 = costpts_x.records.query(
-                f'gen == "{idx+1}" & costptset == "{idx2+1}"'
+                f'gen == "{idx + 1}" & costptset == "{idx2 + 1}"'
             ).value.values
             query2 = query2[0] if len(query2) > 0 else None
 
@@ -860,11 +860,11 @@ def main():
                 raise ValueError("Zero-length piecewise segment detected")
 
             next_slope[...] = (
-                costpts_y[gen_, f"{int(cps_)+2}"]
-                - costpts_y[gen_, f"{int(cps_)+1}"]
+                costpts_y[gen_, f"{int(cps_) + 2}"]
+                - costpts_y[gen_, f"{int(cps_) + 1}"]
             ) / (
-                costpts_x[gen_, f"{int(cps_)+2}"]
-                - costpts_x[gen_, f"{int(cps_)+1}"]
+                costpts_x[gen_, f"{int(cps_) + 2}"]
+                - costpts_x[gen_, f"{int(cps_) + 1}"]
             )
 
             if cur_slope.toValue() - next_slope.toValue() > 1e-8:

@@ -25,10 +25,10 @@ def main():
     m = Container()
 
     # VARIABLES #
-    x = [Variable(m, name=f"x{i+1}") for i in range(14)]
+    x = [Variable(m, name=f"x{i + 1}") for i in range(14)]
 
     # EQUATIONS #
-    e = [Equation(m, name=f"e{i+1}") for i in range(15)]
+    e = [Equation(m, name=f"e{i + 1}") for i in range(15)]
 
     # Objective function to be minimized:
     eobj = (
@@ -97,7 +97,7 @@ def main():
     # REPORTING PARAMETER
     rep = Parameter(m, name="rep", domain=["*", "*"])
     for i in range(14):
-        rep[f"x{i+1}", "value"] = x[i].l
+        rep[f"x{i + 1}", "value"] = x[i].l
 
     print(
         "Objective Function Value: ",

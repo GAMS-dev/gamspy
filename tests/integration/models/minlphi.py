@@ -1622,7 +1622,7 @@ def main():
             kdynmax[km] = False
             print(
                 "stopping criterion met: \n\n",
-                f"zoaup: {round(zoaup.toValue(),3)}\n\n",
+                f"zoaup: {round(zoaup.toValue(), 3)}\n\n",
                 f"yhxopt: {yhxopt.toDict()}\n\n",
                 f"yhuopt: {yhuopt.toDict()}\n\n",
                 f"ycuopt: {ycuopt.toDict()}\n\n",
