@@ -59,7 +59,9 @@ class AvgPool2d:
         self.padding = _padding
 
     def _set_bounds(
-        self, input: gp.Parameter | gp.Variable, subset: gp.Set,
+        self,
+        input: gp.Parameter | gp.Variable,
+        subset: gp.Set,
     ) -> tuple[gp.Parameter, gp.Parameter]:
         # Extract batch and channel dimensions from input domain
         N, C = input.domain[:2]
@@ -109,7 +111,9 @@ class AvgPool2d:
         return lb, ub
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True,
+        self,
+        input: gp.Parameter | gp.Variable,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
@@ -131,7 +135,7 @@ class AvgPool2d:
         """
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
-    
+
         if not isinstance(propagate_bounds, bool):
             raise ValidationError("Expected a boolean for propagate_bounds")
 
