@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.5.0"
+version = "1.5.1"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,8 +36,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer,control] == 48.6.0",
-  "gamspy_base == 48.6.0",
+  "gamsapi[transfer] == 48.6.1",
+  "gamspy_base == 48.6.1",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
@@ -99,7 +99,7 @@ where = ["src"]
 omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
 
 [tool.coverage.report]
-exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "@property"]
+exclude_also = ["pragma: no cover", "if TYPE_CHECKING:", "if typing.TYPE_CHECKING:", "def __repr__", "def __del__", "@property"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

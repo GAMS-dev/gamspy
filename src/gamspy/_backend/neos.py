@@ -8,8 +8,6 @@ import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
 
-from gams import DebugLevel
-
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
 from gamspy._options import Options
@@ -447,7 +445,7 @@ class NEOSServer(backend.Backend):
 
     def execute_gams(self, gams_string: str):
         working_directory = self.container.working_directory
-        if self.container._debugging_level == DebugLevel.KeepFiles:
+        if self.container._debugging_level == "keep":
             self.options.log_file = os.path.basename(self.job_name) + ".log"
 
         extra_options = {

@@ -52,7 +52,7 @@ elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
 
-def getDefaultSolvers() -> dict:
+def getDefaultSolvers() -> dict[str, str]:
     try:
         import gamspy_base
     except ModuleNotFoundError as e:  # pragma: no cover

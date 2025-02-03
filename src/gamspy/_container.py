@@ -180,7 +180,7 @@ def check_response(response: bytes, job_name: str) -> None:
             info = ""
 
         raise GamspyException(
-            f'{info} Check {job_name + ".lst"} for more information.',
+            f'Return code {return_code}. {info} Check {job_name + ".lst"} for more information.',
             return_code,
         )
 
@@ -608,7 +608,10 @@ class Container(gt.Container):
             if name in self.data:
                 updated_records = self._temp_container[name].records
 
-                self[name]._records = updated_records
+                if user_invoked:
+                    self[name].records = updated_records
+                else:
+                    self[name]._records = updated_records
 
                 if updated_records is not None:
                     self[name].domain_labels = self[name].domain_names

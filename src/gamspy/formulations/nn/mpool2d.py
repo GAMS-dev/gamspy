@@ -18,68 +18,116 @@ class _MPool2d:
         stride: int | tuple[int, int] | None = None,
         padding: int = 0,
     ):
+        # Validate pooling type
         if sense not in ["min", "max"]:
             raise ValidationError("_MPool2d expects min or max")
 
+        # Convert kernel_size, stride, and padding to tuples
         _kernel_size = utils._check_tuple_int(kernel_size, "kernel_size")
         if stride is None:
-            stride = kernel_size
+            stride = kernel_size  # Default stride = kernel size
 
         _stride = utils._check_tuple_int(stride, "stride")
         _padding = utils._check_tuple_int(padding, "padding", allow_zero=True)
 
+        # Store configurations
         self.container = container
         self.kernel_size = _kernel_size
         self.stride = _stride
         self.padding = _padding
         self.sense = sense
 
-    def _get_big_M_for_N_C(
-        self, input: gp.Parameter | gp.Variable, default_big_m: int
+    def _set_bounds_and_big_M(
+        self,
+        input: gp.Parameter | gp.Variable,
+        default_big_m: int,
+        subset: gp.Set,
+        out_var: gp.Variable,
     ) -> tuple[gp.Parameter, gp.Parameter, gp.Parameter]:
-        N, C, H, W = input.domain
-        big_m_par = gp.Parameter(self.container, domain=[N, C])
-        lb = gp.Parameter(self.container, domain=[N, C])
-        ub = gp.Parameter(self.container, domain=[N, C])
+        # Extract batch and channel dimensions from input domain
+        N, C = input.domain[:2]
+        H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
 
+        # Create subset2 mapping output positions to input positions
+        subset2 = gp.Set(self.container, domain=[H_out, W_out, H_in, W_in])
+        subset2[H_out, W_out, H_in, W_in] = gp.Sum(
+            [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
+        )
+
+        # Initialize parameters for bounds and Big-M
+        big_m_par = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        lb = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        ub = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+
+        # Calculate upper/lower bounds based on input type
         if isinstance(input, gp.Variable):
-            ub[...] = gp.Smax([H, W], input.up[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input.lo[N, C, H, W])
+            # Use variable bounds if input is a variable
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.up[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.lo[N, C, H_in, W_in],
+            )
         else:
-            ub[...] = gp.Smax([H, W], input[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input[N, C, H, W])
+            # Use parameter values directly if input is a parameter
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
 
-        big_m_par[N, C] = ub - lb
+        # Set output variable bounds
+        out_var.lo[...] = lb
+        out_var.up[...] = ub
+
+        # Calculate Big-M values and handle infinity
+        big_m_par[N, C, H_out, W_out] = ub - lb
         big_m_par[...].where[big_m_par[...] == "inf"] = default_big_m
-        return big_m_par, lb, ub
+
+        return big_m_par
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, big_m: int = 1000
+        self,
+        input: gp.Parameter | gp.Variable,
+        big_m: int = 1000,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
+        # User input validation
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
+
+        if not isinstance(propagate_bounds, bool):
+            raise ValidationError("Expected a boolean for propagate_bounds")
 
         if len(input.domain) != 4:
             raise ValidationError(
                 f"expected 4D input (got {len(input.domain)}D input)"
             )
 
+        # Extract dimensions from input (Batch, Channel, Height, Width)
         N, C, H_in, W_in = input.domain
-
         h_in = len(H_in)
         w_in = len(W_in)
 
+        # Calculate output dimensions using padding, kernel, and stride
         h_out, w_out = utils._calc_hw(
             self.padding, self.kernel_size, self.stride, h_in, w_in
         )
 
+        # Create output variable
         out_var = gp.Variable(
             self.container, domain=dim([len(N), len(C), h_out, w_out])
         )
-
         N, C, H_out, W_out = out_var.domain
 
-        # expr must have domain N, C, H_out, W_out
+        # Calculate input window positions (top - left)
+        # These indices determine where pooling windows start in the input tensor
+        # Formula accounts for padding and stride
         top_index = (
             (self.stride[0] * (gp.Ord(H_out) - 1)) - self.padding[0] + 1
         )
@@ -87,15 +135,18 @@ class _MPool2d:
             (self.stride[1] * (gp.Ord(W_out) - 1)) - self.padding[1] + 1
         )
 
+        # Create filter dimensions and domain relationships
         Hf, Wf = gp.math._generate_dims(self.container, self.kernel_size)
         Hf, Wf, H_in, W_in = utils._next_domains(
             [Hf, Wf, H_in, W_in], out_var.domain
         )
 
+        # Create mapping between input/output positions
         name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
             self.container, name, domain=[H_out, W_out, Hf, Wf, H_in, W_in]
         )
+        # Create relationship between output positions and their corresponding input windows
         subset[
             H_out,
             W_out,
@@ -104,28 +155,36 @@ class _MPool2d:
             H_in,
             W_in,
         ].where[
-            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))
-            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))
+            (gp.Ord(H_in) == (top_index + gp.Ord(Hf) - 1))  # Vertical position
+            & (gp.Ord(W_in) == (left_index + gp.Ord(Wf) - 1))  # Horizontal
         ] = True
 
+        # Create a binary variable
         bin_var = gp.Variable(
             self.container,
             type="binary",
             domain=[N, C, H_out, W_out, H_in, W_in],
         )
 
+        # Create constraint equations
         greater_than = gp.Equation(
             self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
         )
-
         less_than = gp.Equation(
             self.container, domain=[N, C, H_out, W_out, Hf, Wf, H_in, W_in]
         )
 
-        # can be done better
-        _big_m, lb, ub = self._get_big_M_for_N_C(input, big_m)
+        # Set up Big-M parameter
+        if propagate_bounds:
+            _big_m = self._set_bounds_and_big_M(input, big_m, subset, out_var)
+        else:
+            _big_m = gp.Parameter(self.container, records=big_m)
+
         big_m_expr = _big_m * (1 - bin_var[N, C, H_out, W_out, H_in, W_in])
+
+        # Build constraints based on pooling type
         if self.sense == "max":
+            # For max pooling:
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
                 out_var[N, C, H_out, W_out] >= input[N, C, H_in, W_in]
             )
@@ -134,6 +193,7 @@ class _MPool2d:
                 <= input[N, C, H_in, W_in] + big_m_expr
             )
         else:
+            # For min pooling:
             greater_than[N, C, subset[H_out, W_out, Hf, Wf, H_in, W_in]] = (
                 out_var[N, C, H_out, W_out] + big_m_expr
                 >= input[N, C, H_in, W_in]
@@ -142,6 +202,7 @@ class _MPool2d:
                 out_var[N, C, H_out, W_out] <= input[N, C, H_in, W_in]
             )
 
+        # Ensure exactly one element is selected per window
         pick_one = gp.Equation(self.container, domain=[N, C, H_out, W_out])
         pick_one[N, C, H_out, W_out] = (
             gp.Sum(
@@ -153,8 +214,5 @@ class _MPool2d:
             )
             == 1
         )
-
-        out_var.lo[...] = lb
-        out_var.up[...] = ub
 
         return out_var, [less_than, greater_than, pick_one]

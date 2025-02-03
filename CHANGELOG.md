@@ -1,13 +1,25 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.5.1
+------------
+- General
+  - Fix the bugs in dynamic set assignments.
+  - Rewrite parts of GAMS Control API.
+  - Fix debugging level bug of NEOS backend.
+  - Fix license issue of big models that are solved with frozen solve.
+  - Allow loadRecordsFromGdx to domain forward.
+  - Upgrade gamspy_base and gamsapi dependencies.
+  - Enhance bound propagation for `MaxPool2d` and `MinPool2d` classes.
+- Testing
+  - Add bound propagation tests for `MaxPool2d` and `MinPool2d` classes.
+- Documentation
+  - Update embedding Neural Network documentation.
+
 GAMSPy 1.5.0
 ------------
 - General
   - Fix implicit parameter validation bug.
-  - Allow the usage of Container as a context manager.
-  - Allow propagating bounds to the output variable in `flatten_dims` method.
-  - Add piecewise linear function formulations.
   - Migrate GAMSPy CLI to Typer.
   - Threads can now create a container since we register the signal only to the main thread.
   - Fix solver options bug in frozen solve.

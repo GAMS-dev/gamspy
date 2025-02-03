@@ -45,12 +45,18 @@ class MaxPool2d(_MPool2d):
         super().__init__("max", container, kernel_size, stride, padding)
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable, big_m: int = 1000
+        self,
+        input: gp.Parameter | gp.Variable,
+        big_m: int = 1000,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
         calculating the max pooling. Returns the output variable and the list
-        of equations required for the max pooling formulation.
+        of equations required for the max pooling formulation. if propagate_bounds
+        is True, it will also set the bounds for the output variable based on the input.
+        It will also compute the big M value required for the pooling operation
+        using the bounds.
 
         Parameters
         ----------
@@ -60,10 +66,14 @@ class MaxPool2d(_MPool2d):
         big_m: int
                Big M value that is required for the pooling operation.
                Default value: 1000.
+        propagate_bounds: bool
+                If True, it will set the bounds for the output variable
+                based on the input.
+                Default value: True
 
         Returns
         -------
         tuple[gp.Variable, list[gp.Equation]]
 
         """
-        return super().__call__(input, big_m)
+        return super().__call__(input, big_m, propagate_bounds)

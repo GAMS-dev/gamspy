@@ -11,7 +11,6 @@ import time
 
 import pandas as pd
 import pytest
-from gams import GamsEngineConfiguration
 
 from gamspy import (
     Container,
@@ -25,6 +24,7 @@ from gamspy import (
     Sum,
     Variable,
 )
+from gamspy._backend.engine import EngineConfiguration
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.engine
@@ -197,7 +197,7 @@ def test_engine(data):
         remove_results=True,
     )
 
-    assert isinstance(client._get_engine_config(), GamsEngineConfiguration)
+    assert isinstance(client._engine_config, EngineConfiguration)
 
     transport.solve(backend="engine", client=client, output=sys.stdout)
 

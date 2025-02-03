@@ -39,3 +39,11 @@
   html[data-theme=dark] .sd-card img[src*='.svg'] {
     filter: invert(0.82) brightness(0.8) contrast(1.2);
   }
+
+.sphinx-tabs-panel {
+    background: none;
+}
+
+.sphinx-tabs-tab[aria-selected="true"] {
+    background: none;
+}
