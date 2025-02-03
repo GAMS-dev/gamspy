@@ -119,14 +119,20 @@ class AvgPool2d:
         Forward pass your input, generate output and equations required for
         calculating the average pooling. Unlike the min or max pooling avg
         pooling does not require binary variables or the big-M formulation.
+        if propagate_bounds is True, it will also set the bounds for the
+        output variable based on the input.
         Returns the output variable and the list of equations required for
-        the avg pooling formulation
+        the avg pooling formulation.
 
         Parameters
         ----------
         input : gp.Parameter | gp.Variable
                 input to the max pooling 2d layer, must be in shape
                 (batch x in_channels x height x width)
+        propagate_bounds: bool
+                If True, it will set the bounds for the output variable
+                based on the input.
+                Default value: True
 
         Returns
         -------
