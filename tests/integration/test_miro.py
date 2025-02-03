@@ -212,7 +212,7 @@ def test_miro():
                     "symnames": ["model_type", "f"],
                     "symtext": [
                         "model_type",
-                        ("freight in dollars per case per thousand" " miles"),
+                        ("freight in dollars per case per thousand miles"),
                     ],
                     "symtypes": ["set", "parameter"],
                     "headers": {
@@ -255,7 +255,7 @@ def test_miro():
                     "alias": "Output Variable/Equation Scalars",
                     "symnames": ["z"],
                     "symtext": [
-                        "total transportation costs in thousands of" " dollars"
+                        "total transportation costs in thousands of dollars"
                     ],
                     "symtypes": ["variable"],
                     "headers": {

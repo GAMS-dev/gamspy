@@ -89,7 +89,7 @@ def _parse_errors(lines: list[str], index: int) -> str:
         ...
 
     error_message = (
-        f'\n\n{FRAME}\nError Summary\n{FRAME}\n{"".join(error_lines)}'
+        f"\n\n{FRAME}\nError Summary\n{FRAME}\n{''.join(error_lines)}"
     )
 
     return error_message.rstrip()

@@ -171,7 +171,7 @@ def main():
         MeanVarMip.solve(
             options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
-        MeanVarianceMIP += f"{round(lamda_loop,1)},{round(MeanVarMip.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceMIP += f"{round(lamda_loop, 1)},{round(MeanVarMip.objective_value, 4)},{round(PortVariance.records.level[0], 4)},{round(PortReturn.records.level[0], 4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         MeanVarianceMIP += ",".join(x_recs)
         MeanVarianceMIP += "\n"
@@ -280,7 +280,7 @@ def main():
         MeanVarWithCost.solve(
             options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
-        MeanVarianceWithCost += f"{round(lamda_loop,1)},{round(MeanVarWithCost.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceWithCost += f"{round(lamda_loop, 1)},{round(MeanVarWithCost.objective_value, 4)},{round(PortVariance.records.level[0], 4)},{round(PortReturn.records.level[0], 4)},"
         x0_recs = [
             str(round(x_rec, 4)) for x_rec in x_0.records.level.tolist()
         ]
@@ -423,7 +423,7 @@ def main():
         MeanVarRevision.solve(
             options=Options(minlp="SHOT", relative_optimality_gap=0)
         )
-        MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop,1)},{round(MeanVarRevision.objective_value,4)},{round(PortVariance.records.level[0],4)},{round(PortReturn.records.level[0],4)},"
+        MeanVarianceRevision += f"{MeanVarRevision.status},{round(lamda_loop, 1)},{round(MeanVarRevision.objective_value, 4)},{round(PortVariance.records.level[0], 4)},{round(PortReturn.records.level[0], 4)},"
         x_recs = [str(round(x_rec, 4)) for x_rec in x.records.level.tolist()]
         buy_recs = [
             str(round(x_rec, 4)) for x_rec in buy.records.level.tolist()

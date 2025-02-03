@@ -159,7 +159,7 @@ def main():
             print("PortVariance: ", round(PortVariance.toValue(), 3))
 
             FrontierHandle.write(
-                f"{round(PortVariance.toValue(),4)},{round(MU_TARGET.toValue(),4)},"
+                f"{round(PortVariance.toValue(), 4)},{round(MU_TARGET.toValue(), 4)},"
             )
 
             x_recs = [str(round(x_rec, 4)) for x_rec in x.toDict().values()]
@@ -189,7 +189,7 @@ def main():
             print("PortVariance: ", round(PortVariance.toValue(), 3))
 
             FrontierHandle.write(
-                f"{round(PortVariance.toValue(),4)},{round(MU_TARGET.toValue(),4)},"
+                f"{round(PortVariance.toValue(), 4)},{round(MU_TARGET.toValue(), 4)},"
             )
 
             x_recs = [str(round(x_rec, 4)) for x_rec in x.toDict().values()]
@@ -221,7 +221,7 @@ def main():
             print("PortVariance: ", round(PortVariance.toValue(), 3))
 
             FrontierHandle.write(
-                f"{round(PortVariance.toValue(),4)},{round(MU_TARGET.toValue(),4)},"
+                f"{round(PortVariance.toValue(), 4)},{round(MU_TARGET.toValue(), 4)},"
             )
 
             x_recs = [str(round(x_rec, 4)) for x_rec in x.toDict().values()]
@@ -253,7 +253,7 @@ def main():
             print("PortVariance: ", round(PortVariance.toValue(), 3))
 
             FrontierHandle.write(
-                f"{round(PortVariance.toValue(),4)},{round(MU_TARGET.toValue(),4)},"
+                f"{round(PortVariance.toValue(), 4)},{round(MU_TARGET.toValue(), 4)},"
             )
 
             x_recs = [str(round(x_rec, 4)) for x_rec in x.toDict().values()]
@@ -306,7 +306,7 @@ def main():
         FrontierHandle.write(",".join(i_recs) + "\n")
 
         FrontierHandle.write(
-            f"{round(PortVariance.toValue(),4)},{round((d_bar.toValue()+RiskFree.toValue()),4)},{round(z.toValue(),4)},"
+            f"{round(PortVariance.toValue(), 4)},{round((d_bar.toValue() + RiskFree.toValue()), 4)},{round(z.toValue(), 4)},"
         )
 
         # Write the tangent portfolio.
@@ -382,7 +382,7 @@ def main():
             print("PortVariance: ", round(PortVariance.toValue(), 3))
 
             FrontierHandle.write(
-                f"{MeanVarTrack.status},{round(PortVariance.toValue(),4)},{round(MU_TARGET.toValue(),4)},"
+                f"{MeanVarTrack.status},{round(PortVariance.toValue(), 4)},{round(MU_TARGET.toValue(), 4)},"
             )
 
             x_recs = [str(round(x_rec, 4)) for x_rec in x.toDict().values()]
