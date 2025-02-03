@@ -1856,17 +1856,48 @@ def test_avg_pool_bounds_neg(data):
 
     recs = out.records
 
-    # nothing gets scaled
-    assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == -0.64615).all()
-    assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 0.90273).all()
+    exp_ub = np.array(
+        [
+            [[[0.54191, 0.90273], [0.66672, 0.8369]]],
+            [[[0.64615, 0.91273], [0.66672, 0.8369]]],
+            [
+                [
+                    [
+                        -1 / 4,
+                        -1 / 4,
+                    ],  # Maximum (-1) is scaled by scaling factor (1/4)
+                    [-1 / 4, -1 / 4],
+                ]
+            ],
+        ]
+    )
 
-    # positive lower bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "1"]["lower"] == (0.17423 / 4)).all()
-    assert (recs[recs["DenseDim3_1"] == "1"]["upper"] == 0.91273).all()
+    exp_lb = np.array(
+        [
+            [
+                [
+                    [
+                        -0.64615,
+                        0.17423 / 4,
+                    ],  # Minimum (0.17423) is scaled by scaling factor (1/4)
+                    [-0.33891, -0.49197],
+                ]
+            ],
+            [
+                [
+                    [
+                        0.27341 / 4,
+                        0.17423 / 4,
+                    ],  # Positive Minimum values are scaled by (1/4)
+                    [0.33891 / 4, 0.23754 / 4],
+                ]
+            ],
+            [[[-1.0, -1.0], [-1.0, -1.0]]],
+        ]
+    )
 
-    # negative upper bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -1).all()
-    assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == (-1) / 4).all()
+    assert np.allclose(np.array(recs.upper).reshape(out.shape), exp_ub)
+    assert np.allclose(np.array(recs.lower).reshape(out.shape), exp_lb)
 
     model = gp.Model(
         m,
