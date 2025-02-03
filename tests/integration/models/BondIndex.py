@@ -331,14 +331,14 @@ def main():
 
     with open("BondIndex.csv", "w", encoding="UTF-8") as ResultHandle:
         ResultHandle.write(
-            f'"Objective Function", {round(BondIndex.objective_value,3)}\n'
+            f'"Objective Function", {round(BondIndex.objective_value, 3)}\n'
         )
         ResultHandle.write(
-            f'"Final Epsilon", {round(EpsTolerance.records.value[0],3)}\n'
+            f'"Final Epsilon", {round(EpsTolerance.records.value[0], 3)}\n'
         )
         ResultHandle.write(
             '"Initial Portfolio Value in USD",'
-            f" {round(InitVal.records.value[0],3)}\n"
+            f" {round(InitVal.records.value[0], 3)}\n"
         )
         ResultHandle.write("\n")
         ResultHandle.write(
@@ -352,12 +352,12 @@ def main():
                 CurrentValue.records["i"] == ii.uni, "value"
             ].values[0]
             ResultHandle.write(
-                f'"{ii.uni}","{i_recs[ii.Index]}",{round(ii.level,3)},{round(cv_value,2)},{round(100*(cv_value/InitVal.records.value[0]),2)}\n'
+                f'"{ii.uni}","{i_recs[ii.Index]}",{round(ii.level, 3)},{round(cv_value, 2)},{round(100 * (cv_value / InitVal.records.value[0]), 2)}\n'
             )
 
         ResultHandle.write(
             '"Cash in US'
-            f' dollar",{Cash.records.level[0]},{((Cash.records.level[0]/InitVal.records.value[0])*100)}'
+            f' dollar",{Cash.records.level[0]},{((Cash.records.level[0] / InitVal.records.value[0]) * 100)}'
         )
 
     import math

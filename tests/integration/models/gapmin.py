@@ -346,7 +346,7 @@ def main():
 
         results.write(
             "\n\nzlbest                    objective value  = "
-            f" {round(zlbest.toValue(),3)}"
+            f" {round(zlbest.toValue(), 3)}"
         )
         results.write("\n\nDual values on assignment constraint\n")
 
@@ -362,7 +362,7 @@ def main():
 
         results.write(
             "\n\nzfeas quick and dirty bound obj value      = "
-            f" {round(zfeas.toValue(),3)}"
+            f" {round(zfeas.toValue(), 3)}"
         )
         print("a priori upper bound", round(zfeas.toValue(), 3))
 
@@ -519,7 +519,7 @@ def main():
             )
 
         results.write(
-            f"\n\nbest Lagrangian bound   =   {round(zlbest.toValue(),3)}"
+            f"\n\nbest Lagrangian bound   =   {round(zlbest.toValue(), 3)}"
         )
 
     print("\n\nreport: \n", report.pivot().round(3))

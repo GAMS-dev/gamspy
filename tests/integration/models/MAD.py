@@ -160,7 +160,7 @@ def main():
 
         MeanAbsoluteDeviation.solve()
 
-        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0], 3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -213,7 +213,7 @@ def main():
         MeanVariance.solve()
         z.l = gams_math.sqrt(z.l)
 
-        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0], 3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -279,7 +279,7 @@ def main():
 
         MeanAbsoluteDeviationWeighted.solve()
 
-        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0], 3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 
@@ -296,7 +296,7 @@ def main():
 
         MeanAbsoluteDeviationWeighted.solve()
 
-        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0],3)},"
+        output_csv += f"{z.records.level.round(3)[0]},{round(MU_TARGET.records.value[0] * Budget.records.value[0], 3)},"
         x_recs = [str(x_rec) for x_rec in x.records.level.round(3).tolist()]
         output_csv += ",".join(x_recs) + "\n"
 

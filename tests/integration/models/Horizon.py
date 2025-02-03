@@ -275,7 +275,7 @@ def main():
                 )
 
                 HorizonHandle.write(
-                    f'{round(budget,2)},{horizon_ret},"{ii}",{bond_mat},{coupon},{purchased_price}'
+                    f'{round(budget, 2)},{horizon_ret},"{ii}",{bond_mat},{coupon},{purchased_price}'
                 )
                 HorizonHandle.write("\n")
 

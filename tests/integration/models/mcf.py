@@ -78,7 +78,7 @@ def read_solution(df: pd.DataFrame, cost: float) -> None:
 
     # Print readable output
     for commodity, move_data in solution.items():
-        print(f"\v{'-'*20}")
+        print(f"\v{'-' * 20}")
         print(f"{commodity}: ${sum([flow['cost'] for flow in move_data])}")
         for flow in move_data:
             print(

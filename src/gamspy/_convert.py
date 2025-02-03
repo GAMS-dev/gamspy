@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Equation, Model, Parameter, Set, Variable
 
-    SymbolType: TypeAlias = Alias | Set | Parameter | Variable | Equation
+    SymbolType: TypeAlias = Union[Alias, Set, Parameter, Variable, Equation]
 
 logger = logging.getLogger("CONVERTER")
 logger.setLevel(logging.INFO)
@@ -143,7 +143,7 @@ class GamsConverter(Converter):
             file.write(gams_string)
 
         logger.info(
-            f'GAMS (.gms) file has been generated under {os.path.join(self.path, self.model.name + ".gms")}'
+            f"GAMS (.gms) file has been generated under {os.path.join(self.path, self.model.name + '.gms')}"
         )
 
 
@@ -239,7 +239,7 @@ class LatexConverter(Converter):
             file.write(latex_str)
 
         logger.info(
-            f'LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + ".tex")}'
+            f"LaTeX (.tex) file has been generated under {os.path.join(self.path, self.model.name + '.tex')}"
         )
 
         self.latex_str = latex_str
@@ -279,7 +279,7 @@ class LatexConverter(Converter):
                                 1:-1
                             ]
 
-                row = f'{summary["name"]} & {domain_str} & {summary["description"]}\\\\'
+                row = f"{summary['name']} & {domain_str} & {summary['description']}\\\\"
                 row = row.replace("_", "\\_")
                 table.append(row)
 
