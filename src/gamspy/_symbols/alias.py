@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import threading
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
 from gams.core.gdx import GMS_DT_ALIAS
@@ -72,6 +72,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._current_index = 0
+        obj._metadata = dict()
 
         return obj
 
@@ -122,6 +123,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         name: str | None = None,
         alias_with: Set | Alias = None,  # type: ignore
     ):
+        self._metadata: dict[str, Any] = dict()
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
