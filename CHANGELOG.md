@@ -6,6 +6,7 @@ GAMSPy 1.6.0
 - General
   - Upgrade pre-commit dependencies.
   - Enhance bound propagation for `AvgPool2d` class.
+  - Allow registering metadata to symbols via `symbol._metadata` attribute.
 
 GAMSPy 1.5.1
 ------------

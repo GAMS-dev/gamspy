@@ -142,6 +142,7 @@ class Equation(gt.Equation, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._synchronize = True
+        obj._metadata = dict()
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -214,6 +215,7 @@ class Equation(gt.Equation, Symbol):
         is_miro_output: bool = False,
         definition_domain: list | None = None,
     ):
+        self._metadata: dict[str, Any] = dict()
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 

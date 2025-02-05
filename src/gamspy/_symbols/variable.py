@@ -133,6 +133,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
         obj._synchronize = True
+        obj._metadata = dict()
 
         # create attributes
         obj._l, obj._m, obj._lo, obj._up, obj._s = obj._init_attributes()
@@ -209,6 +210,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         uels_on_axes: bool = False,
         is_miro_output: bool = False,
     ):
+        self._metadata: dict[str, Any] = dict()
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
