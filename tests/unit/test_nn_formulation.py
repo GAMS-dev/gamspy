@@ -1669,6 +1669,11 @@ def test_avg_pooling(data):
     out2, eqs2 = ap2(par_input)
     out3, eqs3 = ap3(par_input)
     out4, eqs4 = ap4(par_input)
+    out5, _ = ap4(par_input, propagate_bounds=False)
+
+    # test that records are not created when propagate_bounds is False
+    assert out5.records is None
+
     obj = (
         gp.Sum(out.domain, out)
         + gp.Sum(out2.domain, out2)
