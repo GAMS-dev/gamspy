@@ -8,6 +8,7 @@ GAMSPy 1.6.0
   - Enhance bound propagation for `AvgPool2d` class.
   - Allow adding debug options to Options objects.
   - Allow starting from a GAMS restart file.
+  - Allow registering metadata to symbols via `symbol._metadata` attribute.
 
 GAMSPy 1.5.1
 ------------

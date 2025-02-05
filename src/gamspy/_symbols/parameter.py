@@ -100,9 +100,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         # gamspy attributes
         obj._synchronize = True
-
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
+        obj._metadata = dict()
 
         # miro support
         obj._is_miro_input = False
@@ -178,6 +178,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         is_miro_output: bool = False,
         is_miro_table: bool = False,
     ):
+        self._metadata: dict[str, Any] = dict()
         if (is_miro_input or is_miro_output) and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
