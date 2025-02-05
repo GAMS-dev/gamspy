@@ -433,6 +433,10 @@ class Options(BaseModel):
         """Set extra options of the backend"""
         self._extra_options = options
 
+    def _set_debug_options(self, options: dict) -> None:
+        """Set debugging options"""
+        self._debug_options = options
+
     @staticmethod
     def fromFile(path: str) -> Options:
         """
@@ -505,6 +509,10 @@ class Options(BaseModel):
         if hasattr(self, "_extra_options") and self._extra_options:
             all_options.update(**self._extra_options)
             delattr(self, "_extra_options")
+
+        if hasattr(self, "_debug_options") and self._debug_options:
+            all_options.update(**self._debug_options)
+            delattr(self, "_debug_options")
 
         if hasattr(self, "_frame"):
             filename = self._frame.f_code.co_filename

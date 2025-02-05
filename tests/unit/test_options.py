@@ -771,3 +771,13 @@ def test_solver_options_twice(data):
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
         assert "OptFile 1" not in file.read()
+
+
+def test_debug_options():
+    m = Container()
+    save_path = os.path.join(m.working_directory, "save.g00")
+    m._options._set_debug_options({"save": save_path})
+    _ = Set(m, records=["i1", "i2"])
+    assert os.path.exists(save_path)
+    os.remove(save_path)
+    m.close()
