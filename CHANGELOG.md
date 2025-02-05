@@ -5,6 +5,7 @@ GAMSPy 1.6.0
 ------------
 - General
   - Upgrade pre-commit dependencies.
+  - Enhance bound propagation for `AvgPool2d` class.
 
 GAMSPy 1.5.1
 ------------
