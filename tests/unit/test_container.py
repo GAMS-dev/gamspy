@@ -95,8 +95,6 @@ def test_container(data):
     m._cast_symbols()
     assert isinstance(m["e"], Equation)
 
-    print(m.data.keys())
-
     # Test load_from
     with pytest.raises(ValidationError):
         _ = Container(load_from=1)
