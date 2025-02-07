@@ -4,7 +4,17 @@ import pandas as pd
 import pytest
 
 import gamspy.math as gp_math
-from gamspy import Alias, Card, Container, Number, Ord, Parameter, Set, Sum
+from gamspy import (
+    Alias,
+    Card,
+    Container,
+    Number,
+    Ord,
+    Parameter,
+    Set,
+    Sum,
+    Variable,
+)
 from gamspy._algebra.expression import SetExpression
 from gamspy.exceptions import ValidationError
 
@@ -507,3 +517,41 @@ def test_singleton():
     assert s5.toList() == ["s1"]
     s5[s5].where[False] = True
     assert s5.records is None
+
+
+def test_indexing():
+    m = Container()
+    i = Set(m, "i", records=range(3))
+    j = Set(m, "j", records=range(3))
+    a = Parameter(m, "a", domain=[i, j])
+    v = Variable(m, "v", domain=[i, j])
+    e = Variable(m, "e", domain=[i, j])
+
+    assert i[1].gamsRepr() == 'i("1")'
+    assert i["1"].gamsRepr() == i[1].gamsRepr()
+    assert a[i, 2].gamsRepr() == 'a(i,"2")'
+    assert a[i, "2"].gamsRepr() == a[i, 2].gamsRepr()
+    assert a[1, 2].gamsRepr() == 'a("1","2")'
+    assert v[i, 2].gamsRepr() == 'v(i,"2")'
+    assert v[i, "2"].gamsRepr() == v[i, 2].gamsRepr()
+    assert v[1, 2].gamsRepr() == 'v("1","2")'
+    assert v.l[i, 2].gamsRepr() == 'v.l(i,"2")'
+    assert v.l[i, "2"].gamsRepr() == v.l[i, 2].gamsRepr()
+    assert v.l[1, 2].gamsRepr() == 'v.l("1","2")'
+    assert e[i, 2].gamsRepr() == 'e(i,"2")'
+    assert e[i, "2"].gamsRepr() == e[i, 2].gamsRepr()
+    assert e[1, 2].gamsRepr() == 'e("1","2")'
+    assert e.l[i, 2].gamsRepr() == 'e.l(i,"2")'
+    assert e.l[1, 2].gamsRepr() == 'e.l("1","2")'
+
+    k = Set(m, "k", records=range(3))
+    k[0] = False
+
+    a.generateRecords()
+    a[0, 1] = 5
+
+    v.generateRecords()
+    v.l[0, 1] = 5
+
+    e.generateRecords()
+    e.l[0, 1] = 5
