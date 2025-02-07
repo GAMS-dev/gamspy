@@ -57,7 +57,7 @@ class GamsConverter(Converter):
         model: Model,
         path: str,
         options: Options | None,
-        dump_gams_state: bool = False,
+        dump_gams_state: bool,
     ) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
@@ -97,7 +97,8 @@ class GamsConverter(Converter):
 
         # Write .g00 file
         if self.dump_gams_state:
-            ...
+            self.container._options._set_debug_options({"save": self.g00_path})
+            self.container._synch_with_gams()
 
         # Write .gdx file
         self.container.write(self.gdx_path, symbols)
