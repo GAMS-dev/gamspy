@@ -1233,8 +1233,8 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
-        converter = GamsConverter(self, path)
-        converter.convert(options=options)
+        converter = GamsConverter(self, path, options)
+        converter.convert()
 
     def toLatex(self, path: str, generate_pdf: bool = False) -> None:
         """

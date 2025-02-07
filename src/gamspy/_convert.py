@@ -52,13 +52,22 @@ class Converter(ABC):
 
 
 class GamsConverter(Converter):
-    def __init__(self, model: Model, path: str) -> None:
+    def __init__(
+        self,
+        model: Model,
+        path: str,
+        options: Options | None,
+        dump_gams_state: bool = False,
+    ) -> None:
         os.makedirs(path, exist_ok=True)
         self.model = model
         self.container = model.container
         self.path = path
+        self.options = options
+        self.dump_gams_state = dump_gams_state
         self.gdx_path = os.path.join(path, model.name + "_data.gdx")
         self.gms_path = os.path.join(path, model.name + ".gms")
+        self.g00_path = os.path.join(path, model.name + ".g00")
 
     def get_definitions(self) -> list[str]:
         definitions = []
@@ -82,11 +91,15 @@ class GamsConverter(Converter):
 
         return all_needed_symbols
 
-    def convert(self, options: Options | None = None) -> None:
-        """Generates .gms and .gdx file"""
+    def convert(self) -> None:
+        """Generates .gms, .gdx and .g00 file"""
         symbols = self.get_all_symbols()
 
-        # Write the symbol data first
+        # Write .g00 file
+        if self.dump_gams_state:
+            ...
+
+        # Write .gdx file
         self.container.write(self.gdx_path, symbols)
 
         # 1. Declarations
@@ -112,9 +125,13 @@ class GamsConverter(Converter):
 
         # 4. Model attribute options
         options_strs = []
-        if options is not None:
-            options._export(os.path.join(self.path, f"{self.model.name}.pf"))
-            for key, value in options.model_dump(exclude_none=True).items():
+        if self.options is not None:
+            self.options._export(
+                os.path.join(self.path, f"{self.model.name}.pf")
+            )
+            for key, value in self.options.model_dump(
+                exclude_none=True
+            ).items():
                 if key in MODEL_ATTR_OPTION_MAP:
                     if isinstance(value, bool):
                         value = int(value)
