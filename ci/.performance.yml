@@ -11,7 +11,7 @@ leg-performance:
     - conda create -y -n performance python=3.12
     - conda activate performance
     - conda install -c conda-forge cyipopt
-    - python -m pip install psutil
+    - python -m pip install psutil pyoptinterface
     - python -m pip install .[dev,test] --force-reinstall
     - python -m pip install highsbox llvmlite tccbox
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
