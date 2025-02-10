@@ -37,6 +37,12 @@ assigned members to the sets as follows:
 They are labels, but are often referred to as elements or members. The optional ``description`` 
 may be used to describe the set for future reference and to ease readability.
 
+.. note::
+    One can also use ranges for the set records. For example: `Set(m, "my_set", records=range(5))`.
+    This is a convenient way to initialize a set in case you do not have distinct labels that are 
+    important for the model that you are developing. In general, using proper label names are highly 
+    recommended for the readability of the model.
+
 Besides using the :meth:`Set <gamspy.Set>` class directly, one can also facilitate the :meth:`addSet <gamspy.Container.addSet>` function: ::
 
     from gamspy import Container
