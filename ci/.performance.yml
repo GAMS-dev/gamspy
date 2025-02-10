@@ -13,6 +13,8 @@ leg-performance:
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
     - gamspy install solver mpsge scip reshop
+    - python scripts/performance/lp/main.py
+    - python scripts/performance/qcp/main.py
     - python scripts/performance/performance.py
     - python scripts/performance/read.py
     - python scripts/performance/main_IJKLM.py
