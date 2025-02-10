@@ -1,3 +1,4 @@
+import logging
 import time
 
 import pandas as pd
@@ -5,6 +6,8 @@ import pyoptinterface as poi
 from pyoptinterface import highs
 
 import gamspy as gp
+
+logging.disable(logging.WARNING)
 
 
 def create_poi_model(Model, N):

@@ -5,14 +5,18 @@ leg-performance:
   image: python:3.12
   when: manual
   script:
-    - python -m pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
+    - curl --silent https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+    - sh Miniconda3-latest-Linux-x86_64.sh -b -p anaconda3
+    - source anaconda3/bin/activate
+    - conda create -y -n performance python=3.12
+    - conda activate performance
+    - conda install -c conda-forge cyipopt
     - python -m pip install psutil
     - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install highsbox llvmlite tccbox
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
     - echo $GAMS_LICENSE > $(gamspy show base)/gamslice.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs
     - python scripts/performance/lp/main.py
     - python scripts/performance/qcp/main.py
     - python scripts/performance/performance.py
