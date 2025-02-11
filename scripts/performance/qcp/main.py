@@ -4,6 +4,7 @@
 # in the LICENSE.md file or at https://opensource.org/licenses/MIT.
 
 import logging
+import math
 import time
 
 import numpy as np
@@ -24,7 +25,7 @@ def add_ndarray_variable(m, shape, **kwargs):
     return array
 
 
-def solve_facility_poi(m, G, F):
+def solve_facility_poi(m, G, F, time_limit=0):
     # Create variables
     y = add_ndarray_variable(m, (F, 2), lb=0.0, ub=1.0)
     s = add_ndarray_variable(m, (G + 1, G + 1, F), lb=0.0)
@@ -57,12 +58,14 @@ def solve_facility_poi(m, G, F):
 
     # Optimize model
     m.set_model_attribute(poi.ModelAttribute.Silent, True)
-    m.set_model_attribute(poi.ModelAttribute.TimeLimitSec, 1e-9)
+    m.set_model_attribute(poi.ModelAttribute.TimeLimitSec, time_limit)
 
     m.optimize()
+    objective_value = m.get_model_attribute(poi.ModelAttribute.ObjectiveValue)
+    return objective_value
 
 
-def solve_facility_gamspy(G, F):
+def solve_facility_gamspy(G, F, time_limit=0):
     M = 2 * 1.414
     with gp.Container() as m:
         grid = gp.Set(records=range(G + 1))
@@ -110,16 +113,26 @@ def solve_facility_gamspy(G, F):
             objective=d,
         )
         m.addGamsCode("facility.justscrdir = 0")
-        model.solve(solver="ipopt", options=gp.Options(time_limit=1e-9))
+        model.solve(solver="ipopt", options=gp.Options(time_limit=time_limit))
+
+        return model.objective_value
 
 
 def main(Ns=[25, 50, 75, 100]):
+    # sanity check with a small size
+    model = ipopt.Model()
+    poi_objective = solve_facility_poi(model, 10, 10)
+    gamspy_objective = solve_facility_gamspy(10, 10)
+    assert math.isclose(poi_objective, gamspy_objective, abs_tol=1e-6), (
+        f"{poi_objective=}, {gamspy_objective=}"
+    )
+
     results = []
     for n in Ns:
         poi_dict = dict()
         start = time.time()
         model = ipopt.Model()
-        solve_facility_poi(model, n, n)
+        solve_facility_poi(model, n, n, 1e-9)
         timing = time.time() - start
         poi_dict["poi"] = timing
         results.append(poi_dict)
@@ -129,7 +142,7 @@ def main(Ns=[25, 50, 75, 100]):
     df = pd.DataFrame(results, index=Ns)
     for n in Ns:
         start = time.time()
-        solve_facility_gamspy(n, n)
+        solve_facility_gamspy(n, n, 1e-9)
         timing = time.time() - start
         gamspy_results.append(timing)
         print(f"[GAMSPy] {timing=}")
