@@ -425,7 +425,10 @@ class Options(BaseModel):
 
             with open(solver_options_file_name, "w", encoding="utf-8") as solver_file:
                 for key, value in solver_options.items():
-                    solver_file.write(f"{key} {value}\n")
+                    row = f"{key} {value}\n"
+                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                        row = f"{key} = {value}\n"
+                    solver_file.write(row)
 
             self._solver_options_file = "1"
 
