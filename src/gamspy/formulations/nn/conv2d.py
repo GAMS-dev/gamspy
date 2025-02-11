@@ -337,6 +337,7 @@ class Conv2d:
             propagate_bounds
             and self._state == 1
             and isinstance(input, gp.Variable)
+            and input.records is not None
         ):
             input_bounds = gp.Parameter(
                 self.container, domain=dim([2, *input.shape])
