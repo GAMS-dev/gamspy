@@ -225,24 +225,36 @@ class Conv2d:
                 )
             else:
                 self.bias.setRecords(bias)
+        else:
+            self.bias = gp.Parameter(
+                self.container,
+                domain=dim([self.out_channels]),
+            )
 
         self._state = 1
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable
+        self, input: gp.Parameter | gp.Variable, propagate_bounds: bool = True
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
-        calculating the convolution.
+        calculating the convolution. If `propagate_bounds` is True,
+        the `input` is of type variable, and `load_weights` was called, then
+        the bounds of the input are propagated to the output.
 
         Parameters
         ----------
         input : gp.Parameter | gp.Variable
                 input to the conv layer, must be in shape
                 (batch x in_channels x height x width)
-
+        propagate_bounds : bool = True
+                If True, propagate bounds of the input to the output.
+                Otherwise, the output variable is unbounded.
 
         """
+        if not isinstance(propagate_bounds, bool):
+            raise ValidationError("propagate_bounds should be a boolean.")
+
         if self.weight is None:
             raise ValidationError(
                 "You must call load_weights or make_variable first before using the Conv2d"
@@ -318,5 +330,65 @@ class Conv2d:
             expr = expr + self.bias[C_out]
 
         set_out[N, C_out, H_out, W_out] = out[N, C_out, H_out, W_out] == expr
+
+        # If propagate_bounds is True, weight is a parameter and input is a variable,
+        # we will propagate the bounds of the input to the output
+        if (
+            propagate_bounds
+            and self._state == 1
+            and isinstance(input, gp.Variable)
+        ):
+            input_bounds = gp.Parameter(
+                self.container, domain=dim([2, *input.shape])
+            )
+            input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+            input_bounds[("1",) + tuple(input.domain)] = input.up[...]
+
+            weight = self.weight.toDense()
+            pos_weight = np.maximum(weight, 0)
+            neg_weight = np.minimum(weight, 0)
+
+            all_weight = np.stack([neg_weight, pos_weight], axis=0)
+
+            weight_neg_pos = gp.Parameter(
+                self.container,
+                domain=dim([2, *self.weight.shape]),
+                records=all_weight,
+            )
+
+            lo_out = gp.Parameter(self.container, domain=out.domain)
+            up_out = gp.Parameter(self.container, domain=out.domain)
+
+            lo_out[N, C_out, H_out, W_out] = (
+                gp.Sum(
+                    [C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]],
+                    (
+                        input_bounds["0", N, C_in, H_in, W_in]
+                        * weight_neg_pos["1", C_out, C_in, Hf, Wf]
+                    )
+                    + (
+                        input_bounds["1", N, C_in, H_in, W_in]
+                        * weight_neg_pos["0", C_out, C_in, Hf, Wf]
+                    ),
+                )
+                + self.bias[C_out]
+            )
+            up_out[N, C_out, H_out, W_out] = (
+                gp.Sum(
+                    [C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]],
+                    (
+                        input_bounds["0", N, C_in, H_in, W_in]
+                        * weight_neg_pos["0", C_out, C_in, Hf, Wf]
+                    )
+                    + (
+                        input_bounds["1", N, C_in, H_in, W_in]
+                        * weight_neg_pos["1", C_out, C_in, Hf, Wf]
+                    ),
+                )
+                + self.bias[C_out]
+            )
+
+            out.lo[...] = lo_out[...]
+            out.up[...] = up_out[...]
 
         return out, [set_out]
