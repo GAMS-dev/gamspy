@@ -79,6 +79,7 @@ MODEL_ATTR_OPTION_MAP = {
     "infeasibility_tolerance": "tolInfRep",
     "try_partial_integer_solution": "tryInt",
     "examine_linearity": "tryLinear",
+    "bypass_solver": "justscrdir",
 }
 EXECUTION_OPTIONS = {"loadpoint": "execute_loadpoint"}
 
@@ -176,6 +177,8 @@ class Options(BaseModel):
         if there are any active NLP terms. If there are none, the default LP solver will be used. The procedure 
         also checks to see if QCP and DNLP models can be reduced to an LP; MIQCP and MINLP can be solved as a MIP; 
         RMIQCP and RMINLP can be solved as an RMIP.
+    bypass_solver: bool | None
+        If True, GAMSPy does not pass the generated model to the solver. Useful for model generation time analysis.
     hold_fixed_variables: bool | None
         Treat fixed variables as constants
     iteration_limit: int | None
@@ -307,6 +310,7 @@ class Options(BaseModel):
     infeasibility_tolerance: Optional[float] = None
     try_partial_integer_solution: Optional[bool] = None
     examine_linearity: Optional[bool] = None
+    bypass_solver: Optional[bool] = None
     min_improvement_threshold: Optional[float] = None
     miro_protect: bool = True
     hold_fixed_variables: Optional[bool] = None

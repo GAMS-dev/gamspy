@@ -10,6 +10,7 @@ GAMSPy 1.6.0
   - Allow starting from a GAMS restart file.
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
   - Fix solver option format of HIGHS, SHOT, SOPLEX and SCIP.
+  - Add `bypass_solver` option.
 - Testing
   - Add an lp and a qcp benchmark for performance comparison.
 - Documentation
