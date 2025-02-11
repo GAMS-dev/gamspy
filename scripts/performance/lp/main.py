@@ -1,6 +1,5 @@
 import logging
 import math
-import sys
 import time
 
 import pandas as pd
@@ -24,7 +23,7 @@ def solve_poi_model(Model, N, time_limit):
     poi.quicksum_(expr, x, lambda x: 2 * x)
     poi.quicksum_(expr, y)
     m.set_objective(expr)
-    # m.set_model_attribute(poi.ModelAttribute.Silent, True)
+    m.set_model_attribute(poi.ModelAttribute.Silent, True)
     if time_limit is not None:
         m.set_model_attribute(poi.ModelAttribute.TimeLimitSec, time_limit)
 
@@ -58,7 +57,6 @@ def solve_gamspy_model(N, time_limit=None):
         )
         m.addGamsCode("bench.justscrdir = 0")
         model.solve(
-            output=sys.stdout,
             solver="HIGHS",
             options=gp.Options(
                 time_limit=time_limit, relative_optimality_gap=0
