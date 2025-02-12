@@ -153,6 +153,9 @@ def _transform_given_indices(
 ):
     new_domain: list = []
     given_domain = utils._to_list(indices)
+    given_domain = [
+        str(elem) if isinstance(elem, int) else elem for elem in given_domain
+    ]
     validate_type(given_domain)
 
     if len(domain) == 0:
