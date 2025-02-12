@@ -10,6 +10,10 @@ GAMSPy 1.6.0
   - Allow starting from a GAMS restart file.
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
   - Allow dumping gams state on `.toGams` call.
+  - Allow indexing into symbols with integers.
+  - Add `bypass_solver` option.
+- Documentation
+  - Add CNNs to embedding Neural Network documentation.
 
 GAMSPy 1.5.1
 ------------
