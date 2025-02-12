@@ -38,10 +38,11 @@ They are labels, but are often referred to as elements or members. The optional 
 may be used to describe the set for future reference and to ease readability.
 
 .. note::
-    One can also use ranges for the set records. For example: `Set(m, "my_set", records=range(5))`.
+    One can also use ranges for the set records. For example: `Set(m, "my_set", records=range(2,5))`.
     This is a convenient way to initialize a set in case you do not have distinct labels that are 
     important for the model that you are developing. In general, using proper label names are highly 
-    recommended for the readability of the model.
+    recommended for the readability of the model. Referencing is by name, not by address. So `my_set[2]`
+    does not refer to the third element (zero based) in `my_set` but to the element with name `2`.
 
 Besides using the :meth:`Set <gamspy.Set>` class directly, one can also facilitate the :meth:`addSet <gamspy.Container.addSet>` function: ::
 
