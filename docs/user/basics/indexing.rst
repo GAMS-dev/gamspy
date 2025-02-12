@@ -12,8 +12,8 @@ Set-based Indexing and Literal Indexing
 =======================================
 
 Set-based indexing is at the core of the GAMSPy and GAMS execution system. They are concise, easy to read and have great performance.
-Therefore, we encourage the use of it in most contexts. Yet, in certain cases, one might be inclined to do literal indexing. Because of that 
-GAMSPy also allows literal indexing.
+Therefore, we encourage the use of it in most contexts. Yet, in certain cases, one might be inclined to do literal indexing (with a str or an int). 
+Because of that GAMSPy also allows literal indexing.
 
 .. tab-set-code::
 
@@ -29,10 +29,14 @@ GAMSPy also allows literal indexing.
         import gamspy as gp
         
         m = gp.Container()
+
         i = gp.Set(m, records=['i1', 'i2'])
         a = gp.Parameter(m, "a", domain=i, records=[('i1', 1), ('i2', 2)])
-        a['i1'] = 5 # literal indexing that sets element 'i1' to 5 
-        a['i2'] = 6 # literal indexing that sets element 'i2' to 6
+        a['i1'] = 5 # literal indexing with a string that sets element 'i1' to 5 
+        a['i2'] = 6 # literal indexing with a string that sets element 'i2' to 6
+
+        j = gp.Set(m, records=range(5))
+        j[1] = False # literal indexing with an integer that removes element 1 from the set.
 
 Slices and Ellipsis
 ===================
