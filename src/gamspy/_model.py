@@ -10,8 +10,6 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from gams.core.gmd import gmdCloseLicenseSession
-
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -1037,7 +1035,7 @@ class Model:
     def unfreeze(self) -> None:
         """Unfreezes the model"""
         self._is_frozen = False
-        gmdCloseLicenseSession(self.instance.sync_db.gmd)
+        self.instance.close_license_session()
 
     def solve(
         self,
