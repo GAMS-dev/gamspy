@@ -10,6 +10,7 @@ import gamspy._algebra.operable as operable
 import gamspy._algebra.operation as operation
 import gamspy._validation as validation
 import gamspy.utils as utils
+from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicFunction
 from gamspy._symbols.implicits import ImplicitSet
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
@@ -465,6 +466,9 @@ class Expression(operable.Operable):
     def _validate_definition(
         self, control_stack: list[Set | Alias | ImplicitSet]
     ) -> None:
+        if not get_option("DOMAIN_VALIDATION"):
+            return
+
         stack = []
 
         node = self.right
