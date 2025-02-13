@@ -27,13 +27,13 @@ def _set_default_options() -> None:
         configuration["DOMAIN_VALIDATION"] = validate
 
 
-def set_options(options: dict) -> None:
+def set_options(options: dict[str, Any]) -> None:
     """
     Sets the given configuration options.
 
     Parameters
     ----------
-    options : dict
+    options : dict[str, Any]
 
     Raises
     ------
