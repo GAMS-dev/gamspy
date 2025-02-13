@@ -13,6 +13,7 @@ from gamspy._config import get_option
 from gamspy._model import Problem, Sense
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._symbols.symbol import Symbol
+from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -120,7 +121,7 @@ def validate_type(domain):
                 implicits.ImplicitSet,
                 str,
                 int,
-                type(...),
+                EllipsisType,
                 slice,
             ),
         ):
@@ -135,13 +136,13 @@ def _get_ellipsis_range(domain, given_domain):
     end = len(domain)
 
     for item in given_domain:
-        if isinstance(item, type(...)):
+        if type(item) is EllipsisType:
             break
 
         start += 1
 
     for item in reversed(given_domain):
-        if isinstance(item, type(...)):
+        if type(item) is EllipsisType:
             break
 
         end -= 1
@@ -151,44 +152,40 @@ def _get_ellipsis_range(domain, given_domain):
 
 def _transform_given_indices(
     domain: list[Set | Alias | str],
-    indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
+    indices: Sequence[Set | Alias | str | EllipsisType | slice],
 ):
-    given_domain = utils._to_list(indices)
-    given_domain = [
-        str(elem) if isinstance(elem, int) else elem for elem in given_domain
-    ]
-    validate_type(given_domain)
-
     if len(domain) == 0:
         # If scalar, only correct indexing is [:] or [...]
-        if len(given_domain) != 1:
+        if len(indices) != 1:
             raise ValidationError(
                 "Scalar values can only be indexed by '[:]' or '[...]'"
             )
 
-        if not isinstance(given_domain[0], (type(...), slice)):
+        if type(indices[0]) not in (EllipsisType, slice):
             raise ValidationError(
                 "Scalar values can only be indexed by '[:]' or '[...]'"
             )
 
         return []
 
-    if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
+    if sum(type(item) is EllipsisType for item in indices) > 1:
         raise ValidationError(
             "There cannot be more than one ellipsis in indexing"
         )
 
     new_domain: list = []
     index = 0
-    for item in given_domain:
-        dimension = (
-            1 if isinstance(item, (str, type(...), slice)) else item.dimension
-        )
-        if isinstance(item, type(...)):
-            start, end = _get_ellipsis_range(domain, given_domain)
+    for item in indices:
+        try:
+            dimension = item.dimension  # type: ignore
+        except AttributeError:
+            dimension = 1
+
+        if type(item) is EllipsisType:
+            start, end = _get_ellipsis_range(domain, indices)
             new_domain += domain[start:end]
             index = end
-        elif isinstance(item, slice):
+        elif type(item) is slice:
             new_domain.append(domain[index])
             index += dimension
         else:
@@ -208,30 +205,42 @@ def validate_domain(
     | Operation,
     indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
-    domain = _transform_given_indices(symbol.domain, indices)  # type: ignore
+    domain = utils._to_list(indices)
+    domain = [str(elem) if type(elem) is int else elem for elem in domain]
+    domain = _transform_given_indices(symbol.domain, domain)  # type: ignore
     if not get_option("DOMAIN_VALIDATION"):
         return domain
 
+    validate_type(domain)
     validate_container(symbol, domain)
     validate_dimension(symbol, domain)
 
     offset = 0
     for given in domain:
-        given_dim = 1 if isinstance(given, str) else given.dimension
+        try:
+            given_dim = given.dimension
+        except AttributeError:
+            given_dim = 1
         actual = symbol.domain[offset]
-        actual_dim = 1 if isinstance(actual, str) else actual.dimension
+
+        try:
+            actual_dim = actual.dimension
+        except AttributeError:
+            actual_dim = 1
 
         if actual_dim == 1 and given_dim == 1:
-            if isinstance(given, str):
-                if (
-                    hasattr(actual, "records")
-                    and len(actual.records) < 1000
-                    and not actual.records.isin([given]).sum().any()
-                ):
-                    raise ValidationError(
-                        f"Literal index `{given}` was not found in set"
-                        f" `{actual.name}`"
-                    )
+            if type(given) is str:
+                try:
+                    if (
+                        len(actual.records) < 1000
+                        and not actual.records.isin([given]).sum().any()
+                    ):
+                        raise ValidationError(
+                            f"Literal index `{given}` was not found in set"
+                            f" `{actual.name}`"
+                        )
+                except AttributeError:
+                    ...
             else:
                 validate_one_dimensional_sets(given, actual)
 

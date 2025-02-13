@@ -416,10 +416,10 @@ def _to_list(
     | ImplicitSet,
 ) -> list:
     """Converts the given object to a list"""
-    if isinstance(obj, tuple):
+    if type(obj) is tuple:
         return list(obj)
 
-    if not isinstance(obj, list):
+    if type(obj) is not list:
         return [obj]
 
     return obj

@@ -25,6 +25,17 @@ if TYPE_CHECKING:
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
 
+LATEX_DATA_MAP = {
+    "=g=": "\\geq",
+    "=l=": "\\leq",
+    "=e=": "=",
+    "*": "\\cdot",
+    "and": "\\wedge",
+    "or": "\\vee",
+    "xor": "\\oplus",
+    "$": "|",
+}
+
 
 @dataclass
 class DomainPlaceHolder:
@@ -69,15 +80,11 @@ class Expression(operable.Operable):
         right: OperableType | None,
     ):
         self.left = (
-            utils._map_special_values(left)
-            if isinstance(left, float)
-            else left
+            utils._map_special_values(left) if type(left) is float else left
         )
         self.data = data
         self.right = (
-            utils._map_special_values(right)
-            if isinstance(right, float)
-            else right
+            utils._map_special_values(right) if type(right) is float else right
         )
 
         if data == "=" and isinstance(right, Expression):
@@ -92,10 +99,10 @@ class Expression(operable.Operable):
             {*left_control, *right_control}
         )
         self.container = None
-        if left is not None and hasattr(left, "container"):
-            self.container = left.container
-        elif right is not None and hasattr(right, "container"):
-            self.container = right.container
+        if hasattr(left, "container"):
+            self.container = left.container  # type: ignore
+        elif hasattr(right, "container"):
+            self.container = right.container  # type: ignore
 
     def _create_domain(self):
         for loc, result in [
@@ -105,9 +112,9 @@ class Expression(operable.Operable):
             if isinstance(loc, condition.Condition):
                 loc = loc.conditioning_on
 
-            if loc is None or isinstance(loc, (int, float, str)):
+            if loc is None or type(loc) in (int, float, str):
                 result_domain = []  # left is a scalar
-            elif isinstance(loc, domain.Domain):
+            elif type(loc) is domain.Domain:
                 result_domain = loc.sets
             else:
                 result_domain = loc.domain
@@ -168,30 +175,28 @@ class Expression(operable.Operable):
         if self.left is not None:
             left_str = (
                 str(self.left)
-                if isinstance(self.left, (int, float, str))
-                else self.left.gamsRepr()
+                if type(self.left) in (int, float, str)
+                else self.left.gamsRepr()  # type: ignore
             )
 
         if self.right is not None:
             right_str = (
                 str(self.right)
-                if isinstance(self.right, (int, float, str))
-                else self.right.gamsRepr()
+                if type(self.right) in (int, float, str)
+                else self.right.gamsRepr()  # type: ignore
             )
 
         # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0));   -> not valid
         # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
-        if isinstance(self.left, (int, float)) and self.left < 0:
+        if type(self.left) in (int, float) and self.left < 0:  # type: ignore
             left_str = f"({left_str})"
 
-        if isinstance(self.right, (int, float)) and self.right < 0:
+        if type(self.right) in (int, float) and self.right < 0:  # type: ignore
             right_str = f"({right_str})"
 
         # (voycap(j,k)$vc(j,k)) .. sum(.) -> not valid
         #  voycap(j,k)$vc(j,k)  .. sum(.) -> valid
-        if self.data in ["..", "="] and isinstance(
-            self.left, condition.Condition
-        ):
+        if self.data in ["..", "="] and type(self.left) is condition.Condition:
             left_str = left_str[1:-1]
 
         return left_str, right_str
@@ -249,21 +254,10 @@ class Expression(operable.Operable):
         -------
         str
         """
-        data_map = {
-            "=g=": "\\geq",
-            "=l=": "\\leq",
-            "=e=": "=",
-            "*": "\\cdot",
-            "and": "\\wedge",
-            "or": "\\vee",
-            "xor": "\\oplus",
-            "$": "|",
-        }
-
-        if isinstance(self.left, float):
+        if type(self.left) is float:
             self.left = utils._map_special_values(self.left)
 
-        if isinstance(self.right, float):
+        if type(self.right) is float:
             self.right = utils._map_special_values(self.right)
 
         if self.left is None:
@@ -271,8 +265,8 @@ class Expression(operable.Operable):
         else:
             left_str = (
                 str(self.left)
-                if isinstance(self.left, (int, float, str))
-                else self.left.latexRepr()
+                if type(self.left) in (int, float, str)
+                else self.left.latexRepr()  # type: ignore
             )
 
         if self.right is None:
@@ -280,18 +274,16 @@ class Expression(operable.Operable):
         else:
             right_str = (
                 str(self.right)
-                if isinstance(self.right, (int, float, str))
-                else self.right.latexRepr()
+                if type(self.right) in (int, float, str)
+                else self.right.latexRepr()  # type: ignore
             )
 
         data = self.data
-        if isinstance(self.data, str):
-            data = data_map.get(self.data, self.data)
+        if type(self.data) is str:
+            data = LATEX_DATA_MAP.get(self.data, self.data)
 
         data_str = (
-            str(data)
-            if isinstance(data, (int, float, str))
-            else data.latexRepr()
+            str(data) if type(data) in (int, float, str) else data.latexRepr()  # type: ignore
         )
 
         if self.data == "/":
@@ -356,7 +348,7 @@ class Expression(operable.Operable):
                     stack.append(root.right)
 
                 stack.append(root)
-                root = root.left if hasattr(root, "left") else None
+                root = root.left if hasattr(root, "left") else None  # type: ignore
 
             if len(stack) == 0:
                 break
@@ -522,7 +514,7 @@ class SetExpression(Expression):
 
     def _adjust_left_right(self) -> None:
         if isinstance(self.left, (ImplicitSet, SetExpression)):
-            if isinstance(self.right, (int, float)):
+            if type(self.right) in (int, float):
                 if self.right == 0:
                     self.right = "no"
                 elif self.right == 1:
@@ -531,8 +523,9 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
                     )
-            elif isinstance(self.right, condition.Condition) and isinstance(
-                self.right.conditioning_on, number.Number
+            elif (
+                type(self.right) is condition.Condition
+                and type(self.right.conditioning_on) is number.Number
             ):
                 if self.right.conditioning_on._value == 0:
                     self.right.conditioning_on._value = "no"
@@ -543,7 +536,7 @@ class SetExpression(Expression):
                 )
 
         if isinstance(self.right, (ImplicitSet, SetExpression)):
-            if isinstance(self.left, (int, float)):
+            if type(self.left) in (int, float):
                 if self.left == 0:
                     self.left = "no"
                 elif self.left == 1:
@@ -552,8 +545,9 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
                     )
-            elif isinstance(self.left, condition.Condition) and isinstance(
-                self.left.conditioning_on, number.Number
+            elif (
+                type(self.left) is condition.Condition
+                and type(self.left.conditioning_on) is number.Number
             ):
                 if self.left.conditioning_on._value == 0:
                     self.left.conditioning_on._value = "no"
