@@ -365,3 +365,13 @@ be set via environment variables. Environment variable names are always in the f
 .. note::
     Note that package wide options are different than :ref:`model options <solve_options>`. While package wide options 
     affect the behavior of the whole package, model options affect the behavior of the solve process.
+
+Here is a list of package wide options:
+
++-----------------------------------+--------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------------------+
+| Option Name                       | Commandline Option Name        | Type                                             | Description                                                                               |
++===================================+================================+==================================================+===========================================================================================+
+| DOMAIN_VALIDATION                 | GAMSPY_DOMAIN_VALIDATION       | int                                              | Whether to check for domain validation. Set to 1 by default.                              |
++-----------------------------------+--------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------------------+
+| GAMS_SYSDIR                       | GAMSPY_GAMS_SYSDIR             | str                                              | Path to the GAMS system directory. Set to gamspy_base directory by default                |
++-----------------------------------+--------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------------------+
