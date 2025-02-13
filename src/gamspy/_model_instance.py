@@ -27,6 +27,7 @@ from gams.core.gev import (
 from gams.core.gmd import (
     GMD_NRUELS,
     gmdCallSolver,
+    gmdCloseLicenseSession,
     gmdInfo,
     gmdInitFromDict,
     gmdInitUpdate,
@@ -218,6 +219,9 @@ class ModelInstance:
             and gevHandleToPtr(self._gev) is not None
         ):
             gevFree(self._gev)
+
+    def close_license_session(self) -> None:
+        gmdCloseLicenseSession(self.sync_db.gmd)
 
     def _create_modifiers(self) -> list[GamsModifier]:
         modifiers = []

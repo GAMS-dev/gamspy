@@ -6,7 +6,13 @@ GAMSPy 1.6.0
 - General
   - Upgrade pre-commit dependencies.
   - Enhance bound propagation for `AvgPool2d` class.
+  - Allow adding debug options to Options objects.
+  - Allow starting from a GAMS restart file.
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
+  - Allow indexing into symbols with integers.
+  - Add `bypass_solver` option.
+- Documentation
+  - Add CNNs to embedding Neural Network documentation.
 
 GAMSPy 1.5.1
 ------------
