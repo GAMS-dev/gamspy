@@ -117,7 +117,148 @@ class Conv2d:
 
         self._state = 0
         self.weight: Parameter | Variable | None = None
+        self.weight_array = None
         self.bias: Parameter | Variable | None = None
+        self.bias_array = None
+
+    def _encode_infinity(self, x):
+        """
+        Encode infinity values as complex numbers.
+        - Replace -np.inf with 0 - 1j.
+        - Replace np.inf with 0 + 1j.
+        """
+        x = np.where(x == -np.inf, 0 - 1j, x)
+        x = np.where(x == np.inf, 0 + 1j, x)
+        return x
+
+    def _decode_complex_number(self, z):
+        """
+        Decode complex numbers back to real numbers.
+        - 5 + 0j -> 5
+        - 3 + 1j -> np.inf
+        - 7 - 3j -> -np.inf
+        """
+        if z.imag == 0:
+            return z.real
+        elif z.imag > 0:
+            return np.inf
+        else:
+            return -np.inf
+
+    def _propagate_bounds(self, input, output, weight, bias, stride, padding):
+        input_bounds = gp.Parameter(
+            self.container, domain=dim([2, *input.shape])
+        )
+        input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+        input_bounds[("1",) + tuple(input.domain)] = input.up[...]
+
+        input_lower, input_upper = input_bounds.toDense()
+
+        # Encode infinity values as complex numbers
+        input_lower = self._encode_infinity(input_lower)
+        input_upper = self._encode_infinity(input_upper)
+
+        batch, in_channels, h_in, w_in = input_lower.shape
+        out_channels, _, h_k, w_k = weight.shape
+        stride_y, stride_x = stride
+        padding_y, padding_x = padding
+
+        if bias is None:
+            bias = np.zeros(out_channels)
+
+        # Compute output dimensions
+        h_out = (h_in + 2 * padding_y - h_k) // stride_y + 1
+        w_out = (w_in + 2 * padding_x - w_k) // stride_x + 1
+
+        # Initialize output bounds
+        output_lower = np.zeros(
+            (batch, out_channels, h_out, w_out), dtype=np.complex128
+        )
+        output_upper = np.zeros(
+            (batch, out_channels, h_out, w_out), dtype=np.complex128
+        )
+
+        # Pad the input bounds
+        input_lower = np.pad(
+            input_lower,
+            ((0, 0), (0, 0), (padding_y, padding_y), (padding_x, padding_x)),
+            mode="constant",
+            constant_values=0,
+        )
+        input_upper = np.pad(
+            input_upper,
+            ((0, 0), (0, 0), (padding_y, padding_y), (padding_x, padding_x)),
+            mode="constant",
+            constant_values=0,
+        )
+
+        # Split weights into positive and negative parts
+        pos_weight = np.maximum(weight, 0)
+        neg_weight = np.minimum(weight, 0)
+
+        # Iterate over each output pixel
+        for y_out in range(h_out):
+            for x_out in range(w_out):
+                # Input region bounds
+                y_in_start = y_out * stride_y
+                x_in_start = x_out * stride_x
+                y_in_end = y_in_start + h_k
+                x_in_end = x_in_start + w_k
+
+                # Extract input region bounds
+                input_region_lower = input_lower[
+                    :, :, y_in_start:y_in_end, x_in_start:x_in_end
+                ]
+                input_region_upper = input_upper[
+                    :, :, y_in_start:y_in_end, x_in_start:x_in_end
+                ]
+
+                # Compute bounds for each output channel
+                for c_out in range(out_channels):
+                    # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
+                    output_lower[:, c_out, y_out, x_out] = (
+                        np.sum(
+                            input_region_lower
+                            * pos_weight[c_out, np.newaxis, :, :, :],
+                            axis=(1, 2, 3),
+                        )
+                        + np.sum(
+                            input_region_upper
+                            * neg_weight[c_out, np.newaxis, :, :, :],
+                            axis=(1, 2, 3),
+                        )
+                        + bias[c_out]
+                    )
+
+                    # Upper bound: sum(input_lower * neg_weight + input_upper * pos_weight)
+                    output_upper[:, c_out, y_out, x_out] = (
+                        np.sum(
+                            input_region_lower
+                            * neg_weight[c_out, np.newaxis, :, :, :],
+                            axis=(1, 2, 3),
+                        )
+                        + np.sum(
+                            input_region_upper
+                            * pos_weight[c_out, np.newaxis, :, :, :],
+                            axis=(1, 2, 3),
+                        )
+                        + bias[c_out]
+                    )
+
+        # Decode complex numbers back to real numbers
+        output_lower = np.vectorize(self._decode_complex_number)(output_lower)
+        output_upper = np.vectorize(self._decode_complex_number)(output_upper)
+
+        out_bounds_array = np.stack([output_lower, output_upper], axis=0)
+
+        out_bounds = gp.Parameter(
+            self.container,
+            domain=dim([2, *output.shape]),
+            records=out_bounds_array,
+        )
+
+        output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
+        output.up[...] = out_bounds[("1",) + tuple(output.domain)]
 
     def make_variable(self) -> None:
         """
@@ -216,6 +357,8 @@ class Conv2d:
         else:
             self.weight.setRecords(weight)
 
+        self.weight_array = weight
+
         if self.use_bias:
             if self.bias is None:
                 self.bias = gp.Parameter(
@@ -225,11 +368,8 @@ class Conv2d:
                 )
             else:
                 self.bias.setRecords(bias)
-        else:
-            self.bias = gp.Parameter(
-                self.container,
-                domain=dim([self.out_channels]),
-            )
+
+            self.bias_array = bias
 
         self._state = 1
 
@@ -337,59 +477,40 @@ class Conv2d:
             propagate_bounds
             and self._state == 1
             and isinstance(input, gp.Variable)
-            and input.records is not None
         ):
-            input_bounds = gp.Parameter(
-                self.container, domain=dim([2, *input.shape])
-            )
-            input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
-            input_bounds[("1",) + tuple(input.domain)] = input.up[...]
-
-            weight = self.weight.toDense()
-            pos_weight = np.maximum(weight, 0)
-            neg_weight = np.minimum(weight, 0)
-
-            all_weight = np.stack([neg_weight, pos_weight], axis=0)
-
-            weight_neg_pos = gp.Parameter(
-                self.container,
-                domain=dim([2, *self.weight.shape]),
-                records=all_weight,
+            self._propagate_bounds(
+                input,
+                out,
+                self.weight_array,
+                self.bias_array,
+                self.stride,
+                padding,
             )
 
-            lo_out = gp.Parameter(self.container, domain=out.domain)
-            up_out = gp.Parameter(self.container, domain=out.domain)
+            # input_bounds = gp.Parameter(
+            #     self.container, domain=dim([2, *input.shape])
+            # )
+            # input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+            # input_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
-            lo_out[N, C_out, H_out, W_out] = (
-                gp.Sum(
-                    [C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]],
-                    (
-                        input_bounds["0", N, C_in, H_in, W_in]
-                        * weight_neg_pos["1", C_out, C_in, Hf, Wf]
-                    )
-                    + (
-                        input_bounds["1", N, C_in, H_in, W_in]
-                        * weight_neg_pos["0", C_out, C_in, Hf, Wf]
-                    ),
-                )
-                + self.bias[C_out]
-            )
-            up_out[N, C_out, H_out, W_out] = (
-                gp.Sum(
-                    [C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]],
-                    (
-                        input_bounds["0", N, C_in, H_in, W_in]
-                        * weight_neg_pos["0", C_out, C_in, Hf, Wf]
-                    )
-                    + (
-                        input_bounds["1", N, C_in, H_in, W_in]
-                        * weight_neg_pos["1", C_out, C_in, Hf, Wf]
-                    ),
-                )
-                + self.bias[C_out]
-            )
+            # weight = self.weight.toDense()
+            # pos_weight = np.maximum(weight, 0)
+            # neg_weight = np.minimum(weight, 0)
 
-            out.lo[...] = lo_out[...]
-            out.up[...] = up_out[...]
+            # all_weight = np.stack([neg_weight, pos_weight], axis=0)
+
+            # weight_neg_pos = gp.Parameter(self.container, domain=dim([2, *self.weight.shape]), records=all_weight)
+
+            # lo_out = gp.Parameter(self.container, domain=out.domain)
+            # up_out = gp.Parameter(self.container, domain=out.domain)
+
+            # lo_out[N, C_out, H_out, W_out] = gp.Sum([C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]], (input_bounds["0", N, C_in, H_in, W_in] * weight_neg_pos["1", C_out, C_in, Hf, Wf]) + (input_bounds["1", N, C_in, H_in, W_in] * weight_neg_pos["0", C_out, C_in, Hf, Wf])) + self.bias[C_out]
+            # up_out[N, C_out, H_out, W_out] = gp.Sum([C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]], (input_bounds["0", N, C_in, H_in, W_in] * weight_neg_pos["0", C_out, C_in, Hf, Wf]) + (input_bounds["1", N, C_in, H_in, W_in] * weight_neg_pos["1", C_out, C_in, Hf, Wf])) + self.bias[C_out]
+
+            # out.lo[...] = lo_out[...]
+            # out.up[...] = up_out[...]
+
+            # print("all_weight: \n ", weight_neg_pos.toDense())
+            # print("input_bounds: \n ", input_bounds.toDense())
 
         return out, [set_out]
