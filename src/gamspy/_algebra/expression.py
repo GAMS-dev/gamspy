@@ -81,11 +81,15 @@ class Expression(operable.Operable):
         right: OperableType | None,
     ):
         self.left = (
-            utils._map_special_values(left) if type(left) is float else left
+            utils._map_special_values(left)
+            if isinstance(left, float)
+            else left
         )
         self.data = data
         self.right = (
-            utils._map_special_values(right) if type(right) is float else right
+            utils._map_special_values(right)
+            if isinstance(right, float)
+            else right
         )
 
         if data == "=" and isinstance(right, Expression):
@@ -113,9 +117,9 @@ class Expression(operable.Operable):
             if isinstance(loc, condition.Condition):
                 loc = loc.conditioning_on
 
-            if loc is None or type(loc) in (int, float, str):
+            if loc is None or isinstance(loc, (int, float, str)):
                 result_domain = []  # left is a scalar
-            elif type(loc) is domain.Domain:
+            elif isinstance(loc, domain.Domain):
                 result_domain = loc.sets
             else:
                 result_domain = loc.domain
@@ -176,28 +180,30 @@ class Expression(operable.Operable):
         if self.left is not None:
             left_str = (
                 str(self.left)
-                if type(self.left) in (int, float, str)
-                else self.left.gamsRepr()  # type: ignore
+                if isinstance(self.left, (int, float, str))
+                else self.left.gamsRepr()
             )
 
         if self.right is not None:
             right_str = (
                 str(self.right)
-                if type(self.right) in (int, float, str)
-                else self.right.gamsRepr()  # type: ignore
+                if isinstance(self.right, (int, float, str))
+                else self.right.gamsRepr()
             )
 
         # ((((ord(n) - 1) / 10) * -1) + ((ord(n) / 10) * 0));   -> not valid
         # ((((ord(n) - 1) / 10) * (-1)) + ((ord(n) / 10) * 0)); -> valid
-        if type(self.left) in (int, float) and self.left < 0:  # type: ignore
+        if isinstance(self.left, (int, float)) and self.left < 0:
             left_str = f"({left_str})"
 
-        if type(self.right) in (int, float) and self.right < 0:  # type: ignore
+        if isinstance(self.right, (int, float)) and self.right < 0:
             right_str = f"({right_str})"
 
         # (voycap(j,k)$vc(j,k)) .. sum(.) -> not valid
         #  voycap(j,k)$vc(j,k)  .. sum(.) -> valid
-        if self.data in ["..", "="] and type(self.left) is condition.Condition:
+        if self.data in ["..", "="] and isinstance(
+            self.left, condition.Condition
+        ):
             left_str = left_str[1:-1]
 
         return left_str, right_str
@@ -255,10 +261,21 @@ class Expression(operable.Operable):
         -------
         str
         """
-        if type(self.left) is float:
+        data_map = {
+            "=g=": "\\geq",
+            "=l=": "\\leq",
+            "=e=": "=",
+            "*": "\\cdot",
+            "and": "\\wedge",
+            "or": "\\vee",
+            "xor": "\\oplus",
+            "$": "|",
+        }
+
+        if isinstance(self.left, float):
             self.left = utils._map_special_values(self.left)
 
-        if type(self.right) is float:
+        if isinstance(self.right, float):
             self.right = utils._map_special_values(self.right)
 
         if self.left is None:
@@ -266,8 +283,8 @@ class Expression(operable.Operable):
         else:
             left_str = (
                 str(self.left)
-                if type(self.left) in (int, float, str)
-                else self.left.latexRepr()  # type: ignore
+                if isinstance(self.left, (int, float, str))
+                else self.left.latexRepr()
             )
 
         if self.right is None:
@@ -275,16 +292,18 @@ class Expression(operable.Operable):
         else:
             right_str = (
                 str(self.right)
-                if type(self.right) in (int, float, str)
-                else self.right.latexRepr()  # type: ignore
+                if isinstance(self.right, (int, float, str))
+                else self.right.latexRepr()
             )
 
         data = self.data
-        if type(self.data) is str:
-            data = LATEX_DATA_MAP.get(self.data, self.data)
+        if isinstance(self.data, str):
+            data = data_map.get(self.data, self.data)
 
         data_str = (
-            str(data) if type(data) in (int, float, str) else data.latexRepr()  # type: ignore
+            str(data)
+            if isinstance(data, (int, float, str))
+            else data.latexRepr()
         )
 
         if self.data == "/":
@@ -518,7 +537,7 @@ class SetExpression(Expression):
 
     def _adjust_left_right(self) -> None:
         if isinstance(self.left, (ImplicitSet, SetExpression)):
-            if type(self.right) in (int, float):
+            if isinstance(self.right, (int, float)):
                 if self.right == 0:
                     self.right = "no"
                 elif self.right == 1:
@@ -527,9 +546,8 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.right}` for the set operation `{self.data}`."
                     )
-            elif (
-                type(self.right) is condition.Condition
-                and type(self.right.conditioning_on) is number.Number
+            elif isinstance(self.right, condition.Condition) and isinstance(
+                self.right.conditioning_on, number.Number
             ):
                 if self.right.conditioning_on._value == 0:
                     self.right.conditioning_on._value = "no"
@@ -540,7 +558,7 @@ class SetExpression(Expression):
                 )
 
         if isinstance(self.right, (ImplicitSet, SetExpression)):
-            if type(self.left) in (int, float):
+            if isinstance(self.left, (int, float)):
                 if self.left == 0:
                     self.left = "no"
                 elif self.left == 1:
@@ -549,9 +567,8 @@ class SetExpression(Expression):
                     raise ValidationError(
                         f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
                     )
-            elif (
-                type(self.left) is condition.Condition
-                and type(self.left.conditioning_on) is number.Number
+            elif isinstance(self.left, condition.Condition) and isinstance(
+                self.left.conditioning_on, number.Number
             ):
                 if self.left.conditioning_on._value == 0:
                     self.left.conditioning_on._value = "no"
