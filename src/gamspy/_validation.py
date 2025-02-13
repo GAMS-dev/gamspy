@@ -150,10 +150,10 @@ def _get_ellipsis_range(domain, given_domain):
     return start, end
 
 
-def _transform_given_indices(
+def _expand_ellipsis_slice(
     domain: list[Set | Alias | str],
     indices: Sequence[Set | Alias | str | EllipsisType | slice],
-):
+) -> Sequence[Set | Alias | str]:
     if len(domain) == 0:
         # If scalar, only correct indexing is [:] or [...]
         if len(indices) != 1:
@@ -207,7 +207,7 @@ def validate_domain(
 ):
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]
-    domain = _transform_given_indices(symbol.domain, domain)  # type: ignore
+    domain = _expand_ellipsis_slice(symbol.domain, domain)  # type: ignore
     if not get_option("DOMAIN_VALIDATION"):
         return domain
 
