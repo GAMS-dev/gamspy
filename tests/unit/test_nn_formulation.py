@@ -219,6 +219,9 @@ def test_conv2d_call_bad(data):
     bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 4]))
     pytest.raises(ValidationError, conv1, bad_inp_2)
 
+    # propagate_bounds must be a boolean
+    pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
+
 
 def test_conv2d_simple_correctness(data):
     m, w1, b1, inp, par_input, _ = data

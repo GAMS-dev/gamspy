@@ -393,7 +393,7 @@ class Conv2d:
 
         """
         if not isinstance(propagate_bounds, bool):
-            raise ValidationError("propagate_bounds should be a boolean.")
+            raise ValidationError("Expected a boolean for propagate_bounds")
 
         if self.weight is None:
             raise ValidationError(
