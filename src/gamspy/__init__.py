@@ -20,7 +20,7 @@ from gamspy._algebra import (
 from gamspy._algebra.expression import Expression
 from gamspy._backend.engine import EngineClient
 from gamspy._backend.neos import NeosClient
-from gamspy._config import get_option, set_options
+from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
 from gamspy._model import Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._options import ModelInstanceOptions, Options
@@ -38,6 +38,7 @@ from gamspy._symbols import (
 from .version import __version__
 
 _ctx_managers: dict[tuple[int, int], Container] = dict()
+_set_default_options()
 
 __all__ = [
     "Container",

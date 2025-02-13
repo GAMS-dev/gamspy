@@ -5,29 +5,26 @@ from typing import Any
 
 from gamspy.exceptions import ValidationError
 
-configuration: dict = dict()
+configuration: dict[str, Any] = dict()
 
 
-def _set_default_options():
-    # Set the default for GAMSPY_GAMS_SYSDIR
+def _set_default_options() -> None:
+    # Set the default for GAMS_SYSDIR
     try:
         import gamspy_base
 
-        configuration["GAMSPY_GAMS_SYSDIR"] = gamspy_base.directory
+        configuration["GAMS_SYSDIR"] = gamspy_base.directory
     except ModuleNotFoundError:
         ...
 
     sysdir = os.getenv("GAMSPY_GAMS_SYSDIR", None)
     if sysdir is not None:
-        configuration["GAMSPY_GAMS_SYSDIR"] = sysdir
+        configuration["GAMS_SYSDIR"] = sysdir
 
     # Check for domain violation by default
-    validate = os.getenv("DOMAIN_VALIDATION", 1)
+    validate = os.getenv("GAMSPY_DOMAIN_VALIDATION", 1)
     if validate:
         configuration["DOMAIN_VALIDATION"] = validate
-
-
-_set_default_options()
 
 
 def set_options(options: dict) -> None:

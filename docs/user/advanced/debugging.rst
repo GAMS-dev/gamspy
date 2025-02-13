@@ -344,13 +344,24 @@ tree memory usage.
 
 Setting GAMSPy Configurations
 -----------------------------
-GAMSPy allows setting options via :meth:`gp.set_options <gamspy.set_options>`. For example, one can skip 
-the domain validation by setting `DOMAIN_VALIDATION` to 0. By default, GAMSPy performs domain validation.
+GAMSPy allows setting package wide options via :meth:`gp.set_options <gamspy.set_options>`. For example, 
+one can skip the domain validation by setting `DOMAIN_VALIDATION` to 0. By default, GAMSPy performs 
+domain validation which is helpful while writing mathematical models but might add a small overhead 
+to the execution time.
 
 .. code-block:: python
 
     import gamspy as gp
     gp.set_options({"DOMAIN_VALIDATION": 0})
 
-One can also set the system directory via `GAMSPY_GAMS_SYSDIR` option. Beaware that if a system directory 
-is given in the constructor of the `Container`, it overrides this option.
+One can also set the system directory via `GAMSPY_GAMS_SYSDIR` option. Beware that if a system directory 
+is given in the constructor of the `Container`, it overrides this option. Package wide options can also 
+be set via environment variables. Environment variable names are always in the format of ``GAMSPY_<option_name>``.
+
+.. code-block:: bash
+
+    GAMSPY_DOMAIN_VALIDATION=0 python test.py
+
+.. note::
+    Note that package wide options are different than :ref:`model options <solve_options>`. While package wide options 
+    affect the behavior of the whole package, model options affect the behavior of the solve process.

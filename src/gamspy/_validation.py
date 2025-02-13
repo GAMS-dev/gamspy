@@ -119,6 +119,7 @@ def validate_type(domain):
                 symbols.UniverseAlias,
                 implicits.ImplicitSet,
                 str,
+                int,
                 type(...),
                 slice,
             ),
@@ -152,7 +153,6 @@ def _transform_given_indices(
     domain: list[Set | Alias | str],
     indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
-    new_domain: list = []
     given_domain = utils._to_list(indices)
     given_domain = [
         str(elem) if isinstance(elem, int) else elem for elem in given_domain
@@ -171,13 +171,14 @@ def _transform_given_indices(
                 "Scalar values can only be indexed by '[:]' or '[...]'"
             )
 
-        return new_domain
+        return []
 
     if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
         raise ValidationError(
             "There cannot be more than one ellipsis in indexing"
         )
 
+    new_domain: list = []
     index = 0
     for item in given_domain:
         dimension = (
