@@ -154,6 +154,9 @@ def _transform_given_indices(
 ):
     new_domain: list = []
     given_domain = utils._to_list(indices)
+    given_domain = [
+        str(elem) if isinstance(elem, int) else elem for elem in given_domain
+    ]
     validate_type(given_domain)
 
     if len(domain) == 0:
@@ -385,8 +388,7 @@ def validate_model(
     if isinstance(sense, str):
         if sense.upper() not in Sense.values():
             raise ValueError(
-                f"Allowed sense values: {Sense.values()} but found"
-                f" {sense}."
+                f"Allowed sense values: {Sense.values()} but found {sense}."
             )
 
         sense = Sense(sense.upper())

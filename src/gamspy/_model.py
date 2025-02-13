@@ -10,8 +10,6 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from gams.core.gmd import gmdCloseLicenseSession
-
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -22,7 +20,12 @@ import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
 from gamspy._convert import GamsConverter, LatexConverter
 from gamspy._model_instance import ModelInstance
-from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
+from gamspy._options import (
+    EXECUTION_OPTIONS,
+    MODEL_ATTR_OPTION_MAP,
+    ModelInstanceOptions,
+    Options,
+)
 from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
@@ -35,7 +38,6 @@ if TYPE_CHECKING:
     from gamspy._algebra.operation import Operation
     from gamspy._backend.engine import EngineClient
     from gamspy._backend.neos import NeosClient
-    from gamspy._options import ModelInstanceOptions
     from gamspy._symbols.implicits import ImplicitParameter, ImplicitVariable
     from gamspy._symbols.symbol import Symbol
 
@@ -273,9 +275,11 @@ class Model:
                 f"Objective variable `{self._objective_variable}` must be a free variable"
             )
 
-        if limited_variables and not isinstance(limited_variables, Iterable):
+        if limited_variables is not None and not isinstance(
+            limited_variables, Iterable
+        ):
             raise ValidationError(
-                f"`limited_variables must an Iterable of ImplicitVariable objects but found {limited_variables}`"
+                f"`limited_variables must be an Iterable of ImplicitVariable objects but found {limited_variables}`"
             )
 
         self._limited_variables = limited_variables
@@ -1031,7 +1035,7 @@ class Model:
     def unfreeze(self) -> None:
         """Unfreezes the model"""
         self._is_frozen = False
-        gmdCloseLicenseSession(self.instance.instance.sync_db._gmd)
+        self.instance.close_license_session()
 
     def solve(
         self,
@@ -1114,10 +1118,13 @@ class Model:
             options._frame = frame
 
         if self._is_frozen:
-            self.instance.solve(
+            if model_instance_options is None:
+                model_instance_options = ModelInstanceOptions()
+
+            summary = self.instance.solve(
                 solver, model_instance_options, solver_options, output
             )
-            return None
+            return summary
 
         self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)

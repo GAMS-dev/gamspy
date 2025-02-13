@@ -246,7 +246,7 @@ def main():
             break
         b_list = b.toList("level")
 
-        sol_str = f"solution{it+1}"
+        sol_str = f"solution{it + 1}"
         binrep[s, sol_str] = Round(b.l[s])
         binrep["", "", "Obj", sol_str] = obj
         binrep["", "", "mSec", sol_str] = solve_time * 1000

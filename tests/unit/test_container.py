@@ -95,6 +95,17 @@ def test_container(data):
     m._cast_symbols()
     assert isinstance(m["e"], Equation)
 
+    # Test load_from
+    with pytest.raises(ValidationError):
+        _ = Container(load_from=1)
+
+    with pytest.raises(ValidationError):
+        _ = Container(load_from="bla.gdp")
+
+    new_cont = Container(m)
+    new_cont["a"][...] = 5
+    assert new_cont.data.keys() == m.data.keys()
+
     # Test getters
     m = Container()
 
@@ -211,6 +222,12 @@ def test_read_synch():
     m.write(gdx_file)
     m = Container()
     m.read(gdx_file)
+
+    assert m["j"].toList() == ["new-york", "chicago", "topeka"]
+    assert m["j_sub"].toList() == ["new-york", "chicago"]
+    m["j_sub"][m["j"]] = False
+
+    m = Container(gdx_file)
 
     assert m["j"].toList() == ["new-york", "chicago", "topeka"]
     assert m["j_sub"].toList() == ["new-york", "chicago"]
@@ -507,6 +524,8 @@ def test_write(data):
     )
     assert int(m["a"].toValue()) == 0
 
+    m.close()
+
 
 def test_read(data):
     m, *_ = data
@@ -518,6 +537,8 @@ def test_read(data):
     m = Container()
     m.read(gdx_path, load_records=False)
     assert m["a"].records is None
+
+    m.close()
 
 
 def test_debugging_level(data):
@@ -723,3 +744,16 @@ def test_output(data):
         [sys.executable, path], capture_output=True, check=True, text=True
     )
     assert process.stdout
+
+
+def test_restart():
+    m = Container()
+    save_path = os.path.join(m.working_directory, "save.g00")
+    m._options._set_debug_options({"save": save_path})
+    _ = Set(m, "i", records=["i1", "i2"])
+    assert os.path.exists(save_path)
+    m.close()
+
+    m = Container(load_from=save_path)
+    assert "i" in m.data
+    assert m["i"].toList() == ["i1", "i2"]

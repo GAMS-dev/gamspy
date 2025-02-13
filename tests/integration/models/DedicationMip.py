@@ -248,7 +248,7 @@ def main():
 
     purchased_price = (x.records.level * Price.records.value).round(3).tolist()
     for idx, ii, _ in i.records.itertuples():
-        output_csv += f'{round(v0.records.level[0],3)},"{ii}",{BondData.pivot().loc[ii,"Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
+        output_csv += f'{round(v0.records.level[0], 3)},"{ii}",{BondData.pivot().loc[ii, "Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
@@ -323,7 +323,7 @@ def main():
     purchased_price = (x.records.level * Price.records.value).round(3).tolist()
 
     for idx, ii, _ in i.records.itertuples():
-        output_csv += f'{round(v0.records.level[0],3)},"{ii}",{BondData.pivot().loc[ii,"Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
+        output_csv += f'{round(v0.records.level[0], 3)},"{ii}",{BondData.pivot().loc[ii, "Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
@@ -416,7 +416,7 @@ def main():
     purchased_price = (x.records.level * Price.records.value).round(3).tolist()
 
     for idx, ii, _ in i.records.itertuples():
-        output_csv += f'{round(v0.records.level[0],3)},"{ii}",{BondData.pivot().loc[ii,"Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
+        output_csv += f'{round(v0.records.level[0], 3)},"{ii}",{BondData.pivot().loc[ii, "Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]
@@ -458,7 +458,7 @@ def main():
     purchased_price = (x.records.level * Price.records.value).round(3).tolist()
 
     for idx, ii, _ in i.records.itertuples():
-        output_csv += f'{round(v0.records.level[0],3)},"{ii}",{BondData.pivot().loc[ii,"Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
+        output_csv += f'{round(v0.records.level[0], 3)},"{ii}",{BondData.pivot().loc[ii, "Maturity"]},{Coupon.records.value[idx]},{purchased_price[idx]}\n'
 
     for tt, _ in t.records.itertuples(index=False):
         borrow_rec = borrow.records[borrow.records["t"] == tt]

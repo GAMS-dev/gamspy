@@ -1204,6 +1204,7 @@ def test_max_pooling(data):
     mp2 = MaxPool2d(m, (2, 1))
     mp3 = MaxPool2d(m, 3, stride=(1, 1))
     mp4 = MaxPool2d(m, 4, stride=(3, 2), padding=2)
+
     out, eqs = mp1(par_input)
     out2, eqs2 = mp2(par_input)
     out3, eqs3 = mp3(par_input)
@@ -1365,6 +1366,10 @@ def test_pooling_with_bounds(data):
     out2, _ = mp2(var_input)
     out3, _ = ap1(var_input)
 
+    out4, _ = mp1(par_input)
+    out5, _ = mp2(par_input)
+    out6, _ = ap1(par_input)
+
     for recs in [out.records, out2.records, out3.records]:
         assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == 10).all()
         assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 20).all()
@@ -1374,6 +1379,138 @@ def test_pooling_with_bounds(data):
 
         assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -50).all()
         assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == 50).all()
+
+    exp_lb = np.array(
+        [
+            [[[0.27341, 0.29883], [0.40205, 0.23754]]],
+            [[[0.48203, 0.364], [0.37691, 0.19674]]],
+            [[[0.54127, 0.03598], [0.19366, 0.043283]]],
+        ]
+    )
+
+    exp_ub = np.array(
+        [
+            [[[0.64615, 0.90273], [0.66672, 0.8369]]],
+            [[[0.9401, 0.80008], [0.9395, 0.97884]]],
+            [[[0.92599, 0.86881], [0.90938, 0.51248]]],
+        ]
+    )
+
+    for recs in [out4.records, out5.records, out6.records]:
+        assert np.allclose(np.array(recs.upper).reshape(out4.shape), exp_ub)
+        assert np.allclose(np.array(recs.lower).reshape(out4.shape), exp_lb)
+
+
+def test_mpooling_with_complex_bounds(data):
+    m, *_ = data
+
+    max_pool = MaxPool2d(m, (2, 3))
+    min_pool = MinPool2d(m, (2, 3))
+
+    data = np.array(
+        [
+            [
+                [
+                    [2, -5, -40, -3, -np.inf, 3],
+                    [100, 0, 2, 2, 10, -5],
+                    [np.inf, -5, 0, 0, 0, 0],
+                    [-2, 4, -2, 0, 0, 0],
+                ],
+                [
+                    [4, 1, 1, -2, 3, 4],
+                    [4, 1, 3, 3, -1, -5],
+                    [3, -3, -2, -5, -3, -6],
+                    [-2, 4, 4, -5, 0, -5],
+                ],
+            ],
+            [
+                [
+                    [-4, 1, -1, -3, 3, 0],
+                    [-12, -3, -5, -4, -3, 4],
+                    [0, -4, 1, 3, -3, 2],
+                    [-1, -5, -2, -3, 3, 2],
+                ],
+                [
+                    [-4, -5, 4, 2, -2, 2],
+                    [4, -5, -3, -1, 3, 0],
+                    [4, 2, -3, -1, -1, 0],
+                    [40, 2, 1, 5, 2, 0],
+                ],
+            ],
+        ]
+    )
+
+    ub_data = np.where(data < 0, 0, data)
+    lb_data = np.where(data > 0, 0, data)
+
+    lb = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=lb_data)
+    ub = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=ub_data)
+
+    par = gp.Parameter(m, domain=dim((2, 2, 4, 6)), records=data)
+    var = gp.Variable(m, domain=dim((2, 2, 4, 6)))
+
+    var.lo[...] = lb[...]
+    var.up[...] = ub[...]
+
+    out1, _ = max_pool(par, propagate_bounds=False)
+    out2, _ = min_pool(par, propagate_bounds=False)
+    out3, _ = max_pool(par)
+    out4, _ = min_pool(par)
+
+    out5, _ = max_pool(var, propagate_bounds=False)
+    out6, _ = min_pool(var, propagate_bounds=False)
+    out7, _ = max_pool(var)
+    out8, _ = min_pool(var)
+
+    exp_ub_par = np.array(
+        [
+            [[[100, 10], [np.inf, 0]], [[4.0, 4.0], [4.0, 0.0]]],
+            [[[1.0, 4.0], [1.0, 3.0]], [[4.0, 3.0], [40.0, 5.0]]],
+        ]
+    )
+
+    exp_lb_par = np.array(
+        [
+            [[[-40.0, -np.inf], [-5.0, 0.0]], [[1.0, -5.0], [-3.0, -6.0]]],
+            [[[-12.0, -4.0], [-5.0, -3.0]], [[-5.0, -2.0], [-3.0, -1.0]]],
+        ]
+    )
+
+    exp_ub_var = np.where(exp_ub_par < 0, 0, exp_ub_par)
+    exp_lb_var = np.where(exp_lb_par > 0, 0, exp_lb_par)
+
+    assert out1.records is None
+    assert out2.records is None
+    assert out5.records is None
+    assert out6.records is None
+
+    assert np.allclose(
+        np.array(out3.records.lower).reshape(out3.shape), exp_lb_par
+    )
+    assert np.allclose(
+        np.array(out3.records.upper).reshape(out3.shape), exp_ub_par
+    )
+
+    assert np.allclose(
+        np.array(out4.records.lower).reshape(out4.shape), exp_lb_par
+    )
+    assert np.allclose(
+        np.array(out4.records.upper).reshape(out4.shape), exp_ub_par
+    )
+
+    assert np.allclose(
+        np.array(out7.records.lower).reshape(out7.shape), exp_lb_var
+    )
+    assert np.allclose(
+        np.array(out7.records.upper).reshape(out7.shape), exp_ub_var
+    )
+
+    assert np.allclose(
+        np.array(out8.records.lower).reshape(out8.shape), exp_lb_var
+    )
+    assert np.allclose(
+        np.array(out8.records.upper).reshape(out8.shape), exp_ub_var
+    )
 
 
 def test_min_pooling(data):
@@ -1532,6 +1669,11 @@ def test_avg_pooling(data):
     out2, eqs2 = ap2(par_input)
     out3, eqs3 = ap3(par_input)
     out4, eqs4 = ap4(par_input)
+    out5, _ = ap4(par_input, propagate_bounds=False)
+
+    # test that records are not created when propagate_bounds is False
+    assert out5.records is None
+
     obj = (
         gp.Sum(out.domain, out)
         + gp.Sum(out2.domain, out2)
@@ -1710,17 +1852,26 @@ def test_avg_pool_bounds_neg(data):
 
     recs = out.records
 
-    # nothing gets scaled
-    assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == -0.64615).all()
-    assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 0.90273).all()
+    # Maximum (-1) is scaled by scaling factor (1/4)
+    exp_ub = np.array(
+        [
+            [[[0.54191, 0.90273], [0.66672, 0.8369]]],
+            [[[0.64615, 0.91273], [0.66672, 0.8369]]],
+            [[[-1 / 4, -1 / 4], [-1 / 4, -1 / 4]]],
+        ]
+    )
 
-    # positive lower bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "1"]["lower"] == (0.17423 / 4)).all()
-    assert (recs[recs["DenseDim3_1"] == "1"]["upper"] == 0.91273).all()
+    # Positive Minimum values are scaled by scaling factor (1/4)
+    exp_lb = np.array(
+        [
+            [[[-0.64615, 0.17423 / 4], [-0.33891, -0.49197]]],
+            [[[0.27341 / 4, 0.17423 / 4], [0.33891 / 4, 0.23754 / 4]]],
+            [[[-1.0, -1.0], [-1.0, -1.0]]],
+        ]
+    )
 
-    # negative upper bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -1).all()
-    assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == (-1) / 4).all()
+    assert np.allclose(np.array(recs.upper).reshape(out.shape), exp_ub)
+    assert np.allclose(np.array(recs.lower).reshape(out.shape), exp_lb)
 
     model = gp.Model(
         m,
@@ -1743,13 +1894,18 @@ def test_pool_call_bad(data):
     maxpool1 = MaxPool2d(m, (2, 2))
 
     new_par = gp.Parameter(m, "new_par", domain=dim([10]))
-    new_var = gp.Parameter(m, "new_var", domain=dim([10]))
+    new_var = gp.Variable(m, "new_var", domain=dim([10]))
+
+    par2 = gp.Parameter(m, "par2", domain=dim([2, 2, 4, 10]))
+    var2 = gp.Variable(m, "var2", domain=dim([2, 2, 4, 10]))
 
     for pool in [avgpool1, minpool1, maxpool1]:
         pytest.raises(ValidationError, pool, "asd")
         pytest.raises(ValidationError, pool, 5)
         pytest.raises(ValidationError, pool, new_par)
         pytest.raises(ValidationError, pool, new_var)
+        pytest.raises(ValidationError, pool, par2, propagate_bounds="True")
+        pytest.raises(ValidationError, pool, var2, propagate_bounds="True")
 
     pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
 

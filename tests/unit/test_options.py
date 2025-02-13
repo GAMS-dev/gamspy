@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import sys
+import time
 
 import pytest
 from pydantic import ValidationError
@@ -10,15 +11,18 @@ from pydantic import ValidationError
 import gamspy.exceptions as exceptions
 import gamspy.math as math
 from gamspy import (
+    Alias,
     Container,
     Equation,
     Model,
     Options,
     Parameter,
+    Problem,
     Sense,
     Set,
     Sum,
     Variable,
+    VariableType,
 )
 from gamspy.exceptions import GamspyException
 
@@ -771,3 +775,96 @@ def test_solver_options_twice(data):
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
         assert "OptFile 1" not in file.read()
+
+
+def test_debug_options():
+    m = Container()
+    save_path = os.path.join(m.working_directory, "save.g00")
+    m._options._set_debug_options({"save": save_path})
+    _ = Set(m, records=["i1", "i2"])
+    assert os.path.exists(save_path)
+    os.remove(save_path)
+    m.close()
+
+
+def test_bypass_solver():
+    m = Container()
+
+    f = Set(
+        m,
+        name="f",
+        description="faces on a dice",
+        records=[f"face{idx}" for idx in range(1, 20)],
+    )
+    dice = Set(
+        m,
+        name="dice",
+        description="number of dice",
+        records=[f"dice{idx}" for idx in range(1, 20)],
+    )
+
+    flo = Parameter(m, name="flo", description="lowest face value", records=1)
+    fup = Parameter(
+        m, "fup", description="highest face value", records=len(dice) * len(f)
+    )
+
+    fp = Alias(m, name="fp", alias_with=f)
+
+    wnx = Variable(m, name="wnx", description="number of wins")
+    fval = Variable(
+        m,
+        name="fval",
+        domain=[dice, f],
+        description="face value on dice - may be fractional",
+    )
+    comp = Variable(
+        m,
+        name="comp",
+        domain=[dice, f, fp],
+        description="one implies f beats fp",
+        type=VariableType.BINARY,
+    )
+
+    fval.lo[dice, f] = flo
+    fval.up[dice, f] = fup
+    fval.fx["dice1", "face1"] = flo
+
+    eq1 = Equation(m, "eq1", domain=dice, description="count the wins")
+    eq3 = Equation(
+        m,
+        "eq3",
+        domain=[dice, f, fp],
+        description="definition of non-transitive relation",
+    )
+    eq4 = Equation(
+        m,
+        "eq4",
+        domain=[dice, f],
+        description="different face values for a single dice",
+    )
+
+    eq1[dice] = Sum((f, fp), comp[dice, f, fp]) == wnx
+    eq3[dice, f, fp] = (
+        fval[dice, f] + (fup - flo + 1) * (1 - comp[dice, f, fp])
+        >= fval[dice.lead(1, type="circular"), fp] + 1
+    )
+    eq4[dice, f - 1] = fval[dice, f - 1] + 1 <= fval[dice, f]
+
+    xdice = Model(
+        m,
+        "xdice",
+        equations=m.getEquations(),
+        problem=Problem.MIP,
+        sense=Sense.MAX,
+        objective=wnx,
+    )
+
+    start = time.time()
+    xdice.solve(options=Options(bypass_solver=True))
+    end = time.time()
+
+    # It should not take more than 5 seconds since we don't pass it to the solver
+    # If we pass it to the solver, it should take hours maybe days.
+    assert end - start < 5
+
+    m.close()

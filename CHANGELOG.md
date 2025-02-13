@@ -1,12 +1,31 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.6.0
+------------
+- General
+  - Upgrade pre-commit dependencies.
+  - Enhance bound propagation for `AvgPool2d` class.
+  - Allow adding debug options to Options objects.
+  - Allow starting from a GAMS restart file.
+  - Allow registering metadata to symbols via `symbol._metadata` attribute.
+  - Allow indexing into symbols with integers.
+  - Add `bypass_solver` option.
+  - Add configurable options via set_options and get_option.
+- Documentation
+  - Add CNNs to embedding Neural Network documentation.
+
 GAMSPy 1.5.1
 ------------
 - General
   - Fix the bugs in dynamic set assignments.
+  - Rewrite parts of GAMS Control API.
+  - Fix debugging level bug of NEOS backend.
+  - Fix license issue of big models that are solved with frozen solve.
   - Allow loadRecordsFromGdx to domain forward.
-  - Add configurable options via set_options and get_option.
+  - Enhance bound propagation for `MaxPool2d` and `MinPool2d` classes.
+- Testing
+  - Add bound propagation tests for `MaxPool2d` and `MinPool2d` classes.
 - Documentation
   - Update embedding Neural Network documentation.
 
@@ -14,7 +33,6 @@ GAMSPy 1.5.0
 ------------
 - General
   - Fix implicit parameter validation bug.
-  - Fix the bugs in dynamic set assignments.
   - Migrate GAMSPy CLI to Typer.
   - Threads can now create a container since we register the signal only to the main thread.
   - Fix solver options bug in frozen solve.

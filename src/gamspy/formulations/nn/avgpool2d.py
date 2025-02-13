@@ -58,47 +58,80 @@ class AvgPool2d:
         self.stride = _stride
         self.padding = _padding
 
-    def _get_bounds(
-        self, input: gp.Parameter | gp.Variable
+    def _set_bounds(
+        self,
+        input: gp.Parameter | gp.Variable,
+        subset: gp.Set,
     ) -> tuple[gp.Parameter, gp.Parameter]:
-        # this can be done more fine-grained
-        N, C, H, W = input.domain
-        lb = gp.Parameter(self.container, domain=[N, C])
-        ub = gp.Parameter(self.container, domain=[N, C])
+        # Extract batch and channel dimensions from input domain
+        N, C = input.domain[:2]
+        H_out, W_out, Hf, Wf, H_in, W_in = subset.domain
 
+        # Create subset2 mapping output positions to input positions
+        subset2 = gp.Set(self.container, domain=[H_out, W_out, H_in, W_in])
+        subset2[H_out, W_out, H_in, W_in] = gp.Sum(
+            [Hf, Wf], subset[H_out, W_out, Hf, Wf, H_in, W_in]
+        )
+
+        # Initialize parameters for bounds
+        lb = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+        ub = gp.Parameter(self.container, domain=[N, C, H_out, W_out])
+
+        # Calculate upper/lower bounds based on input type
         if isinstance(input, gp.Variable):
-            ub[...] = gp.Smax([H, W], input.up[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input.lo[N, C, H, W])
+            # Use variable bounds if input is a variable
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.up[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input.lo[N, C, H_in, W_in],
+            )
         else:
-            ub[...] = gp.Smax([H, W], input[N, C, H, W])
-            lb[...] = gp.Smin([H, W], input[N, C, H, W])
+            # Use parameter values directly if input is a parameter
+            ub[...] = gp.Smax(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
+            lb[...] = gp.Smin(
+                gp.Domain(H_in, W_in).where[subset2[H_out, W_out, H_in, W_in]],
+                input[N, C, H_in, W_in],
+            )
 
         # 0 padding on the edges can shift the minimum and max value
-        scale = (
-            (self.kernel_size[0] - self.padding[0])
-            * (self.kernel_size[1] - self.padding[1])
-        ) / (self.kernel_size[0] * self.kernel_size[1])
+        kh, kw = self.kernel_size
+        ph, pw = self.padding
+        scale = ((kh - ph) * (kw - pw)) / (kh * kw)
 
-        lb[N, C].where[lb[N, C] > 0] = lb[N, C] * scale
-        ub[N, C].where[ub[N, C] < 0] = ub[N, C] * scale
+        lb.where[lb > 0] = lb * scale
+        ub.where[ub < 0] = ub * scale
 
         return lb, ub
 
     def __call__(
-        self, input: gp.Parameter | gp.Variable
+        self,
+        input: gp.Parameter | gp.Variable,
+        propagate_bounds: bool = True,
     ) -> tuple[gp.Variable, list[gp.Equation]]:
         """
         Forward pass your input, generate output and equations required for
         calculating the average pooling. Unlike the min or max pooling avg
         pooling does not require binary variables or the big-M formulation.
+        if propagate_bounds is True, it will also set the bounds for the
+        output variable based on the input.
         Returns the output variable and the list of equations required for
-        the avg pooling formulation
+        the avg pooling formulation.
 
         Parameters
         ----------
         input : gp.Parameter | gp.Variable
                 input to the max pooling 2d layer, must be in shape
                 (batch x in_channels x height x width)
+        propagate_bounds: bool
+                If True, it will set the bounds for the output variable
+                based on the input.
+                Default value: True
 
         Returns
         -------
@@ -107,6 +140,9 @@ class AvgPool2d:
         """
         if not isinstance(input, (gp.Parameter, gp.Variable)):
             raise ValidationError("Expected a parameter or a variable input")
+
+        if not isinstance(propagate_bounds, bool):
+            raise ValidationError("Expected a boolean for propagate_bounds")
 
         if len(input.domain) != 4:
             raise ValidationError(
@@ -122,12 +158,9 @@ class AvgPool2d:
             self.padding, self.kernel_size, self.stride, h_in, w_in
         )
 
-        lb, ub = self._get_bounds(input)
         out_var = gp.Variable(
             self.container, domain=dim([len(N), len(C_in), h_out, w_out])
         )
-        out_var.lo[...] = lb
-        out_var.up[...] = ub
 
         N, C, H_out, W_out = out_var.domain
 
@@ -169,4 +202,11 @@ class AvgPool2d:
         )
 
         set_out[...] = out_var[N, C, H_out, W_out] == expr
+
+        # Set variable bounds if propagate_bounds is True
+        if propagate_bounds:
+            lb, ub = self._set_bounds(input, subset)
+            out_var.lo[...] = lb
+            out_var.up[...] = ub
+
         return out_var, [set_out]

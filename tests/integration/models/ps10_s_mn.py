@@ -257,7 +257,7 @@ def main():
     print(f"no MHRC case: {p_noMHRC.records.value[0]}%")
     print(f"no MN case: {p_noMN_lic.records.value[0]}%")
     print(f"no util-equality case: {p_Util_gap.records.value[0]}%")
-    print(f"Time Elapsed: {round(time.time()-start, 2)}s")
+    print(f"Time Elapsed: {round(time.time() - start, 2)}s")
 
 
 if __name__ == "__main__":

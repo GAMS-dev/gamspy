@@ -179,7 +179,7 @@ def check_response(response: bytes, job_name: str) -> None:
             info = ""
 
         raise GamspyException(
-            f'{info} Check {job_name + ".lst"} for more information.',
+            f"Return code {return_code}. {info} Check {job_name + '.lst'} for more information.",
             return_code,
         )
 
@@ -264,13 +264,27 @@ class Container(gt.Container):
         )
 
         if load_from is not None:
-            self._read(load_from)
-            if not isinstance(load_from, gt.Container):
-                self._unsaved_statements = []
-                self._clean_modified_symbols()
-                self._add_statement(f"$declareAndLoad {load_from}")
+            if not isinstance(load_from, (str, gt.Container)):
+                raise ValidationError(
+                    f"`load_from` must be of type str or Container but found {type(load_from)}"
+                )
 
-            self._synch_with_gams(gams_to_gamspy=False)
+            if isinstance(load_from, str) and load_from[-4:] not in (
+                ".gdx",
+                ".g00",
+            ):
+                raise ValidationError(
+                    f"`load_from` must end with .gdx or .g00 but found {load_from}"
+                )
+
+            if isinstance(load_from, str) and load_from.endswith(".g00"):
+                self._options._set_debug_options(
+                    {"restart": load_from, "gdxSymbols": "all"}
+                )
+                self._synch_with_gams(gams_to_gamspy=True)
+            else:
+                self._read(load_from)
+                self._synch_with_gams()
 
     def __enter__(self):
         pid = os.getpid()
