@@ -1047,15 +1047,15 @@ def test_ellipsis(data):
     supply.l[...] = 5
     assert supply.records.level.to_list() == [5.0, 5.0]
 
-    domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
+    domain = validation._expand_ellipsis_slice(["a", "b", "c"], ["a", ...])
     assert domain == ["a", "b", "c"]
 
-    domain = validation._transform_given_indices(
+    domain = validation._expand_ellipsis_slice(
         ["a", "b", "c"], ["a", ..., "c"]
     )
     assert domain == ["a", "b", "c"]
 
-    domain = validation._transform_given_indices(["a", "b", "c"], [..., "c"])
+    domain = validation._expand_ellipsis_slice(["a", "b", "c"], [..., "c"])
     assert domain == ["a", "b", "c"]
 
     with pytest.raises(ValidationError):
