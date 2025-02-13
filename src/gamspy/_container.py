@@ -122,7 +122,7 @@ def get_system_directory(system_directory: str | None) -> str:
     if system_directory is not None:
         return system_directory
 
-    return get_option("GAMSPY_GAMS_SYSDIR")
+    return get_option("GAMS_SYSDIR")
 
 
 def check_response(response: bytes, job_name: str) -> None:
