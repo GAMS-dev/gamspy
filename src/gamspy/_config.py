@@ -23,13 +23,15 @@ def _set_default_options() -> None:
 
     # Check for domain violation by default
     validate = os.getenv("GAMSPY_DOMAIN_VALIDATION", 1)
-    if validate:
-        configuration["DOMAIN_VALIDATION"] = validate
+    configuration["DOMAIN_VALIDATION"] = validate
 
     # Special value mapping
     map_special_values = os.getenv("GAMSPY_MAP_SPECIAL_VALUES", 1)
-    if validate:
-        configuration["MAP_SPECIAL_VALUES"] = map_special_values
+    configuration["MAP_SPECIAL_VALUES"] = map_special_values
+
+    # Lazy evaluation
+    evaluate_lazily = os.getenv("GAMSPY_LAZY_EVALUATION", 0)
+    configuration["LAZY_EVALUATION"] = evaluate_lazily
 
 
 def set_options(options: dict[str, Any]) -> None:

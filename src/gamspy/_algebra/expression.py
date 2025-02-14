@@ -95,7 +95,10 @@ class Expression(operable.Operable):
         if data == "=" and isinstance(right, Expression):
             right._fix_equalities()
 
-        self.representation = self._create_output_str()
+        if get_option("LAZY_EVALUATION"):
+            self._representation = None
+        else:
+            self._representation = self._create_output_str()
         self.where = condition.Condition(self)
         self._create_domain()
         left_control = getattr(left, "controlled_domain", [])
@@ -108,6 +111,13 @@ class Expression(operable.Operable):
             self.container = left.container  # type: ignore
         elif hasattr(right, "container"):
             self.container = right.container  # type: ignore
+
+    @property
+    def representation(self) -> str:
+        if self._representation is None:
+            self._representation = self._create_output_str()
+
+        return self._representation
 
     def _create_domain(self):
         for loc, result in [
@@ -251,7 +261,9 @@ class Expression(operable.Operable):
 
     def _replace_operator(self, operator: str):
         self.data = operator
-        self.representation = self._create_output_str()
+
+        if not get_option("LAZY_EVALUATION"):
+            self._representation = self._create_output_str()
 
     def latexRepr(self) -> str:
         """
@@ -379,7 +391,8 @@ class Expression(operable.Operable):
                 if root.data in EQ_MAP:
                     root._replace_operator(EQ_MAP[root.data])
                 else:
-                    root.representation = root._create_output_str()
+                    if not get_option("LAZY_EVALUATION"):
+                        root._representation = root._create_output_str()
 
             last_item = peek(stack)
             if (
@@ -579,4 +592,5 @@ class SetExpression(Expression):
                         f"Incompatible operand `{self.left}` for the set operation `{self.data}`."
                     )
 
-        self.representation = self._create_output_str()
+        if not get_option("LAZY_EVALUATION"):
+            self._representation = self._create_output_str()
