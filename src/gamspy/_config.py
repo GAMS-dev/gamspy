@@ -27,9 +27,9 @@ def _set_default_options() -> None:
         configuration["DOMAIN_VALIDATION"] = validate
 
     # Special value mapping
-    map_special_values = os.getenv("GAMSPY_SPECIAL_VALUE_MAPPING", 1)
+    map_special_values = os.getenv("GAMSPY_MAP_SPECIAL_VALUES", 1)
     if validate:
-        configuration["SPECIAL_VALUE_MAPPING"] = map_special_values
+        configuration["MAP_SPECIAL_VALUES"] = map_special_values
 
 
 def set_options(options: dict[str, Any]) -> None:
