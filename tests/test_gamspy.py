@@ -5,6 +5,7 @@ import glob
 import json
 import os
 import shutil
+import time
 from os.path import join
 
 import gamspy_base
@@ -34,6 +35,32 @@ def test_config():
         a["i3"] = 5
 
     gp.set_options({"DOMAIN_VALIDATION": 1})
+
+
+@pytest.mark.unit
+def test_domain_checking_config_performance():
+    start = time.time()
+    m = gp.Container()
+    i = gp.Set(m, records=range(999))
+    a = gp.Parameter(m, domain=i)
+    for idx in range(999):
+        a[idx] = 1
+
+    timing_with_validation = time.time() - start
+
+    gp.set_options({"DOMAIN_VALIDATION": 0})
+    start = time.time()
+    m = gp.Container()
+    i = gp.Set(m, records=range(999))
+    a = gp.Parameter(m, domain=i)
+    for idx in range(999):
+        a[idx] = 1
+    timing_without_validation = time.time() - start
+    gp.set_options({"DOMAIN_VALIDATION": 1})
+
+    assert timing_without_validation < timing_with_validation, (
+        f"{timing_with_validation=}, {timing_without_validation=}"
+    )
 
 
 @pytest.mark.doc

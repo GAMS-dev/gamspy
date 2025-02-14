@@ -26,6 +26,104 @@ if TYPE_CHECKING:
     )
     from gamspy._types import EllipsisType
 
+RESERVED_WORDS = [
+    "abort",
+    "acronym",
+    "acronyms",
+    "alias",
+    "all",
+    "and",
+    "binary",
+    "break",
+    "card",
+    "continue",
+    "diag",
+    "display",
+    "do",
+    "else",
+    "elseif",
+    "endfor",
+    "endif",
+    "endloop",
+    "endwhile",
+    "eps",
+    "equation",
+    "equations",
+    "execute",
+    "execute_load",
+    "execute_loaddc",
+    "execute_loadhandle",
+    "execute_loadpoint",
+    "execute_unload",
+    "execute_unloaddi",
+    "execute_unloadidx",
+    "file",
+    "files",
+    "for",
+    "free",
+    "function",
+    "functions",
+    "gdxLoad",
+    "if",
+    "inf",
+    "integer",
+    "logic",
+    "loop",
+    "model",
+    "models",
+    "na",
+    "negative",
+    "nonnegative",
+    "no",
+    "not",
+    "option",
+    "options",
+    "or",
+    "ord",
+    "parameter",
+    "parameters",
+    "positive",
+    "prod",
+    "put",
+    "put_utility",
+    "putclear",
+    "putclose",
+    "putfmcl",
+    "puthd",
+    "putheader",
+    "putpage",
+    "puttitle",
+    "puttl",
+    "repeat",
+    "sameas",
+    "sand",
+    "scalar",
+    "scalars",
+    "semicont",
+    "semiint",
+    "set",
+    "sets",
+    "singleton",
+    "smax",
+    "smin",
+    "solve",
+    "sor",
+    "sos1",
+    "sos2",
+    "sum",
+    "system",
+    "table",
+    "tables",
+    "then",
+    "undf",
+    "until",
+    "variable",
+    "variables",
+    "while",
+    "xor",
+    "yes",
+]
+
 
 def get_dimension(
     domain: Sequence[Set | Alias | ImplicitSet | str],
@@ -33,10 +131,8 @@ def get_dimension(
     dimension = 0
 
     for elem in domain:
-        if isinstance(
-            elem, (symbols.Set, symbols.Alias, implicits.ImplicitSet)
-        ):
-            dimension += elem.dimension
+        if type(elem) in (symbols.Set, symbols.Alias, implicits.ImplicitSet):
+            dimension += elem.dimension  # type: ignore
         else:
             dimension += 1
 
@@ -48,15 +144,15 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     domain = symbol
 
     while domain != "*":
-        if isinstance(domain, str):
+        if type(domain) is str:
             path.insert(0, domain)
         else:
             path.insert(0, domain.name)
 
-        if isinstance(domain, symbols.Alias):
+        if type(domain) is symbols.Alias:
             path.insert(0, domain.alias_with.name)
 
-        domain = "*" if isinstance(domain, str) else domain.domain[0]  # type: ignore
+        domain = "*" if type(domain) is str else domain.domain[0]  # type: ignore
 
     return path
 
@@ -73,14 +169,9 @@ def validate_dimension(
 ):
     dimension = get_dimension(domain)
 
-    entity_name = (
-        f"symbol {symbol.name}"
-        if hasattr(symbol, "name")
-        else symbol.__class__.__name__
-    )
     if dimension != symbol.dimension:
         raise ValidationError(
-            f"The {entity_name} is referenced with"
+            f"The `{symbol}` is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"
             f" given dimension is {dimension}"
@@ -91,16 +182,16 @@ def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
-    if isinstance(given, implicits.ImplicitSet):
+    if type(given) is implicits.ImplicitSet:
         return
 
     given_path = get_domain_path(given)
 
     if (
-        isinstance(actual, symbols.Set)
+        type(actual) is symbols.Set
         and actual.name not in given_path
         or (
-            isinstance(actual, symbols.Alias)
+            type(actual) is symbols.Alias
             and actual.alias_with.name not in given_path
         )
     ):
@@ -112,18 +203,15 @@ def validate_one_dimensional_sets(
 
 def validate_type(domain):
     for given in domain:
-        if not isinstance(
-            given,
-            (
-                symbols.Set,
-                symbols.Alias,
-                symbols.UniverseAlias,
-                implicits.ImplicitSet,
-                str,
-                int,
-                EllipsisType,
-                slice,
-            ),
+        if type(given) not in (
+            symbols.Set,
+            symbols.Alias,
+            symbols.UniverseAlias,
+            implicits.ImplicitSet,
+            str,
+            int,
+            EllipsisType,
+            slice,
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -274,108 +362,10 @@ def validate_name(word: str) -> str:
     if not isinstance(word, str):
         raise TypeError("Symbol name must be type str")
 
-    reserved_words = [
-        "abort",
-        "acronym",
-        "acronyms",
-        "alias",
-        "all",
-        "and",
-        "binary",
-        "break",
-        "card",
-        "continue",
-        "diag",
-        "display",
-        "do",
-        "else",
-        "elseif",
-        "endfor",
-        "endif",
-        "endloop",
-        "endwhile",
-        "eps",
-        "equation",
-        "equations",
-        "execute",
-        "execute_load",
-        "execute_loaddc",
-        "execute_loadhandle",
-        "execute_loadpoint",
-        "execute_unload",
-        "execute_unloaddi",
-        "execute_unloadidx",
-        "file",
-        "files",
-        "for",
-        "free",
-        "function",
-        "functions",
-        "gdxLoad",
-        "if",
-        "inf",
-        "integer",
-        "logic",
-        "loop",
-        "model",
-        "models",
-        "na",
-        "negative",
-        "nonnegative",
-        "no",
-        "not",
-        "option",
-        "options",
-        "or",
-        "ord",
-        "parameter",
-        "parameters",
-        "positive",
-        "prod",
-        "put",
-        "put_utility",
-        "putclear",
-        "putclose",
-        "putfmcl",
-        "puthd",
-        "putheader",
-        "putpage",
-        "puttitle",
-        "puttl",
-        "repeat",
-        "sameas",
-        "sand",
-        "scalar",
-        "scalars",
-        "semicont",
-        "semiint",
-        "set",
-        "sets",
-        "singleton",
-        "smax",
-        "smin",
-        "solve",
-        "sor",
-        "sos1",
-        "sos2",
-        "sum",
-        "system",
-        "table",
-        "tables",
-        "then",
-        "undf",
-        "until",
-        "variable",
-        "variables",
-        "while",
-        "xor",
-        "yes",
-    ]
-
-    if word.lower() in reserved_words:
+    if word.lower() in RESERVED_WORDS:
         raise ValidationError(
             "Name cannot be one of the reserved words. List of reserved"
-            f" words: {reserved_words}"
+            f" words: {RESERVED_WORDS}"
         )
 
     return word
