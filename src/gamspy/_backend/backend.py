@@ -179,7 +179,7 @@ class Backend(ABC):
                     continue
 
                 symbol = self.container[name]
-                if isinstance(symbol, syms.Alias):
+                if type(symbol) is syms.Alias:
                     filtered_names.append(name)
                     continue
 
@@ -201,7 +201,7 @@ class Backend(ABC):
                 new_domain = []
                 for elem in symbol.domain:
                     if (
-                        isinstance(elem, str)
+                        type(elem) is str
                         and elem != "*"
                         and elem in self.container
                     ):
@@ -211,7 +211,7 @@ class Backend(ABC):
 
                 symbol.domain = new_domain
                 symbol.dimension = len(new_domain)
-                if isinstance(symbol, (syms.Variable, syms.Equation)):
+                if type(symbol) in (syms.Variable, syms.Equation):
                     symbol._update_attr_domains()
 
     def parse_listings(self):
