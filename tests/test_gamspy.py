@@ -39,12 +39,22 @@ def test_config():
 
 @pytest.mark.unit
 def test_domain_checking_config_performance():
+    gp.set_options({"DOMAIN_VALIDATION": 1})
     start = time.time()
     m = gp.Container()
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
     for idx in range(999):
-        a[idx] = 1
+        _ = (
+            a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+        )
 
     timing_with_validation = time.time() - start
 
@@ -54,10 +64,20 @@ def test_domain_checking_config_performance():
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
     for idx in range(999):
-        a[idx] = 1
+        _ = (
+            a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+            + a[idx]
+        )
     timing_without_validation = time.time() - start
     gp.set_options({"DOMAIN_VALIDATION": 1})
 
+    print(f"{timing_with_validation=}, {timing_without_validation=}")
     assert timing_without_validation < timing_with_validation, (
         f"{timing_with_validation=}, {timing_without_validation=}"
     )
