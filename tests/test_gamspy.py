@@ -83,6 +83,20 @@ def test_domain_checking_config_performance():
     )
 
 
+def test_map_special_values():
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    a[...] = gp.SpecialValues.EPS
+    assert a.getAssignment() == "a = EPS;"
+
+    gp.set_options({"MAP_SPECIAL_VALUES": 0})
+    m = gp.Container()
+    a = gp.Parameter(m, "a")
+    a[...] = gp.SpecialValues.EPS
+    assert a.getAssignment() == "a = -0.0;"
+    gp.set_options({"MAP_SPECIAL_VALUES": 1})
+
+
 @pytest.mark.doc
 def test_switcher():
     this = os.path.dirname(os.path.abspath(__file__))
