@@ -11,6 +11,8 @@ GAMSPy 1.6.0
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
   - Allow indexing into symbols with integers.
   - Add `bypass_solver` option.
+  - Replace conda, pip and virtualenv with uv in ci pipelines.
+  - Provide ssl context explicitly for NEOS backend.
 - Documentation
   - Add CNNs to embedding Neural Network documentation.
 

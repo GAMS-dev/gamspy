@@ -47,6 +47,10 @@ Usage
      - 
      - False
      - Uninstalls all add-on solvers.
+   * - -\-use-uv 
+     - 
+     - False
+     - Use uv instead of pip to uninstall solvers.
 
 Examples
 ~~~~~~~~

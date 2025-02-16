@@ -2,8 +2,10 @@ from __future__ import annotations
 import importlib
 import shutil
 
+import sys
 from typing import Annotated, Iterable, Optional, Union
 
+import certifi
 import typer
 from gamspy.exceptions import GamspyException, ValidationError
 import gamspy.utils as utils
@@ -49,8 +51,12 @@ def license(
 
     if is_alp:
         alp_id = license
+        http = urllib3.PoolManager(
+            cert_reqs="CERT_REQUIRED",
+            ca_certs=certifi.where()
+        )
         encoded_args = urlencode({"access_token": alp_id})
-        request = urllib3.request(
+        request = http.request(
             "GET", "https://license.gams.com/license-type?" + encoded_args
         )
         if request.status != 200:
@@ -181,7 +187,12 @@ def solver(
         "--skip-pip-install",
         "-s",
         help="If you already have the solver installed, skip pip install and update gamspy installed solver list."
-    )
+    ),
+    use_uv: bool = typer.Option(
+        False,
+        "--use-uv",
+        help="Use uv instead of pip to install solvers."
+    ),
 ):
     try:
         import gamspy_base
@@ -204,17 +215,25 @@ def solver(
 
             if not skip_pip_install:
                 # install specified solver
+                if use_uv:
+                    command = [
+                        "uv",
+                        "pip",
+                        "install",
+                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        "--force-reinstall",
+                    ]
+                else:
+                    command = [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
+                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        "--force-reinstall",
+                    ]
                 try:
-                    _ = subprocess.run(
-                        [
-                            "pip",
-                            "install",
-                            f"gamspy-{solver_name}=={gamspy_base.__version__}",
-                            "--force-reinstall",
-                        ],
-                        check=True,
-                        stderr=subprocess.PIPE,
-                    )
+                    _ = subprocess.run(command, check=True, stderr=subprocess.PIPE)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
                         f"Could not install gamspy-{solver_name}: {e.stderr.decode('utf-8')}"

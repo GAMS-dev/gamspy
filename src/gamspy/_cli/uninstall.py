@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import subprocess
+import sys
 from typing import Iterable
 from gamspy.exceptions import GamspyException, ValidationError
 import gamspy.utils as utils
@@ -45,7 +46,12 @@ def solver(
         "--skip-pip-install",
         "-s",
         help="If you already have the solver uninstalled, skip pip uninstall and update gamspy installed solver list."
-    )
+    ),
+    use_uv: bool = typer.Option(
+        False,
+        "--use-uv",
+        help="Use uv instead of pip to uninstall solvers."
+    ),
 ):
     try:
         import gamspy_base
@@ -71,11 +77,12 @@ def solver(
 
             if not skip_pip_uninstall:
                 # uninstall specified solver
+                if use_uv:
+                    command = ["uv", "pip", "uninstall", f"gamspy-{solver_name}"]
+                else:
+                    command = [sys.executable, "-m", "pip", "uninstall", f"gamspy-{solver_name}", "-y"]
                 try:
-                    _ = subprocess.run(
-                        ["pip", "uninstall", f"gamspy-{solver_name}", "-y"],
-                        check=True,
-                    )
+                    _ = subprocess.run(command, check=True)
                 except subprocess.CalledProcessError as e:
                     raise GamspyException(
                         f"Could not uninstall gamspy-{solver_name}: {e.output}"
