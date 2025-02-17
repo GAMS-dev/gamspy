@@ -4,13 +4,12 @@ dac-test-3.13:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
-    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop highs
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -20,13 +19,12 @@ dac-test-3.12:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" python=3.12
-    - conda activate "$(pwd)/gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
+    - source "gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop highs
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -38,13 +36,12 @@ dac-test-3.11:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" python=3.11
-    - conda activate "$(pwd)/gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
+    - source "gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop highs
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -56,13 +53,12 @@ dac-test-3.10:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.10${CI_COMMIT_SHORT_SHA}" python=3.10
-    - conda activate "$(pwd)/gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
+    - source "gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop highs
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -75,13 +71,12 @@ dac-test-3.9:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
-    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop highs
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
     - pytest -x -v -s -m 'doc'
 
@@ -92,11 +87,10 @@ dac-engine-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
-    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 dac-engine-3.9:
@@ -105,11 +99,10 @@ dac-engine-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
-    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
@@ -119,11 +112,10 @@ dac-neos-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
-    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
 dac-neos-3.9:
@@ -132,9 +124,8 @@ dac-neos-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
-    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'neos' tests

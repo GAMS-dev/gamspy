@@ -95,6 +95,9 @@ follow_imports_for_stubs = true
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"gamspy" = ["py.typed"]
+
 [tool.coverage.run]
 omit = ["*/_cli/*.py", "__main__.py", "*__init__.py", "*engine.py", "*neos.py"]
 

@@ -81,6 +81,10 @@ Usage
      - 
      - False
      - Reinstalls previously installed add-on solvers.
+   * - -\-use-uv 
+     - 
+     - False
+     - Use uv instead of pip to install solvers.
 
 Examples
 ~~~~~~~~
