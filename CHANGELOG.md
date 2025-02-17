@@ -13,6 +13,7 @@ GAMSPy 1.6.0
   - Add `bypass_solver` option.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Provide ssl context explicitly for NEOS backend.
+  - Add configurable options via set_options and get_option.
 - Documentation
   - Add CNNs to embedding Neural Network documentation.
 
@@ -24,7 +25,6 @@ GAMSPy 1.5.1
   - Fix debugging level bug of NEOS backend.
   - Fix license issue of big models that are solved with frozen solve.
   - Allow loadRecordsFromGdx to domain forward.
-  - Upgrade gamspy_base and gamsapi dependencies.
   - Enhance bound propagation for `MaxPool2d` and `MinPool2d` classes.
 - Testing
   - Add bound propagation tests for `MaxPool2d` and `MinPool2d` classes.

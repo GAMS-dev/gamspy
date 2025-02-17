@@ -38,3 +38,6 @@ gamspy
    gamspy.utils
    gamspy.SpecialValues
    gamspy.exceptions
+
+.. autofunction:: gamspy.set_options
+.. autofunction:: gamspy.get_option
