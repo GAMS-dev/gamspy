@@ -5,10 +5,10 @@ leg-test-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop --use-uv
     - COVERAGE_CORE=sysmon coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -25,10 +25,10 @@ leg-test-3.12:
   tags: [linux]
   image: python:3.12
   script:
-    - python -m pip install virtualenv && virtualenv venv312 && source venv312/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv312 && source venv312/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -41,10 +41,10 @@ leg-test-3.11:
   tags: [linux]
   image: python:3.11
   script:
-    - python -m pip install virtualenv && virtualenv venv311 && source venv311/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv311 && source venv311/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -57,10 +57,10 @@ leg-test-3.10:
   tags: [linux]
   image: python:3.10
   script:
-    - python -m pip install virtualenv && virtualenv venv310 && source venv310/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv310 && source venv310/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -73,10 +73,10 @@ leg-test-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - $(gamspy show base)/gamsgetkey $LOCAL_LICENSE > $(gamspy show base)/ci_license.txt
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop --use-uv
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.gams.com/miro/miro.git --branch gamspy --single-branch miro
     - if [ "$RUN_MIRO" == "1" ]; then pip install fastapi && cd miro && ./scripts/test_gamspy_models.sh && cd .. && rm -rf miro; fi
     - pytest -x -v -s -m 'unit or integration or model_library' tests
@@ -90,8 +90,8 @@ leg-engine-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 leg-engine-3.9:
@@ -101,8 +101,8 @@ leg-engine-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
@@ -113,8 +113,8 @@ leg-neos-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
 leg-neos-3.9:
@@ -124,6 +124,6 @@ leg-neos-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - python -m pip install virtualenv && virtualenv venv39 && source venv39/bin/activate
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests

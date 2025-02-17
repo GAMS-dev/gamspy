@@ -3,9 +3,8 @@ leg-cli-3.13:
   tags: [linux]
   image: python:3.13
   script:
-    - python -m pip install virtualenv && virtualenv venv313 && source venv313/bin/activate
-    - python -m pip install wheel build && python -m build
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate && uv pip install pip
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
     name: linux_3.13
@@ -17,11 +16,8 @@ leg-cli-3.9:
   tags: [linux]
   image: python:3.9
   script:
-    - python -m pip install virtualenv
-    - virtualenv venv39
-    - source venv39/bin/activate
-    - python -m pip install wheel build
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate && uv pip install pip
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 dac-cli-3.13:
@@ -29,12 +25,10 @@ dac-cli-3.13:
   when: on_success
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
-    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build && python -m build
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
     name: macos_arm64_3.13
@@ -46,24 +40,20 @@ dac-cli-3.9:
   needs: [dac-cli-3.13]
   tags: [macos-arm64]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
-    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 deg-cli-3.13:
   stage: cli
   tags: [macos]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" python=3.13
-    - conda activate "$(pwd)/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build && python -m build
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
+    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
     name: macos_x86_64_3.13
@@ -75,29 +65,20 @@ deg-cli-3.9:
   needs: [deg-cli-3.13]
   tags: [macos]
   script:
-    - eval "$($MINICONDA shell.bash hook)"
-    - ulimit -n 10240
-    - python scripts/atomic_conda_create.py "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" python=3.9
-    - conda activate "$(pwd)/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
-    - python -m pip install wheel build
-    - python -m pip install .[dev,test] --force-reinstall
+    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
 
 wei-cli-3.13:
   stage: cli
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.13
   script:
-    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
-    - conda env list
-    - conda activate gamspy-env-3.13
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
-    - python -m build
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_venv313; .windows_venv313\Scripts\Activate; uv pip install pip
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
     name: windows_3.13
@@ -108,15 +89,9 @@ wei-cli-3.9:
   stage: cli
   needs: [wei-cli-3.13]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.9
   script:
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda env list
-    - conda activate gamspy-env-3.9
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install wheel build
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_venv39; .windows_venv39\Scripts\Activate; uv pip install pip
+    - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
