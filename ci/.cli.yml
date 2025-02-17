@@ -77,7 +77,7 @@ wei-cli-3.13:
   image: winamd64/python:3.13
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_venv313; .windows_venv313\Scripts\Activate; uv pip install pip pip-system-certs
+    - python -m pip install uv; uv venv .windows_venv313; .windows_venv313\Scripts\Activate; uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   artifacts:
@@ -92,6 +92,6 @@ wei-cli-3.9:
   image: winamd64/python:3.9
   script:
     - python --version
-    - python -m pip install uv; uv venv .windows_venv39; .windows_venv39\Scripts\Activate; uv pip install pip pip-system-certs
+    - python -m pip install uv; uv venv .windows_venv39; .windows_venv39\Scripts\Activate; uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'cli' tests
