@@ -341,3 +341,41 @@ tree memory usage.
 
     from gamspy import Container, Options
     m = Container(options=Options(profile_file="<file_path>", monitor_process_tree_memory=True))
+
+Setting GAMSPy Configurations
+-----------------------------
+GAMSPy allows setting package wide options via :meth:`gp.set_options <gamspy.set_options>`. For example, 
+one can skip the domain validation by setting `DOMAIN_VALIDATION` to 0. By default, GAMSPy performs 
+domain validation which is helpful while writing mathematical models but might add a small overhead 
+to the execution time.
+
+.. code-block:: python
+
+    import gamspy as gp
+    gp.set_options({"DOMAIN_VALIDATION": 0})
+
+One can also set the system directory via `GAMSPY_GAMS_SYSDIR` option. Beware that if a system directory 
+is given in the constructor of the `Container`, it overrides this option. Package wide options can also 
+be set via environment variables. Environment variable names are always in the format of ``GAMSPY_<option_name>``.
+
+.. code-block:: bash
+
+    GAMSPY_DOMAIN_VALIDATION=0 python test.py
+
+.. note::
+    Note that package wide options are different than :ref:`model options <solve_options>`. While package wide options 
+    affect the behavior of the whole package, model options affect the behavior of the solve process.
+
+Here is a list of package wide options:
+
++------------------------------+--------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| Option Name                  | Commandline Option Name        | Type  | Description                                                                                                                              |
++==============================+================================+=======+==========================================================================================================================================+
+| DOMAIN_VALIDATION            | GAMSPY_DOMAIN_VALIDATION       | int   | Whether to check for domain validation. Set to 1 by default.                                                                             |
++------------------------------+--------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| GAMS_SYSDIR                  | GAMSPY_GAMS_SYSDIR             | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
++------------------------------+--------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| MAP_SPECIAL_VALUES           | GAMSPY_MAP_SPECIAL_VALUES      | int   | Map special values. Can be disabled for performance if there are no special values in the records. Set to 1 by default.                  |
++------------------------------+--------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+| LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION         | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
++------------------------------+--------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+

@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -11,6 +11,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy._model import Problem
+    from types import FrameType
 
 MULTI_SOLVE_MAP = {"replace": 0, "merge": 1, "clear": 2}
 SOLVE_LINK_MAP = {"disk": 2, "memory": 5}
@@ -345,6 +346,15 @@ class Options(BaseModel):
     zero_rounding_threshold: Optional[float] = None
     report_underflow: Optional[bool] = None
 
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self._extra_options: dict[str, Any] = dict()
+        self._debug_options: dict[str, Any] = dict()
+        self._solver: str | None = None
+        self._problem: str | None = None
+        self._solver_options_file: str | None = None
+        self._frame: FrameType | None = None
+
     def _get_gams_compatible_options(
         self, output: io.TextIOWrapper | None = None
     ) -> dict:
@@ -415,7 +425,8 @@ class Options(BaseModel):
         solver_options: dict | None,
     ):
         """Set the solver and the solver options"""
-        self._solver = (str(problem), solver)
+        self._solver = solver
+        self._problem = str(problem)
         
         if solver_options:
             if solver is None:
@@ -500,29 +511,20 @@ class Options(BaseModel):
         """
         all_options = dict()
         # Solver options
-        if hasattr(self, "_solver"):
-            problem_type, solver = self._solver
-            all_options[problem_type] = solver
-            delattr(self, "_solver")
+        if self._solver is not None:
+            all_options[self._problem] = self._solver
 
-        if hasattr(self, "_solver_options_file"):
+        if self._solver_options_file is not None:
             all_options["optfile"] = self._solver_options_file
-            delattr(self, "_solver_options_file")
 
         # Extra options
-        if hasattr(self, "_extra_options") and self._extra_options:
-            all_options.update(**self._extra_options)
-            delattr(self, "_extra_options")
+        all_options.update(**self._extra_options)
+        all_options.update(**self._debug_options)
 
-        if hasattr(self, "_debug_options") and self._debug_options:
-            all_options.update(**self._debug_options)
-            delattr(self, "_debug_options")
-
-        if hasattr(self, "_frame"):
+        if self._frame is not None:
             filename = self._frame.f_code.co_filename
             line_number = self._frame.f_lineno
             all_options['GP_SolveLine'] = f"{filename} line {line_number}"
-            delattr(self, "_frame")
 
         # User options
         user_options = self._get_gams_compatible_options(output)

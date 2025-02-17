@@ -9,6 +9,7 @@ from gams.core import gdx
 
 import gamspy._model as model
 import gamspy._symbols.implicits as implicits
+from gamspy._config import get_option
 from gamspy.exceptions import FatalError, ValidationError
 
 if TYPE_CHECKING:
@@ -416,16 +417,19 @@ def _to_list(
     | ImplicitSet,
 ) -> list:
     """Converts the given object to a list"""
-    if isinstance(obj, tuple):
+    if type(obj) is tuple:
         return list(obj)
 
-    if not isinstance(obj, list):
+    if type(obj) is not list:
         return [obj]
 
     return obj
 
 
 def _map_special_values(value: float):
+    if not get_option("MAP_SPECIAL_VALUES"):
+        return value
+
     if gt.SpecialValues.isEps(value):
         return "EPS"
 
