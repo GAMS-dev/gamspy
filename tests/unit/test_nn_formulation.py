@@ -1205,7 +1205,6 @@ def test_conv2d_propagate_bounds_general(data):
 
     w1 = np.random.randint(-5, 5, (3, 1, 2, 2))
     b1 = np.random.rand(3)
-    m = gp.Container()
 
     inp_lower = np.random.rand(16, 1, 24, 24)
     inp_upper = np.random.rand(16, 1, 24, 24)
