@@ -152,6 +152,25 @@ class Conv2d:
         input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
         input_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
+        # If the bounds are all zeros (None in GAMSPy parameters);
+        # we skip matrix multiplication as it will result in zero values
+        if input_bounds.records is None:
+            out_bounds_array = np.zeros(output.shape)
+
+            if self.use_bias:
+                b = self.bias_array[:, np.newaxis, np.newaxis]
+                out_bounds_array = out_bounds_array + b
+
+            out_bounds = gp.Parameter(
+                self.container,
+                domain=dim(output.shape),
+                records=out_bounds_array,
+            )
+            output.lo[...] = out_bounds
+            output.up[...] = out_bounds
+
+            return
+
         input_lower, input_upper = input_bounds.toDense()
 
         # Encode infinity values as complex numbers
