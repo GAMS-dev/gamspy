@@ -1254,6 +1254,88 @@ def test_conv2d_propagate_bounds_general(data):
     assert out6.lo.records is not None
 
 
+def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
+    m, *_ = data
+
+    w1 = np.zeros((3, 1, 2, 2))
+    b1 = np.random.rand(3)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    # When bias is present, the output bounds should be equal to the bias
+    assert np.allclose(
+        np.array(out1.records.upper).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+    assert np.allclose(
+        np.array(out1.records.lower).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+
+    # When bias is not present, the output bounds should be zeros
+    assert np.allclose(
+        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
+    )
+    assert np.allclose(
+        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
+    )
+
+
+def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
+    m, *_ = data
+
+    w1 = np.random.randint(-5, 5, (3, 1, 2, 2))
+    b1 = np.random.rand(3)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    # Input bounded with zeros results in bounded output with zeros (bias not present) or bias (bias present)
+    inp.lo[...] = 0
+    inp.up[...] = 0
+
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    # When bias is present, the output bounds should be equal to the bias
+    assert np.allclose(
+        np.array(out1.records.upper).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+    assert np.allclose(
+        np.array(out1.records.lower).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+
+    # When bias is not present, the output bounds should be zeros
+    assert np.allclose(
+        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
+    )
+    assert np.allclose(
+        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
+    )
+
+
 def test_max_pooling(data):
     m, w1, b1, inp, par_input, ii = data
 
