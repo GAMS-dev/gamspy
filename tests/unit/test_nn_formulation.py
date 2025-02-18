@@ -1200,6 +1200,61 @@ def test_conv2d_with_padding_and_stride(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+def test_conv2d_propagate_bounds_general(data):
+    m, *_ = data
+
+    w1 = np.random.randint(-5, 5, (3, 1, 2, 2))
+    b1 = np.random.rand(3)
+    m = gp.Container()
+
+    inp_lower = np.random.rand(16, 1, 24, 24)
+    inp_upper = np.random.rand(16, 1, 24, 24)
+
+    lo_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_upper)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    # Unbounded input results in unbounded output
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    assert out1.up.records is None
+    assert out1.lo.records is None
+    assert out2.up.records is None
+    assert out2.lo.records is None
+
+    # Bounded input with "propagate_bounds = False" results in unbounded output
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out3, _ = conv1(inp, propagate_bounds=False)
+    out4, _ = conv2(inp, propagate_bounds=False)
+
+    assert out3.up.records is None
+    assert out3.lo.records is None
+    assert out4.up.records is None
+    assert out4.lo.records is None
+
+    # Bounded input with "propagate_bounds = True" results in bounded output
+    out5, _ = conv1(inp, propagate_bounds=True)
+    out6, _ = conv2(inp, propagate_bounds=True)
+
+    assert out5.up.records is not None
+    assert out5.lo.records is not None
+    assert out6.up.records is not None
+    assert out6.lo.records is not None
+
+
 def test_max_pooling(data):
     m, w1, b1, inp, par_input, ii = data
 
