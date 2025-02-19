@@ -10,6 +10,7 @@ GAMSPy 1.6.0
   - Allow starting from a GAMS restart file.
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
   - Fix solver option format of HIGHS, SHOT, SOPLEX and SCIP.
+  - Allow dumping gams state on `.toGams` call.
   - Allow indexing into symbols with integers.
   - Add `bypass_solver` option.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
