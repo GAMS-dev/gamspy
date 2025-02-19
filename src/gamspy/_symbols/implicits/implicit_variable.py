@@ -382,10 +382,10 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
         Examples
         --------
         >>> import gamspy as gp
-        >>> m = operation.Container()
-        >>> i = operation.Set(m, "i", records=['i1','i2'])
-        >>> j = operation.Set(m, "j", records=['j1','j2'])
-        >>> v = operation.Variable(m, "v", domain=[i, j])
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Set(m, "j", records=['j1','j2'])
+        >>> v = gp.Variable(m, "v", domain=[i, j])
         >>> v_t = v.t() # v_t is an ImplicitVariable
         >>> v_t_t = v_t.t() # you can get transpose of ImplicitVariable as well
         >>> v_t_t.domain
