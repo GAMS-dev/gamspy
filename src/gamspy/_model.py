@@ -1217,7 +1217,12 @@ class Model:
 
         return model_str
 
-    def toGams(self, path: str, options: Options | None = None) -> None:
+    def toGams(
+        self,
+        path: str,
+        options: Options | None = None,
+        dump_gams_state: bool = False,
+    ) -> None:
         """
         Generates GAMS model under path/<model_name>.gms
 
@@ -1231,8 +1236,8 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
-        converter = GamsConverter(self, path)
-        converter.convert(options=options)
+        converter = GamsConverter(self, path, options, dump_gams_state)
+        converter.convert()
 
     def toLatex(self, path: str, generate_pdf: bool = False) -> None:
         """
