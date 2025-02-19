@@ -1336,6 +1336,122 @@ def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
     )
 
 
+def test_conv2d_propagate_bounds_complex_bounds(data):
+    m, *_ = data
+
+    w1 = np.array(
+        [[[[3, -3], [-2, 0]], [[0, -2], [-1, -3]], [[2, 0], [-4, 1]]]]
+    )
+
+    b1 = np.array([3])
+
+    inp_lower = np.array(
+        [
+            [
+                [
+                    [-2, -np.inf, -4, -1],
+                    [-2, -1, -1, -np.inf],
+                    [0, -5, -3, -1],
+                    [-3, 0, -1, -np.inf],
+                ],
+                [
+                    [-2, -4, -2, -1],
+                    [-3, -1, -5, -3],
+                    [-2, -1, -1, -1],
+                    [-1, -1, 0, -2],
+                ],
+                [
+                    [-1, -2, -1, -5],
+                    [0, -3, -3, -1],
+                    [-2, 0, -1, -2],
+                    [-5, -3, -5, 0],
+                ],
+            ],
+            [
+                [
+                    [-2, -3, 0, 0],
+                    [-3, -4, -2, -1],
+                    [-2, -1, -5, -4],
+                    [-5, 0, -4, -5],
+                ],
+                [
+                    [-1, -2, -5, 0],
+                    [-3, -1, -3, -2],
+                    [-1, -5, -3, -1],
+                    [-2, -2, 0, -3],
+                ],
+                [
+                    [-3, -3, -np.inf, -1],
+                    [-np.inf, 0, -5, -2],
+                    [-4, -np.inf, -3, -3],
+                    [-4, -3, -3, -np.inf],
+                ],
+            ],
+        ]
+    )
+
+    inp_upper = np.array(
+        [
+            [
+                [
+                    [4, 2, 4, 4],
+                    [3, 2, np.inf, 4],
+                    [2, 1, 2, np.inf],
+                    [3, np.inf, 3, 3],
+                ],
+                [
+                    [3, 2, 3, 1],
+                    [3, 3, 4, 1],
+                    [np.inf, 4, 3, np.inf],
+                    [3, 2, 4, 2],
+                ],
+                [[1, 2, 1, 2], [3, 4, np.inf, 4], [4, 2, 4, 2], [1, 3, 3, 4]],
+            ],
+            [
+                [[np.inf, 4, 3, 4], [2, 4, 3, 3], [4, 2, 2, 4], [2, 2, 1, 3]],
+                [
+                    [np.inf, 3, 3, 2],
+                    [2, 4, np.inf, 4],
+                    [4, 2, 3, 4],
+                    [4, 2, 2, 2],
+                ],
+                [
+                    [np.inf, 1, 4, 2],
+                    [3, 1, 3, 1],
+                    [2, 4, 2, 2],
+                    [3, 2, np.inf, 2],
+                ],
+            ],
+        ]
+    )
+
+    exp_up = np.array([[[[np.inf, 54], [67, 54]]], [[[np.inf, 54], [68, 58]]]])
+
+    exp_lo = np.array(
+        [
+            [[[-48, -np.inf], [-34, -np.inf]]],
+            [[[-57, -np.inf], [-50, -np.inf]]],
+        ]
+    )
+
+    lo_inp = gp.Parameter(m, domain=dim((2, 3, 4, 4)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((2, 3, 4, 4)), records=inp_upper)
+
+    # in_channels=3, out_channels=1, kernel_size=2x2, stride=2
+    conv1 = Conv2d(m, 3, 1, 2, 2)
+    conv1.load_weights(w1, b1)
+
+    # 2 images, 3 channels, 4 by 4
+    inp = gp.Variable(m, domain=dim((2, 3, 4, 4)))
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out, _ = conv1(inp, propagate_bounds=True)
+
+    assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
+    assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
+
+
 def test_max_pooling(data):
     m, w1, b1, inp, par_input, ii = data
 
