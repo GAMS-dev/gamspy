@@ -14,6 +14,7 @@ GAMSPy 1.6.0
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
+  - Allow args and kwargs for gamspy scripts for miro applications.
 - Documentation
   - Add CNNs to embedding Neural Network documentation.
 

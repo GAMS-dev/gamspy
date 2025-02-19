@@ -4,6 +4,7 @@ import platform
 import subprocess
 import sys
 from enum import Enum
+from typing import List
 
 import typer
 
@@ -26,12 +27,6 @@ class ModeEnum(Enum):
     short_help="Runs a GAMSPY model with GAMS MIRO app."
 )
 def miro(
-    model: str = typer.Option(
-        None,
-        "--model",
-        "-g",
-        help="Path to the GAMSPy model."
-    ),
     mode: ModeEnum = typer.Option(
         "base",
         "--mode",
@@ -48,7 +43,17 @@ def miro(
         False,
         "--skip-execution",
         help="Whether to skip model execution."
-    )
+    ),
+    model: str = typer.Option(
+        None,
+        "--model",
+        "-g",
+        help="Path to the GAMSPy model."
+    ),
+    args: List[str] = typer.Argument(
+        None,
+        help="Arguments to the GAMSPy model."
+    ),
 ) -> None:
     if model is None:
         raise ValidationError("--model must be provided to run MIRO")
@@ -75,11 +80,12 @@ def miro(
     if not skip_execution:
         subprocess_env = os.environ.copy()
         subprocess_env["MIRO"] = "1"
+        command = [sys.executable, model]
+        if args is not None:
+            command += args
 
         try:
-            subprocess.run(
-                [sys.executable, model], env=subprocess_env, check=True
-            )
+            subprocess.run(command, env=subprocess_env, check=True)
         except subprocess.CalledProcessError:
             return
 

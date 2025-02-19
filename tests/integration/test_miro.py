@@ -851,6 +851,31 @@ def test_miro_in():
     assert process.returncode == 0, process.stderr
 
 
+def test_args():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    script_path = os.path.join(directory, "miro_models", "miro10.py")
+    process = subprocess.run(
+        [
+            "gamspy",
+            "run",
+            "miro",
+            "--model",
+            script_path,
+            "--",
+            "--bla",
+            "bla",
+            "a",
+            "b",
+            "c",
+            "d",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert process.returncode == 0, process.stderr
+
+
 def test_miro_protect(data):
     m = data
     m = Container()

@@ -39,11 +39,17 @@ command-line utility: ::
 
     gamspy run miro --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
+If you have extra arguments for your model script, you can provide it as follows: ::
+
+    gamspy run miro --path <path_to_your_MIRO_installation> --model <path_to_your_model> -- --argument1 value --argument2 value
+
 This initializes the default values for your MIRO app, creates the necessary data contract and spawns 
 the application. To run the MIRO `Configuration mode <https://www.gams.com/miro/customize.html>`_, add the 
 `--mode=config` argument: ::
 
     gamspy run miro --mode="config" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
+
+`--` indicates the end of the arguments for the `gamspy run miro` command and the rest of the arguments (`--argument1`, and `--argument2`) are passed to the model script.
 
 To `deploy <https://www.gams.com/miro/deployment.html>`_ a GAMSPy MIRO app (create a `.miroapp` file), run 
 with `--mode=deploy`: ::
