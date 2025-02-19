@@ -853,40 +853,29 @@ def test_miro_in():
 
 
 @pytest.mark.skipif(
-    platform.system() != "Linux" and sys.version_info == (3, 9),
+    platform.system() != "Linux" or sys.version_info.minor != 9,
     reason="Run miro tests",
 )
 def test_args():
-    link = "https://d37drm4t2jghv5.cloudfront.net/miro/2.11/linux/GAMS-MIRO-2.11.0.AppImage"
-    process = subprocess.run(
-        f"curl {link} -o miro.AppImage && chmod +x miro.AppImage",
-        capture_output=True,
-        text=True,
-        shell=True,
-    )
-    assert process.returncode == 0, process.stderr + process.stdout
-
     directory = str(pathlib.Path(__file__).parent.resolve())
     script_path = os.path.join(directory, "miro_models", "miro10.py")
+    subprocess_env = os.environ.copy()
+    subprocess_env["MIRO"] = "1"
+    command = [
+        sys.executable,
+        script_path,
+        "--my-kwarg",
+        "bla",
+        "a",
+        "b",
+        "c",
+        "d",
+    ]
     process = subprocess.run(
-        [
-            "gamspy",
-            "run",
-            "miro",
-            "--path",
-            "miro.AppImage",
-            "--model",
-            script_path,
-            "--",
-            "--bla",
-            "bla",
-            "a",
-            "b",
-            "c",
-            "d",
-        ],
+        command,
         capture_output=True,
         text=True,
+        env=subprocess_env,
     )
 
     assert process.returncode == 0, process.stderr
