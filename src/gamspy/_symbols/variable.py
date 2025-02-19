@@ -396,6 +396,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'sum((i,j),x(i,j))'
         >>> gp.Sum((i, j), x[i, j]).gamsRepr()
         'sum((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
@@ -440,6 +441,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'prod((i,j),x(i,j))'
         >>> gp.Product((i, j), x[i, j]).gamsRepr()
         'prod((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
@@ -484,6 +486,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'smin((i,j),x(i,j))'
         >>> gp.Smin((i, j), x[i, j]).gamsRepr()
         'smin((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
@@ -528,6 +531,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'smax((i,j),x(i,j))'
         >>> gp.Smax((i, j), x[i, j]).gamsRepr()
         'smax((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
@@ -572,6 +576,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'sand((i,j),x(i,j))'
         >>> gp.Sand((i, j), x[i, j]).gamsRepr()
         'sand((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
@@ -616,6 +621,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'sor((i,j),x(i,j))'
         >>> gp.Sor((i, j), x[i, j]).gamsRepr()
         'sor((i,j),x(i,j))'
+
         """
         if not self.domain:
             raise ValidationError(
