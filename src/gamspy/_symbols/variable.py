@@ -383,10 +383,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.sum().gamsRepr()
+        'sum((i,j),x(i,j))'
+        >>> gp.Sum((i, j), x[i, j]).gamsRepr()
+        'sum((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Sum operation is not possible on scalar parameters."
+                "Sum operation is not possible on scalar variables."
             )
 
         if not indices:
@@ -414,10 +427,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.product().gamsRepr()
+        'prod((i,j),x(i,j))'
+        >>> gp.Product((i, j), x[i, j]).gamsRepr()
+        'prod((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Product operation is not possible on scalar parameters."
+                "Product operation is not possible on scalar variables."
             )
 
         if not indices:
@@ -445,10 +471,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.smin().gamsRepr()
+        'smin((i,j),x(i,j))'
+        >>> gp.Smin((i, j), x[i, j]).gamsRepr()
+        'smin((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Smin operation is not possible on scalar parameters."
+                "Smin operation is not possible on scalar variables."
             )
 
         if not indices:
@@ -476,10 +515,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.smax().gamsRepr()
+        'smax((i,j),x(i,j))'
+        >>> gp.Smax((i, j), x[i, j]).gamsRepr()
+        'smax((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Smax operation is not possible on scalar parameters."
+                "Smax operation is not possible on scalar variables."
             )
 
         if not indices:
@@ -507,10 +559,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.sand().gamsRepr()
+        'sand((i,j),x(i,j))'
+        >>> gp.Sand((i, j), x[i, j]).gamsRepr()
+        'sand((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Sand operation is not possible on scalar parameters."
+                "Sand operation is not possible on scalar variables."
             )
 
         if not indices:
@@ -538,10 +603,23 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         ------
         ValidationError
             In case the symbol is scalar.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i")
+        >>> j = gp.Set(m, "j")
+        >>> x = gp.Variable(m, "x", domain=[i, j])
+        >>> y = gp.Variable(m, "y")
+        >>> x.sor().gamsRepr()
+        'sor((i,j),x(i,j))'
+        >>> gp.Sor((i, j), x[i, j]).gamsRepr()
+        'sor((i,j),x(i,j))'
         """
         if not self.domain:
             raise ValidationError(
-                "Sor operation is not possible on scalar parameters."
+                "Sor operation is not possible on scalar variables."
             )
 
         if not indices:
