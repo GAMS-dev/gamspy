@@ -24,10 +24,21 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.symbol import Symbol
+from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import Alias, Container, Set
+    from gamspy import (
+        Alias,
+        Container,
+        Product,
+        Sand,
+        Set,
+        Smax,
+        Smin,
+        Sor,
+        Sum,
+    )
     from gamspy._algebra.expression import Expression
     from gamspy.math.matrix import Dim
 
@@ -351,6 +362,192 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     def __repr__(self) -> str:
         return f"Variable(name='{self.name}', domain={self.domain}, type='{self.type}')"
+
+    def sum(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Sum:
+        """
+        Equivalent to Sum(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.sum() is equivalent to Sum((i,j), v[i, j, k])
+        v.sum(i) is equivalent to Sum(i, v[i, j, k])
+        v.sum(i, j) is equivalent to Sum((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Sum
+            Generated Sum operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Sum operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Sum(indices, self[self.domain])
+
+    def product(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Product:
+        """
+        Equivalent to Product(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.product() is equivalent to Product((i,j), v[i, j, k])
+        v.product(i) is equivalent to Product(i, v[i, j, k])
+        v.product(i, j) is equivalent to Product((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Product
+            Generated Product operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Product operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Product(indices, self[self.domain])
+
+    def smin(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Smin:
+        """
+        Equivalent to Smin(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.smin() is equivalent to Smin((i,j), v[i, j, k])
+        v.smin(i) is equivalent to Smin(i, v[i, j, k])
+        v.smin(i, j) is equivalent to Smin((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Smin
+            Generated Smin operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Smin operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Smin(indices, self[self.domain])
+
+    def smax(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Smax:
+        """
+        Equivalent to Smax(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.smax() is equivalent to Smax((i,j), v[i, j, k])
+        v.smax(i) is equivalent to Smax(i, v[i, j, k])
+        v.smax(i, j) is equivalent to Smax((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Smax
+            Generated Smax operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Smax operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Smax(indices, self[self.domain])
+
+    def sand(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Sand:
+        """
+        Equivalent to Sand(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.sand() is equivalent to Sand((i,j), v[i, j, k])
+        v.sand(i) is equivalent to Sand(i, v[i, j, k])
+        v.sand(i, j) is equivalent to Sand((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Sand
+            Generated Sand operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Sand operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Sand(indices, self[self.domain])
+
+    def sor(
+        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
+    ) -> Sor:
+        """
+        Equivalent to Sor(indices, obj[obj.domain]). For example:
+
+        v = Variable(m, domain=[i, j, k])
+        v.sor() is equivalent to Sor((i,j), v[i, j, k])
+        v.sor(i) is equivalent to Sor(i, v[i, j, k])
+        v.sor(i, j) is equivalent to Sor((i, j), v[i, j, k])
+
+        Returns
+        -------
+        Sor
+            Generated Sor operation.
+
+        Raises
+        ------
+        ValidationError
+            In case the symbol is scalar.
+        """
+        if not self.domain:
+            raise ValidationError(
+                "Sor operation is not possible on scalar parameters."
+            )
+
+        if not indices:
+            indices = self.domain
+
+        return gp.Sor(indices, self[self.domain])
 
     @property
     def T(self) -> implicits.ImplicitVariable:

@@ -14,6 +14,7 @@ GAMSPy 1.6.0
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
+  - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
 - Documentation
   - Add CNNs to embedding Neural Network documentation.
 
