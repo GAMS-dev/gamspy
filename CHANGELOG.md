@@ -9,12 +9,15 @@ GAMSPy 1.6.0
   - Allow adding debug options to Options objects.
   - Allow starting from a GAMS restart file.
   - Allow registering metadata to symbols via `symbol._metadata` attribute.
+  - Fix solver option format of HIGHS, SHOT, SOPLEX and SCIP.
   - Allow dumping gams state on `.toGams` call.
   - Allow indexing into symbols with integers.
   - Add `bypass_solver` option.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
+- Testing
+  - Add an lp and a qcp benchmark for performance comparison.
 - Documentation
   - Add CNNs to embedding Neural Network documentation.
 

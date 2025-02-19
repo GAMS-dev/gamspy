@@ -291,6 +291,8 @@ class Container(gt.Container):
         tid = threading.get_native_id()
         gp._ctx_managers[(pid, tid)] = self
 
+        return self
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         pid = os.getpid()
         tid = threading.get_native_id()

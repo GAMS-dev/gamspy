@@ -787,6 +787,94 @@ def test_debug_options():
     m.close()
 
 
+def test_solver_options_highs(data):
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(
+        m,
+        name="i",
+        records=canning_plants,
+        description="canning plants",
+    )
+    j = Set(
+        m,
+        name="j",
+        records=markets,
+        description="markets",
+    )
+
+    a = Parameter(
+        m,
+        name="a",
+        domain=i,
+        records=capacities,
+        description="capacity of plant i in cases",
+    )
+    b = Parameter(
+        m,
+        name="b",
+        domain=j,
+        records=demands,
+        description="demand at market j in cases",
+    )
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        description="distance in thousands of miles",
+    )
+    c = Parameter(
+        m,
+        name="c",
+        domain=[i, j],
+        description="transport cost in thousands of dollars per case",
+    )
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(
+        m,
+        name="x",
+        domain=[i, j],
+        type="Positive",
+        description="shipment quantities in cases",
+    )
+
+    # Equation
+    supply = Equation(
+        m,
+        name="supply",
+        domain=i,
+        description="observe supply limit at plant i",
+    )
+    demand = Equation(
+        m,
+        name="demand",
+        domain=j,
+        description="satisfy demand at market j",
+    )
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    log_path = os.path.join("tmp", "log.log")
+    with open(log_path, "w") as file:
+        transport.solve(
+            output=file, solver="highs", solver_options={"random_seed": 999}
+        )
+
+    with open(log_path) as file:
+        assert "random_seed" in file.read()
+
+
 def test_bypass_solver():
     m = Container()
 
