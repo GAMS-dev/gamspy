@@ -177,17 +177,13 @@ class Conv2d:
         input_lower = self._encode_infinity(input_lower)
         input_upper = self._encode_infinity(input_upper)
 
-        batch, in_channels, h_in, w_in = input_lower.shape
-        out_channels, _, h_k, w_k = weight.shape
+        batch, out_channels, h_out, w_out = output.shape
+        h_k, w_k = weight.shape[2:]
         stride_y, stride_x = stride
         padding_y, padding_x = padding
 
         if bias is None:
             bias = np.zeros(out_channels)
-
-        # Compute output dimensions
-        h_out = (h_in + 2 * padding_y - h_k) // stride_y + 1
-        w_out = (w_in + 2 * padding_x - w_k) // stride_x + 1
 
         # Initialize output bounds
         output_lower = np.zeros(
@@ -528,8 +524,5 @@ class Conv2d:
 
             # out.lo[...] = lo_out[...]
             # out.up[...] = up_out[...]
-
-            # print("all_weight: \n ", weight_neg_pos.toDense())
-            # print("input_bounds: \n ", input_bounds.toDense())
 
         return out, [set_out]
