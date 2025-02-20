@@ -1203,7 +1203,7 @@ def test_conv2d_with_padding_and_stride(data):
 def test_conv2d_propagate_bounds_general(data):
     m, *_ = data
 
-    w1 = np.random.randint(-5, 5, (3, 1, 2, 2))
+    w1 = np.random.rand(3, 1, 2, 2)
     b1 = np.random.rand(3)
 
     inp_lower = np.random.rand(16, 1, 24, 24)
@@ -1213,7 +1213,7 @@ def test_conv2d_propagate_bounds_general(data):
     up_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_upper)
 
     # in_channels=1, out_channels=3, kernel_size=2x2
-    conv1 = Conv2d(m, 1, 3, 2)
+    conv1 = Conv2d(m, 1, 3, 2, padding=2)
     conv1.load_weights(w1, b1)
 
     # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
@@ -1296,7 +1296,7 @@ def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
 def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
     m, *_ = data
 
-    w1 = np.random.randint(-5, 5, (3, 1, 2, 2))
+    w1 = np.random.rand(3, 1, 2, 2)
     b1 = np.random.rand(3)
 
     # in_channels=1, out_channels=3, kernel_size=2x2
