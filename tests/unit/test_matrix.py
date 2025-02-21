@@ -478,14 +478,19 @@ def test_domain_conflict_resolution_2(data):
     assert r2.domain[0] == mat.domain[0]
     assert r2.domain[1] == mat.domain[1]
 
-    # Added an exception to make this one work
+    mat2 = Parameter(m, name="mat2", domain=[mat.domain[1], mat.domain[0]])
+    r3 = vec @ mat2
+    assert len(r3.domain) == 1
     r3 = vec @ mat
     assert len(r3.domain) == 1
-    assert r3.domain[0] == vec.domain[0]
 
     r4 = mat @ vec
     assert len(r4.domain) == 1
-    assert r4.domain[0] == vec.domain[0]
+    assert r4.domain[0] == mat.domain[0]
+
+    r4 = mat2 @ vec
+    assert len(r4.domain) == 1
+    assert r4.domain[0] == mat2.domain[0]
 
     # Added an exception to make this one work
     r5 = vec @ batched_mat
