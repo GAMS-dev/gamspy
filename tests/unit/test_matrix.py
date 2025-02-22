@@ -481,8 +481,11 @@ def test_domain_conflict_resolution_2(data):
     mat2 = Parameter(m, name="mat2", domain=[mat.domain[1], mat.domain[0]])
     r3 = vec @ mat2
     assert len(r3.domain) == 1
+    assert r3.domain[0] == mat2.domain[1]
+
     r3 = vec @ mat
     assert len(r3.domain) == 1
+    assert r3.domain[0] == mat.domain[1]
 
     r4 = mat @ vec
     assert len(r4.domain) == 1
