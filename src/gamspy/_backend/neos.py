@@ -4,9 +4,12 @@ import base64
 import logging
 import os
 import shutil
+import ssl
 import xmlrpc.client
 import zipfile
 from typing import TYPE_CHECKING
+
+import certifi
 
 import gamspy._backend.backend as backend
 import gamspy.utils as utils
@@ -66,7 +69,8 @@ class NeosClient:
         self.password = password
         self.priority = priority
         self.is_blocking = is_blocking
-        self.neos = xmlrpc.client.ServerProxy(server)
+        context = ssl.create_default_context(cafile=certifi.where())
+        self.neos = xmlrpc.client.ServerProxy(server, context=context)
         self.jobs: list[tuple] = []
 
     def is_alive(self) -> bool:

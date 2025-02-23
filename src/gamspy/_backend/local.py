@@ -37,18 +37,17 @@ class Local(backend.Backend):
         )
         self.job_name = self.get_job_name()
         self.gms_file = self.job_name + ".gms"
+        self.lst_file = self.job_name + ".lst"
         self.pf_file = self.job_name + ".pf"
         self.trace_file = self.job_name + ".txt"
 
-    def _prepare_extra_options(
-        self, job_name: str, gams_to_gamspy: bool
-    ) -> dict:
+    def _prepare_extra_options(self, gams_to_gamspy: bool) -> dict:
         scrdir = self.container._process_directory
 
         extra_options = {
             "trace": self.trace_file,
             "input": self.gms_file,
-            "output": job_name + ".lst",
+            "output": self.lst_file,
             "optdir": self.container.working_directory,
             "sysdir": self.container.system_directory,
             "scrdir": scrdir,
@@ -92,9 +91,7 @@ class Local(backend.Backend):
             gams_file.write(gams_string)
 
         # Write pf file
-        extra_options = self._prepare_extra_options(
-            self.job_name, gams_to_gamspy
-        )
+        extra_options = self._prepare_extra_options(gams_to_gamspy)
         self.options._set_extra_options(extra_options)
         self.options._export(self.pf_file, self.output)
 

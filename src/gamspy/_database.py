@@ -252,9 +252,9 @@ class Database:
 
     def export(self, file_path: str) -> None:
         """Writes database into a GDX file"""
-        assert file_path.endswith(
-            ".gdx"
-        ), f"File path should point to a gdx file but got `{file_path}`"
+        assert file_path.endswith(".gdx"), (
+            f"File path should point to a gdx file but got `{file_path}`"
+        )
 
         if os.path.isabs(file_path):
             rc = gmdWriteGDX(self.gmd, file_path, False)

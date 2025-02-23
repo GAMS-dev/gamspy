@@ -1205,8 +1205,6 @@ def test_max_pooling(data):
     mp3 = MaxPool2d(m, 3, stride=(1, 1))
     mp4 = MaxPool2d(m, 4, stride=(3, 2), padding=2)
 
-    pytest.raises(ValidationError, mp1, par_input, propagate_bounds="no")
-
     out, eqs = mp1(par_input)
     out2, eqs2 = mp2(par_input)
     out3, eqs3 = mp3(par_input)
@@ -1370,6 +1368,7 @@ def test_pooling_with_bounds(data):
 
     out4, _ = mp1(par_input)
     out5, _ = mp2(par_input)
+    out6, _ = ap1(par_input)
 
     for recs in [out.records, out2.records, out3.records]:
         assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == 10).all()
@@ -1397,19 +1396,9 @@ def test_pooling_with_bounds(data):
         ]
     )
 
-    assert np.allclose(
-        np.array(out4.records.upper).reshape(out4.shape), exp_ub
-    )
-    assert np.allclose(
-        np.array(out4.records.lower).reshape(out4.shape), exp_lb
-    )
-
-    assert np.allclose(
-        np.array(out5.records.upper).reshape(out5.shape), exp_ub
-    )
-    assert np.allclose(
-        np.array(out5.records.lower).reshape(out5.shape), exp_lb
-    )
+    for recs in [out4.records, out5.records, out6.records]:
+        assert np.allclose(np.array(recs.upper).reshape(out4.shape), exp_ub)
+        assert np.allclose(np.array(recs.lower).reshape(out4.shape), exp_lb)
 
 
 def test_mpooling_with_complex_bounds(data):
@@ -1680,6 +1669,11 @@ def test_avg_pooling(data):
     out2, eqs2 = ap2(par_input)
     out3, eqs3 = ap3(par_input)
     out4, eqs4 = ap4(par_input)
+    out5, _ = ap4(par_input, propagate_bounds=False)
+
+    # test that records are not created when propagate_bounds is False
+    assert out5.records is None
+
     obj = (
         gp.Sum(out.domain, out)
         + gp.Sum(out2.domain, out2)
@@ -1858,17 +1852,26 @@ def test_avg_pool_bounds_neg(data):
 
     recs = out.records
 
-    # nothing gets scaled
-    assert (recs[recs["DenseDim3_1"] == "0"]["lower"] == -0.64615).all()
-    assert (recs[recs["DenseDim3_1"] == "0"]["upper"] == 0.90273).all()
+    # Maximum (-1) is scaled by scaling factor (1/4)
+    exp_ub = np.array(
+        [
+            [[[0.54191, 0.90273], [0.66672, 0.8369]]],
+            [[[0.64615, 0.91273], [0.66672, 0.8369]]],
+            [[[-1 / 4, -1 / 4], [-1 / 4, -1 / 4]]],
+        ]
+    )
 
-    # positive lower bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "1"]["lower"] == (0.17423 / 4)).all()
-    assert (recs[recs["DenseDim3_1"] == "1"]["upper"] == 0.91273).all()
+    # Positive Minimum values are scaled by scaling factor (1/4)
+    exp_lb = np.array(
+        [
+            [[[-0.64615, 0.17423 / 4], [-0.33891, -0.49197]]],
+            [[[0.27341 / 4, 0.17423 / 4], [0.33891 / 4, 0.23754 / 4]]],
+            [[[-1.0, -1.0], [-1.0, -1.0]]],
+        ]
+    )
 
-    # negative upper bounds must be scaled due to padding
-    assert (recs[recs["DenseDim3_1"] == "2"]["lower"] == -1).all()
-    assert (recs[recs["DenseDim3_1"] == "2"]["upper"] == (-1) / 4).all()
+    assert np.allclose(np.array(recs.upper).reshape(out.shape), exp_ub)
+    assert np.allclose(np.array(recs.lower).reshape(out.shape), exp_lb)
 
     model = gp.Model(
         m,
@@ -1893,16 +1896,18 @@ def test_pool_call_bad(data):
     new_par = gp.Parameter(m, "new_par", domain=dim([10]))
     new_var = gp.Variable(m, "new_var", domain=dim([10]))
 
+    par2 = gp.Parameter(m, "par2", domain=dim([2, 2, 4, 10]))
+    var2 = gp.Variable(m, "var2", domain=dim([2, 2, 4, 10]))
+
     for pool in [avgpool1, minpool1, maxpool1]:
         pytest.raises(ValidationError, pool, "asd")
         pytest.raises(ValidationError, pool, 5)
         pytest.raises(ValidationError, pool, new_par)
         pytest.raises(ValidationError, pool, new_var)
+        pytest.raises(ValidationError, pool, par2, propagate_bounds="True")
+        pytest.raises(ValidationError, pool, var2, propagate_bounds="True")
 
     pytest.raises(ValidationError, _MPool2d, "sup", m, (2, 2))
-
-    pytest.raises(ValidationError, minpool1, new_var, "true")
-    pytest.raises(ValidationError, maxpool1, new_var, "true")
 
 
 def test_flatten_bad(data):

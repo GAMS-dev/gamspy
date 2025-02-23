@@ -236,9 +236,9 @@ def pwl_suite(fct, name):
     y.fx = 6  # y can be either 4 or 8 but not their convex combination
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
-    assert (
-        res["Model Status"].item() == "IntegerInfeasible"
-    ), "Case 11 failed !"
+    assert res["Model Status"].item() == "IntegerInfeasible", (
+        "Case 11 failed !"
+    )
     print("Case 11 passed !")
 
     # test None case
@@ -248,9 +248,9 @@ def pwl_suite(fct, name):
     x.fx = 5  # should be IntegerInfeasible since 5 \in [4, 6]
     model = gp.Model(m, equations=eqs, objective=y, sense="max", problem="mip")
     res = model.solve()
-    assert (
-        res["Model Status"].item() == "IntegerInfeasible"
-    ), "Case 12 failed !"
+    assert res["Model Status"].item() == "IntegerInfeasible", (
+        "Case 12 failed !"
+    )
     print("Case 12 passed !")
 
     # test None case
@@ -296,9 +296,9 @@ def pwl_suite(fct, name):
         problem="mip",
     )
     model.solve()
-    assert np.allclose(
-        y.toDense(), np.array([1, 23, 27.5, 45, 21])
-    ), "Case 14 failed !"
+    assert np.allclose(y.toDense(), np.array([1, 23, 27.5, 45, 21])), (
+        "Case 14 failed !"
+    )
     print("Case 14 passed !")
 
     # test unbounded when edges are discontinuous
@@ -355,9 +355,9 @@ def pwl_suite(fct, name):
 
     x.fx = 5  # bounded from right
     res = model.solve()
-    assert (
-        res["Model Status"].item() == "IntegerInfeasible"
-    ), "Case 17 failed !"
+    assert res["Model Status"].item() == "IntegerInfeasible", (
+        "Case 17 failed !"
+    )
     print("Case 17 passed !")
 
     y, eqs = fct(
@@ -370,9 +370,9 @@ def pwl_suite(fct, name):
     x.fx = -5
     model = gp.Model(m, equations=eqs, objective=y, sense="min", problem="mip")
     res = model.solve()
-    assert (
-        res["Model Status"].item() == "IntegerInfeasible"
-    ), "Case 18 failed !"
+    assert res["Model Status"].item() == "IntegerInfeasible", (
+        "Case 18 failed !"
+    )
     print("Case 18 passed !")
 
     x.fx = 5

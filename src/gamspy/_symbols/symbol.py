@@ -34,10 +34,6 @@ class Symbol(ABC):
         representation = f"{name}"
         domain = list(self.domain)
 
-        if hasattr(self, "_scalar_domains"):
-            for i, d in self._scalar_domains:
-                domain.insert(i, d)
-
         if domain and domain != ["*"]:
             set_strs = []
             for elem in domain:

@@ -10,8 +10,6 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from gams.core.gmd import gmdCloseLicenseSession
-
 import gamspy as gp
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operation as operation
@@ -1037,7 +1035,7 @@ class Model:
     def unfreeze(self) -> None:
         """Unfreezes the model"""
         self._is_frozen = False
-        gmdCloseLicenseSession(self.instance.sync_db.gmd)
+        self.instance.close_license_session()
 
     def solve(
         self,
@@ -1219,7 +1217,12 @@ class Model:
 
         return model_str
 
-    def toGams(self, path: str, options: Options | None = None) -> None:
+    def toGams(
+        self,
+        path: str,
+        options: Options | None = None,
+        dump_gams_state: bool = False,
+    ) -> None:
         """
         Generates GAMS model under path/<model_name>.gms
 
@@ -1233,8 +1236,8 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
-        converter = GamsConverter(self, path)
-        converter.convert(options=options)
+        converter = GamsConverter(self, path, options, dump_gams_state)
+        converter.convert()
 
     def toLatex(self, path: str, generate_pdf: bool = False) -> None:
         """

@@ -27,6 +27,7 @@ from gams.core.gev import (
 from gams.core.gmd import (
     GMD_NRUELS,
     gmdCallSolver,
+    gmdCloseLicenseSession,
     gmdInfo,
     gmdInitFromDict,
     gmdInitUpdate,
@@ -219,6 +220,9 @@ class ModelInstance:
         ):
             gevFree(self._gev)
 
+    def close_license_session(self) -> None:
+        gmdCloseLicenseSession(self.sync_db.gmd)
+
     def _create_modifiers(self) -> list[GamsModifier]:
         modifiers = []
 
@@ -338,7 +342,10 @@ class ModelInstance:
                 solver_options_file_name, "w", encoding="utf-8"
             ) as solver_file:
                 for key, value in solver_options.items():
-                    solver_file.write(f"{key} {value}\n")
+                    row = f"{key} {value}\n"
+                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                        row = f"{key} = {value}\n"
+                    solver_file.write(row)
 
             option_file = 1
 

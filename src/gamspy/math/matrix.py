@@ -446,14 +446,13 @@ def _validate_matrix_mult_dims(left, right):
         if not utils.setBaseEqual(left.domain[0], right.domain[0]):
             raise ValidationError(dim_no_match_err)
 
-        if utils.setBaseEqual(right.domain[0], right.domain[1]):
-            sum_domain = right.domain[1]
-            right_domain = right.domain[0]
-        else:
-            sum_domain = right.domain[0]
-            right_domain = right.domain[1]
+        sum_domain = left.domain[0]
+        right_domain = right.domain[1]
 
-        while sum_domain == right.domain[1] or sum_domain in controlled_domain:
+        while right_domain in controlled_domain:
+            right_domain = next_alias(right_domain)
+
+        while sum_domain == right_domain or sum_domain in controlled_domain:
             sum_domain = next_alias(sum_domain)
 
         return [sum_domain], [sum_domain, right_domain], sum_domain

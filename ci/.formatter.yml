@@ -4,10 +4,8 @@ leg-formatter:
   tags: [linux]
   image: python:3.12
   script:
-    - python -m pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - python -m pip install ruff==0.6.7
+    - python -m pip install uv && uv venv .formatter_venv && source .formatter_venv/bin/activate
+    - uv pip install ruff==0.9.4
     - ruff format src/gamspy --check
     - ruff format tests --check
     - ruff check src/gamspy --fix --exit-non-zero-on-fix

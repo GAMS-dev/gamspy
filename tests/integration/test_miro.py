@@ -70,7 +70,7 @@ def test_domain_forwarding_2():
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
     process = subprocess.run(
-        ["python", model_path],
+        [sys.executable, model_path],
         env=subprocess_env,
         text=True,
         capture_output=True,
@@ -212,7 +212,7 @@ def test_miro():
                     "symnames": ["model_type", "f"],
                     "symtext": [
                         "model_type",
-                        ("freight in dollars per case per thousand" " miles"),
+                        ("freight in dollars per case per thousand miles"),
                     ],
                     "symtypes": ["set", "parameter"],
                     "headers": {
@@ -255,7 +255,7 @@ def test_miro():
                     "alias": "Output Variable/Equation Scalars",
                     "symnames": ["z"],
                     "symtext": [
-                        "total transportation costs in thousands of" " dollars"
+                        "total transportation costs in thousands of dollars"
                     ],
                     "symtypes": ["variable"],
                     "headers": {
@@ -465,7 +465,7 @@ def test_table_columns():
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
     process = subprocess.run(
-        ["python", model_path],
+        [sys.executable, model_path],
         env=subprocess_env,
         capture_output=True,
         text=True,

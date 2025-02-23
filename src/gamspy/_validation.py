@@ -9,9 +9,11 @@ from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 import gamspy._symbols as symbols
 import gamspy._symbols.implicits as implicits
 import gamspy.utils as utils
+from gamspy._config import get_option
 from gamspy._model import Problem, Sense
 from gamspy._options import EXECUTION_OPTIONS, MODEL_ATTR_OPTION_MAP, Options
 from gamspy._symbols.symbol import Symbol
+from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -24,6 +26,104 @@ if TYPE_CHECKING:
     )
     from gamspy._types import EllipsisType
 
+RESERVED_WORDS = [
+    "abort",
+    "acronym",
+    "acronyms",
+    "alias",
+    "all",
+    "and",
+    "binary",
+    "break",
+    "card",
+    "continue",
+    "diag",
+    "display",
+    "do",
+    "else",
+    "elseif",
+    "endfor",
+    "endif",
+    "endloop",
+    "endwhile",
+    "eps",
+    "equation",
+    "equations",
+    "execute",
+    "execute_load",
+    "execute_loaddc",
+    "execute_loadhandle",
+    "execute_loadpoint",
+    "execute_unload",
+    "execute_unloaddi",
+    "execute_unloadidx",
+    "file",
+    "files",
+    "for",
+    "free",
+    "function",
+    "functions",
+    "gdxLoad",
+    "if",
+    "inf",
+    "integer",
+    "logic",
+    "loop",
+    "model",
+    "models",
+    "na",
+    "negative",
+    "nonnegative",
+    "no",
+    "not",
+    "option",
+    "options",
+    "or",
+    "ord",
+    "parameter",
+    "parameters",
+    "positive",
+    "prod",
+    "put",
+    "put_utility",
+    "putclear",
+    "putclose",
+    "putfmcl",
+    "puthd",
+    "putheader",
+    "putpage",
+    "puttitle",
+    "puttl",
+    "repeat",
+    "sameas",
+    "sand",
+    "scalar",
+    "scalars",
+    "semicont",
+    "semiint",
+    "set",
+    "sets",
+    "singleton",
+    "smax",
+    "smin",
+    "solve",
+    "sor",
+    "sos1",
+    "sos2",
+    "sum",
+    "system",
+    "table",
+    "tables",
+    "then",
+    "undf",
+    "until",
+    "variable",
+    "variables",
+    "while",
+    "xor",
+    "yes",
+]
+
 
 def get_dimension(
     domain: Sequence[Set | Alias | ImplicitSet | str],
@@ -31,10 +131,8 @@ def get_dimension(
     dimension = 0
 
     for elem in domain:
-        if isinstance(
-            elem, (symbols.Set, symbols.Alias, implicits.ImplicitSet)
-        ):
-            dimension += elem.dimension
+        if type(elem) in (symbols.Set, symbols.Alias, implicits.ImplicitSet):
+            dimension += elem.dimension  # type: ignore
         else:
             dimension += 1
 
@@ -46,15 +144,15 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
     domain = symbol
 
     while domain != "*":
-        if isinstance(domain, str):
+        if type(domain) is str:
             path.insert(0, domain)
         else:
             path.insert(0, domain.name)
 
-        if isinstance(domain, symbols.Alias):
+        if type(domain) is symbols.Alias:
             path.insert(0, domain.alias_with.name)
 
-        domain = "*" if isinstance(domain, str) else domain.domain[0]  # type: ignore
+        domain = "*" if type(domain) is str else domain.domain[0]  # type: ignore
 
     return path
 
@@ -71,14 +169,9 @@ def validate_dimension(
 ):
     dimension = get_dimension(domain)
 
-    entity_name = (
-        f"symbol {symbol.name}"
-        if hasattr(symbol, "name")
-        else symbol.__class__.__name__
-    )
     if dimension != symbol.dimension:
         raise ValidationError(
-            f"The {entity_name} is referenced with"
+            f"The `{symbol}` is referenced with"
             f" {'more' if dimension > symbol.dimension else 'less'} indices"
             f" than declared. Declared dimension is {symbol.dimension} but"
             f" given dimension is {dimension}"
@@ -89,16 +182,16 @@ def validate_one_dimensional_sets(
     given: Set | Alias | ImplicitSet,
     actual: str | Set | Alias,
 ):
-    if isinstance(given, implicits.ImplicitSet):
+    if type(given) is implicits.ImplicitSet:
         return
 
     given_path = get_domain_path(given)
 
     if (
-        isinstance(actual, symbols.Set)
+        type(actual) is symbols.Set
         and actual.name not in given_path
         or (
-            isinstance(actual, symbols.Alias)
+            type(actual) is symbols.Alias
             and actual.alias_with.name not in given_path
         )
     ):
@@ -110,17 +203,15 @@ def validate_one_dimensional_sets(
 
 def validate_type(domain):
     for given in domain:
-        if not isinstance(
-            given,
-            (
-                symbols.Set,
-                symbols.Alias,
-                symbols.UniverseAlias,
-                implicits.ImplicitSet,
-                str,
-                type(...),
-                slice,
-            ),
+        if type(given) not in (
+            symbols.Set,
+            symbols.Alias,
+            symbols.UniverseAlias,
+            implicits.ImplicitSet,
+            str,
+            int,
+            EllipsisType,
+            slice,
         ):
             raise TypeError(
                 "Domain item must be type Set, Alias, ImplicitSet or str but"
@@ -133,13 +224,13 @@ def _get_ellipsis_range(domain, given_domain):
     end = len(domain)
 
     for item in given_domain:
-        if isinstance(item, type(...)):
+        if type(item) is EllipsisType:
             break
 
         start += 1
 
     for item in reversed(given_domain):
-        if isinstance(item, type(...)):
+        if type(item) is EllipsisType:
             break
 
         end -= 1
@@ -147,43 +238,42 @@ def _get_ellipsis_range(domain, given_domain):
     return start, end
 
 
-def _transform_given_indices(
+def _expand_ellipsis_slice(
     domain: list[Set | Alias | str],
-    indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
-):
-    new_domain: list = []
-    given_domain = utils._to_list(indices)
-    validate_type(given_domain)
-
+    indices: Sequence[Set | Alias | str | EllipsisType | slice],
+) -> Sequence[Set | Alias | str]:
     if len(domain) == 0:
         # If scalar, only correct indexing is [:] or [...]
-        if len(given_domain) != 1:
+        if len(indices) != 1:
             raise ValidationError(
                 "Scalar values can only be indexed by '[:]' or '[...]'"
             )
 
-        if not isinstance(given_domain[0], (type(...), slice)):
+        if type(indices[0]) not in (EllipsisType, slice):
             raise ValidationError(
                 "Scalar values can only be indexed by '[:]' or '[...]'"
             )
 
-        return new_domain
+        return []
 
-    if len([item for item in given_domain if isinstance(item, type(...))]) > 1:
+    if sum(type(item) is EllipsisType for item in indices) > 1:
         raise ValidationError(
             "There cannot be more than one ellipsis in indexing"
         )
 
+    new_domain: list = []
     index = 0
-    for item in given_domain:
-        dimension = (
-            1 if isinstance(item, (str, type(...), slice)) else item.dimension
-        )
-        if isinstance(item, type(...)):
-            start, end = _get_ellipsis_range(domain, given_domain)
+    for item in indices:
+        try:
+            dimension = item.dimension  # type: ignore
+        except AttributeError:
+            dimension = 1
+
+        if type(item) is EllipsisType:
+            start, end = _get_ellipsis_range(domain, indices)
             new_domain += domain[start:end]
             index = end
-        elif isinstance(item, slice):
+        elif type(item) is slice:
             new_domain.append(domain[index])
             index += dimension
         else:
@@ -203,27 +293,42 @@ def validate_domain(
     | Operation,
     indices: EllipsisType | slice | Set | Alias | str | Iterable | ImplicitSet,
 ):
-    domain = _transform_given_indices(symbol.domain, indices)  # type: ignore
+    domain = utils._to_list(indices)
+    domain = [str(elem) if type(elem) is int else elem for elem in domain]
+    domain = _expand_ellipsis_slice(symbol.domain, domain)  # type: ignore
+    if not get_option("DOMAIN_VALIDATION"):
+        return domain
+
+    validate_type(domain)
     validate_container(symbol, domain)
     validate_dimension(symbol, domain)
 
     offset = 0
     for given in domain:
-        given_dim = 1 if isinstance(given, str) else given.dimension
+        try:
+            given_dim = given.dimension
+        except AttributeError:
+            given_dim = 1
         actual = symbol.domain[offset]
-        actual_dim = 1 if isinstance(actual, str) else actual.dimension
+
+        try:
+            actual_dim = actual.dimension
+        except AttributeError:
+            actual_dim = 1
 
         if actual_dim == 1 and given_dim == 1:
-            if isinstance(given, str):
-                if (
-                    hasattr(actual, "records")
-                    and len(actual.records) < 1000
-                    and not actual.records.isin([given]).sum().any()
-                ):
-                    raise ValidationError(
-                        f"Literal index `{given}` was not found in set"
-                        f" `{actual.name}`"
-                    )
+            if type(given) is str:
+                try:
+                    if (
+                        len(actual.records) < 1000
+                        and not actual.records.isin([given]).sum().any()
+                    ):
+                        raise ValidationError(
+                            f"Literal index `{given}` was not found in set"
+                            f" `{actual.name}`"
+                        )
+                except AttributeError:
+                    ...
             else:
                 validate_one_dimensional_sets(given, actual)
 
@@ -257,108 +362,10 @@ def validate_name(word: str) -> str:
     if not isinstance(word, str):
         raise TypeError("Symbol name must be type str")
 
-    reserved_words = [
-        "abort",
-        "acronym",
-        "acronyms",
-        "alias",
-        "all",
-        "and",
-        "binary",
-        "break",
-        "card",
-        "continue",
-        "diag",
-        "display",
-        "do",
-        "else",
-        "elseif",
-        "endfor",
-        "endif",
-        "endloop",
-        "endwhile",
-        "eps",
-        "equation",
-        "equations",
-        "execute",
-        "execute_load",
-        "execute_loaddc",
-        "execute_loadhandle",
-        "execute_loadpoint",
-        "execute_unload",
-        "execute_unloaddi",
-        "execute_unloadidx",
-        "file",
-        "files",
-        "for",
-        "free",
-        "function",
-        "functions",
-        "gdxLoad",
-        "if",
-        "inf",
-        "integer",
-        "logic",
-        "loop",
-        "model",
-        "models",
-        "na",
-        "negative",
-        "nonnegative",
-        "no",
-        "not",
-        "option",
-        "options",
-        "or",
-        "ord",
-        "parameter",
-        "parameters",
-        "positive",
-        "prod",
-        "put",
-        "put_utility",
-        "putclear",
-        "putclose",
-        "putfmcl",
-        "puthd",
-        "putheader",
-        "putpage",
-        "puttitle",
-        "puttl",
-        "repeat",
-        "sameas",
-        "sand",
-        "scalar",
-        "scalars",
-        "semicont",
-        "semiint",
-        "set",
-        "sets",
-        "singleton",
-        "smax",
-        "smin",
-        "solve",
-        "sor",
-        "sos1",
-        "sos2",
-        "sum",
-        "system",
-        "table",
-        "tables",
-        "then",
-        "undf",
-        "until",
-        "variable",
-        "variables",
-        "while",
-        "xor",
-        "yes",
-    ]
-
-    if word.lower() in reserved_words:
+    if word.lower() in RESERVED_WORDS:
         raise ValidationError(
             "Name cannot be one of the reserved words. List of reserved"
-            f" words: {reserved_words}"
+            f" words: {RESERVED_WORDS}"
         )
 
     return word
@@ -381,8 +388,7 @@ def validate_model(
     if isinstance(sense, str):
         if sense.upper() not in Sense.values():
             raise ValueError(
-                f"Allowed sense values: {Sense.values()} but found"
-                f" {sense}."
+                f"Allowed sense values: {Sense.values()} but found {sense}."
             )
 
         sense = Sense(sense.upper())

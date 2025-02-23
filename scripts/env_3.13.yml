@@ -1,7 +1,0 @@
-name: darwinenv313
-channels:
-  - anaconda
-  - conda-forge
-dependencies:
-  - freetds
-  - python=3.13

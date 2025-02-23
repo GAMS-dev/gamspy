@@ -501,6 +501,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         obj.container._add_statement(obj)
         obj._current_index = 0
         obj._synchronize = True
+        obj._metadata = dict()
 
         # miro support
         obj._is_miro_input = False
@@ -565,6 +566,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         is_miro_input: bool = False,
         is_miro_output: bool = False,
     ):
+        self._metadata: dict[str, Any] = dict()
         if (is_miro_input or is_miro_output) and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
