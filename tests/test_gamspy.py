@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.5.1"
+    assert gp.__version__ == "1.6.0"
 
 
 @pytest.mark.unit
@@ -40,10 +40,10 @@ def test_config():
 @pytest.mark.unit
 def test_domain_checking_config_performance():
     gp.set_options({"DOMAIN_VALIDATION": 1})
-    start = time.time()
     m = gp.Container()
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
+    start = time.time()
     for idx in range(999):
         _ = (
             a[idx]
@@ -59,10 +59,10 @@ def test_domain_checking_config_performance():
     timing_with_validation = time.time() - start
 
     gp.set_options({"DOMAIN_VALIDATION": 0})
-    start = time.time()
     m = gp.Container()
     i = gp.Set(m, records=range(999))
     a = gp.Parameter(m, domain=i)
+    start = time.time()
     for idx in range(999):
         _ = (
             a[idx]

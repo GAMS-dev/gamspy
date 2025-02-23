@@ -12,7 +12,7 @@ GAMSPy 1.6.0
   - Fix solver option format of HIGHS, SHOT, SOPLEX and SCIP.
   - Allow dumping gams state on `.toGams` call.
   - Allow indexing into symbols with integers.
-  - Add `bypass_solver` option.
+  - Add `bypass_solver`, `cutoff`, and `default_point` options.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.

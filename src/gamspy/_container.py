@@ -51,6 +51,20 @@ LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+is_windows = platform.system() == "Windows"
+
+
+def add_sysdir_to_path(system_directory: str) -> None:
+    if is_windows:
+        if "PATH" in os.environ:
+            if not os.environ["PATH"].startswith(
+                system_directory + os.pathsep
+            ):
+                os.environ["PATH"] = (
+                    system_directory + os.pathsep + os.environ["PATH"]
+                )
+        else:
+            os.environ["PATH"] = system_directory
 
 
 def open_connection(
@@ -230,6 +244,7 @@ class Container(gt.Container):
         self._is_socket_open = True
 
         system_directory = get_system_directory(system_directory)
+        add_sysdir_to_path(system_directory)
 
         self._unsaved_statements: list = []
 
@@ -284,6 +299,11 @@ class Container(gt.Container):
                 self._synch_with_gams(gams_to_gamspy=True)
             else:
                 self._read(load_from)
+                if not isinstance(load_from, gt.Container):
+                    self._unsaved_statements = []
+                    self._clean_modified_symbols()
+                    self._add_statement(f"$declareAndLoad {load_from}")
+
                 self._synch_with_gams()
 
     def __enter__(self):

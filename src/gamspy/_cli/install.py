@@ -1,6 +1,7 @@
 from __future__ import annotations
 import importlib
 import shutil
+import platform
 
 import sys
 from typing import Annotated, Iterable, Optional, Union
@@ -214,13 +215,19 @@ def solver(
                 )
 
             if not skip_pip_install:
+
+                # TODO: This is a temporary solution which will be removed in GAMSPy 1.7.0
+                solver_version = gamspy_base.__version__
+                if platform.system() == "Darwin" and platform.machine() == "arm64":
+                    solver_version += ".post1"
+
                 # install specified solver
                 if use_uv:
                     command = [
                         "uv",
                         "pip",
                         "install",
-                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
                 else:
@@ -229,7 +236,7 @@ def solver(
                         "-m",
                         "pip",
                         "install",
-                        f"gamspy-{solver_name}=={gamspy_base.__version__}",
+                        f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
                     ]
                 try:
@@ -246,13 +253,6 @@ def solver(
                 except ModuleNotFoundError as e:
                     e.msg = f"You must install gamspy-{solver_name} first!"
                     raise e
-
-                if solver_lib.__version__ != gamspy_base.__version__:
-                    raise ValidationError(
-                        f"gamspy_base version ({gamspy_base.__version__}) and solver"
-                        f" version ({solver_lib.__version__}) must match! Run `gamspy"
-                        " update` to update your solvers."
-                    )
 
             # copy solver files to gamspy_base
             gamspy_base_dir = utils._get_gamspy_base_directory()

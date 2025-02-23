@@ -203,6 +203,11 @@ class Options(BaseModel):
         optimal solution will be within the min_improvement_threshold or less of the found solution. Observe that the option
         min_improvement_threshold is specified in absolute terms, therefore non-negative values are appropriate for both
         minimization and maximization models.
+    cutoff: float | None
+        Within a branch-and-bound based solver, the parts of the tree with an objective value worse than the cutoff value are 
+        ignored. Note that this may speed up the initial phase of the branch and bound algorithm (before the first integer 
+        solution is found). However, the true optimum may be beyond the cutoff value. In this case the true optimum will be 
+        missed and moreover, no solution will be found.
     miro_protect:
         Protects MIRO input symbol records from being re-assigned, by default True.
     node_limit: int | None
@@ -313,6 +318,8 @@ class Options(BaseModel):
     examine_linearity: Optional[bool] = None
     bypass_solver: Optional[bool] = None
     min_improvement_threshold: Optional[float] = None
+    cutoff: Optional[float] = None
+    default_point: Optional[int] = None
     miro_protect: bool = True
     hold_fixed_variables: Optional[bool] = None
     iteration_limit: Optional[int] = None
