@@ -131,19 +131,11 @@ class Conv2d:
         x = np.where(x == np.inf, 0 + 1j, x)
         return x
 
-    def _decode_complex_number(self, z):
-        """
-        Decode complex numbers back to real numbers.
-        - 5 + 0j -> 5
-        - 3 + 1j -> np.inf
-        - 7 - 3j -> -np.inf
-        """
-        if z.imag == 0:
-            return z.real
-        elif z.imag > 0:
-            return np.inf
-        else:
-            return -np.inf
+    def _decode_complex_array(self, z: np.ndarray) -> np.ndarray:
+        real = z.real.copy()
+        real[z.imag > 0] = np.inf
+        real[z.imag < 0] = -np.inf
+        return real
 
     def _propagate_bounds(self, input, output, weight, bias, stride, padding):
         input_bounds = gp.Parameter(
@@ -173,9 +165,13 @@ class Conv2d:
 
         input_lower, input_upper = input_bounds.toDense()
 
-        # Encode infinity values as complex numbers
-        input_lower = self._encode_infinity(input_lower)
-        input_upper = self._encode_infinity(input_upper)
+        inf_exists = input_bounds.countNegInf() or input_bounds.countPosInf()
+        out_arr_dtype = np.complex128 if inf_exists else np.float64
+
+        if inf_exists:
+            # Encode infinity values as complex numbers
+            input_lower = self._encode_infinity(input_lower)
+            input_upper = self._encode_infinity(input_upper)
 
         batch, out_channels, h_out, w_out = output.shape
         h_k, w_k = weight.shape[2:]
@@ -187,25 +183,36 @@ class Conv2d:
 
         # Initialize output bounds
         output_lower = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=np.complex128
+            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
         )
         output_upper = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=np.complex128
+            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
         )
 
-        # Pad the input bounds
-        input_lower = np.pad(
-            input_lower,
-            ((0, 0), (0, 0), (padding_y, padding_y), (padding_x, padding_x)),
-            mode="constant",
-            constant_values=0,
-        )
-        input_upper = np.pad(
-            input_upper,
-            ((0, 0), (0, 0), (padding_y, padding_y), (padding_x, padding_x)),
-            mode="constant",
-            constant_values=0,
-        )
+        if padding_y != 0 or padding_x != 0:
+            # Pad the input bounds
+            input_lower = np.pad(
+                input_lower,
+                (
+                    (0, 0),
+                    (0, 0),
+                    (padding_y, padding_y),
+                    (padding_x, padding_x),
+                ),
+                mode="constant",
+                constant_values=0,
+            )
+            input_upper = np.pad(
+                input_upper,
+                (
+                    (0, 0),
+                    (0, 0),
+                    (padding_y, padding_y),
+                    (padding_x, padding_x),
+                ),
+                mode="constant",
+                constant_values=0,
+            )
 
         # Split weights into positive and negative parts
         pos_weight = np.maximum(weight, 0)
@@ -260,9 +267,10 @@ class Conv2d:
                         + bias[c_out]
                     )
 
-        # Decode complex numbers back to real numbers
-        output_lower = np.vectorize(self._decode_complex_number)(output_lower)
-        output_upper = np.vectorize(self._decode_complex_number)(output_upper)
+        if inf_exists:
+            # Decode complex numbers back to real numbers
+            output_lower = self._decode_complex_array(output_lower)
+            output_upper = self._decode_complex_array(output_upper)
 
         out_bounds_array = np.stack([output_lower, output_upper], axis=0)
 
@@ -501,28 +509,5 @@ class Conv2d:
                 self.stride,
                 padding,
             )
-
-            # input_bounds = gp.Parameter(
-            #     self.container, domain=dim([2, *input.shape])
-            # )
-            # input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
-            # input_bounds[("1",) + tuple(input.domain)] = input.up[...]
-
-            # weight = self.weight.toDense()
-            # pos_weight = np.maximum(weight, 0)
-            # neg_weight = np.minimum(weight, 0)
-
-            # all_weight = np.stack([neg_weight, pos_weight], axis=0)
-
-            # weight_neg_pos = gp.Parameter(self.container, domain=dim([2, *self.weight.shape]), records=all_weight)
-
-            # lo_out = gp.Parameter(self.container, domain=out.domain)
-            # up_out = gp.Parameter(self.container, domain=out.domain)
-
-            # lo_out[N, C_out, H_out, W_out] = gp.Sum([C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]], (input_bounds["0", N, C_in, H_in, W_in] * weight_neg_pos["1", C_out, C_in, Hf, Wf]) + (input_bounds["1", N, C_in, H_in, W_in] * weight_neg_pos["0", C_out, C_in, Hf, Wf])) + self.bias[C_out]
-            # up_out[N, C_out, H_out, W_out] = gp.Sum([C_in, subset[H_out, W_out, Hf, Wf, H_in, W_in]], (input_bounds["0", N, C_in, H_in, W_in] * weight_neg_pos["0", C_out, C_in, Hf, Wf]) + (input_bounds["1", N, C_in, H_in, W_in] * weight_neg_pos["1", C_out, C_in, Hf, Wf])) + self.bias[C_out]
-
-            # out.lo[...] = lo_out[...]
-            # out.up[...] = up_out[...]
 
         return out, [set_out]
