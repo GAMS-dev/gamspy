@@ -70,7 +70,7 @@ def test_domain_forwarding_2():
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
     process = subprocess.run(
-        ["python", model_path],
+        [sys.executable, model_path],
         env=subprocess_env,
         text=True,
         capture_output=True,
@@ -465,7 +465,7 @@ def test_table_columns():
     subprocess_env["GAMS_IDC_GDX_OUTPUT"] = miro_gdx_out
 
     process = subprocess.run(
-        ["python", model_path],
+        [sys.executable, model_path],
         env=subprocess_env,
         capture_output=True,
         text=True,

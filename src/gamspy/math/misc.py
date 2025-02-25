@@ -1183,7 +1183,7 @@ def ifthen(
     >>> x = ifthen(tt == 2, 3, 4 + y)
 
     """
-    condition.representation = utils._replace_equality_signs(
+    condition._representation = utils._replace_equality_signs(
         condition.gamsRepr()
     )
 

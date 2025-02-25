@@ -1047,15 +1047,15 @@ def test_ellipsis(data):
     supply.l[...] = 5
     assert supply.records.level.to_list() == [5.0, 5.0]
 
-    domain = validation._transform_given_indices(["a", "b", "c"], ["a", ...])
+    domain = validation._expand_ellipsis_slice(["a", "b", "c"], ["a", ...])
     assert domain == ["a", "b", "c"]
 
-    domain = validation._transform_given_indices(
+    domain = validation._expand_ellipsis_slice(
         ["a", "b", "c"], ["a", ..., "c"]
     )
     assert domain == ["a", "b", "c"]
 
-    domain = validation._transform_given_indices(["a", "b", "c"], [..., "c"])
+    domain = validation._expand_ellipsis_slice(["a", "b", "c"], [..., "c"])
     assert domain == ["a", "b", "c"]
 
     with pytest.raises(ValidationError):
@@ -1128,7 +1128,17 @@ def test_max_line_length(data):
     long_expr = f
     for _ in range(1200):
         long_expr *= f
+
     supply[i] = Sum(j, x[i, j]) * long_expr <= a[i]
+    gp.set_options({"LAZY_EVALUATION": 1})
+    with pytest.raises(RecursionError):
+        long_expr = f
+        for _ in range(1200):
+            long_expr *= f
+        supply[i] = Sum(j, x[i, j]) * long_expr <= a[i]
+
+    gp.set_options({"LAZY_EVALUATION": 0})
+
     demand[j] = Sum(i, x[i, j]) >= b[j]
 
     transport = Model(

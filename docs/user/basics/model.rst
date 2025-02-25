@@ -380,6 +380,8 @@ file: ::
 
 The terms of use for NEOS can be found here: `Terms of use <https://neos-server.org/neos/termofuse.html>`_.
 
+.. _solve_options:
+
 Solve Options
 -------------
 

@@ -20,6 +20,7 @@ import gamspy._miro as miro
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
+from gamspy._config import get_option
 from gamspy._extrinsic import ExtrinsicLibrary
 from gamspy._miro import MiroJSONEncoder
 from gamspy._model import Problem, Sense
@@ -50,6 +51,20 @@ LOOPBACK = "127.0.0.1"
 IS_MIRO_INIT = os.getenv("MIRO", False)
 MIRO_GDX_IN = os.getenv("GAMS_IDC_GDX_INPUT", None)
 MIRO_GDX_OUT = os.getenv("GAMS_IDC_GDX_OUTPUT", None)
+is_windows = platform.system() == "Windows"
+
+
+def add_sysdir_to_path(system_directory: str) -> None:
+    if is_windows:
+        if "PATH" in os.environ:
+            if not os.environ["PATH"].startswith(
+                system_directory + os.pathsep
+            ):
+                os.environ["PATH"] = (
+                    system_directory + os.pathsep + os.environ["PATH"]
+                )
+        else:
+            os.environ["PATH"] = system_directory
 
 
 def open_connection(
@@ -118,12 +133,10 @@ def open_connection(
 
 
 def get_system_directory(system_directory: str | None) -> str:
-    system_directory = os.getenv("GAMSPY_GAMS_SYSDIR", system_directory)
+    if system_directory is not None:
+        return system_directory
 
-    if system_directory is None:
-        system_directory = utils._get_gamspy_base_directory()
-
-    return system_directory
+    return get_option("GAMS_SYSDIR")
 
 
 def check_response(response: bytes, job_name: str) -> None:
@@ -231,6 +244,7 @@ class Container(gt.Container):
         self._is_socket_open = True
 
         system_directory = get_system_directory(system_directory)
+        add_sysdir_to_path(system_directory)
 
         self._unsaved_statements: list = []
 
@@ -285,12 +299,19 @@ class Container(gt.Container):
                 self._synch_with_gams(gams_to_gamspy=True)
             else:
                 self._read(load_from)
+                if not isinstance(load_from, gt.Container):
+                    self._unsaved_statements = []
+                    self._clean_modified_symbols()
+                    self._add_statement(f"$declareAndLoad {load_from}")
+
                 self._synch_with_gams()
 
     def __enter__(self):
         pid = os.getpid()
         tid = threading.get_native_id()
         gp._ctx_managers[(pid, tid)] = self
+
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pid = os.getpid()
@@ -416,11 +437,7 @@ class Container(gt.Container):
         for symbol_name in symbol_names:
             gtp_symbol = self.data[symbol_name]
             new_domain = [
-                (
-                    self.data[member.name]
-                    if not isinstance(member, str)
-                    else member
-                )
+                (self.data[member.name] if type(member) is not str else member)
                 for member in gtp_symbol.domain
             ]
 
@@ -519,7 +536,7 @@ class Container(gt.Container):
         for name, symbol in self:
             if symbol.modified:
                 if (
-                    isinstance(symbol, gp.Alias)
+                    type(symbol) is gp.Alias
                     and symbol.alias_with.name not in modified_names  # type: ignore
                 ):
                     modified_names.append(symbol.alias_with.name)
@@ -530,7 +547,7 @@ class Container(gt.Container):
 
     def _clean_modified_symbols(self) -> None:
         for symbol in self.data.values():
-            if isinstance(symbol, gp.Alias):
+            if type(symbol) is gp.Alias:
                 symbol.alias_with.modified = False
 
             symbol.modified = False
@@ -558,11 +575,11 @@ class Container(gt.Container):
         modified_names: list[str],
     ) -> str:
         LOADABLE = (gp.Set, gp.Parameter, gp.Variable, gp.Equation)
-        MIRO_INPUT_TYPES = (gt.Set, gt.Parameter)
+        MIRO_INPUT_TYPES = (gp.Set, gp.Parameter)
 
         strings = ["$onMultiR", "$onUNDF"]
         for statement in self._unsaved_statements:
-            if isinstance(statement, str):
+            if type(statement) is str:
                 strings.append(statement)
             else:
                 strings.append(statement.getDeclaration())
@@ -572,7 +589,7 @@ class Container(gt.Container):
             for name in modified_names:
                 symbol = self[name]
                 if (
-                    isinstance(symbol, LOADABLE)
+                    type(symbol) in LOADABLE
                     and not name.startswith(gp.Model._generate_prefix)
                     and symbol.synchronize
                 ):
@@ -582,7 +599,7 @@ class Container(gt.Container):
                 strings.append(f"$gdxIn {gdx_in}")
                 for loadable in loadables:
                     if (
-                        isinstance(loadable, MIRO_INPUT_TYPES)
+                        type(loadable) in MIRO_INPUT_TYPES
                         and loadable._is_miro_input
                         and not IS_MIRO_INIT
                         and MIRO_GDX_IN

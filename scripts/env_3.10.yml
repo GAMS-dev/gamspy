@@ -1,6 +1,0 @@
-name: darwinenv310
-channels:
-  - anaconda
-dependencies:
-  - freetds
-  - python=3.10

@@ -3,21 +3,15 @@ wei-test-3.13:
   stage: test
   needs: [wei-cli-3.9]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.13
   script:
-    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
-    - conda env list
-    - conda activate gamspy-env-3.13
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test313; .windows_test313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - $env:COVERAGE_CORE = 'sysmon'; coverage run --source=gamspy -m pytest -x -v -s -m 'unit or integration or model_library or doc' tests
     - coverage report -m --data-file=".coverage"
     - coverage xml --data-file=".coverage"
@@ -26,21 +20,15 @@ wei-test-3.12:
   stage: test
   needs: [wei-cli-3.9]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.12
   script:
-    - conda create -y -n gamspy-env-3.12 python=3.12
-    - conda env list
-    - conda activate gamspy-env-3.12
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.12;C:\Miniconda\envs\gamspy-env-3.12\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test312; .windows_test312\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -51,21 +39,15 @@ wei-test-3.11:
   stage: test
   needs: [wei-cli-3.9]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.11
   script:
-    - conda create -y -n gamspy-env-3.11 python=3.11
-    - conda env list
-    - conda activate gamspy-env-3.11
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.11;C:\Miniconda\envs\gamspy-env-3.11\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test311; .windows_test311\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -76,21 +58,15 @@ wei-test-3.10:
   stage: test
   needs: [wei-cli-3.9]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.10
   script:
-    - conda create -y -n gamspy-env-3.10 python=3.10
-    - conda env list
-    - conda activate gamspy-env-3.10
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.10;C:\Miniconda\envs\gamspy-env-3.10\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test310; .windows_test310\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
@@ -101,21 +77,15 @@ wei-test-3.9:
   stage: test
   needs: [wei-cli-3.9]
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.9
   script:
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda env list
-    - conda activate gamspy-env-3.9
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_test39; .windows_test39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - $basePath = Invoke-Expression "& gamspy show base"
     - $getKeyPath = "$basePath\gamsgetkey"
     - $outputPath = "$basePath\ci_license.txt"
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
-    - gamspy install solver mpsge scip reshop
+    - gamspy install solver mpsge scip reshop highs --use-uv
     - pytest -x -v -s -m 'unit or integration or model_library' tests
     - pytest -x -v -s -m 'doc'
 
@@ -125,16 +95,10 @@ wei-engine-3.13:
   when: manual
   needs: []
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.13
   script:
-    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
-    - conda env list
-    - conda activate gamspy-env-3.13
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine313; .windows_engine313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 wei-engine-3.9:
@@ -142,16 +106,10 @@ wei-engine-3.9:
   when: manual
   needs: []
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.9
   script:
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda env list
-    - conda activate gamspy-env-3.9
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_engine39; .windows_engine39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'engine' tests
 
 #### NEOS #####
@@ -160,16 +118,10 @@ wei-neos-3.13:
   when: manual
   needs: []
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.13
   script:
-    - conda create -y -n gamspy-env-3.13 python=3.13 -c conda-forge
-    - conda env list
-    - conda activate gamspy-env-3.13
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.13;C:\Miniconda\envs\gamspy-env-3.13\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos313; .windows_neos313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
 
 wei-neos-3.9:
@@ -177,14 +129,8 @@ wei-neos-3.9:
   when: manual
   needs: []
   tags: [windows]
-  image:
-    name: $MACHINES_CONTAINER_REG/wei/builder-full:latest
-    entrypoint: [""]
+  image: winamd64/python:3.9
   script:
-    - conda create -y -n gamspy-env-3.9 python=3.9
-    - conda env list
-    - conda activate gamspy-env-3.9
-    - $env:Path = "C:\Miniconda\envs\gamspy-env-3.9;C:\Miniconda\envs\gamspy-env-3.9\Scripts;" + $env:Path
     - python --version
-    - python -m pip install .[dev,test] --force-reinstall
+    - python -m pip install uv; uv venv .windows_neos39; .windows_neos39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
     - pytest -x -v -s -m 'neos' tests
