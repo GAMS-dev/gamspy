@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
-import gamspy._algebra.operation as operation
 import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
@@ -14,17 +13,7 @@ from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy import (
-        Alias,
-        Product,
-        Sand,
-        Set,
-        Smax,
-        Smin,
-        Sor,
-        Sum,
-        Variable,
-    )
+    from gamspy import Set, Variable
     from gamspy._algebra.expression import Expression
 
 
@@ -51,7 +40,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __repr__(self) -> str:
         return f"ImplicitVariable(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
 
-    def __getitem__(self, indices: list | str) -> ImplicitVariable:
+    def __getitem__(
+        self, indices: Sequence | str | EllipsisType | slice
+    ) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
         return ImplicitVariable(
             parent=self.parent,
@@ -182,192 +173,6 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def stage(self, value: int | float | Expression):
         # b[t].stage = 30 -> b.stage[t] = 30
         self.parent.stage[self.domain] = value
-
-    def sum(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Sum:
-        """
-        Equivalent to Sum(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.sum() is equivalent to Sum((i,j), v[i, j, k])
-        v.sum(i) is equivalent to Sum(i, v[i, j, k])
-        v.sum(i, j) is equivalent to Sum((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Sum
-            Generated Sum operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Sum operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Sum(indices, self[self.domain])
-
-    def product(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Product:
-        """
-        Equivalent to Product(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.product() is equivalent to Product((i,j), v[i, j, k])
-        v.product(i) is equivalent to Product(i, v[i, j, k])
-        v.product(i, j) is equivalent to Product((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Product
-            Generated Product operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Product operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Product(indices, self[self.domain])
-
-    def smin(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Smin:
-        """
-        Equivalent to Smin(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.smin() is equivalent to Smin((i,j), v[i, j, k])
-        v.smin(i) is equivalent to Smin(i, v[i, j, k])
-        v.smin(i, j) is equivalent to Smin((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Smin
-            Generated Smin operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Smin operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Smin(indices, self[self.domain])
-
-    def smax(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Smax:
-        """
-        Equivalent to Smax(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.smax() is equivalent to Smax((i,j), v[i, j, k])
-        v.smax(i) is equivalent to Smax(i, v[i, j, k])
-        v.smax(i, j) is equivalent to Smax((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Smax
-            Generated Smax operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Smax operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Smax(indices, self[self.domain])
-
-    def sand(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Sand:
-        """
-        Equivalent to Sand(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.sand() is equivalent to Sand((i,j), v[i, j, k])
-        v.sand(i) is equivalent to Sand(i, v[i, j, k])
-        v.sand(i, j) is equivalent to Sand((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Sand
-            Generated Sand operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Sand operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Sand(indices, self[self.domain])
-
-    def sor(
-        self, *indices: Sequence[Set | Alias | str | EllipsisType | slice]
-    ) -> Sor:
-        """
-        Equivalent to Sor(indices, obj[obj.domain]). For example:
-
-        v = Variable(m, domain=[i, j, k])
-        v.sor() is equivalent to Sor((i,j), v[i, j, k])
-        v.sor(i) is equivalent to Sor(i, v[i, j, k])
-        v.sor(i, j) is equivalent to Sor((i, j), v[i, j, k])
-
-        Returns
-        -------
-        Sor
-            Generated Sor operation.
-
-        Raises
-        ------
-        ValidationError
-            In case the symbol is scalar.
-        """
-        if not self.domain:
-            raise ValidationError(
-                "Sor operation is not possible on scalar parameters."
-            )
-
-        if not indices:
-            indices = self.domain
-
-        return operation.Sor(indices, self[self.domain])
 
     @property
     def T(self) -> implicits.ImplicitVariable:

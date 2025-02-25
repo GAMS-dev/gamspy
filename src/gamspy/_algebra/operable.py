@@ -175,3 +175,6 @@ class Operable:
         return operation.Sum(
             [sum_domain], self[left_domain] * other[right_domain]
         )
+
+    def gamsRepr(self):
+        """Representation of the symbol in GAMS"""

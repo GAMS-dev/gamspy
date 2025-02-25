@@ -653,7 +653,7 @@ def test_alternative_operation_syntax():
     expr2 = Sor((i, j), x[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
 
-    ### ImplicitParameter
+    ### ImplicitVariable
     # Test sum
     expr = x[i, j].sum()
     expr2 = Sum((i, j), x[i, j])
@@ -730,4 +730,83 @@ def test_alternative_operation_syntax():
 
     expr = x[i, j].sor(i, j)
     expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    ### Sum over attribute
+    # Test sum
+    expr = x.l[i, j].sum()
+    expr2 = Sum((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sum(i)
+    expr2 = Sum(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sum(i, j)
+    expr2 = Sum((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test product
+    expr = x.l[i, j].product()
+    expr2 = Product((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].product(i)
+    expr2 = Product(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].product(i, j)
+    expr2 = Product((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smin
+    expr = x.l[i, j].smin()
+    expr2 = Smin((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smin(i)
+    expr2 = Smin(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smin(i, j)
+    expr2 = Smin((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smax
+    expr = x.l[i, j].smax()
+    expr2 = Smax((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smax(i)
+    expr2 = Smax(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].smax(i, j)
+    expr2 = Smax((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sand
+    expr = x.l[i, j].sand()
+    expr2 = Sand((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sand(i)
+    expr2 = Sand(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sand(i, j)
+    expr2 = Sand((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sor
+    expr = x.l[i, j].sor()
+    expr2 = Sor((i, j), x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sor(i)
+    expr2 = Sor(i, x.l[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.l[i, j].sor(i, j)
+    expr2 = Sor((i, j), x.l[i, j])
     assert expr.gamsRepr() == expr2.gamsRepr()
