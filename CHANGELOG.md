@@ -17,6 +17,7 @@ GAMSPy 1.6.0
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
   - Fix bug in an edge case of the vector-matrix multiplication.
+  - Allow propagating bounds of the output in `Conv2D` class.
 - Testing
   - Add an lp and a qcp benchmark for performance comparison.
 - Documentation
