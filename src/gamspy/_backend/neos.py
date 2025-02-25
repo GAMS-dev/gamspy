@@ -456,6 +456,7 @@ class NEOSServer(backend.Backend):
             "gdx": "output.gdx",
             "gdxSymbols": "newOrChanged",
             "trace": os.path.basename(self.trace_file),
+            "forcework": "1",
         }
         self.options._set_extra_options(extra_options)
 

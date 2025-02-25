@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.7.0
+------------
+- General
+  - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
+
 GAMSPy 1.6.0
 ------------
 - General
@@ -12,12 +17,12 @@ GAMSPy 1.6.0
   - Fix solver option format of HIGHS, SHOT, SOPLEX and SCIP.
   - Allow dumping gams state on `.toGams` call.
   - Allow indexing into symbols with integers.
-  - Add `bypass_solver` option.
+  - Add `bypass_solver`, `cutoff`, and `default_point` options.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
   - Add --use-uv option to allow solver downloads with uv.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
-  - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
+  - Fix bug in an edge case of the vector-matrix multiplication.
 - Testing
   - Add an lp and a qcp benchmark for performance comparison.
 - Documentation
