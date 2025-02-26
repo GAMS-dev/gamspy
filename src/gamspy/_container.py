@@ -101,7 +101,7 @@ def open_connection(
         port = int(port_info.removeprefix("port: "))
     except ValueError as e:
         raise ValidationError(
-            f"Error while reading the port! {port_info=}"
+            f"Error while reading the port! {port_info + process.stdout.read()}"
         ) from e
 
     def handler(signum, frame):
