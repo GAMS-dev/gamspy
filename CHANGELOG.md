@@ -3,6 +3,8 @@ GAMSPy CHANGELOG
 
 GAMSPy 1.7.0
 ------------
+- Documentation
+  - Add a section in FAQ about the compatibiltiy issues of the Python interpreter from the Microsoft Store.
 - Testing
   - Enforce the order of tests. Run unit tests first, and model library tests last.
   - Use spawn method for multiprocessing to avoid possible deadlocks with fork method.
