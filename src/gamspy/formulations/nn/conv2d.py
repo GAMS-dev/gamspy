@@ -96,14 +96,12 @@ class Conv2d:
                     "'same' padding can only be used with stride=1"
                 )
 
-            _padding: tuple[int, int] | str = (
-                (0, 0) if padding == "valid" else "same"
+            _padding: tuple[int, int, int, int] | str = (
+                (0, 0, 0, 0) if padding == "valid" else "same"
             )
 
         else:
-            _padding = utils._check_tuple_int(
-                padding, "padding", allow_zero=True
-            )
+            _padding = utils._check_padding(padding)
 
         if not isinstance(bias, bool):
             raise ValidationError("bias must be a boolean")
@@ -138,13 +136,14 @@ class Conv2d:
         real[z.imag < 0] = -np.inf
         return real
 
-    def _swv_propagate_bounds(
-        self, input, output, weight, bias, stride, padding
-    ):
+    def _propagate_bounds(self, input, output, weight, bias, stride, padding):
+        # Extract input bounds
         input_bounds = gp.Parameter(
             self.container, domain=dim([2, *input.shape])
         )
+        # lower bounds
         input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
+        # upper bounds
         input_bounds[("1",) + tuple(input.domain)] = input.up[...]
 
         # If the bounds are all zeros (None in GAMSPy parameters);
@@ -168,6 +167,7 @@ class Conv2d:
 
         input_lower, input_upper = input_bounds.toDense()
 
+        # Check if the input bounds contain (-)infinity values
         inf_exists = input_bounds.countNegInf() or input_bounds.countPosInf()
         out_arr_dtype = np.complex128 if inf_exists else np.float64
 
@@ -179,48 +179,28 @@ class Conv2d:
         batch, out_channels, h_out, w_out = output.shape
         _, in_channels, h_k, w_k = weight.shape
         stride_y, stride_x = stride
-        padding_y, padding_x = padding
+        pad_top, pad_left, pad_bottom, pad_right = padding
 
-        if bias is None:
-            bias = np.zeros(out_channels)
-
-        if padding_y != 0 or padding_x != 0:
+        # if any side of the padding is non-zero, we need to pad the input
+        if any(padding):
             # Pad the input bounds
             input_lower = np.pad(
                 input_lower,
-                (
-                    (0, 0),
-                    (0, 0),
-                    (padding_y, padding_y),
-                    (padding_x, padding_x),
-                ),
+                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
                 mode="constant",
                 constant_values=0,
             )
             input_upper = np.pad(
                 input_upper,
-                (
-                    (0, 0),
-                    (0, 0),
-                    (padding_y, padding_y),
-                    (padding_x, padding_x),
-                ),
+                ((0, 0), (0, 0), (pad_top, pad_bottom), (pad_left, pad_right)),
                 mode="constant",
                 constant_values=0,
             )
 
-        # print(input_lower.shape, input_upper.shape, output.shape)
-        # print(batch, in_channels, h_k, w_k)
-
-        # Create sliding windows for the input
-        windows_lower = sliding_window_view(
-            input_lower, (batch, in_channels, h_k, w_k)
-        )
-        windows_upper = sliding_window_view(
-            input_upper, (batch, in_channels, h_k, w_k)
-        )
-
-        # Downsample the sliding windows by selecting every `stride_y` step along the height (vertical) axis
+        # ----- Sliding window view -----
+        # Create sliding windows for the input, where each window has the same shape as the kernel.
+        # This is done separately for the lower and upper bounds of the input.
+        # Then, downsample the sliding windows by selecting every `stride_y` step along the height (vertical) axis
         # and every `stride_x` step along the width (horizontal) axis. This reduces the number of windows
         # by skipping positions based on the user-specified strides.
         #
@@ -230,6 +210,14 @@ class Conv2d:
         #
         # This ensures that the windows are processed in a left-to-right, top-to-bottom order,
         # prioritizing horizontal traversal first, which is the desired behavior.
+
+        windows_lower = sliding_window_view(
+            input_lower, (batch, in_channels, h_k, w_k)
+        )
+        windows_upper = sliding_window_view(
+            input_upper, (batch, in_channels, h_k, w_k)
+        )
+
         windows_lower = windows_lower[
             :, :, ::stride_y, ::stride_x, :, :, :
         ].transpose(0, 1, 4, 2, 3, 5, 6, 7)
@@ -256,6 +244,9 @@ class Conv2d:
         output_upper = np.zeros(
             (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
         )
+
+        if bias is None:
+            bias = np.zeros(out_channels)
 
         for c_out in range(out_channels):
             # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
@@ -289,153 +280,7 @@ class Conv2d:
             )
 
         if inf_exists:
-            # Decode complex numbers back to real numbers
-            output_lower = self._decode_complex_array(output_lower)
-            output_upper = self._decode_complex_array(output_upper)
-
-        out_bounds_array = np.stack([output_lower, output_upper], axis=0)
-
-        out_bounds = gp.Parameter(
-            self.container,
-            domain=dim([2, *output.shape]),
-            records=out_bounds_array,
-        )
-
-        output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
-        output.up[...] = out_bounds[("1",) + tuple(output.domain)]
-
-    def _propagate_bounds(self, input, output, weight, bias, stride, padding):
-        input_bounds = gp.Parameter(
-            self.container, domain=dim([2, *input.shape])
-        )
-        input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
-        input_bounds[("1",) + tuple(input.domain)] = input.up[...]
-
-        # If the bounds are all zeros (None in GAMSPy parameters);
-        # we skip matrix multiplication as it will result in zero values
-        if input_bounds.records is None:
-            out_bounds_array = np.zeros(output.shape)
-
-            if self.use_bias:
-                b = self.bias_array[:, np.newaxis, np.newaxis]
-                out_bounds_array = out_bounds_array + b
-
-            out_bounds = gp.Parameter(
-                self.container,
-                domain=dim(output.shape),
-                records=out_bounds_array,
-            )
-            output.lo[...] = out_bounds
-            output.up[...] = out_bounds
-
-            return
-
-        input_lower, input_upper = input_bounds.toDense()
-
-        inf_exists = input_bounds.countNegInf() or input_bounds.countPosInf()
-        out_arr_dtype = np.complex128 if inf_exists else np.float64
-
-        if inf_exists:
-            # Encode infinity values as complex numbers
-            input_lower = self._encode_infinity(input_lower)
-            input_upper = self._encode_infinity(input_upper)
-
-        batch, out_channels, h_out, w_out = output.shape
-        h_k, w_k = weight.shape[2:]
-        stride_y, stride_x = stride
-        padding_y, padding_x = padding
-
-        if bias is None:
-            bias = np.zeros(out_channels)
-
-        # Initialize output bounds
-        output_lower = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
-        )
-        output_upper = np.zeros(
-            (batch, out_channels, h_out, w_out), dtype=out_arr_dtype
-        )
-
-        if padding_y != 0 or padding_x != 0:
-            # Pad the input bounds
-            input_lower = np.pad(
-                input_lower,
-                (
-                    (0, 0),
-                    (0, 0),
-                    (padding_y, padding_y),
-                    (padding_x, padding_x),
-                ),
-                mode="constant",
-                constant_values=0,
-            )
-            input_upper = np.pad(
-                input_upper,
-                (
-                    (0, 0),
-                    (0, 0),
-                    (padding_y, padding_y),
-                    (padding_x, padding_x),
-                ),
-                mode="constant",
-                constant_values=0,
-            )
-
-        # Split weights into positive and negative parts
-        pos_weight = np.maximum(weight, 0)
-        neg_weight = np.minimum(weight, 0)
-
-        # Iterate over each output pixel
-        for y_out in range(h_out):
-            for x_out in range(w_out):
-                # Input region bounds
-                y_in_start = y_out * stride_y
-                x_in_start = x_out * stride_x
-                y_in_end = y_in_start + h_k
-                x_in_end = x_in_start + w_k
-
-                # Extract input region bounds
-                input_region_lower = input_lower[
-                    :, :, y_in_start:y_in_end, x_in_start:x_in_end
-                ]
-                input_region_upper = input_upper[
-                    :, :, y_in_start:y_in_end, x_in_start:x_in_end
-                ]
-
-                # Compute bounds for each output channel
-                for c_out in range(out_channels):
-                    # Lower bound: sum(input_lower * pos_weight + input_upper * neg_weight)
-                    output_lower[:, c_out, y_out, x_out] = (
-                        np.sum(
-                            input_region_lower
-                            * pos_weight[c_out, np.newaxis, :, :, :],
-                            axis=(1, 2, 3),
-                        )
-                        + np.sum(
-                            input_region_upper
-                            * neg_weight[c_out, np.newaxis, :, :, :],
-                            axis=(1, 2, 3),
-                        )
-                        + bias[c_out]
-                    )
-
-                    # Upper bound: sum(input_lower * neg_weight + input_upper * pos_weight)
-                    output_upper[:, c_out, y_out, x_out] = (
-                        np.sum(
-                            input_region_lower
-                            * neg_weight[c_out, np.newaxis, :, :, :],
-                            axis=(1, 2, 3),
-                        )
-                        + np.sum(
-                            input_region_upper
-                            * pos_weight[c_out, np.newaxis, :, :, :],
-                            axis=(1, 2, 3),
-                        )
-                        + bias[c_out]
-                    )
-
-        if inf_exists:
-            # Decode complex numbers back to real numbers
+            # Decode complex numbers back to real numbers if infinity values were used
             output_lower = self._decode_complex_array(output_lower)
             output_upper = self._decode_complex_array(output_upper)
 
@@ -617,7 +462,7 @@ class Conv2d:
         set_out = gp.Equation(self.container, domain=out.domain)
 
         if isinstance(self.padding, str):
-            padding = utils._calc_same_padding(self.kernel_size, h_in, w_in)
+            padding = utils._calc_same_padding(self.kernel_size)
         else:
             padding = self.padding
 
@@ -668,7 +513,7 @@ class Conv2d:
             and self._state == 1
             and isinstance(input, gp.Variable)
         ):
-            self._swv_propagate_bounds(
+            self._propagate_bounds(
                 input,
                 out,
                 self.weight_array,
