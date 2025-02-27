@@ -106,7 +106,7 @@ def test_conv2d_bad_init(data):
     # stride size must be integer or tuple of integer
     for bad_value in bad_values:
         pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, bad_value)
-    # stride size must be integer or tuple of integer
+    # padding size must be integer or tuple of integer
     for bad_value in bad_values[:-1]:
         pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, 1, bad_value)
 
@@ -1572,6 +1572,55 @@ def test_conv2d_propagate_bounds_with_same_padding(data):
     inp.up[...] = up_inp[...]
 
     out, _ = conv1(inp, propagate_bounds=True)
+
+    assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
+    assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
+
+
+def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
+    m, *_ = data
+
+    np.random.seed(42)
+
+    w1 = np.random.randint(-5, 5, (2, 2, 2, 2))
+
+    inp_lower = np.random.randint(-5, 0, (2, 2, 2, 2))
+
+    inp_upper = np.random.randint(0, 5, (2, 2, 2, 2))
+
+    lo_inp = gp.Parameter(m, domain=dim((2, 2, 2, 2)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((2, 2, 2, 2)), records=inp_upper)
+
+    # in_channels=2, out_channels=2, kernel_size=2x2, padding=same
+    conv = Conv2d(m, 2, 2, 2, padding="same", bias=False)
+    conv.load_weights(w1)
+
+    # 2 images, 2 channels, 2 by 2
+    inp = gp.Variable(m, domain=dim((2, 2, 2, 2)))
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out, _ = conv(inp, propagate_bounds=True)
+
+    exp_lo = np.array(
+        [
+            [
+                [[-56, -17], [-28, -6]],
+                [[-30, -20], [-21, -12]],
+            ],
+            [
+                [[-34, -18], [-23, -7]],
+                [[-30, -16], [-24, -14]],
+            ],
+        ]
+    )
+
+    exp_up = np.array(
+        [
+            [[[31, 22], [19, 5]], [[41, 12], [28, 10]]],
+            [[[40, 15], [16, 4]], [[37, 16], [15, 8]]],
+        ]
+    )
 
     assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
     assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)

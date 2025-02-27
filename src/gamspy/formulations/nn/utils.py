@@ -42,8 +42,8 @@ def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
 
     if isinstance(value, tuple):
         if not (
-            all(isinstance(x, int) for x in padding)
-            and all(x >= 0 for x in padding)
+            all(isinstance(x, int) for x in value)
+            and all(x >= 0 for x in value)
         ):
             raise ValidationError("Padding must be greater than or equal to 0")
 
