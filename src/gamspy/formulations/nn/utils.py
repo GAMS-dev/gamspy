@@ -41,14 +41,17 @@ def _check_padding(value: int | tuple[int, int]) -> tuple[int, int, int, int]:
         padding = (value, value, value, value)
 
     if isinstance(value, tuple):
-        if not (
-            all(isinstance(x, int) for x in value)
-            and all(x >= 0 for x in value)
-        ):
-            raise ValidationError("Padding must be greater than or equal to 0")
-
         # padding is represented as (top, left, bottom, right)
         padding = (value[0], value[1], value[0], value[1])
+
+    def cmp(a: int) -> bool:
+        return a >= 0
+
+    if not (isinstance(padding[0], int) and cmp(padding[0])):
+        raise ValidationError("Padding must be greater than or equal to 0")
+
+    if not (isinstance(padding[1], int) and cmp(padding[1])):
+        raise ValidationError("Padding must be a greater than or equal to 0")
 
     return padding
 
