@@ -606,7 +606,7 @@ def test_conv2d_with_padding(data):
     m, w1, b1, inp, par_input, _ = data
 
     conv_with_valid_padding = Conv2d(m, 1, 2, 3, padding="valid")
-    assert conv_with_valid_padding.padding == (0, 0)
+    assert conv_with_valid_padding.padding == (0, 0, 0, 0)
 
     conv1 = Conv2d(m, 1, 2, 3, padding=(2, 1))
     conv1.load_weights(w1, b1)
@@ -1213,7 +1213,7 @@ def test_conv2d_propagate_bounds_general(data):
     up_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_upper)
 
     # in_channels=1, out_channels=3, kernel_size=2x2
-    conv1 = Conv2d(m, 1, 3, 2)  # TODO: add padding
+    conv1 = Conv2d(m, 1, 3, 2)
     conv1.load_weights(w1, b1)
 
     # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
