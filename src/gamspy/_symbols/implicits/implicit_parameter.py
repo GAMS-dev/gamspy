@@ -18,7 +18,12 @@ from gamspy.math.matrix import permute
 if TYPE_CHECKING:
     import pandas as pd
 
-    from gamspy import Equation, Parameter, Set, Variable
+    from gamspy import (
+        Equation,
+        Parameter,
+        Set,
+        Variable,
+    )
     from gamspy._algebra.expression import Expression
 
 logger = logging.getLogger("GAMSPy")

@@ -11,7 +11,13 @@ from gamspy import (
     Equation,
     Ord,
     Parameter,
+    Product,
+    Sand,
     Set,
+    Smax,
+    Smin,
+    Sor,
+    Sum,
     UniverseAlias,
 )
 from gamspy.exceptions import ValidationError
@@ -230,3 +236,109 @@ def test_indexing(m):
 
     dyn_col_alias["c-1"] = False
     assert dyn_col_alias.toList() == [f"c-{idx}" for idx in range(2, 5)]
+
+
+def test_alternative_operation_syntax():
+    m = Container()
+
+    i = Set(m)
+    j = Set(m)
+    a = Set(m, domain=[i, j])
+    x = Alias(m, alias_with=a)
+    y = Parameter(m)
+
+    # Test sum
+    with pytest.raises(ValidationError):
+        y.sum()
+
+    expr = x.sum()
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sum(i)
+    expr2 = Sum(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sum(i, j)
+    expr2 = Sum((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test product
+    with pytest.raises(ValidationError):
+        y.product()
+
+    expr = x.product()
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.product(i)
+    expr2 = Product(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.product(i, j)
+    expr2 = Product((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smin
+    with pytest.raises(ValidationError):
+        y.smin()
+
+    expr = x.smin()
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smin(i)
+    expr2 = Smin(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smin(i, j)
+    expr2 = Smin((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test smax
+    with pytest.raises(ValidationError):
+        y.smax()
+
+    expr = x.smax()
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smax(i)
+    expr2 = Smax(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.smax(i, j)
+    expr2 = Smax((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sand
+    with pytest.raises(ValidationError):
+        y.sand()
+
+    expr = x.sand()
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sand(i)
+    expr2 = Sand(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sand(i, j)
+    expr2 = Sand((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    # Test sor
+    with pytest.raises(ValidationError):
+        y.sor()
+
+    expr = x.sor()
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sor(i)
+    expr2 = Sor(i, x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()
+
+    expr = x.sor(i, j)
+    expr2 = Sor((i, j), x[i, j])
+    assert expr.gamsRepr() == expr2.gamsRepr()

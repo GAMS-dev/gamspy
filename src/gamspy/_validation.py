@@ -150,7 +150,7 @@ def get_domain_path(symbol: Set | Alias | ImplicitSet) -> list[str]:
             path.insert(0, domain.name)
 
         if type(domain) is symbols.Alias:
-            path.insert(0, domain.alias_with.name)
+            path.insert(0, domain.alias_with.name)  # type: ignore
 
         domain = "*" if type(domain) is str else domain.domain[0]  # type: ignore
 
@@ -162,6 +162,7 @@ def validate_dimension(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
@@ -192,7 +193,7 @@ def validate_one_dimensional_sets(
         and actual.name not in given_path
         or (
             type(actual) is symbols.Alias
-            and actual.alias_with.name not in given_path
+            and actual.alias_with.name not in given_path  # type: ignore
         )
     ):
         raise ValidationError(
@@ -288,6 +289,7 @@ def validate_domain(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,
@@ -342,6 +344,7 @@ def validate_container(
     | Parameter
     | Variable
     | Equation
+    | ImplicitSet
     | ImplicitParameter
     | ImplicitVariable
     | Operation,

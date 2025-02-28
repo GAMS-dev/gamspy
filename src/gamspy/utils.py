@@ -546,7 +546,7 @@ def _get_set(domain: list[Set | Alias | Domain | Expression]):
     for el in domain:
         if hasattr(el, "left"):
             if hasattr(el.left, "sets"):
-                res.extend(el.left.sets)
+                res.extend(el.left.sets)  # type: ignore
             else:
                 res.append(el.left)
         elif hasattr(el, "sets"):

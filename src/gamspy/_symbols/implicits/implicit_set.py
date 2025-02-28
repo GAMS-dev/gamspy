@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
 
@@ -12,6 +14,7 @@ if TYPE_CHECKING:
 
     from gamspy import Alias, Set
     from gamspy._algebra.expression import Expression
+    from gamspy._types import EllipsisType
 
 
 class ImplicitSet(ImplicitSymbol, operable.Operable):
@@ -46,6 +49,17 @@ class ImplicitSet(ImplicitSymbol, operable.Operable):
 
     def __repr__(self) -> str:
         return f"ImplicitSet(parent={self.parent}, name='{self.name}', domain={self.domain}, extension={self.extension}, parent_scalar_domains={self.parent_scalar_domains})"
+
+    def __getitem__(
+        self, indices: Sequence | str | EllipsisType | slice
+    ) -> ImplicitSet:
+        domain = validation.validate_domain(self, indices)
+        return ImplicitSet(
+            parent=self.parent,
+            name=self.name,
+            domain=domain,
+            scalar_domains=self._scalar_domains,
+        )
 
     @property
     def dimension(self):
