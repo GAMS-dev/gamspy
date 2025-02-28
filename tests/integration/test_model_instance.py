@@ -73,7 +73,8 @@ def data():
 
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     if os.path.exists("dict.txt"):
         os.remove("dict.txt")
