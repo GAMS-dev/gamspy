@@ -71,7 +71,6 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._current_index = 0
         obj._metadata = dict()
 
         return obj
@@ -157,6 +156,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.container._add_statement(self)
 
             self.container._synch_with_gams()
+
+    def _serialize(self) -> dict:
+        return {"_metadata": self._metadata}
+
+    def _deserialize(self, info: dict) -> None: ...
 
     def __len__(self):
         if self.records is not None:

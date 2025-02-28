@@ -275,6 +275,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
             validation.validate_container(self, self.domain)
             self.where = condition.Condition(self)
+            self._assignment: Expression | None = None
             self.container._add_statement(self)
 
             if records is not None:
@@ -285,6 +286,22 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 )
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_input": self._is_miro_input,
+            "_is_miro_output": self._is_miro_output,
+            "_is_miro_table": self._is_miro_table,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None: ...
 
     def __getitem__(
         self, indices: EllipsisType | slice | Sequence | str
@@ -540,7 +557,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         'a(i) = (a(i) * 5);'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Parameter is not defined!")
+        if self._assignment is None:
+            raise ValidationError("Parameter was not assigned!")
 
         return self._assignment.getDeclaration()

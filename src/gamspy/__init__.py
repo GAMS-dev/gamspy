@@ -24,6 +24,7 @@ from gamspy._config import _set_default_options, get_option, set_options
 from gamspy._container import Container
 from gamspy._model import Model, ModelStatus, Problem, Sense, SolveStatus
 from gamspy._options import ModelInstanceOptions, Options
+from gamspy._serialization import deserialize, serialize
 from gamspy._symbols import (
     Alias,
     Equation,
@@ -77,4 +78,6 @@ __all__ = [
     "__version__",
     "get_option",
     "set_options",
+    "serialize",
+    "deserialize",
 ]

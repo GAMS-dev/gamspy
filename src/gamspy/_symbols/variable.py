@@ -113,6 +113,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # set private properties directly
         obj._type = type
+        obj._assignment = None
         obj._gams_type = GMS_DT_VAR
         obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
 
@@ -211,6 +212,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         is_miro_output: bool = False,
     ):
         self._metadata: dict[str, Any] = dict()
+        self._assignment: Expression | None = None
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
@@ -332,6 +334,20 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 self.container._synch_with_gams()
 
             container._options.miro_protect = True
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None: ...
 
     def __getitem__(
         self, indices: Sequence | str
@@ -944,7 +960,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'v.l(i) = 0;'
 
         """
-        if not hasattr(self, "_assignment"):
+        if self._assignment is None:
             raise ValidationError("Variable is not assigned!")
 
         return self._assignment.getDeclaration()

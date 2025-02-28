@@ -22,6 +22,14 @@ class Symbol(ABC):
     def gamsRepr(self):
         """Representation of the implicit symbol in GAMS"""
 
+    @abstractmethod
+    def _serialize(self) -> dict:
+        """Serializes the symbol into a dict"""
+
+    @abstractmethod
+    def _deserialize(self, info: dict) -> None:
+        """Deserializes given info into a symbol"""
+
     def latexRepr(self):
         """
         Representation of symbol in Latex.

@@ -118,16 +118,13 @@ class UniverseAlias(gt.UniverseAlias):
         # allow conditions
         self.where = condition.Condition(self)
 
-        # iterator index
-        self._current_index = 0
         self.container._add_statement(self)
         self.container._synch_with_gams()
 
-    def __len__(self):
-        if not self.records.empty:
-            return len(self.records.index)
+    def _serialize(self) -> dict:
+        return dict()
 
-        return 0
+    def _deserialize(self, info: dict) -> None: ...
 
     def __repr__(self) -> str:
         return f"UniverseAlias(name='{self.name}')"

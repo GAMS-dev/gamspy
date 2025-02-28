@@ -122,6 +122,7 @@ class Equation(gt.Equation, Symbol):
         # set private properties directly
         type = cast_type(type)
         obj.type = EQU_TYPE[type]
+        obj._assignment = None
         obj._gams_type = GMS_DT_EQU
         obj._gams_subtype = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
         obj._requires_state_check = False
@@ -216,6 +217,7 @@ class Equation(gt.Equation, Symbol):
         definition_domain: list | None = None,
     ):
         self._metadata: dict[str, Any] = dict()
+        self._assignment: Expression | None = None
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
@@ -346,6 +348,20 @@ class Equation(gt.Equation, Symbol):
                 self.container._synch_with_gams()
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None: ...
 
     def __hash__(self):
         return id(self)
@@ -1123,8 +1139,8 @@ class Equation(gt.Equation, Symbol):
         'e.l(i) = 0;'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Equation is not assigned!")
+        if self._assignment is None:
+            raise ValidationError("Equation was not assigned!")
 
         return self._assignment.getDeclaration()
 

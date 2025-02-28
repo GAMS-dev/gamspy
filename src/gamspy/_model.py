@@ -331,7 +331,38 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version = None
 
+        self.container.models.append(self)
         self.container._synch_with_gams()
+
+    def _serialize(self) -> dict:
+        info = {
+            "name": self.name,
+            "problem": str(self.problem),
+            "sense": str(self.sense),
+        }
+
+        # equations
+        equations = [equation.name for equation in self.equations]
+        info["equations"] = equations
+
+        # matches
+        if self._matches is not None:
+            matches = {
+                key.name: value.name for key, value in self._matches.items()
+            }
+            info["_matches"] = matches
+
+        # objective variable
+        if self._objective_variable is not None:
+            info["_objective_variable"] = self._objective_variable.name
+
+        # attributes
+        for attribute in ATTRIBUTE_MAP.values():
+            info[attribute] = getattr(self, attribute, None)
+
+        return info
+
+    def _deserialize(self, info: dict) -> None: ...
 
     def __repr__(self) -> str:
         return f"Model(name='{self.name}', problem='{str(self.problem)}', equations={self.equations}, sense='{str(self.sense)}', objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
