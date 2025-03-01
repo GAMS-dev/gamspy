@@ -21,6 +21,7 @@ from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
     from gamspy import Container, Set
+    from gamspy._algebra.expression import Expression
 
 
 class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
@@ -123,6 +124,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
         alias_with: Set | Alias = None,  # type: ignore
     ):
         self._metadata: dict[str, Any] = dict()
+        self._assignment: Expression | None = None
         # does symbol exist
         has_symbol = False
         if isinstance(getattr(self, "container", None), gp.Container):
@@ -158,9 +160,18 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        return {"_metadata": self._metadata}
+        info = {"_metadata": self._metadata}
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
 
-    def _deserialize(self, info: dict) -> None: ...
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key == "_assignment":
+                value = expression.Expression(None, value, None)
+
+            setattr(self, key, value)
 
     def __len__(self):
         if self.records is not None:
@@ -255,3 +266,27 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
 
         """
         return f"Alias({self.alias_with.name},{self.name});"
+
+    def getAssignment(self) -> str:
+        """
+        Latest assignment to the Set in GAMS
+
+        Returns
+        -------
+        str
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> i = gp.Set(m, "i", records=['i1','i2'])
+        >>> j = gp.Alias(m, "j", alias_with=i)
+        >>> j['i1'] = False
+        >>> j.getAssignment()
+        'j("i1") = no;'
+
+        """
+        if self._assignment is None:
+            raise ValidationError("Set was not assigned!")
+
+        return self._assignment.getDeclaration()

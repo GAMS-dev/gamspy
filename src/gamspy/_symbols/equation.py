@@ -359,9 +359,17 @@ class Equation(gt.Equation, Symbol):
         if self._assignment is not None:
             info["_assignment"] = self._assignment.getDeclaration()
 
+        if self._definition is not None:
+            info["_definition"] = self._definition.getDeclaration()
+
         return info
 
-    def _deserialize(self, info: dict) -> None: ...
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key in ["_assignment", "_definition"]:
+                value = expression.Expression(None, value, None)
+
+            setattr(self, key, value)
 
     def __hash__(self):
         return id(self)

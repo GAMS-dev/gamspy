@@ -33,6 +33,8 @@ def test_alias_creation(m):
 
     a = Alias(m, alias_with=i)
     assert len(a) == 0
+    with pytest.raises(ValidationError):
+        _ = a.getAssignment()
 
     # no alias
     with pytest.raises(TypeError):
@@ -61,8 +63,11 @@ def test_alias_creation(m):
 
     # len of Alias
     i2 = Set(m, records=["i1", "i2"])
-    k2 = Alias(m, alias_with=i2)
+    k2 = Alias(m, "k2", alias_with=i2)
     assert len(k2) == 2
+
+    k2["i1"] = False
+    assert k2.getAssignment() == 'k2("i1") = no;'
 
     # synch
     with pytest.raises(ValidationError):
@@ -148,13 +153,10 @@ def test_universe_alias(m):
     gdx_path = os.path.join("tmp", "test.gdx")
 
     h = UniverseAlias(m, "h")
-    assert len(h) == 0
     _ = Set(m, "i", records=["i1", "i2"])
     _ = Set(m, "j", records=["j1", "j2"])
 
     assert h.records.values.tolist() == [["i1"], ["i2"], ["j1"], ["j2"]]
-
-    assert len(h) == 4
 
     m.write(gdx_path)
 

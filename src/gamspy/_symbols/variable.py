@@ -347,7 +347,12 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         return info
 
-    def _deserialize(self, info: dict) -> None: ...
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key == "_assignment":
+                value = expression.Expression(None, value, None)
+
+            setattr(self, key, value)
 
     def __getitem__(
         self, indices: Sequence | str

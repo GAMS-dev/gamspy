@@ -358,11 +358,16 @@ class Model:
 
         # attributes
         for attribute in ATTRIBUTE_MAP.values():
-            info[attribute] = getattr(self, attribute, None)
+            if attribute in ["_status", "_solve_status"]:
+                value = getattr(self, attribute, None)
+                if value is not None:
+                    value = value.value
+
+                info[attribute] = value
+            else:
+                info[attribute] = getattr(self, attribute, None)
 
         return info
-
-    def _deserialize(self, info: dict) -> None: ...
 
     def __repr__(self) -> str:
         return f"Model(name='{self.name}', problem='{str(self.problem)}', equations={self.equations}, sense='{str(self.sense)}', objective={self._objective_variable}, matches={self._matches}, limited_variables={self._limited_variables}"
