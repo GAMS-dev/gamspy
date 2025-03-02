@@ -32,7 +32,7 @@ def serialize(container: Container, path: str) -> None:
     with open(json_path, "w") as file:
         json.dump(info, file)
 
-    # shutil.make_archive(path, "zip", path)
+    shutil.make_archive(path, "zip", path)
 
 
 def deserialize(path: str) -> Container:
