@@ -331,7 +331,7 @@ class Model:
         self._solve_status: SolveStatus | None = None
         self._solver_version = None
 
-        self.container.models.append(self)
+        self.container.models.update({self.name: self})
         self.container._synch_with_gams()
 
     def _serialize(self) -> dict:

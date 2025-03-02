@@ -25,7 +25,7 @@ def serialize(container: Container, path: str) -> None:
 
     # Serialize models
     models = dict()
-    for model in container.models:
+    for model in container.models.values():
         models[model.name] = model._serialize()
         info["models"] = models
 
@@ -60,8 +60,11 @@ def deserialize(path: str) -> Container:
             for equation in equations
             if equation.name in model["equations"]
         ]
-        matches = models.get("_matches", None)
-        objective_variable = models.get("_objective_variable", None)
+        matches = model.get("_matches", None)
+        objective_variable = model.get("_objective_variable", None)
+        if objective_variable is not None:
+            objective_variable = container[objective_variable]
+
         deserialized_model = container.addModel(
             name=name,
             problem=model["problem"],

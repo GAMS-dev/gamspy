@@ -26,6 +26,8 @@ from gamspy import (
     Sum,
     UniverseAlias,
     Variable,
+    deserialize,
+    serialize,
 )
 from gamspy.exceptions import GamspyException, ValidationError
 
@@ -760,3 +762,53 @@ def test_restart():
     assert "i" in m.data
     assert m["i"].toList() == ["i1", "i2"]
     m.close()
+
+
+def test_serialization(data):
+    m, canning_plants, markets, capacities, demands, distances = data
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(m, name="d", domain=[i, j], records=distances)
+    c = Parameter(m, name="c", domain=[i, j])
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    transport.solve()
+    serialization_path = os.path.join("tmp", "serialized")
+    serialize(m, serialization_path)
+
+    m2 = deserialize(serialization_path + ".zip")
+    assert m.data.keys() == m2.data.keys()
+
+    # Test model
+    transport2 = m2.models["transport"]
+    assert transport.name == transport2.name
+    assert transport.objective_value == transport2.objective_value
+
+    # Test symbols
+    c2 = m2["c"]
+    assert c.records.equals(c2.records)
+    x2 = m2["x"]
+    assert x.records.equals(x2.records)
+    assert x.domain_names == x2.domain_names
+
+    # Test solve
+    transport2.solve()

@@ -238,7 +238,7 @@ class Container(gt.Container):
     ):
         self.output = output
         self._gams_string = ""
-        self.models: list[Model] = []
+        self.models: dict[str, Model] = dict()
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
