@@ -169,7 +169,8 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                value = expression.Expression(None, value, None)
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right)
 
             setattr(self, key, value)
 

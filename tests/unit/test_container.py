@@ -768,6 +768,7 @@ def test_serialization(data):
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
+    k = Alias(m, name="k", alias_with=i)
 
     a = Parameter(m, name="a", domain=[i], records=capacities)
     b = Parameter(m, name="b", domain=[j], records=demands)
@@ -776,6 +777,7 @@ def test_serialization(data):
     c[i, j] = 90 * d[i, j] / 1000
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
+    x._metadata = {"some_metadata": "some_value"}
 
     supply = Equation(m, name="supply", domain=[i])
     demand = Equation(m, name="demand", domain=[j])
@@ -796,19 +798,42 @@ def test_serialization(data):
     serialize(m, serialization_path)
 
     m2 = deserialize(serialization_path + ".zip")
+    assert id(m) != id(m2)
     assert m.data.keys() == m2.data.keys()
 
     # Test model
     transport2 = m2.models["transport"]
+    assert id(transport) != transport2
     assert transport.name == transport2.name
     assert transport.objective_value == transport2.objective_value
 
     # Test symbols
-    c2 = m2["c"]
+    i2: Set = m2["i"]
+    j2: Set = m2["j"]
+    k2: Alias = m2["k"]
+    c2: Parameter = m2["c"]
+    d2: Parameter = m2["d"]
+
+    assert i.records.equals(i2.records)
+    assert k.records.equals(k2.records)
     assert c.records.equals(c2.records)
-    x2 = m2["x"]
+    assert all(not isinstance(elem, str) for elem in c2.domain)
+    assert c.domain_names == c2.domain_names
+    x2: Variable = m2["x"]
     assert x.records.equals(x2.records)
+    assert all(not isinstance(elem, str) for elem in c2.domain)
     assert x.domain_names == x2.domain_names
+    assert x._metadata == x2._metadata
+    supply2: Equation = m2["supply"]
+    assert supply.records.equals(supply2.records)
+    assert all(not isinstance(elem, str) for elem in supply2.domain)
+    assert supply.domain_names == supply2.domain_names
+
+    # Test assignment and definitions
+    assert c.getAssignment() == c2.getAssignment()
+    assert supply.getDefinition() == supply2.getDefinition()
 
     # Test solve
+    c2[i2, j2] = 90 * d2[i2, j2] / 100
     transport2.solve()
+    assert transport.objective_value != transport2.objective_value

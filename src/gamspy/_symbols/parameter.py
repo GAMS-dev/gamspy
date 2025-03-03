@@ -207,7 +207,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if has_symbol:
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -273,7 +273,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
             self.where = condition.Condition(self)
             self._assignment: Expression | None = None
             self.container._add_statement(self)
@@ -304,9 +304,20 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def _deserialize(self, info: dict) -> None:
         for key, value in info.items():
             if key == "_assignment":
-                value = expression.Expression(None, value, None)
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
 
             setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __getitem__(
         self, indices: EllipsisType | slice | Sequence | str

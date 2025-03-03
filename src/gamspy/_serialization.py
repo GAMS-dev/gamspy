@@ -16,7 +16,7 @@ def serialize(container: Container, path: str) -> None:
     # Dump the GAMS State to disc
     container._options._set_debug_options({"save": g00_path})
     container._synch_with_gams()
-    container.close()
+    container._options._set_debug_options(dict())
 
     # Serialize symbols
     info = dict()
