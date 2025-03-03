@@ -297,6 +297,7 @@ class Container(gt.Container):
                     {"restart": load_from, "gdxSymbols": "all"}
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
+                self._options._set_debug_options(dict())
             else:
                 self._read(load_from)
                 if not isinstance(load_from, gt.Container):
