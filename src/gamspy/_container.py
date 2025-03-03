@@ -1252,6 +1252,17 @@ class Container(gt.Container):
 
         return m
 
+    def serialize(self, path: str) -> None:
+        """
+        Serializes the Container into a zip file.
+
+        Parameters
+        ----------
+        path : str
+            Path to the zip file.
+        """
+        gp.serialize(self, path)
+
     def getEquations(self) -> list[Equation]:
         """
         Returns all equation symbols in the Container.

@@ -3,39 +3,89 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import tempfile
+import zipfile
 
 from gamspy import Container
 from gamspy._model import ATTRIBUTE_MAP
+from gamspy.exceptions import ValidationError
 
 
 def serialize(container: Container, path: str) -> None:
-    os.makedirs(path)
-    g00_path = os.path.join(path, "gams_state.g00")
-    json_path = os.path.join(path, "dict.json")
+    """
+    Serializes the given Container into a zip file.
 
-    # Dump the GAMS State to disc
-    container._options._set_debug_options({"save": g00_path})
-    container._synch_with_gams()
-    container._options._set_debug_options(dict())
+    Parameters
+    ----------
+    container : Container
+        Container to be serialized.
+    path : str
+        Path to the zip file.
 
-    # Serialize symbols
-    info = dict()
-    for name, symbol in container.data.items():
-        info[name] = symbol._serialize()
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> m = gp.Container()
+    >>> i = gp.Set(m, "i", records=range(3))
+    >>> gp.serialize(m, "serialization_path.zip")
 
-    # Serialize models
-    models = dict()
-    for model in container.models.values():
-        models[model.name] = model._serialize()
-        info["models"] = models
+    """
+    if not path.endswith(".zip"):
+        raise ValidationError(f"The path must end with .zip but found {path}")
 
-    with open(json_path, "w") as file:
-        json.dump(info, file)
+    if not isinstance(container, Container):
+        raise ValidationError(
+            f"`container` must be of type Container but found {type(container)}"
+        )
 
-    shutil.make_archive(path, "zip", path)
+    with tempfile.TemporaryDirectory() as tmpdir_name:
+        g00_path = os.path.join(tmpdir_name, "gams_state.g00")
+        json_path = os.path.join(tmpdir_name, "dict.json")
+
+        # Dump the GAMS State to disc
+        container._options._set_debug_options({"save": g00_path})
+        container._synch_with_gams()
+        container._options._set_debug_options(dict())
+
+        # Serialize symbols
+        info = dict()
+        for name, symbol in container.data.items():
+            info[name] = symbol._serialize()
+
+        # Serialize models
+        models = dict()
+        for model in container.models.values():
+            models[model.name] = model._serialize()
+            info["models"] = models
+
+        with open(json_path, "w") as file:
+            json.dump(info, file)
+
+        shutil.make_archive(path[:-4], "zip", tmpdir_name)
 
 
 def deserialize(path: str) -> Container:
+    """
+    Deserializes the given zip file into a Container.
+
+    Parameters
+    ----------
+    path : str
+        Path to the zip file.
+
+    Returns
+    -------
+    Container
+        Deserialized Container.
+
+    Raises
+    ------
+    ValidationError
+        In case the given path is not a zip file.
+    """
+    if not zipfile.is_zipfile(path):
+        raise ValidationError(f"`{path}` is not a zip file.")
+
     src = path
     dst = path[:-4]
     shutil.unpack_archive(src, dst, "zip")

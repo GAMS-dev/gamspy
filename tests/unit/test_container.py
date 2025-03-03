@@ -764,7 +764,7 @@ def test_restart():
     m.close()
 
 
-def test_serialization(data):
+def test_serialization(data) -> None:
     m, canning_plants, markets, capacities, demands, distances = data
     i = Set(m, name="i", records=canning_plants)
     j = Set(m, name="j", records=markets)
@@ -794,10 +794,21 @@ def test_serialization(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
     transport.solve()
-    serialization_path = os.path.join("tmp", "serialized")
-    serialize(m, serialization_path)
 
-    m2 = deserialize(serialization_path + ".zip")
+    serialization_path = os.path.join("tmp", "serialized.zip")
+    serialization_path2 = os.path.join("tmp", "serialized2.zip")
+    # Incorrect zip file name
+    with pytest.raises(ValidationError):
+        serialize(m, "bla")
+
+    # Incorrect container type
+    with pytest.raises(ValidationError):
+        serialize(i, serialization_path)
+
+    serialize(m, serialization_path)  # try gp.serialize syntax
+    m.serialize(serialization_path2)  # try container.serialize syntax
+
+    m2 = deserialize(serialization_path)
     assert id(m) != id(m2)
     assert m.data.keys() == m2.data.keys()
 
