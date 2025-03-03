@@ -761,6 +761,8 @@ def test_restart():
     m = Container(load_from=save_path)
     assert "i" in m.data
     assert m["i"].toList() == ["i1", "i2"]
+    _ = Set(m, "j", records=range(6))
+    assert list(m.data.keys()) == ["i", "j"]
     m.close()
 
 

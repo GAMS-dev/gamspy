@@ -6,6 +6,7 @@ GAMSPy 1.7.0
 - General
   - Allow container serialization/deserialization.
   - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
+  - Fix a bug when starting from a GAMS restart file.
 - Documentation
   - Add a section in FAQ about the compatibiltiy issues of the Python interpreter from the Microsoft Store.
 - Testing
