@@ -37,7 +37,7 @@ class Symbol:
     def _deserialize(self, info: dict):
         """Deserializes given info into a symbol"""
 
-    def latexRepr(self):
+    def latexRepr(self: Set | Alias | Parameter | Variable | Equation):
         """
         Representation of symbol in Latex.
 
