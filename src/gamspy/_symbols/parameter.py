@@ -207,7 +207,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         if has_symbol:
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -273,8 +273,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
             self.where = condition.Condition(self)
+            self._assignment: Expression | None = None
             self.container._add_statement(self)
 
             if records is not None:
@@ -285,6 +286,38 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
                 )
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_input": self._is_miro_input,
+            "_is_miro_output": self._is_miro_output,
+            "_is_miro_table": self._is_miro_table,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key == "_assignment":
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
+
+            setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __getitem__(
         self, indices: EllipsisType | slice | Sequence | str
@@ -540,7 +573,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
         'a(i) = (a(i) * 5);'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Parameter is not defined!")
+        if self._assignment is None:
+            raise ValidationError("Parameter was not assigned!")
 
         return self._assignment.getDeclaration()

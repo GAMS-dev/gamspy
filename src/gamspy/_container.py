@@ -238,6 +238,7 @@ class Container(gt.Container):
     ):
         self.output = output
         self._gams_string = ""
+        self.models: dict[str, Model] = dict()
         if IS_MIRO_INIT:
             atexit.register(self._write_miro_files)
 
@@ -298,6 +299,8 @@ class Container(gt.Container):
                 )
                 self._synch_with_gams(gams_to_gamspy=True)
                 self._options._set_debug_options(dict())
+                self._clean_modified_symbols()
+                self._unsaved_statements = []
             else:
                 self._read(load_from)
                 if not isinstance(load_from, gt.Container):
@@ -1248,6 +1251,17 @@ class Container(gt.Container):
                 m._synch_with_gams()
 
         return m
+
+    def serialize(self, path: str) -> None:
+        """
+        Serializes the Container into a zip file.
+
+        Parameters
+        ----------
+        path : str
+            Path to the zip file.
+        """
+        gp.serialize(self, path)
 
     def getEquations(self) -> list[Equation]:
         """

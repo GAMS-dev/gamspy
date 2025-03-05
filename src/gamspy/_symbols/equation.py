@@ -123,6 +123,7 @@ class Equation(gt.Equation, Symbol):
         # set private properties directly
         type = cast_type(type)
         obj.type = EQU_TYPE[type]
+        obj._assignment = None
         obj._gams_type = GMS_DT_EQU
         obj._gams_subtype = TRANSFER_TO_GAMS_EQUATION_SUBTYPES[type]
         obj._requires_state_check = False
@@ -217,6 +218,7 @@ class Equation(gt.Equation, Symbol):
         definition_domain: list | None = None,
     ):
         self._metadata: dict[str, Any] = dict()
+        self._assignment: Expression | None = None
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
@@ -251,7 +253,7 @@ class Equation(gt.Equation, Symbol):
 
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -318,7 +320,7 @@ class Equation(gt.Equation, Symbol):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
 
             self.where = condition.Condition(self)
             self.container._add_statement(self)
@@ -347,6 +349,42 @@ class Equation(gt.Equation, Symbol):
                 self.container._synch_with_gams()
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        if self._definition is not None:
+            info["_definition"] = self._definition.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key == "_assignment":
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
+            elif key == "_definition":
+                left, right = value.split(" .. ")
+                value = expression.Expression(left, "..", right[:-1])
+
+            setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __hash__(self):
         return id(self)
@@ -1125,8 +1163,8 @@ class Equation(gt.Equation, Symbol):
         'e.l(i) = 0;'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Equation is not assigned!")
+        if self._assignment is None:
+            raise ValidationError("Equation was not assigned!")
 
         return self._assignment.getDeclaration()
 

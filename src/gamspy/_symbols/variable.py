@@ -114,6 +114,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         # set private properties directly
         obj._type = type
+        obj._assignment = None
         obj._gams_type = GMS_DT_VAR
         obj._gams_subtype = TRANSFER_TO_GAMS_VARIABLE_SUBTYPES[type]
 
@@ -212,6 +213,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         is_miro_output: bool = False,
     ):
         self._metadata: dict[str, Any] = dict()
+        self._assignment: Expression | None = None
         if is_miro_output and name is None:
             raise ValidationError("Please specify a name for miro symbols.")
 
@@ -245,7 +247,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -311,7 +313,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
@@ -333,6 +335,36 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 self.container._synch_with_gams()
 
             container._options.miro_protect = True
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        for key, value in info.items():
+            if key == "_assignment":
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
+
+            setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __getitem__(
         self, indices: Sequence | str | EllipsisType | slice
@@ -945,7 +977,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         'v.l(i) = 0;'
 
         """
-        if not hasattr(self, "_assignment"):
+        if self._assignment is None:
             raise ValidationError("Variable is not assigned!")
 
         return self._assignment.getDeclaration()

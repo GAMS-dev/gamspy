@@ -28,6 +28,15 @@ class Symbol:
     def __bool__(self):
         raise ValidationError("A symbol cannot be used as a truth value.")
 
+    def gamsRepr(self):
+        """Representation of the implicit symbol in GAMS"""
+
+    def _serialize(self):
+        """Serializes the symbol into a dict"""
+
+    def _deserialize(self, info: dict):
+        """Deserializes given info into a symbol"""
+
     def latexRepr(self: Set | Alias | Parameter | Variable | Equation):
         """
         Representation of symbol in Latex.

@@ -501,7 +501,6 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         # gamspy attributes
         obj.where = condition.Condition(obj)
         obj.container._add_statement(obj)
-        obj._current_index = 0
         obj._synchronize = True
         obj._metadata = dict()
 
@@ -595,7 +594,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         if has_symbol:
             if any(
                 d1 != d2
-                for d1, d2 in itertools.zip_longest(self.domain, domain)
+                for d1, d2 in itertools.zip_longest(self._domain, domain)
             ):
                 raise ValueError(
                     "Cannot overwrite symbol in container unless symbol"
@@ -641,6 +640,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             assert container is not None
 
             self.where = condition.Condition(self)
+            self._assignment: Expression | None = None
 
             if name is not None:
                 name = validation.validate_name(name)
@@ -670,7 +670,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if is_miro_output:
                 container._miro_output_symbols.append(self.name)
 
-            validation.validate_container(self, self.domain)
+            validation.validate_container(self, self._domain)
             self.container._add_statement(self)
 
             if records is not None:
@@ -681,6 +681,38 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
                 )
 
             container._options.miro_protect = previous_state
+
+    def _serialize(self) -> dict:
+        info = {
+            "_domain_forwarding": self.domain_forwarding,
+            "_is_miro_input": self._is_miro_input,
+            "_is_miro_output": self._is_miro_output,
+            "_metadata": self._metadata,
+            "_synchronize": self._synchronize,
+        }
+        if self._assignment is not None:
+            info["_assignment"] = self._assignment.getDeclaration()
+
+        return info
+
+    def _deserialize(self, info: dict) -> None:
+        # Set attributes
+        for key, value in info.items():
+            if key == "_assignment":
+                left, right = value.split(" = ")
+                value = expression.Expression(left, "=", right[:-1])
+
+            setattr(self, key, value)
+
+        # Relink domain symbols
+        new_domain = []
+        for elem in self._domain:
+            if elem == "*":
+                new_domain.append(elem)
+                continue
+            new_domain.append(self.container[elem])
+
+        self.domain = new_domain
 
     def __len__(self):
         if self.records is not None:
@@ -894,7 +926,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
         'i("i1") = no;'
 
         """
-        if not hasattr(self, "_assignment"):
-            raise ValidationError("Set is not assigned!")
+        if self._assignment is None:
+            raise ValidationError("Set was not assigned!")
 
         return self._assignment.getDeclaration()
