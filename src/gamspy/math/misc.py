@@ -66,7 +66,7 @@ def _stringify(x: str | int | float | Symbol | ImplicitSymbol):
     elif isinstance(x, str):
         return f'"{x}"'
 
-    return x.gamsRepr()
+    return x.gamsRepr()  # type: ignore
 
 
 def abs(x: OperableType) -> Expression:

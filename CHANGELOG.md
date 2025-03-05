@@ -3,6 +3,9 @@ GAMSPy CHANGELOG
 
 GAMSPy 1.7.0
 ------------
+- General
+  - Support an alternative syntax for operations. For example, x.sum() is equivalent to Sum(x.domain, x[x.domain]).
+  - Fix a bug when starting from a GAMS restart file.
 - Documentation
   - Add a section in FAQ about the compatibiltiy issues of the Python interpreter from the Microsoft Store.
 - Testing
@@ -22,6 +25,7 @@ GAMSPy 1.6.0
   - Allow indexing into symbols with integers.
   - Add `bypass_solver`, `cutoff`, and `default_point` options.
   - Replace conda, pip and virtualenv with uv in ci pipelines.
+  - Add --use-uv option to allow solver downloads with uv.
   - Provide ssl context explicitly for NEOS backend.
   - Add configurable options via set_options and get_option.
   - Fix bug in an edge case of the vector-matrix multiplication.

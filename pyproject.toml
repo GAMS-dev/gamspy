@@ -91,6 +91,7 @@ gamspy = "gamspy._cli.cli:main"
 warn_unused_configs = true
 follow_imports = "skip"
 follow_imports_for_stubs = true
+disable_error_code = ["misc"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
