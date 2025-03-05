@@ -87,41 +87,23 @@ def _calc_hw(
         return h_in, w_in
 
     if len(padding) == 2:
-        h_out = math.floor(
-            1
-            + (
-                (h_in + (2 * padding[0]) - (kernel_size[0] - 1) - 1)
-                / stride[0]
-            )
-        )
-        w_out = math.floor(
-            1
-            + (
-                (w_in + (2 * padding[1]) - (kernel_size[1] - 1) - 1)
-                / stride[1]
-            )
-        )
+        # padding is represented as (top, left, bottom, right)
+        padding = (padding[0], padding[1], padding[0], padding[1])
 
-    elif len(padding) == 4:
-        h_out = math.floor(
-            1
-            + (
-                (h_in + (padding[0] + padding[2]) - (kernel_size[0] - 1) - 1)
-                / stride[0]
-            )
+    h_out = math.floor(
+        1
+        + (
+            (h_in + (padding[0] + padding[2]) - (kernel_size[0] - 1) - 1)
+            / stride[0]
         )
-        w_out = math.floor(
-            1
-            + (
-                (w_in + (padding[1] + padding[3]) - (kernel_size[1] - 1) - 1)
-                / stride[1]
-            )
+    )
+    w_out = math.floor(
+        1
+        + (
+            (w_in + (padding[1] + padding[3]) - (kernel_size[1] - 1) - 1)
+            / stride[1]
         )
-
-    else:
-        raise ValidationError(
-            f"Padding must be a tuple of 2 or 4 integers. Not {len(padding)}."
-        )
+    )
 
     return h_out, w_out
 
