@@ -41,3 +41,5 @@ gamspy
 
 .. autofunction:: gamspy.set_options
 .. autofunction:: gamspy.get_option
+.. autofunction:: gamspy.serialize
+.. autofunction:: gamspy.deserialize   

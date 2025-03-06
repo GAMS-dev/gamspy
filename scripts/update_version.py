@@ -39,8 +39,8 @@ def update_version_test(args: Namespace) -> None:
     with open(test_path) as file:
         content = file.read()
 
-    pattern = f'gamspy.__version__ == "{__version__}"'
-    new_pattern = f'gamspy.__version__ == "{args.new_version}"'
+    pattern = f'gp.__version__ == "{__version__}"'
+    new_pattern = f'gp.__version__ == "{args.new_version}"'
     new_content = content.replace(pattern, new_pattern)
 
     with open(test_path, "w") as file:

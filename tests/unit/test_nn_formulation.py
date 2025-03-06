@@ -106,7 +106,7 @@ def test_conv2d_bad_init(data):
     # stride size must be integer or tuple of integer
     for bad_value in bad_values:
         pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, bad_value)
-    # stride size must be integer or tuple of integer
+    # padding size must be integer or tuple of integer
     for bad_value in bad_values[:-1]:
         pytest.raises(ValidationError, Conv2d, m, 4, 4, 3, 1, bad_value)
 
@@ -145,13 +145,28 @@ def test_conv2d_load_weights(data):
 
 def test_conv2d_same_indices(data):
     m, *_ = data
-    conv1 = Conv2d(m, 4, 4, 4, bias=True)
+    conv1 = Conv2d(m, 4, 4, 4, bias=True, name_prefix="conv1")
     w1 = np.random.rand(4, 4, 4, 4)
     b1 = np.random.rand(4)
     conv1.load_weights(w1, b1)
 
     inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
     out, eqs = conv1(inp)
+
+    output_var_found = False
+    weight_par_found = False
+    bias_par_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_conv1_output"):
+            output_var_found = True
+        elif sym_name.startswith("p_conv1_weight"):
+            weight_par_found = True
+        elif sym_name.startswith("p_conv1_bias"):
+            bias_par_found = True
+
+    assert output_var_found
+    assert weight_par_found
+    assert bias_par_found
 
     # this produces an output that is 4 x 4 too
     conv2 = Conv2d(m, 4, 4, 4, padding=3, stride=2, bias=True)
@@ -218,6 +233,9 @@ def test_conv2d_call_bad(data):
     # batch x in_channel x height x width
     bad_inp_2 = gp.Variable(m, domain=dim([10, 3, 4, 4]))
     pytest.raises(ValidationError, conv1, bad_inp_2)
+
+    # propagate_bounds must be a boolean
+    pytest.raises(ValidationError, conv1, inp, propagate_bounds="True")
 
 
 def test_conv2d_simple_correctness(data):
@@ -603,7 +621,7 @@ def test_conv2d_with_padding(data):
     m, w1, b1, inp, par_input, _ = data
 
     conv_with_valid_padding = Conv2d(m, 1, 2, 3, padding="valid")
-    assert conv_with_valid_padding.padding == (0, 0)
+    assert conv_with_valid_padding.padding == (0, 0, 0, 0)
 
     conv1 = Conv2d(m, 1, 2, 3, padding=(2, 1))
     conv1.load_weights(w1, b1)
@@ -1197,6 +1215,432 @@ def test_conv2d_with_padding_and_stride(data):
     assert np.allclose(out.toDense(), expected_out)
 
 
+def test_conv2d_propagate_bounds_general(data):
+    m, *_ = data
+
+    w1 = np.random.rand(3, 1, 2, 2)
+    b1 = np.random.rand(3)
+
+    inp_lower = np.random.rand(16, 1, 24, 24)
+    inp_upper = np.random.rand(16, 1, 24, 24)
+
+    lo_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((16, 1, 24, 24)), records=inp_upper)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    # Unbounded input results in unbounded output
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    assert out1.up.records is None
+    assert out1.lo.records is None
+    assert out2.up.records is None
+    assert out2.lo.records is None
+
+    # Bounded input with "propagate_bounds = False" results in unbounded output
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out3, _ = conv1(inp, propagate_bounds=False)
+    out4, _ = conv2(inp, propagate_bounds=False)
+
+    assert out3.up.records is None
+    assert out3.lo.records is None
+    assert out4.up.records is None
+    assert out4.lo.records is None
+
+    # Bounded input with "propagate_bounds = True" results in bounded output
+    out5, _ = conv1(inp, propagate_bounds=True)
+    out6, _ = conv2(inp, propagate_bounds=True)
+
+    assert out5.up.records is not None
+    assert out5.lo.records is not None
+    assert out6.up.records is not None
+    assert out6.lo.records is not None
+
+
+def test_conv2d_propagate_bounds_zero_weights_unbounded_input(data):
+    m, *_ = data
+
+    w1 = np.zeros((3, 1, 2, 2))
+    b1 = np.random.rand(3)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    # When bias is present, the output bounds should be equal to the bias
+    assert np.allclose(
+        np.array(out1.records.upper).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+    assert np.allclose(
+        np.array(out1.records.lower).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+
+    # When bias is not present, the output bounds should be zeros
+    assert np.allclose(
+        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
+    )
+    assert np.allclose(
+        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
+    )
+
+
+def test_conv2d_propagate_bounds_input_bounded_by_zero(data):
+    m, *_ = data
+
+    w1 = np.random.rand(3, 1, 2, 2)
+    b1 = np.random.rand(3)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2
+    conv1 = Conv2d(m, 1, 3, 2)
+    conv1.load_weights(w1, b1)
+
+    # in_channels=1, out_channels=3, kernel_size=2x2, bias=False
+    conv2 = Conv2d(m, 1, 3, 2, bias=False)
+    conv2.load_weights(w1)
+
+    # 16 images, 1 channels, 24 by 24
+    inp = gp.Variable(m, domain=dim((16, 1, 24, 24)))
+
+    # Input bounded with zeros results in bounded output with zeros (bias not present) or bias (bias present)
+    inp.lo[...] = 0
+    inp.up[...] = 0
+
+    out1, _ = conv1(inp, propagate_bounds=True)
+    out2, _ = conv2(inp, propagate_bounds=True)
+
+    # When bias is present, the output bounds should be equal to the bias
+    assert np.allclose(
+        np.array(out1.records.upper).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+    assert np.allclose(
+        np.array(out1.records.lower).reshape(out1.shape),
+        b1[:, np.newaxis, np.newaxis],
+    )
+
+    # When bias is not present, the output bounds should be zeros
+    assert np.allclose(
+        np.array(out2.records.upper).reshape(out2.shape), np.zeros(out2.shape)
+    )
+    assert np.allclose(
+        np.array(out2.records.lower).reshape(out2.shape), np.zeros(out2.shape)
+    )
+
+
+def test_conv2d_propagate_bounds_complex_bounds(data):
+    m, *_ = data
+
+    w1 = np.array(
+        [[[[3, -3], [-2, 0]], [[0, -2], [-1, -3]], [[2, 0], [-4, 1]]]]
+    )
+
+    b1 = np.array([3])
+
+    inp_lower = np.array(
+        [
+            [
+                [
+                    [-2, -np.inf, -4, -1],
+                    [-2, -1, -1, -np.inf],
+                    [0, -5, -3, -1],
+                    [-3, 0, -1, -np.inf],
+                ],
+                [
+                    [-2, -4, -2, -1],
+                    [-3, -1, -5, -3],
+                    [-2, -1, -1, -1],
+                    [-1, -1, 0, -2],
+                ],
+                [
+                    [-1, -2, -1, -5],
+                    [0, -3, -3, -1],
+                    [-2, 0, -1, -2],
+                    [-5, -3, -5, 0],
+                ],
+            ],
+            [
+                [
+                    [-2, -3, 0, 0],
+                    [-3, -4, -2, -1],
+                    [-2, -1, -5, -4],
+                    [-5, 0, -4, -5],
+                ],
+                [
+                    [-1, -2, -5, 0],
+                    [-3, -1, -3, -2],
+                    [-1, -5, -3, -1],
+                    [-2, -2, 0, -3],
+                ],
+                [
+                    [-3, -3, -np.inf, -1],
+                    [-np.inf, 0, -5, -2],
+                    [-4, -np.inf, -3, -3],
+                    [-4, -3, -3, -np.inf],
+                ],
+            ],
+        ]
+    )
+
+    inp_upper = np.array(
+        [
+            [
+                [
+                    [4, 2, 4, 4],
+                    [3, 2, np.inf, 4],
+                    [2, 1, 2, np.inf],
+                    [3, np.inf, 3, 3],
+                ],
+                [
+                    [3, 2, 3, 1],
+                    [3, 3, 4, 1],
+                    [np.inf, 4, 3, np.inf],
+                    [3, 2, 4, 2],
+                ],
+                [[1, 2, 1, 2], [3, 4, np.inf, 4], [4, 2, 4, 2], [1, 3, 3, 4]],
+            ],
+            [
+                [[np.inf, 4, 3, 4], [2, 4, 3, 3], [4, 2, 2, 4], [2, 2, 1, 3]],
+                [
+                    [np.inf, 3, 3, 2],
+                    [2, 4, np.inf, 4],
+                    [4, 2, 3, 4],
+                    [4, 2, 2, 2],
+                ],
+                [
+                    [np.inf, 1, 4, 2],
+                    [3, 1, 3, 1],
+                    [2, 4, 2, 2],
+                    [3, 2, np.inf, 2],
+                ],
+            ],
+        ]
+    )
+
+    exp_up = np.array([[[[np.inf, 54], [67, 54]]], [[[np.inf, 54], [68, 58]]]])
+
+    exp_lo = np.array(
+        [
+            [[[-48, -np.inf], [-34, -np.inf]]],
+            [[[-57, -np.inf], [-50, -np.inf]]],
+        ]
+    )
+
+    lo_inp = gp.Parameter(m, domain=dim((2, 3, 4, 4)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((2, 3, 4, 4)), records=inp_upper)
+
+    # in_channels=3, out_channels=1, kernel_size=2x2, stride=2
+    conv1 = Conv2d(m, 3, 1, 2, 2)
+    conv1.load_weights(w1, b1)
+
+    # 2 images, 3 channels, 4 by 4
+    inp = gp.Variable(m, domain=dim((2, 3, 4, 4)))
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out, _ = conv1(inp, propagate_bounds=True)
+
+    assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
+    assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
+
+
+def test_conv2d_propagate_bounds_with_same_padding(data):
+    m, *_ = data
+
+    w1 = np.array(
+        [
+            [
+                [
+                    [-1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, -1],
+                ]
+            ]
+        ]
+    )
+
+    inp_lower = np.array(
+        [
+            [
+                [
+                    [-1, -2, -3, -3, 0],
+                    [-1, 0, -1, -3, -4],
+                    [-1, -1, -3, -3, 0],
+                    [-1, -1, -3, -2, -5],
+                    [-2, -4, -5, 0, -4],
+                ]
+            ],
+            [
+                [
+                    [-1, -1, -2, -2, -5],
+                    [-2, -4, 0, -4, -3],
+                    [-4, -2, -2, -3, -2],
+                    [-4, -4, -1, -2, -2],
+                    [-4, -4, -5, 0, -3],
+                ]
+            ],
+        ]
+    )
+
+    inp_upper = np.array(
+        [
+            [
+                [
+                    [1, 4, 1, 4, 4],
+                    [4, 4, 2, 3, 4],
+                    [4, 3, 1, 1, 1],
+                    [2, 4, 2, 3, 1],
+                    [3, 1, 4, 3, 2],
+                ]
+            ],
+            [
+                [
+                    [3, 2, 4, 3, 3],
+                    [4, 1, 2, 3, 3],
+                    [1, 2, 1, 3, 3],
+                    [3, 1, 2, 3, 3],
+                    [4, 2, 1, 3, 1],
+                ]
+            ],
+        ]
+    )
+
+    exp_up = np.array(
+        [
+            [
+                [
+                    [1.0, 5.0, 4.0, 8.0, 4.0],
+                    [5.0, 8.0, 7.0, 6.0, 7.0],
+                    [5.0, 7.0, 3.0, 7.0, 4.0],
+                    [6.0, 10.0, 3.0, 10.0, 4.0],
+                    [3.0, 2.0, 5.0, 6.0, 4.0],
+                ]
+            ],
+            [
+                [
+                    [7.0, 2.0, 8.0, 6.0, 3.0],
+                    [6.0, 4.0, 6.0, 7.0, 5.0],
+                    [5.0, 5.0, 7.0, 5.0, 7.0],
+                    [7.0, 10.0, 4.0, 8.0, 6.0],
+                    [4.0, 6.0, 5.0, 4.0, 3.0],
+                ]
+            ],
+        ]
+    )
+
+    exp_lo = np.array(
+        [
+            [
+                [
+                    [-5.0, -4.0, -6.0, -7.0, 0.0],
+                    [-4.0, -2.0, -6.0, -5.0, -8.0],
+                    [-5.0, -7.0, -10.0, -6.0, -3.0],
+                    [-2.0, -9.0, -9.0, -5.0, -6.0],
+                    [-2.0, -6.0, -9.0, -2.0, -7.0],
+                ]
+            ],
+            [
+                [
+                    [-2.0, -3.0, -5.0, -5.0, -5.0],
+                    [-4.0, -8.0, -5.0, -11.0, -6.0],
+                    [-5.0, -8.0, -6.0, -8.0, -5.0],
+                    [-6.0, -6.0, -6.0, -4.0, -5.0],
+                    [-4.0, -7.0, -6.0, -2.0, -6.0],
+                ]
+            ],
+        ]
+    )
+
+    lo_inp = gp.Parameter(m, domain=dim((2, 1, 5, 5)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((2, 1, 5, 5)), records=inp_upper)
+
+    # in_channels=1, out_channels=1, kernel_size=3x3, padding=same
+    conv1 = Conv2d(m, 1, 1, 3, padding="same", bias=False)
+    conv1.load_weights(w1)
+
+    # 2 images, 1 channel, 5 by 5
+    inp = gp.Variable(m, domain=dim((2, 1, 5, 5)))
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out, _ = conv1(inp, propagate_bounds=True)
+
+    assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
+    assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
+
+
+def test_conv2d_propagate_bounds_with_same_padding_even_input(data):
+    m, *_ = data
+
+    np.random.seed(42)
+
+    w1 = np.random.randint(-5, 5, (2, 2, 2, 2))
+
+    inp_lower = np.random.randint(-5, 0, (2, 2, 2, 2))
+
+    inp_upper = np.random.randint(0, 5, (2, 2, 2, 2))
+
+    lo_inp = gp.Parameter(m, domain=dim((2, 2, 2, 2)), records=inp_lower)
+    up_inp = gp.Parameter(m, domain=dim((2, 2, 2, 2)), records=inp_upper)
+
+    # in_channels=2, out_channels=2, kernel_size=2x2, padding=same
+    conv = Conv2d(m, 2, 2, 2, padding="same", bias=False)
+    conv.load_weights(w1)
+
+    # 2 images, 2 channels, 2 by 2
+    inp = gp.Variable(m, domain=dim((2, 2, 2, 2)))
+    inp.lo[...] = lo_inp[...]
+    inp.up[...] = up_inp[...]
+
+    out, _ = conv(inp, propagate_bounds=True)
+
+    exp_lo = np.array(
+        [
+            [
+                [[-56, -17], [-28, -6]],
+                [[-30, -20], [-21, -12]],
+            ],
+            [
+                [[-34, -18], [-23, -7]],
+                [[-30, -16], [-24, -14]],
+            ],
+        ]
+    )
+
+    exp_up = np.array(
+        [
+            [[[31, 22], [19, 5]], [[41, 12], [28, 10]]],
+            [[[40, 15], [16, 4]], [[37, 16], [15, 8]]],
+        ]
+    )
+
+    assert np.allclose(np.array(out.records.lower).reshape(out.shape), exp_lo)
+    assert np.allclose(np.array(out.records.upper).reshape(out.shape), exp_up)
+
+
 def test_max_pooling(data):
     m, w1, b1, inp, par_input, ii = data
 
@@ -1404,8 +1848,8 @@ def test_pooling_with_bounds(data):
 def test_mpooling_with_complex_bounds(data):
     m, *_ = data
 
-    max_pool = MaxPool2d(m, (2, 3))
-    min_pool = MinPool2d(m, (2, 3))
+    max_pool = MaxPool2d(m, (2, 3), name_prefix="maxpool1")
+    min_pool = MinPool2d(m, (2, 3), name_prefix="minpool1")
 
     data = np.array(
         [
@@ -1456,6 +1900,18 @@ def test_mpooling_with_complex_bounds(data):
     out2, _ = min_pool(par, propagate_bounds=False)
     out3, _ = max_pool(par)
     out4, _ = min_pool(par)
+
+    for name in ["minpool1", "maxpool1"]:
+        output_var_found = False
+        matching_set_found = False
+        for sym_name in m.data:
+            if sym_name.startswith(f"v_{name}_output"):
+                output_var_found = True
+            elif sym_name.startswith(f"s_{name}_in_out_matching"):
+                matching_set_found = True
+
+        assert output_var_found, f"{name} output var not found"
+        assert matching_set_found, f"{name} match set not found"
 
     out5, _ = max_pool(var, propagate_bounds=False)
     out6, _ = min_pool(var, propagate_bounds=False)
@@ -1661,7 +2117,7 @@ def test_min_pooling(data):
 
 def test_avg_pooling(data):
     m, w1, b1, inp, par_input, ii = data
-    ap1 = AvgPool2d(m, 2)
+    ap1 = AvgPool2d(m, 2, name_prefix="avgpool1")
     ap2 = AvgPool2d(m, (2, 1))
     ap3 = AvgPool2d(m, 3, stride=(1, 1))
     ap4 = AvgPool2d(m, 4, stride=(3, 2), padding=2)
@@ -1670,6 +2126,17 @@ def test_avg_pooling(data):
     out3, eqs3 = ap3(par_input)
     out4, eqs4 = ap4(par_input)
     out5, _ = ap4(par_input, propagate_bounds=False)
+
+    output_var_found = False
+    matching_set_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_avgpool1_output"):
+            output_var_found = True
+        elif sym_name.startswith("s_avgpool1_in_out_matching_1"):
+            matching_set_found = True
+
+    assert output_var_found
+    assert matching_set_found
 
     # test that records are not created when propagate_bounds is False
     assert out5.records is None
@@ -2425,7 +2892,7 @@ def test_linear_propagate_bounds_non_boolean(data):
 
 def test_linear_propagate_bounded_input(data):
     m, *_ = data
-    lin1 = Linear(m, 4, 3)
+    lin1 = Linear(m, 4, 3, name_prefix="lin1")
     w1 = np.random.rand(3, 4)
     b1 = np.random.rand(3)
     lin1.load_weights(w1, b1)
@@ -2456,6 +2923,21 @@ def test_linear_propagate_bounded_input(data):
     assert np.allclose(
         np.array(out1.up.records.upper).reshape(2, 3), expected_ub
     )
+
+    output_var_found = False
+    weight_par_found = False
+    bias_par_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_lin1_output"):
+            output_var_found = True
+        elif sym_name.startswith("p_lin1_weight"):
+            weight_par_found = True
+        elif sym_name.startswith("p_lin1_bias"):
+            bias_par_found = True
+
+    assert output_var_found
+    assert weight_par_found
+    assert bias_par_found
 
 
 def test_linear_propagate_unbounded_input(data):

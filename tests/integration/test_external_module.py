@@ -51,7 +51,8 @@ def data():
     # Clean up
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
     tmp_dirs = glob.glob("tmp*")
     for tmp_dir in tmp_dirs:
         shutil.rmtree(tmp_dir)

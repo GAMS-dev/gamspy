@@ -77,7 +77,8 @@ def data():
     m.close()
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     shutil.rmtree("tmp")
 
@@ -125,7 +126,8 @@ def network_license():
     )
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
 
 def test_network_license(network_license):

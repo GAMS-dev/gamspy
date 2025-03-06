@@ -216,11 +216,7 @@ def solver(
 
             if not skip_pip_install:
 
-                # TODO: This is a temporary solution which will be removed in GAMSPy 1.7.0
                 solver_version = gamspy_base.__version__
-                if platform.system() == "Darwin" and platform.machine() == "arm64":
-                    solver_version += ".post1"
-
                 # install specified solver
                 if use_uv:
                     command = [

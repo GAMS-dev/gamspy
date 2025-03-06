@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
@@ -8,6 +9,7 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._symbols.implicits.implicit_symbol import ImplicitSymbol
+from gamspy._types import EllipsisType
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -38,7 +40,9 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
     def __repr__(self) -> str:
         return f"ImplicitVariable(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}, parent_scalar_domains={self.parent_scalar_domains})"
 
-    def __getitem__(self, indices: list | str) -> ImplicitVariable:
+    def __getitem__(
+        self, indices: Sequence | str | EllipsisType | slice
+    ) -> ImplicitVariable:
         domain = validation.validate_domain(self, indices)
         return ImplicitVariable(
             parent=self.parent,

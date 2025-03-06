@@ -37,6 +37,7 @@ class Operation(operable.Operable):
         rhs: (
             Expression
             | Operation
+            | ImplicitSet
             | ImplicitVariable
             | ImplicitParameter
             | int
@@ -271,6 +272,7 @@ class Sum(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int
@@ -344,6 +346,7 @@ class Product(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int
@@ -417,6 +420,7 @@ class Smin(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int
@@ -490,6 +494,7 @@ class Smax(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int
@@ -563,6 +568,7 @@ class Sand(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int
@@ -635,6 +641,7 @@ class Sor(Operation):
         | Condition,
         expression: Operation
         | Expression
+        | ImplicitSet
         | ImplicitParameter
         | ImplicitVariable
         | int

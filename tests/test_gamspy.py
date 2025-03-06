@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.6.0"
+    assert gp.__version__ == "1.7.0"
 
 
 @pytest.mark.unit
@@ -115,7 +115,8 @@ def teardown():
     # Cleanup
     files = glob.glob("_*")
     for file in files:
-        os.remove(file)
+        if os.path.isfile(file):
+            os.remove(file)
 
     if os.path.exists("test"):
         shutil.rmtree("test")

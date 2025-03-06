@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gamspy"
-version = "1.6.0"
+version = "1.7.0"
 authors = [
   { name = "GAMS Development Corporation", email = "support@gams.com" },
 ]
@@ -36,8 +36,8 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
 ]
 dependencies = [
-  "gamsapi[transfer] == 49.1.0",
-  "gamspy_base == 49.1.0",
+  "gamsapi[transfer] == 49.2.0",
+  "gamspy_base == 49.2.0",
   "pydantic >= 2.0",
   "certifi >= 2022.09.14",
   "urllib3 >= 2.0.7",
@@ -91,6 +91,7 @@ gamspy = "gamspy._cli.cli:main"
 warn_unused_configs = true
 follow_imports = "skip"
 follow_imports_for_stubs = true
+disable_error_code = ["misc"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

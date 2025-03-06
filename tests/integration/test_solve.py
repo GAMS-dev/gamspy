@@ -3,6 +3,7 @@ from __future__ import annotations
 import concurrent.futures
 import logging
 import math
+import multiprocessing
 import os
 import platform
 import shutil
@@ -34,6 +35,9 @@ from gamspy import (
 from gamspy.exceptions import GamspyException, ValidationError
 
 pytestmark = pytest.mark.integration
+
+if multiprocessing.get_start_method(allow_none=True) is None:
+    multiprocessing.set_start_method("spawn")
 
 
 @pytest.fixture
