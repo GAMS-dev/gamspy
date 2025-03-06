@@ -44,6 +44,10 @@ class Conv2d:
         padding.
     bias : bool
         Is bias added after the convolution, by default True
+    name_prefix : str | None
+        Prefix for names of the GAMS symbols generated, by default None which means
+        random prefix. Using same name_prefix in different formulations causes name
+        conflicts. Do not use same name_prefix again.
 
     Examples
     --------
@@ -75,6 +79,7 @@ class Conv2d:
         stride: int | tuple[int, int] = 1,
         padding: int | tuple[int, int] | Literal["same", "valid"] = 0,
         bias: bool = True,
+        name_prefix: str | None = None,
     ):
         if not (isinstance(in_channels, int) and in_channels > 0):
             raise ValidationError("in_channels must be a positive integer")
@@ -120,6 +125,11 @@ class Conv2d:
         self.bias: Parameter | Variable | None = None
         self.bias_array = None
 
+        if name_prefix is None:
+            name_prefix = str(uuid.uuid4()).split("-")[0]
+
+        self._name_prefix = name_prefix
+
     def _encode_infinity(self, x):
         """
         Encode infinity values as complex numbers.
@@ -139,7 +149,9 @@ class Conv2d:
     def _propagate_bounds(self, input, output, weight, bias, stride, padding):
         # Extract input bounds
         input_bounds = gp.Parameter(
-            self.container, domain=dim([2, *input.shape])
+            self.container,
+            domain=dim([2, *input.shape]),
+            name=utils._generate_name("p", self._name_prefix, "input_bounds"),
         )
         # lower bounds
         input_bounds[("0",) + tuple(input.domain)] = input.lo[...]
@@ -159,6 +171,9 @@ class Conv2d:
                 self.container,
                 domain=dim(output.shape),
                 records=out_bounds_array,
+                name=utils._generate_name(
+                    "p", self._name_prefix, "output_bounds"
+                ),
             )
             output.lo[...] = out_bounds
             output.up[...] = out_bounds
@@ -290,6 +305,7 @@ class Conv2d:
             self.container,
             domain=dim([2, *output.shape]),
             records=out_bounds_array,
+            name=utils._generate_name("p", self._name_prefix, "output_bounds"),
         )
 
         output.lo[...] = out_bounds[("0",) + tuple(output.domain)]
@@ -318,13 +334,16 @@ class Conv2d:
 
         if self.weight is None:
             self.weight = gp.Variable(
-                self.container, domain=dim(expected_shape)
+                self.container,
+                domain=dim(expected_shape),
+                name=utils._generate_name("v", self._name_prefix, "weight"),
             )
 
         if self.use_bias and self.bias is None:
             self.bias = gp.Variable(
                 self.container,
                 domain=dim([self.out_channels]),
+                name=utils._generate_name("v", self._name_prefix, "bias"),
             )
 
         self._state = 2
@@ -387,7 +406,10 @@ class Conv2d:
 
         if self.weight is None:
             self.weight = gp.Parameter(
-                self.container, domain=dim(expected_shape), records=weight
+                self.container,
+                domain=dim(expected_shape),
+                records=weight,
+                name=utils._generate_name("p", self._name_prefix, "weight"),
             )
         else:
             self.weight.setRecords(weight)
@@ -400,6 +422,7 @@ class Conv2d:
                     self.container,
                     domain=dim([self.out_channels]),
                     records=bias,
+                    name=utils._generate_name("p", self._name_prefix, "bias"),
                 )
             else:
                 self.bias.setRecords(bias)
@@ -455,11 +478,16 @@ class Conv2d:
         out = gp.Variable(
             self.container,
             domain=dim([len(N), self.out_channels, h_out, w_out]),
+            name=utils._generate_name("v", self._name_prefix, "output"),
         )
 
         N, C_out, H_out, W_out = out.domain
 
-        set_out = gp.Equation(self.container, domain=out.domain)
+        set_out = gp.Equation(
+            self.container,
+            domain=out.domain,
+            name=utils._generate_name("e", self._name_prefix, "set_output"),
+        )
 
         if isinstance(self.padding, str):
             padding = utils._calc_same_padding(self.kernel_size)
@@ -476,9 +504,10 @@ class Conv2d:
             out.domain,
         )
 
-        name = "ds_" + str(uuid.uuid4()).split("-")[0]
         subset = gp.Set(
-            self.container, name, domain=[H_out, W_out, Hf, Wf, H_in, W_in]
+            self.container,
+            domain=[H_out, W_out, Hf, Wf, H_in, W_in],
+            name=utils._generate_name("s", self._name_prefix, "conv_subset"),
         )
         subset[
             H_out,

@@ -132,27 +132,52 @@ find the minimum change required for the neural network to misclassify it.
 Testing with a sample
 ---------------------
 
-.. code-block:: python
+.. tabs::
+   .. group-tab:: Feed-forward Neural Network
 
-   mean = (0.1307,)
-   std = (0.3081,)
+      .. code-block:: python
+      
+         mean = (0.1307,)
+         std = (0.3081,)
+      
+         transform = transforms.Compose([transforms.ToTensor()])
+         dataset1 = datasets.MNIST('../data', train=False, download=True, transform=transform)
+         test_loader = torch.utils.data.DataLoader(dataset1)
+      
+         for data, target in test_loader:
+             data, target = data, target
+             break
+      
+         single_image = data[0]
+         single_target = target[0]
+      
+         if torch.argmax(network(single_image)) == single_target:
+             print("Model currently classifies correctly")
+         else:
+             print("Pick some other data")
 
-   transform = transforms.Compose([transforms.ToTensor()])
-   dataset1 = datasets.MNIST('../data', train=False, download=True, transform=transform)
-   test_loader = torch.utils.data.DataLoader(dataset1)
+   .. group-tab:: Convolutional Neural Network
 
-   for data, target in test_loader:
-       data, target = data, target
-       break
-
-   single_image = data[0]
-   single_target = target[0]
-
-   if torch.argmax(network(single_image)) == single_target:
-       print("Model currently classifies correctly")
-   else:
-       print("Pick some other data")
-
+      .. code-block:: python
+      
+         mean = (0.1307,)
+         std = (0.3081,)
+      
+         transform = transforms.Compose([transforms.ToTensor()])
+         dataset1 = datasets.MNIST('../data', train=False, download=True, transform=transform)
+         test_loader = torch.utils.data.DataLoader(dataset1)
+      
+         for data, target in test_loader:
+             data, target = data, target
+             break
+      
+         single_image = data[0]
+         single_target = target[0]
+      
+         if torch.argmax(network(single_image.unsqueeze(0))) == single_target:
+             print("Model currently classifies correctly")
+         else:
+             print("Pick some other data")
 
 Embedding the Neural Net
 ------------------------
@@ -308,7 +333,7 @@ inputs. We then ensure that `a1` stays within the valid range, so that the
 
 .. code-block:: python
 
-   set_a1 = gp.Equation(m, "set_a1", domain=a1.shape)
+   set_a1 = gp.Equation(m, "set_a1", domain=dim(a1.shape))
    set_a1[...] = a1 == (image + noise - mean[0]) / std[0]
 
    #set lower and upper bounds
