@@ -145,13 +145,28 @@ def test_conv2d_load_weights(data):
 
 def test_conv2d_same_indices(data):
     m, *_ = data
-    conv1 = Conv2d(m, 4, 4, 4, bias=True)
+    conv1 = Conv2d(m, 4, 4, 4, bias=True, name_prefix="conv1")
     w1 = np.random.rand(4, 4, 4, 4)
     b1 = np.random.rand(4)
     conv1.load_weights(w1, b1)
 
     inp = gp.Variable(m, domain=dim([4, 4, 4, 4]))
     out, eqs = conv1(inp)
+
+    output_var_found = False
+    weight_par_found = False
+    bias_par_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_conv1_output"):
+            output_var_found = True
+        elif sym_name.startswith("p_conv1_weight"):
+            weight_par_found = True
+        elif sym_name.startswith("p_conv1_bias"):
+            bias_par_found = True
+
+    assert output_var_found
+    assert weight_par_found
+    assert bias_par_found
 
     # this produces an output that is 4 x 4 too
     conv2 = Conv2d(m, 4, 4, 4, padding=3, stride=2, bias=True)
@@ -1833,8 +1848,8 @@ def test_pooling_with_bounds(data):
 def test_mpooling_with_complex_bounds(data):
     m, *_ = data
 
-    max_pool = MaxPool2d(m, (2, 3))
-    min_pool = MinPool2d(m, (2, 3))
+    max_pool = MaxPool2d(m, (2, 3), name_prefix="maxpool1")
+    min_pool = MinPool2d(m, (2, 3), name_prefix="minpool1")
 
     data = np.array(
         [
@@ -1885,6 +1900,18 @@ def test_mpooling_with_complex_bounds(data):
     out2, _ = min_pool(par, propagate_bounds=False)
     out3, _ = max_pool(par)
     out4, _ = min_pool(par)
+
+    for name in ["minpool1", "maxpool1"]:
+        output_var_found = False
+        matching_set_found = False
+        for sym_name in m.data:
+            if sym_name.startswith(f"v_{name}_output"):
+                output_var_found = True
+            elif sym_name.startswith(f"s_{name}_in_out_matching"):
+                matching_set_found = True
+
+        assert output_var_found, f"{name} output var not found"
+        assert matching_set_found, f"{name} match set not found"
 
     out5, _ = max_pool(var, propagate_bounds=False)
     out6, _ = min_pool(var, propagate_bounds=False)
@@ -2090,7 +2117,7 @@ def test_min_pooling(data):
 
 def test_avg_pooling(data):
     m, w1, b1, inp, par_input, ii = data
-    ap1 = AvgPool2d(m, 2)
+    ap1 = AvgPool2d(m, 2, name_prefix="avgpool1")
     ap2 = AvgPool2d(m, (2, 1))
     ap3 = AvgPool2d(m, 3, stride=(1, 1))
     ap4 = AvgPool2d(m, 4, stride=(3, 2), padding=2)
@@ -2099,6 +2126,17 @@ def test_avg_pooling(data):
     out3, eqs3 = ap3(par_input)
     out4, eqs4 = ap4(par_input)
     out5, _ = ap4(par_input, propagate_bounds=False)
+
+    output_var_found = False
+    matching_set_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_avgpool1_output"):
+            output_var_found = True
+        elif sym_name.startswith("s_avgpool1_in_out_matching_1"):
+            matching_set_found = True
+
+    assert output_var_found
+    assert matching_set_found
 
     # test that records are not created when propagate_bounds is False
     assert out5.records is None
@@ -2854,7 +2892,7 @@ def test_linear_propagate_bounds_non_boolean(data):
 
 def test_linear_propagate_bounded_input(data):
     m, *_ = data
-    lin1 = Linear(m, 4, 3)
+    lin1 = Linear(m, 4, 3, name_prefix="lin1")
     w1 = np.random.rand(3, 4)
     b1 = np.random.rand(3)
     lin1.load_weights(w1, b1)
@@ -2885,6 +2923,21 @@ def test_linear_propagate_bounded_input(data):
     assert np.allclose(
         np.array(out1.up.records.upper).reshape(2, 3), expected_ub
     )
+
+    output_var_found = False
+    weight_par_found = False
+    bias_par_found = False
+    for sym_name in m.data:
+        if sym_name.startswith("v_lin1_output"):
+            output_var_found = True
+        elif sym_name.startswith("p_lin1_weight"):
+            weight_par_found = True
+        elif sym_name.startswith("p_lin1_bias"):
+            bias_par_found = True
+
+    assert output_var_found
+    assert weight_par_found
+    assert bias_par_found
 
 
 def test_linear_propagate_unbounded_input(data):

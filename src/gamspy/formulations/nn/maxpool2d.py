@@ -18,6 +18,10 @@ class MaxPool2d(_MPool2d):
         Stride in the max pooling, it is equal to kernel_size if not provided
     padding : int | tuple[int, int]
         Amount of padding to be added to input, by default 0
+    name_prefix : str | None
+        Prefix for generated GAMSPy symbols, by default None which means
+        random prefix. Using the same name_prefix in different formulations causes name
+        conflicts. Do not use the same name_prefix again.
 
     Examples
     --------
@@ -41,8 +45,11 @@ class MaxPool2d(_MPool2d):
         kernel_size: int | tuple[int, int],
         stride: int | None = None,
         padding: int = 0,
+        name_prefix: str | None = None,
     ):
-        super().__init__("max", container, kernel_size, stride, padding)
+        super().__init__(
+            "max", container, kernel_size, stride, padding, name_prefix
+        )
 
     def __call__(
         self,
