@@ -87,7 +87,6 @@ wei-cli-3.13:
 
 wei-cli-3.9:
   stage: cli
-  needs: [wei-cli-3.13]
   tags: [windows]
   image: winamd64/python:3.9
   script:
