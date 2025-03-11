@@ -38,3 +38,4 @@ details are found in :ref:`reference`.
    :maxdepth: 2
 
    ml/ml
+   ml/examples
