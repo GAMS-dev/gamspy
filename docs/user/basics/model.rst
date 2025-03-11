@@ -105,6 +105,23 @@ argument in its constructor. ::
     )
 
 You do not need to include equations already provided in `matches` in the `equations` argument.
+In addition to this explicit equation, variable matching, some newer matching constructs are also supported.
+Equation sequence syntax: ::
+
+    model = Model(m, problem=Problem.MCP, matches={(e1, e2, e3) : v})
+
+This is equivalent to the following explicit syntax: ::
+    
+    model = Model(m, problem=Problem.MCP, matches={e1:v, e2:v, e3:v})
+
+Variable sequence syntax: ::
+
+    model = Model(m, problem=Problem.MCP, matches={e : (v1, v2, v3)})
+
+This is equivalent to the following explicit syntax: ::
+
+    model = Model(m, problem=Problem.MCP, matches={e:v1, e:v2, e:v3})
+
 An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
 
 
