@@ -59,7 +59,8 @@ class Condition(operable.Operable):
         return Condition(self)
 
     def __getitem__(
-        self, condition: Expression | ImplicitParameter | ImplicitSet
+        self,
+        condition: Operation | Expression | ImplicitParameter | ImplicitSet,
     ) -> Condition:
         if isinstance(condition, expression.Expression):
             condition._fix_equalities()
