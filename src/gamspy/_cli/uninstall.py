@@ -78,7 +78,7 @@ def solver(
             if not skip_pip_uninstall:
                 # uninstall specified solver
                 if use_uv:
-                    command = ["uv", "pip", "uninstall", f"gamspy-{solver_name}"]
+                    command = ["uv", "pip", "--python-preference", "only-system", "uninstall", f"gamspy-{solver_name}"]
                 else:
                     command = [sys.executable, "-m", "pip", "uninstall", f"gamspy-{solver_name}", "-y"]
                 try:

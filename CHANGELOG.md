@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.8.0
+------------
+- General
+  - Ignore empty and newlines in the existing solvers file.
+
 GAMSPy 1.7.0
 ------------
 - General
