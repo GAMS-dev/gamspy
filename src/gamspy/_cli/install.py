@@ -277,12 +277,7 @@ def solver(
 
             with open(addons_path, "w") as file:
                 if solver_name.upper() not in installed:
-                    file.write(
-                        "\n".join(installed)
-                        + "\n"
-                        + solver_name.upper()
-                        + "\n"
-                    )
+                    file.write("\n".join(installed + [solver_name.upper()]))
 
     if install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
