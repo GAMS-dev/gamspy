@@ -298,6 +298,7 @@ def solver(
         try:
             with open(addons_path) as file:
                 solvers = file.read().splitlines()
+                solvers = [solver for solver in solvers if solver != "" and solver != "\n"]
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
