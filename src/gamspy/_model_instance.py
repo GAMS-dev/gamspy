@@ -209,6 +209,16 @@ class ModelInstance:
         self.modifiers = self._create_modifiers()
         self.instantiate(model, freeze_options)
 
+        # preallocate summary frame for performance reasons
+        HEADER = [
+            "Solver Status",
+            "Model Status",
+            "Objective",
+            "Solver",
+            "Solver Time",
+        ]
+        self.summary = pd.DataFrame(index=range(1), columns=HEADER)
+
     def __del__(self):
         if hasattr(self, "_gmo") and self._gmo:
             gmoFree(self._gmo)
@@ -349,14 +359,13 @@ class ModelInstance:
 
             option_file = 1
 
+        names_to_write = []
         for symbol in self.modifiables:
             if isinstance(symbol, gp.Parameter):
                 self.instance_container[symbol.name].setRecords(
                     self.container[symbol.name].records
                 )
-                self.instance_container.write(
-                    self.sync_db.gmd, symbols=[symbol.name], eps_to_zero=False
-                )
+                names_to_write.append(symbol.name)
 
             if (
                 isinstance(symbol, implicits.ImplicitParameter)
@@ -370,10 +379,11 @@ class ModelInstance:
                 self.instance_container[attr_name].setRecords(
                     self.container[parent_name].records.drop(columns, axis=1)
                 )
+                names_to_write.append(attr_name)
 
-                self.instance_container.write(
-                    self.sync_db.gmd, symbols=[attr_name], eps_to_zero=False
-                )
+            self.instance_container.write(
+                self.sync_db.gmd, symbols=names_to_write, eps_to_zero=False
+            )
 
         ### Legacy code from GAMS Control. TODO: Pay the technical debt of the following legacy code. ###
         rc = gmdInitUpdate(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
@@ -514,27 +524,15 @@ class ModelInstance:
             self._gmo, gmoHdomused
         )
         self.model._objective_value = gmoGetHeadnTail(self._gmo, gmoHobjval)
-        HEADER = [
-            "Solver Status",
-            "Model Status",
-            "Objective",
-            "Solver",
-            "Solver Time",
+        self.summary.loc[0] = [
+            str(self.model._solve_status),
+            str(self.model._status),
+            self.model._objective_value,
+            solver,
+            self.model._solve_model_time,
         ]
-        summary = pd.DataFrame(
-            [
-                [
-                    str(self.model._solve_status),
-                    str(self.model._status),
-                    self.model._objective_value,
-                    solver,
-                    self.model._solve_model_time,
-                ]
-            ],
-            columns=HEADER,
-        )
 
-        return summary
+        return self.summary
 
     def _get_scenario(self, model: Model) -> str:
         params = [
@@ -699,12 +697,19 @@ class ModelInstance:
                 ].domain_names
 
             if name in (symbol.name for symbol in self.modifiables):
-                _ = gp.Variable(
-                    self.container,
-                    name + "_var",
-                    domain=self.container[name].domain,
-                    records=temp[name + "_var"].records,
-                )
+                generated_var = name + "_var"
+                if generated_var not in self.container.data:
+                    _ = gp.Variable(
+                        self.container,
+                        name + "_var",
+                        domain=self.container[name].domain,
+                        records=temp[generated_var].records,
+                    )
+                else:
+                    self.container[generated_var]._records = temp[
+                        generated_var
+                    ].records
+
         self.container._options.miro_protect = prev_state
 
         if self.model._objective_variable is not None:

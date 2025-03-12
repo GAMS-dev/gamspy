@@ -1197,7 +1197,7 @@ class Equation(gt.Equation, Symbol):
 
 def cast_type(type: str | EquationType) -> str:
     if isinstance(type, str):
-        if type.lower() not in [
+        if type.lower() not in (
             "eq",
             "geq",
             "leq",
@@ -1205,7 +1205,7 @@ def cast_type(type: str | EquationType) -> str:
             "nonbinding",
             "external",
             "boolean",
-        ]:
+        ):
             raise ValueError(
                 "Allowed equation types:"
                 f" {EquationType.values()} but found {type}."

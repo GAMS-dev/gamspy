@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.8.0
+------------
+- General
+  - Improve the performance of frozen solves.
+
 GAMSPy 1.7.0
 ------------
 - General
