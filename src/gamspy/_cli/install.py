@@ -1,7 +1,6 @@
 from __future__ import annotations
 import importlib
 import shutil
-import platform
 
 import sys
 from typing import Annotated, Iterable, Optional, Union
@@ -161,7 +160,7 @@ def append_dist_info(files, gamspy_base_dir: str):
             line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
-        record.write("\n".join(lines))
+        record.write("\n".join(lines) + "\n")
 
 @app.command(
     short_help="To install solvers",
@@ -222,6 +221,8 @@ def solver(
                     command = [
                         "uv",
                         "pip",
+                        "--python-preference",
+                        "only-system",
                         "install",
                         f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
