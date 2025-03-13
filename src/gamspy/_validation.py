@@ -475,12 +475,12 @@ def validate_solver_args(
     if not isinstance(solver, str):
         raise TypeError("`solver` argument must be a string.")
 
-    if backend == "neos" and solver.lower() in ["mpsge", "kestrel"]:
+    if backend == "neos" and solver.lower() in ("mpsge", "kestrel"):
         raise ValidationError(
             f"`{solver}` is not a valid solver for NEOS Server."
         )
 
-    if backend == "engine" and solver.lower() in ["mpsge"]:
+    if backend == "engine" and solver.lower() == "mpsge":
         raise ValidationError(
             f"`{solver}` is not a valid solver for GAMS Engine."
         )

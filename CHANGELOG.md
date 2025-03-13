@@ -5,6 +5,7 @@ GAMSPy 1.8.0
 ------------
 - General
   - Improve the performance of frozen solves.
+  - Ignore empty and newlines in the existing solvers file.
 
 GAMSPy 1.7.0
 ------------
