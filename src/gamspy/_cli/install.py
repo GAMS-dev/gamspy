@@ -1,7 +1,6 @@
 from __future__ import annotations
 import importlib
 import shutil
-import platform
 
 import sys
 from typing import Annotated, Iterable, Optional, Union
@@ -161,7 +160,7 @@ def append_dist_info(files, gamspy_base_dir: str):
             line = f"{gamspy_base_relative_path}{os.sep}{file},,"
             lines.append(line)
 
-        record.write("\n".join(lines))
+        record.write("\n".join(lines) + "\n")
 
 @app.command(
     short_help="To install solvers",
@@ -222,6 +221,8 @@ def solver(
                     command = [
                         "uv",
                         "pip",
+                        "--python-preference",
+                        "only-system",
                         "install",
                         f"gamspy-{solver_name}=={solver_version}",
                         "--force-reinstall",
@@ -276,12 +277,7 @@ def solver(
 
             with open(addons_path, "w") as file:
                 if solver_name.upper() not in installed:
-                    file.write(
-                        "\n".join(installed)
-                        + "\n"
-                        + solver_name.upper()
-                        + "\n"
-                    )
+                    file.write("\n".join(installed + [solver_name.upper()]))
 
     if install_all_solvers:
         available_solvers = utils.getAvailableSolvers()
@@ -298,6 +294,7 @@ def solver(
         try:
             with open(addons_path) as file:
                 solvers = file.read().splitlines()
+                solvers = [solver for solver in solvers if solver != "" and solver != "\n"]
                 install_addons(solvers)
                 return
         except FileNotFoundError as e:
