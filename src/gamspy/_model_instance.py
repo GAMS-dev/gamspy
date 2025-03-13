@@ -362,9 +362,9 @@ class ModelInstance:
         names_to_write = []
         for symbol in self.modifiables:
             if isinstance(symbol, gp.Parameter):
-                self.instance_container[symbol.name].setRecords(
-                    self.container[symbol.name].records
-                )
+                self.instance_container[symbol.name].records = self.container[
+                    symbol.name
+                ].records
                 names_to_write.append(symbol.name)
 
             if (
@@ -701,7 +701,7 @@ class ModelInstance:
                 if generated_var not in self.container.data:
                     _ = gp.Variable(
                         self.container,
-                        name + "_var",
+                        generated_var,
                         domain=self.container[name].domain,
                         records=temp[generated_var].records,
                     )
