@@ -105,25 +105,37 @@ argument in its constructor. ::
     )
 
 You do not need to include equations already provided in `matches` in the `equations` argument.
+
 In addition to this explicit equation, variable matching, some alternative matching constructs with more flexibility are also supported.
-Equation sequence syntax: ::
+
+**Equation sequence syntax:** ::
 
     model = Model(m, problem=Problem.MCP, matches={(e1, e2, e3) : v})
 
-This is equivalent to the following explicit syntax: ::
-    
-    model = Model(m, problem=Problem.MCP, matches={e1:v, e2:v, e3:v})
+This syntax requires that each equation in the sequence be conformant with ``v`` 
+(i.e. each equation has the same domain with the variable) and that the 
+set of tuples defining each equation be disjoint. For each column of ``v``, 
+at most one of ``e1`` or ``e2`` or ``e3`` will have a matching row. This is 
+useful when a variable contains columns of different kinds, e.g. prices for 
+both tradable and non-tradable commodities whose equilibrium conditions are 
+best expressed in different equations.
 
-Variable sequence syntax: ::
+**Variable sequence syntax:** ::
 
     model = Model(m, problem=Problem.MCP, matches={e : (v1, v2, v3)})
 
-This is equivalent to the following explicit syntax: ::
+This construct requires that each variable in the variable sequence be conformant with `e`. 
+This points to the exclusive-or relationship among the non-fixed variables involved in a match. 
+For each row of ``e``, at most one of the matching columns in ``v1`` or ``v2`` or ``v3`` is 
+allowed to be non-fixed. The fixed columns in the match are ignored by the solver, and the row 
+is paired with the one non-fixed column. If all the columns are fixed, this effectively drops the 
+row from the model, just as would happen with a fixed column in the simple match ``e.v``. If no 
+columns exist to match a row of ``e``, this is an error. This construct is useful when a system 
+has too many degrees of freedom if all the variables in question are left endogenous: by fixing 
+some variables (i.e. making them exogenous) we arrive at a square system.
 
-    model = Model(m, problem=Problem.MCP, matches={e:v1, e:v2, e:v3})
-
+More background information on MCP models can be found `here <https://www.gams.com/latest/docs/UG_ModelSolve.html#UG_ModelSolve_ModelClassificationOfModels_MCP>`_.
 An example MCP model can be found in the model library: `HANSMCP <https://github.com/GAMS-dev/gamspy/blob/master/tests/integration/models/hansmcp.py>`_.
-
 
 Model Attributes
 ================
