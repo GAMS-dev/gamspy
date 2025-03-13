@@ -105,7 +105,7 @@ argument in its constructor. ::
     )
 
 You do not need to include equations already provided in `matches` in the `equations` argument.
-In addition to this explicit equation, variable matching, some newer matching constructs are also supported.
+In addition to this explicit equation, variable matching, some alternative matching constructs with more flexibility are also supported.
 Equation sequence syntax: ::
 
     model = Model(m, problem=Problem.MCP, matches={(e1, e2, e3) : v})
