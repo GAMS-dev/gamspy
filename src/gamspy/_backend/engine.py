@@ -100,7 +100,7 @@ class EngineConfiguration:
 
     def _verify_host(self, host: str):
         validated_url = urllib.parse.urlparse(host)
-        if validated_url.scheme not in ["http", "https"]:
+        if validated_url.scheme not in ("http", "https"):
             raise ValidationError(
                 "Invalid GAMS Engine host. Only HTTP and HTTPS protocols supported"
             )
@@ -189,7 +189,7 @@ class Auth(Endpoint):
 
             response_data = r.data.decode("utf-8", errors="replace")
 
-            if r.status in [200, 400, 401, 500]:
+            if r.status in (200, 400, 401, 500):
                 info = json.loads(response_data)
 
             if r.status == 200:
@@ -247,7 +247,7 @@ class Auth(Endpoint):
             )
 
             response_data = r.data.decode("utf-8", errors="replace")
-            if r.status in [200, 400, 401, 500]:
+            if r.status in (200, 400, 401, 500):
                 info = json.loads(response_data)
 
             if r.status == 200:
@@ -788,7 +788,7 @@ class GAMSEngine(backend.Backend):
                 "`engine_client` must be provided to solve on GAMS Engine"
             )
 
-        if solver.lower() in ["mpsge"]:
+        if solver.lower() == "mpsge":
             raise ValidationError(
                 f"`{solver}` is not a valid solver for GAMS Engine."
             )
@@ -873,7 +873,7 @@ class GAMSEngine(backend.Backend):
                         status_code=job_status,
                     )
 
-                if job_status in [-1, -3]:
+                if job_status in (-1, -3):
                     raise EngineException(
                         "Could not get job results because the job is"
                         f" {message}.",
@@ -881,11 +881,11 @@ class GAMSEngine(backend.Backend):
                         status_code=job_status,
                     )
 
-                while job_status in [-10, -2, 0]:
+                while job_status in (-10, -2, 0):
                     logger.info(f"Job status is {message}...")
                     job_status, _, _ = self.client.job.get(token)
 
-                while job_status in [1, 2]:
+                while job_status in (1, 2):
                     message, is_finished = self.client.job.get_logs(token)
 
                     if self.output is not None:

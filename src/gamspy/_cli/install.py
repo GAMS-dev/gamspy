@@ -66,7 +66,7 @@ def license(
 
         data = request.data.decode("utf-8", errors="replace")
         cmex_type = json.loads(data)["cmex_type"]
-        if cmex_type not in ["gamspy", "gamspy++", "gamsall"]:
+        if cmex_type not in ("gamspy", "gamspy++", "gamsall"):
             raise ValidationError(
                 f"Given access code `{alp_id} ({cmex_type})` is not valid for GAMSPy. "
                 "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -107,13 +107,13 @@ def license(
         lines = license_text.splitlines()
         license_type = lines[0][54]
         if license_type == "+":
-            if lines[2][:2] not in ["00", "07", "08", "09"]:
+            if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
-            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+            if lines[2][8:10] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given access code `{alp_id}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
@@ -127,13 +127,13 @@ def license(
 
         license_type = lines[0][54]
         if license_type == "+":
-            if lines[2][:2] not in ["00", "07", "08", "09"]:
+            if lines[2][:2] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."
                 )
         else:
-            if lines[2][8:10] not in ["00", "07", "08", "09"]:
+            if lines[2][8:10] not in ("00", "07", "08", "09"):
                 raise ValidationError(
                     f"Given license file `{license}` is not valid for GAMSPy. "
                     "Make sure that you use a GAMSPy license, not a GAMS license."

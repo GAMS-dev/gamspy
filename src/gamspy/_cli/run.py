@@ -137,7 +137,7 @@ def discover_miro():
         ],
     }
 
-    if system in ["Darwin", "Windows"]:
+    if system in ("Darwin", "Windows"):
         for location in standard_locations[system]:
             if os.path.isfile(location):
                 return location

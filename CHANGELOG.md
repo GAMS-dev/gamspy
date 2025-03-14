@@ -4,6 +4,7 @@ GAMSPy CHANGELOG
 GAMSPy 1.8.0
 ------------
 - General
+  - Improve the performance of frozen solves.
   - Add support for new equation, variable matching syntax for MCP models.
   - Ignore empty and newlines in the existing solvers file.
 - Documentation

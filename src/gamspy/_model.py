@@ -375,7 +375,7 @@ class Model:
 
         # attributes
         for attribute in ATTRIBUTE_MAP.values():
-            if attribute in ["_status", "_solve_status"]:
+            if attribute in ("_status", "_solve_status"):
                 value = getattr(self, attribute, None)
                 if value is not None:
                     value = value.value
@@ -826,7 +826,7 @@ class Model:
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
-            if self.problem in [Problem.CNS, Problem.MCP, Problem.EMP]:
+            if self.problem in (Problem.CNS, Problem.MCP, Problem.EMP):
                 return None
 
             variable, equation = self._generate_obj_var_and_equation()
@@ -845,7 +845,7 @@ class Model:
             equation.modified = False
             variable.modified = False
 
-            if equation.name not in [symbol.name for symbol in self.equations]:
+            if equation.name not in (symbol.name for symbol in self.equations):
                 self.equations.append(equation)
 
             return variable
@@ -873,7 +873,7 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            if equation.name not in [symbol.name for symbol in self.equations]:
+            if equation.name not in (symbol.name for symbol in self.equations):
                 self.equations.append(equation)
 
             return variable
@@ -887,7 +887,7 @@ class Model:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense("MIN")
 
-        if self.problem not in [Problem.MCP, Problem.CNS, Problem.EMP]:
+        if self.problem not in (Problem.MCP, Problem.CNS, Problem.EMP):
             solve_string += f" {self.sense}"
 
         if self._objective_variable is not None:

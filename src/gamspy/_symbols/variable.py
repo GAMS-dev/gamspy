@@ -630,7 +630,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @scale.setter
     def scale(self, value: int | float | Expression):
-        if self.type in ["integer", "binary"]:
+        if self.type in ("integer", "binary"):
             raise ValidationError(
                 "Scales cannot be applied to discrete variables."
             )
@@ -691,7 +691,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
     @prior.setter
     def prior(self, value: int | float | Expression):
-        if self.type not in ["integer", "binary"]:
+        if self.type not in ("integer", "binary"):
             raise ValidationError(
                 "Priorities can only be used on discrete variables."
             )

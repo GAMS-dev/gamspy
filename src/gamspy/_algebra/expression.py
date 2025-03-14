@@ -120,10 +120,10 @@ class Expression(operable.Operable):
         return self._representation
 
     def _create_domain(self):
-        for loc, result in [
+        for loc, result in (
             (self.left, "_left_domain"),
             (self.right, "_right_domain"),
-        ]:
+        ):
             if isinstance(loc, condition.Condition):
                 loc = loc.conditioning_on
 
@@ -156,7 +156,7 @@ class Expression(operable.Operable):
 
         shadow_domain = []
         result_domain = []
-        for d in [*left_domain, *right_domain]:
+        for d in (*left_domain, *right_domain):
             if isinstance(d, str):
                 continue
 
@@ -211,7 +211,7 @@ class Expression(operable.Operable):
 
         # (voycap(j,k)$vc(j,k)) .. sum(.) -> not valid
         #  voycap(j,k)$vc(j,k)  .. sum(.) -> valid
-        if self.data in ["..", "="] and isinstance(
+        if self.data in ("..", "=") and isinstance(
             self.left, condition.Condition
         ):
             left_str = left_str[1:-1]
@@ -231,10 +231,10 @@ class Expression(operable.Operable):
         if self.data == ".":
             return out_str.replace(" ", "")
 
-        if self.data in ["..", "="]:
+        if self.data in ("..", "="):
             return f"{out_str};"
 
-        if self.data in ["=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="]:
+        if self.data in ("=g=", "=l=", "=e=", "=n=", "=x=", "=c=", "=b="):
             return out_str
 
         return f"({out_str})"

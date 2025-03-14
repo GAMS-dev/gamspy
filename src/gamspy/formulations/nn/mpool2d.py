@@ -20,7 +20,7 @@ class _MPool2d:
         name_prefix: str | None = None,
     ):
         # Validate pooling type
-        if sense not in ["min", "max"]:
+        if sense not in ("min", "max"):
             raise ValidationError("_MPool2d expects min or max")
 
         # Convert kernel_size, stride, and padding to tuples

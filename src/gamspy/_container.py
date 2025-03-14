@@ -485,7 +485,7 @@ class Container(gt.Container):
                 )
             elif isinstance(gtp_symbol, gt.Equation):
                 symbol_type = gtp_symbol.type
-                if gtp_symbol.type in ["eq", "leq", "geq"]:
+                if gtp_symbol.type in ("eq", "leq", "geq"):
                     symbol_type = "regular"
 
                 _ = gp.Equation._constructor_bypass(
