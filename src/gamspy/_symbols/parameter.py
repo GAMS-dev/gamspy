@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from gamspy import Alias, Container, Set
     from gamspy._algebra.expression import Expression
     from gamspy._algebra.operation import Operation
+    from gamspy._symbols.implicits import ImplicitParameter
     from gamspy._types import EllipsisType
     from gamspy.math.matrix import Dim
 
@@ -329,7 +330,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
     def __setitem__(
         self,
         indices: EllipsisType | slice | Sequence | str | implicits.ImplicitSet,
-        rhs: Operation | Expression | float | int,
+        rhs: Operation | Expression | ImplicitParameter | float | int,
     ):
         # self[domain] = rhs
         domain = validation.validate_domain(self, indices)

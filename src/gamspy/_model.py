@@ -8,7 +8,7 @@ import threading
 import uuid
 from collections.abc import Iterable, Sequence
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -240,7 +240,11 @@ class Model:
         equations: Sequence[Equation] = [],
         sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
-        matches: dict[Equation, Variable] | None = None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None = None,
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
@@ -262,7 +266,7 @@ class Model:
         assert self.container is not None
         self._matches = matches
         self.problem, self.sense = validation.validate_model(
-            equations, problem, sense
+            equations, matches, problem, sense
         )
         self.equations = list(equations)
         self._objective = objective
@@ -337,7 +341,7 @@ class Model:
         self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        info = {
+        info: dict[str, Any] = {
             "name": self.name,
             "problem": str(self.problem),
             "sense": str(self.sense),
@@ -349,9 +353,20 @@ class Model:
 
         # matches
         if self._matches is not None:
-            matches = {
-                key.name: value.name for key, value in self._matches.items()
-            }
+            matches: dict = dict()
+            for key, value in self._matches.items():
+                if isinstance(key, gp.Equation):
+                    if isinstance(value, gp.Variable):
+                        matches[key.name] = value.name
+                    else:
+                        matches[key.name] = (
+                            variable.name for variable in value
+                        )
+                else:
+                    assert isinstance(value, gp.Variable)
+                    for equation in key:
+                        matches[equation.name] = value.name
+
             info["_matches"] = matches
 
         # objective variable
@@ -1213,23 +1228,41 @@ class Model:
         'Model my_model / e,my_model_objective /;'
 
         """
+        equations_in_matches = []
+        if self._matches is not None:
+            for key in self._matches:
+                if isinstance(key, gp.Equation):
+                    equations_in_matches.append(key)
+                else:
+                    equations_in_matches += [equation for equation in key]
+
         equations = []
         for equation in self.equations:
-            if self._matches:
-                if equation not in self._matches:
+            if self._matches is not None:
+                if equation not in equations_in_matches:
                     equations.append(equation.name)
             else:
                 equations.append(equation.name)
 
         equations_str = ",".join(equations)
 
-        if self._matches:
-            matches_str = ",".join(
-                [
-                    f"{equation.name}.{variable.name}"
-                    for equation, variable in self._matches.items()
-                ]
-            )
+        if self._matches is not None:
+            matches = []
+            for key, value in self._matches.items():
+                if isinstance(key, gp.Equation):
+                    if isinstance(value, gp.Variable):
+                        matches.append(f"{key.name}.{value.name}")
+                    else:
+                        matches.append(
+                            f"{key.name}:({'|'.join([variable.name for variable in value])})"
+                        )
+                else:
+                    assert isinstance(value, gp.Variable)
+                    matches.append(
+                        f"({'|'.join([equation.name for equation in key])}):{value.name}"
+                    )
+
+            matches_str = ",".join(matches)
 
             equations_str = (
                 ",".join([equations_str, matches_str])

@@ -376,6 +376,11 @@ def validate_name(word: str) -> str:
 
 def validate_model(
     equations: Iterable[Equation],
+    matches: dict[
+        Variable | Equation | tuple[Variable] | tuple[Equation],
+        Variable | Equation | tuple[Variable] | tuple[Equation],
+    ]
+    | None,
     problem: Problem | str,
     sense: str | Sense,
 ) -> tuple[Problem, Sense]:
@@ -405,6 +410,22 @@ def validate_model(
         )
     ):
         raise TypeError("`equations` must be an Iterable of Equation objects")
+
+    if matches is not None:
+        if not isinstance(matches, dict):
+            raise TypeError(
+                f"`matches` must be of type dict but found {type(matches)}"
+            )
+
+        if any(
+            not isinstance(key, (symbols.Equation, Sequence))
+            or not isinstance(value, (symbols.Variable, Sequence))
+            or (isinstance(key, Sequence) and isinstance(value, Sequence))
+            for key, value in matches.items()
+        ):
+            raise TypeError(
+                "Possible syntaxes for the elements of the `matches` dictionary: Equation:Variable, Equation:Sequence[Variable], or Sequence[Equation]:Variable"
+            )
 
     return problem, sense
 

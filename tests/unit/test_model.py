@@ -1060,6 +1060,48 @@ def test_solve_string_mcp(data):
     )
     assert hansen._generate_solve_string() == "solve hansen using MCP;"
 
+    # Test new mcp matching syntax
+
+    # One equation to many variables
+    hansen = Model(
+        m,
+        "hansen2",
+        problem=Problem.MCP,
+        matches={mkt: (p, y, i)},
+    )
+
+    assert hansen.getDeclaration() == "Model hansen2 / mkt:(p|y|i) /;"
+
+    # Many equations to one variable
+    hansen = Model(
+        m,
+        "hansen2",
+        problem=Problem.MCP,
+        matches={(mkt, profit, income): i},
+    )
+
+    assert (
+        hansen.getDeclaration() == "Model hansen2 / (mkt|profit|income):i /;"
+    )
+
+    # Many to many should fail for now
+    with pytest.raises(TypeError):
+        hansen = Model(
+            m,
+            "hansen4",
+            problem=Problem.MCP,
+            matches={(mkt, profit, income): (p, y, i)},
+        )
+
+    # Non-dict matches should fail
+    with pytest.raises(TypeError):
+        hansen = Model(
+            m,
+            "hansen4",
+            problem=Problem.MCP,
+            matches=(i, income),
+        )
+
 
 def test_solve_string_cns(data):
     m, canning_plants, markets, distances, capacities, demands = data

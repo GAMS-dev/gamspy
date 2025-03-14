@@ -4,7 +4,11 @@ GAMSPy CHANGELOG
 GAMSPy 1.8.0
 ------------
 - General
+  - Add support for new equation, variable matching syntax for MCP models.
   - Ignore empty and newlines in the existing solvers file.
+- Documentation
+  - Add `Examples` section under `Machine Learning` documentation.
+  - Add a Thermal Reformer example demonstrating neural network surrogate modeling.
 
 GAMSPy 1.7.0
 ------------
@@ -17,8 +21,6 @@ GAMSPy 1.7.0
 - Documentation
   - Add a section in FAQ about the compatibiltiy issues of the Python interpreter from the Microsoft Store.
   - Fix minor issue in embedding Neural Network documentation.
-  - Add `Examples` section under `Machine Learning` documentation.
-  - Add a Thermal Reformer example demonstrating neural network surrogate modeling.
 - Testing
   - Enforce the order of tests. Run unit tests first, and model library tests last.
   - Use spawn method for multiprocessing to avoid possible deadlocks with fork method.
