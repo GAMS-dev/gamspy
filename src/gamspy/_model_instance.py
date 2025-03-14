@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import time
+import weakref
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -219,16 +220,12 @@ class ModelInstance:
         ]
         self.summary = pd.DataFrame(index=range(1), columns=HEADER)
 
-    def __del__(self):
-        if hasattr(self, "_gmo") and self._gmo:
-            gmoFree(self._gmo)
+        weakref.finalize(self, self.cleanup, self._gmo, self._gev)
 
-        if (
-            hasattr(self, "_gev")
-            and self._gev
-            and gevHandleToPtr(self._gev) is not None
-        ):
-            gevFree(self._gev)
+    @staticmethod
+    def cleanup(gmo, gev) -> None:
+        gmoFree(gmo)
+        gevFree(gev)
 
     def close_license_session(self) -> None:
         gmdCloseLicenseSession(self.sync_db.gmd)
@@ -318,7 +315,7 @@ class ModelInstance:
             self.container._job = self.job_name
             self.container._send_job(self.job_name, self.pf_file)
         except GamspyException as exception:
-            self.container._workspace._has_error = True
+            self.container._workspace._errors.append(str(exception))
             raise exception
         finally:
             self.container._unsaved_statements = []
