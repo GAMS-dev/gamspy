@@ -3,10 +3,11 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+import weakref
 
 from gamspy.exceptions import ValidationError
 
-DEBUGGING_LEVELS = ["delete", "keep_on_error", "keep"]
+DEBUGGING_LEVELS = ("delete", "keep_on_error", "keep")
 
 
 def validate_arguments(
@@ -35,7 +36,7 @@ class Workspace:
 
         self.debugging_level = debugging_level
         self.using_tmp_working_dir = False
-        self._has_error = False
+        self._errors: list[str] = []
 
         if working_directory is None:
             self.using_tmp_working_dir = True
@@ -44,19 +45,28 @@ class Workspace:
             self.working_directory = os.path.abspath(working_directory)
             os.makedirs(self.working_directory, exist_ok=True)
 
-    def __del__(self):
-        if (
-            hasattr(self, "using_tmp_working_dir")
-            and self.using_tmp_working_dir
-        ):
-            try:
-                if self.debugging_level == "delete":
-                    shutil.rmtree(self.working_directory)
+        weakref.finalize(
+            self,
+            self.cleanup,
+            self.using_tmp_working_dir,
+            self.debugging_level,
+            self.working_directory,
+            self._errors,
+        )
 
-                if (
-                    self.debugging_level == "keep_on_error"
-                    and not self._has_error
-                ):
-                    shutil.rmtree(self.working_directory)
-            except Exception:  # pragma: no cover
+    @staticmethod
+    def cleanup(
+        using_tmp_working_dir: bool,
+        debugging_level: str,
+        working_directory: str,
+        errors: list[str],
+    ):
+        if using_tmp_working_dir:
+            try:  # in case working directory has already been deleted.
+                if debugging_level == "delete":
+                    shutil.rmtree(working_directory)
+
+                if debugging_level == "keep_on_error" and len(errors) == 0:
+                    shutil.rmtree(working_directory)
+            except FileNotFoundError:
                 ...

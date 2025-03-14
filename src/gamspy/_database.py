@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import weakref
 from typing import TYPE_CHECKING
 
 from gams.core.gdx import delete_intp, doubleArray, intp_value
@@ -16,7 +17,6 @@ from gams.core.gmd import (
     gmdCreateD,
     gmdFree,
     gmdGetLastError,
-    gmdHandleToPtr,
     gmdSetSpecialValues,
     gmdSymbolInfo,
     gmdWriteGDX,
@@ -198,12 +198,11 @@ class Database:
         rc = gmdSetSpecialValues(self.gmd, _spec_values)
         self._check_for_gmd_error(rc)
 
-    def __del__(self):
-        try:
-            if self.gmd is not None and gmdHandleToPtr(self.gmd) is not None:
-                gmdFree(self.gmd)
-        except Exception:
-            pass
+        weakref.finalize(self, self.cleanup, self.gmd)
+
+    @staticmethod
+    def cleanup(gmd):
+        gmdFree(gmd)
 
     def __len__(self):
         return len(self.symbols)
