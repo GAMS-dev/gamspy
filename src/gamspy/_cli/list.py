@@ -58,7 +58,7 @@ def solvers(
             "[bold]Full list can be found here[/bold]: https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES"
         )
     elif defaults:
-        default_solvers = utils.getDefaultSolvers()
+        default_solvers = utils.getDefaultSolvers(gamspy_base.directory)
         table = Table("Problem", "Solver")
         for problem in default_solvers:
             try:

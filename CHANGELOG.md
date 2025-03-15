@@ -8,6 +8,7 @@ GAMSPy 1.8.0
   - Add support for new equation, variable matching syntax for MCP models.
   - Ignore empty and newlines in the existing solvers file.
   - Use finalizers instead of __del__.
+  - Cache solver capabilities, default solvers and installed solvers to speed up solver validation.
 - Documentation
   - Add `Examples` section under `Machine Learning` documentation.
   - Add a Thermal Reformer example demonstrating neural network surrogate modeling.

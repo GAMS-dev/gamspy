@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     )
     from gamspy._types import EllipsisType
 
-RESERVED_WORDS = [
+RESERVED_WORDS = (
     "abort",
     "acronym",
     "acronyms",
@@ -122,7 +122,7 @@ RESERVED_WORDS = [
     "while",
     "xor",
     "yes",
-]
+)
 
 
 def get_dimension(
