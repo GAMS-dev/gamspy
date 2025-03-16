@@ -52,9 +52,9 @@ elif platform.system() == "Darwin":
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
-_defaults: dict[str, str] | None = None
-_capabilities: dict[str, list[str]] | None = None
-_installed_solvers: list[str] | None = None
+_defaults: dict[str, dict[str, str]] = dict()
+_capabilities: dict[str, dict[str, list[str]]] = dict()
+_installed_solvers: dict[str, list[str]] = dict()
 
 
 def getDefaultSolvers(system_directory: str) -> dict[str, str]:
@@ -77,8 +77,10 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
 
     """
     global _defaults
-    if _defaults is not None:
-        return _defaults
+    try:
+        return _defaults[system_directory]
+    except KeyError:
+        ...
 
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     with open(capabilities_path, encoding="utf-8") as file:
@@ -89,8 +91,8 @@ def getDefaultSolvers(system_directory: str) -> dict[str, str]:
         problem, solver = line.split()
         defaults[problem] = solver
 
-    _defaults = defaults
-    return _defaults
+    _defaults[system_directory] = defaults
+    return defaults
 
 
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
@@ -107,8 +109,10 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     dict[str, list[str]]
     """
     global _capabilities
-    if _capabilities is not None:
-        return _capabilities
+    try:
+        return _capabilities[system_directory]
+    except KeyError:
+        ...
 
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     capabilities: dict[str, list[str]] = dict()
@@ -130,8 +134,8 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
 
         capabilities[solver] = problem_types
 
-    _capabilities = capabilities
-    return _capabilities
+    _capabilities[system_directory] = capabilities
+    return capabilities
 
 
 def getInstalledSolvers(system_directory: str) -> list[str]:
@@ -155,8 +159,10 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
 
     """
     global _installed_solvers
-    if _installed_solvers is not None:
-        return _installed_solvers
+    try:
+        return _installed_solvers[system_directory]
+    except KeyError:
+        ...
 
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     solvers: list[str] = []
@@ -179,8 +185,9 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
-    _installed_solvers = sorted(solvers)
-    return _installed_solvers
+    solvers.sort()
+    _installed_solvers[system_directory] = solvers
+    return solvers
 
 
 def getAvailableSolvers() -> list[str]:
