@@ -52,15 +52,47 @@ elif platform.system() == "Darwin":
 elif platform.system() == "Windows":
     DEFAULT_DIR = os.path.join(user_dir, "Documents", "GAMSPy")
 
+_defaults: dict[str, dict[str, str]] = dict()
+_capabilities: dict[str, dict[str, list[str]]] = dict()
+_installed_solvers: dict[str, list[str]] = dict()
 
-def getDefaultSolvers() -> dict[str, str]:
+
+def getDefaultSolvers(system_directory: str) -> dict[str, str]:
+    """
+    Returns the default solver for each problem type.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    dict[str, str]
+
+    Examples
+    --------
+    >>> import gamspy as gp
+    >>> import gamspy_base
+    >>> default_solvers = gp.utils.getDefaultSolvers(gamspy_base.directory)
+
+    """
+    global _defaults
     try:
-        import gamspy_base
-    except ModuleNotFoundError as e:  # pragma: no cover
-        e.msg = "You must first install gamspy_base to use this functionality"
-        raise e
+        return _defaults[system_directory]
+    except KeyError:
+        ...
 
-    return gamspy_base.defaults
+    capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
+    with open(capabilities_path, encoding="utf-8") as file:
+        lines = file.read().split("DEFAULTS")[1].splitlines()[1:]
+
+    defaults: dict[str, str] = dict()
+    for line in lines:
+        problem, solver = line.split()
+        defaults[problem] = solver
+
+    _defaults[system_directory] = defaults
+    return defaults
 
 
 def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
@@ -76,6 +108,12 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
     -------
     dict[str, list[str]]
     """
+    global _capabilities
+    try:
+        return _capabilities[system_directory]
+    except KeyError:
+        ...
+
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     capabilities: dict[str, list[str]] = dict()
 
@@ -96,6 +134,7 @@ def getSolverCapabilities(system_directory: str) -> dict[str, list[str]]:
 
         capabilities[solver] = problem_types
 
+    _capabilities[system_directory] = capabilities
     return capabilities
 
 
@@ -119,6 +158,12 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
     >>> installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
 
     """
+    global _installed_solvers
+    try:
+        return _installed_solvers[system_directory]
+    except KeyError:
+        ...
+
     capabilities_path = os.path.join(system_directory, CAPABILITIES_FILE)
     solvers: list[str] = []
 
@@ -140,7 +185,9 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
-    return sorted(solvers)
+    solvers.sort()
+    _installed_solvers[system_directory] = solvers
+    return solvers
 
 
 def getAvailableSolvers() -> list[str]:
