@@ -544,7 +544,7 @@ class ModelInstance:
         return self.summary
 
     def _get_scenario(self, model: Model) -> str:
-        auto_id = "scenario_" + str(uuid.uuid4()).replace("-", "_")
+        auto_id = "s" + str(uuid.uuid4()).split("-")[0]
         params = [
             modifier.gams_symbol
             for modifier in self.modifiers

@@ -139,7 +139,6 @@ def test_parameter_change(data):
     ]
 
     transport.freeze(modifiables=[bmult])
-
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
@@ -156,7 +155,6 @@ def test_parameter_change(data):
         ]
         assert math.isclose(z.toValue(), result, rel_tol=1e-3)
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
-
     transport2 = Model(
         m,
         name="transport2",
@@ -186,12 +184,11 @@ def test_parameter_change(data):
         assert transport2.status == status
 
     transport2.unfreeze()
-
     # different solver
-    summary = transport.solve(solver="ipopt")
-    assert summary["Solver"].item() == "ipopt"
+    summary = transport.solve(solver="cplex")
+    assert summary["Solver"].item() == "cplex"
     assert math.isclose(
-        transport.objective_value, 199.88517934823204, rel_tol=1e-6
+        transport.objective_value, 199.77750000000003, rel_tol=1e-6
     )
 
     # invalid solver

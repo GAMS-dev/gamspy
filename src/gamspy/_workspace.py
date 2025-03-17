@@ -68,5 +68,5 @@ class Workspace:
 
                 if debugging_level == "keep_on_error" and len(errors) == 0:
                     shutil.rmtree(working_directory)
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError):
                 ...
