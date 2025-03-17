@@ -18,6 +18,7 @@ from gamspy import (
     Equation,
     Model,
     ModelInstanceOptions,
+    ModelStatus,
     Options,
     Parameter,
     Problem,
@@ -155,6 +156,36 @@ def test_parameter_change(data):
         ]
         assert math.isclose(z.toValue(), result, rel_tol=1e-3)
         assert math.isclose(transport.objective_value, result, rel_tol=1e-3)
+
+    transport2 = Model(
+        m,
+        name="transport2",
+        equations=[supply, demand, cost],
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
+
+    bmult_list = [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3]
+
+    transport2.freeze(modifiables=[bmult])
+
+    expected_status = (
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.OptimalGlobal,
+        ModelStatus.InfeasibleGlobal,
+        ModelStatus.InfeasibleGlobal,
+        ModelStatus.InfeasibleGlobal,
+    )
+    for b_value, status in zip(bmult_list, expected_status):
+        bmult.setRecords(b_value)
+        transport2.solve(solver="conopt")
+        assert transport2.status == status
+
+    transport2.unfreeze()
 
     # different solver
     summary = transport.solve(solver="ipopt")
