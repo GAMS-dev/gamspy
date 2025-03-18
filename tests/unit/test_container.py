@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -370,13 +371,20 @@ def test_system_directory():
     m = Container()
 
     if os.getenv("GAMSPY_GAMS_SYSDIR", None) is None:
-        assert m.system_directory.lower() == expected_path.lower()
+        assert (
+            Path(m.system_directory.lower()).resolve()
+            == Path(expected_path.lower()).resolve()
+        )
 
         assert (
-            utils._get_gamspy_base_directory().lower() == expected_path.lower()
+            Path(utils._get_gamspy_base_directory().lower()).resolve()
+            == Path(expected_path.lower()).resolve()
         )
     else:
-        assert m.system_directory == os.environ["GAMSPY_GAMS_SYSDIR"]
+        assert (
+            Path(m.system_directory).resolve()
+            == Path(os.environ["GAMSPY_GAMS_SYSDIR"]).resolve()
+        )
 
 
 def test_write_load_on_demand(data):
