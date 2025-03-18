@@ -17,7 +17,7 @@ from gamspy.exceptions import GamspyException, ValidationError
 
 @pytest.mark.unit
 def test_version():
-    assert gp.__version__ == "1.7.0"
+    assert gp.__version__ == "1.8.0"
 
 
 @pytest.mark.unit
