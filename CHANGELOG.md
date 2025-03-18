@@ -11,6 +11,7 @@ GAMSPy 1.8.0
   - Cache solver capabilities, default solvers and installed solvers to speed up solver validation.
   - Fix the bug in the case of multiple frozen models in one container.
   - Perform pip audit check in the pipeline instead of pre-commit.
+  - Upgrade gamspy_base and gamsapi dependencies.
 - Documentation
   - Add `Examples` section under `Machine Learning` documentation.
   - Add a Thermal Reformer example demonstrating neural network surrogate modeling.
