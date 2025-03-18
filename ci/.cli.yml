@@ -44,7 +44,7 @@ dac-cli-3.9:
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
     - uv venv "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - source "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
   after_script:
