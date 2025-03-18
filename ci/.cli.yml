@@ -26,10 +26,12 @@ dac-cli-3.13:
   tags: [macos-arm64]
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
-    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
-    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
+    - source "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
+  after_script:
+    - rm -rf "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
   artifacts:
     name: macos_arm64_3.13
     expire_in: 2 hours
@@ -41,20 +43,24 @@ dac-cli-3.9:
   tags: [macos-arm64]
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
-    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
+  after_script:
+    - rm -rf "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
 
 deg-cli-3.13:
   stage: cli
   tags: [macos]
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
-    - uv venv "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
-    - source "gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
+    - source "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
+  after_script:
+    - rm -rf "${TMPDIR}/gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"
   artifacts:
     name: macos_x86_64_3.13
     expire_in: 2 hours
@@ -66,10 +72,12 @@ deg-cli-3.9:
   tags: [macos]
   script:
     - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
-    - uv venv "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
-    - source "gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
+    - uv venv "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
+    - source "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
     - pytest -x -v -s -m 'cli' tests
+  after_script:
+    - rm -rf "${TMPDIR}/gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"
 
 wei-cli-3.13:
   stage: cli
@@ -87,7 +95,6 @@ wei-cli-3.13:
 
 wei-cli-3.9:
   stage: cli
-  needs: [wei-cli-3.13]
   tags: [windows]
   image: winamd64/python:3.9
   script:

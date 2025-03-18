@@ -8,7 +8,7 @@ import threading
 import uuid
 from collections.abc import Iterable, Sequence
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import gamspy as gp
 import gamspy._algebra.expression as expression
@@ -240,7 +240,11 @@ class Model:
         equations: Sequence[Equation] = [],
         sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
-        matches: dict[Equation, Variable] | None = None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None = None,
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
@@ -262,7 +266,7 @@ class Model:
         assert self.container is not None
         self._matches = matches
         self.problem, self.sense = validation.validate_model(
-            equations, problem, sense
+            equations, matches, problem, sense
         )
         self.equations = list(equations)
         self._objective = objective
@@ -337,7 +341,7 @@ class Model:
         self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        info = {
+        info: dict[str, Any] = {
             "name": self.name,
             "problem": str(self.problem),
             "sense": str(self.sense),
@@ -349,9 +353,20 @@ class Model:
 
         # matches
         if self._matches is not None:
-            matches = {
-                key.name: value.name for key, value in self._matches.items()
-            }
+            matches: dict = dict()
+            for key, value in self._matches.items():
+                if isinstance(key, gp.Equation):
+                    if isinstance(value, gp.Variable):
+                        matches[key.name] = value.name
+                    else:
+                        matches[key.name] = (
+                            variable.name for variable in value
+                        )
+                else:
+                    assert isinstance(value, gp.Variable)
+                    for equation in key:
+                        matches[equation.name] = value.name
+
             info["_matches"] = matches
 
         # objective variable
@@ -360,7 +375,7 @@ class Model:
 
         # attributes
         for attribute in ATTRIBUTE_MAP.values():
-            if attribute in ["_status", "_solve_status"]:
+            if attribute in ("_status", "_solve_status"):
                 value = getattr(self, attribute, None)
                 if value is not None:
                     value = value.value
@@ -811,7 +826,7 @@ class Model:
                     "Cannot set an objective when the sense is FEASIBILITY!"
                 )
 
-            if self.problem in [Problem.CNS, Problem.MCP, Problem.EMP]:
+            if self.problem in (Problem.CNS, Problem.MCP, Problem.EMP):
                 return None
 
             variable, equation = self._generate_obj_var_and_equation()
@@ -830,7 +845,7 @@ class Model:
             equation.modified = False
             variable.modified = False
 
-            if equation.name not in [symbol.name for symbol in self.equations]:
+            if equation.name not in (symbol.name for symbol in self.equations):
                 self.equations.append(equation)
 
             return variable
@@ -858,7 +873,7 @@ class Model:
             equation._definition = statement
             equation.modified = False
             variable.modified = False
-            if equation.name not in [symbol.name for symbol in self.equations]:
+            if equation.name not in (symbol.name for symbol in self.equations):
                 self.equations.append(equation)
 
             return variable
@@ -872,7 +887,7 @@ class Model:
             # Set sense as min or max for feasibility
             self.sense = gp.Sense("MIN")
 
-        if self.problem not in [Problem.MCP, Problem.CNS, Problem.EMP]:
+        if self.problem not in (Problem.MCP, Problem.CNS, Problem.EMP):
             solve_string += f" {self.sense}"
 
         if self._objective_variable is not None:
@@ -1134,7 +1149,9 @@ class Model:
 
         """
         if solver is None:
-            solver = utils.getDefaultSolvers()[str(self.problem).upper()]
+            solver = utils.getDefaultSolvers(self.container.system_directory)[
+                str(self.problem).upper()
+            ]
 
         validation.validate_solver_args(
             self.container.system_directory,
@@ -1213,23 +1230,41 @@ class Model:
         'Model my_model / e,my_model_objective /;'
 
         """
+        equations_in_matches = []
+        if self._matches is not None:
+            for key in self._matches:
+                if isinstance(key, gp.Equation):
+                    equations_in_matches.append(key)
+                else:
+                    equations_in_matches += [equation for equation in key]
+
         equations = []
         for equation in self.equations:
-            if self._matches:
-                if equation not in self._matches:
+            if self._matches is not None:
+                if equation not in equations_in_matches:
                     equations.append(equation.name)
             else:
                 equations.append(equation.name)
 
         equations_str = ",".join(equations)
 
-        if self._matches:
-            matches_str = ",".join(
-                [
-                    f"{equation.name}.{variable.name}"
-                    for equation, variable in self._matches.items()
-                ]
-            )
+        if self._matches is not None:
+            matches = []
+            for key, value in self._matches.items():
+                if isinstance(key, gp.Equation):
+                    if isinstance(value, gp.Variable):
+                        matches.append(f"{key.name}.{value.name}")
+                    else:
+                        matches.append(
+                            f"{key.name}:({'|'.join([variable.name for variable in value])})"
+                        )
+                else:
+                    assert isinstance(value, gp.Variable)
+                    matches.append(
+                        f"({'|'.join([equation.name for equation in key])}):{value.name}"
+                    )
+
+            matches_str = ",".join(matches)
 
             equations_str = (
                 ",".join([equations_str, matches_str])

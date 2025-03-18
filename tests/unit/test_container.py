@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import uuid
+from pathlib import Path
 
 import pandas as pd
 import pytest
@@ -26,6 +27,7 @@ from gamspy import (
     Sum,
     UniverseAlias,
     Variable,
+    VariableType,
     deserialize,
     serialize,
 )
@@ -369,13 +371,20 @@ def test_system_directory():
     m = Container()
 
     if os.getenv("GAMSPY_GAMS_SYSDIR", None) is None:
-        assert m.system_directory.lower() == expected_path.lower()
+        assert (
+            Path(m.system_directory.lower()).resolve()
+            == Path(expected_path.lower()).resolve()
+        )
 
         assert (
-            utils._get_gamspy_base_directory().lower() == expected_path.lower()
+            Path(utils._get_gamspy_base_directory().lower()).resolve()
+            == Path(expected_path.lower()).resolve()
         )
     else:
-        assert m.system_directory == os.environ["GAMSPY_GAMS_SYSDIR"]
+        assert (
+            Path(m.system_directory).resolve()
+            == Path(os.environ["GAMSPY_GAMS_SYSDIR"]).resolve()
+        )
 
 
 def test_write_load_on_demand(data):
@@ -850,3 +859,59 @@ def test_serialization(data) -> None:
     c2[i2, j2] = 90 * d2[i2, j2] / 100
     transport2.solve()
     assert transport.objective_value != transport2.objective_value
+
+
+def test_mcp_serialization(data) -> None:
+    m, _, _, _, _, _ = data
+    c = Set(m, "c")
+    h = Set(m, "h")
+    s = Set(m, "s")
+
+    cc = Alias(m, "cc", c)
+
+    e = Parameter(m, "e", domain=[c, h])
+    esub = Parameter(m, "esub", domain=h)
+
+    alpha = Parameter(m, "alpha", domain=[c, h])
+    a = Parameter(m, "a", domain=[c, s])
+
+    p = Variable(m, "p", type=VariableType.POSITIVE, domain=c)
+    y = Variable(m, "y", type=VariableType.POSITIVE, domain=s)
+    i = Variable(m, "i", type=VariableType.POSITIVE, domain=h)
+
+    mkt = Equation(m, "mkt", domain=c, description="commodity market")
+    profit = Equation(m, "profit", domain=s, description="zero profit")
+    income = Equation(m, "income", domain=h, description="income index")
+
+    mkt[c] = Sum(s, a[c, s] * y[s]) + Sum(h, e[c, h]) >= Sum(
+        h.where[esub[h] != 1],
+        (i[h] / Sum(cc, alpha[cc, h] * p[cc] ** (1 - esub[h])))
+        * alpha[c, h]
+        * (1 / p[c]) ** esub[h],
+    ) + Sum(h.where[esub[h] == 1], i[h] * alpha[c, h] / p[c])
+
+    profit[s] = -Sum(c, a[c, s] * p[c]) >= 0
+    income[h] = i[h] >= Sum(c, p[c] * e[c, h])
+
+    hansen = Model(
+        m,
+        "hansen",
+        problem=Problem.MCP,
+        matches={mkt: p, profit: y, income: i},
+    )
+
+    serialization_path = os.path.join("tmp", "mcp_serialized.zip")
+    serialize(m, serialization_path)  # try gp.serialize syntax
+    m2 = deserialize(serialization_path)
+    hansen2 = m2.models["hansen"]
+
+    for unserialized, serialized in zip(
+        hansen._matches.items(), hansen2._matches.items()
+    ):
+        orig_equation, orig_variable = unserialized
+        serialized_equation, serialized_variable = serialized
+
+        assert isinstance(serialized_equation, Equation)
+        assert isinstance(serialized_variable, Variable)
+        assert orig_equation.name == serialized_equation.name
+        assert orig_variable.name == serialized_variable.name

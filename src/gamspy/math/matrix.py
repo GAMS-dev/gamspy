@@ -64,7 +64,7 @@ def vector_norm(
     if isinstance(ord, float):
         if ord.is_integer():
             ord = int(ord)
-        elif ord in [float("inf"), float("-inf")]:
+        elif ord in (float("inf"), float("-inf")):
             raise ValidationError("Infinity norms are not supported")
 
     if ord == 0:
@@ -431,7 +431,7 @@ def _validate_matrix_mult_dims(left, right):
 
         sum_domain = left.domain[1]
         while (
-            sum_domain in [left_domain, right_domain]
+            sum_domain in (left_domain, right_domain)
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)
@@ -527,7 +527,7 @@ def _validate_matrix_mult_dims(left, right):
         while (
             sum_domain in left.domain[:-1]
             or sum_domain in right.domain[:-2]
-            or sum_domain in [right_domain, left_domain]
+            or sum_domain in (right_domain, left_domain)
             or sum_domain in controlled_domain
         ):
             sum_domain = next_alias(sum_domain)

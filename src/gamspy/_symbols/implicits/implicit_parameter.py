@@ -25,6 +25,7 @@ if TYPE_CHECKING:
         Variable,
     )
     from gamspy._algebra.expression import Expression
+    from gamspy._algebra.operation import Operation
 
 logger = logging.getLogger("GAMSPy")
 logger.setLevel(logging.WARNING)
@@ -80,7 +81,11 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             scalar_domains=self._scalar_domains,
         )
 
-    def __setitem__(self, indices: Iterable | str, rhs: Expression) -> None:
+    def __setitem__(
+        self,
+        indices: Iterable | str,
+        rhs: Expression | Operation | ImplicitParameter | int | float,
+    ) -> None:
         if (
             isinstance(self.parent, (syms.Variable, syms.Equation))
             and len(self.parent.domain) > 0

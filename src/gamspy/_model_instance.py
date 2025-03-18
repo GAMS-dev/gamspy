@@ -4,6 +4,8 @@ import io
 import os
 import sys
 import time
+import uuid
+import weakref
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -65,7 +67,11 @@ from gamspy._database import (
     GamsVariable,
 )
 from gamspy._options import ModelInstanceOptions, Options
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import (
+    GamspyException,
+    ValidationError,
+    _customize_exception,
+)
 
 if TYPE_CHECKING:
     from gamspy import Container, Model, Parameter
@@ -209,16 +215,22 @@ class ModelInstance:
         self.modifiers = self._create_modifiers()
         self.instantiate(model, freeze_options)
 
-    def __del__(self):
-        if hasattr(self, "_gmo") and self._gmo:
-            gmoFree(self._gmo)
+        # preallocate summary frame for performance reasons
+        HEADER = [
+            "Solver Status",
+            "Model Status",
+            "Objective",
+            "Solver",
+            "Solver Time",
+        ]
+        self.summary = pd.DataFrame(index=range(1), columns=HEADER)
 
-        if (
-            hasattr(self, "_gev")
-            and self._gev
-            and gevHandleToPtr(self._gev) is not None
-        ):
-            gevFree(self._gev)
+        weakref.finalize(self, self.cleanup, self._gmo, self._gev)
+
+    @staticmethod
+    def cleanup(gmo, gev) -> None:
+        gmoFree(gmo)
+        gevFree(gev)
 
     def close_license_session(self) -> None:
         gmdCloseLicenseSession(self.sync_db.gmd)
@@ -308,7 +320,14 @@ class ModelInstance:
             self.container._job = self.job_name
             self.container._send_job(self.job_name, self.pf_file)
         except GamspyException as exception:
-            self.container._workspace._has_error = True
+            self.container._workspace._errors.append(str(exception))
+            message = _customize_exception(
+                options,
+                self.job_name,
+                exception.return_code,
+            )
+
+            exception.args = (exception.message + message,)
             raise exception
         finally:
             self.container._unsaved_statements = []
@@ -349,14 +368,13 @@ class ModelInstance:
 
             option_file = 1
 
+        names_to_write = []
         for symbol in self.modifiables:
             if isinstance(symbol, gp.Parameter):
-                self.instance_container[symbol.name].setRecords(
-                    self.container[symbol.name].records
-                )
-                self.instance_container.write(
-                    self.sync_db.gmd, symbols=[symbol.name], eps_to_zero=False
-                )
+                self.instance_container[symbol.name].records = self.container[
+                    symbol.name
+                ].records
+                names_to_write.append(symbol.name)
 
             if (
                 isinstance(symbol, implicits.ImplicitParameter)
@@ -370,10 +388,11 @@ class ModelInstance:
                 self.instance_container[attr_name].setRecords(
                     self.container[parent_name].records.drop(columns, axis=1)
                 )
+                names_to_write.append(attr_name)
 
-                self.instance_container.write(
-                    self.sync_db.gmd, symbols=[attr_name], eps_to_zero=False
-                )
+            self.instance_container.write(
+                self.sync_db.gmd, symbols=names_to_write, eps_to_zero=False
+            )
 
         ### Legacy code from GAMS Control. TODO: Pay the technical debt of the following legacy code. ###
         rc = gmdInitUpdate(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
@@ -514,29 +533,18 @@ class ModelInstance:
             self._gmo, gmoHdomused
         )
         self.model._objective_value = gmoGetHeadnTail(self._gmo, gmoHobjval)
-        HEADER = [
-            "Solver Status",
-            "Model Status",
-            "Objective",
-            "Solver",
-            "Solver Time",
+        self.summary.loc[0] = [
+            str(self.model._solve_status),
+            str(self.model._status),
+            self.model._objective_value,
+            solver,
+            self.model._solve_model_time,
         ]
-        summary = pd.DataFrame(
-            [
-                [
-                    str(self.model._solve_status),
-                    str(self.model._status),
-                    self.model._objective_value,
-                    solver,
-                    self.model._solve_model_time,
-                ]
-            ],
-            columns=HEADER,
-        )
 
-        return summary
+        return self.summary
 
     def _get_scenario(self, model: Model) -> str:
+        auto_id = "s" + str(uuid.uuid4()).split("-")[0]
         params = [
             modifier.gams_symbol
             for modifier in self.modifiers
@@ -544,9 +552,9 @@ class ModelInstance:
         ]
         lines = []
         if params:
-            lines.append("Set s__(*) /'s0'/;")
+            lines.append(f"Set {auto_id}__(*) /'s0'/;")
             for symbol in params:
-                declaration = f"Parameter s__{symbol.name}(s__"
+                declaration = f"Parameter {auto_id}__{symbol.name}({auto_id}__"
                 domain = ""
                 if symbol.dimension:
                     domain = "," + ",".join("*" * symbol.dimension)
@@ -555,21 +563,27 @@ class ModelInstance:
                 declaration = f"{declaration}{domain};"
                 lines.append(declaration)
 
-                domain = "(s__"
+                domain = f"({auto_id}__"
 
                 if symbol.dimension:
                     domain += ","
 
-                assign_str = f"s__{symbol.name}(s__"
+                assign_str = f"{auto_id}__{symbol.name}({auto_id}__"
                 if symbol.dimension:
-                    assign_str += "," + ",".join(["s__"] * symbol.dimension)
+                    assign_str += "," + ",".join(
+                        [f"{auto_id}__"] * symbol.dimension
+                    )
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
 
-            scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
+            scenario = (
+                f"Set {auto_id}_dict(*,*,*) / '{auto_id}__'.'scenario'.''"
+            )
             for symbol in params:
-                scenario += f",\n'{symbol.name}'.'param'.'s__{symbol.name}'"
+                scenario += (
+                    f",\n'{symbol.name}'.'param'.'{auto_id}__{symbol.name}'"
+                )
             scenario += "/;"
             lines.append(scenario)
 
@@ -583,7 +597,7 @@ class ModelInstance:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
         if params:
-            solve_string += " scenario dict"
+            solve_string += f" scenario {auto_id}_dict"
         solve_string += ";"
         lines.append(solve_string)
 
@@ -699,12 +713,19 @@ class ModelInstance:
                 ].domain_names
 
             if name in (symbol.name for symbol in self.modifiables):
-                _ = gp.Variable(
-                    self.container,
-                    name + "_var",
-                    domain=self.container[name].domain,
-                    records=temp[name + "_var"].records,
-                )
+                generated_var = name + "_var"
+                if generated_var not in self.container.data:
+                    _ = gp.Variable(
+                        self.container,
+                        generated_var,
+                        domain=self.container[name].domain,
+                        records=temp[generated_var].records,
+                    )
+                else:
+                    self.container[generated_var]._records = temp[
+                        generated_var
+                    ].records
+
         self.container._options.miro_protect = prev_state
 
         if self.model._objective_variable is not None:

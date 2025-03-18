@@ -119,7 +119,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     @scale.setter
     def scale(self, value: int | float | Expression):
-        if self.parent.type in ["integer", "binary"]:
+        if self.parent.type in ("integer", "binary"):
             raise ValidationError(
                 "Scales cannot be applied to discrete variables."
             )
@@ -152,7 +152,7 @@ class ImplicitVariable(ImplicitSymbol, operable.Operable):
 
     @prior.setter
     def prior(self, value: int | float | Expression):
-        if self.parent.type not in ["integer", "binary"]:
+        if self.parent.type not in ("integer", "binary"):
             raise ValidationError(
                 "Priorities can only be used on discrete variables."
             )

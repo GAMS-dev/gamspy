@@ -4,6 +4,7 @@ import os
 import platform
 import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -47,6 +48,8 @@ def test_install_license(teardown):
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [
+                sys.executable,
+                "-m",
                 "gamspy",
                 "install",
                 "license",
@@ -63,6 +66,8 @@ def test_install_license(teardown):
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [
+                sys.executable,
+                "-m",
                 "gamspy",
                 "install",
                 "license",
@@ -79,6 +84,8 @@ def test_install_license(teardown):
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
             [
+                sys.executable,
+                "-m",
                 "gamspy",
                 "install",
                 "license",
@@ -91,6 +98,8 @@ def test_install_license(teardown):
     # Test network license
     _ = subprocess.run(
         [
+            sys.executable,
+            "-m",
             "gamspy",
             "install",
             "license",
@@ -112,7 +121,7 @@ def test_install_license(teardown):
     # Test invalid access code / license
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "install", "license", "blabla"],
+            [sys.executable, "-m", "gamspy", "install", "license", "blabla"],
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
@@ -123,6 +132,8 @@ def test_install_license(teardown):
 
     process = subprocess.run(
         [
+            sys.executable,
+            "-m",
             "gamspy",
             "install",
             "license",
@@ -137,6 +148,8 @@ def test_install_license(teardown):
     # Test checkout
     process = subprocess.run(
         [
+            sys.executable,
+            "-m",
             "gamspy",
             "install",
             "license",
@@ -155,6 +168,8 @@ def test_install_license(teardown):
     # Test renew
     process = subprocess.run(
         [
+            sys.executable,
+            "-m",
             "gamspy",
             "install",
             "license",
@@ -174,7 +189,14 @@ def test_install_license(teardown):
 
     # Recover local license
     process = subprocess.run(
-        ["gamspy", "install", "license", os.environ["LOCAL_LICENSE"]],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "license",
+            os.environ["LOCAL_LICENSE"],
+        ],
         text=True,
         capture_output=True,
     )
@@ -185,14 +207,22 @@ def test_install_license(teardown):
 def test_install_solver():
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "install", "solver", "bla"],
+            [sys.executable, "-m", "gamspy", "install", "solver", "bla"],
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
 
     process = subprocess.run(
-        ["gamspy", "install", "solver", "minos", "mosek"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "minos",
+            "mosek",
+        ],
         capture_output=True,
         text=True,
     )
@@ -200,35 +230,66 @@ def test_install_solver():
 
     with pytest.raises(subprocess.CalledProcessError):
         _ = subprocess.run(
-            ["gamspy", "uninstall", "solver", "bla"],
+            [sys.executable, "-m", "gamspy", "uninstall", "solver", "bla"],
             check=True,
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
         )
 
     process = subprocess.run(
-        ["gamspy", "install", "solver", "--install-all-solvers"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "--install-all-solvers",
+        ],
         capture_output=True,
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
-        ["gamspy", "uninstall", "solver", "minos", "mosek"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "minos",
+            "mosek",
+        ],
         capture_output=True,
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
-        ["gamspy", "uninstall", "solver", "--uninstall-all-solvers"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "--uninstall-all-solvers",
+        ],
         capture_output=True,
         text=True,
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
-        ["gamspy", "install", "solver", "mpsge", "scip", "reshop"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "mpsge",
+            "scip",
+            "reshop",
+        ],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
@@ -236,7 +297,15 @@ def test_install_solver():
 
     # use uv
     process = subprocess.run(
-        ["gamspy", "install", "solver", "soplex", "--use-uv"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "install",
+            "solver",
+            "soplex",
+            "--use-uv",
+        ],
         capture_output=True,
         text=True,
     )
@@ -244,7 +313,15 @@ def test_install_solver():
 
     # use uv
     process = subprocess.run(
-        ["gamspy", "uninstall", "solver", "soplex", "--use-uv"],
+        [
+            sys.executable,
+            "-m",
+            "gamspy",
+            "uninstall",
+            "solver",
+            "soplex",
+            "--use-uv",
+        ],
         capture_output=True,
         text=True,
     )
@@ -253,7 +330,7 @@ def test_install_solver():
 
 def test_list_solvers():
     process = subprocess.run(
-        ["gamspy", "list", "solvers"],
+        [sys.executable, "-m", "gamspy", "list", "solvers"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
@@ -261,7 +338,7 @@ def test_list_solvers():
     assert process.returncode == 0, process.stdout + process.stderr
 
     process = subprocess.run(
-        ["gamspy", "list", "solvers", "-a"],
+        [sys.executable, "-m", "gamspy", "list", "solvers", "-a"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
     )
@@ -271,7 +348,7 @@ def test_list_solvers():
 
 def test_show_license():
     process = subprocess.run(
-        ["gamspy", "show", "license"],
+        [sys.executable, "-m", "gamspy", "show", "license"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         text=True,
@@ -283,7 +360,7 @@ def test_show_license():
 
 def test_show_base():
     process = subprocess.run(
-        ["gamspy", "show", "base"],
+        [sys.executable, "-m", "gamspy", "show", "base"],
         stderr=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         text=True,
@@ -298,7 +375,7 @@ def test_show_base():
 def test_probe(teardown):
     node_info_path = os.path.join("tmp", "info.json")
     process = subprocess.run(
-        ["gamspy", "probe", "-j", node_info_path],
+        [sys.executable, "-m", "gamspy", "probe", "-j", node_info_path],
         capture_output=True,
         text=True,
     )
@@ -307,6 +384,8 @@ def test_probe(teardown):
 
     process = subprocess.run(
         [
+            sys.executable,
+            "-m",
             "gamspy",
             "retrieve",
             "license",

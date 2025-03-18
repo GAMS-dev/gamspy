@@ -11,6 +11,7 @@ import threading
 import time
 import traceback
 import uuid
+import weakref
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
@@ -278,6 +279,13 @@ class Container(gt.Container):
         self._socket, self._process = open_connection(
             self.system_directory, self._process_directory, self._license_path
         )
+        weakref.finalize(
+            self,
+            self._release_resources,
+            self._is_socket_open,
+            self._socket,
+            self._process,
+        )
 
         if load_from is not None:
             if not isinstance(load_from, (str, gt.Container)):
@@ -335,12 +343,6 @@ class Container(gt.Container):
 
         return f"<Empty Container ({hex(id(self))})>"
 
-    def __del__(self):
-        try:
-            self._stop_socket()
-        except (Exception, ConnectionResetError):  # pragma: no cover
-            ...
-
     @property
     def working_directory(self) -> str:
         """
@@ -373,16 +375,21 @@ class Container(gt.Container):
 
         return bool("+" in lines[0] and lines[4][47] == "N")
 
-    def _stop_socket(self):
-        if hasattr(self, "_socket") and self._is_socket_open:
-            self._socket.sendall(b"stop")
-            self._socket.close()
-            self._is_socket_open = False
+    @staticmethod
+    def _release_resources(
+        is_socket_open: bool, socket: socket.socket, process: subprocess.Popen
+    ):
+        if is_socket_open:
+            try:
+                socket.sendall(b"stop")
+                socket.close()
 
-            if not self._process.stdout.closed:
-                self._process.stdout.close()
+                if not process.stdout.closed:
+                    process.stdout.close()
 
-            while self._process.poll() is None:
+                while process.poll() is None:
+                    ...
+            except OSError:  # Socket may have been already closed.
                 ...
 
     def _read_output(self, output: io.TextIOWrapper | None) -> None:
@@ -427,7 +434,10 @@ class Container(gt.Container):
             encoder = MiroJSONEncoder(self)
             encoder.write_json()
         except Exception:
-            self._stop_socket()
+            self._release_resources(
+                self._is_socket_open, self._socket, self._process
+            )
+            self._is_socket_open = False
             traceback.print_exc()
             os._exit(1)
 
@@ -485,7 +495,7 @@ class Container(gt.Container):
                 )
             elif isinstance(gtp_symbol, gt.Equation):
                 symbol_type = gtp_symbol.type
-                if gtp_symbol.type in ["eq", "leq", "geq"]:
+                if gtp_symbol.type in ("eq", "leq", "geq"):
                     symbol_type = "regular"
 
                 _ = gp.Equation._constructor_bypass(
@@ -837,7 +847,10 @@ class Container(gt.Container):
         to communicate with the GAMS execution engine, e.g. creating new symbols, changing data,
         solves, etc. The container data (Container.data) is still available for read operations.
         """
-        self._stop_socket()
+        self._release_resources(
+            self._is_socket_open, self._socket, self._process
+        )
+        self._is_socket_open = False
 
     def addAlias(
         self,
