@@ -9,6 +9,7 @@ GAMSPy 1.8.0
   - Ignore empty and newlines in the existing solvers file.
   - Use finalizers instead of __del__.
   - Cache solver capabilities, default solvers and installed solvers to speed up solver validation.
+  - Fix the bug in the case of multiple frozen models in one container.
 - Documentation
   - Add `Examples` section under `Machine Learning` documentation.
   - Add a Thermal Reformer example demonstrating neural network surrogate modeling.

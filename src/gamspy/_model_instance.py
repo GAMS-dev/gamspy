@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import time
+import uuid
 import weakref
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
@@ -66,7 +67,11 @@ from gamspy._database import (
     GamsVariable,
 )
 from gamspy._options import ModelInstanceOptions, Options
-from gamspy.exceptions import GamspyException, ValidationError
+from gamspy.exceptions import (
+    GamspyException,
+    ValidationError,
+    _customize_exception,
+)
 
 if TYPE_CHECKING:
     from gamspy import Container, Model, Parameter
@@ -316,6 +321,13 @@ class ModelInstance:
             self.container._send_job(self.job_name, self.pf_file)
         except GamspyException as exception:
             self.container._workspace._errors.append(str(exception))
+            message = _customize_exception(
+                options,
+                self.job_name,
+                exception.return_code,
+            )
+
+            exception.args = (exception.message + message,)
             raise exception
         finally:
             self.container._unsaved_statements = []
@@ -532,6 +544,7 @@ class ModelInstance:
         return self.summary
 
     def _get_scenario(self, model: Model) -> str:
+        auto_id = "s" + str(uuid.uuid4()).split("-")[0]
         params = [
             modifier.gams_symbol
             for modifier in self.modifiers
@@ -539,9 +552,9 @@ class ModelInstance:
         ]
         lines = []
         if params:
-            lines.append("Set s__(*) /'s0'/;")
+            lines.append(f"Set {auto_id}__(*) /'s0'/;")
             for symbol in params:
-                declaration = f"Parameter s__{symbol.name}(s__"
+                declaration = f"Parameter {auto_id}__{symbol.name}({auto_id}__"
                 domain = ""
                 if symbol.dimension:
                     domain = "," + ",".join("*" * symbol.dimension)
@@ -550,21 +563,27 @@ class ModelInstance:
                 declaration = f"{declaration}{domain};"
                 lines.append(declaration)
 
-                domain = "(s__"
+                domain = f"({auto_id}__"
 
                 if symbol.dimension:
                     domain += ","
 
-                assign_str = f"s__{symbol.name}(s__"
+                assign_str = f"{auto_id}__{symbol.name}({auto_id}__"
                 if symbol.dimension:
-                    assign_str += "," + ",".join(["s__"] * symbol.dimension)
+                    assign_str += "," + ",".join(
+                        [f"{auto_id}__"] * symbol.dimension
+                    )
 
                 assign_str += ") = Eps;"
                 lines.append(assign_str)
 
-            scenario = "Set dict(*,*,*) / 's__'.'scenario'.''"
+            scenario = (
+                f"Set {auto_id}_dict(*,*,*) / '{auto_id}__'.'scenario'.''"
+            )
             for symbol in params:
-                scenario += f",\n'{symbol.name}'.'param'.'s__{symbol.name}'"
+                scenario += (
+                    f",\n'{symbol.name}'.'param'.'{auto_id}__{symbol.name}'"
+                )
             scenario += "/;"
             lines.append(scenario)
 
@@ -578,7 +597,7 @@ class ModelInstance:
             solve_string += f" {model._objective_variable.gamsRepr()}"
 
         if params:
-            solve_string += " scenario dict"
+            solve_string += f" scenario {auto_id}_dict"
         solve_string += ";"
         lines.append(solve_string)
 
