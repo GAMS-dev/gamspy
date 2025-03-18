@@ -14,18 +14,18 @@ You can create a virtual environment and activate it as follows:
 
     .. code-block:: Linux-MacOS
 
-        python -m venv .venv
-        source .venv/bin/activate
+        python -m venv .gamspy_venv
+        source .gamspy_venv/bin/activate
 
     .. code-block:: Windows(Bash)
 
-        python -m venv .venv
-        source .venv/Scripts/activate
+        python -m venv .gamspy_venv
+        source .gamspy_venv/Scripts/activate
 
     .. code-block:: Windows(PowerShell)
 
-        python -m venv .venv
-        .venv\Scripts\Activate.ps1
+        python -m venv .gamspy_venv
+        .gamspy_venv\Scripts\Activate.ps1
 
 You can run the following command to install GAMSPy from PyPI::
 
