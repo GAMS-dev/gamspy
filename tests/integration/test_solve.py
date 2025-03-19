@@ -1533,7 +1533,7 @@ def test_invalid_arguments(data):
 
     # solver is not installed
     with pytest.raises(ValidationError):
-        transport.solve(solver="SNOPT")
+        transport.solve(solver="miles")
 
     # solver is not capable of solving this problem type
     with pytest.raises(ValidationError):
