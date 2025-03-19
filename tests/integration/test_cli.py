@@ -327,21 +327,6 @@ def test_install_solver():
     )
     assert process.returncode == 0, process.stdout + process.stderr
 
-    # We want all solvers to be available before we start the tests
-    process = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gamspy",
-            "install",
-            "solver",
-            "--install-all-solvers",
-            "--use-uv",
-        ],
-        capture_output=True,
-        text=True,
-    )
-
 
 def test_list_solvers():
     process = subprocess.run(
