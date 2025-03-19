@@ -54,6 +54,8 @@ from gams.core.gmo import (
     gmoOptFileSet,
     gmoRegisterEnvironment,
     gmoSolveStat,
+    gmoTmipbest,
+    gmoTmipnod,
     new_gmoHandle_tp,
 )
 
@@ -523,6 +525,10 @@ class ModelInstance:
         self.model._num_iterations = gmoGetHeadnTail(self._gmo, gmoHiterused)
         self.model._marginals = gmoGetHeadnTail(self._gmo, gmoHmarginals)
         self.model._algorithm_time = gmoGetHeadnTail(self._gmo, gmoHetalg)
+        self.model._objective_estimation = gmoGetHeadnTail(
+            self._gmo, gmoTmipbest
+        )
+        self.model._num_nodes_used = gmoGetHeadnTail(self._gmo, gmoTmipnod)
         self.model._num_domain_violations = gmoGetHeadnTail(
             self._gmo, gmoHdomused
         )

@@ -5,6 +5,7 @@ GAMSPy 1.9.0
 ------------
 - General
   - Validate solver options for most of the solvers. It can be disable through VALIDATE_SOLVER_OPTIONS option.
+  - get the value of objective estimation and the number of nodes used after frozen solves
 
 GAMSPy 1.8.0
 ------------
