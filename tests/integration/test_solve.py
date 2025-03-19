@@ -1004,8 +1004,87 @@ def test_solver_options(data):
 
     # Test solver change
     transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
-
     assert os.path.exists(f"{m.working_directory}{os.sep}conopt.opt")
+
+    # Test solver option validation
+
+    ## Baron
+    with pytest.raises(ValidationError):
+        transport.solve(solver="baron", solver_options={"blabla": "1.e12"})
+
+    ## Cbc
+    with pytest.raises(ValidationError):
+        transport.solve(solver="cbc", solver_options={"blabla": "1.e12"})
+
+    ## Conopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
+
+    with pytest.raises(ValidationError):
+        transport.solve(solver="conopt4", solver_options={"blabla": "1.e12"})
+
+    ## Convert
+    with pytest.raises(ValidationError):
+        transport.solve(solver="convert", solver_options={"blabla": "1.e12"})
+
+    ## Copt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="copt", solver_options={"blabla": "1.e12"})
+
+    ## Cplex
+    with pytest.raises(ValidationError):
+        transport.solve(solver="cplex", solver_options={"blabla": "1.e12"})
+
+    ## Examiner
+    with pytest.raises(ValidationError):
+        transport.solve(solver="examiner", solver_options={"blabla": "1.e12"})
+
+    ## Examiner2
+    with pytest.raises(ValidationError):
+        transport.solve(solver="examiner2", solver_options={"blabla": "1.e12"})
+
+    ## gurobi
+    with pytest.raises(ValidationError):
+        transport.solve(solver="gurobi", solver_options={"blabla": "1.e12"})
+
+    ## Highs will not care whether there is a wrong solver option
+    transport.solve(solver="highs", solver_options={"blabla": "1.e12"})
+
+    ## Ipopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="ipopt", solver_options={"blabla": "1.e12"})
+
+    ## Kestrel will expect kestrel_solver option but will not find it
+    with pytest.raises(GamspyException):
+        transport.solve(solver="kestrel", solver_options={"blabla": "1.e12"})
+
+    ## Knitro
+    with pytest.raises(ValidationError):
+        transport.solve(solver="knitro", solver_options={"blabla": "1.e12"})
+
+    ## Minos
+    with pytest.raises(ValidationError):
+        transport.solve(solver="minos", solver_options={"blabla": "1.e12"})
+
+    ## Mosek
+    with pytest.raises(ValidationError):
+        transport.solve(solver="mosek", solver_options={"blabla": "1.e12"})
+
+    ## Snopt
+    with pytest.raises(ValidationError):
+        transport.solve(solver="snopt", solver_options={"blabla": "1.e12"})
+
+    ## Soplex will not care
+    transport.solve(solver="soplex", solver_options={"blabla": "1.e12"})
+
+    ## Xpress
+    with pytest.raises(ValidationError):
+        transport.solve(solver="xpress", solver_options={"blabla": "1.e12"})
+
+    # Test disabled solver option validation
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 0})
+    transport.solve(solver="conopt", solver_options={"blabla": "1.e12"})
+    gp.set_options({"SOLVER_OPTION_VALIDATION": 1})
 
 
 def test_ellipsis(data):

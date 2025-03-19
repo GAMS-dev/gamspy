@@ -66,7 +66,7 @@ from gamspy._database import (
     GamsParameter,
     GamsVariable,
 )
-from gamspy._options import ModelInstanceOptions, Options
+from gamspy._options import ModelInstanceOptions, Options, write_solver_options
 from gamspy.exceptions import (
     GamspyException,
     ValidationError,
@@ -352,20 +352,14 @@ class ModelInstance:
         output: io.TextIOWrapper | None = None,
     ) -> pd.DataFrame:
         # write solver options file
-        solver_options_file_name = os.path.join(
-            self.container.working_directory, f"{solver.lower()}.opt"
-        )
         option_file = 0
         if solver_options:
-            with open(
-                solver_options_file_name, "w", encoding="utf-8"
-            ) as solver_file:
-                for key, value in solver_options.items():
-                    row = f"{key} {value}\n"
-                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
-                        row = f"{key} = {value}\n"
-                    solver_file.write(row)
-
+            write_solver_options(
+                self.container.system_directory,
+                self.container.working_directory,
+                solver,
+                solver_options,
+            )
             option_file = 1
 
         names_to_write = []

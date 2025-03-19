@@ -1186,6 +1186,7 @@ class Model:
         self._append_solve_string()
         self._create_model_attributes()
         options._set_solver_options(
+            system_directory=self.container.system_directory,
             working_directory=self.container.working_directory,
             solver=solver,
             problem=self.problem,
