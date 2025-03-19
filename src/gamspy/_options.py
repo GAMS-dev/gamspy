@@ -616,6 +616,7 @@ def validate_solver_options(
     if rc == 0:
         raise Exception(msg)
 
+    # Check the validity of the .def file.
     solver_def_file = get_def_file(system_directory, solver)
     if optReadDefinition(option_handle, solver_def_file):
         msg_list = []
@@ -628,6 +629,7 @@ def validate_solver_options(
 
     optClearMessages(option_handle)
 
+    # Check the validity of the parameters 
     if optReadParameterFile(option_handle, options_file_name):
         raise Exception(f"Error while reading {options_file_name}")
 
@@ -641,6 +643,16 @@ def validate_solver_options(
     if msg_list:
         error_messages = []
         for message in msg_list:
+            # optMsgInputEcho    = 0,
+            # optMsgHelp         = 1,
+            # optMsgDefineError  = 2,
+            # optMsgValueError   = 3,
+            # optMsgValueWarning = 4,
+            # optMsgDeprecated   = 5,
+            # optMsgFileEnter    = 6,
+            # optMsgFileLeave    = 7,
+            # optMsgTooManyMsgs  = 8,
+            # optMsgUserError    = 9
             if message[1] not in (6, 7):
                 error_messages.append(message[0])
 

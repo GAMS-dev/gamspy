@@ -33,7 +33,7 @@ def _set_default_options() -> None:
     evaluate_lazily = int(os.getenv("GAMSPY_LAZY_EVALUATION", 0))
     configuration["LAZY_EVALUATION"] = evaluate_lazily
 
-    # Disable solver option validation
+    # Solver option validation. Enabled by default.
     validate_solver_options = int(
         os.getenv("GAMSPY_SOLVER_OPTION_VALIDATION", 1)
     )
