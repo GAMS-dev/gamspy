@@ -582,7 +582,6 @@ def write_solver_options(
         "HIGHS",
         "SOPLEX",
         "KESTREL",
-        "MPSGE",
         "SCIP",
         "SHOT",
         "SOPLEX",
@@ -597,11 +596,14 @@ def get_def_file(system_directory: str, solver: str) -> str:
     solver_name = solver.upper()
     def_file_path = os.path.join(system_directory, f"opt{solver.lower()}.def")
 
-    if solver_name in ("CONOPT3", "CONOPT4"):
+    if solver_name == "CONOPT4":
         return os.path.join(system_directory, "optconopt.def")
 
     if solver_name == "EXAMINER2":
         return os.path.join(system_directory, "optexaminer.def")
+    
+    if solver_name == "IPOPTH":
+        return os.path.join(system_directory, "optipopt.def")
 
     return def_file_path
 
@@ -656,7 +658,8 @@ def validate_solver_options(
             if message[1] not in (6, 7):
                 error_messages.append(message[0])
 
-        error_message = "\n".join(error_messages)
-        raise ValidationError(
-            f"Error while reading the parameter file: \n\n{error_message}"
-        )
+        if error_messages:
+            error_message = "\n".join(error_messages)
+            raise ValidationError(
+                f"Error while reading the parameter file: \n\n{error_message}"
+            )
