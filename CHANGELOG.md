@@ -8,6 +8,7 @@ GAMSPy 1.9.0
   - get the value of objective estimation and the number of nodes used after frozen solves
   - Add description argument for model objects.
   - Make GAMSPy symbols non-iterable.
+  - Inherit output argument from the container in solve function if the output argument is not specified.
 
 GAMSPy 1.8.0
 ------------

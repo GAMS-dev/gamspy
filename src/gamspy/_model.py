@@ -1156,6 +1156,9 @@ class Model:
         >>> solved = my_model.solve()
 
         """
+        if output is None:
+            output = self.container.output
+
         if solver is None:
             solver = utils.getDefaultSolvers(self.container.system_directory)[
                 str(self.problem).upper()
