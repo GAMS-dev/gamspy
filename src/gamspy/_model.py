@@ -226,7 +226,7 @@ class Model:
     >>> m = gp.Container()
     >>> v = gp.Variable(m, "v")
     >>> e = gp.Equation(m, "e", definition= v == 5)
-    >>> my_model = gp.Model(m, "my_model", "LP", [e])
+    >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
 
     """
 
@@ -1152,7 +1152,7 @@ class Model:
         >>> m = gp.Container()
         >>> v = gp.Variable(m, "v")
         >>> e = gp.Equation(m, "e", definition= v == 5)
-        >>> my_model = gp.Model(m, "my_model", "LP", [e], "max", v)
+        >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e], sense="max", objective=v)
         >>> solved = my_model.solve()
 
         """
@@ -1237,7 +1237,7 @@ class Model:
         >>> m = gp.Container()
         >>> v = gp.Variable(m, "v")
         >>> e = gp.Equation(m, "e", definition= v == 5)
-        >>> my_model = gp.Model(m, "my_model", "LP", [e])
+        >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
         >>> my_model.getDeclaration()
         'Model my_model / e,my_model_objective /;'
 
