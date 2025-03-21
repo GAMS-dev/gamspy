@@ -19,7 +19,7 @@ gamspy
    gamspy.Problem
    gamspy.Sense
    gamspy.Options
-   gamspy.ModelInstanceOptions
+   gamspy.FreezeOptions
    gamspy.Expression
    gamspy._algebra.domain
    gamspy._algebra.number

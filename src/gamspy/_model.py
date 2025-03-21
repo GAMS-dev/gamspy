@@ -23,7 +23,7 @@ from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
     MODEL_ATTR_OPTION_MAP,
-    ModelInstanceOptions,
+    FreezeOptions,
     Options,
 )
 from gamspy.exceptions import GamspyException, ValidationError
@@ -1103,7 +1103,7 @@ class Model:
         solver: str | None = None,
         options: Options | None = None,
         solver_options: dict | None = None,
-        model_instance_options: ModelInstanceOptions | None = None,
+        model_instance_options: FreezeOptions | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
@@ -1120,7 +1120,7 @@ class Model:
             GAMS options
         solver_options : dict, optional
             Solver options
-        model_instance_options : ModelInstanceOptions, optional
+        model_instance_options : FreezeOptions, optional
             Model instance options
         output : TextIOWrapper, optional
             Output redirection target
@@ -1185,7 +1185,7 @@ class Model:
 
         if self._is_frozen:
             if model_instance_options is None:
-                model_instance_options = ModelInstanceOptions()
+                model_instance_options = FreezeOptions()
 
             summary = self.instance.solve(
                 solver, model_instance_options, solver_options, output

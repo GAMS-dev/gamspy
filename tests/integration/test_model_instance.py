@@ -16,8 +16,8 @@ from gamspy import (
     Alias,
     Container,
     Equation,
+    FreezeOptions,
     Model,
-    ModelInstanceOptions,
     ModelStatus,
     Options,
     Parameter,
@@ -349,7 +349,7 @@ def test_validations(data):
     # Test model instance options
     transport.solve(
         solver="conopt",
-        model_instance_options=ModelInstanceOptions(debug=True),
+        model_instance_options=FreezeOptions(debug=True),
     )
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
     assert os.path.exists("dict.txt")
