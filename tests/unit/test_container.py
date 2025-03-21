@@ -903,9 +903,11 @@ def test_mcp_serialization(data) -> None:
         matches={mkt: p, profit: y, income: i},
     )
 
-    serialization_path = os.path.join("tmp", "mcp_serialized.zip")
-    serialize(m, serialization_path)  # try gp.serialize syntax
-    m2 = deserialize(serialization_path)
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "mcp_serialized.zip")
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m2 = deserialize(serialization_path)
+
     hansen2 = m2.models["hansen"]
 
     for unserialized, serialized in zip(
