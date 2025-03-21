@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -806,20 +807,22 @@ def test_serialization(data) -> None:
     )
     transport.solve()
 
-    serialization_path = os.path.join("tmp", "serialized.zip")
-    serialization_path2 = os.path.join("tmp", "serialized2.zip")
-    # Incorrect zip file name
-    with pytest.raises(ValidationError):
-        serialize(m, "bla")
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "serialized.zip")
+        serialization_path2 = os.path.join(directory, "serialized2.zip")
+        # Incorrect zip file name
+        with pytest.raises(ValidationError):
+            serialize(m, "bla")
 
-    # Incorrect container type
-    with pytest.raises(ValidationError):
-        serialize(i, serialization_path)
+        # Incorrect container type
+        with pytest.raises(ValidationError):
+            serialize(i, serialization_path)
 
-    serialize(m, serialization_path)  # try gp.serialize syntax
-    m.serialize(serialization_path2)  # try container.serialize syntax
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m.serialize(serialization_path2)  # try container.serialize syntax
 
-    m2 = deserialize(serialization_path)
+        m2 = deserialize(serialization_path)
+
     assert id(m) != id(m2)
     assert m.data.keys() == m2.data.keys()
 

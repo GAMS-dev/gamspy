@@ -926,7 +926,10 @@ class Model:
         self.container._add_statement("$offListing")
         for attr_name in ATTRIBUTE_MAP:
             symbol_name = f"{self._generate_prefix}{attr_name}_{self._auto_id}"
-            _ = gp.Parameter._constructor_bypass(self.container, symbol_name)
+            Symbol = gp.Parameter._constructor_bypass(
+                self.container, symbol_name
+            )
+            Symbol.modified = False
 
             self.container._add_statement(
                 f"{symbol_name} = {self.name}.{attr_name};"
@@ -1186,6 +1189,7 @@ class Model:
         self._append_solve_string()
         self._create_model_attributes()
         options._set_solver_options(
+            system_directory=self.container.system_directory,
             working_directory=self.container.working_directory,
             solver=solver,
             problem=self.problem,
