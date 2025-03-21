@@ -28,6 +28,7 @@ The general syntax for creating a model is as follows: ::
     example_model = Model(
         m,
         name="myModel",
+        description"description of your model",
         equations=[e1, e2],
         problem=Problem.LP,
         sense=Sense.MAX,
