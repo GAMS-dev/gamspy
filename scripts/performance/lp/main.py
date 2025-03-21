@@ -13,15 +13,15 @@ logging.disable(logging.WARNING)
 
 def solve_poi_model(Model, N, time_limit):
     m = Model()
-    x = m.add_variables(range(N), range(N))
-    y = m.add_variables(range(N), range(N))
+    x = m.add_m_variables((N, N))
+    y = m.add_m_variables((N, N))
     for i in range(N):
         for j in range(N):
             m.add_linear_constraint(x[i, j] - y[i, j], poi.Geq, i)
             m.add_linear_constraint(x[i, j] + y[i, j], poi.Geq, 0)
     expr = poi.ExprBuilder()
-    poi.quicksum_(expr, x, lambda x: 2 * x)
-    poi.quicksum_(expr, y)
+    poi.quicksum_(expr, x.flat, lambda x: 2 * x)
+    poi.quicksum_(expr, y.flat)
     m.set_objective(expr)
     m.set_model_attribute(poi.ModelAttribute.Silent, True)
     if time_limit is not None:

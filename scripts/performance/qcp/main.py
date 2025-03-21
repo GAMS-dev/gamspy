@@ -17,20 +17,12 @@ import gamspy as gp
 logging.disable(logging.WARNING)
 
 
-def add_ndarray_variable(m, shape, **kwargs):
-    array = np.empty(shape, dtype=object)
-    array_flat = array.flat
-    for i in range(array.size):
-        array_flat[i] = m.add_variable(**kwargs)
-    return array
-
-
 def solve_facility_poi(m, G, F, time_limit=0):
     # Create variables
-    y = add_ndarray_variable(m, (F, 2), lb=0.0, ub=1.0)
-    s = add_ndarray_variable(m, (G + 1, G + 1, F), lb=0.0)
-    z = add_ndarray_variable(m, (G + 1, G + 1, F))
-    r = add_ndarray_variable(m, (G + 1, G + 1, F, 2))
+    y = m.add_m_variables((F, 2), lb=0.0, ub=1.0)
+    s = m.add_m_variables((G + 1, G + 1, F), lb=0.0)
+    z = m.add_m_variables((G + 1, G + 1, F))
+    r = m.add_m_variables((G + 1, G + 1, F, 2))
     d = m.add_variable()
 
     # Set objective
