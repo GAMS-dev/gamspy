@@ -79,6 +79,10 @@ def test_set_creation(data):
     with pytest.raises(ValidationError):
         _ = Set(m2, "set2", domain=[set1])
 
+    # GAMSPy symbols are not iterable to avoid infinite loop on builtin Python sum.
+    with pytest.raises(ValidationError):
+        sum(i)
+
 
 def test_set_string(data):
     m, canning_plants, *_ = data
