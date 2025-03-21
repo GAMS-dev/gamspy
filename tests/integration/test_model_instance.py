@@ -18,6 +18,7 @@ from gamspy import (
     Equation,
     FreezeOptions,
     Model,
+    ModelInstanceOptions,
     ModelStatus,
     Options,
     Parameter,
@@ -346,7 +347,7 @@ def test_validations(data):
 
     transport.freeze(modifiables=[x.up], options=Options(lp="conopt"))
 
-    # Test model instance options
+    # Test freeze options
     transport.solve(
         solver="conopt",
         model_instance_options=FreezeOptions(debug=True),
@@ -354,6 +355,13 @@ def test_validations(data):
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
     assert os.path.exists("dict.txt")
     assert os.path.exists("gams.gms")
+
+    # ModelInstanceOptions should throw a warning
+    with pytest.warns(UserWarning):
+        transport.solve(
+            solver="conopt",
+            model_instance_options=ModelInstanceOptions(debug=True),
+        )
 
     # Test solver options
     with open("_out.txt", "w") as file:

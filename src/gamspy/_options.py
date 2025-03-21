@@ -566,12 +566,12 @@ class ModelInstanceOptions(BaseModel):
         "base_case"
     )
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         warnings.warn(
             "ModelInstanceOptions will be renamed to FreezeOptions in GAMSPy 1.9.0. Please use FreezeOptions instead.",
             stacklevel=2,
         )
-        super().__init__()
+        super().__init__(**kwargs)
 
 
 def write_solver_options(
