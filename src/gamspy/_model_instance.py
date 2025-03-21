@@ -68,7 +68,7 @@ from gamspy._database import (
     GamsParameter,
     GamsVariable,
 )
-from gamspy._options import ModelInstanceOptions, Options, write_solver_options
+from gamspy._options import FreezeOptions, Options, write_solver_options
 from gamspy.exceptions import (
     GamspyException,
     ValidationError,
@@ -349,7 +349,7 @@ class ModelInstance:
     def solve(
         self,
         solver: str,
-        instance_options: ModelInstanceOptions,
+        instance_options: FreezeOptions,
         solver_options: dict | None = None,
         output: io.TextIOWrapper | None = None,
     ) -> pd.DataFrame:

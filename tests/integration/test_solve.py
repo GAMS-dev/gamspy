@@ -761,7 +761,7 @@ def test_solve(data):
     )
 
     with pytest.raises(ValidationError):
-        transport2 = Model(
+        _ = Model(
             m,
             name="transport2",
             equations=[cost, supply, demand],
@@ -772,9 +772,9 @@ def test_solve(data):
         )
 
     # Test limited variables
-    transport2 = Model(
+    transport3 = Model(
         m,
-        name="transport2",
+        name="transport3",
         equations=[cost, supply, demand],
         problem="LP",
         sense="min",
@@ -783,8 +783,8 @@ def test_solve(data):
     )
 
     assert (
-        transport2.getDeclaration()
-        == "Model transport2 / cost,supply,demand,x(freeLinks) /;"
+        transport3.getDeclaration()
+        == "Model transport3 / cost,supply,demand,x(freeLinks) /;"
     )
 
     # Test output redirection
@@ -851,13 +851,13 @@ def test_solve(data):
     assert not any("dummy_" in name for name in m.data)
 
     # Test invalid problem
-    pytest.raises(ValueError, Model, m, "dummy", "bla", [cost])
+    pytest.raises(ValueError, Model, m, "dummy", "", "bla", [cost])
 
     # Test invalid sense
-    pytest.raises(ValueError, Model, m, "dummy", "LP", [cost], "bla")
+    pytest.raises(ValueError, Model, m, "dummy", "", "LP", [cost], "bla")
 
     # Test invalid objective variable
-    pytest.raises(TypeError, Model, m, "dummy", "LP", [cost], "min", a)
+    pytest.raises(TypeError, Model, m, "dummy", "", "LP", [cost], "min", a)
 
     # Test invalid commandline options
     pytest.raises(

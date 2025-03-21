@@ -4,6 +4,7 @@ import io
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
+import warnings
 
 from gams.core.opt import (
     new_optHandle_tp,
@@ -551,6 +552,12 @@ class Options(BaseModel):
                 )
             )
 
+class FreezeOptions(BaseModel):
+    no_match_limit: int = 0
+    debug: bool = False
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
+        "base_case"
+    )
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
@@ -558,6 +565,13 @@ class ModelInstanceOptions(BaseModel):
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
         "base_case"
     )
+
+    def __init__(self, **kwargs):
+        warnings.warn(
+            "ModelInstanceOptions will be renamed to FreezeOptions in GAMSPy 1.9.0. Please use FreezeOptions instead.",
+            stacklevel=2,
+        )
+        super().__init__(**kwargs)
 
 
 def write_solver_options(

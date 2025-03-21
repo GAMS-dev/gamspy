@@ -113,7 +113,7 @@ def test_model(data):
     assert test_model.objective_value == 153.675
 
     # Check if the name is reserved
-    pytest.raises(ValidationError, Model, m, "set", "LP")
+    pytest.raises(ValidationError, Model, m, "set", "", "LP")
 
     # Equation definition with more than one index
     bla = Equation(
@@ -171,7 +171,9 @@ def test_model(data):
     )
 
     # Equations provided as strings
-    pytest.raises(TypeError, Model, m, "test_model5", "LP", ["cost", "supply"])
+    pytest.raises(
+        TypeError, Model, m, "test_model5", "", "LP", ["cost", "supply"]
+    )
 
     # Test matches
     test_model6 = Model(
@@ -212,6 +214,7 @@ def test_model(data):
         ValueError,
         Model,
         m,
+        "",
         "test_model7",
         "",
         m.getEquations(),
@@ -225,6 +228,7 @@ def test_model(data):
         Model,
         m,
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -237,6 +241,7 @@ def test_model(data):
         Model,
         m,
         5,
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -249,6 +254,7 @@ def test_model(data):
         Model,
         m,
         "test_model 8",
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -261,10 +267,25 @@ def test_model(data):
         Model,
         m,
         "_test_model7",
+        "",
         "LP",
         m.getEquations(),
         "min",
         Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    test_model8 = Model(
+        m,
+        name="test_model8",
+        description="some description",
+        equations=[supply, demand],
+        problem="LP",
+        sense="min",
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    assert (
+        test_model8.getDeclaration()
+        == 'Model test_model8 "some description" / supply,demand,test_model8_objective /;'
     )
 
 
@@ -308,6 +329,7 @@ def test_feasibility(data):
         Model,
         m,
         "transport2",
+        "",
         "LP",
         m.getEquations(),
         "feasibility",

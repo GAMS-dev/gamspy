@@ -1749,7 +1749,7 @@ def test_math_op(data):
 
     m = ct.addModel(
         "math",
-        Problem.QCP,
+        problem=Problem.QCP,
         equations=ct.getEquations(),
         sense=Sense.MIN,
         objective=Sum(S, x[S]),

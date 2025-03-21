@@ -5,6 +5,7 @@ import typing
 
 import gamspy._algebra.expression as expression
 import gamspy.math as gamspy_math
+from gamspy.exceptions import ValidationError
 
 if typing.TYPE_CHECKING:
     from gamspy._types import OperableType
@@ -15,6 +16,11 @@ class Operable:
     A mixin class that overloads the magic operations of a class
     to be used in Expressions
     """
+
+    def __iter__(self):
+        raise ValidationError(
+            "GAMSPy symbols are not iterable. If you want to iterate on records, iterate over <symbol>.records."
+        )
 
     # +, -, /, *, **, %
     def __add__(self, other: OperableType):
