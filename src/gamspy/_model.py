@@ -898,7 +898,7 @@ class Model:
         if self._objective_variable is not None:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        return solve_string + ";"
+        return solve_string
 
     def _add_runtime_options(
         self, options: Options, backend: str = "local"
@@ -924,7 +924,7 @@ class Model:
                 )
 
     def _append_solve_string(self) -> None:
-        solve_string = self._generate_solve_string()
+        solve_string = self._generate_solve_string() + ";"
         self.container._add_statement(solve_string + "\n")
 
     def _create_model_attributes(self) -> None:
