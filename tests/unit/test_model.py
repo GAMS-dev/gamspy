@@ -319,7 +319,7 @@ def test_feasibility(data):
     )
     assert (
         transport._generate_solve_string()
-        == "solve transport using LP MIN transport_objective_variable;"
+        == "solve transport using LP MIN transport_objective_variable"
     )
     transport.solve()
     assert x.records is not None
@@ -1038,7 +1038,7 @@ def test_solve_string_lp(data):
     )
     assert (
         test_model._generate_solve_string()
-        == "solve test_model using LP MIN z;"
+        == "solve test_model using LP MIN z"
     )
 
 
@@ -1080,7 +1080,7 @@ def test_solve_string_mcp(data):
         problem=Problem.MCP,
         matches={mkt: p, profit: y, income: i},
     )
-    assert hansen._generate_solve_string() == "solve hansen using MCP;"
+    assert hansen._generate_solve_string() == "solve hansen using MCP"
 
     # Test new mcp matching syntax
 
@@ -1132,7 +1132,7 @@ def test_solve_string_cns(data):
     f[...] = x * x == 4
     x.l = 1
     m = Model(m, name="m", equations=[f], problem="CNS", sense="FEASIBILITY")
-    assert m._generate_solve_string() == "solve m using CNS;"
+    assert m._generate_solve_string() == "solve m using CNS"
 
 
 def test_models_with_same_name():
