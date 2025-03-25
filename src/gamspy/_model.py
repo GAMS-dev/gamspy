@@ -25,6 +25,7 @@ from gamspy._options import (
     EXECUTION_OPTIONS,
     MODEL_ATTR_OPTION_MAP,
     FreezeOptions,
+    ModelInstanceOptions,
     Options,
 )
 from gamspy.exceptions import GamspyException, ValidationError
@@ -1104,7 +1105,8 @@ class Model:
         solver: str | None = None,
         options: Options | None = None,
         solver_options: dict | None = None,
-        model_instance_options: FreezeOptions | None = None,
+        model_instance_options: ModelInstanceOptions | None = None,
+        freeze_options: FreezeOptions | None = None,
         output: io.TextIOWrapper | None = None,
         backend: Literal["local", "engine", "neos"] = "local",
         client: EngineClient | NeosClient | None = None,
@@ -1121,7 +1123,9 @@ class Model:
             GAMS options
         solver_options : dict, optional
             Solver options
-        model_instance_options : FreezeOptions, optional
+        model_instance_options : ModelInstanceOptions, optional
+            Options to solve a frozen model. This argument will be deprecated in GAMSPy 1.10.0. Please use freeze_options instead.
+        freeze_options : FreezeOptions, optional
             Options to solve a frozen model.
         output : TextIOWrapper, optional
             Output redirection target
@@ -1185,17 +1189,20 @@ class Model:
             options._frame = frame
 
         if self._is_frozen:
-            if model_instance_options is None:
-                model_instance_options = FreezeOptions()
-            else:
+            instance_options = FreezeOptions()
+            if model_instance_options is not None:
                 warnings.warn(
-                    "model_instance_options will be renamed to freeze_options in GAMSPy 1.9.0",
+                    "model_instance_options will be renamed to freeze_options in GAMSPy 1.10.0",
                     DeprecationWarning,
                     stacklevel=2,
                 )
+                instance_options = model_instance_options
+
+            if freeze_options is not None:
+                instance_options = freeze_options
 
             summary = self.instance.solve(
-                solver, model_instance_options, solver_options, output
+                solver, instance_options, solver_options, output
             )
             return summary
 
