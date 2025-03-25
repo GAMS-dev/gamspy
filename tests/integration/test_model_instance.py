@@ -11,6 +11,7 @@ import gamspy_base
 import pandas as pd
 import pytest
 
+import gamspy as gp
 import gamspy.utils as utils
 from gamspy import (
     Alias,
@@ -357,7 +358,7 @@ def test_validations(data):
     assert os.path.exists("gams.gms")
 
     # ModelInstanceOptions should throw a warning
-    with pytest.warns(UserWarning):
+    with pytest.warns(DeprecationWarning):
         transport.solve(
             solver="conopt",
             model_instance_options=ModelInstanceOptions(debug=True),
@@ -922,3 +923,19 @@ def test_database():
     m = Container(gdx_path)
     assert len(m) == 6
     m.close()
+
+
+def test_feasibility():
+    m = gp.Container()
+    x = gp.Variable(m, "x", records=2)
+    a = gp.Parameter(m, "a", records=6)
+    b = gp.Parameter(m, "b", records=3)
+    e = gp.Equation(m, "e", definition=a * x / gp.math.sqr(b) == 0)
+    mi = gp.Model(m, "mi", equations=[e], problem="LP", sense="FEASIBILITY")
+    assert (
+        mi._generate_solve_string()
+        == "solve mi using LP MIN mi_objective_variable"
+    )
+    mi.freeze([a, b])
+    mi.solve(solver="cplex", solver_options={"writelp": "mi.lp"})
+    mi.unfreeze()

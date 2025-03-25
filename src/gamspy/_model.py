@@ -6,6 +6,7 @@ import logging
 import os
 import threading
 import uuid
+import warnings
 from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -898,7 +899,7 @@ class Model:
         if self._objective_variable is not None:
             solve_string += f" {self._objective_variable.gamsRepr()}"
 
-        return solve_string + ";"
+        return solve_string
 
     def _add_runtime_options(
         self, options: Options, backend: str = "local"
@@ -924,7 +925,7 @@ class Model:
                 )
 
     def _append_solve_string(self) -> None:
-        solve_string = self._generate_solve_string()
+        solve_string = self._generate_solve_string() + ";"
         self.container._add_statement(solve_string + "\n")
 
     def _create_model_attributes(self) -> None:
@@ -1121,7 +1122,7 @@ class Model:
         solver_options : dict, optional
             Solver options
         model_instance_options : FreezeOptions, optional
-            Model instance options
+            Options to solve a frozen model.
         output : TextIOWrapper, optional
             Output redirection target
         backend : str, optional
@@ -1186,6 +1187,12 @@ class Model:
         if self._is_frozen:
             if model_instance_options is None:
                 model_instance_options = FreezeOptions()
+            else:
+                warnings.warn(
+                    "model_instance_options will be renamed to freeze_options in GAMSPy 1.9.0",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
             summary = self.instance.solve(
                 solver, model_instance_options, solver_options, output

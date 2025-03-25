@@ -569,6 +569,7 @@ class ModelInstanceOptions(BaseModel):
     def __init__(self, **kwargs):
         warnings.warn(
             "ModelInstanceOptions will be renamed to FreezeOptions in GAMSPy 1.9.0. Please use FreezeOptions instead.",
+            DeprecationWarning,
             stacklevel=2,
         )
         super().__init__(**kwargs)

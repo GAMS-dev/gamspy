@@ -588,16 +588,11 @@ class ModelInstance:
             lines.append(scenario)
 
         lines.append(f"{model.name}.justScrDir = 1;")
-        solve_string = f"solve {model.name} using {model.problem}"
-
-        if model.problem not in (gp.Problem.MCP, gp.Problem.CNS):
-            solve_string += f" {model.sense}"
-
-        if model._objective_variable is not None:
-            solve_string += f" {model._objective_variable.gamsRepr()}"
+        solve_string = model._generate_solve_string()
 
         if params:
             solve_string += f" scenario {auto_id}_dict"
+
         solve_string += ";"
         lines.append(solve_string)
 

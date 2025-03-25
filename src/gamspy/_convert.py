@@ -146,7 +146,7 @@ class GamsConverter(Converter):
                     options_strs.append(f"{EXECUTION_OPTIONS[key]} '{value}'")
 
         # 5. Solve string
-        solve_string = self.model._generate_solve_string()
+        solve_string = self.model._generate_solve_string() + ";"
         strings = [
             *declarations,
             load_str,
