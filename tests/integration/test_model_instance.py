@@ -358,7 +358,7 @@ def test_validations(data):
     assert os.path.exists("gams.gms")
 
     # ModelInstanceOptions should throw a warning
-    with pytest.warns(UserWarning):
+    with pytest.warns(DeprecationWarning):
         transport.solve(
             solver="conopt",
             model_instance_options=ModelInstanceOptions(debug=True),
@@ -931,7 +931,7 @@ def test_feasibility():
     a = gp.Parameter(m, "a", records=6)
     b = gp.Parameter(m, "b", records=3)
     e = gp.Equation(m, "e", definition=a * x / gp.math.sqr(b) == 0)
-    mi = gp.Model(m, equations=[e], problem="LP", sense="FEASIBILITY")
+    mi = gp.Model(m, "mi", equations=[e], problem="LP", sense="FEASIBILITY")
     assert (
         mi._generate_solve_string()
         == "solve mi using LP MIN mi_objective_variable"
