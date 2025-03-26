@@ -544,7 +544,7 @@ Here is the list of options and their descriptions:
 | solve_link_type                   | Solve link option                                                                 | "disk": The model instance is saved to the scratch directory,                             |
 |                                   |                                                                                   | "memory": The model instance is passed to the solver in-memory                            |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
-| multi_solve_strategy              | Multiple solve management                                                         | "replace" | "merge" | "clear"                                                             |
+| merge_strategy                    | Multiple solve management                                                         | "replace" | "merge" | "clear"                                                             |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 | step_summary                      | Summary of computing resources used by job steps                                  | bool                                                                                      |
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
