@@ -6,14 +6,10 @@ import shutil
 import tempfile
 import zipfile
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
 
 from gamspy import Container
 from gamspy._model import ATTRIBUTE_MAP
 from gamspy.exceptions import ValidationError
-
-if TYPE_CHECKING:
-    pass
 
 
 def serialize(container: Container, path: str) -> None:
