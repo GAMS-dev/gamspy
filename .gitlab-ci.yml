@@ -3,7 +3,7 @@ default:
     - linux
 
 stages:
-  - formatter
+  - precommit
   - cli
   - test
   - engine
@@ -46,7 +46,7 @@ variables:
     description: "Password for PyPI"
 
 
-include: ['ci/.formatter.yml',
+include: ['ci/.precommit.yml',
           'ci/.cli.yml',
           'ci/.test-leg.yml',
           'ci/.test-dac.yml',
