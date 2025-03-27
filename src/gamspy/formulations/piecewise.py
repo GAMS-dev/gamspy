@@ -244,16 +244,22 @@ def _indicator(
     if expr.data == "=e=":
         # sos1(bin_var, lhs - rhs) might be better
         eqs1 = _indicator(
-            indicator_var, indicator_val, expr.left <= expr.right
+            indicator_var,
+            indicator_val,
+            expr.left <= expr.right,  # type: ignore
         )
         eqs2 = _indicator(
-            indicator_var, indicator_val, -expr.left <= -expr.right
+            indicator_var,
+            indicator_val,
+            -expr.left <= -expr.right,  # type: ignore
         )
         return [*eqs1, *eqs2]
 
     if expr.data == "=g=":
         return _indicator(
-            indicator_var, indicator_val, -expr.left <= -expr.right
+            indicator_var,
+            indicator_val,
+            -expr.left <= -expr.right,  # type: ignore
         )
 
     equations = []

@@ -76,9 +76,16 @@ class GamsConverter(Converter):
             definitions.append(equation._definition.getDeclaration())
 
         if self.model._matches:
-            for equation in self.model._matches:
-                assert equation._definition is not None
-                definitions.append(equation._definition.getDeclaration())
+            for key in self.model._matches:
+                if isinstance(key, syms.Equation):
+                    assert key._definition is not None
+                    definitions.append(key._definition.getDeclaration())
+                else:
+                    for equation in key:
+                        assert equation._definition is not None
+                        definitions.append(
+                            equation._definition.getDeclaration()
+                        )
 
         return definitions
 
@@ -279,7 +286,7 @@ class LatexConverter(Converter):
                 f"Could not generate pdf file: {process.stderr}"
             )
 
-    def get_table(self, symbol_type):
+    def get_table(self, symbol_type) -> str:
         table = [TABLE_HEADER]
         for name in self.symbols:
             symbol: SymbolType = self.container[name]

@@ -7,7 +7,6 @@ import logging
 import math
 import time
 
-import numpy as np
 import pandas as pd
 import pyoptinterface as poi
 from pyoptinterface import ipopt
