@@ -46,7 +46,7 @@ variables:
     description: "Password for PyPI"
 
 
-include: ['ci/.precommit.yml',
+include: ['ci/.precommit-check.yml',
           'ci/.cli.yml',
           'ci/.test-leg.yml',
           'ci/.test-dac.yml',
