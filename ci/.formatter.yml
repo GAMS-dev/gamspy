@@ -1,13 +1,10 @@
-leg-formatter:
-  stage: formatter
+leg-precommit:
+  stage: precommit
   when: on_success
   tags: [linux]
   image: python:3.12
   script:
-    - python -m pip install uv && uv venv .formatter_venv && source .formatter_venv/bin/activate
+    - python -m pip install uv && uv venv .precommit_venv && source .precommit_venv/bin/activate
     - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt
-    - uv pip install ruff==0.9.4
-    - ruff format src/gamspy --check
-    - ruff format tests --check
-    - ruff check src/gamspy --fix --exit-non-zero-on-fix
-    - ruff check tests --fix --exit-non-zero-on-fix
+    - uv pip install pre-commit
+    - pre-commit run --all-files

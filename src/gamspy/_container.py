@@ -287,6 +287,7 @@ class Container(gt.Container):
             self._process,
         )
 
+        self._is_restarted = False
         if load_from is not None:
             if not isinstance(load_from, (str, gt.Container)):
                 raise ValidationError(
@@ -309,6 +310,7 @@ class Container(gt.Container):
                 self._options._set_debug_options(dict())
                 self._clean_modified_symbols()
                 self._unsaved_statements = []
+                self._is_restarted = True
             else:
                 self._read(load_from)
                 if not isinstance(load_from, gt.Container):
@@ -1167,7 +1169,11 @@ class Container(gt.Container):
         equations: Sequence[Equation] = [],
         sense: Sense | str = Sense.FEASIBILITY,
         objective: Variable | Expression | None = None,
-        matches: dict[Equation, Variable] | None = None,
+        matches: dict[
+            Equation | Sequence[Equation],
+            Variable | Sequence[Variable],
+        ]
+        | None = None,
         limited_variables: Sequence[Variable] | None = None,
         external_module: str | None = None,
     ) -> Model:
@@ -1189,7 +1195,7 @@ class Container(gt.Container):
             "MIN", "MAX", or "FEASIBILITY".
         objective : Variable | Expression, optional
             Objective variable to minimize or maximize or objective itself.
-        matches : dict[Equation, Variable]
+        matches : dict[Equation | Sequence[Equation], Variable | Sequence[Variable]], optional
             Equation - Variable matches for MCP models.
         limited_variables : Sequence, optional
             Allows limiting the domain of variables used in a model.

@@ -10,7 +10,11 @@ GAMSPy 1.9.0
   - Make GAMSPy symbols non-iterable.
   - Inherit output argument from the container in solve function if the output argument is not specified.
   - Rename ModelInstanceOptions to FreezeOptions and add a warning for the usage of ModelInstanceOptions.
-  - Fix sense=feasibility bug of frozen models. 
+  - Fix sense=feasibility bug of frozen models.
+  - Fix static code analysis errors.
+  - Do not validate equation definitions in case the container was restarted from a save file (.g00 file).
+- Testing
+  - Run all pre-commit hooks instead of running selectively.
 
 GAMSPy 1.8.0
 ------------

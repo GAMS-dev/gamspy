@@ -214,7 +214,7 @@ class Model:
         "MIN", "MAX", or "FEASIBILITY". By default, Sense.FEASIBILITY
     objective : Variable | Expression, optional
         Objective variable to minimize or maximize or objective itself.
-    matches : dict[Equation, Variable]
+    matches : dict[Equation | Sequence[Equation], Variable | Sequence[Variable]], optional
         Equation - Variable matches for MCP models.
     limited_variables : Sequence[ImplicitVariable], optional
         Allows limiting the domain of variables used in a model.
@@ -380,15 +380,15 @@ class Model:
             info["_objective_variable"] = self._objective_variable.name
 
         # attributes
-        for attribute in ATTRIBUTE_MAP.values():
-            if attribute in ("_status", "_solve_status"):
-                value = getattr(self, attribute, None)
-                if value is not None:
-                    value = value.value
+        for attr_name in ATTRIBUTE_MAP.values():
+            if attr_name in ("_status", "_solve_status"):
+                attr_value = getattr(self, attr_name, None)
+                if attr_value is not None:
+                    attr_value = attr_value.value
 
-                info[attribute] = value
+                info[attr_name] = attr_value
             else:
-                info[attribute] = getattr(self, attribute, None)
+                info[attr_name] = getattr(self, attr_name, None)
 
         return info
 
