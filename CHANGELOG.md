@@ -11,6 +11,11 @@ GAMSPy 1.9.0
   - Inherit output argument from the container in solve function if the output argument is not specified.
   - Start the renaming process (deprecation) of model_instance_options to freeze_options. GAMSPy 1.9.0 will throw a warning. GAMSPy 1.10.0 will throw an exception, and GAMSPy 1.11.0 will remove model_instance_options altogether.
   - Fix sense=feasibility bug of frozen models. 
+  - Rename ModelInstanceOptions to FreezeOptions and add a warning for the usage of ModelInstanceOptions.
+  - Fix static code analysis errors.
+  - Do not validate equation definitions in case the container was restarted from a save file (.g00 file).
+- Testing
+  - Run all pre-commit hooks instead of running selectively.
 
 GAMSPy 1.8.0
 ------------

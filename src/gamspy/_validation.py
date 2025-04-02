@@ -377,8 +377,8 @@ def validate_name(word: str) -> str:
 def validate_model(
     equations: Iterable[Equation],
     matches: dict[
-        Variable | Equation | tuple[Variable] | tuple[Equation],
-        Variable | Equation | tuple[Variable] | tuple[Equation],
+        Equation | Sequence[Equation],
+        Variable | Sequence[Variable],
     ]
     | None,
     problem: Problem | str,
@@ -527,6 +527,9 @@ def validate_solver_args(
 
 
 def validate_equations(model: Model):
+    if model.container._is_restarted:
+        return
+
     for equation in model.equations:
         if equation._definition is None:
             raise ValidationError(

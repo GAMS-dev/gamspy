@@ -76,7 +76,7 @@ There are nine basic :meth:`variable types <gamspy.VariableType>` that may be us
 variable statements: 
 
 =================================================  ==================================================================================================================================================================================================  ======================  ======================
-Keyword                                            Description                                                                                                       Default Lower Bound   Default Upper Bound
+Keyword                                            Description                                                                                                                                                                                         Default Lower Bound     Default Upper Bound
 =================================================  ==================================================================================================================================================================================================  ======================  ======================
 free (default)                                     No bounds on variable. Both bounds may be changed from the default values by the user.                                                                                                              float('-inf')           float('inf')
 positive                                           No negative values are allowed for variable. The user may change both bounds from the default value.                                                                                                0                       float('inf')
