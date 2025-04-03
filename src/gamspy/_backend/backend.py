@@ -163,6 +163,7 @@ class Backend(ABC):
         gams_string = self.container._generate_gams_string(
             gdx_in, modified_names
         )
+        self.make_unmodified(modified_names)
 
         return gams_string
 
