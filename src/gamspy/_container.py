@@ -520,16 +520,6 @@ class Container(gt.Container):
             if name in self.data:
                 del self.data[name]
 
-    def _get_symbol_names_to_load(
-        self, load_from: str, names: list[str] | None
-    ) -> list[str]:
-        if names is None:
-            names = utils._get_symbol_names_from_gdx(
-                self.system_directory, load_from
-            )
-
-        return names
-
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + str(uuid.uuid4())
         job = os.path.join(self.working_directory, suffix)
@@ -647,26 +637,22 @@ class Container(gt.Container):
         symbol_names: list[str] | None = None,
         user_invoked: bool = False,
     ):
-        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
+        if symbol_names is None:
+            names = utils._get_symbol_names_from_gdx(
+                self.system_directory, load_from
+            )
+        else:
+            names = symbol_names
 
-        self._temp_container.read(load_from, symbol_names)
+        self._temp_container.read(load_from, names)
 
-        for name in symbol_names:
+        for name in names:
             if name in self.data:
                 updated_records = self._temp_container[name].records
-
-                if user_invoked:
-                    self[name].records = updated_records
-                else:
-                    self[name]._records = updated_records
-
-                if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
+                self[name].records = updated_records
+                self[name].domain_labels = self[name].domain_names
             else:
                 self._read(load_from, [name])
-
-            if user_invoked:
-                self[name].modified = True
 
         self._temp_container.data = {}
 
@@ -800,7 +786,7 @@ class Container(gt.Container):
         ----------
         load_from : str
             Path to the GDX file
-        symbols : List[str], optional
+        symbol_names : List[str], optional
             Symbols whose data will be load from GDX, by default None
 
         Examples
