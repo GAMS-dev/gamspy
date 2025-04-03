@@ -649,7 +649,13 @@ class Container(gt.Container):
         for name in names:
             if name in self.data:
                 updated_records = self._temp_container[name].records
-                self[name].records = updated_records
+
+                if user_invoked:
+                    self[name].records = updated_records
+                else:
+                    self[name]._records = updated_records
+                    self[name].modified = True
+
                 self[name].domain_labels = self[name].domain_names
             else:
                 self._read(load_from, [name])
