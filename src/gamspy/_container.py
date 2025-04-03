@@ -791,7 +791,7 @@ class Container(gt.Container):
         """
         if symbol_names is None:
             symbol_names = utils._get_symbol_names_from_gdx(
-                self.container.system_directory, self.container._gdx_out
+                self.system_directory, self._gdx_out
             )
 
         self._load_records_from_gdx(load_from, symbol_names)
