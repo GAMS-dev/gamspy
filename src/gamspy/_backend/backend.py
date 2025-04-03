@@ -9,7 +9,7 @@ import pandas as pd
 
 import gamspy._symbols as syms
 import gamspy.utils as utils
-from gamspy.exceptions import ValidationError
+from gamspy.exceptions import GamspyException, ValidationError
 
 if TYPE_CHECKING:
     import io
@@ -152,9 +152,13 @@ class Backend(ABC):
         modified_names = self.container._get_modified_symbols()
 
         if len(modified_names) != 0:
-            self.container.write(
-                self.container._gdx_in, modified_names, eps_to_zero=False
-            )
+            try:
+                self.container.write(
+                    self.container._gdx_in, modified_names, eps_to_zero=False
+                )
+            except Exception as e:
+                # Unfortunately, GTP raises a blind exception here. Turn it into a GamspyException.
+                raise GamspyException(str(e)) from e
 
         gams_string = self.container._generate_gams_string(
             gdx_in, modified_names
