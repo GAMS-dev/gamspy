@@ -351,7 +351,7 @@ def test_validations(data):
     # Test freeze options
     transport.solve(
         solver="conopt",
-        model_instance_options=FreezeOptions(debug=True),
+        freeze_options=FreezeOptions(debug=True),
     )
     assert math.isclose(transport.objective_value, 153.675, rel_tol=1e-6)
     assert os.path.exists("dict.txt")
