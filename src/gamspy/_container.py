@@ -12,7 +12,7 @@ import time
 import traceback
 import uuid
 import weakref
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -631,7 +631,9 @@ class Container(gt.Container):
 
         return gams_string
 
-    def _load_records_from_gdx(self, load_from: str, names: list[str]) -> None:
+    def _load_records_from_gdx(
+        self, load_from: str, names: Iterable[str]
+    ) -> None:
         self._temp_container.read(load_from, names)
         original_state = self._options.miro_protect
         self._options.miro_protect = False
@@ -764,7 +766,7 @@ class Container(gt.Container):
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbol_names: list[str] | None = None,
+        symbol_names: Iterable[str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a GDX file. If no
@@ -774,7 +776,7 @@ class Container(gt.Container):
         ----------
         load_from : str
             Path to the GDX file
-        symbol_names : List[str], optional
+        symbol_names : Iterable[str], optional
             Symbols whose data will be load from GDX, by default None
 
         Examples
@@ -790,6 +792,7 @@ class Container(gt.Container):
 
         """
         if symbol_names is None:
+            # If no symbol names are given, all records in the gdx should be loaded
             symbol_names = utils._get_symbol_names_from_gdx(
                 self.system_directory, load_from
             )

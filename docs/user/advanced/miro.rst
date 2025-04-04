@@ -50,6 +50,12 @@ with `--mode=deploy`: ::
 
     gamspy run miro --mode="deploy" --path <path_to_your_MIRO_installation> --model <path_to_your_model>
 
+Before deploying your GAMSPy/MIRO application, you must create a `model assembly file <https://www.gams.com/miro/deployment.html#model-assembly-file>`_. 
+This is a plain text file named ``<modelname>_files.txt`` that lists all files required by your model. 
+Each line in the file should contain the relative path to one file used in your model. For detailed 
+information about the model assembly file and additional customization options for your deployed application, 
+please refer to the `GAMS MIRO documentation <https://www.gams.com/miro/deployment.html>`_.
+
 The MIRO installation path can also be set as an environment variable with the name "MIRO_PATH" (e.g. in .bashrc), 
 so that it does not have to be specified for each run. ::
 

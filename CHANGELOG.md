@@ -14,6 +14,9 @@ GAMSPy 1.9.0
   - Rename ModelInstanceOptions to FreezeOptions and add a warning for the usage of ModelInstanceOptions.
   - Fix static code analysis errors.
   - Do not validate equation definitions in case the container was restarted from a save file (.g00 file).
+- Documentation
+  - Add additional instructions to deploy a GAMSPy/GAMS MIRO model.
+  - Fix name mismatch between the argument name and the docstring of loadRecordsFromGdx function.
 - Testing
   - Run all pre-commit hooks instead of running selectively.
 
