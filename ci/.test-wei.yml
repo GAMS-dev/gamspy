@@ -31,7 +31,7 @@ wei-test-3.12:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest-x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -51,7 +51,7 @@ wei-test-3.11:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest-x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -71,7 +71,7 @@ wei-test-3.10:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - pytest -x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest-x -v -s -m 'unit or integration or model_library' tests
   rules:
     - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -91,8 +91,8 @@ wei-test-3.9:
     - Invoke-Expression "& $getKeyPath $LOCAL_LICENSE | Out-File -Encoding ASCII $outputPath"
     - gamspy install solver --install-all-solvers --use-uv
     - gamspy uninstall solver miles --use-uv
-    - pytest -x -v -s -m 'unit or integration or model_library' tests
-    - pytest -x -v -s -m 'doc'
+    - python -m pytest-x -v -s -m 'unit or integration or model_library' tests
+    - python -m pytest-x -v -s -m 'doc'
 
 #### ENGINE #####
 wei-engine-3.13:
@@ -104,7 +104,7 @@ wei-engine-3.13:
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_engine313; .windows_engine313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
-    - pytest -x -v -s -m 'engine' tests
+    - python -m pytest-x -v -s -m 'engine' tests
 
 wei-engine-3.9:
   stage: engine
@@ -115,7 +115,7 @@ wei-engine-3.9:
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_engine39; .windows_engine39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
-    - pytest -x -v -s -m 'engine' tests
+    - python -m pytest-x -v -s -m 'engine' tests
 
 #### NEOS #####
 wei-neos-3.13:
@@ -127,7 +127,7 @@ wei-neos-3.13:
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_neos313; .windows_neos313\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
-    - pytest -x -v -s -m 'neos' tests
+    - python -m pytest-x -v -s -m 'neos' tests
 
 wei-neos-3.9:
   stage: neos
@@ -138,4 +138,4 @@ wei-neos-3.9:
   script:
     - python --version
     - python -m pip install uv; uv venv .windows_neos39; .windows_neos39\Scripts\Activate; uv pip install .[dev,test] --force-reinstall
-    - pytest -x -v -s -m 'neos' tests
+    - python -m pytest-x -v -s -m 'neos' tests
