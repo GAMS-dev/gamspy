@@ -877,7 +877,7 @@ def test_solve(data):
 
 
 @pytest.mark.skipif(
-    platform.system() == "Windows",
+    platform.system() != "Linux",
     reason="It doesn't work in Docker Windows Server container.",
 )
 def test_interrupt():
