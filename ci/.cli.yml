@@ -25,7 +25,8 @@ dac-cli-3.13:
   when: on_success
   tags: [macos-arm64]
   script:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
     - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
@@ -42,7 +43,8 @@ dac-cli-3.9:
   needs: [dac-cli-3.13]
   tags: [macos-arm64]
   script:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
     - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
@@ -54,7 +56,8 @@ deg-cli-3.13:
   stage: cli
   tags: [macos]
   script:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13 && uv build
     - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
@@ -71,7 +74,8 @@ deg-cli-3.9:
   needs: [deg-cli-3.13]
   tags: [macos]
   script:
-    - curl -LsSf https://astral.sh/uv/install.sh | sh && source $HOME/.local/bin/env
+    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
     - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
     - uv pip install .[dev,test] pip --force-reinstall
