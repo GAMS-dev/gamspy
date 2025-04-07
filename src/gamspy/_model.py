@@ -1148,10 +1148,10 @@ class Model:
     ) -> None:
         self._is_frozen = True
         if options is None:
-            options = Options()
+            options = self.container._options
 
         self.instance = ModelInstance(
-            self.container, self, modifiables, options
+            self.container, self, modifiables, options, self.container.output
         )
 
     def unfreeze(self) -> None:
