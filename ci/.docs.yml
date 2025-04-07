@@ -7,7 +7,7 @@ leg-build-docs:
   script:
     - python -m pip install uv && uv venv .docs_venv && source .docs_venv/bin/activate
     - uv pip install .[test,doc]
-    - pytest --nbmake docs/user/notebooks/*.ipynb
+    - python -m pytest--nbmake docs/user/notebooks/*.ipynb
     - ipython kernel install --name "python3" --user
     - wget https://github.com/jgm/pandoc/releases/download/3.1.8/pandoc-3.1.8-linux-amd64.tar.gz && tar xvzf pandoc-3.1.8-linux-amd64.tar.gz --strip-components 1
     - PATH=$(pwd)/bin/:$PATH

@@ -12,7 +12,7 @@ import time
 import traceback
 import uuid
 import weakref
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -520,16 +520,6 @@ class Container(gt.Container):
             if name in self.data:
                 del self.data[name]
 
-    def _get_symbol_names_to_load(
-        self, load_from: str, names: list[str] | None
-    ) -> list[str]:
-        if names is None:
-            names = utils._get_symbol_names_from_gdx(
-                self.system_directory, load_from
-            )
-
-        return names
-
     def _setup_paths(self) -> tuple[str, str, str]:
         suffix = "_" + str(uuid.uuid4())
         job = os.path.join(self.working_directory, suffix)
@@ -642,36 +632,22 @@ class Container(gt.Container):
         return gams_string
 
     def _load_records_from_gdx(
-        self,
-        load_from: str,
-        symbol_names: list[str] | None = None,
-        user_invoked: bool = False,
-    ):
-        symbol_names = self._get_symbol_names_to_load(load_from, symbol_names)
+        self, load_from: str, names: Iterable[str]
+    ) -> None:
+        self._temp_container.read(load_from, names)
+        original_state = self._options.miro_protect
+        self._options.miro_protect = False
 
-        self._temp_container.read(load_from, symbol_names)
-
-        for name in symbol_names:
+        for name in names:
             if name in self.data:
                 updated_records = self._temp_container[name].records
-
-                if user_invoked:
-                    self[name].records = updated_records
-                else:
-                    self[name]._records = updated_records
-
-                if updated_records is not None:
-                    self[name].domain_labels = self[name].domain_names
+                self[name].records = updated_records
+                self[name].domain_labels = self[name].domain_names
             else:
                 self._read(load_from, [name])
 
-            if user_invoked:
-                self[name].modified = True
-
+        self._options.miro_protect = original_state
         self._temp_container.data = {}
-
-        if user_invoked:
-            self._synch_with_gams()
 
     def _read(
         self,
@@ -790,7 +766,7 @@ class Container(gt.Container):
     def loadRecordsFromGdx(
         self,
         load_from: str,
-        symbol_names: list[str] | None = None,
+        symbol_names: Iterable[str] | None = None,
     ) -> None:
         """
         Loads data of the given symbols from a GDX file. If no
@@ -800,7 +776,7 @@ class Container(gt.Container):
         ----------
         load_from : str
             Path to the GDX file
-        symbols : List[str], optional
+        symbol_names : Iterable[str], optional
             Symbols whose data will be load from GDX, by default None
 
         Examples
@@ -815,7 +791,14 @@ class Container(gt.Container):
         True
 
         """
-        self._load_records_from_gdx(load_from, symbol_names, user_invoked=True)
+        if symbol_names is None:
+            # If no symbol names are given, all records in the gdx should be loaded
+            symbol_names = utils._get_symbol_names_from_gdx(
+                self.system_directory, load_from
+            )
+
+        self._load_records_from_gdx(load_from, symbol_names)
+        self._synch_with_gams()
 
     def addGamsCode(self, gams_code: str) -> None:
         """
