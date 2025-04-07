@@ -579,6 +579,28 @@ In addition to solve options, user can specify solver options as a dictionary.::
     
 For all possible solver options, please check the corresponding `solver manual <https://www.gams.com/latest/docs/S_MAIN.html>`_
 
+Converting A Model To A Scalar Format
+=====================================
+:meth:`gamspy.Model.convert` transforms a GAMSPy model instance into a scalar model where all confidential information 
+has been removed or into formats used by other modeling and solution systems. It is designed to achieve the following goals:
+
+- Permit users to convert a confidential model into GAMS scalar format so that any idenifiable structure is removed. It can then be passed on to others for investigation without confidentiality being lost.
+- A way of sharing a model instance created by GAMSPy for use with other modeling systems or solvers.
+
+For example, you can convert your GAMSPy model into a scalar GAMS model as follows: ::
+
+    import gamspy as gp
+
+    m = gp.Container()
+    ... # Definition of your model
+    model = gp.Model(m, equations=m.getEquations(), problem="LP", sense="MAX", objective=z)
+    model.convert(path="path_to_the_directory", file_format=gp.FileFormat.GAMS, options=gp.ConvertOptions(Width=50))
+
+The `path` parameter specifies the directory where the converted model will be saved. The `file_format` parameter specifies the 
+format of the converted model. The `options` parameter specifies the options for the conversion. See :meth:`gamspy.ConvertOptions` 
+for all available conversion options.
+
+
 Exporting Model To LaTeX
 ========================
 GAMSPy models can be exported to a `.tex` file in LaTeX format by using the :meth:`toLatex <gamspy.Model.toLatex>` function of the model.

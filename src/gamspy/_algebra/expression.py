@@ -78,7 +78,7 @@ class Expression(operable.Operable):
         self,
         left: OperableType | ImplicitEquation | None,
         data: str | MathOp | ExtrinsicFunction,
-        right: OperableType | None,
+        right: OperableType | str | None,
     ):
         self.left = (
             utils._map_special_values(left)

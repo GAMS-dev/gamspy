@@ -574,6 +574,102 @@ class ModelInstanceOptions(BaseModel):
         )
         super().__init__(**kwargs)
 
+class ConvertOptions(BaseModel):
+    """
+    Options for the conversion of GAMSPy models into different formats.
+
+    Attributes
+    ----------
+    AmplNLBin : Optional[bool]
+        Enables binary .nl file. False by default.
+    AmplNlInitDual : Optional[int]
+        Specifies which initial equation marginal values to write to the .nl file.
+        
+        * **0**: Write no values 
+        
+        * **1**: Write only nondefault values
+        
+        * **2**: Write all values.
+
+        1 by default.
+    AmplNlInitPrimal : Optional[int]
+        Specifies which initial primal values to write to the .nl file.
+        
+        * **0**: Write no values
+        
+        * **1**: Write only nondefault values
+        
+        * **2**: Write all values.
+
+        2 by default.
+    GDXHessian : Optional[bool]
+        Controls whether Hessian information is included in GDX Jacobian file.
+        False by default.
+    GDXNames : Optional[bool]
+        Controls whether variable and equation names are included in GDX Jacobian file.
+        True by default.
+    GDXQuadratic : Optional[bool]
+        Specifies whether quadratic terms are included in GDX Jacobian file.
+        False by default.
+    GDXUELs : Optional[bool]
+        Controls whether Universal Element List (UEL) information is included in GDX Jacobian file.
+        True by default.
+    GAMSInsert : Optional[str]
+        Allows the insertion of custom GAMS code into the model.
+    HeaderTimeStamp : Optional[bool]
+        Specifies a timestamp to include in the header of the output file.
+    GDXIntervalEval : Optional[bool]
+        Controls the inclusion of interval evaluation (symbols `A_int` and `e_int`) into the GDX Jacobian format.
+        False by default.
+    GAMSObjVar : Optional[str]
+        Specifies the name of the objective variable in the GAMS scalar model.
+    PermuteEqus : Optional[bool]
+        Enables or disables the permutation of equations.
+        False by default.
+    PermuteVars : Optional[bool]
+        Enables or disables the permutation of variables.
+        False by default.
+    QExtractAlg : Optional[int]
+        Specifies the algorithm used for quadratic extraction.
+        
+        * **0**: Automatic
+
+        * **1**: ThreePass: Uses a three-pass forward / backward / forward AD technique to compute function / gradient / Hessian values and a hybrid scheme for storage.
+
+        * **2**: DoubleForward: Uses forward-mode AD to compute and store function, gradient, and Hessian values at each node or stack level as required. The gradients and Hessians are stored in linked lists.
+
+        * **3**: Concurrent: Uses ThreePass and DoubleForward in parallel. As soon as one finishes, the other one stops.
+
+        0 by default.
+    Reform : Optional[int]
+        Controls the reformulation of certain structures in the model.
+        0: No reformulation, 1: Apply reformulation.
+    SkipNRows : Optional[int]
+        Skip constraints of type `NONBINDING`.
+    Width : Optional[int]
+        Sets the width for certain output formats, such as tables or reports.
+    """
+    
+    model_config = ConfigDict(extra="forbid")
+
+    AmplNLBin: Optional[bool] = None
+    AmplNlInitDual: Optional[int] = None
+    AmplNlInitPrimal: Optional[int] = None
+    GDXHessian: Optional[bool] = None
+    GDXNames: Optional[bool] = None
+    GDXQuadratic: Optional[bool] = None
+    GDXUELs: Optional[bool] = None
+    GAMSInsert: Optional[str] = None
+    HeaderTimeStamp: Optional[bool] = None
+    GDXIntervalEval: Optional[bool] = None
+    GAMSObjVar: Optional[str] = None
+    PermuteEqus: Optional[bool] = None
+    PermuteVars: Optional[bool] = None
+    QExtractAlg: Optional[int] = None
+    Reform: Optional[int] = None
+    SkipNRows: Optional[int] = None
+    Width: Optional[int] = None
+
 
 def write_solver_options(
     system_directory: str,

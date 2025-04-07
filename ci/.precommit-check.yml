@@ -2,7 +2,7 @@ leg-precommit:
   stage: precommit
   when: on_success
   tags: [linux]
-  image: python:3.12
+  image: python:3.13
   script:
     - python -m pip install uv && uv venv .precommit_venv && source .precommit_venv/bin/activate
     - uv export --no-emit-project --format requirements-txt > requirements.txt && uvx pip-audit -v -r requirements.txt --disable-pip && rm requirements.txt

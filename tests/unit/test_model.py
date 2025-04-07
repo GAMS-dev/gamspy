@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+
 import pandas as pd
 import pytest
 
@@ -17,6 +20,8 @@ from gamspy import (
     Variable,
     VariableType,
 )
+from gamspy._model import FileFormat
+from gamspy._options import ConvertOptions
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -111,6 +116,40 @@ def test_model(data):
         "test_model_objective",
     ]
     assert test_model.objective_value == 153.675
+
+    # Test convert
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=FileFormat.GDXJacobian,
+            options=ConvertOptions(GDXNames=0),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gdx"))
+        with open(os.path.join(m.working_directory, "convert.opt")) as f:
+            assert "GDXNames 0" in f.read()
+
+    # Test unknown file format
+    with pytest.raises(ValidationError):
+        test_model.convert(
+            tmpdir,
+            file_format="Unknown format",
+            options=ConvertOptions(GDXNames=0),
+        )
+
+    # Test GAMSJacobian
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=[FileFormat.GAMSJacobian, FileFormat.GDXJacobian],
+            options=ConvertOptions(GDXNames=0),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gms"))
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gdx"))
+
+        with open(os.path.join(tmpdir, "jacobian.gms")) as file:
+            assert (
+                "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
+            )
 
     # Check if the name is reserved
     pytest.raises(ValidationError, Model, m, "set", "", "LP")
