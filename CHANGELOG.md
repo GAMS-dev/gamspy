@@ -16,6 +16,8 @@ GAMSPy 1.9.0
   - Fix sense=feasibility bug of frozen models.
   - Fix static code analysis errors.
   - Do not validate equation definitions in case the container was restarted from a save file (.g00 file).
+  - Propagate the output option of the container to `model.freeze`.
+  - Raise warning in case the frozen solve is interrupted.
 - Documentation
   - Add additional instructions to deploy a GAMSPy/GAMS MIRO model.
   - Fix name mismatch between the argument name and the docstring of loadRecordsFromGdx function.

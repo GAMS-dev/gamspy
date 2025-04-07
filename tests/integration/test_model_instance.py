@@ -3,9 +3,13 @@ from __future__ import annotations
 import glob
 import math
 import os
+import pathlib
 import platform
+import signal
 import subprocess
 import sys
+import tempfile
+import time
 
 import gamspy_base
 import pandas as pd
@@ -939,3 +943,75 @@ def test_feasibility():
     mi.freeze([a, b])
     mi.solve(solver="cplex", solver_options={"writelp": "mi.lp"})
     mi.unfreeze()
+
+
+def test_output_propagation(data):
+    _, canning_plants, markets, capacities, demands, distances = data
+    file = tempfile.NamedTemporaryFile("w", delete=False)  # noqa
+    m = Container(output=file)
+    i = Set(m, name="i", records=canning_plants)
+    j = Set(m, name="j", records=markets)
+
+    a = Parameter(m, name="a", domain=[i], records=capacities)
+    b = Parameter(m, name="b", domain=[j], records=demands)
+    d = Parameter(
+        m,
+        name="d",
+        domain=[i, j],
+        records=distances,
+        is_miro_input=True,
+    )
+    c = Parameter(m, name="c", domain=[i, j])
+    bmult = Parameter(m, name="bmult", records=1)
+    c[i, j] = 90 * d[i, j] / 1000
+
+    x = Variable(m, name="x", domain=[i, j], type="Positive")
+    z = Variable(m, name="z")
+
+    cost = Equation(m, name="cost")
+    supply = Equation(m, name="supply", domain=[i])
+    demand = Equation(m, name="demand", domain=[j])
+
+    cost[...] = z == Sum((i, j), c[i, j] * x[i, j])
+    supply[i] = Sum(j, x[i, j]) <= a[i]
+    demand[j] = Sum(i, x[i, j]) >= bmult * b[j]
+
+    transport = Model(
+        m,
+        name="transport",
+        equations=m.getEquations(),
+        problem="LP",
+        sense=Sense.MIN,
+        objective=z,
+    )
+
+    transport.freeze(modifiables=[bmult])
+
+    with open(file.name) as f:
+        assert "Generating LP model transport" in f.read()
+
+    transport.unfreeze()
+    file.close()
+    os.unlink(file.name)
+    m.close()
+
+
+@pytest.mark.skipif(
+    platform.system() != "Linux", reason="Test only for linux."
+)
+def test_interrupt():
+    directory = str(pathlib.Path(__file__).parent.resolve())
+    process = subprocess.Popen(
+        [sys.executable, os.path.join(directory, "dice2.py")],
+        stdout=subprocess.PIPE,
+        text=True,
+        stderr=subprocess.STDOUT,
+    )
+    time.sleep(4)
+    process.send_signal(signal.SIGINT)
+    process.wait()
+    output = process.stdout.read()
+    assert (
+        "[FROZEN MODEL - WARNING] The solve was interrupted! Solve status: UserInterrupt"
+        in output
+    ), output
