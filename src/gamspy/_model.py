@@ -19,11 +19,16 @@ import gamspy._symbols.implicits as implicits
 import gamspy._validation as validation
 import gamspy.utils as utils
 from gamspy._backend.backend import backend_factory
-from gamspy._convert import GamsConverter, LatexConverter
+from gamspy._convert import (
+    GamsConverter,
+    LatexConverter,
+    get_convert_solver_options,
+)
 from gamspy._model_instance import ModelInstance
 from gamspy._options import (
     EXECUTION_OPTIONS,
     MODEL_ATTR_OPTION_MAP,
+    ConvertOptions,
     FreezeOptions,
     ModelInstanceOptions,
     Options,
@@ -139,6 +144,26 @@ class SolveStatus(Enum):
     InternalError = 11
     Skipped = 12
     SystemError = 13
+
+
+class FileFormat(Enum):
+    """An enumeration for file format types"""
+
+    AMPL = "ampl.mod"
+    AMPLNL = "ampl.nl"
+    CPLEXLP = "cplex.lp"
+    CPLEXMPS = "cplex.mps"
+    GAMSDict = "dict.txt"
+    GAMSDictMap = "dictmap.gdx"
+    GAMSJacobian = "jacobian.gms"
+    GDXJacobian = "jacobian.gdx"
+    FileList = "files.txt"
+    FixedMPS = "fixed.mps"
+    GAMS = "gams.gms"
+    JuMP = "jump.jl"
+    LINGO = "lingo.lng"
+    OSiL = "osil.xml"
+    Pyomo = "pyomo.py"
 
 
 INTERRUPT_STATUS = [
@@ -925,10 +950,6 @@ class Model:
                     f"{EXECUTION_OPTIONS[key]} '{value}';\n"
                 )
 
-    def _append_solve_string(self) -> None:
-        solve_string = self._generate_solve_string() + ";"
-        self.container._add_statement(solve_string + "\n")
-
     def _create_model_attributes(self) -> None:
         self.container._add_statement("$offListing")
         for attr_name in ATTRIBUTE_MAP:
@@ -1031,6 +1052,44 @@ class Model:
                     infeas_dict[variable.name] = infeas_rows
 
         return infeas_dict
+
+    def convert(
+        self,
+        path: str,
+        file_format: FileFormat | Sequence[FileFormat],
+        options: ConvertOptions | None = None,
+    ) -> None:
+        """
+        Converts the model to one or more specified file formats.
+
+        Parameters
+        ----------
+        path : str
+            Path to the directory where the converted model files will be saved.
+        file_format : FileFormat | Sequence[FileFormat]
+            File format(s) to convert the model to. Can be a single FileFormat or a list of FileFormats.
+        options : ConvertOptions, optional
+            Additional options to customize the conversion process.
+
+        Raises
+        ------
+        ValueError
+            If the specified file format is not supported.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> v = gp.Variable(m, "v")
+        >>> e = gp.Equation(m, "e", definition= v == 5)
+        >>> my_model = gp.Model(m, "my_model", problem="LP", equations=[e])
+        >>> my_model.convert("output_directory", gp.FileFormat.GAMS)
+        >>> my_model.convert("output_directory", [gp.FileFormat.GAMS, gp.FileFormat.AMPL])
+
+        """
+        os.makedirs(path, exist_ok=True)
+        solver_options = get_convert_solver_options(path, file_format, options)
+        self.solve(solver="convert", solver_options=solver_options)
 
     def getEquationListing(
         self,
@@ -1208,7 +1267,7 @@ class Model:
 
         self.container._add_statement(self.getDeclaration())
         self._add_runtime_options(options, backend)
-        self._append_solve_string()
+        self.container._add_statement(self._generate_solve_string() + "\n")
         self._create_model_attributes()
         options._set_solver_options(
             system_directory=self.container.system_directory,

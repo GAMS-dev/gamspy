@@ -20,6 +20,7 @@ gamspy
    gamspy.Sense
    gamspy.Options
    gamspy.FreezeOptions
+   gamspy.ConvertOptions
    gamspy.Expression
    gamspy._algebra.domain
    gamspy._algebra.number

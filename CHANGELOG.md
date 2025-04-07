@@ -12,6 +12,8 @@ GAMSPy 1.9.0
   - Start the renaming process (deprecation) of model_instance_options to freeze_options. GAMSPy 1.9.0 will throw a warning. GAMSPy 1.10.0 will throw an exception, and GAMSPy 1.11.0 will remove model_instance_options altogether.
   - Fix sense=feasibility bug of frozen models. 
   - Rename ModelInstanceOptions to FreezeOptions and add a warning for the usage of ModelInstanceOptions.
+  - Add model.convert function to allow converting a GAMSPy model instance to different file formats.
+  - Fix sense=feasibility bug of frozen models.
   - Fix static code analysis errors.
   - Do not validate equation definitions in case the container was restarted from a save file (.g00 file).
 - Documentation

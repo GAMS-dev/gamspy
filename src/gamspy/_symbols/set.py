@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 class SetMixin:
     @property
-    def pos(self) -> Expression:
+    def pos(self: Set | Alias) -> Expression:
         """
         Element position in the current set, starting with 1.
 
@@ -53,7 +53,7 @@ class SetMixin:
         return expression.Expression(self, ".", "pos")
 
     @property
-    def ord(self) -> Expression:
+    def ord(self: Set | Alias) -> Expression:
         """
         Same as .pos but for ordered sets only.
 
@@ -75,7 +75,7 @@ class SetMixin:
         return expression.Expression(self, ".", "ord")
 
     @property
-    def off(self) -> Expression:
+    def off(self: Set | Alias) -> Expression:
         """
         Element position in the current set minus 1. So .off = .pos - 1
 
@@ -97,7 +97,7 @@ class SetMixin:
         return expression.Expression(self, ".", "off")
 
     @property
-    def rev(self) -> Expression:
+    def rev(self: Set | Alias) -> Expression:
         """
         Reverse element position in the current set, so the value for
         the last element is 0, the value for the penultimate is 1, etc.
@@ -120,7 +120,7 @@ class SetMixin:
         return expression.Expression(self, ".", "rev")
 
     @property
-    def uel(self) -> Expression:
+    def uel(self: Set | Alias) -> Expression:
         """
         Element position in the unique element list.
 
@@ -142,7 +142,7 @@ class SetMixin:
         return expression.Expression(self, ".", "uel")
 
     @property
-    def len(self) -> Expression:
+    def len(self: Set | Alias) -> Expression:
         """
         Length of the set element name (a count of the number of characters).
 
@@ -164,7 +164,7 @@ class SetMixin:
         return expression.Expression(self, ".", "len")
 
     @property
-    def tlen(self) -> Expression:
+    def tlen(self: Set | Alias) -> Expression:
         """
         Length of the set element text (a count of the number of characters).
 
@@ -186,7 +186,7 @@ class SetMixin:
         return expression.Expression(self, ".", "tlen")
 
     @property
-    def val(self) -> Expression:
+    def val(self: Set | Alias) -> Expression:
         """
         If a set element is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -211,7 +211,7 @@ class SetMixin:
         return expression.Expression(self, ".", "val")
 
     @property
-    def tval(self) -> Expression:
+    def tval(self: Set | Alias) -> Expression:
         """
         If a set element text is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -236,7 +236,7 @@ class SetMixin:
         return expression.Expression(self, ".", "tval")
 
     @property
-    def first(self) -> Expression:
+    def first(self: Set | Alias) -> Expression:
         """
         Returns 1 for the first set element, otherwise 0.
 
@@ -258,7 +258,7 @@ class SetMixin:
         return expression.Expression(self, ".", "first")
 
     @property
-    def last(self) -> Expression:
+    def last(self: Set | Alias) -> Expression:
         """
         Returns 1 for the last set element, otherwise 0.
 
