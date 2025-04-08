@@ -880,7 +880,7 @@ class Equation(gt.Equation, Symbol):
         >>> e.l[...] = -10
         >>> e.lo[...] = 5
         >>> e.computeInfeasibilities().values.tolist()
-        [[-10.0, 0.0, 5.0, 0.0, 1.0, 15.0]]
+        [[-10.0, 0.0, 5.0, inf, 1.0, 15.0]]
 
         """
         return utils._calculate_infeasibilities(self)
