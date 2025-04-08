@@ -984,10 +984,9 @@ class GAMSEngine(backend.Backend):
         self.container._send_job(self.job_name, self.pf_file)
 
     def _append_gamspy_files(self) -> list[str]:
-        extra_model_files = self.client.extra_model_files + [
-            self.container._gdx_in,
-            self.restart_file,
-        ]
+        extra_model_files = self.client.extra_model_files + [self.restart_file]
+        if os.path.exists(self.container._gdx_in):
+            extra_model_files.append(self.container._gdx_in)
 
         if self.solver_options:
             assert self.solver is not None

@@ -332,6 +332,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
+                self.modified = False
                 self.container._synch_with_gams()
 
             container._options.miro_protect = True
@@ -953,6 +954,9 @@ class Variable(gt.Variable, operable.Operable, Symbol):
 
         if self.description:
             output += ' "' + self.description + '"'
+
+        if self.records is None:
+            output += " / /"
 
         output += ";"
 

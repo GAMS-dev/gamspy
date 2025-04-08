@@ -8,6 +8,9 @@ free Variable z "objective variable";
 Equation numpat "number of patterns used";
 Equation demand(i) "meet demand";
 Model master / numpat,demand /;
+$onMultiR
+$gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/master_data.gdx
+$$offMulti
 numpat .. z =e= sum(pp,xp(pp));
 demand(i) .. sum(pp,(aip(i,pp) * xp(pp))) =g= d(i);
 solve master using RMIP MIN z;

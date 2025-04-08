@@ -282,6 +282,7 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
+                self.modified = False
                 self.container._synch_with_gams(
                     gams_to_gamspy=self._is_miro_input
                 )
@@ -550,6 +551,9 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         if self.description:
             output += ' "' + self.description + '"'
+
+        if self.records is None:
+            output += " / /"
 
         output += ";"
 

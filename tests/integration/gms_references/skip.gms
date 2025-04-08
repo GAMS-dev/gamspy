@@ -81,6 +81,9 @@ Equation heat(i) "logical integer constraint";
 free Variable skip_objective_variable;
 Equation skip_objective;
 Model skip / tctrlo,lmtdlo,lmtdsn,tempset,artrex1,artrex2,material,feed,matlog,duty,rebcon,conheat,rebheat,dtminlp,dtminc,trtcdef,dtmincr,dtminex,hxclog,hxhulog,hxculog,qcqrlog,sequen,lead,limutil,hidirect,heat,skip_objective /;
+$onMultiR
+$gdxLoadAll /home/muhammet/Documents/gams_workspace/gamspy/tmp/to_gams/skip_data.gdx
+$$offMulti
 tctrlo(zcrhx(i,j)) .. (((tc(i) - tr(j)) + 1) - ycol(i)) =g= 1;
 lmtdlo(i) .. lmtd(i) =g= (2 * ycol(i));
 lmtdsn(i) .. lmtd(i) =e= ((((0.6666666666666666 * ( sqrt(((tc(i) - tcin) * (tc(i) - tcout))) )) + (0.16666666666666666 * ((tc(i) - tcin) + (tc(i) - tcout)))) + sl1(i)) - sl2(i));
