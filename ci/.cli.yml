@@ -20,6 +20,28 @@ leg-cli-3.9:
     - uv pip install .[dev,test] --force-reinstall
     - python -m pytest -x -v -s -m 'cli' tests
 
+lag-cli-3.13:
+  stage: cli
+  tags: [linux_arm64]
+  image: python:3.13
+  script:
+    - python -m pip install uv && uv venv venv313 && source venv313/bin/activate && uv pip install pip && uv build
+    - uv pip install .[dev,test] --force-reinstall
+    - python -m pytest -x -v -s -m 'cli' tests
+  artifacts:
+    name: linux_3.13
+    expire_in: 2 hours
+    paths: [dist/*]
+
+lag-cli-3.9:
+  stage: cli
+  tags: [linux_arm64]
+  image: python:3.9
+  script:
+    - python -m pip install uv && uv venv venv39 && source venv39/bin/activate && uv pip install pip
+    - uv pip install .[dev,test] --force-reinstall
+    - python -m pytest -x -v -s -m 'cli' tests
+
 dac-cli-3.13:
   stage: cli
   when: on_success
