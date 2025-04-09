@@ -7,6 +7,9 @@ from pathlib import Path
 
 import pandas as pd
 
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
+
 base_dir = Path(__file__).parent.parent.parent
 usual_suspects = [
     "main",
@@ -35,6 +38,7 @@ def main():
         os.path.join(base_dir, "tests", "integration", "models", "*.py")
     )
 
+    columns = [model.split("/")[-1][:-3] for model in all_models]
     final_df = pd.DataFrame(
         index=[
             "preprocess",
@@ -42,8 +46,11 @@ def main():
             "postprocess",
             "_send_job",
             "overhead",
-        ]
+        ],
+        columns=columns,
     )
+
+    dfs = []
     for model in all_models:
         model_name = model.split("/")[-1][:-3]
         print(f"Running {model_name}...")
@@ -71,8 +78,9 @@ def main():
             columns=[model_name],
         )
 
-        final_df[model_name] = df[model_name]
+        dfs.append(df[model_name])
 
+    final_df = pd.concat(dfs, axis=1)
     final_df = final_df.T.sort_values("overhead", ascending=False).round(2)
     print(final_df)
     print(f"Average overhead {final_df['overhead'].mean(axis=0):.2f}.")
