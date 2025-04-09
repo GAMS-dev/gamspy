@@ -172,7 +172,8 @@ def test_equation_declaration(data):
     cost = Equation(m, name="cost", description="define objective function")
     assert cost.gamsRepr() == "cost"
     assert (
-        cost.getDeclaration() == 'Equation cost "define objective function";'
+        cost.getDeclaration()
+        == 'Equation cost "define objective function" / /;'
     )
 
     # Equation declaration with an index
@@ -185,13 +186,13 @@ def test_equation_declaration(data):
     assert supply.gamsRepr() == "supply"
     assert (
         supply.getDeclaration()
-        == 'Equation supply(i) "observe supply limit at plant i";'
+        == 'Equation supply(i) "observe supply limit at plant i" / /;'
     )
 
     # Equation declaration with more than one index
     bla = Equation(m, name="bla", domain=[i, j], description="some text")
     assert bla.gamsRepr() == "bla"
-    assert bla.getDeclaration() == 'Equation bla(i,j) "some text";'
+    assert bla.getDeclaration() == 'Equation bla(i,j) "some text" / /;'
 
     u = Set(m, "u")
     v = Alias(m, "v", alias_with=u)
@@ -481,7 +482,7 @@ def test_changed_domain(data):
     A = Equation(cont, "A", domain=[s, m])
 
     A.domain = ["s", "m"]
-    assert A.getDeclaration() == "Equation A(*,*);"
+    assert A.getDeclaration() == "Equation A(*,*) / /;"
 
 
 def test_equation_assignment(data):

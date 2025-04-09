@@ -158,6 +158,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
+            self.modified = False
             self.container._synch_with_gams()
 
     def _serialize(self) -> dict:

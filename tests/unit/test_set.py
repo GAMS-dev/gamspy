@@ -92,7 +92,7 @@ def test_set_string(data):
     # Without records
     b = Set(m, "b")
     assert b.gamsRepr() == "b"
-    assert b.getDeclaration() == "Set b(*);"
+    assert b.getDeclaration() == "Set b(*) / /;"
 
     # Without domain
     i = Set(m, "i", records=canning_plants, description="dummy set")
@@ -505,7 +505,7 @@ def test_singleton():
     m = Container()
     s = Set(m, "s", is_singleton=True)
     s2 = Set(m, "s2", is_singleton=True)
-    assert s.getDeclaration() == "Singleton Set s(*);"
+    assert s.getDeclaration() == "Singleton Set s(*) / /;"
 
     with pytest.raises(ValidationError):
         _ = Set(m, "s3", is_singleton=True, records=["i1", "i2"])

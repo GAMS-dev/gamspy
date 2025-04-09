@@ -193,7 +193,11 @@ def test_lp_transport(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -335,7 +339,11 @@ def test_mip_cutstock(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -588,7 +596,11 @@ def test_nlp_weapons(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -722,7 +734,11 @@ def test_mcp_qp6(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -887,7 +903,11 @@ def test_dnlp_inscribedsquare(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1601,7 +1621,11 @@ def test_minlp_minlphix(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1680,7 +1704,11 @@ def test_qcp_EDsensitivity(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1731,7 +1759,11 @@ def test_set_attributes(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 
@@ -1768,7 +1800,11 @@ def test_math_op(data):
             if not line.startswith("$gdxLoad")
         ]
     with open(reference_path) as file2:
-        content2 = file2.read().splitlines()
+        content2 = [
+            line
+            for line in file2.read().splitlines()
+            if not line.startswith("$gdxLoad")
+        ]
 
     assert content1 == content2
 

@@ -455,18 +455,17 @@ def test_generate_gams_string():
     _ = Variable(m, "v")
     _ = Equation(m, "e")
 
-    assert (
-        m.generateGamsString()
-        == f"$onMultiR\n$onUNDF\nSet i(*);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nAlias(i,a);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nParameter p;\n$gdxIn {m._gdx_in}\n$loadDC p\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nfree Variable v;\n$gdxIn {m._gdx_in}\n$loadDC v\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nEquation e;\n$gdxIn {m._gdx_in}\n$loadDC e\n$gdxIn\n$offUNDF\n"
-    )
+    generated = m.generateGamsString()
+    expected = "$onMultiR\n$onUNDF\nSet i(*) / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nAlias(i,a);\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nParameter p / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nfree Variable v / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nEquation e / /;\n$offUNDF\n$offMulti\n"
+    assert generated == expected
 
     assert (
         m.generateGamsString(show_raw=True)
-        == """Set i(*);
+        == """Set i(*) / /;
 Alias(i,a);
-Parameter p;
-free Variable v;
-Equation e;
+Parameter p / /;
+free Variable v / /;
+Equation e / /;
 """
     )
     m.close()

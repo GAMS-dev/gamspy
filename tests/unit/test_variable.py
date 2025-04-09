@@ -97,7 +97,7 @@ def test_variable_string(data):
     # Variable without data
     v4 = Variable(m, "v4")
     assert v4.gamsRepr() == "v4"
-    assert v4.getDeclaration() == "free Variable v4;"
+    assert v4.getDeclaration() == "free Variable v4 / /;"
 
     with pytest.raises(TypeError):
         v4.records = 5
@@ -105,7 +105,7 @@ def test_variable_string(data):
     # Variable without domain
     v0 = Variable(m, name="v0", description="some text")
     assert v0.gamsRepr() == "v0"
-    assert v0.getDeclaration() == 'free Variable v0 "some text";'
+    assert v0.getDeclaration() == 'free Variable v0 "some text" / /;'
 
     expression = -v0
     assert expression.getDeclaration() == "( - v0)"
@@ -113,14 +113,14 @@ def test_variable_string(data):
     # Variable one domain
     v1 = Variable(m, name="v1", domain=[i])
     assert v1.gamsRepr() == "v1(i)"
-    assert v1.getDeclaration() == "free Variable v1(i);"
+    assert v1.getDeclaration() == "free Variable v1(i) / /;"
 
     assert (v1[i] == v1[i]).gamsRepr() == "v1(i) =e= v1(i)"
 
     # Variable two domain
     v2 = Variable(m, name="v2", domain=[i, j])
     assert v2.gamsRepr() == "v2(i,j)"
-    assert v2.getDeclaration() == "free Variable v2(i,j);"
+    assert v2.getDeclaration() == "free Variable v2(i,j) / /;"
 
     # Scalar variable with records
     pi = Variable(
@@ -162,16 +162,16 @@ def test_variable_types(data):
     i = Set(m, "i", records=["1", "2"])
 
     v = Variable(m, name="v", type="Positive")
-    assert v.getDeclaration() == "positive Variable v;"
+    assert v.getDeclaration() == "positive Variable v / /;"
 
     v1 = Variable(m, name="v1", type="Negative")
-    assert v1.getDeclaration() == "negative Variable v1;"
+    assert v1.getDeclaration() == "negative Variable v1 / /;"
 
     v2 = Variable(m, name="v2", type="Binary")
-    assert v2.getDeclaration() == "binary Variable v2;"
+    assert v2.getDeclaration() == "binary Variable v2 / /;"
 
     v3 = Variable(m, name="v3", domain=[i], type="Integer")
-    assert v3.getDeclaration() == "integer Variable v3(i);"
+    assert v3.getDeclaration() == "integer Variable v3(i) / /;"
 
     assert str(VariableType.FREE) == "free"
     assert VariableType.values() == [
