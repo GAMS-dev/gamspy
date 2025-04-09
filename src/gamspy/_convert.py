@@ -291,7 +291,7 @@ class GamsConverter:
             )
 
         # 2. Load the data from gdx
-        load_str = f"$onMultiR\n$gdxLoadAll {os.path.abspath(self.gdx_path)}\n$$offMulti"
+        load_str = f"$onMultiR\n$gdxLoadAll {os.path.abspath(self.gdx_path)}\n$offMulti"
 
         # 3. Definitions
         definitions = self.get_definitions()

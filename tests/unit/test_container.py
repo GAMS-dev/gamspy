@@ -456,7 +456,7 @@ def test_generate_gams_string():
     _ = Equation(m, "e")
 
     generated = m.generateGamsString()
-    expected = "$onMultiR\n$onUNDF\nSet i(*) / /;\n$offUNDF\n$onMultiR\n$onUNDF\nAlias(i,a);\n$offUNDF\n$onMultiR\n$onUNDF\nParameter p / /;\n$offUNDF\n$onMultiR\n$onUNDF\nfree Variable v / /;\n$offUNDF\n$onMultiR\n$onUNDF\nEquation e / /;\n$offUNDF\n"
+    expected = "$onMultiR\n$onUNDF\nSet i(*) / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nAlias(i,a);\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nParameter p / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nfree Variable v / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nEquation e / /;\n$offUNDF\n$offMulti\n"
     assert generated == expected
 
     assert (

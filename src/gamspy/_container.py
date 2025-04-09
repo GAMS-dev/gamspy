@@ -619,7 +619,7 @@ class Container(gt.Container):
 
                 strings.append("$gdxIn")
 
-        strings.append("$offUNDF")
+        strings += ["$offUNDF", "$offMulti"]
 
         if not IS_MIRO_INIT and MIRO_GDX_OUT:
             strings.append(miro.get_unload_output_str(self))

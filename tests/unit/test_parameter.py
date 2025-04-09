@@ -200,10 +200,9 @@ def test_undef():
         m, name="rho", records=[np.nan]
     )  # Instead of using numpy there might be a NA from the math package
 
-    assert (
-        m.generateGamsString() == "$onMultiR\n$onUNDF\nParameter"
-        f" rho;\n$gdxIn {m._gdx_in}\n$loadDC rho\n$gdxIn\n$offUNDF\n"
-    )
+    generated = m.generateGamsString()
+    expected = f"$onMultiR\n$onUNDF\nParameter rho;\n$gdxIn {m._gdx_in}\n$loadDC rho\n$gdxIn\n$offUNDF\n$offMulti\n"
+    assert generated == expected
 
 
 def test_assignment_dimensionality(data):
