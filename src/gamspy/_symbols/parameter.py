@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
+import numpy as np
 import pandas as pd
 from gams.core.gdx import GMS_DT_PAR
 
@@ -280,12 +281,13 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
             self.container._add_statement(self)
 
             if records is not None:
-                self.setRecords(records, uels_on_axes=uels_on_axes)
+                super().setRecords(records, uels_on_axes=uels_on_axes)
+                if self.dimension == 0:
+                    self.modified = False
             else:
                 self.modified = False
-                self.container._synch_with_gams(
-                    gams_to_gamspy=self._is_miro_input
-                )
+
+            self.container._synch_with_gams(gams_to_gamspy=self._is_miro_input)
 
             container._options.miro_protect = previous_state
 
@@ -554,6 +556,14 @@ class Parameter(gt.Parameter, operable.Operable, Symbol):
 
         if self.records is None:
             output += " / /"
+
+        if self.dimension == 0 and self.records is not None:
+            value = self.toValue()
+            value = utils._map_special_values(value)
+            if isinstance(value, float) and np.isnan(value):
+                value = "Undf"
+
+            output += f" / {value} /"
 
         output += ";"
 

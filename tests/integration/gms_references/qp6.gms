@@ -4,7 +4,7 @@ Set d(days) "selected days";
 Set s(stocks) "selected stocks";
 Parameter mean(stocks) "mean of daily return";
 Parameter dev(stocks,days) "deviations";
-Parameter totmean "total mean return";
+Parameter totmean "total mean return" / -0.08019310344827588 /;
 positive Variable x(stocks) "investments";
 free Variable w(days) "intermediate variables";
 Equation budget;

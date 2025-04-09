@@ -1,5 +1,5 @@
 Set gen(*);
-Parameter load;
+Parameter load / 998.0 /;
 Parameter data(gen,*);
 free Variable P(gen);
 Equation eq2;
