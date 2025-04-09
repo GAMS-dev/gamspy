@@ -5,14 +5,11 @@ import os
 import shutil
 import tempfile
 import zipfile
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 from gamspy import Container
 from gamspy._model import ATTRIBUTE_MAP
 from gamspy.exceptions import ValidationError
-
-if TYPE_CHECKING:
-    from gamspy import Equation, Variable
 
 
 def serialize(container: Container, path: str) -> None:
@@ -115,16 +112,18 @@ def deserialize(path: str) -> Container:
             if equation.name in model["equations"]
         ]
 
-        deserialized_matches = model.get("_matches", None)
-        matches: dict[Equation, Variable] = dict()
+        deserialized_matches: dict[str, str | Sequence[str]] = model.get(
+            "_matches", None
+        )
+        matches = dict()
         if deserialized_matches is not None:
-            for eq_name, var_name in deserialized_matches.items():
-                if isinstance(var_name, tuple):
-                    matches[container[eq_name]] = (
-                        container[name] for name in var_name
-                    )
+            for key, value in deserialized_matches.items():
+                if isinstance(value, str):
+                    matches[container[key]] = container[value]
                 else:
-                    matches[container[eq_name]] = container[var_name]
+                    matches[container[key]] = [
+                        container[var_name] for var_name in value
+                    ]
 
         objective_variable = model.get("_objective_variable", None)
         if objective_variable is not None:

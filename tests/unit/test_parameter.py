@@ -89,7 +89,7 @@ def test_parameter_string(data):
     assert a.getDeclaration() == 'Parameter a(i) "capacities";'
 
     b = Parameter(m, "b")
-    assert b.getDeclaration() == "Parameter b;"
+    assert b.getDeclaration() == "Parameter b / /;"
     assert (b == 5).gamsRepr() == "(b eq 5)"
     assert (-b).getDeclaration() == "( - b)"
     assert (b != 5).gamsRepr() == "(b ne 5)"
@@ -120,7 +120,7 @@ def test_implicit_parameter_string(data):
     A = Parameter(cont, "A", domain=[s, m])
 
     A.domain = ["s", "m"]
-    assert A.getDeclaration() == "Parameter A(*,*);"
+    assert A.getDeclaration() == "Parameter A(*,*) / /;"
 
 
 def test_parameter_assignment(data):
@@ -200,10 +200,11 @@ def test_undef():
         m, name="rho", records=[np.nan]
     )  # Instead of using numpy there might be a NA from the math package
 
-    assert (
-        m.generateGamsString() == "$onMultiR\n$onUNDF\nParameter"
-        f" rho;\n$gdxIn {m._gdx_in}\n$loadDC rho\n$gdxIn\n$offUNDF\n"
+    generated = m.generateGamsString()
+    expected = (
+        "$onMultiR\n$onUNDF\nParameter rho / Undf /;\n$offUNDF\n$offMulti\n"
     )
+    assert generated == expected
 
 
 def test_assignment_dimensionality(data):

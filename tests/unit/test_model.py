@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import tempfile
+
 import pandas as pd
 import pytest
 
@@ -17,6 +20,8 @@ from gamspy import (
     Variable,
     VariableType,
 )
+from gamspy._model import FileFormat
+from gamspy._options import ConvertOptions
 from gamspy.exceptions import ValidationError
 
 pytestmark = pytest.mark.unit
@@ -112,8 +117,42 @@ def test_model(data):
     ]
     assert test_model.objective_value == 153.675
 
+    # Test convert
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=FileFormat.GDXJacobian,
+            options=ConvertOptions(GDXNames=0),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gdx"))
+        with open(os.path.join(m.working_directory, "convert.opt")) as f:
+            assert "GDXNames 0" in f.read()
+
+    # Test unknown file format
+    with pytest.raises(ValidationError):
+        test_model.convert(
+            tmpdir,
+            file_format="Unknown format",
+            options=ConvertOptions(GDXNames=0),
+        )
+
+    # Test GAMSJacobian
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_model.convert(
+            tmpdir,
+            file_format=[FileFormat.GAMSJacobian, FileFormat.GDXJacobian],
+            options=ConvertOptions(GDXNames=0),
+        )
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gms"))
+        assert os.path.exists(os.path.join(tmpdir, "jacobian.gdx"))
+
+        with open(os.path.join(tmpdir, "jacobian.gms")) as file:
+            assert (
+                "$if not set jacfile $set jacfile jacobian.gdx" in file.read()
+            )
+
     # Check if the name is reserved
-    pytest.raises(ValidationError, Model, m, "set", "LP")
+    pytest.raises(ValidationError, Model, m, "set", "", "LP")
 
     # Equation definition with more than one index
     bla = Equation(
@@ -171,7 +210,9 @@ def test_model(data):
     )
 
     # Equations provided as strings
-    pytest.raises(TypeError, Model, m, "test_model5", "LP", ["cost", "supply"])
+    pytest.raises(
+        TypeError, Model, m, "test_model5", "", "LP", ["cost", "supply"]
+    )
 
     # Test matches
     test_model6 = Model(
@@ -212,6 +253,7 @@ def test_model(data):
         ValueError,
         Model,
         m,
+        "",
         "test_model7",
         "",
         m.getEquations(),
@@ -225,6 +267,7 @@ def test_model(data):
         Model,
         m,
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -237,6 +280,7 @@ def test_model(data):
         Model,
         m,
         5,
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -249,6 +293,7 @@ def test_model(data):
         Model,
         m,
         "test_model 8",
+        "",
         "LP",
         m.getEquations(),
         "min",
@@ -261,10 +306,25 @@ def test_model(data):
         Model,
         m,
         "_test_model7",
+        "",
         "LP",
         m.getEquations(),
         "min",
         Sum((i, j), c[i, j] * x[i, j]),
+    )
+
+    test_model8 = Model(
+        m,
+        name="test_model8",
+        description="some description",
+        equations=[supply, demand],
+        problem="LP",
+        sense="min",
+        objective=Sum((i, j), c[i, j] * x[i, j]),
+    )
+    assert (
+        test_model8.getDeclaration()
+        == 'Model test_model8 "some description" / supply,demand,test_model8_objective /;'
     )
 
 
@@ -298,7 +358,7 @@ def test_feasibility(data):
     )
     assert (
         transport._generate_solve_string()
-        == "solve transport using LP MIN transport_objective_variable;"
+        == "solve transport using LP MIN transport_objective_variable"
     )
     transport.solve()
     assert x.records is not None
@@ -308,6 +368,7 @@ def test_feasibility(data):
         Model,
         m,
         "transport2",
+        "",
         "LP",
         m.getEquations(),
         "feasibility",
@@ -1016,7 +1077,7 @@ def test_solve_string_lp(data):
     )
     assert (
         test_model._generate_solve_string()
-        == "solve test_model using LP MIN z;"
+        == "solve test_model using LP MIN z"
     )
 
 
@@ -1058,7 +1119,7 @@ def test_solve_string_mcp(data):
         problem=Problem.MCP,
         matches={mkt: p, profit: y, income: i},
     )
-    assert hansen._generate_solve_string() == "solve hansen using MCP;"
+    assert hansen._generate_solve_string() == "solve hansen using MCP"
 
     # Test new mcp matching syntax
 
@@ -1110,7 +1171,7 @@ def test_solve_string_cns(data):
     f[...] = x * x == 4
     x.l = 1
     m = Model(m, name="m", equations=[f], problem="CNS", sense="FEASIBILITY")
-    assert m._generate_solve_string() == "solve m using CNS;"
+    assert m._generate_solve_string() == "solve m using CNS"
 
 
 def test_models_with_same_name():

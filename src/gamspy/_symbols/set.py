@@ -31,13 +31,13 @@ if TYPE_CHECKING:
 
 class SetMixin:
     @property
-    def pos(self):
+    def pos(self: Set | Alias) -> Expression:
         """
         Element position in the current set, starting with 1.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -53,13 +53,13 @@ class SetMixin:
         return expression.Expression(self, ".", "pos")
 
     @property
-    def ord(self):
+    def ord(self: Set | Alias) -> Expression:
         """
         Same as .pos but for ordered sets only.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -75,13 +75,13 @@ class SetMixin:
         return expression.Expression(self, ".", "ord")
 
     @property
-    def off(self):
+    def off(self: Set | Alias) -> Expression:
         """
         Element position in the current set minus 1. So .off = .pos - 1
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -97,14 +97,14 @@ class SetMixin:
         return expression.Expression(self, ".", "off")
 
     @property
-    def rev(self):
+    def rev(self: Set | Alias) -> Expression:
         """
         Reverse element position in the current set, so the value for
         the last element is 0, the value for the penultimate is 1, etc.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -120,13 +120,13 @@ class SetMixin:
         return expression.Expression(self, ".", "rev")
 
     @property
-    def uel(self):
+    def uel(self: Set | Alias) -> Expression:
         """
         Element position in the unique element list.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -142,13 +142,13 @@ class SetMixin:
         return expression.Expression(self, ".", "uel")
 
     @property
-    def len(self):
+    def len(self: Set | Alias) -> Expression:
         """
         Length of the set element name (a count of the number of characters).
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -164,13 +164,13 @@ class SetMixin:
         return expression.Expression(self, ".", "len")
 
     @property
-    def tlen(self):
+    def tlen(self: Set | Alias) -> Expression:
         """
         Length of the set element text (a count of the number of characters).
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -186,7 +186,7 @@ class SetMixin:
         return expression.Expression(self, ".", "tlen")
 
     @property
-    def val(self):
+    def val(self: Set | Alias) -> Expression:
         """
         If a set element is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -195,7 +195,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -211,7 +211,7 @@ class SetMixin:
         return expression.Expression(self, ".", "val")
 
     @property
-    def tval(self):
+    def tval(self: Set | Alias) -> Expression:
         """
         If a set element text is a number, this attribute gives the value of the number.
         For extended range arithmetic symbols, the symbols are reproduced.
@@ -220,7 +220,7 @@ class SetMixin:
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -236,13 +236,13 @@ class SetMixin:
         return expression.Expression(self, ".", "tval")
 
     @property
-    def first(self):
+    def first(self: Set | Alias) -> Expression:
         """
         Returns 1 for the first set element, otherwise 0.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -258,13 +258,13 @@ class SetMixin:
         return expression.Expression(self, ".", "first")
 
     @property
-    def last(self):
+    def last(self: Set | Alias) -> Expression:
         """
         Returns 1 for the last set element, otherwise 0.
 
         Returns
         -------
-        ImplicitSet
+        Expression
 
         Examples
         --------
@@ -676,6 +676,7 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
             if records is not None:
                 self.setRecords(records, uels_on_axes=uels_on_axes)
             else:
+                self.modified = False
                 self.container._synch_with_gams(
                     gams_to_gamspy=self._is_miro_input
                 )
@@ -903,6 +904,9 @@ class Set(gt.Set, operable.Operable, Symbol, SetMixin):
 
         if self.description:
             output += f' "{self.description}"'
+
+        if self.records is None:
+            output += " / /"
 
         output += ";"
 

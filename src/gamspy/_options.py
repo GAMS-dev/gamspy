@@ -4,8 +4,21 @@ import io
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
+import warnings
 
+from gams.core.opt import (
+    new_optHandle_tp,
+    optCreateD,
+    optReadDefinition,
+    optClearMessages,
+    optReadParameterFile,
+    optFree,
+    optGetMessage,
+    GMS_SSSIZE,
+    optMessageCount,
+)
 from pydantic import BaseModel, ConfigDict
+from gamspy._config import get_option
 
 from gamspy.exceptions import ValidationError
 
@@ -163,20 +176,20 @@ class Options(BaseModel):
         This option determines whether GAMS will employ user-specified variable and equation scaling factors.
         It must be set to True if scaling factors are to be used.
     enable_prior: bool | None
-        Instructs the solver to use the priority branching information passed by GAMS through variable suffix 
+        Instructs the solver to use the priority branching information passed by GAMS through variable suffix
         values variable.prior. If and how priorities are used is solver-dependent.
     infeasibility_tolerance: float | None
-        This option sets the tolerance for marking an equation infeasible in the equation listing. By default, 
+        This option sets the tolerance for marking an equation infeasible in the equation listing. By default,
         1.0e-13.
     try_partial_integer_solution: bool | None
-        Signals the solver to make use of a partial or near-integer-feasible solution stored in current variable 
-        values to get a quick integer-feasible point. The exact form of implementation depends on the solver and 
+        Signals the solver to make use of a partial or near-integer-feasible solution stored in current variable
+        values to get a quick integer-feasible point. The exact form of implementation depends on the solver and
         may be partly controlled by solver settings or options. See the solver manuals for details.
     examine_linearity: bool | None
-        Examine empirical NLP model to see if there are any NLP terms active. If there are none the default LP 
-        solver will be used. If this option is set to True, empirical NLP models will be examined to determine 
-        if there are any active NLP terms. If there are none, the default LP solver will be used. The procedure 
-        also checks to see if QCP and DNLP models can be reduced to an LP; MIQCP and MINLP can be solved as a MIP; 
+        Examine empirical NLP model to see if there are any NLP terms active. If there are none the default LP
+        solver will be used. If this option is set to True, empirical NLP models will be examined to determine
+        if there are any active NLP terms. If there are none, the default LP solver will be used. The procedure
+        also checks to see if QCP and DNLP models can be reduced to an LP; MIQCP and MINLP can be solved as a MIP;
         RMIQCP and RMINLP can be solved as an RMIP.
     bypass_solver: bool | None
         If True, GAMSPy does not pass the generated model to the solver. Useful for model generation time analysis.
@@ -204,9 +217,9 @@ class Options(BaseModel):
         min_improvement_threshold is specified in absolute terms, therefore non-negative values are appropriate for both
         minimization and maximization models.
     cutoff: float | None
-        Within a branch-and-bound based solver, the parts of the tree with an objective value worse than the cutoff value are 
-        ignored. Note that this may speed up the initial phase of the branch and bound algorithm (before the first integer 
-        solution is found). However, the true optimum may be beyond the cutoff value. In this case the true optimum will be 
+        Within a branch-and-bound based solver, the parts of the tree with an objective value worse than the cutoff value are
+        ignored. Note that this may speed up the initial phase of the branch and bound algorithm (before the first integer
+        solution is found). However, the true optimum may be beyond the cutoff value. In this case the true optimum will be
         missed and moreover, no solution will be found.
     miro_protect:
         Protects MIRO input symbol records from being re-assigned, by default True.
@@ -426,6 +439,7 @@ class Options(BaseModel):
 
     def _set_solver_options(
         self,
+        system_directory: str,
         working_directory: str,
         solver: str,
         problem: Problem,
@@ -434,24 +448,11 @@ class Options(BaseModel):
         """Set the solver and the solver options"""
         self._solver = solver
         self._problem = str(problem)
-        
+
         if solver_options:
-            if solver is None:
-                raise ValidationError(
-                    "You need to provide a 'solver' to apply solver options."
-                )
-
-            solver_options_file_name = os.path.join(
-                working_directory, f"{solver.lower()}.opt"
+            write_solver_options(
+                system_directory, working_directory, solver, solver_options
             )
-
-            with open(solver_options_file_name, "w", encoding="utf-8") as solver_file:
-                for key, value in solver_options.items():
-                    row = f"{key} {value}\n"
-                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
-                        row = f"{key} = {value}\n"
-                    solver_file.write(row)
-
             self._solver_options_file = "1"
 
     def _set_extra_options(self, options: dict) -> None:
@@ -534,7 +535,7 @@ class Options(BaseModel):
         if self._frame is not None:
             filename = self._frame.f_code.co_filename
             line_number = self._frame.f_lineno
-            all_options['GP_SolveLine'] = f"{filename} line {line_number}"
+            all_options["GP_SolveLine"] = f"{filename} line {line_number}"
 
         # User options
         user_options = self._get_gams_compatible_options(output)
@@ -544,10 +545,19 @@ class Options(BaseModel):
         with open(pf_file, "w", encoding="utf-8") as file:
             file.write(
                 "\n".join(
-                    [f'{key} = "{value}"' for key, value in all_options.items()]
+                    [
+                        f'{key} = "{value}"'
+                        for key, value in all_options.items()
+                    ]
                 )
             )
 
+class FreezeOptions(BaseModel):
+    no_match_limit: int = 0
+    debug: bool = False
+    update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
+        "base_case"
+    )
 
 class ModelInstanceOptions(BaseModel):
     no_match_limit: int = 0
@@ -555,3 +565,212 @@ class ModelInstanceOptions(BaseModel):
     update_type: Literal["0", "base_case", "accumulate", "inherit"] = (
         "base_case"
     )
+
+    def __init__(self, **kwargs):
+        warnings.warn(
+            "ModelInstanceOptions will be renamed to FreezeOptions in GAMSPy 1.9.0. Please use FreezeOptions instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(**kwargs)
+
+class ConvertOptions(BaseModel):
+    """
+    Options for the conversion of GAMSPy models into different formats.
+
+    Attributes
+    ----------
+    AmplNLBin : Optional[bool]
+        Enables binary .nl file. False by default.
+    AmplNlInitDual : Optional[int]
+        Specifies which initial equation marginal values to write to the .nl file.
+        
+        * **0**: Write no values 
+        
+        * **1**: Write only nondefault values
+        
+        * **2**: Write all values.
+
+        1 by default.
+    AmplNlInitPrimal : Optional[int]
+        Specifies which initial primal values to write to the .nl file.
+        
+        * **0**: Write no values
+        
+        * **1**: Write only nondefault values
+        
+        * **2**: Write all values.
+
+        2 by default.
+    GDXHessian : Optional[bool]
+        Controls whether Hessian information is included in GDX Jacobian file.
+        False by default.
+    GDXNames : Optional[bool]
+        Controls whether variable and equation names are included in GDX Jacobian file.
+        True by default.
+    GDXQuadratic : Optional[bool]
+        Specifies whether quadratic terms are included in GDX Jacobian file.
+        False by default.
+    GDXUELs : Optional[bool]
+        Controls whether Universal Element List (UEL) information is included in GDX Jacobian file.
+        True by default.
+    GAMSInsert : Optional[str]
+        Allows the insertion of custom GAMS code into the model.
+    HeaderTimeStamp : Optional[bool]
+        Specifies a timestamp to include in the header of the output file.
+    GDXIntervalEval : Optional[bool]
+        Controls the inclusion of interval evaluation (symbols `A_int` and `e_int`) into the GDX Jacobian format.
+        False by default.
+    GAMSObjVar : Optional[str]
+        Specifies the name of the objective variable in the GAMS scalar model.
+    PermuteEqus : Optional[bool]
+        Enables or disables the permutation of equations.
+        False by default.
+    PermuteVars : Optional[bool]
+        Enables or disables the permutation of variables.
+        False by default.
+    QExtractAlg : Optional[int]
+        Specifies the algorithm used for quadratic extraction.
+        
+        * **0**: Automatic
+
+        * **1**: ThreePass: Uses a three-pass forward / backward / forward AD technique to compute function / gradient / Hessian values and a hybrid scheme for storage.
+
+        * **2**: DoubleForward: Uses forward-mode AD to compute and store function, gradient, and Hessian values at each node or stack level as required. The gradients and Hessians are stored in linked lists.
+
+        * **3**: Concurrent: Uses ThreePass and DoubleForward in parallel. As soon as one finishes, the other one stops.
+
+        0 by default.
+    Reform : Optional[int]
+        Controls the reformulation of certain structures in the model.
+        0: No reformulation, 1: Apply reformulation.
+    SkipNRows : Optional[int]
+        Skip constraints of type `NONBINDING`.
+    Width : Optional[int]
+        Sets the width for certain output formats, such as tables or reports.
+    """
+    
+    model_config = ConfigDict(extra="forbid")
+
+    AmplNLBin: Optional[bool] = None
+    AmplNlInitDual: Optional[int] = None
+    AmplNlInitPrimal: Optional[int] = None
+    GDXHessian: Optional[bool] = None
+    GDXNames: Optional[bool] = None
+    GDXQuadratic: Optional[bool] = None
+    GDXUELs: Optional[bool] = None
+    GAMSInsert: Optional[str] = None
+    HeaderTimeStamp: Optional[bool] = None
+    GDXIntervalEval: Optional[bool] = None
+    GAMSObjVar: Optional[str] = None
+    PermuteEqus: Optional[bool] = None
+    PermuteVars: Optional[bool] = None
+    QExtractAlg: Optional[int] = None
+    Reform: Optional[int] = None
+    SkipNRows: Optional[int] = None
+    Width: Optional[int] = None
+
+
+def write_solver_options(
+    system_directory: str,
+    working_directory: str,
+    solver: str,
+    solver_options: dict,
+) -> None:
+    options_file_name = os.path.join(
+        working_directory, f"{solver.lower()}.opt"
+    )
+    with open(options_file_name, "w", encoding="utf-8") as solver_file:
+        for key, value in solver_options.items():
+            row = f"{key} {value}\n"
+            if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
+                row = f"{key} = {value}\n"
+
+            solver_file.write(row)
+
+    # The following solvers do not use the opt<solver>.def file
+    if solver.upper() in (
+        "HIGHS",
+        "SOPLEX",
+        "KESTREL",
+        "SCIP",
+        "SHOT",
+        "SOPLEX",
+    ):
+        return
+
+    if get_option("SOLVER_OPTION_VALIDATION"):
+        validate_solver_options(system_directory, options_file_name, solver)
+
+
+def get_def_file(system_directory: str, solver: str) -> str:
+    solver_name = solver.upper()
+    def_file_path = os.path.join(system_directory, f"opt{solver.lower()}.def")
+
+    if solver_name == "CONOPT4":
+        return os.path.join(system_directory, "optconopt.def")
+
+    if solver_name == "EXAMINER2":
+        return os.path.join(system_directory, "optexaminer.def")
+    
+    if solver_name == "IPOPTH":
+        return os.path.join(system_directory, "optipopt.def")
+
+    return def_file_path
+
+
+def validate_solver_options(
+    system_directory: str, options_file_name: str, solver: str
+) -> None:
+    option_handle = new_optHandle_tp()
+    rc, msg = optCreateD(option_handle, system_directory, GMS_SSSIZE)
+
+    # Return code 0 means there is an error. Weird but this is what we have to work with.
+    if rc == 0:
+        raise Exception(msg)
+
+    # Check the validity of the .def file.
+    solver_def_file = get_def_file(system_directory, solver)
+    if optReadDefinition(option_handle, solver_def_file):
+        msg_list = []
+        for i in range(optMessageCount(option_handle)):
+            msg_list.append(optGetMessage(option_handle, i + 1))
+
+        raise ValidationError(
+            f"Error while processing {solver_def_file}. Log messages: {msg_list}"
+        )
+
+    optClearMessages(option_handle)
+
+    # Check the validity of the parameters 
+    if optReadParameterFile(option_handle, options_file_name):
+        raise Exception(f"Error while reading {options_file_name}")
+
+    msg_list = []
+    for i in range(optMessageCount(option_handle)):
+        msg_list.append(optGetMessage(option_handle, i + 1))
+
+    optClearMessages(option_handle)
+    optFree(option_handle)
+
+    if msg_list:
+        error_messages = []
+        for message in msg_list:
+            # optMsgInputEcho    = 0,
+            # optMsgHelp         = 1,
+            # optMsgDefineError  = 2,
+            # optMsgValueError   = 3,
+            # optMsgValueWarning = 4,
+            # optMsgDeprecated   = 5,
+            # optMsgFileEnter    = 6,
+            # optMsgFileLeave    = 7,
+            # optMsgTooManyMsgs  = 8,
+            # optMsgUserError    = 9
+            if message[1] not in (6, 7):
+                error_messages.append(message[0])
+
+        if error_messages:
+            error_message = "\n".join(error_messages)
+            raise ValidationError(
+                f"Error while reading the parameter file: \n\n{error_message}"
+            )

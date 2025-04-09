@@ -171,10 +171,9 @@ class Symbol:
                 "Sum operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Sum(indices, self[self.domain])
+        return gp.Sum(op_indices, self[self.domain])
 
     def product(
         self: Set | Alias | Parameter | Variable,
@@ -217,10 +216,9 @@ class Symbol:
                 "Product operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Product(indices, self[self.domain])
+        return gp.Product(op_indices, self[self.domain])
 
     def smin(
         self: Set | Alias | Parameter | Variable,
@@ -263,10 +261,9 @@ class Symbol:
                 "Smin operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Smin(indices, self[self.domain])
+        return gp.Smin(op_indices, self[self.domain])
 
     def smax(
         self: Set | Alias | Parameter | Variable,
@@ -309,10 +306,9 @@ class Symbol:
                 "Smax operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Smax(indices, self[self.domain])
+        return gp.Smax(op_indices, self[self.domain])
 
     def sand(
         self: Set | Alias | Parameter | Variable,
@@ -355,10 +351,9 @@ class Symbol:
                 "Sand operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Sand(indices, self[self.domain])
+        return gp.Sand(op_indices, self[self.domain])
 
     def sor(
         self: Set | Alias | Parameter | Variable,
@@ -401,7 +396,6 @@ class Symbol:
                 "Sor operation is not possible on scalar symbols."
             )
 
-        if not indices:
-            indices = self.domain
+        op_indices = indices if indices else self.domain
 
-        return gp.Sor(indices, self[self.domain])
+        return gp.Sor(op_indices, self[self.domain])

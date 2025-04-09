@@ -71,7 +71,7 @@ class GamsSymbol:
 
     def get_number_records(self):
         ret = gmdSymbolInfo(self.database.gmd, self.sym_ptr, GMD_NRRECORDS)
-        self.database._check_for_gmd_error(ret[0])
+        self.database._check_for_gmd_error(ret[0], self.database.workspace)
         return ret[1]
 
 
@@ -99,7 +99,9 @@ class GamsSet(GamsSymbol):
             self.text,
             rc,
         )
-        self.database._check_for_gmd_error(_int_value_and_free(rc))
+        self.database._check_for_gmd_error(
+            _int_value_and_free(rc), self.database.workspace
+        )
 
 
 class GamsParameter(GamsSymbol):
@@ -124,7 +126,9 @@ class GamsParameter(GamsSymbol):
             self.text,
             rc,
         )
-        self.database._check_for_gmd_error(_int_value_and_free(rc))
+        self.database._check_for_gmd_error(
+            _int_value_and_free(rc), self.database.workspace
+        )
 
 
 class GamsVariable(GamsSymbol):
@@ -151,7 +155,9 @@ class GamsVariable(GamsSymbol):
             self.text,
             rc,
         )
-        self.database._check_for_gmd_error(_int_value_and_free(rc))
+        self.database._check_for_gmd_error(
+            _int_value_and_free(rc), self.database.workspace
+        )
 
 
 class GamsEquation(GamsSymbol):
@@ -178,7 +184,9 @@ class GamsEquation(GamsSymbol):
             self.text,
             rc,
         )
-        self.database._check_for_gmd_error(_int_value_and_free(rc))
+        self.database._check_for_gmd_error(
+            _int_value_and_free(rc), self.database.workspace
+        )
 
 
 class Database:
@@ -196,7 +204,7 @@ class Database:
             raise GamspyException(ret[1])
 
         rc = gmdSetSpecialValues(self.gmd, _spec_values)
-        self._check_for_gmd_error(rc)
+        self._check_for_gmd_error(rc, self.workspace)
 
         weakref.finalize(self, self.cleanup, self.gmd)
 
@@ -210,10 +218,11 @@ class Database:
     def __getitem__(self, symbol_name: str):
         return self.symbols[symbol_name]
 
-    def _check_for_gmd_error(self, rc, workspace=None):
+    def _check_for_gmd_error(self, rc, workspace: Workspace):
         if not rc:
             msg = gmdGetLastError(self.gmd)[1]
-            raise GamspyException(msg, workspace)
+            workspace._errors.append(msg)
+            raise GamspyException(msg, rc)
 
     def add_equation(
         self,
@@ -263,4 +272,4 @@ class Database:
                 os.path.join(self.workspace.working_directory, file_path),
                 False,
             )
-        self._check_for_gmd_error(rc)
+        self._check_for_gmd_error(rc, self.workspace)

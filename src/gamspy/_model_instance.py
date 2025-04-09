@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import os
 import sys
 import time
@@ -54,6 +55,8 @@ from gams.core.gmo import (
     gmoOptFileSet,
     gmoRegisterEnvironment,
     gmoSolveStat,
+    gmoTmipbest,
+    gmoTmipnod,
     new_gmoHandle_tp,
 )
 
@@ -66,7 +69,7 @@ from gamspy._database import (
     GamsParameter,
     GamsVariable,
 )
-from gamspy._options import ModelInstanceOptions, Options
+from gamspy._options import FreezeOptions, Options, write_solver_options
 from gamspy.exceptions import (
     GamspyException,
     ValidationError,
@@ -76,6 +79,14 @@ from gamspy.exceptions import (
 if TYPE_CHECKING:
     from gamspy import Container, Model, Parameter
     from gamspy._symbols.implicits import ImplicitParameter
+
+logger = logging.getLogger("FROZEN MODEL")
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("[%(name)s - %(levelname)s] %(message)s")
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 VARIABLE_MAP = {
@@ -180,6 +191,7 @@ class ModelInstance:
         model: Model,
         modifiables: list[Parameter | ImplicitParameter],
         freeze_options: Options,
+        output: io.TextIOWrapper | None,
     ):
         self.container = container
         self.job_name = container._job
@@ -192,6 +204,7 @@ class ModelInstance:
         )
 
         self.model = model
+        self.output = output
         assert self.model._is_frozen
 
         self.modifiables = self._init_modifiables(modifiables)
@@ -300,7 +313,7 @@ class ModelInstance:
     def instantiate(self, model: Model, options: Options) -> None:
         # Check the gmd state.
         rc, _, _, _ = gmdInfo(self.sync_db.gmd, GMD_NRUELS)
-        self.sync_db._check_for_gmd_error(rc)
+        self.sync_db._check_for_gmd_error(rc, self.workspace)
 
         # Prepare the required lines to solve with model instance
         scenario_str = self._get_scenario(model)
@@ -313,12 +326,12 @@ class ModelInstance:
         options.log_file = os.path.join(
             self.container.working_directory, "gamslog.dat"
         )
-        options.export(self.pf_file)
+        options._export(self.pf_file, self.output)
 
         # Run
         try:
             self.container._job = self.job_name
-            self.container._send_job(self.job_name, self.pf_file)
+            self.container._send_job(self.job_name, self.pf_file, self.output)
         except GamspyException as exception:
             self.container._workspace._errors.append(str(exception))
             message = _customize_exception(
@@ -342,30 +355,24 @@ class ModelInstance:
             raise GamspyException(f"Could not load model instance: {ret[1]}")
 
         rc = gmdInitFromDict(self.sync_db.gmd, gmoHandleToPtr(self._gmo))
-        self.sync_db._check_for_gmd_error(rc)
+        self.sync_db._check_for_gmd_error(rc, self.workspace)
 
     def solve(
         self,
         solver: str,
-        instance_options: ModelInstanceOptions,
-        solver_options: dict | None = None,
-        output: io.TextIOWrapper | None = None,
+        instance_options: FreezeOptions,
+        solver_options: dict | None,
+        output: io.TextIOWrapper | None,
     ) -> pd.DataFrame:
         # write solver options file
-        solver_options_file_name = os.path.join(
-            self.container.working_directory, f"{solver.lower()}.opt"
-        )
         option_file = 0
         if solver_options:
-            with open(
-                solver_options_file_name, "w", encoding="utf-8"
-            ) as solver_file:
-                for key, value in solver_options.items():
-                    row = f"{key} {value}\n"
-                    if solver.upper() in ("SHOT", "SOPLEX", "SCIP", "HIGHS"):
-                        row = f"{key} = {value}\n"
-                    solver_file.write(row)
-
+            write_solver_options(
+                self.container.system_directory,
+                self.container.working_directory,
+                solver,
+                solver_options,
+            )
             option_file = 1
 
         names_to_write = []
@@ -522,13 +529,24 @@ class ModelInstance:
         self._update_main_container()
 
         # update model attributes
+        from gamspy._model import INTERRUPT_STATUS
+
         self.model._status = gp.ModelStatus(gmoModelStat(self._gmo))
         self.model._solve_status = gp.SolveStatus(gmoSolveStat(self._gmo))
+        if self.model._solve_status in INTERRUPT_STATUS:
+            logger.warning(
+                f"The solve was interrupted! Solve status: {self.model._solve_status.name}. "
+                "For further information, see https://gamspy.readthedocs.io/en/latest/reference/gamspy._model.html#gamspy.SolveStatus."
+            )
         self.model._model_generation_time = model_generation_time
         self.model._solve_model_time = gmoGetHeadnTail(self._gmo, gmoHresused)
         self.model._num_iterations = gmoGetHeadnTail(self._gmo, gmoHiterused)
         self.model._marginals = gmoGetHeadnTail(self._gmo, gmoHmarginals)
         self.model._algorithm_time = gmoGetHeadnTail(self._gmo, gmoHetalg)
+        self.model._objective_estimation = gmoGetHeadnTail(
+            self._gmo, gmoTmipbest
+        )
+        self.model._num_nodes_used = gmoGetHeadnTail(self._gmo, gmoTmipnod)
         self.model._num_domain_violations = gmoGetHeadnTail(
             self._gmo, gmoHdomused
         )
@@ -588,16 +606,11 @@ class ModelInstance:
             lines.append(scenario)
 
         lines.append(f"{model.name}.justScrDir = 1;")
-        solve_string = f"solve {model.name} using {model.problem}"
-
-        if model.problem not in (gp.Problem.MCP, gp.Problem.CNS):
-            solve_string += f" {model.sense}"
-
-        if model._objective_variable is not None:
-            solve_string += f" {model._objective_variable.gamsRepr()}"
+        solve_string = model._generate_solve_string()
 
         if params:
             solve_string += f" scenario {auto_id}_dict"
+
         solve_string += ";"
         lines.append(solve_string)
 

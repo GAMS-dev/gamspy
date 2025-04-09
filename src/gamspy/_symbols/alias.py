@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import threading
 import uuid
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import gams.transfer as gt
@@ -157,10 +158,11 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
             self.where = condition.Condition(self)
             self.container._add_statement(self)
 
+            self.modified = False
             self.container._synch_with_gams()
 
     def _serialize(self) -> dict:
-        info = {"_metadata": self._metadata}
+        info: dict[str, Any] = {"_metadata": self._metadata}
         if self._assignment is not None:
             info["_assignment"] = self._assignment.getDeclaration()
 
@@ -188,7 +190,7 @@ class Alias(gt.Alias, operable.Operable, Symbol, SetMixin):
     def __repr__(self) -> str:
         return f"Alias(name='{self.name}', alias_with={self.alias_with})"
 
-    def __getitem__(self, indices: tuple | str) -> implicits.ImplicitSet:
+    def __getitem__(self, indices: Sequence | str) -> implicits.ImplicitSet:
         domain = validation.validate_domain(self, indices)
 
         return implicits.ImplicitSet(self, name=self.name, domain=domain)

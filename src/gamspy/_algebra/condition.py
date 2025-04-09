@@ -44,7 +44,8 @@ class Condition(operable.Operable):
         | Number
         | Card
         | Ord,
-        condition: Expression
+        condition: Operation
+        | Expression
         | ImplicitParameter
         | ImplicitSet
         | int

@@ -343,6 +343,7 @@ def _calculate_infeasibilities(symbol: Variable | Equation) -> pd.DataFrame:
 def _filter_gams_string(raw_string: str) -> str:
     FILTERS = (
         "$onMultiR",
+        "$offMulti",
         "$onUNDF",
         "$gdxIn",
         "$loadDC",

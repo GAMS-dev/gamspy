@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -454,18 +455,17 @@ def test_generate_gams_string():
     _ = Variable(m, "v")
     _ = Equation(m, "e")
 
-    assert (
-        m.generateGamsString()
-        == f"$onMultiR\n$onUNDF\nSet i(*);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nAlias(i,a);\n$gdxIn {m._gdx_in}\n$loadDC i\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nParameter p;\n$gdxIn {m._gdx_in}\n$loadDC p\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nfree Variable v;\n$gdxIn {m._gdx_in}\n$loadDC v\n$gdxIn\n$offUNDF\n$onMultiR\n$onUNDF\nEquation e;\n$gdxIn {m._gdx_in}\n$loadDC e\n$gdxIn\n$offUNDF\n"
-    )
+    generated = m.generateGamsString()
+    expected = "$onMultiR\n$onUNDF\nSet i(*) / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nAlias(i,a);\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nParameter p / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nfree Variable v / /;\n$offUNDF\n$offMulti\n$onMultiR\n$onUNDF\nEquation e / /;\n$offUNDF\n$offMulti\n"
+    assert generated == expected
 
     assert (
         m.generateGamsString(show_raw=True)
-        == """Set i(*);
+        == """Set i(*) / /;
 Alias(i,a);
-Parameter p;
-free Variable v;
-Equation e;
+Parameter p / /;
+free Variable v / /;
+Equation e / /;
 """
     )
     m.close()
@@ -806,20 +806,22 @@ def test_serialization(data) -> None:
     )
     transport.solve()
 
-    serialization_path = os.path.join("tmp", "serialized.zip")
-    serialization_path2 = os.path.join("tmp", "serialized2.zip")
-    # Incorrect zip file name
-    with pytest.raises(ValidationError):
-        serialize(m, "bla")
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "serialized.zip")
+        serialization_path2 = os.path.join(directory, "serialized2.zip")
+        # Incorrect zip file name
+        with pytest.raises(ValidationError):
+            serialize(m, "bla")
 
-    # Incorrect container type
-    with pytest.raises(ValidationError):
-        serialize(i, serialization_path)
+        # Incorrect container type
+        with pytest.raises(ValidationError):
+            serialize(i, serialization_path)
 
-    serialize(m, serialization_path)  # try gp.serialize syntax
-    m.serialize(serialization_path2)  # try container.serialize syntax
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m.serialize(serialization_path2)  # try container.serialize syntax
 
-    m2 = deserialize(serialization_path)
+        m2 = deserialize(serialization_path)
+
     assert id(m) != id(m2)
     assert m.data.keys() == m2.data.keys()
 
@@ -900,9 +902,11 @@ def test_mcp_serialization(data) -> None:
         matches={mkt: p, profit: y, income: i},
     )
 
-    serialization_path = os.path.join("tmp", "mcp_serialized.zip")
-    serialize(m, serialization_path)  # try gp.serialize syntax
-    m2 = deserialize(serialization_path)
+    with tempfile.TemporaryDirectory() as directory:
+        serialization_path = os.path.join(directory, "mcp_serialized.zip")
+        serialize(m, serialization_path)  # try gp.serialize syntax
+        m2 = deserialize(serialization_path)
+
     hansen2 = m2.models["hansen"]
 
     for unserialized, serialized in zip(
