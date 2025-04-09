@@ -946,7 +946,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
         >>> i = gp.Set(m, "i", records=['i1','i2'])
         >>> v = gp.Variable(m, "v", domain=[i])
         >>> v.getDeclaration()
-        'free Variable v(i);'
+        'free Variable v(i) / /;'
 
         """
         output = self.type + " "

@@ -880,7 +880,7 @@ class Equation(gt.Equation, Symbol):
         >>> e.l[...] = -10
         >>> e.lo[...] = 5
         >>> e.computeInfeasibilities().values.tolist()
-        [[-10.0, 0.0, 5.0, 0.0, 1.0, 10.0]]
+        [[-10.0, 0.0, 5.0, inf, 1.0, 15.0]]
 
         """
         return utils._calculate_infeasibilities(self)
@@ -1131,7 +1131,7 @@ class Equation(gt.Equation, Symbol):
         >>> v = gp.Variable(m, "v", domain=[i])
         >>> e = gp.Equation(m, "e", domain=[i])
         >>> e.getDeclaration()
-        'Equation e(i);'
+        'Equation e(i) / /;'
 
         """
         output = f"Equation {self.name}"
