@@ -21,9 +21,19 @@ def _set_default_options() -> None:
     if sysdir is not None:
         configuration["GAMS_SYSDIR"] = sysdir
 
+    # Enable all validations by default
+    validate = int(os.getenv("GAMSPY_VALIDATION", 1))
+    configuration["VALIDATION"] = validate
+
     # Check for domain violation by default
     validate = int(os.getenv("GAMSPY_DOMAIN_VALIDATION", 1))
     configuration["DOMAIN_VALIDATION"] = validate
+
+    # Solver option validation. Enabled by default.
+    validate_solver_options = int(
+        os.getenv("GAMSPY_SOLVER_OPTION_VALIDATION", 1)
+    )
+    configuration["SOLVER_OPTION_VALIDATION"] = validate_solver_options
 
     # Special value mapping
     map_special_values = int(os.getenv("GAMSPY_MAP_SPECIAL_VALUES", 1))
@@ -32,12 +42,6 @@ def _set_default_options() -> None:
     # Lazy evaluation
     evaluate_lazily = int(os.getenv("GAMSPY_LAZY_EVALUATION", 0))
     configuration["LAZY_EVALUATION"] = evaluate_lazily
-
-    # Solver option validation. Enabled by default.
-    validate_solver_options = int(
-        os.getenv("GAMSPY_SOLVER_OPTION_VALIDATION", 1)
-    )
-    configuration["SOLVER_OPTION_VALIDATION"] = validate_solver_options
 
 
 def set_options(options: dict[str, Any]) -> None:

@@ -371,9 +371,11 @@ Here is a list of package wide options:
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | Option Name                  | Commandline Option Name         | Type  | Description                                                                                                                              |
 +==============================+=================================+=======+==========================================================================================================================================+
+| VALIDATION                   | GAMSPY_VALIDATION               | int   | Whether to enable all validations of GAMSPy. Set to 1 by default                                                                         |
++------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | DOMAIN_VALIDATION            | GAMSPY_DOMAIN_VALIDATION        | int   | Whether to check for domain validation. Set to 1 by default.                                                                             |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-| SOLVER_OPTION_VALIDATION     | GAMSPY_SOLVER_OPTION_VALIDATION | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
+| SOLVER_OPTION_VALIDATION     | GAMSPY_SOLVER_OPTION_VALIDATION | str   | Whether to validate solver options. Set to 1 by default.                                                                                 |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | GAMS_SYSDIR                  | GAMSPY_GAMS_SYSDIR              | str   | Path to the GAMS system directory. Set to gamspy_base directory by default.                                                              |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
@@ -381,6 +383,8 @@ Here is a list of package wide options:
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION          | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
+
+If ``VALIDATION`` option is set to 0, it will ignore the value of other validation options and skip the validation.
 
 Serialization and Deserialization
 ---------------------------------
