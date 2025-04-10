@@ -383,35 +383,3 @@ Here is a list of package wide options:
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 | LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION          | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
-
-If ``VALIDATION`` option is set to 0, it will ignore the value of other validation options and skip the validation.
-
-Serialization and Deserialization
----------------------------------
-
-Serialization is a process to convert Container objects into a zip file which 
-can be easily stored, transmitted, and reconstructed. Deserialization is the 
-opposite process to reconstruct a Container from a zip file. GAMSPy provides 
-:meth:`gp.serialize <gamspy.serialize>` and :meth:`gp.deserialize <gamspy.deserialize>` 
-functions to perform these processes. One can serialize a container as follows:
-
-.. code-block:: python
-
-    import gamspy as gp
-    m = gp.Container()
-    i = gp.Set(m, "i", records=range(3))
-    gp.serialize(m, "path_to_the_zip_file.zip")
-
-This would create a zip file with the needed information to reconstruct the Container later.
-One can reconstruct a Container from this zip file later as follows:
-
-.. code-block:: python
-
-    import gamspy as gp
-    m = gp.deserialize("path_to_the_zip_file.zip")
-    i = m["i"]
-
-This creates a new container with the information from the zip file. The symbol `i` in the 
-returned Container will be identical to the symbol `i` in the first container that was used 
-to generate the zip file.
- 
