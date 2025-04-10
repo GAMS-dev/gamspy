@@ -699,7 +699,7 @@ def write_solver_options(
     ):
         return
 
-    if get_option("SOLVER_OPTION_VALIDATION"):
+    if get_option("VALIDATION") and get_option("SOLVER_OPTION_VALIDATION"):
         validate_solver_options(system_directory, options_file_name, solver)
 
 

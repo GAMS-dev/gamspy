@@ -384,6 +384,8 @@ Here is a list of package wide options:
 | LAZY_EVALUATION              | GAMSPY_LAZY_EVALUATION          | int   | Whether to evaluate expressions lazily. Lazy evaluation might cause recursion depth errors for very long expression. Set to 0 by default |
 +------------------------------+---------------------------------+-------+------------------------------------------------------------------------------------------------------------------------------------------+
 
+If ``VALIDATION`` option is set to 0, it will ignore the value of other validation options and skip the validation.
+
 Serialization and Deserialization
 ---------------------------------
 
