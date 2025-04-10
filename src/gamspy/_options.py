@@ -722,12 +722,15 @@ def get_def_file(system_directory: str, solver: str) -> str:
 def validate_solver_options(
     system_directory: str, options_file_name: str, solver: str
 ) -> None:
+    if not get_option("VALIDATION"):
+        return
+
     option_handle = new_optHandle_tp()
     rc, msg = optCreateD(option_handle, system_directory, GMS_SSSIZE)
 
     # Return code 0 means there is an error. Weird but this is what we have to work with.
     if rc == 0:
-        raise Exception(msg)
+        raise RuntimeError(msg)
 
     # Check the validity of the .def file.
     solver_def_file = get_def_file(system_directory, solver)
@@ -736,7 +739,7 @@ def validate_solver_options(
         for i in range(optMessageCount(option_handle)):
             msg_list.append(optGetMessage(option_handle, i + 1))
 
-        raise ValidationError(
+        raise RuntimeError(
             f"Error while processing {solver_def_file}. Log messages: {msg_list}"
         )
 
@@ -744,7 +747,7 @@ def validate_solver_options(
 
     # Check the validity of the parameters 
     if optReadParameterFile(option_handle, options_file_name):
-        raise Exception(f"Error while reading {options_file_name}")
+        raise RuntimeError(f"Error while reading {options_file_name}")
 
     msg_list = []
     for i in range(optMessageCount(option_handle)):

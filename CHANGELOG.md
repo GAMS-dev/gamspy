@@ -1,6 +1,11 @@
 GAMSPy CHANGELOG
 ================
 
+GAMSPy 1.10.0
+-------------
+- General
+  - Allow users to disable all validation via gp.set_options({"VALIDATION": 0}).
+
 GAMSPy 1.9.0
 ------------
 - General

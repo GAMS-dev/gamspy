@@ -36,6 +36,20 @@ def test_config():
 
     gp.set_options({"DOMAIN_VALIDATION": 1})
 
+    e = gp.Equation(m, "e")
+    model = gp.Model(m, "my_model", equations=[e])
+
+    # no equation definition was found. ValidationError by default.
+    with pytest.raises(ValidationError):
+        model.solve()
+
+    # no equation definition was found. Raises GamspyException because the validation is disabled.
+    gp.set_options({"VALIDATION": 0})
+    with pytest.raises(GamspyException):
+        model.solve()
+
+    gp.set_options({"VALIDATION": 1})
+
 
 @pytest.mark.unit
 def test_domain_checking_config_performance():

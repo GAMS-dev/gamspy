@@ -298,7 +298,7 @@ def validate_domain(
     domain = utils._to_list(indices)
     domain = [str(elem) if type(elem) is int else elem for elem in domain]
     domain = _expand_ellipsis_slice(symbol.domain, domain)  # type: ignore
-    if not get_option("DOMAIN_VALIDATION"):
+    if not get_option("VALIDATION") or not get_option("DOMAIN_VALIDATION"):
         return domain
 
     validate_type(domain)
@@ -362,6 +362,9 @@ def validate_container(
 
 
 def validate_name(word: str) -> str:
+    if not get_option("VALIDATION"):
+        return word
+
     if not isinstance(word, str):
         raise TypeError("Symbol name must be type str")
 
@@ -384,6 +387,15 @@ def validate_model(
     problem: Problem | str,
     sense: str | Sense,
 ) -> tuple[Problem, Sense]:
+    if not get_option("VALIDATION"):
+        if isinstance(problem, str):
+            problem = Problem(problem.upper())
+
+        if isinstance(sense, str):
+            sense = Sense(sense.upper())
+
+        return problem, sense
+
     if isinstance(problem, str):
         if problem.upper() not in Problem.values():
             raise ValueError(
@@ -431,6 +443,9 @@ def validate_model(
 
 
 def validate_model_name(name: str) -> str:
+    if not get_option("VALIDATION"):
+        return name
+
     if len(name) == 0:
         raise ValueError("Model name must be at least one character.")
 
@@ -464,6 +479,9 @@ def validate_solver_args(
     output: io.TextIOWrapper | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
+    if not get_option("VALIDATION"):
+        return
+
     # Check validity of options
     if options is not None and not isinstance(options, Options):
         raise TypeError(
@@ -526,7 +544,10 @@ def validate_solver_args(
             )
 
 
-def validate_equations(model: Model):
+def validate_equations(model: Model) -> None:
+    if not get_option("VALIDATION"):
+        return
+
     if model.container._is_restarted:
         return
 
@@ -538,6 +559,12 @@ def validate_equations(model: Model):
 
 
 def validate_global_options(options: Any) -> Options:
+    if not get_option("VALIDATION"):
+        if options is None:
+            return Options()
+
+        return options
+
     if options is not None and not isinstance(options, Options):
         raise TypeError(
             f"`options` must be of type Option but found {type(options)}"
