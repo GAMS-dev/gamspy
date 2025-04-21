@@ -369,7 +369,7 @@ def test_validations(data):
         )
 
     # Test solver options
-    with tempfile.NamedTemporaryFile("w", delete_on_close=False) as file:
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
         transport.solve(
             solver="conopt", output=file, solver_options={"rtmaxv": "1.e12"}
         )
@@ -381,7 +381,7 @@ def test_validations(data):
         options_path = os.path.join(m.working_directory, "conopt.opt")
         assert os.path.exists(options_path)
 
-    with tempfile.NamedTemporaryFile("w", delete_on_close=False) as file:
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
         # Test a second solve call without solver options
         transport.solve(solver="conopt", output=file)
         file.close()
