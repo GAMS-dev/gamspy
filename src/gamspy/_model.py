@@ -1228,6 +1228,9 @@ class Model:
                 str(self.problem).upper()
             ]
 
+        if solver.upper() == "CONOPT":
+            solver = "CONOPT4"
+
         validation.validate_solver_args(
             self.container.system_directory,
             backend,

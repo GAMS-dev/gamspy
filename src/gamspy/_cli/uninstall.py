@@ -66,6 +66,10 @@ def solver(
         for item in addons:
             solver_name = item.lower()
 
+            if solver_name.upper() in gamspy_base.default_solvers:
+                print(f"`{solver_name}` is a default solver, skipping...")
+                continue
+
             installed_solvers = utils.getInstalledSolvers(
                 gamspy_base.directory
             )
@@ -74,7 +78,7 @@ def solver(
                     f'Given solver name ("{solver_name}") is not valid. Installed'
                     f" solvers solvers that can be uninstalled: {installed_solvers}"
                 )
-
+            
             if not skip_pip_uninstall:
                 # uninstall specified solver
                 if use_uv:

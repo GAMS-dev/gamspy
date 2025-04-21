@@ -185,6 +185,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
         if solver != "GUSS":
             solvers.append(solver)
 
+    solvers.remove("CONOPT")
     solvers.sort()
     _installed_solvers[system_directory] = solvers
     return solvers
@@ -215,7 +216,11 @@ def getAvailableSolvers() -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return sorted(gamspy_base.available_solvers)
+    solvers = sorted(gamspy_base.available_solvers)
+    if "CONOPT" in solvers and "CONOPT4" in solvers:
+        solvers.remove("CONOPT")
+
+    return solvers
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
