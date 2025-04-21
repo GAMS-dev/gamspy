@@ -122,7 +122,7 @@ def test_options(data):
 
     assert (
         content
-        == 'limcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
+        == 'optfile = "0"\nlimcol = "0"\nlimrow = "0"\nsolprint = "0"\nsolvelink = "2"\npreviouswork = "1"\ntraceopt = "3"\nlogoption = "0"'
     )
 
 
