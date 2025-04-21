@@ -148,7 +148,7 @@ def test_parameter_change(data):
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
-        assert summary["Solver"].item() == "conopt"
+        assert summary["Solver"].item() == "CONOPT4"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
