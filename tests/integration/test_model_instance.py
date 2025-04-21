@@ -369,17 +369,25 @@ def test_validations(data):
         )
 
     # Test solver options
-    with open("_out.txt", "w") as file:
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
         transport.solve(
             solver="conopt", output=file, solver_options={"rtmaxv": "1.e12"}
         )
+        file.close()
 
-    with open("_out.txt") as file:
-        assert ">>  rtmaxv 1.e12" in file.read()
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" in f.read()
 
-    options_path = os.path.join(m.working_directory, "conopt.opt")
-    assert os.path.exists(options_path)
-    os.remove(options_path)
+        options_path = os.path.join(m.working_directory, "conopt.opt")
+        assert os.path.exists(options_path)
+
+    with tempfile.NamedTemporaryFile("w", delete=False) as file:
+        # Test a second solve call without solver options
+        transport.solve(solver="conopt", output=file)
+        file.close()
+
+        with open(file.name) as f:
+            assert ">>  rtmaxv 1.e12" not in f.read()
 
 
 @pytest.mark.skipif(

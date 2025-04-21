@@ -49,9 +49,7 @@ from gams.core.gmo import (
     gmoHresused,
     gmoLoadDataLegacy,
     gmoModelStat,
-    gmoNameOptFile,
     gmoNameOptFileSet,
-    gmoOptFile,
     gmoOptFileSet,
     gmoRegisterEnvironment,
     gmoSolveStat,
@@ -466,11 +464,6 @@ class ModelInstance:
             )
             ls_handle = gevGetLShandle(self._gev)
 
-        tmp_opt_file = gmoOptFile(self._gmo)
-        save_name_opt_file = gmoNameOptFile(self._gmo)
-        if instance_options is not None and option_file != 0:
-            tmp_opt_file = option_file
-
         if instance_options is not None and instance_options.debug:
             with open(
                 os.path.join(self.workspace.working_directory, "convert.opt"),
@@ -503,10 +496,10 @@ class ModelInstance:
                 rc = gmdCallSolver(self.sync_db.gmd, "convert")
                 self.sync_db._check_for_gmd_error(rc, self.workspace)
 
-        gmoOptFileSet(self._gmo, tmp_opt_file)
+        gmoOptFileSet(self._gmo, option_file)
         gmoNameOptFileSet(
             self._gmo,
-            os.path.join(os.path.dirname(save_name_opt_file), solver + ".opt"),
+            os.path.join(self.workspace.working_directory, solver + ".opt"),
         )
 
         rc = gmdCallSolver(self.sync_db.gmd, solver)
