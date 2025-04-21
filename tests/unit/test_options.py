@@ -774,7 +774,7 @@ def test_solver_options_twice(data):
 
     transport.solve(options=Options(log_file=log_file_path))
     with open(log_file_path) as file:
-        assert "OptFile 1" not in file.read()
+        assert "OptFile 0" in file.read()
 
 
 def test_debug_options():
