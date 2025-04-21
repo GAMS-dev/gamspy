@@ -1,21 +1,3 @@
-GAMSPy 1.10.0 (2025-04-21)
-==========================
-
-New features
-------------
-
-- #599: Allow renaming on ``container.loadRecordsFromGdx`` function call.
-
-
-- #601: Allow users to disable all validation via ``gp.set_options({"VALIDATION": 0})``.
-
-
-
-Improved documentation
-----------------------
-
-- #602: Use towncrier to automate changelog creation and avoid marge conflicts in the changelog file.
-
 GAMSPy 1.9.0
 ============
 - General
