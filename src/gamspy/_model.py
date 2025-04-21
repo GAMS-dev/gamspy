@@ -1227,6 +1227,11 @@ class Model:
             solver = utils.getDefaultSolvers(self.container.system_directory)[
                 str(self.problem).upper()
             ]
+        else:
+            if not isinstance(solver, str):
+                raise TypeError(
+                    f"`solver` argument must be of type `str` but given `{type(solver)}`"
+                )
 
         if solver.upper() == "CONOPT":
             solver = "CONOPT4"
