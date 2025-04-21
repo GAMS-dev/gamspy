@@ -81,7 +81,8 @@ doc = [
   "pytest>=8.2.1",
   "nbmake>=1.5.3",
   "openpyxl>=3.1.2",
-  "sphinx-tabs>=3.4.7"
+  "sphinx-tabs>=3.4.7",
+  "towncrier>= 24.8.0",
 ]
 
 [project.scripts]
