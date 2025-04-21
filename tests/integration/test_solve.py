@@ -1004,7 +1004,7 @@ def test_solver_options(data):
 
     # Test solver change
     transport.solve(solver="conopt", solver_options={"rtmaxv": "1.e12"})
-    assert os.path.exists(f"{m.working_directory}{os.sep}conopt.opt")
+    assert os.path.exists(os.path.join(m.working_directory, "conopt4.opt"))
 
     # Test solver option validation
 

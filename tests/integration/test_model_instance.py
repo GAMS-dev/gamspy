@@ -378,7 +378,7 @@ def test_validations(data):
         with open(file.name) as f:
             assert ">>  rtmaxv 1.e12" in f.read()
 
-        options_path = os.path.join(m.working_directory, "conopt.opt")
+        options_path = os.path.join(m.working_directory, "conopt4.opt")
         assert os.path.exists(options_path)
 
     with tempfile.NamedTemporaryFile("w", delete=False) as file:
