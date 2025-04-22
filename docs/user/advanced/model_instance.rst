@@ -254,7 +254,7 @@ in the model, this is suspicious and hence, the ``solve`` throws an exception by
 The number of allowed *unmatched records* can be controlled with ``no_match_limit``. Here any number of 5 and larger will prevent 
 the exception and the frozen model is passed to the solver: ::
 
-    mymodel.solve(frozen_model_options=gp.FreezeOptions(no_match_limit=5))
+    mymodel.solve(freeze_options=gp.FreezeOptions(no_match_limit=5))
 
 Missing Values in the Modifiable's Data
 ---------------------------------------
@@ -292,7 +292,7 @@ If we solve now with ``update_type="0"``, the solver sees the right hand side (w
 When ``update_type="base_case"`` or ``update_type="accumulate"`` is used, the solver sees the right hand side of ``[1,2,3,4,100]``. Let's continue the example
 with ``update_type="0"``: ::
 
-   mymodel.solve(frozen_model_options=gp.FreezeOptions(update_type="0"))
+   mymodel.solve(freeze_options=gp.FreezeOptions(update_type="0"))
 
 The records for ``b`` inside the model instance are now ``[0,0,0,0,100]``. We could have also accomplished this by not having any default records
 and any update_type: ::
