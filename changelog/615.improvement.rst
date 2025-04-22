@@ -1,0 +1,1 @@
+Remove duplicate conopt entries in gamspy list solvers cli command.
