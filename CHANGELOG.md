@@ -7,6 +7,7 @@ GAMSPy 1.10.0
   - Allow renaming on container.loadRecordsFromGdx function call.
   - Allow users to disable all validation via gp.set_options({"VALIDATION": 0}).
   - Fix the problem of the first solve with solver options affecting the subsequent solves without solver options.
+  - Improve the error message of undefined equations.
 
 GAMSPy 1.9.0
 ------------
