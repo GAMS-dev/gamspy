@@ -47,6 +47,20 @@ Or it can be accesed by using the utility function getAvailableSolvers: ::
     import gamspy.utils as utils
     print(utils.getAvailableSolvers())
 
+As soon as you install GAMSPy, you get the default solvers and you can install 
+other solvers later. The solvers that are already installed on your machine can 
+be queried as follows: ::
+
+    import gamspy_base
+    import gamspy.utils as utils
+    print(utils.getInstalledSolvers(gamspy_base.directory))
+
+All installable solvers can be listed with: ::
+
+    import gamspy_base
+    import gamspy.utils as utils
+    print(utils.getInstallableSolvers(gamspy_base.directory))
+
 What is the default solver if I don't specify one?
 --------------------------------------------------
 

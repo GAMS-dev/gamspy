@@ -1,1 +1,1 @@
-Remove duplicate conopt entries in gamspy list solvers cli command.
+Remove duplicate conopt entries in gamspy list solvers cli command and add utils.getInstallableSolvers function.

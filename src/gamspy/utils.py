@@ -193,7 +193,7 @@ def getInstalledSolvers(system_directory: str) -> list[str]:
 
 def getAvailableSolvers() -> list[str]:
     """
-    Returns all available solvers that can be installed.
+    Returns all available solvers.
 
     Returns
     -------
@@ -221,6 +221,39 @@ def getAvailableSolvers() -> list[str]:
         solvers.remove("CONOPT")
 
     return solvers
+
+
+def getInstallableSolvers(system_directory: str) -> list[str]:
+    """
+    Returns all installable solvers.
+
+    Parameters
+    ----------
+    system_directory : str
+
+    Returns
+    -------
+    list[str]
+
+    Raises
+    ------
+    ModuleNotFoundError
+        In case gamspy_base is not installed.
+
+    Examples
+    --------
+    >>> import gamspy_base
+    >>> import gamspy.utils as utils
+    >>> available_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+
+    """
+    try:
+        import gamspy_base
+    except ModuleNotFoundError as e:  # pragma: no cover
+        e.msg = "You must first install gamspy_base to use this functionality"
+        raise e
+
+    return list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
