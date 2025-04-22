@@ -105,6 +105,22 @@ def backend_factory(
     )
 
 
+def _cast_values(
+    objective_value: str,
+    num_equations: str,
+    num_variables: str,
+    solver_time: str,
+) -> tuple[float, int | float, int | float, float]:
+    objective = (
+        float("nan") if objective_value == "NA" else float(objective_value)
+    )
+    equations = float("nan") if num_equations == "NA" else int(num_equations)
+    variables = float("nan") if num_variables == "NA" else int(num_variables)
+    time = float("nan") if solver_time == "NA" else float(solver_time)
+
+    return objective, equations, variables, time
+
+
 class Backend(ABC):
     def __init__(
         self,
@@ -259,6 +275,12 @@ class Backend(ABC):
                 _,
                 _,
             ) = line.split(",")
+
+        objective_value, num_equations, num_variables, solver_time = (
+            _cast_values(
+                objective_value, num_equations, num_variables, solver_time
+            )
+        )
 
         dataframe = pd.DataFrame(
             [

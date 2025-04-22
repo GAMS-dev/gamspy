@@ -372,7 +372,7 @@ class Options(BaseModel):
         self._debug_options: dict[str, Any] = dict()
         self._solver: str | None = None
         self._problem: str | None = None
-        self._solver_options_file: str | None = None
+        self._solver_options_file: str = "0"
         self._frame: FrameType | None = None
 
     def _get_gams_compatible_options(
@@ -454,6 +454,8 @@ class Options(BaseModel):
                 system_directory, working_directory, solver, solver_options
             )
             self._solver_options_file = "1"
+        else:
+            self._solver_options_file = "0"
 
     def _set_extra_options(self, options: dict) -> None:
         """Set extra options of the backend"""
@@ -525,8 +527,7 @@ class Options(BaseModel):
         if self._solver is not None:
             all_options[self._problem] = self._solver
 
-        if self._solver_options_file is not None:
-            all_options["optfile"] = self._solver_options_file
+        all_options["optfile"] = self._solver_options_file
 
         # Extra options
         all_options.update(**self._extra_options)
