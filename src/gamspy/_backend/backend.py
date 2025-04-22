@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal, no_type_check
 
 import pandas as pd
@@ -103,6 +104,14 @@ def backend_factory(
         f"`{backend}` is not a valid backend. Possible backends:"
         " local, engine, and neos"
     )
+
+
+def cast_value(
+    value: str, type_to_cast: Callable[[str], int | float]
+) -> int | float:
+    return_value = float("nan") if value == "NA" else type_to_cast(value)
+
+    return return_value
 
 
 class Backend(ABC):
@@ -265,12 +274,12 @@ class Backend(ABC):
                 [
                     SOLVE_STATUS[int(solver_status)],
                     ModelStatus(int(model_status)).name,
-                    objective_value,
-                    num_equations,
-                    num_variables,
+                    cast_value(objective_value, float),
+                    cast_value(num_equations, int),
+                    cast_value(num_variables, int),
                     model_type,
                     solver_name,
-                    solver_time,
+                    cast_value(solver_time, float),
                 ]
             ],
             columns=HEADER,
