@@ -8,7 +8,8 @@ Which solvers does GAMSPy support?
 ----------------------------------
 At the moment, GAMSPy supports 29 solvers:
 
-- CONOPT
+- CONOPT3
+- CONOPT4
 - CONVERT
 - CPLEX
 - IPOPT
@@ -19,7 +20,6 @@ At the moment, GAMSPy supports 29 solvers:
 - SHOT
 - BARON
 - CBC
-- CONOPT3
 - COPT
 - DICOPT
 - EXAMINER
