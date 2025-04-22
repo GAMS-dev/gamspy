@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import uuid
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal, no_type_check
 
 import pandas as pd
@@ -106,12 +105,20 @@ def backend_factory(
     )
 
 
-def cast_value(
-    value: str, type_to_cast: Callable[[str], int | float]
-) -> int | float:
-    return_value = float("nan") if value == "NA" else type_to_cast(value)
+def _cast_values(
+    objective_value: str,
+    num_equations: str,
+    num_variables: str,
+    solver_time: str,
+) -> tuple[float, int | float, int | float, float]:
+    objective = (
+        float("nan") if objective_value == "NA" else float(objective_value)
+    )
+    equations = float("nan") if num_equations == "NA" else int(num_equations)
+    variables = float("nan") if num_variables == "NA" else int(num_variables)
+    time = float("nan") if solver_time == "NA" else float(solver_time)
 
-    return return_value
+    return objective, equations, variables, time
 
 
 class Backend(ABC):
@@ -269,17 +276,23 @@ class Backend(ABC):
                 _,
             ) = line.split(",")
 
+        objective_value, num_equations, num_variables, solver_time = (
+            _cast_values(
+                objective_value, num_equations, num_variables, solver_time
+            )
+        )
+
         dataframe = pd.DataFrame(
             [
                 [
                     SOLVE_STATUS[int(solver_status)],
                     ModelStatus(int(model_status)).name,
-                    cast_value(objective_value, float),
-                    cast_value(num_equations, int),
-                    cast_value(num_variables, int),
+                    objective_value,
+                    num_equations,
+                    num_variables,
                     model_type,
                     solver_name,
-                    cast_value(solver_time, float),
+                    solver_time,
                 ]
             ],
             columns=HEADER,
