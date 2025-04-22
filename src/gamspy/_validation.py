@@ -553,6 +553,18 @@ def validate_equations(model: Model) -> None:
 
     for equation in model.equations:
         if equation._definition is None:
+            if equation.dimension == 0:
+                name = equation.name
+                raise ValidationError(
+                    f"`{name}` has been declared as a scalar equation but no equation definition was found.\n"
+                    f"The definition of `{name}` must use either `[:]` or `[...]` after the python variable name for the definition to register. "
+                    f"For example: \n\n\t{name} = gp.Equation(..., name='{name}', ...)\n\t{name}[...] = LHS == RHS\n\nFailure to add `[:]` or `[...]`, like in the following:\n\n\t"
+                    f"{name} = LHS == RHS\n\njust redefines the Python variable `{name}` as an expression, but does not define the equation `{name}`. "
+                    "This issue stems from the lack of assignment operator overloading in Python.\n"
+                    f"You can verify that the equation `{name}` has been defined by printing its definition:\n\n\t"
+                    f"print({name}.getDefinition())"
+                )
+
             raise ValidationError(
                 f"`{equation.name}` has been declared as an equation but no equation definition was found."
             )
