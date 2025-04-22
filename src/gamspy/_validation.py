@@ -561,7 +561,7 @@ def validate_equations(model: Model) -> None:
                     f"For example: \n\n\t{name} = gp.Equation(..., name='{name}', ...)\n\t{name}[...] = LHS == RHS\n\nFailure to add `[:]` or `[...]`, like in the following:\n\n\t"
                     f"{name} = LHS == RHS\n\njust redefines the Python variable `{name}` as an expression, but does not define the equation `{name}`. "
                     "This issue stems from the lack of assignment operator overloading in Python.\n"
-                    f"You can verify that the equation `name` has been defined by printing its definition:\n\n\t"
+                    f"You can verify that the equation `{name}` has been defined by printing its definition:\n\n\t"
                     f"print({name}.getDefinition())"
                 )
 
