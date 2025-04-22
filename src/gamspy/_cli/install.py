@@ -214,7 +214,7 @@ def solver(
             if solver_name.upper() not in installable_solvers:
                 raise ValidationError(
                     f'Given solver name ("{solver_name}") is not valid. Available'
-                    f" solvers that can be installed: {installable_solvers}"
+                    f" solvers that can be installed: {installable_solvers}")
             
             installed_solvers = utils.getInstalledSolvers(gamspy_base.directory)
             if solver_name.upper() in installed_solvers:
