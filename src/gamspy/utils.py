@@ -253,7 +253,7 @@ def getInstallableSolvers(system_directory: str) -> list[str]:
         e.msg = "You must first install gamspy_base to use this functionality"
         raise e
 
-    return list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers))
+    return sorted(list(set(getAvailableSolvers()) - set(gamspy_base.default_solvers)))
 
 
 def checkAllSame(iterable1: Sequence, iterable2: Sequence) -> bool:
