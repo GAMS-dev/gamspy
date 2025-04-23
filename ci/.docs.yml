@@ -3,7 +3,7 @@ leg-build-docs:
   when: manual
   needs: []
   tags: [linux]
-  image: python:3.10-slim
+  image: python:3.10
   script:
     - python -m pip install uv && uv venv .docs_venv && source .docs_venv/bin/activate
     - uv pip install .[test,doc]

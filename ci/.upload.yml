@@ -2,7 +2,7 @@ leg-upload-wheel:
   stage: upload
   needs: []
   tags: [puma]
-  image: python:3.12-slim
+  image: python:3.12
   script:
     - python -m pip install uv && uv venv .upload_venv
     - source .upload_venv/bin/activate && uv pip install pip
