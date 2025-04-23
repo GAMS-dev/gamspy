@@ -2,7 +2,7 @@ leg-performance:
   stage: performance
   needs: []
   tags: [puma]
-  image: python:3.12
+  image: python:3.12-slim
   when: manual
   script:
     - curl --silent https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh

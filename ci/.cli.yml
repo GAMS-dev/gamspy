@@ -1,7 +1,7 @@
 leg-cli-3.13:
   stage: cli
   tags: [linux]
-  image: python:3.13
+  image: python:3.13-slim
   script:
     - python -m pip install uv && uv venv venv313 && source venv313/bin/activate && uv pip install pip && uv build
     - uv pip install .[dev,test] --force-reinstall
@@ -14,7 +14,7 @@ leg-cli-3.13:
 leg-cli-3.9:
   stage: cli
   tags: [linux]
-  image: python:3.9
+  image: python:3.9-slim
   script:
     - python -m pip install uv && uv venv venv39 && source venv39/bin/activate && uv pip install pip
     - uv pip install .[dev,test] --force-reinstall
