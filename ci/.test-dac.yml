@@ -4,7 +4,7 @@ dac-test-3.13:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
     - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -23,7 +23,7 @@ dac-test-3.12:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.12${CI_COMMIT_SHORT_SHA}" --python 3.12
     - source "${TMPDIR}gamspy-env-3.12${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -44,7 +44,7 @@ dac-test-3.11:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.11${CI_COMMIT_SHORT_SHA}" --python 3.11
     - source "${TMPDIR}gamspy-env-3.11${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -65,7 +65,7 @@ dac-test-3.10:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.10${CI_COMMIT_SHORT_SHA}" --python 3.10
     - source "${TMPDIR}gamspy-env-3.10${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -87,7 +87,7 @@ dac-test-3.9:
   needs: [dac-cli-3.9]
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
     - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -107,7 +107,7 @@ dac-engine-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
     - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -122,7 +122,7 @@ dac-engine-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
     - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -138,7 +138,7 @@ dac-neos-3.13:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}" --python 3.13
     - source "${TMPDIR}gamspy-env-3.13${CI_COMMIT_SHORT_SHA}"/bin/activate
@@ -153,7 +153,7 @@ dac-neos-3.9:
   needs: []
   tags: [macos-arm64]
   script:
-    - which uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+    - [ ! -f $HOME/.local/bin/uv ] && curl -LsSf https://astral.sh/uv/install.sh | sh
     - source $HOME/.local/bin/env
     - uv venv "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}" --python 3.9
     - source "${TMPDIR}gamspy-env-3.9${CI_COMMIT_SHORT_SHA}"/bin/activate
