@@ -156,6 +156,7 @@ class FileFormat(Enum):
     GAMSDict = "dict.txt"
     GAMSDictMap = "dictmap.gdx"
     GAMSJacobian = "jacobian.gms"
+    GAMSPyJacobian = "jacobian.py"
     GDXJacobian = "jacobian.gdx"
     FileList = "files.txt"
     FixedMPS = "fixed.mps"
