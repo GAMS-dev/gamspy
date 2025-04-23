@@ -276,7 +276,7 @@ class Options(BaseModel):
     solve_link_type: Optional[Literal["disk", "memory"]] = None
         Solver link option
 
-        * **disk**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open - If this is not supported by the selected solver, it gets reset to **1** automatically
+        * **disk**: Model instance saved to scratch directory, the solver is called with a spawn (if possible) or a shell (if spawn is not possible) while GAMS remains open.
 
         * **memory**: The model instance is passed to the solver in-memory - If this is not supported by the selected solver, it gets reset to **disk** automatically.
     merge_strategy: Optional[Literal["replace", "merge", "clear"]] = None
