@@ -25,6 +25,12 @@ def solvers(
         "-a",
         help="Shows all available solvers."
     ),
+    installables: bool = typer.Option(
+        False,
+        "--installables",
+        "-i",
+        help="Shows solvers that can be installed."
+    ),
     defaults: bool = typer.Option(
         False,
         "--defaults",
@@ -57,6 +63,9 @@ def solvers(
         print(
             "[bold]Full list can be found here[/bold]: https://www.gams.com/latest/docs/S_MAIN.html#SOLVERS_MODEL_TYPES"
         )
+    elif installables:
+        installable_solvers = utils.getInstallableSolvers(gamspy_base.directory)
+        console.print(", ".join(installable_solvers))
     elif defaults:
         default_solvers = utils.getDefaultSolvers(gamspy_base.directory)
         table = Table("Problem", "Solver")

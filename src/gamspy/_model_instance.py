@@ -499,7 +499,9 @@ class ModelInstance:
         gmoOptFileSet(self._gmo, option_file)
         gmoNameOptFileSet(
             self._gmo,
-            os.path.join(self.workspace.working_directory, solver + ".opt"),
+            os.path.join(
+                self.workspace.working_directory, solver.lower() + ".opt"
+            ),
         )
 
         rc = gmdCallSolver(self.sync_db.gmd, solver)

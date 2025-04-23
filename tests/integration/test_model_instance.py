@@ -148,7 +148,7 @@ def test_parameter_change(data):
     for b_value, result in zip(bmult_list, results):
         bmult[...] = b_value
         summary = transport.solve(solver="conopt")
-        assert summary["Solver"].item() == "conopt"
+        assert summary["Solver"].item() == "CONOPT4"
         assert "bmult_var" in m.data
         assert x.records.columns.to_list() == [
             "i",
@@ -378,7 +378,7 @@ def test_validations(data):
         with open(file.name) as f:
             assert ">>  rtmaxv 1.e12" in f.read()
 
-        options_path = os.path.join(m.working_directory, "conopt.opt")
+        options_path = os.path.join(m.working_directory, "conopt4.opt")
         assert os.path.exists(options_path)
 
     with tempfile.NamedTemporaryFile("w", delete=False) as file:

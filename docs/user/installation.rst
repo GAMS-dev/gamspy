@@ -114,6 +114,7 @@ The same information can also be accessed programmatically via the ``utils`` mod
     import gamspy_base
     print(gp.utils.getInstalledSolvers(gamspy_base.directory))
     print(gp.utils.getAvailableSolvers())
+    print(gp.utils.getInstallableSolvers(gamspy_base.directory))
 
 .. note::
     All available solver packages can also be found on `PyPI <https://pypi.org/user/GAMS_Development>`_.
