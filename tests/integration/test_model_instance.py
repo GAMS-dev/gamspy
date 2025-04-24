@@ -692,7 +692,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
@@ -725,7 +725,7 @@ def test_license():
     subprocess.run(
         [
             sys.executable,
-            "-m",
+            "-Bm",
             "gamspy",
             "install",
             "license",
