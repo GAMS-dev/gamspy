@@ -1,0 +1,1 @@
+Fix the bug in the filtering of a single record in non-level attributes of a variable (lo, up, marginal, scale).

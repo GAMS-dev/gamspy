@@ -525,6 +525,7 @@ def test_records(data):
         ["san-diego", "topeka", 275.0],
     ]
     assert x.l["san-diego", "new-york"].records == 275.0
+    assert math.isclose(x.m["san-diego", "chicago"].records, 0.009)
     assert z.l.records == 153.675
 
     # Test the columns of equation
@@ -559,6 +560,7 @@ def test_records(data):
         ["san-diego", 550.0],
     ]
     assert supply.l["seattle"].records == 350.0
+    assert supply.up["san-diego"].records == 600.0
 
     m = Container()
     i1 = Set(m, name="i1", records=range(2))

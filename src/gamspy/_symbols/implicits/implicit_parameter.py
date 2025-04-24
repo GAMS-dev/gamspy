@@ -161,7 +161,7 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
                 recs = recs[recs[column_name] == literal]
 
             if all(isinstance(elem, str) for elem in self.domain):
-                return float(recs["level"].squeeze())
+                return float(recs[ATTR_MAPPING[extension]].squeeze())
 
             return recs
 
