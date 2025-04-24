@@ -449,3 +449,22 @@ def test_multiple_ops(data):
         ) + Sum(I, duration[I] * pi[I])
     except ValidationError:
         pytest.fail("Unexpected ValidationError.")
+
+
+def test_number():
+    m = Container()
+
+    v = Variable(m, "v")
+
+    # Make sure that Number(value) keeps the order
+    assert (v == Number(0)).gamsRepr() == "v =e= 0"
+    assert (Number(0) == v).gamsRepr() == "0 =e= v"
+
+    i = Set(m, name="i", records=[f"i{j}" for j in range(10)])
+    x = Variable(m, name="x", domain=i)
+    e = Equation(m, name="e", definition=Sum(i, x[i] * x[i]) == Number(1))
+    assert e.getDefinition() == "e .. sum(i,(x(i) * x(i))) =e= 1;"
+    f = Equation(m, name="f", definition=Number(1) == Sum(i, x[i] * x[i]))
+    assert f.getDefinition() == "f .. 1 =e= sum(i,(x(i) * x(i)));"
+
+    m.close()
