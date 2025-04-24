@@ -8,7 +8,7 @@ import gamspy._algebra.operable as operable
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
-    from gamspy._algebra.expression import Expression
+    pass
 
 
 class ExtrinsicFunction(operable.Operable):
@@ -28,7 +28,7 @@ class ExtrinsicFunction(operable.Operable):
     def __len__(self):
         return len(self.__str__())
 
-    def __call__(self, *args, **kwds) -> Expression:
+    def __call__(self, *args, **kwds) -> ExtrinsicFunction:
         if kwds:
             raise ValidationError(
                 "External functions do not accept keyword arguments"
