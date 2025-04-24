@@ -429,6 +429,7 @@ def test_records(data):
 
     x = Variable(m, name="x", domain=[i, j], type="Positive")
     assert x.records is None
+    assert x[i, "new-york"].records is None
     assert x.l[i, j].records is None
     assert x.l[i, "new-york"].records is None
     assert x.l["san-diego", j].records is None
@@ -483,14 +484,27 @@ def test_records(data):
         "scale",
     ]
 
-    # Test the columns of the attribute records
+    # Test the columns of the records
+    assert x[i, j].records.columns.tolist() == [
+        "i",
+        "j",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
     assert x.l[i, j].records.columns.tolist() == ["i", "j", "level"]
     assert x.m[i, j].records.columns.tolist() == ["i", "j", "marginal"]
     assert x.up[i, j].records.columns.tolist() == ["i", "j", "upper"]
     assert x.lo[i, j].records.columns.tolist() == ["i", "j", "lower"]
     assert x.scale[i, j].records.columns.tolist() == ["i", "j", "scale"]
 
-    # Test the records of the filtered attribute records
+    # Test the records of the filtered records
+    assert x[i, "new-york"].records.values.tolist() == [
+        ["seattle", "new-york", 50.0, 0, 0, float("inf"), 1.0],
+        ["san-diego", "new-york", 275.0, 0, 0, float("inf"), 1.0],
+    ]
     assert x.l.records.values.tolist() == [
         ["seattle", "new-york", 50.0],
         ["seattle", "chicago", 300.0],
@@ -546,17 +560,32 @@ def test_records(data):
         "scale",
     ]
 
-    # Test the columns of the attribute records
+    # Test the columns of the records
+    assert supply["seattle"].records.columns.tolist() == [
+        "i",
+        "level",
+        "marginal",
+        "lower",
+        "upper",
+        "scale",
+    ]
     assert supply.l[i].records.columns.tolist() == ["i", "level"]
     assert supply.m[i].records.columns.tolist() == ["i", "marginal"]
     assert supply.up[i].records.columns.tolist() == ["i", "upper"]
     assert supply.lo[i].records.columns.tolist() == ["i", "lower"]
     assert supply.scale[i].records.columns.tolist() == ["i", "scale"]
 
-    # Test the records of the filtered attribute records
+    # Test the records of the filtered records
     assert supply.l[i].records.values.tolist() == [
         ["seattle", 350.0],
         ["san-diego", 550.0],
+    ]
+    assert supply[i].records.values.tolist() == [
+        ["seattle", 350.0, -0, float("-inf"), 350, 1],
+        ["san-diego", 550.0, -0, float("-inf"), 600, 1],
+    ]
+    assert supply["seattle"].records.values.tolist() == [
+        ["seattle", 350.0, -0, float("-inf"), 350, 1],
     ]
     assert supply.l["seattle"].records == 350.0
 
