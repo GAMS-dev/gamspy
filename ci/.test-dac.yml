@@ -23,7 +23,7 @@ dac-test-3.13:
 
 dac-test-3.12:
   stage: test
-  needs: [dac-cli-3.9]
+  needs: [dac-test-3.13]
   tags: [macos-arm64]
   script:
     - |
@@ -47,7 +47,7 @@ dac-test-3.12:
 
 dac-test-3.11:
   stage: test
-  needs: [dac-cli-3.9]
+  needs: [dac-test-3.12]
   tags: [macos-arm64]
   script:
     - |
@@ -71,7 +71,7 @@ dac-test-3.11:
 
 dac-test-3.10:
   stage: test
-  needs: [dac-cli-3.9]
+  needs: [dac-test-3.11]
   tags: [macos-arm64]
   script:
     - |
@@ -96,7 +96,7 @@ dac-test-3.10:
 
 dac-test-3.9:
   stage: test
-  needs: [dac-cli-3.9]
+  needs: [dac-test-3.10]
   tags: [macos-arm64]
   script:
     - |

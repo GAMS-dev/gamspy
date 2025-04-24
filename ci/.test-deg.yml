@@ -27,7 +27,7 @@ deg-test-3.13:
 
 deg-test-3.12:
   stage: test
-  needs: [deg-cli-3.9]
+  needs: [deg-test-3.13]
   tags: [macos]
   script:
     - |
@@ -51,7 +51,7 @@ deg-test-3.12:
 
 deg-test-3.11:
   stage: test
-  needs: [deg-cli-3.9]
+  needs: [deg-test-3.12]
   tags: [macos]
   script:
     - |
@@ -75,7 +75,7 @@ deg-test-3.11:
 
 deg-test-3.10:
   stage: test
-  needs: [deg-cli-3.9]
+  needs: [deg-test-3.11]
   tags: [macos]
   script:
     - |
@@ -99,7 +99,7 @@ deg-test-3.10:
 
 deg-test-3.9:
   stage: test
-  needs: [deg-cli-3.9]
+  needs: [deg-test-3.10]
   tags: [macos]
   script:
     - |
