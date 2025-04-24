@@ -332,6 +332,15 @@ to match all elements of the second and the third column. Cell 2 matches all rec
 '0', and the third and fourth dimensions are '1'. It makes use of the slice operator 
 to match all elements of the second dimension. 
 
+The same filtering process can also be done on the whole domain of the variable instead of a particular 
+attribute of a variable: ::
+
+  In [3]: v1['0', :, '1', '1'].records
+  Out[3]:
+    i1 i2 i3 i4     level  marginal lower upper scale
+  3  0  0  1  1  0.948649       0.0  -inf   inf   1.0
+  7  0  1  1  1  0.409199       0.0  -inf   inf   1.0
+
 
 Variables in Assignment Statements
 ==================================
