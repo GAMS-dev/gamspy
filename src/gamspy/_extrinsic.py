@@ -19,6 +19,12 @@ class ExtrinsicFunction(operable.Operable):
         self.args: tuple = ()
         self.domain: list = []
 
+    def __eq__(self, other):
+        return expression.Expression(self, "=e=", other)
+
+    def __ne__(self, other):
+        return expression.Expression(self, "ne", other)
+
     def __len__(self):
         return len(self.__str__())
 
@@ -29,7 +35,7 @@ class ExtrinsicFunction(operable.Operable):
             )
 
         self.args = args
-        return expression.Expression(None, self, None)
+        return self
 
     def __str__(self) -> str:
         representation = self.name
