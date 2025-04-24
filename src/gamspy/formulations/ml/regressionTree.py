@@ -121,7 +121,6 @@ m = gp.Container(working_directory="./data")
 n_features = tree_dict["n_features"]
 sample_size = int(in_data.shape[0])
 nleafs = len(leafs)  # nleafs = 3
-leaf_vars_dim = dim((sample_size, nleafs))  # len = 15 vars but many of them will be ...
 
 ind = gp.Parameter(m, name="ind_p", domain=dim((sample_size,)), records=in_data)
 i = dim((sample_size,))
@@ -153,7 +152,7 @@ ind_vars = gp.Variable(
     m,
     name=f"iv",
     type="BINARY",
-    domain=leaf_vars_dim,
+    domain=dim((sample_size, nleafs)),
     description=f"indicator variable for each leaf for each sample",
 )
 
@@ -167,7 +166,9 @@ o1 = gp.Equation(
 sample_domain = o1.domain[0]
 feat_domain = ind_vars.domain[1]
 
-o1[o1.domain[0]] = gp.Sum(ind_vars.domain[1], ind_vars[o1.domain[0], ind_vars.domain[1]]) == 1
+o1[o1.domain[0]] = (
+    gp.Sum(ind_vars.domain[1], ind_vars[o1.domain[0], ind_vars.domain[1]]) == 1
+)
 
 
 out_link = gp.Parameter(
@@ -205,69 +206,73 @@ lb_output = gp.Equation(
     definition=y >= np.min(tree_dict["value"]),
 )
 
+ss = gp.Set(
+    m,
+    name="ss",
+    description="Universal set for all possible outcome for a given sample point and feature",
+    domain=dim((sample_size, n_features, nleafs)),
+)
 
-def add_binding_constraint(
-    m, ind_var: gp.Variable, feat_var: gp.Variable, suffix, sense, value, M
-):
-    if sense == "ge":
-        gp.Equation(
-            m,
-            name=f"iv_feat_ge_{suffix}",
-            domain=dim((sample_size,)),
-            definition=feat_var >= float(value) - M * (1 - ind_var),
-            description="constraint to link the indicator variable with the feature",
-        )
-    else:
-        ### Adding LE constraint
-        gp.Equation(
-            m,
-            name=f"iv_feat_le_{suffix}",
-            domain=dim((sample_size,)),
-            definition=feat_var <= float(value) + M * (1 - ind_var),
-            # description="constraint to link the indicator variable with the feature",
-        )
+s = gp.Set(
+    m,
+    name="s",
+    description="Dynamic subset of possible paths",
+    domain=ss.domain,  # TODO: Why we cannot just pass ss here, and GAMSPy infers the domain of ss? We get `ValueError: All linked 'domain' elements must have dimension == 1`
+)
 
+bb = gp.Set(
+    m,
+    name="bb",
+    domain=["*"],
+    records=["ge", "le"],
+)
+
+feat_thresh = gp.Parameter(
+    m,
+    name="feat_thres",
+    description="feature value",
+    domain=s.domain + [bb],
+)
 
 for i, leaf in enumerate(leafs):
     leaf = int(leaf)
-    # print(f"{leaf = }")
     for feat in range(n_features):
-        mask = (b.up[:, feat] >= node_lb[:, leaf][feat]) & (
-            b.lo[:, feat] <= node_ub[:, leaf][feat]
-        )
-        ind_vars.fx[:, i].where[
-            ~mask
-        ] = 0  # these indicator variables will not be reached
-        # print(f"{feat = }")
         feat_ub = float(node_ub[feat, leaf])
         feat_lb = float(node_lb[feat, leaf])
-        for rec in range(sample_size):
-            suffix = f"l{leaf}_f{feat}_s{rec}"
-            if feat_lb > -np.inf:
-                # print("####Adding GE constraints")
-                mask_ext = (b.lo[rec, feat] < feat_lb) & mask
-                add_binding_constraint(
-                    m,
-                    ind_var=ind_vars[rec, i].where[mask],
-                    feat_var=b[rec, feat].where[mask],
-                    suffix=suffix,
-                    sense="ge",
-                    value=feat_lb,
-                    M=1e6,
-                )
-            if feat_ub < np.inf:
-                # print("####Adding LE constraints")
-                mask_ext = (b.up[:, feat] > feat_ub) & mask
-                add_binding_constraint(
-                    m,
-                    ind_var=ind_vars[rec, i].where[mask],
-                    feat_var=b[rec, feat].where[mask],
-                    suffix=suffix,
-                    sense="le",
-                    value=feat_ub,
-                    M=1e6,
-                )
+        mask = (b.up[:, feat] >= feat_lb) & (b.lo[:, feat] <= feat_ub)
+        # these indicator variables will not be reached
+        ind_vars.fx[:, i].where[~mask] = 0
+        # for rec in range(sample_size):
+        if feat_lb > -np.inf:
+            mask_ext = (b.lo[:, feat] < feat_lb) & mask
+            s[:, feat, i].where[mask_ext] = True
+            feat_thresh[s, "ge"] = feat_lb
+        if feat_ub < np.inf:
+            mask_ext = (b.up[:, feat] > feat_ub) & mask
+            s[:, feat, i].where[mask_ext] = True
+            feat_thresh[s, "le"] = feat_ub
+        s[...] = False
 
+ge_cons = gp.Equation(
+    m,
+    name=f"iv_feat_ge",
+    domain=ss.domain,
+    description="constraint to link the indicator variable with the feature GE",
+)
+### Adding LE constraint
+le_cons = gp.Equation(
+    m,
+    name=f"iv_feat_le",
+    domain=ss.domain,
+    description="constraint to link the indicator variable with the feature LE",
+)
+s[...].where[gp.Sum(bb, feat_thresh[...,bb])] = True
+
+# TODO: uncontrolled sets
+ge_cons[s] = b.where[s] >= feat_thresh[s, "ge"] - 1e6 * (1 - ind_vars.where[s])
+le_cons[ss] =  b.where[s] <= feat_thresh[s,"le"] + 1e6 * (1 - ind_vars.where[s])
+
+exit(0)
 dt_model = gp.Model(
     m,
     name="dt_model",
