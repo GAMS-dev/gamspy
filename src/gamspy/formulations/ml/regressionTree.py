@@ -277,7 +277,10 @@ dt_model = gp.Model(
 
 # dt_model.toGams("./GAMS")
 
-dt_model.solve(options=gp.Options(equation_listing_limit=1e6)).to_string()
+summary = dt_model.solve(options=gp.Options(equation_listing_limit=1e6))
+
+if summary is not None:
+    print(summary.to_string())
 
 # print(dt_model.getEquationListing())
 # print("Y.L\n\n",y.l.records)
