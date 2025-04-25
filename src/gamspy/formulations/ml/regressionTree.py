@@ -108,7 +108,6 @@ n_features = tree_dict["n_features"]
 sample_size = int(input_data.shape[0])
 nleafs = len(leafs)
 
-# TODO: mypy error: Argument "domain" to "Set" has incompatible type "Dim"; expected "Sequence[gamspy._symbols.set.Set | Alias | str] | gamspy._symbols.set.Set | Alias | str | None"  [arg-type]
 s_set = gp.Set(m, name="s_set", domain=dim((sample_size,)))
 s_set.generateRecords(1)
 f_set = gp.Set(m, name="f_set", domain=dim((n_features,)))
@@ -237,7 +236,6 @@ for i, leaf in enumerate(leafs):
             feat_thresh[s, "le"] = feat_ub
         s[...] = False
 
-# TODO: mypy throws an error: Invalid index type "EllipsisType" for "gamspy._symbols.set.Set"; expected type "Sequence[Any] | str"  [index]
 s[...].where[gp.Sum(bb, feat_thresh[..., bb])] = True
 
 ge_cons = gp.Equation(
@@ -271,7 +269,6 @@ dt_model = gp.Model(
     equations=m.getEquations(),
     problem="MIP",
     sense=gp.Sense.MIN,
-    # TODO: Argument "objective" to "Model" has incompatible type "Sum"; expected "Variable | Expression | None"  [arg-type]
     objective=obj,
 )
 
