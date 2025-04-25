@@ -45,22 +45,7 @@ class Symbol:
         -------
         str
         """
-        name = self.name.replace("_", "\\_")
-        representation = f"{name}"
-        domain = list(self.domain)
-
-        if domain and domain != ["*"]:
-            set_strs = []
-            for elem in domain:
-                if isinstance(elem, (gp.Set, gp.Alias, implicits.ImplicitSet)):
-                    set_strs.append(elem.latexRepr())
-                elif isinstance(elem, str):
-                    set_strs.append("*")
-
-            domain_str = ",".join(set_strs)
-            representation = f"{representation}_{{{domain_str}}}"
-
-        return representation
+        return self.name
 
     @property
     def synchronize(

@@ -26,17 +26,6 @@ if TYPE_CHECKING:
 GMS_MAX_LINE_LENGTH = 80000
 LINE_LENGTH_OFFSET = 79000
 
-LATEX_DATA_MAP = {
-    "=g=": "\\geq",
-    "=l=": "\\leq",
-    "=e=": "=",
-    "*": "\\cdot",
-    "and": "\\wedge",
-    "or": "\\vee",
-    "xor": "\\oplus",
-    "$": "|",
-}
-
 
 @dataclass
 class DomainPlaceHolder:

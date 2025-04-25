@@ -24,6 +24,7 @@ from gamspy import (
     Sum,
     Variable,
 )
+from gamspy.exceptions import ValidationError
 from gamspy.math import sqrt
 
 pytestmark = pytest.mark.integration
@@ -1551,3 +1552,39 @@ def test_qcp_EDsensitivity(data):
         generated_tex = file.read()
 
     assert reference_tex == generated_tex
+
+
+def test_latex_repr(data):
+    # Other tests are check the equivalency of the generated tex file and the reference tex file.
+    # Here we test the latex representation of individual components.
+    m = data
+
+    i = Set(m, "i", records=["i1", "i2"])
+    assert i.latexRepr() == "i"
+    j = Set(m, "j", domain=i, records=["i1"])
+    assert j.latexRepr() == "j"
+    assert j[i].latexRepr() == "j_{i}"
+    assert j["i1"].latexRepr() == 'j_{"i1"}'
+
+    a = Parameter(m, "a")
+    assert a.latexRepr() == "a"
+    b = Parameter(m, "b", domain=[i, j])
+    assert b.latexRepr() == "b"
+    assert b[i, j].latexRepr() == "b_{i,j}"
+    assert b[i, "i1"].latexRepr() == 'b_{i,"i1"}'
+
+    c = Variable(m, "c")
+    assert c.latexRepr() == "c"
+    d = Variable(m, "d", domain=[i, j])
+    assert d.latexRepr() == "d"
+    assert d[i, j].latexRepr() == "d_{i,j}"
+    assert d[i, "i1"].latexRepr() == 'd_{i,"i1"}'
+
+    e = Equation(m, "e")
+
+    # Equations must be defined to get its latex representation
+    with pytest.raises(ValidationError):
+        e.latexRepr()
+
+    e[...] = c * c - a >= 0
+    assert e.latexRepr() == "$\nc \\cdot c - a \\geq 0\n$"
