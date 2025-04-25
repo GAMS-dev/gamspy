@@ -114,7 +114,7 @@ class ImplicitSymbol(ABC):
                 if isinstance(elem, (gp.Set, gp.Alias, ImplicitSet)):
                     set_strs.append(elem.latexRepr())
                 elif isinstance(elem, str):
-                    set_strs.append("*")
+                    set_strs.append(f'"{elem}"')
 
             domain_str = ",".join(set_strs)
             representation = f"{representation}_{{{domain_str}}}"

@@ -187,7 +187,7 @@ $
 \hrule
 \subsubsection*{$duty_{i}$}
 $
-qc_{i} = kf_{i,*} + kf_{i,*} \cdot tc_{i} - tcmin_{i} + s3_{i} - s4_{i}\hfill \forall i
+qc_{i} = kf_{i,"a"} + kf_{i,"b"} \cdot tc_{i} - tcmin_{i} + s3_{i} - s4_{i}\hfill \forall i
 $
 \vspace{5pt}
 \hrule
@@ -211,7 +211,7 @@ $
 \hrule
 \subsubsection*{$dtminlp_{j}$}
 $
-dtmin - thu_{*} - tr_{j} \leq 0\hfill \forall j
+dtmin - thu_{"lp"} - tr_{j} \leq 0\hfill \forall j
 $
 \vspace{5pt}
 \hrule
@@ -223,7 +223,7 @@ $
 \hrule
 \subsubsection*{$trtcdef_{i,j}$}
 $
-tr_{j} = af_{i,*} + af_{i,*} \cdot tc_{i} - tcmin_{i} + s1_{i} - s2_{i}\hfill \forall zcr
+tr_{j} = af_{i,"a"} + af_{i,"b"} \cdot tc_{i} - tcmin_{i} + s1_{i} - s2_{i}\hfill \forall zcr
 $
 \vspace{5pt}
 \hrule
@@ -235,7 +235,7 @@ $
 \hrule
 \subsubsection*{$dtminex_{j}$}
 $
-dtmin - thu_{*} - tr_{j} - u \cdot 1 - yhu_{*,j} \leq 0\hfill \forall j
+dtmin - thu_{"ex"} - tr_{j} - u \cdot 1 - yhu_{"ex",j} \leq 0\hfill \forall j
 $
 \vspace{5pt}
 \hrule

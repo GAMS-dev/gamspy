@@ -1,0 +1,1 @@
+Fix literal bug in latex representation of implicit symbols.
