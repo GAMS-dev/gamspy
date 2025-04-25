@@ -277,9 +277,7 @@ dt_model = gp.Model(
 
 # dt_model.toGams("./GAMS")
 
-print(
-    dt_model.solve(options=gp.Options(equation_listing_limit=1e6)).to_string()
-)
+dt_model.solve(options=gp.Options(equation_listing_limit=1e6)).to_string()
 
 # print(dt_model.getEquationListing())
 # print("Y.L\n\n",y.l.records)

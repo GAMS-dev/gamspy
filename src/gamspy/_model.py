@@ -269,7 +269,7 @@ class Model:
         problem: Problem | str = Problem.MIP,
         equations: Sequence[Equation] = [],
         sense: Sense | str = Sense.FEASIBILITY,
-        objective: Variable | Expression | None = None,
+        objective: Variable | Expression | Operation | None = None,
         matches: dict[
             Equation | Sequence[Equation],
             Variable | Sequence[Variable],
