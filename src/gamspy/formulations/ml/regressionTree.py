@@ -1,4 +1,3 @@
-import sys
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.tree import DecisionTreeRegressor
@@ -7,7 +6,7 @@ from gamspy.math import dim
 
 input_data = np.array(
     [
-        [2, 3],  # [l1, l2, l3] > y = 10 => 10*l1 = 1
+        [2, 3],  # [l1, l2, l3]
         [3, 1],
         [1, 2],
         [5, 6],
@@ -20,30 +19,6 @@ output = np.array([10, 10, 10, 15, 33])
 model = DecisionTreeRegressor(random_state=42)
 model.fit(input_data, output)
 
-# plt.figure(figsize=(20, 10))
-# plot_tree(model, feature_names=np.array(["A", "B"]), filled=True, rounded=True, node_ids=True)
-# plt.title("Decision Tree Regressor")
-# plt.savefig("regression_tree.svg", format="svg")
-# plt.close()
-### Predict on training data (just for demo)
-# predictions = model.predict(input_data)
-# print("Predictions:", predictions)
-
-# from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-
-# mse = mean_squared_error(output, predictions)
-# rmse = np.sqrt(mse)
-# mae = mean_absolute_error(output, predictions)
-# r2 = r2_score(output, predictions)
-
-# # Print report
-# print("Regression Report:")
-# print(f"MAE  = {mae:.3f}")
-# print(f"MSE  = {mse:.3f}")
-# print(f"RMSE = {rmse:.3f}")
-# print(f"R²   = {r2:.3f}")
-
-# exit(0)
 tree_dict = {
     "children_left": model.tree_.children_left,
     "children_right": model.tree_.children_right,
@@ -54,18 +29,8 @@ tree_dict = {
     "n_features": model.tree_.n_features,
 }
 
-# import pprint
-# pprint.pprint(tree_dict)
-
-# exit(0)
-
 leafs = tree_dict["children_left"] < 0
 leafs = leafs.nonzero()[0]
-# print(f"{leafs = }")
-# print(f"{tree_dict["value"][leafs, :]}")
-
-# exit(0)
-
 
 def _compute_leafs_bounds(tree, epsilon):
     """Compute the bounds that define each leaf of the tree"""
@@ -106,11 +71,6 @@ def _compute_leafs_bounds(tree, epsilon):
 
 node_lb, node_ub = _compute_leafs_bounds(tree_dict, 0)
 
-# print(f"{node_lb = }\n\n {node_ub = }")
-
-
-### print(f"{input_data[:,2].sum()}")  ## = 57
-### exit(0)
 
 in_data = input_data[:, 0].reshape((5, 1))  # Data for feature "A" is available.
 
@@ -120,7 +80,14 @@ m = gp.Container(working_directory="./data")
 
 n_features = tree_dict["n_features"]
 sample_size = int(in_data.shape[0])
-nleafs = len(leafs)  # nleafs = 3
+nleafs = len(leafs)
+
+s_set = gp.Set(m, name="s_set", domain=dim((sample_size,)))
+s_set.generateRecords(1)
+f_set = gp.Set(m, name="f_set", domain=dim((n_features,)))
+f_set.generateRecords(1)
+l_set = gp.Set(m, name="l_set", domain=dim((nleafs,)))
+l_set.generateRecords(1)
 
 ind = gp.Parameter(m, name="ind_p", domain=dim((sample_size,)), records=in_data)
 i = dim((sample_size,))
@@ -143,8 +110,11 @@ b.up[..., 1] = float(input_data[:, 1].max())
 
 obj = gp.Sum(y.domain[0], y[y.domain[0]])
 
-e1 = gp.Equation(m, name="feature_b_contraint")
-e1[...] = gp.Sum(b.domain[0], b[..., 1]) >= 3
+# e1 = gp.Equation(m, name="feature_b_contraint")
+# e1[...] = gp.Sum(b.domain[0], b[..., 1]) <= 30
+
+e2 = gp.Equation(m, name="feature_b_contraint_2")
+e2[...] = gp.Sum(b.domain[0], b[..., 1]) >= 25
 
 ### Now we add knowledge from the DT
 
@@ -235,14 +205,13 @@ feat_thresh = gp.Parameter(
 )
 
 for i, leaf in enumerate(leafs):
-    leaf = int(leaf)
     for feat in range(n_features):
         feat_ub = float(node_ub[feat, leaf])
         feat_lb = float(node_lb[feat, leaf])
         mask = (b.up[:, feat] >= feat_lb) & (b.lo[:, feat] <= feat_ub)
         # these indicator variables will not be reached
         ind_vars.fx[:, i].where[~mask] = 0
-        # for rec in range(sample_size):
+        s[:,feat,i].where[mask] = True
         if feat_lb > -np.inf:
             mask_ext = (b.lo[:, feat] < feat_lb) & mask
             s[:, feat, i].where[mask_ext] = True
@@ -253,32 +222,32 @@ for i, leaf in enumerate(leafs):
             feat_thresh[s, "le"] = feat_ub
         s[...] = False
 
+
+s[...].where[gp.Sum(bb, feat_thresh[..., bb])] = True
+
 ge_cons = gp.Equation(
     m,
     name=f"iv_feat_ge",
-    domain=ss.domain,
+    domain=[s_set,f_set,l_set],
     description="constraint to link the indicator variable with the feature GE",
 )
 ### Adding LE constraint
 le_cons = gp.Equation(
     m,
     name=f"iv_feat_le",
-    domain=ss.domain,
+    domain=[s_set,f_set,l_set],
     description="constraint to link the indicator variable with the feature LE",
 )
-s[...].where[gp.Sum(bb, feat_thresh[...,bb])] = True
 
-# TODO: uncontrolled sets
-ge_cons[s] = b.where[s] >= feat_thresh[s, "ge"] - 1e6 * (1 - ind_vars.where[s])
-le_cons[ss] =  b.where[s] <= feat_thresh[s,"le"] + 1e6 * (1 - ind_vars.where[s])
+ge_cons[s[s_set, f_set, l_set]].where[feat_thresh[s, "ge"] != 0] = b[s_set, f_set].where[s[s_set, f_set, l_set]] >= feat_thresh[s, "ge"] - 1e6 * (1 - ind_vars[s_set, l_set].where[s[s_set, f_set, l_set]])
+le_cons[s[s_set, f_set, l_set]].where[feat_thresh[s, "le"] != 0] = b[s_set, f_set].where[s[s_set, f_set, l_set]] <= feat_thresh[s, "le"] + 1e6 * (1 - ind_vars[s_set, l_set].where[s[s_set, f_set, l_set]])
 
-exit(0)
 dt_model = gp.Model(
     m,
     name="dt_model",
     equations=m.getEquations(),
     problem="MIP",
-    sense=gp.Sense.MIN,
+    sense=gp.Sense.MAX,
     objective=obj,
 )
 
@@ -287,7 +256,6 @@ dt_model = gp.Model(
 print(dt_model.solve(options=gp.Options(equation_listing_limit=1e6)))
 
 # print(dt_model.getEquationListing())
-
-print(y.l.records)
-print(b.records)
-print(ind_vars.records)
+# print(y.l.records)
+# print(b.records)
+# print(ind_vars.records)
