@@ -1,6 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.tree import DecisionTreeRegressor
+
 import gamspy as gp
 from gamspy.math import dim
 
@@ -31,6 +31,7 @@ tree_dict = {
 
 leafs = tree_dict["children_left"] < 0
 leafs = leafs.nonzero()[0]
+
 
 def _compute_leafs_bounds(tree, epsilon):
     """Compute the bounds that define each leaf of the tree"""
@@ -72,7 +73,9 @@ def _compute_leafs_bounds(tree, epsilon):
 node_lb, node_ub = _compute_leafs_bounds(tree_dict, 0)
 
 
-in_data = input_data[:, 0].reshape((5, 1))  # Data for feature "A" is available.
+in_data = input_data[:, 0].reshape(
+    (5, 1)
+)  # Data for feature "A" is available.
 
 # We introduce variable for the the missing feature: b_var
 
@@ -89,105 +92,97 @@ f_set.generateRecords(1)
 l_set = gp.Set(m, name="l_set", domain=dim((nleafs,)))
 l_set.generateRecords(1)
 
-ind = gp.Parameter(m, name="ind_p", domain=dim((sample_size,)), records=in_data)
-i = dim((sample_size,))
-y = gp.Variable(m, name="y", domain=i, type="positive")
+ind = gp.Parameter(m, name="ind_p", domain=s_set, records=in_data)
+y = gp.Variable(m, name="y", domain=s_set, type="positive")
 
 # y.up = float(output.sum()) ## not available
 
 # b = gp.Variable(m, name="B_var", domain=i, type="positive")
-b = gp.Variable(
-    m, name="feat_var", domain=dim((sample_size, n_features)), type="positive"
-)
+b = gp.Variable(m, name="feat_var", domain=[s_set, f_set], type="positive")
 
 """
 We introduce feature variables for all the features,
 then we just fix the variables for which we have the data from the input. 
 In the current example, we have the data for "A = 0" but not for "B=1"
 """
-b.fx[..., 0] = ind[ind.domain[0]]  # not [..., 0]
-b.up[..., 1] = float(input_data[:, 1].max())
+b.fx[s_set, 0] = ind[s_set]  # not [..., 0]
+# b.up[:, 0] = float(input_data[:, 0].max())
+b.up[:, 1] = float(input_data[:, 1].max())
 
-obj = gp.Sum(y.domain[0], y[y.domain[0]])
+obj = gp.Sum(s_set, y[s_set])
 
 # e1 = gp.Equation(m, name="feature_b_contraint")
 # e1[...] = gp.Sum(b.domain[0], b[..., 1]) <= 30
 
-e2 = gp.Equation(m, name="feature_b_contraint_2")
-e2[...] = gp.Sum(b.domain[0], b[..., 1]) >= 25
+# e2 = gp.Equation(m, name="feature_b_contraint_2")
+# e2[...] = gp.Sum(b.domain[0], b[..., 1]) >= 25
 
 ### Now we add knowledge from the DT
 
 ind_vars = gp.Variable(
     m,
-    name=f"iv",
+    name="iv",
     type="BINARY",
-    domain=dim((sample_size, nleafs)),
-    description=f"indicator variable for each leaf for each sample",
+    domain=[s_set, l_set],
+    description="indicator variable for each leaf for each sample",
 )
 
 o1 = gp.Equation(
     m,
     name="only_one_output",
-    domain=dim((sample_size,)),
+    domain=s_set,
     description="Activate only one leaf per sample",
 )
-
-sample_domain = o1.domain[0]
-feat_domain = ind_vars.domain[1]
-
-o1[o1.domain[0]] = (
-    gp.Sum(ind_vars.domain[1], ind_vars[o1.domain[0], ind_vars.domain[1]]) == 1
-)
+o1[s_set] = gp.Sum(l_set, ind_vars[s_set, l_set]) == 1
 
 
 out_link = gp.Parameter(
     m,
     name="predicted_value",
-    domain=dim((nleafs,)),
+    domain=l_set,
     records=[
-        (dom, val) for dom, val in zip(range(nleafs), tree_dict["value"][leafs, :])
+        (dom, val)
+        for dom, val in zip(range(nleafs), tree_dict["value"][leafs, :])
     ],
 )
 
 out1 = gp.Equation(
     m,
     name="link_ind_out",
-    domain=dim((sample_size,)),
-    definition=gp.Sum(
-        out_link.domain[0],
-        out_link[out_link.domain[0]] * ind_vars[..., out_link.domain[0]],
-    )
-    == y,
+    domain=s_set,
     description="Link the indicator variable to the predicted value of the decision tree",
+)
+out1[s_set] = (
+    gp.Sum(
+        l_set,
+        out_link[l_set] * ind_vars[s_set, l_set],
+    )
+    == y
 )
 
 ub_output = gp.Equation(
     m,
     name="ub_output",
-    domain=i,
-    definition=y <= np.max(tree_dict["value"]),
+    domain=s_set,
+    description="Output cannot be more than the maximum of predicted value",
 )
+ub_output[s_set] = y <= np.max(tree_dict["value"])
 
 lb_output = gp.Equation(
     m,
     name="lb_output",
-    domain=i,
-    definition=y >= np.min(tree_dict["value"]),
+    domain=s_set,
+    description="Output cannot be less than the minimum of predicted value",
 )
+lb_output[s_set] = y >= np.min(tree_dict["value"])
 
-ss = gp.Set(
-    m,
-    name="ss",
-    description="Universal set for all possible outcome for a given sample point and feature",
-    domain=dim((sample_size, n_features, nleafs)),
-)
+uni_domain = [s_set, f_set, l_set]
 
 s = gp.Set(
     m,
     name="s",
     description="Dynamic subset of possible paths",
-    domain=ss.domain,  # TODO: Why we cannot just pass ss here, and GAMSPy infers the domain of ss? We get `ValueError: All linked 'domain' elements must have dimension == 1`
+    domain=uni_domain,  # TODO: Why we cannot just pass ss here, and GAMSPy infers the domain of ss? We get `ValueError: All linked 'domain' elements must have dimension == 1`
 )
 
 bb = gp.Set(
@@ -200,8 +195,8 @@ bb = gp.Set(
 feat_thresh = gp.Parameter(
     m,
     name="feat_thres",
-    description="feature value",
-    domain=s.domain + [bb],
+    description="feature splitting value",
+    domain=uni_domain + [bb],
 )
 
 for i, leaf in enumerate(leafs):
@@ -210,37 +205,48 @@ for i, leaf in enumerate(leafs):
         feat_lb = float(node_lb[feat, leaf])
         mask = (b.up[:, feat] >= feat_lb) & (b.lo[:, feat] <= feat_ub)
         # these indicator variables will not be reached
-        ind_vars.fx[:, i].where[~mask] = 0
-        s[:,feat,i].where[mask] = True
+        ind_vars.fx[s_set, i].where[~mask] = 0
+        s[s_set, feat, i].where[mask] = True
+        # print(f"Initial s\n{s.records}")
         if feat_lb > -np.inf:
-            mask_ext = (b.lo[:, feat] < feat_lb) & mask
-            s[:, feat, i].where[mask_ext] = True
+            # mask_ext = (b.lo[:, feat] < feat_lb)
+            # s[s_set, feat, i].where[mask_ext] = True
             feat_thresh[s, "ge"] = feat_lb
+            # print(f"s after adding ge data\n{feat_thresh.records}")
         if feat_ub < np.inf:
-            mask_ext = (b.up[:, feat] > feat_ub) & mask
-            s[:, feat, i].where[mask_ext] = True
+            # mask_ext = (b.up[:, feat] > feat_ub)
+            # s[s_set, feat, i].where[mask_ext] = True
             feat_thresh[s, "le"] = feat_ub
+            # print(f"s after adding le data\n{feat_thresh.records}")
         s[...] = False
 
-
 s[...].where[gp.Sum(bb, feat_thresh[..., bb])] = True
+print(f"Final s {s.records}")
 
 ge_cons = gp.Equation(
     m,
-    name=f"iv_feat_ge",
-    domain=[s_set,f_set,l_set],
+    name="iv_feat_ge",
+    domain=uni_domain,
     description="constraint to link the indicator variable with the feature GE",
 )
 ### Adding LE constraint
 le_cons = gp.Equation(
     m,
-    name=f"iv_feat_le",
-    domain=[s_set,f_set,l_set],
+    name="iv_feat_le",
+    domain=uni_domain,
     description="constraint to link the indicator variable with the feature LE",
 )
 
-ge_cons[s[s_set, f_set, l_set]].where[feat_thresh[s, "ge"] != 0] = b[s_set, f_set].where[s[s_set, f_set, l_set]] >= feat_thresh[s, "ge"] - 1e6 * (1 - ind_vars[s_set, l_set].where[s[s_set, f_set, l_set]])
-le_cons[s[s_set, f_set, l_set]].where[feat_thresh[s, "le"] != 0] = b[s_set, f_set].where[s[s_set, f_set, l_set]] <= feat_thresh[s, "le"] + 1e6 * (1 - ind_vars[s_set, l_set].where[s[s_set, f_set, l_set]])
+ge_cons[s[uni_domain]].where[feat_thresh[s, "ge"] != 0] = b[
+    s_set, f_set
+].where[s[uni_domain]] >= feat_thresh[s, "ge"] - 1e6 * (
+    1 - ind_vars[s_set, l_set].where[s[uni_domain]]
+)
+le_cons[s[uni_domain]].where[feat_thresh[s, "le"] != 0] = b[
+    s_set, f_set
+].where[s[uni_domain]] <= feat_thresh[s, "le"] + 1e6 * (
+    1 - ind_vars[s_set, l_set].where[s[uni_domain]]
+)
 
 dt_model = gp.Model(
     m,
