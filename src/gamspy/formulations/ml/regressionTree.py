@@ -19,6 +19,29 @@ output = np.array([10, 10, 10, 15, 33])
 model = DecisionTreeRegressor(random_state=42)
 model.fit(input_data, output)
 
+# # Base URL for retrieving data
+# janos_data_url = "https://raw.githubusercontent.com/INFORMSJoC/2020.1023/master/data/"
+# historical_data = pd.read_csv(
+#     janos_data_url + "college_student_enroll-s1-1.csv", index_col=0
+# )
+
+# # classify our features between the ones that are fixed and the ones that will be
+# # part of the optimization problem
+# features = ["merit", "SAT", "GPA"]
+# target = "enroll"
+
+
+# # Run our regression
+# regression = DecisionTreeRegressor(max_depth=10, max_leaf_nodes=50, random_state=1)
+# regression.fit(X=historical_data.loc[:, features], y=historical_data.loc[:, target])
+
+
+# input_data = pd.read_csv(janos_data_url + "college_applications6000.csv", index_col=0)
+# nstudents = 100
+# # Select randomly nstudents in the data
+# input_data = input_data.sample(nstudents).to_numpy()
+# model = regression
+
 tree_dict = {
     "children_left": model.tree_.children_left,
     "children_right": model.tree_.children_right,
@@ -82,9 +105,10 @@ in_data = input_data[:, 0].reshape(
 m = gp.Container(working_directory="./data")
 
 n_features = tree_dict["n_features"]
-sample_size = int(in_data.shape[0])
+sample_size = int(input_data.shape[0])
 nleafs = len(leafs)
 
+# TODO: mypy error: Argument "domain" to "Set" has incompatible type "Dim"; expected "Sequence[gamspy._symbols.set.Set | Alias | str] | gamspy._symbols.set.Set | Alias | str | None"  [arg-type]
 s_set = gp.Set(m, name="s_set", domain=dim((sample_size,)))
 s_set.generateRecords(1)
 f_set = gp.Set(m, name="f_set", domain=dim((n_features,)))
@@ -114,8 +138,8 @@ obj = gp.Sum(s_set, y[s_set])
 # e1 = gp.Equation(m, name="feature_b_contraint")
 # e1[...] = gp.Sum(b.domain[0], b[..., 1]) <= 30
 
-# e2 = gp.Equation(m, name="feature_b_contraint_2")
-# e2[...] = gp.Sum(b.domain[0], b[..., 1]) >= 25
+e2 = gp.Equation(m, name="feature_b_contraint_2")
+e2[...] = gp.Sum(b.domain[0], b[..., 1]) >= 25
 
 ### Now we add knowledge from the DT
 
@@ -207,34 +231,27 @@ for i, leaf in enumerate(leafs):
         # these indicator variables will not be reached
         ind_vars.fx[s_set, i].where[~mask] = 0
         s[s_set, feat, i].where[mask] = True
-        # print(f"Initial s\n{s.records}")
         if feat_lb > -np.inf:
-            # mask_ext = (b.lo[:, feat] < feat_lb)
-            # s[s_set, feat, i].where[mask_ext] = True
             feat_thresh[s, "ge"] = feat_lb
-            # print(f"s after adding ge data\n{feat_thresh.records}")
         if feat_ub < np.inf:
-            # mask_ext = (b.up[:, feat] > feat_ub)
-            # s[s_set, feat, i].where[mask_ext] = True
             feat_thresh[s, "le"] = feat_ub
-            # print(f"s after adding le data\n{feat_thresh.records}")
         s[...] = False
 
+# TODO: mypy throws an error: Invalid index type "EllipsisType" for "gamspy._symbols.set.Set"; expected type "Sequence[Any] | str"  [index]
 s[...].where[gp.Sum(bb, feat_thresh[..., bb])] = True
-print(f"Final s {s.records}")
 
 ge_cons = gp.Equation(
     m,
     name="iv_feat_ge",
     domain=uni_domain,
-    description="constraint to link the indicator variable with the feature GE",
+    description="Link the indicator variable with the feature which is Lower bounded using a big-M constraint",
 )
-### Adding LE constraint
+
 le_cons = gp.Equation(
     m,
     name="iv_feat_le",
     domain=uni_domain,
-    description="constraint to link the indicator variable with the feature LE",
+    description="Link the indicator variable with the feature which is Upper bounded using a big-M constraint",
 )
 
 ge_cons[s[uni_domain]].where[feat_thresh[s, "ge"] != 0] = b[
@@ -253,15 +270,18 @@ dt_model = gp.Model(
     name="dt_model",
     equations=m.getEquations(),
     problem="MIP",
-    sense=gp.Sense.MAX,
+    sense=gp.Sense.MIN,
+    # TODO: Argument "objective" to "Model" has incompatible type "Sum"; expected "Variable | Expression | None"  [arg-type]
     objective=obj,
 )
 
 # dt_model.toGams("./GAMS")
 
-print(dt_model.solve(options=gp.Options(equation_listing_limit=1e6)))
+print(
+    dt_model.solve(options=gp.Options(equation_listing_limit=1e6)).to_string()
+)
 
 # print(dt_model.getEquationListing())
-# print(y.l.records)
-# print(b.records)
+# print("Y.L\n\n",y.l.records)
+# print("B.L\n\n",b.l[:,1].records)
 # print(ind_vars.records)
