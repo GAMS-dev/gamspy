@@ -135,6 +135,32 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
     def __repr__(self) -> str:
         return f"ImplicitParameter(parent={self.parent}, name='{self.name}', domain={self.domain}, permutation={self.permutation}), parent_scalar_domains={self.parent_scalar_domains})"
 
+    def _add_new_attr_column(
+        self, extension: str, recs: pd.DataFrame
+    ) -> pd.DataFrame:
+        parent_recs: pd.DataFrame = self.parent.records
+        if extension == "range":
+            recs[extension] = parent_recs["lower"] - parent_recs["upper"]
+        elif extension == "slacklo":
+            recs[extension] = (
+                parent_recs["level"] - parent_recs["lower"]
+            ).clip(0)
+        elif extension == "slackup":
+            recs[extension] = (
+                parent_recs["upper"] - parent_recs["level"]
+            ).clip(0)
+        elif extension == "slack":
+            slacklo = (parent_recs["level"] - parent_recs["lower"]).clip(0)
+            slackup = (parent_recs["upper"] - parent_recs["level"]).clip(0)
+            recs[extension] = slacklo.combine(slackup, min)
+        elif extension == "infeas":
+            distance_to_lower = parent_recs["lower"] - parent_recs["level"]
+            distance_to_upper = parent_recs["level"] - parent_recs["upper"]
+            max_distance = distance_to_lower.combine(distance_to_upper, max)
+            recs[extension] = max_distance.clip(lower=0)
+
+        return recs
+
     @property
     def records(self) -> pd.DataFrame | float | None:
         if self.parent.records is None:
@@ -152,16 +178,23 @@ class ImplicitParameter(ImplicitSymbol, operable.Operable):
             return recs
         elif isinstance(self.parent, (syms.Variable, syms.Equation)):
             extension = self.name.split(".")[-1]
-            domain_names = [symbol.name for symbol in self.parent.domain] + [
-                ATTR_MAPPING[extension]
-            ]
-            recs = self.parent.records[domain_names]
+            column_names: list[str] = self.parent.domain_labels
+
+            if extension in ATTR_MAPPING:
+                extension = ATTR_MAPPING[extension]
+                column_names.append(extension)
+
+            recs = self.parent.records[column_names].copy()
+            if extension not in ATTR_MAPPING:
+                # eq.range, eq.slacklo, eq.slackup, eq.slack, eq.infeas
+                recs = self._add_new_attr_column(extension, recs)
+
             for idx, literal in self._scalar_domains:
                 column_name = recs.columns[idx]
                 recs = recs[recs[column_name] == literal]
 
             if all(isinstance(elem, str) for elem in self.domain):
-                return float(recs[ATTR_MAPPING[extension]].squeeze())
+                return float(recs[extension].squeeze())
 
             return recs
 
