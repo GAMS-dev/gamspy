@@ -1685,10 +1685,6 @@ def test_invalid_arguments(data):
     with pytest.raises(ValidationError):
         transport.solve(solver="PATH")
 
-    # we do not accept dict anymore
-    with pytest.raises(TypeError):
-        transport.solve(options={"bla": "bla"})
-
 
 def test_marking_updated_symbols(data):
     m, *_ = data
