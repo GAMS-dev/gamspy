@@ -441,6 +441,7 @@ def validate_model(
 
     if problem == Problem.EMP:
         for equation in equations:
+            assert equation._definition is not None
             symbol_names = equation._definition._find_all_symbols()
             if any(name.endswith("gpauto") for name in symbol_names):
                 raise ValidationError(
