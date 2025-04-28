@@ -1431,6 +1431,9 @@ class Model:
                 f"`options` must be of type gp.Options of found {type(options)}"
             )
 
+        if isinstance(options, dict):
+            options = gp.Options.from_gams(options)
+
         converter = GamsConverter(self, path, options, dump_gams_state)
         converter.convert()
 
