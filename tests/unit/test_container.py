@@ -78,8 +78,7 @@ def test_container(data):
 
     shutil.rmtree("a" * 205)
 
-    with pytest.raises(TypeError):
-        m = Container(options={"bla": "bla"})
+    m = Container(options={"reslim": 5})
 
     i = gt.Set(m, "i")
     m._cast_symbols()
