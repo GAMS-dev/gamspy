@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import base64
 import os
 import platform
+import uuid
 from typing import TYPE_CHECKING
 
 import gams.transfer as gt
@@ -335,6 +337,15 @@ def isin(symbol, sequence: Sequence) -> bool:
 def _get_scalar_data(gams2np: Gams2Numpy, gdx_handle, symbol_id: str) -> float:
     _, arrvals = gams2np.gdxReadSymbolRaw(gdx_handle, symbol_id)
     return float(arrvals[0][0])
+
+
+def _get_unique_name() -> str:
+    """
+    N= 2^122 and the collision probability is: 1 - e^(-(n^2 / 2*N))
+    """
+    u = uuid.uuid4()
+    b64 = base64.urlsafe_b64encode(u.bytes)
+    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
 
 
 def _get_symbol_names_from_gdx(

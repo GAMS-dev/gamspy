@@ -1,0 +1,1 @@
+Raise a validation error in case an automatically named symbol is used in an equation of an EMP model. Use base64 auto-generated names instead of plain uuid.uuid4 names.

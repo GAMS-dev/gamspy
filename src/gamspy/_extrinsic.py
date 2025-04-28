@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 import gamspy._algebra.expression as expression
 import gamspy._algebra.operable as operable
+import gamspy.utils as utils
 from gamspy.exceptions import ValidationError
 
 if TYPE_CHECKING:
@@ -100,7 +100,7 @@ class ExtrinsicLibrary:
     """
 
     def __init__(self, path: str, functions: dict[str, str]):
-        self.name = "ext" + str(uuid.uuid4()).replace("-", "_")
+        self.name = "ext" + utils._get_unique_name()
         self.path = path
         self.functions = functions
 
