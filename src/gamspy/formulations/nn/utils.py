@@ -7,7 +7,7 @@ from gamspy.exceptions import ValidationError
 
 
 def _generate_name(sym_type: str, prefix: str, name: str) -> str:
-    rand = gp.utils._get_unique_name()[:4]
+    rand = gp.utils._get_unique_name()[:5]
     return "_".join([sym_type, prefix, name, rand])
 
 
