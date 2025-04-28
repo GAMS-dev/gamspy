@@ -1,0 +1,1 @@
+Allow users to provide GAMS options as a dictionary.

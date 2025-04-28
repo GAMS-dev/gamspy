@@ -82,6 +82,7 @@ OPTION_MAP = {
     "zero_rounding_threshold": "zerores",
     "report_underflow": "zeroresrep",
 }
+OPTION_MAP_REVERSE = dict(zip(OPTION_MAP.values(), OPTION_MAP.keys()))
 
 MODEL_ATTR_OPTION_MAP = {
     "generate_name_dict": "dictfile",
@@ -374,6 +375,43 @@ class Options(BaseModel):
         self._problem: str | None = None
         self._solver_options_file: str = "0"
         self._frame: FrameType | None = None
+
+    @staticmethod
+    def from_gams(options: dict) -> Options:
+        """
+        Generates a gp.Options object from a dictionary of GAMS options 
+        where keys are the GAMS option names.
+
+        Parameters
+        ----------
+        options : dict
+            GAMs options.
+
+        Returns
+        -------
+        Options
+            Generated GAMSPy options
+
+        Raises
+        ------
+        ValidationError
+            In case the option is not supported in GAMSPy.
+
+        Examples
+        --------
+        >>> import gamspy as gp
+        >>> m = gp.Container()
+        >>> options = gp.Options.from_gams({"reslim": 5})
+
+        """
+        gamspy_options = {}
+        for key, value in options.items():
+            if key.lower() in OPTION_MAP_REVERSE:
+                gamspy_options[OPTION_MAP_REVERSE[key.lower()]] = value
+            else:
+                raise ValidationError(f"`{key}` is not a supported option in GAMSPy.")
+
+        return Options(**gamspy_options) 
 
     def _get_gams_compatible_options(
         self, output: io.TextIOWrapper | None = None

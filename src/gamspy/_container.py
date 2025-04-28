@@ -215,7 +215,7 @@ class Container(gt.Container):
     debugging_level : str, optional
         Decides on keeping the temporary files generate by GAMS, by default
         "keep_on_error"
-    options : Options, optional
+    options : Options, dict, optional
         Global options for the overall execution
 
     Examples
@@ -234,7 +234,7 @@ class Container(gt.Container):
         debugging_level: Literal[
             "keep", "keep_on_error", "delete"
         ] = "keep_on_error",
-        options: Options | None = None,
+        options: Options | dict | None = None,
         output: io.TextIOWrapper | None = None,
     ):
         self.output = output

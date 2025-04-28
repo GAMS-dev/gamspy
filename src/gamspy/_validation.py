@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from gams.transfer._internals import GAMS_SYMBOL_MAX_LENGTH
 
@@ -475,7 +475,7 @@ def validate_solver_args(
     backend: Literal["local", "engine", "neos"],
     solver: str,
     problem: Problem | str,
-    options: Options | None,
+    options: Options | dict | None,
     output: io.TextIOWrapper | None,
     load_symbols: list[Symbol] | None,
 ) -> None:
@@ -483,9 +483,9 @@ def validate_solver_args(
         return
 
     # Check validity of options
-    if options is not None and not isinstance(options, Options):
+    if options is not None and not isinstance(options, (Options, dict)):
         raise TypeError(
-            f"`options` must be of type Option but found {type(options)}"
+            f"`options` must be of type Option or dict but found {type(options)}"
         )
 
     # Check validity of output
@@ -570,12 +570,17 @@ def validate_equations(model: Model) -> None:
             )
 
 
-def validate_global_options(options: Any) -> Options:
+def validate_global_options(options: Options | dict | None) -> Options:
     if not get_option("VALIDATION"):
         if options is None:
             return Options()
+        elif isinstance(options, dict):
+            return Options.from_gams(options)
 
         return options
+
+    if isinstance(options, dict):
+        options = Options.from_gams(options)
 
     if options is not None and not isinstance(options, Options):
         raise TypeError(
