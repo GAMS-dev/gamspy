@@ -278,7 +278,7 @@ class Model:
         limited_variables: Sequence[ImplicitVariable] | None = None,
         external_module: str | None = None,
     ):
-        self._auto_id = "m" + utils._get_unique_name().replace("-", "_")
+        self._auto_id = "m" + utils._get_unique_name()
 
         if name is not None:
             name = validation.validate_name(name)
@@ -800,7 +800,7 @@ class Model:
         self._external_module_file = None
 
         if value is not None:
-            filename = "f" + utils._get_unique_name().replace("-", "_")
+            filename = "f" + utils._get_unique_name()
             self._external_module_file = filename
             self._external_module = value
             self.container._add_statement(f"File {filename} / '{value}' /;")

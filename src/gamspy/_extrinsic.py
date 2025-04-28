@@ -100,7 +100,7 @@ class ExtrinsicLibrary:
     """
 
     def __init__(self, path: str, functions: dict[str, str]):
-        self.name = "ext" + utils._get_unique_name().replace("-", "_")
+        self.name = "ext" + utils._get_unique_name()
         self.path = path
         self.functions = functions
 
