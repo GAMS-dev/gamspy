@@ -424,7 +424,6 @@ Solve options can be specified using the :meth:`gamspy.Options` class. For examp
     model = Model(m, equations=m.getEquations(), problem=Problem.LP, sense=Sense.MAX, objective=z)
     model.solve(options=Options(iteration_limit=2))
 
-
 Here is the list of options and their descriptions:
 
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
@@ -563,6 +562,18 @@ Here is the list of options and their descriptions:
 +-----------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------+
 
 To check all available options, see :meth:`gamspy.Options`.
+
+.. note::
+
+    Solve options can also be given as a dictionary of GAMS options. For example: ::
+
+        import gamspy as gp
+
+        m = gp.Container()
+        ... # Definition of your model
+        model = gp.Model(m, equations=m.getEquations(), problem=gp.Problem.LP, sense=gp.Sense.MAX, objective=z)
+        model.solve(options={"reslim": 5, "lp": "gurobi"})
+
 
 Solver Options
 --------------
