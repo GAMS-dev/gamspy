@@ -345,8 +345,7 @@ def _get_unique_name() -> str:
     """
     u = uuid.uuid4()
     b64 = base64.urlsafe_b64encode(u.bytes)
-    name = b64.rstrip(b"=").decode("ascii").replace("-", "_")
-    return f"{name}gpauto"
+    return b64.rstrip(b"=").decode("ascii").replace("-", "_")
 
 
 def _get_symbol_names_from_gdx(
