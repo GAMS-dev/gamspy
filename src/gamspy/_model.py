@@ -1161,7 +1161,7 @@ class Model:
         if options is None:
             options = self.container._options
         elif isinstance(options, dict):
-            options = gp.Options.from_gams(options)
+            options = gp.Options.fromGams(options)
 
         self.instance = ModelInstance(
             self.container, self, modifiables, options, self.container.output
@@ -1263,7 +1263,7 @@ class Model:
         if options is None:
             options = self.container._options
         elif isinstance(options, dict):
-            options = gp.Options.from_gams(options)
+            options = gp.Options.fromGams(options)
 
         # Only for local until GAMS Engine and NEOS Server backends adopt the new GP_SolveLine option.
         if solver == "local":
@@ -1432,7 +1432,7 @@ class Model:
             )
 
         if isinstance(options, dict):
-            options = gp.Options.from_gams(options)
+            options = gp.Options.fromGams(options)
 
         converter = GamsConverter(self, path, options, dump_gams_state)
         converter.convert()

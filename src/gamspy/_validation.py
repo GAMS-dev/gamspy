@@ -575,12 +575,12 @@ def validate_global_options(options: Options | dict | None) -> Options:
         if options is None:
             return Options()
         elif isinstance(options, dict):
-            return Options.from_gams(options)
+            return Options.fromGams(options)
 
         return options
 
     if isinstance(options, dict):
-        options = Options.from_gams(options)
+        options = Options.fromGams(options)
 
     if options is not None and not isinstance(options, Options):
         raise TypeError(

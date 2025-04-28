@@ -959,6 +959,6 @@ def test_bypass_solver():
 
 
 def test_options_from_gams():
-    options = Options.from_gams({"reslim": 5, "lp": "cplex"})
+    options = Options.fromGams({"reslim": 5, "lp": "cplex"})
     assert options.time_limit == 5
     assert options.lp == "cplex"

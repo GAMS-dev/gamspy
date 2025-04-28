@@ -377,7 +377,7 @@ class Options(BaseModel):
         self._frame: FrameType | None = None
 
     @staticmethod
-    def from_gams(options: dict) -> Options:
+    def fromGams(options: dict) -> Options:
         """
         Generates a gp.Options object from a dictionary of GAMS options 
         where keys are the GAMS option names.
@@ -385,7 +385,7 @@ class Options(BaseModel):
         Parameters
         ----------
         options : dict
-            GAMs options.
+            GAMS options.
 
         Returns
         -------
@@ -401,7 +401,7 @@ class Options(BaseModel):
         --------
         >>> import gamspy as gp
         >>> m = gp.Container()
-        >>> options = gp.Options.from_gams({"reslim": 5})
+        >>> options = gp.Options.fromGams({"reslim": 5})
 
         """
         gamspy_options = {}
