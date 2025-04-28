@@ -1010,7 +1010,7 @@ def test_solve(data):
         TypeError,
         transport.solve,
         None,
-        {"bla": 100},
+        "bla",
     )
 
     pytest.raises(TypeError, transport.solve, None, 5)
