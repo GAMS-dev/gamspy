@@ -4,7 +4,6 @@ import builtins
 import itertools
 import os
 import threading
-import uuid
 from collections.abc import Sequence
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -296,7 +295,7 @@ class Variable(gt.Variable, operable.Operable, Symbol):
                 if is_miro_output:
                     name = name.lower()  # type: ignore
             else:
-                name = "v" + str(uuid.uuid4()).replace("-", "_")
+                name = "v" + utils._get_unique_name().replace("-", "_")
 
             previous_state = container._options.miro_protect
             container._options.miro_protect = False

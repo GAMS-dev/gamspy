@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import uuid
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Literal, no_type_check
 
@@ -159,7 +158,8 @@ class Backend(ABC):
 
         if self.container._debugging_level == "keep":
             job_name = os.path.join(
-                self.container.working_directory, "_" + str(uuid.uuid4())
+                self.container.working_directory,
+                "_" + utils._get_unique_name(),
             )
 
         return job_name

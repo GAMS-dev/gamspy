@@ -10,7 +10,6 @@ import tempfile
 import threading
 import time
 import traceback
-import uuid
 import weakref
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
@@ -521,7 +520,7 @@ class Container(gt.Container):
                 del self.data[name]
 
     def _setup_paths(self) -> tuple[str, str, str]:
-        suffix = "_" + str(uuid.uuid4())
+        suffix = "_" + utils._get_unique_name()
         job = os.path.join(self.working_directory, suffix)
         gdx_in = os.path.join(self.working_directory, f"{suffix}in.gdx")
         gdx_out = os.path.join(self.working_directory, f"{suffix}out.gdx")

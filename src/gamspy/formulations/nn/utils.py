@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import math
-import uuid
 
 import gamspy as gp
 from gamspy.exceptions import ValidationError
 
 
 def _generate_name(sym_type: str, prefix: str, name: str) -> str:
-    rand = str(uuid.uuid4()).split("-")[0]
+    rand = gp.utils._get_unique_name()[:4]
     return "_".join([sym_type, prefix, name, rand])
 
 
