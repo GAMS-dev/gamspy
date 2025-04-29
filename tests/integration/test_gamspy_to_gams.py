@@ -25,7 +25,6 @@ from gamspy import (
     Sum,
     Variable,
 )
-from gamspy.exceptions import ValidationError
 from gamspy.math import sqrt
 
 pytestmark = pytest.mark.integration
@@ -154,10 +153,7 @@ def test_lp_transport(data):
         objective=Sum((i, j), c[i, j] * x[i, j]),
     )
 
-    with pytest.raises(ValidationError):
-        transport.toGams(
-            os.path.join("tmp", "to_gams"), options={"lp": "cplex"}
-        )
+    transport.toGams(os.path.join("tmp", "to_gams"), options={"lp": "cplex"})
 
     transport.toGams(
         os.path.join("tmp", "to_gams"),
