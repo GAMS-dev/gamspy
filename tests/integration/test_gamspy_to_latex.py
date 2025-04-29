@@ -1596,4 +1596,4 @@ def test_latex_repr(data):
         e.latexRepr()
 
     e[...] = c * c - a >= 0
-    assert e.latexRepr() == "$\n(((c \\cdot c) - a) \\geq 0)\n$"
+    assert e.latexRepr() == "$\n((c \\cdot c) - a) \\geq 0\n$"
