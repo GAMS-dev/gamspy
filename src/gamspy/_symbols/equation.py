@@ -1106,7 +1106,7 @@ class Equation(gt.Equation, Symbol):
 
         assert self._definition.right is not None
         definition_str = remove_outer_parens(
-            self._definition.right.latexRepr()
+            self._definition.right.latexRepr()  # type: ignore
         )
         equation_str = "$\n" + definition_str + f"{right_side}" + "\n$"
 
